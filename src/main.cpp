@@ -1,5 +1,3 @@
-// #include <glad/gl.h>
-#include <GL/glew.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
@@ -7,37 +5,10 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-// #include "linmath.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
-static const struct {
-  float x, y;
-  float r, g, b;
-} vertices[3] = {{-0.6f, -0.4f, 1.f, 0.f, 0.f},
-                 {0.6f, -0.4f, 0.f, 1.f, 0.f},
-                 {0.f, 0.6f, 0.f, 0.f, 1.f}};
-
-static const char *vertex_shader_text =
-    "#version 110\n"
-    "uniform mat4 MVP;\n"
-    "attribute vec3 vCol;\n"
-    "attribute vec2 vPos;\n"
-    "varying vec3 color;\n"
-    "void main()\n"
-    "{\n"
-    "    gl_Position = MVP * vec4(vPos, 0.0, 1.0);\n"
-    "    color = vCol;\n"
-    "}\n";
-
-static const char *fragment_shader_text =
-    "#version 110\n"
-    "varying vec3 color;\n"
-    "void main()\n"
-    "{\n"
-    "    gl_FragColor = vec4(color, 1.0);\n"
-    "}\n";
+#include "gl3renderer.h"
 
 static void error_callback(int error, const char *description) {
   fprintf(stderr, "Error: %s\n", description);
@@ -50,18 +21,15 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action,
 }
 
 int main(void) {
-  GLFWwindow *window;
-  GLuint vertex_buffer, vertex_shader, fragment_shader, program;
-  GLint mvp_location, vpos_location, vcol_location;
 
   glfwSetErrorCallback(error_callback);
+  if (!glfwInit()) {
+    return -1;
+  }
 
-  if (!glfwInit())
-    exit(EXIT_FAILURE);
-
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    // Decide GL+GLSL versions
+  // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+  // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+  // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
   // GL ES 2.0 + GLSL 100
   const char *glsl_version = "#version 100";
@@ -84,7 +52,7 @@ int main(void) {
   // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
 #endif
 
-  window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+  auto window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
   if (!window) {
     glfwTerminate();
     exit(EXIT_FAILURE);
@@ -93,39 +61,10 @@ int main(void) {
   glfwSetKeyCallback(window, key_callback);
 
   glfwMakeContextCurrent(window);
-  // gladLoadGL(glfwGetProcAddress);
-  glewInit();
   glfwSwapInterval(1);
 
   // NOTE: OpenGL error checks have been omitted for brevity
-
-  glGenBuffers(1, &vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
-  glCompileShader(vertex_shader);
-
-  fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
-  glCompileShader(fragment_shader);
-
-  program = glCreateProgram();
-  glAttachShader(program, vertex_shader);
-  glAttachShader(program, fragment_shader);
-  glLinkProgram(program);
-
-  mvp_location = glGetUniformLocation(program, "MVP");
-  vpos_location = glGetAttribLocation(program, "vPos");
-  vcol_location = glGetAttribLocation(program, "vCol");
-
-  glEnableVertexAttribArray(vpos_location);
-  glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-                        sizeof(vertices[0]), (void *)0);
-  glEnableVertexAttribArray(vcol_location);
-  glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-                        sizeof(vertices[0]), (void *)(sizeof(float) * 2));
+  Gl3Renderer gl3r;
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -189,7 +128,6 @@ int main(void) {
   // Our state
   bool show_demo_window = true;
   // bool show_another_window = false;
-  ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
   while (!glfwWindowShouldClose(window)) {
     // Poll and handle events (inputs, window resize, etc.)
@@ -277,24 +215,7 @@ int main(void) {
     glfwGetFramebufferSize(window, &width, &height);
     // ratio = width / (float)height;
 
-    glViewport(0, 0, width, height);
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w,
-                 clear_color.z * clear_color.w, clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    // mat4x4_identity(m);
-    // mat4x4_rotate_Z(m, m, (float)glfwGetTime());
-    // mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-    // mat4x4_mul(mvp, p, m);
-    float mvp[16] = {
-        1, 0, 0, 0, //
-        0, 1, 0, 0, //
-        0, 0, 1, 0, //
-        0, 0, 0, 1, //
-    };
-    glUseProgram(program);
-    glUniformMatrix4fv(mvp_location, 1, GL_FALSE, mvp);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    gl3r.render(width, height);
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

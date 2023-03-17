@@ -6,7 +6,10 @@ imgui_dep = dependency('imgui')
 
 executable(
     'vrmeditor',
-    ['src/main.cpp'],
+    [
+        'src/main.cpp',
+        'src/gl3renderer.cpp',
+    ],
     install: true,
     dependencies: [glew_dep, glfw_dep, imgui_dep],
 )
