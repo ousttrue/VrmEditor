@@ -1,5 +1,7 @@
 #include "gl3renderer.h"
 #include <GL/glew.h>
+#include <array>
+#include <span>
 #include <stdexcept>
 
 static const struct {
@@ -33,6 +35,7 @@ GLuint vertex_buffer, vertex_shader, fragment_shader, program;
 GLint mvp_location, vpos_location, vcol_location;
 
 Gl3Renderer::Gl3Renderer() {
+
   glewInit();
 
   glGenBuffers(1, &vertex_buffer);
@@ -66,12 +69,14 @@ Gl3Renderer::Gl3Renderer() {
 
 Gl3Renderer::~Gl3Renderer() {}
 
-void Gl3Renderer::render(int width, int height) {
+void Gl3Renderer::clear(int width, int height) {
   glViewport(0, 0, width, height);
   glClearColor(clear_color[0] * clear_color[3], clear_color[1] * clear_color[3],
                clear_color[2] * clear_color[3], clear_color[3]);
   glClear(GL_COLOR_BUFFER_BIT);
+}
 
+void Gl3Renderer::render() {
   // mat4x4_identity(m);
   // mat4x4_rotate_Z(m, m, (float)glfwGetTime());
   // mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);

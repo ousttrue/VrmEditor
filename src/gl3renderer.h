@@ -7,5 +7,6 @@ public:
 
   Gl3Renderer();
   ~Gl3Renderer();
-  void render(int width, int height);
+  void clear(int width, int height);
+  void render();
 };
