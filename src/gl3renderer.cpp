@@ -1,6 +1,7 @@
 #include "gl3renderer.h"
 #include <GL/glew.h>
 #include <array>
+#include <iostream>
 #include <span>
 #include <stdexcept>
 
@@ -38,8 +39,11 @@ GLint view_location;
 GLint vpos_location, vcol_location;
 
 Gl3Renderer::Gl3Renderer() {
-
-  glewInit();
+  std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
+  std::cout << "GL_VENDOR: " << glGetString(GL_VENDOR) << std::endl;
+  if (glewInit() != GLEW_OK) {
+    throw std::runtime_error("glewInit");
+  }
 
   glGenBuffers(1, &vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
