@@ -21,6 +21,8 @@ struct Camera {
 
 class Gl3Renderer {
 
+  class Gl3RendererImpl *m_impl;
+
 public:
   Gl3Renderer();
   ~Gl3Renderer();
