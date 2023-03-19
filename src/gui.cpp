@@ -68,6 +68,27 @@ Gui::Gui(const void *window, const char *glsl_version) {
 
 Gui::~Gui() {}
 
+std::optional<MouseEvent> Gui::backgroundMouseEvent() const {
+  auto &io = ImGui::GetIO();
+  if (!io.WantCaptureMouse) {
+    return {};
+  }
+
+  MouseEvent event;
+  if (io.MouseDown[1]) {
+    event.rightDrag = Delta{static_cast<int>(io.MouseDelta.x),
+                            static_cast<int>(io.MouseDelta.y)};
+  }
+  if (io.MouseDown[2]) {
+    event.middleDrag = Delta{static_cast<int>(io.MouseDelta.x),
+                             static_cast<int>(io.MouseDelta.y)};
+  }
+  if (io.MouseWheel) {
+    event.wheel = static_cast<int>(io.MouseWheel);
+  }
+  return event;
+}
+
 void Gui::render() {
   // Start the Dear ImGui frame
   ImGui_ImplOpenGL3_NewFrame();

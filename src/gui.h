@@ -1,4 +1,15 @@
 #pragma once
+#include <optional>
+
+struct Delta {
+  int x;
+  int y;
+};
+struct MouseEvent {
+  std::optional<Delta> rightDrag;
+  std::optional<Delta> middleDrag;
+  std::optional<int> wheel;
+};
 
 class Gui {
   // Our state
@@ -8,5 +19,6 @@ class Gui {
 public:
   Gui(const void *window, const char *glsl_version);
   ~Gui();
+  std::optional<MouseEvent> backgroundMouseEvent() const;
   void render();
 };
