@@ -12,13 +12,14 @@ static const struct {
                  {0.f, 0.6f, 0.f, 0.f, 1.f}};
 
 static const char *vertex_shader_text = R"(#version 110
-uniform mat4 MVP;
+uniform mat4 View;
+uniform mat4 Projection;
 attribute vec3 vCol;
 attribute vec2 vPos;
 varying vec3 color;
 void main()
 {
-    gl_Position = MVP * vec4(vPos, 0.0, 1.0);
+    gl_Position = Projection * View * vec4(vPos, 0.0, 1.0);
     color = vCol;
 }
 )";
@@ -32,7 +33,9 @@ void main()
 )";
 
 GLuint vertex_buffer, vertex_shader, fragment_shader, program;
-GLint mvp_location, vpos_location, vcol_location;
+GLint projection_location;
+GLint view_location;
+GLint vpos_location, vcol_location;
 
 Gl3Renderer::Gl3Renderer() {
 
@@ -55,7 +58,8 @@ Gl3Renderer::Gl3Renderer() {
   glAttachShader(program, fragment_shader);
   glLinkProgram(program);
 
-  mvp_location = glGetUniformLocation(program, "MVP");
+  projection_location = glGetUniformLocation(program, "Projection");
+  view_location = glGetUniformLocation(program, "View");
   vpos_location = glGetAttribLocation(program, "vPos");
   vcol_location = glGetAttribLocation(program, "vCol");
 
@@ -69,22 +73,14 @@ Gl3Renderer::Gl3Renderer() {
 
 Gl3Renderer::~Gl3Renderer() {}
 
-void Gl3Renderer::render(const Camera &view) {
-  glViewport(0, 0, view.width(), view.height());
-  glClearColor(view.premul_r(), view.premul_g(), view.premul_b(), view.alpha());
+void Gl3Renderer::render(const Camera &camera) {
+  glViewport(0, 0, camera.width(), camera.height());
+  glClearColor(camera.premul_r(), camera.premul_g(), camera.premul_b(),
+               camera.alpha());
   glClear(GL_COLOR_BUFFER_BIT);
 
-  // mat4x4_identity(m);
-  // mat4x4_rotate_Z(m, m, (float)glfwGetTime());
-  // mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-  // mat4x4_mul(mvp, p, m);
-  float mvp[16] = {
-      1, 0, 0, 0, //
-      0, 1, 0, 0, //
-      0, 0, 1, 0, //
-      0, 0, 0, 1, //
-  };
   glUseProgram(program);
-  glUniformMatrix4fv(mvp_location, 1, GL_FALSE, mvp);
+  glUniformMatrix4fv(projection_location, 1, GL_FALSE, camera.projection);
+  glUniformMatrix4fv(view_location, 1, GL_FALSE, camera.view);
   glDrawArrays(GL_TRIANGLES, 0, 3);
 }

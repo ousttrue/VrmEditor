@@ -70,7 +70,8 @@ Gui::~Gui() {}
 
 std::optional<MouseEvent> Gui::backgroundMouseEvent() const {
   auto &io = ImGui::GetIO();
-  if (!io.WantCaptureMouse) {
+  if (io.WantCaptureMouse) {
+    // mouse event is consumed by ImGui
     return {};
   }
 
