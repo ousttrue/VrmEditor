@@ -113,13 +113,19 @@ int main(int argc, char **argv) {
   if (!window) {
     return -1;
   }
+
   Gl3Renderer gl3r;
   Gui gui(window, platform.glsl_version.c_str());
   Camera camera{};
   spanmath::OrbitView view;
 
+  if (argc > 1) {
+    gl3r.load(argv[1]);
+  }
+
   while (auto size = platform.newFrame()) {
 
+    // render background
     camera.resize(size->width, size->height);
     view.SetSize(size->width, size->height);
     if (auto event = gui.backgroundMouseEvent()) {
@@ -134,9 +140,11 @@ int main(int argc, char **argv) {
       }
     }
     view.Update(spanmath::Mat4(camera.projection), spanmath::Mat4(camera.view));
-
     gl3r.render(camera);
+
+    // render gui
     gui.render();
+
     platform.present();
   }
   return 0;

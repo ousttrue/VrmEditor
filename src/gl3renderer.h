@@ -27,4 +27,6 @@ public:
   void clear();
 
   void render(const Camera &camera);
+
+  void load(const char *path);
 };
