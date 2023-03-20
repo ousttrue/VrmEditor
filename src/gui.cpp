@@ -4,6 +4,7 @@
 #include <imgui_impl_opengl3.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <iostream>
 
 Gui::Gui(const void *window, const char *glsl_version) {
   // Setup Dear ImGui context
@@ -69,33 +70,34 @@ Gui::Gui(const void *window, const char *glsl_version) {
 Gui::~Gui() {}
 
 std::optional<MouseEvent> Gui::backgroundMouseEvent() const {
-  auto &io = ImGui::GetIO();
-  if (io.WantCaptureMouse) {
-    // mouse event is consumed by ImGui
-    return {};
-  }
+  MouseEvent event{};
 
-  MouseEvent event;
-  if (io.MouseDown[1]) {
-    event.rightDrag = Delta{static_cast<int>(io.MouseDelta.x),
-                            static_cast<int>(io.MouseDelta.y)};
-  }
-  if (io.MouseDown[2]) {
-    event.middleDrag = Delta{static_cast<int>(io.MouseDelta.x),
-                             static_cast<int>(io.MouseDelta.y)};
-  }
-  if (io.MouseWheel) {
-    event.wheel = static_cast<int>(io.MouseWheel);
+  auto &io = ImGui::GetIO();
+  if (!io.WantCaptureMouse) {
+    // mouse event is consumed by ImGui
+    if (io.MouseDown[1]) {
+      event.rightDrag = Delta{static_cast<int>(io.MouseDelta.x),
+                              static_cast<int>(io.MouseDelta.y)};
+    }
+    if (io.MouseDown[2]) {
+      event.middleDrag = Delta{static_cast<int>(io.MouseDelta.x),
+                               static_cast<int>(io.MouseDelta.y)};
+    }
+    if (io.MouseWheel) {
+      event.wheel = static_cast<int>(io.MouseWheel);
+    }
   }
   return event;
 }
 
-void Gui::render() {
+void Gui::newFrame() {
   // Start the Dear ImGui frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+}
 
+void Gui::render() {
   // // 1. Show the big demo window (Most of the sample code is in
   // // ImGui::ShowDemoWindow()! You can browse its code to learn more about
   // Dear

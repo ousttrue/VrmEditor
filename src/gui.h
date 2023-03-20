@@ -20,5 +20,6 @@ public:
   Gui(const void *window, const char *glsl_version);
   ~Gui();
   std::optional<MouseEvent> backgroundMouseEvent() const;
+  void newFrame();
   void render();
 };

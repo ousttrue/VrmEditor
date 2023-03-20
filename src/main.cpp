@@ -18,12 +18,6 @@ static void error_callback(int error, const char *description) {
   fprintf(stderr, "Error: %s\n", description);
 }
 
-static void key_callback(GLFWwindow *window, int key, int scancode, int action,
-                         int mods) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
-}
-
 struct WindowSize {
   int width;
   int height;
@@ -77,7 +71,6 @@ public:
     if (!m_window) {
       return nullptr;
     }
-    glfwSetKeyCallback(m_window, key_callback);
     glfwMakeContextCurrent(m_window);
     glfwSwapInterval(1);
     return m_window;
@@ -124,6 +117,8 @@ int main(int argc, char **argv) {
   }
 
   while (auto size = platform.newFrame()) {
+
+    gui.newFrame();
 
     // render background
     camera.resize(size->width, size->height);
