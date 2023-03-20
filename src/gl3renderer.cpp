@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 static const char *vertex_shader_text = R"(#version 110
+uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
 attribute vec3 vPosition;
@@ -17,7 +18,7 @@ varying vec3 normal;
 varying vec2 uv;
 void main()
 {
-    gl_Position = Projection * View * vec4(vPosition, 1.0);
+    gl_Position = Projection * View * Model * vec4(vPosition, 1.0);
     normal = vNormal;
     uv = vUv;
 }
@@ -52,7 +53,7 @@ struct Drawable {
   std::shared_ptr<glo::Vao> vao;
   uint32_t drawCount = 0;
 
-  void draw(const Camera &camera) {
+  void draw(const Camera &camera, const float m[16]) {
     // state
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
@@ -62,6 +63,7 @@ struct Drawable {
     program->Bind();
     program->SetUniformMatrix(printError, "Projection", camera.projection);
     program->SetUniformMatrix(printError, "View", camera.view);
+    program->_SetUniformMatrix(printError, "Model", m);
     vao->Draw(GL_TRIANGLES, drawCount);
   }
 };
@@ -87,9 +89,9 @@ public:
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 
-  void render(const Camera &camera, const Mesh &mesh) {
+  void render(const Camera &camera, const Mesh &mesh, const float m[16]) {
     auto drawable = getOrCreate(mesh);
-    drawable.draw(camera);
+    drawable.draw(camera, m);
   }
 
   Drawable getOrCreate(const Mesh &mesh) {
@@ -156,6 +158,7 @@ Gl3Renderer::~Gl3Renderer() { delete m_impl; }
 
 void Gl3Renderer::clear(const Camera &camera) { m_impl->clear(camera); }
 
-void Gl3Renderer::render(const Camera &camera, const Mesh &mesh) {
-  m_impl->render(camera, mesh);
+void Gl3Renderer::render(const Camera &camera, const Mesh &mesh,
+                         const float m[16]) {
+  m_impl->render(camera, mesh, m);
 }

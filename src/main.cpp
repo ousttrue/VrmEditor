@@ -119,8 +119,10 @@ int main(int argc, char **argv) {
     scene.load(argv[1]);
   }
 
-  RenderFunc render = std::bind(&Gl3Renderer::render, &gl3r,
-                                std::placeholders::_1, std::placeholders::_2);
+  RenderFunc render = [&gl3r](const Camera &camera, const Mesh &mesh,
+                              const float m[16]) {
+    gl3r.render(camera, mesh, m);
+  };
 
   while (auto size = platform.newFrame()) {
     // newFrame

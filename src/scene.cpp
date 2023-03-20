@@ -1,5 +1,6 @@
 #include "scene.h"
 #include "mesh.h"
+#include <array>
 #include <expected>
 #include <format>
 #include <fstream>
@@ -198,18 +199,38 @@ static std::vector<T> ReadAllBytes(const std::string &filename) {
   return buffer;
 }
 
-struct Node {
+struct Node : public std::enable_shared_from_this<Node> {
   uint32_t index;
   std::string name;
-  std::vector<uint32_t> children;
   float3 translation = {};
   quaternion rotation = {};
   float3 scale = {};
   std::optional<uint32_t> mesh;
 
+  std::list<std::shared_ptr<Node>> children;
+  std::weak_ptr<Node> parent;
+
   Node(uint32_t i, std::string_view name) : index(i), name(name) {}
   Node(const Node &) = delete;
   Node &operator=(const Node &) = delete;
+
+  void addChild(const std::shared_ptr<Node> &child) {
+    if (auto current_parent = child->parent.lock()) {
+      current_parent->children.remove(child);
+    }
+    child->parent = shared_from_this();
+    children.push_back(child);
+  }
+
+  void print(int level = 0) {
+    for (int i = 0; i < level; ++i) {
+      std::cout << "  ";
+    }
+    std::cout << name << std::endl;
+    for (auto child : children) {
+      child->print(level + 1);
+    }
+  }
 };
 inline std::ostream &operator<<(std::ostream &os, const Node &node) {
   os << "Node[" << node.index << "]" << node.name << ": " << node.translation
@@ -253,8 +274,9 @@ void Scene::load(const char *path) {
     }
   }
 
-  int i = 0;
-  for (auto &node : glb->gltf["nodes"]) {
+  auto nodes = glb->gltf["nodes"];
+  for (int i = 0; i < nodes.size(); ++i) {
+    auto &node = nodes[i];
     auto name = node.value("name", std::format("node:{}", i));
     auto ptr = std::make_shared<Node>(i, name);
     m_nodes.push_back(ptr);
@@ -275,12 +297,45 @@ void Scene::load(const char *path) {
     }
 
     std::cout << *ptr << std::endl;
-    ++i;
+  }
+  for (int i = 0; i < nodes.size(); ++i) {
+    auto &node = nodes[i];
+    if (node.find("children") != node.end()) {
+      for (auto child : node.at("children")) {
+        m_nodes[i]->addChild(m_nodes[child]);
+      }
+    }
+  }
+
+  auto scene = glb->gltf["scenes"][0];
+  for (auto node : scene["nodes"]) {
+    m_roots.push_back(m_nodes[node]);
+
+    m_roots.back()->print();
   }
 }
 
 void Scene::render(const Camera &camera, const RenderFunc &render) {
-  for (auto &mesh : m_meshes) {
-    render(camera, *mesh);
+  float m[16]{
+      1, 0, 0, 0, //
+      0, 1, 0, 0, //
+      0, 0, 1, 0, //
+      0, 0, 0, 1, //
+  };
+  for (auto &root : m_roots) {
+    traverse(camera, render, root, m);
+  }
+}
+
+void Scene::traverse(const Camera &camera, const RenderFunc &render,
+                     const std::shared_ptr<Node> &node, const float m[16]) {
+
+  if (node->mesh) {
+    auto mesh = m_meshes[*node->mesh];
+    render(camera, *mesh, m);
+  }
+
+  for (auto child : node->children) {
+    traverse(camera, render, child, m);
   }
 }

@@ -10,5 +10,5 @@ public:
   Gl3Renderer();
   ~Gl3Renderer();
   void clear(const Camera &camera);
-  void render(const Camera &camera, const Mesh &mesh);
+  void render(const Camera &camera, const Mesh &mesh, const float m[16]);
 };

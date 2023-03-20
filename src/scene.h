@@ -6,12 +6,13 @@
 struct Camera;
 struct Mesh;
 struct Node;
-using RenderFunc = std::function<void(const Camera &, const Mesh &)>;
+using RenderFunc =
+    std::function<void(const Camera &, const Mesh &, const float[16])>;
 
 class Scene {
   std::vector<std::shared_ptr<Mesh>> m_meshes;
   std::vector<std::shared_ptr<Node>> m_nodes;
-  std::vector<uint32_t> m_roots;
+  std::vector<std::shared_ptr<Node>> m_roots;
 
 public:
   Scene() {}
@@ -19,4 +20,8 @@ public:
   Scene &operator=(const Scene &) = delete;
   void load(const char *path);
   void render(const Camera &camera, const RenderFunc &render);
+
+private:
+  void traverse(const Camera &camera, const RenderFunc &render,
+                const std::shared_ptr<Node> &node, const float m[16]);
 };
