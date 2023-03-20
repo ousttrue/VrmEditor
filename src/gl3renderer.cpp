@@ -3,6 +3,8 @@
 #include <array>
 #include <expected>
 #include <fstream>
+#include <glo/shader.h>
+#include <glo/vao.h>
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -45,6 +47,8 @@ struct Mesh {
     }
   }
 
+  size_t verticesBytes() const { return m_vertices.size() * sizeof(Vertex); }
+
   void setPosition(std::span<const float3> values) {
     std::cout << "position: " << values.size() << std::endl;
     m_vertices.resize(values.size());
@@ -75,13 +79,6 @@ struct Mesh {
   }
 };
 
-// static const struct {
-//   float x, y;
-//   float r, g, b;
-// } vertices[3] = {{-0.6f, -0.4f, 1.f, 0.f, 0.f},
-//                  {0.6f, -0.4f, 0.f, 1.f, 0.f},
-//                  {0.f, 0.6f, 0.f, 0.f, 1.f}};
-
 static const char *vertex_shader_text = R"(#version 110
 uniform mat4 View;
 uniform mat4 Projection;
@@ -107,16 +104,15 @@ void main()
 };
 )";
 
+static void printError(std::string_view msg) { std::cout << msg << std::endl; }
+
 class Gl3RendererImpl {
-  GLuint vertex_buffer = 0;
-  GLuint ibo_buffer = 0;
-  GLuint vertex_shader = 0;
-  GLuint fragment_shader = 0;
-  GLuint program = 0;
+  std::shared_ptr<glo::Vao> m_vao;
+  std::shared_ptr<glo::ShaderProgram> m_program;
   GLint projection_location = -1;
   GLint view_location = -1;
-  GLint vpos_location = -1;
-  GLint vcol_location = -1;
+  // GLint vpos_location = -1;
+  // GLint vcol_location = -1;
 
   uint32_t m_drawCount = 0;
   uint32_t m_indexType = 0;
@@ -129,23 +125,13 @@ public:
       throw std::runtime_error("glewInit");
     }
 
-    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
-    glCompileShader(vertex_shader);
+    m_program = glo::ShaderProgram::Create(printError, vertex_shader_text,
+                                           fragment_shader_text);
 
-    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
-    glCompileShader(fragment_shader);
+    projection_location = *m_program->UniformLocation("Projection");
+    view_location = *m_program->UniformLocation("View");
 
-    program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-
-    projection_location = glGetUniformLocation(program, "Projection");
-    view_location = glGetUniformLocation(program, "View");
-    vpos_location = glGetAttribLocation(program, "vPos");
-    vcol_location = glGetAttribLocation(program, "vCol");
+    std::cout << "shader OK" << std::endl;
   }
 
   ~Gl3RendererImpl() {}
@@ -156,36 +142,47 @@ public:
                  camera.alpha());
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(program);
-    glUniformMatrix4fv(projection_location, 1, GL_FALSE, camera.projection);
-    glUniformMatrix4fv(view_location, 1, GL_FALSE, camera.view);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_buffer);
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
-    glDrawElements(GL_TRIANGLES, m_drawCount, m_indexType, nullptr);
+    m_program->Bind();
+    m_program->SetUniformMatrix(printError, projection_location,
+                                camera.projection);
+    m_program->SetUniformMatrix(printError, view_location, camera.view);
+    m_vao->Draw(GL_TRIANGLES, m_drawCount);
   }
 
   void loadMesh(const Mesh &mesh) {
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * mesh.m_vertices.size(),
-                 mesh.m_vertices.data(), GL_STATIC_DRAW);
-    // vertex layout
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          (void *)offsetof(Vertex, position));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          (void *)offsetof(Vertex, normal));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          (void *)offsetof(Vertex, uv));
+    auto vbo = glo::Vbo::Create(mesh.verticesBytes(), mesh.m_vertices.data());
+    auto ibo = glo::Ibo::Create(mesh.m_indices.size(), mesh.m_indices.data(),
+                                mesh.indexType());
 
-    glGenBuffers(1, &ibo_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.m_indices.size(),
-                 mesh.m_indices.data(), GL_STATIC_DRAW);
+    glo::VertexLayout layouts[] = {
+        {
+            .id = {"vPosition", 0},
+            .type = glo::ValueType::Float,
+            .count = 3,
+            .offset = offsetof(Vertex, position),
+            .stride = sizeof(Vertex),
+        },
+        {
+            .id = {"vNormal", 1},
+            .type = glo::ValueType::Float,
+            .count = 3,
+            .offset = offsetof(Vertex, normal),
+            .stride = sizeof(Vertex),
+        },
+        {
+            .id = {"vUv", 0},
+            .type = glo::ValueType::Float,
+            .count = 2,
+            .offset = offsetof(Vertex, uv),
+            .stride = sizeof(Vertex),
+        },
+    };
+    glo::VertexSlot slots[] = {
+        {.location = 0, .vbo = vbo},
+        {.location = 1, .vbo = vbo},
+        {.location = 2, .vbo = vbo},
+    };
+    m_vao = glo::Vao::Create(layouts, slots, ibo);
 
     m_drawCount = mesh.m_drawCount;
     m_indexType = mesh.indexType();
