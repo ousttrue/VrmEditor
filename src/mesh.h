@@ -1,4 +1,5 @@
 #pragma once
+#include <assert.h>
 #include <span>
 #include <vector>
 
@@ -11,12 +12,24 @@ struct float3 {
   float y;
   float z;
 };
+struct quaternion {
+  float x;
+  float y;
+  float z;
+  float w;
+};
 struct Vertex {
   float3 position;
   float3 normal;
   float2 uv;
 };
 static_assert(sizeof(Vertex) == 32, "sizeof(Vertex)");
+
+struct Submesh {
+  uint32_t offset;
+  uint32_t drawCount;
+  uint32_t material;
+};
 
 struct Mesh {
   uint32_t id;
@@ -29,34 +42,51 @@ struct Mesh {
 
   std::vector<Vertex> m_vertices;
   std::vector<uint8_t> m_indices;
-  uint32_t m_drawCount = 0;
-  int indexValueSize() const { return m_indices.size() / m_drawCount; }
+  std::vector<Submesh> m_submeshes;
+  uint32_t m_indexValueSize = 0;
 
   size_t verticesBytes() const { return m_vertices.size() * sizeof(Vertex); }
 
-  void setPosition(std::span<const float3> values) {
-    m_vertices.resize(values.size());
+  size_t addPosition(std::span<const float3> values) {
+    auto offset = m_vertices.size();
+    m_vertices.resize(offset + values.size());
     for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[i].position = values[i];
+      m_vertices[offset + i].position = values[i];
+    }
+    return offset;
+  }
+
+  void setNormal(uint32_t offset, std::span<const float3> values) {
+    assert(offset + values.size() == m_vertices.size());
+    for (size_t i = 0; i < values.size(); ++i) {
+      m_vertices[offset + i].normal = values[i];
     }
   }
 
-  void setNormal(std::span<const float3> values) {
-    m_vertices.resize(values.size());
+  void setUv(uint32_t offset, std::span<const float2> values) {
+    assert(offset + values.size() == m_vertices.size());
     for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[i].normal = values[i];
+      m_vertices[offset + i].uv = values[i];
     }
   }
 
-  void setUv(std::span<const float2> values) {
-    m_vertices.resize(values.size());
-    for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[i].uv = values[i];
-    }
-  }
+  void addSubmesh(uint32_t offset, std::span<const uint8_t> values,
+                  uint32_t count, uint32_t material) {
+    auto indexOffset = m_indices.size();
+    m_indices.resize(indexOffset + values.size());
+    std::copy(values.begin(), values.end(), m_indices.data() + indexOffset);
 
-  void setIndices(std::span<const uint8_t> values, size_t count) {
-    m_indices.assign(values.begin(), values.end());
-    m_drawCount = count;
+    m_submeshes.push_back({
+        .offset = static_cast<uint32_t>(indexOffset),
+        .drawCount = count,
+        .material = material,
+    });
+
+    auto indexValueSize = values.size() / count;
+    if (m_indexValueSize == 0) {
+      m_indexValueSize = indexValueSize;
+    } else {
+      assert(indexValueSize == m_indexValueSize);
+    }
   }
 };

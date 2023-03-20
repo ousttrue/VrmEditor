@@ -101,7 +101,7 @@ public:
     // load gpu resource
     auto vbo = glo::Vbo::Create(mesh.verticesBytes(), mesh.m_vertices.data());
     auto ibo = glo::Ibo::Create(mesh.m_indices.size(), mesh.m_indices.data(),
-                                indexType(mesh.indexValueSize()));
+                                indexType(mesh.m_indexValueSize));
 
     glo::VertexLayout layouts[] = {
         {
@@ -133,7 +133,7 @@ public:
     };
     auto vao = glo::Vao::Create(layouts, slots, ibo);
 
-    auto drawCount = mesh.m_drawCount;
+    auto drawCount = mesh.m_submeshes[0].drawCount;
 
     auto program = glo::ShaderProgram::Create(printError, vertex_shader_text,
                                               fragment_shader_text);

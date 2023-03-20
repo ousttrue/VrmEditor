@@ -1,6 +1,7 @@
 #include "scene.h"
 #include "mesh.h"
 #include <expected>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <list>
@@ -10,6 +11,33 @@
 #include <vector>
 
 using json = nlohmann::json;
+
+// float3
+inline void to_json(json &j, const float3 &v) { j = json{v.x, v.y, v.z}; }
+inline void from_json(const json &j, float3 &v) {
+  v.x = j[0];
+  v.y = j[1];
+  v.z = j[2];
+}
+inline std::ostream &operator<<(std::ostream &os, const float3 &v) {
+  os << "{" << v.x << ", " << v.y << ", " << v.z << "}";
+  return os;
+}
+
+// quaternion
+inline void to_json(json &j, const quaternion &v) {
+  j = json{v.x, v.y, v.z, v.w};
+}
+inline void from_json(const json &j, quaternion &v) {
+  v.x = j[0];
+  v.y = j[1];
+  v.z = j[2];
+  v.w = j[3];
+}
+inline std::ostream &operator<<(std::ostream &os, const quaternion &v) {
+  os << "{" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << "}";
+  return os;
+}
 
 class BinaryReader {
   std::span<const uint8_t> m_data;
@@ -105,7 +133,7 @@ struct Glb {
 
   template <typename T> std::span<const T> accessor(int accessor_index) {
     auto accessor = gltf["accessors"][accessor_index];
-    std::cout << accessor << std::endl;
+    // std::cout << accessor << std::endl;
     assert(*item_size(accessor) == sizeof(T));
     auto span = buffer_view(accessor["bufferView"]);
     return std::span<const T>((const T *)span.data(), accessor["count"]);
@@ -113,7 +141,7 @@ struct Glb {
 
   std::tuple<std::span<const uint8_t>, uint32_t> indices(int accessor_index) {
     auto accessor = gltf["accessors"][accessor_index];
-    std::cout << accessor << std::endl;
+    // std::cout << accessor << std::endl;
     auto span = buffer_view(accessor["bufferView"]);
     return {span, accessor["count"]};
   }
@@ -170,12 +198,27 @@ static std::vector<T> ReadAllBytes(const std::string &filename) {
   return buffer;
 }
 
-struct SceneImpl {
-  std::list<std::shared_ptr<Mesh>> m_meshes;
-};
+struct Node {
+  uint32_t index;
+  std::string name;
+  std::vector<uint32_t> children;
+  float3 translation = {};
+  quaternion rotation = {};
+  float3 scale = {};
+  std::optional<uint32_t> mesh;
 
-Scene::Scene() : m_impl(new SceneImpl) {}
-Scene::~Scene() { delete m_impl; }
+  Node(uint32_t i, std::string_view name) : index(i), name(name) {}
+  Node(const Node &) = delete;
+  Node &operator=(const Node &) = delete;
+};
+inline std::ostream &operator<<(std::ostream &os, const Node &node) {
+  os << "Node[" << node.index << "]" << node.name << ": " << node.translation
+     << node.rotation << node.scale;
+  if (node.mesh) {
+    os << ", mesh: " << *node.mesh;
+  }
+  return os;
+}
 
 void Scene::load(const char *path) {
   auto bytes = ReadAllBytes<uint8_t>(path);
@@ -190,38 +233,54 @@ void Scene::load(const char *path) {
 
   for (auto &mesh : glb->gltf["meshes"]) {
     for (auto prim : mesh["primitives"]) {
-      auto buffer = std::make_shared<Mesh>();
+      auto ptr = std::make_shared<Mesh>();
+      m_meshes.push_back(ptr);
 
       json attributes = prim["attributes"];
-      for (auto &kv : attributes.items()) {
-        auto key = kv.key();
-        // std::cout << key << ": " << kv.value() << std::endl;
-        if (kv.key() == "POSITION") {
-          auto values = glb->accessor<float3>(kv.value());
-          buffer->setPosition(values);
-        } else if (kv.key() == "NORMAL") {
-          auto values = glb->accessor<float3>(kv.value());
-          buffer->setNormal(values);
-        } else if (kv.key() == "TEXCOORD_0") {
-          auto values = glb->accessor<float2>(kv.value());
-          buffer->setUv(values);
-        } else {
-          throw std::runtime_error(kv.key() + " is not implemened");
-        }
+      auto offset =
+          ptr->addPosition(glb->accessor<float3>(attributes["POSITION"]));
+      if (attributes.find("NORMAL") != attributes.end()) {
+        ptr->setNormal(offset, glb->accessor<float3>(attributes.at("NORMAL")));
+      }
+      if (attributes.find("TEXCOORD_0") != attributes.end()) {
+        ptr->setUv(offset, glb->accessor<float2>(attributes.at("TEXCOORD_0")));
       }
       {
-        std::cout << "indices: " << prim["indices"] << std::endl;
+        // std::cout << "indices: " << prim["indices"] << std::endl;
         auto [span, draw_count] = glb->indices(prim["indices"]);
-        buffer->setIndices(span, draw_count);
+        ptr->addSubmesh(offset, span, draw_count, prim.at("material"));
       }
-
-      m_impl->m_meshes.push_back(buffer);
     }
+  }
+
+  int i = 0;
+  for (auto &node : glb->gltf["nodes"]) {
+    auto name = node.value("name", std::format("node:{}", i));
+    auto ptr = std::make_shared<Node>(i, name);
+    m_nodes.push_back(ptr);
+
+    if (node.find("matrix") != node.end()) {
+      // matrix
+      throw std::runtime_error("not yet");
+    } else {
+      // T
+      ptr->translation = node.value("translation", float3{0, 0, 0});
+      // R
+      ptr->rotation = node.value("rotation", quaternion{0, 0, 0, 1});
+      // S
+      ptr->scale = node.value("scale", float3{1, 1, 1});
+    }
+    if (node.find("mesh") != node.end()) {
+      ptr->mesh = node.at("mesh");
+    }
+
+    std::cout << *ptr << std::endl;
+    ++i;
   }
 }
 
 void Scene::render(const Camera &camera, const RenderFunc &render) {
-  for (auto &mesh : m_impl->m_meshes) {
+  for (auto &mesh : m_meshes) {
     render(camera, *mesh);
   }
 }
