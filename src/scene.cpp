@@ -8,8 +8,8 @@
 #include <iostream>
 #include <list>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <span>
-#include <spanmath/spanmath.h>
 #include <string>
 #include <vector>
 

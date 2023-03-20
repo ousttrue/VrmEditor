@@ -9,8 +9,8 @@
 #include "camera.h"
 #include "gl3renderer.h"
 #include "gui.h"
+#include "orbitview.h"
 #include "scene.h"
-#include <spanmath/orbitview.h>
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
   Gl3Renderer gl3r;
   Gui gui(window, platform.glsl_version.c_str());
   Camera camera{};
-  spanmath::OrbitView view;
+  OrbitView view;
   Scene scene;
 
   if (argc > 1) {
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
         view.Dolly(*wheel);
       }
     }
-    view.Update(spanmath::Mat4(camera.projection), spanmath::Mat4(camera.view));
+    view.Update(camera.projection, camera.view);
 
     // render view
     gl3r.clear(camera);
