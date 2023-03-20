@@ -137,11 +137,25 @@ public:
   ~Gl3RendererImpl() {}
 
   void render(const Camera &camera) {
+
+    // clear
     glViewport(0, 0, camera.width(), camera.height());
     glClearColor(camera.premul_r(), camera.premul_g(), camera.premul_b(),
                  camera.alpha());
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    //
+    // object
+    //
+
+    // state
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BGR);
+
+    glEnable(GL_DEPTH_TEST);
+
+    // mesh
     m_program->Bind();
     m_program->SetUniformMatrix(printError, projection_location,
                                 camera.projection);
