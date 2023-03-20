@@ -1,4 +1,5 @@
 #pragma once
+#include <DirectXMath.h>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -23,5 +24,6 @@ public:
 
 private:
   void traverse(const Camera &camera, const RenderFunc &render,
-                const std::shared_ptr<Node> &node, const float m[16]);
+                const std::shared_ptr<Node> &node,
+                const DirectX::XMFLOAT4X4 &parent);
 };

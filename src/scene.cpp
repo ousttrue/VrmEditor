@@ -1,5 +1,6 @@
 #include "scene.h"
 #include "mesh.h"
+#include <DirectXMath.h>
 #include <array>
 #include <expected>
 #include <format>
@@ -8,6 +9,7 @@
 #include <list>
 #include <nlohmann/json.hpp>
 #include <span>
+#include <spanmath/spanmath.h>
 #include <string>
 #include <vector>
 
@@ -222,6 +224,18 @@ struct Node : public std::enable_shared_from_this<Node> {
     children.push_back(child);
   }
 
+  DirectX::XMFLOAT4X4 world(const DirectX::XMFLOAT4X4 &parent) const {
+    DirectX::XMFLOAT4X4 m;
+    auto t = DirectX::XMMatrixTranslation(translation.x, translation.y,
+                                          translation.z);
+    auto r = DirectX::XMMatrixRotationQuaternion(
+        DirectX::XMLoadFloat4((DirectX::XMFLOAT4 *)&rotation));
+    auto s = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
+    auto world = s * r * t * DirectX::XMLoadFloat4x4(&parent);
+    DirectX::XMStoreFloat4x4(&m, world);
+    return m;
+  }
+
   void print(int level = 0) {
     for (int i = 0; i < level; ++i) {
       std::cout << "  ";
@@ -316,7 +330,7 @@ void Scene::load(const char *path) {
 }
 
 void Scene::render(const Camera &camera, const RenderFunc &render) {
-  float m[16]{
+  DirectX::XMFLOAT4X4 m{
       1, 0, 0, 0, //
       0, 1, 0, 0, //
       0, 0, 1, 0, //
@@ -328,11 +342,14 @@ void Scene::render(const Camera &camera, const RenderFunc &render) {
 }
 
 void Scene::traverse(const Camera &camera, const RenderFunc &render,
-                     const std::shared_ptr<Node> &node, const float m[16]) {
+                     const std::shared_ptr<Node> &node,
+                     const DirectX::XMFLOAT4X4 &parent) {
+
+  DirectX::XMFLOAT4X4 m = node->world(parent);
 
   if (node->mesh) {
     auto mesh = m_meshes[*node->mesh];
-    render(camera, *mesh, m);
+    render(camera, *mesh, (const float *)&m);
   }
 
   for (auto child : node->children) {
