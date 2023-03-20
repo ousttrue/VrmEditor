@@ -26,8 +26,8 @@ public:
   }
 
   void YawPitch(int dx, int dy) {
-    yaw_ += static_cast<float>(dx);
-    pitch_ += static_cast<float>(dy);
+    yaw_ += DirectX::XMConvertToRadians(static_cast<float>(dx));
+    pitch_ += DirectX::XMConvertToRadians(static_cast<float>(dy));
   }
 
   void Shift(int dx, int dy) {
@@ -50,9 +50,8 @@ public:
         (DirectX::XMFLOAT4X4 *)projection,
         DirectX::XMMatrixPerspectiveFovRH(fovY_, aspectRatio, nearZ_, farZ_));
 
-    auto yaw = DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(yaw_));
-    auto pitch =
-        DirectX::XMMatrixRotationX(DirectX::XMConvertToRadians(pitch_));
+    auto yaw = DirectX::XMMatrixRotationY(yaw_);
+    auto pitch = DirectX::XMMatrixRotationX(pitch_);
     auto shift = DirectX::XMMatrixTranslation(shift_[0], shift_[1], shift_[2]);
     DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4 *)view, yaw * pitch * shift);
   }
