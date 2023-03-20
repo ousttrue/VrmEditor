@@ -6,8 +6,10 @@
 #include <stdio.h>
 #include <tuple>
 
+#include "camera.h"
 #include "gl3renderer.h"
 #include "gui.h"
+#include "scene.h"
 #include <spanmath/orbitview.h>
 
 const auto WINDOW_WIDTH = 2000;
@@ -111,16 +113,18 @@ int main(int argc, char **argv) {
   Gui gui(window, platform.glsl_version.c_str());
   Camera camera{};
   spanmath::OrbitView view;
+  Scene scene;
 
   if (argc > 1) {
-    gl3r.load(argv[1]);
+    scene.load(argv[1]);
   }
 
+  RenderFunc render = std::bind(&Gl3Renderer::render, &gl3r,
+                                std::placeholders::_1, std::placeholders::_2);
+
   while (auto size = platform.newFrame()) {
-
+    // newFrame
     gui.newFrame();
-
-    // render background
     camera.resize(size->width, size->height);
     view.SetSize(size->width, size->height);
     if (auto event = gui.backgroundMouseEvent()) {
@@ -135,7 +139,10 @@ int main(int argc, char **argv) {
       }
     }
     view.Update(spanmath::Mat4(camera.projection), spanmath::Mat4(camera.view));
-    gl3r.render(camera);
+
+    // render view
+    gl3r.clear(camera);
+    scene.render(camera, render);
 
     // render gui
     gui.render();
