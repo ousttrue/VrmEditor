@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "material.h"
 #include "mesh.h"
 #include <DirectXMath.h>
 #include <array>
@@ -266,6 +267,43 @@ void Scene::load(const char *path) {
     return;
   }
 
+  auto &images = glb->gltf["images"];
+  for (int i = 0; i < images.size(); ++i) {
+    auto &image = images[i];
+    std::cout << image << std::endl;
+    auto bytes = glb->buffer_view(image["bufferView"]);
+
+    auto ptr =
+        std::make_shared<Image>(image.value("name", std::format("image{}", i)));
+    if (ptr->load(bytes)) {
+
+    } else {
+    }
+    m_images.push_back(ptr);
+  }
+
+  auto &textures = glb->gltf["textures"];
+
+  auto &materials = glb->gltf["materials"];
+  for (int i = 0; i < materials.size(); ++i) {
+    auto &material = materials[i];
+    std::cout << material << std::endl;
+    auto ptr = std::make_shared<Material>(
+        material.value("name", std::format("material{}", i)));
+    m_materials.push_back(ptr);
+    if (material.find("pbrMetallicRoughness") != material.end()) {
+      auto pbrMetallicRoughness = material.at("pbrMetallicRoughness");
+      if (pbrMetallicRoughness.find("baseColorTexture") !=
+          pbrMetallicRoughness.end()) {
+        auto &baseColorTexture = pbrMetallicRoughness.at("baseColorTexture");
+        int texture_index = baseColorTexture.at("index");
+        auto texture = textures.at(texture_index);
+        int image_index = texture["source"];
+        ptr->texture = m_images[image_index];
+      }
+    }
+  }
+
   for (auto &mesh : glb->gltf["meshes"]) {
     for (auto prim : mesh["primitives"]) {
       auto ptr = std::make_shared<Mesh>();
@@ -283,7 +321,9 @@ void Scene::load(const char *path) {
       {
         // std::cout << "indices: " << prim["indices"] << std::endl;
         auto [span, draw_count] = glb->indices(prim["indices"]);
-        ptr->addSubmesh(offset, span, draw_count, prim.at("material"));
+
+        int material_index = prim.at("material");
+        ptr->addSubmesh(offset, span, draw_count, m_materials[material_index]);
       }
     }
   }

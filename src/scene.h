@@ -7,10 +7,14 @@
 struct Camera;
 struct Mesh;
 struct Node;
+class Image;
+class Material;
 using RenderFunc =
     std::function<void(const Camera &, const Mesh &, const float[16])>;
 
 class Scene {
+  std::vector<std::shared_ptr<Image>> m_images;
+  std::vector<std::shared_ptr<Material>> m_materials;
   std::vector<std::shared_ptr<Mesh>> m_meshes;
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;

@@ -1,13 +1,15 @@
 #include "gl3renderer.h"
 #include "camera.h"
+#include "material.h"
 #include "mesh.h"
 #include <GL/glew.h>
 #include <glo/shader.h>
+#include <glo/texture.h>
 #include <glo/vao.h>
 #include <iostream>
 #include <unordered_map>
 
-static const char *vertex_shader_text = R"(#version 110
+static const char *vertex_shader_text = R"(#version 130
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
@@ -24,16 +26,15 @@ void main()
 }
 )";
 
-static const char *fragment_shader_text = R"(#version 110
+static const char *fragment_shader_text = R"(#version 130
 varying vec3 normal;
 varying vec2 uv;
+uniform sampler2D colorTexture;
 void main()
 {
-    gl_FragColor = vec4(normal, 1.0);
+    gl_FragColor = texture(colorTexture, uv);
 };
 )";
-
-static void printError(std::string_view msg) { std::cout << msg << std::endl; }
 
 static GLenum indexType(int indexValueSize) {
   switch (indexValueSize) {
@@ -48,10 +49,16 @@ static GLenum indexType(int indexValueSize) {
   }
 }
 
+struct SubMesh {
+  uint32_t offset;
+  uint32_t drawCount;
+  std::shared_ptr<glo::Texture> texture;
+};
+
 struct Drawable {
   std::shared_ptr<glo::ShaderProgram> program;
   std::shared_ptr<glo::Vao> vao;
-  uint32_t drawCount = 0;
+  std::vector<SubMesh> submeshes;
 
   void draw(const Camera &camera, const float m[16]) {
     // state
@@ -61,15 +68,25 @@ struct Drawable {
     glEnable(GL_DEPTH_TEST);
     // mesh
     program->Bind();
-    program->SetUniformMatrix(printError, "Projection", camera.projection);
-    program->SetUniformMatrix(printError, "View", camera.view);
-    program->_SetUniformMatrix(printError, "Model", m);
-    vao->Draw(GL_TRIANGLES, drawCount);
+    program->SetUniformMatrix("Projection", camera.projection);
+    program->SetUniformMatrix("View", camera.view);
+    program->_SetUniformMatrix("Model", m);
+
+    for (auto &submesh : submeshes) {
+      // setup material
+      if (submesh.texture) {
+        submesh.texture->Bind();
+      } else {
+        // dummy white texture
+      }
+      vao->Draw(GL_TRIANGLES, submesh.drawCount, submesh.offset);
+    }
   }
 };
 
 class Gl3RendererImpl {
-  std::unordered_map<uint32_t, Drawable> m_drawableMap;
+  std::unordered_map<uint32_t, std::shared_ptr<Drawable>> m_drawableMap;
+  std::shared_ptr<glo::Texture> m_white;
 
 public:
   Gl3RendererImpl() {
@@ -78,6 +95,9 @@ public:
     if (glewInit() != GLEW_OK) {
       throw std::runtime_error("glewInit");
     }
+
+    static uint8_t white[] = {255, 255, 255, 255};
+    m_white = glo::Texture::Create(1, 1, white);
   }
 
   ~Gl3RendererImpl() {}
@@ -91,10 +111,10 @@ public:
 
   void render(const Camera &camera, const Mesh &mesh, const float m[16]) {
     auto drawable = getOrCreate(mesh);
-    drawable.draw(camera, m);
+    drawable->draw(camera, m);
   }
 
-  Drawable getOrCreate(const Mesh &mesh) {
+  std::shared_ptr<Drawable> getOrCreate(const Mesh &mesh) {
     auto found = m_drawableMap.find(mesh.id);
     if (found != m_drawableMap.end()) {
       return found->second;
@@ -137,18 +157,38 @@ public:
 
     auto drawCount = mesh.m_submeshes[0].drawCount;
 
-    auto program = glo::ShaderProgram::Create(printError, vertex_shader_text,
-                                              fragment_shader_text);
+    auto program =
+        glo::ShaderProgram::Create(vertex_shader_text, fragment_shader_text);
+    if (!program) {
+      std::cout << program.error() << std::endl;
+      return {};
+    }
 
     // projection_location = *m_program->UniformLocation("Projection");
     // view_location = *m_program->UniformLocation("View");
     // std::cout << "shader OK" << std::endl;
 
-    return Drawable{
-        .program = program,
-        .vao = vao,
-        .drawCount = drawCount,
-    };
+    auto drawable = std::shared_ptr<Drawable>(new Drawable);
+    drawable->program = *program;
+    drawable->vao = vao;
+    for (auto &submesh : mesh.m_submeshes) {
+
+      auto texture = m_white;
+      if (auto image = submesh.material->texture) {
+        texture = glo::Texture::Create(image->width(), image->height(),
+                                       image->pixels());
+      }
+
+      drawable->submeshes.push_back({
+          .offset = submesh.offset,
+          .drawCount = submesh.drawCount,
+          .texture = texture,
+      });
+    }
+
+    m_drawableMap.insert(std::make_pair(mesh.id, drawable));
+
+    return drawable;
   }
 };
 

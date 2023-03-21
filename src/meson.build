@@ -3,6 +3,7 @@ glfw_dep = dependency('glfw3', default_options: ['default_library=static'])
 imgui_dep = dependency('imgui')
 json_dep = subproject('json').get_variable('nlohmann_json_dep')
 glo_dep = dependency('glo')
+stb_dep = dependency('stb')
 
 executable(
     'vrmeditor',
@@ -12,6 +13,7 @@ executable(
         'gui.cpp',
         'scene.cpp',
         'platform.cpp',
+        'stb_image.cpp',
     ],
     install: true,
     dependencies: [
@@ -20,5 +22,6 @@ executable(
         imgui_dep,
         json_dep,
         glo_dep,
+        stb_dep,
     ],
 )

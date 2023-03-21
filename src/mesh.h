@@ -1,5 +1,6 @@
 #pragma once
 #include <assert.h>
+#include <memory>
 #include <span>
 #include <vector>
 
@@ -25,10 +26,11 @@ struct Vertex {
 };
 static_assert(sizeof(Vertex) == 32, "sizeof(Vertex)");
 
-struct Submesh {
+class Material;
+struct Primitive {
   uint32_t offset;
   uint32_t drawCount;
-  uint32_t material;
+  std::shared_ptr<Material> material;
 };
 
 struct Mesh {
@@ -42,7 +44,7 @@ struct Mesh {
 
   std::vector<Vertex> m_vertices;
   std::vector<uint8_t> m_indices;
-  std::vector<Submesh> m_submeshes;
+  std::vector<Primitive> m_submeshes;
   uint32_t m_indexValueSize = 0;
 
   size_t verticesBytes() const { return m_vertices.size() * sizeof(Vertex); }
@@ -71,7 +73,7 @@ struct Mesh {
   }
 
   void addSubmesh(uint32_t offset, std::span<const uint8_t> values,
-                  uint32_t count, uint32_t material) {
+                  uint32_t count, std::shared_ptr<Material> material) {
     auto indexOffset = m_indices.size();
     m_indices.resize(indexOffset + values.size());
     std::copy(values.begin(), values.end(), m_indices.data() + indexOffset);
