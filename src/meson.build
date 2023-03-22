@@ -17,5 +17,6 @@ executable(
         glo_dep,
         stb_dep,
         imguizmo_dep,
+        im_neo_sequencer_dep,
     ],
 )

@@ -9,6 +9,7 @@
 #include <imgui.h>
 
 #include <ImGuizmo.h>
+#include <imgui_neo_sequencer.h>
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
@@ -50,6 +51,11 @@ int main(int argc, char **argv) {
   };
 
   TreeContext context;
+
+  int32_t currentFrame = 0;
+  int32_t startFrame = -10;
+  int32_t endFrame = 64;
+  static bool transformOpen = false;
 
   while (auto info = platform.newFrame()) {
     // newFrame
@@ -119,6 +125,24 @@ int main(int argc, char **argv) {
     auto leave = [](Node &) { ImGui::TreePop(); };
     ImGui::Begin("scene");
     scene.traverse(enter, leave);
+    ImGui::End();
+
+    ImGui::Begin("timeline");
+
+    if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame,
+                                 &endFrame)) {
+      if (ImGui::BeginNeoGroup("Transform", &transformOpen)) {
+        std::vector<ImGui::FrameIndexType> keys = {0, 10, 24};
+        if (ImGui::BeginNeoTimeline("Position", keys)) {
+          ImGui::EndNeoTimeLine();
+        }
+        ImGui::EndNeoGroup();
+      }
+
+      // Timeline code here
+      ImGui::EndNeoSequencer();
+    }
+
     ImGui::End();
 
     gui.update();

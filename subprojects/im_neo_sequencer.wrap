@@ -1,0 +1,9 @@
+[wrap-git]
+url = https://gitlab.com/GroGy/im-neo-sequencer.git 
+
+revision = main
+depth = 1
+patch_directory = im_neo_sequencer
+
+[provide]
+im_neo_sequencer = im_neo_sequencer_dep

@@ -11,6 +11,7 @@ imgui_dep = dependency('imgui')
 json_dep = subproject('json').get_variable('nlohmann_json_dep')
 glo_dep = dependency('glo')
 stb_dep = dependency('stb')
+im_neo_sequencer_dep = dependency('im_neo_sequencer')
 
 subdir('ImGuizmo')
 subdir('src')
