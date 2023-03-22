@@ -30,7 +30,8 @@ struct Node : public std::enable_shared_from_this<Node> {
   Node &operator=(const Node &) = delete;
   void addChild(const std::shared_ptr<Node> &child);
   DirectX::XMFLOAT4X4 world(const DirectX::XMFLOAT4X4 &parent) const;
-  void setWorldMatrix(const DirectX::XMFLOAT4X4 &world,
+  bool setLocalMatrix(const DirectX::XMFLOAT4X4 &local);
+  bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world,
                       const DirectX::XMFLOAT4X4 &parent);
   void print(int level = 0);
 };
@@ -43,6 +44,7 @@ inline std::ostream &operator<<(std::ostream &os, const Node &node) {
   return os;
 }
 
+class Skin;
 class Image;
 class Material;
 using RenderFunc =
@@ -57,6 +59,7 @@ class Scene {
   std::vector<std::shared_ptr<Mesh>> m_meshes;
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;
+  std::vector<std::shared_ptr<Skin>> m_skins;
 
 public:
   Scene() {}

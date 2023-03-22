@@ -23,7 +23,7 @@ struct Mesh {
 
   std::vector<Vertex> m_vertices;
   std::vector<uint8_t> m_indices;
-  std::vector<Primitive> m_submeshes;
+  std::vector<Primitive> m_primitives;
   uint32_t m_indexValueSize = 0;
 
   size_t verticesBytes() const { return m_vertices.size() * sizeof(Vertex); }
@@ -57,7 +57,7 @@ struct Mesh {
     m_indices.resize(indexOffset + values.size());
     std::copy(values.begin(), values.end(), m_indices.data() + indexOffset);
 
-    m_submeshes.push_back({
+    m_primitives.push_back({
         .offset = static_cast<uint32_t>(indexOffset),
         .drawCount = count,
         .material = material,

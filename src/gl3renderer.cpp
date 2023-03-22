@@ -155,8 +155,6 @@ public:
     };
     auto vao = glo::Vao::Create(layouts, slots, ibo);
 
-    auto drawCount = mesh.m_submeshes[0].drawCount;
-
     auto program =
         glo::ShaderProgram::Create(vertex_shader_text, fragment_shader_text);
     if (!program) {
@@ -171,7 +169,7 @@ public:
     auto drawable = std::shared_ptr<Drawable>(new Drawable);
     drawable->program = *program;
     drawable->vao = vao;
-    for (auto &submesh : mesh.m_submeshes) {
+    for (auto &submesh : mesh.m_primitives) {
 
       auto texture = m_white;
       if (auto image = submesh.material->texture) {

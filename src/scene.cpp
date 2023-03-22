@@ -16,6 +16,13 @@
 
 using json = nlohmann::json;
 
+static DirectX::XMFLOAT4X4 IDENTITY{
+    1, 0, 0, 0, //
+    0, 1, 0, 0, //
+    0, 0, 1, 0, //
+    0, 0, 0, 1, //
+};
+
 // float3
 inline void to_json(json &j, const float3 &v) { j = json{v.x, v.y, v.z}; }
 inline void from_json(const json &j, float3 &v) {
@@ -34,6 +41,41 @@ inline void from_json(const json &j, quaternion &v) {
   v.z = j[2];
   v.w = j[3];
 }
+
+// matrix
+inline void to_json(json &j, const DirectX::XMFLOAT4X4 &m) {
+  j = json{
+      m._11, m._12, m._13, m._14, m._21, m._22, m._23, m._24,
+      m._31, m._32, m._33, m._34, m._41, m._42, m._43, m._44,
+  };
+}
+inline void from_json(const json &j, DirectX::XMFLOAT4X4 &m) {
+  m._11 = j[0];
+  m._12 = j[1];
+  m._13 = j[2];
+  m._14 = j[3];
+  m._21 = j[4];
+  m._22 = j[5];
+  m._23 = j[6];
+  m._24 = j[7];
+  m._31 = j[8];
+  m._32 = j[9];
+  m._33 = j[10];
+  m._34 = j[11];
+  m._41 = j[12];
+  m._42 = j[13];
+  m._43 = j[14];
+  m._44 = j[15];
+}
+
+class Skin {
+  std::string m_name;
+
+public:
+  Skin(std::string_view name) : m_name(name) {}
+  std::vector<std::shared_ptr<Node>> joints;
+  std::vector<DirectX::XMFLOAT4X4> bindMatrices;
+};
 
 class BinaryReader {
   std::span<const uint8_t> m_data;
@@ -132,7 +174,10 @@ struct Glb {
     // std::cout << accessor << std::endl;
     assert(*item_size(accessor) == sizeof(T));
     auto span = buffer_view(accessor["bufferView"]);
-    return std::span<const T>((const T *)span.data(), accessor["count"]);
+
+    int offset = accessor.value("byteOffset", 0);
+    return std::span<const T>((const T *)(span.data() + offset),
+                              accessor["count"]);
   }
 
   std::tuple<std::span<const uint8_t>, uint32_t> indices(int accessor_index) {
@@ -216,20 +261,29 @@ DirectX::XMFLOAT4X4 Node::world(const DirectX::XMFLOAT4X4 &parent) const {
   return m;
 }
 
-void Node::setWorldMatrix(const DirectX::XMFLOAT4X4 &world,
+bool Node::setLocalMatrix(const DirectX::XMFLOAT4X4 &local) {
+  DirectX::XMVECTOR s;
+  DirectX::XMVECTOR r;
+  DirectX::XMVECTOR t;
+  if (!DirectX::XMMatrixDecompose(&s, &r, &t,
+                                  DirectX::XMLoadFloat4x4(&local))) {
+    return false;
+  }
+  DirectX::XMStoreFloat3((DirectX::XMFLOAT3 *)&scale, s);
+  DirectX::XMStoreFloat4((DirectX::XMFLOAT4 *)&rotation, r);
+  DirectX::XMStoreFloat3((DirectX::XMFLOAT3 *)&translation, t);
+  return true;
+}
+
+bool Node::setWorldMatrix(const DirectX::XMFLOAT4X4 &world,
                           const DirectX::XMFLOAT4X4 &parent) {
   auto inv = DirectX::XMMatrixInverse(
       nullptr, DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4 *)&parent));
   auto local = DirectX::XMLoadFloat4x4(&world) * inv;
 
-  DirectX::XMVECTOR s;
-  DirectX::XMVECTOR r;
-  DirectX::XMVECTOR t;
-  if (DirectX::XMMatrixDecompose(&s, &r, &t, local)) {
-    DirectX::XMStoreFloat3((DirectX::XMFLOAT3 *)&scale, s);
-    DirectX::XMStoreFloat4((DirectX::XMFLOAT4 *)&rotation, r);
-    DirectX::XMStoreFloat3((DirectX::XMFLOAT3 *)&translation, t);
-  }
+  DirectX::XMFLOAT4X4 m;
+  DirectX::XMStoreFloat4x4(&m, local);
+  return setLocalMatrix(m);
 }
 
 void Node::print(int level) {
@@ -323,7 +377,15 @@ void Scene::load(const char *path) {
 
     if (node.find("matrix") != node.end()) {
       // matrix
-      throw std::runtime_error("not yet");
+      auto m = node["matrix"];
+      // std::cout << m << std::endl;
+      auto local = DirectX::XMFLOAT4X4{
+          m[0],  m[1],  m[2],  m[3],  //
+          m[4],  m[5],  m[6],  m[7],  //
+          m[8],  m[9],  m[10], m[11], //
+          m[12], m[13], m[14], m[15], //
+      };
+      ptr->setLocalMatrix(local);
     } else {
       // T
       ptr->translation = node.value("translation", float3{0, 0, 0});
@@ -347,20 +409,33 @@ void Scene::load(const char *path) {
     }
   }
 
-  auto scene = glb->gltf["scenes"][0];
-  for (auto node : scene["nodes"]) {
-    m_roots.push_back(m_nodes[node]);
+  if (glb->gltf.find("scenes") != glb->gltf.end()) {
+    auto scene = glb->gltf["scenes"][0];
+    for (auto &node : scene["nodes"]) {
+      m_roots.push_back(m_nodes[node]);
+      m_roots.back()->print();
+    }
+  }
 
-    m_roots.back()->print();
+  if (glb->gltf.find("skins") != glb->gltf.end()) {
+    auto skins = glb->gltf["skins"];
+    for (int i = 0; i < skins.size(); ++i) {
+      auto &skin = skins[i];
+      std::cout << skin << std::endl;
+      auto ptr =
+          std::make_shared<Skin>(skin.value("name", std::format("skin{}", i)));
+      m_skins.push_back(ptr);
+
+      for (auto &joint : skin["joints"]) {
+        ptr->joints.push_back(m_nodes[joint]);
+      }
+
+      auto matrices =
+          glb->accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"]);
+      ptr->bindMatrices.assign(matrices.begin(), matrices.end());
+    }
   }
 }
-
-static DirectX::XMFLOAT4X4 IDENTITY{
-    1, 0, 0, 0, //
-    0, 1, 0, 0, //
-    0, 0, 1, 0, //
-    0, 0, 0, 1, //
-};
 
 void Scene::render(const Camera &camera, const RenderFunc &render) {
   for (auto &root : m_roots) {

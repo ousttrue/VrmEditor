@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
             "args": [
-                "${env:GLTF_SAMPLE_MODELS}/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"
+                // "${env:GLTF_SAMPLE_MODELS}/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"
+                "${env:GLTF_SAMPLE_MODELS}/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"
             ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
