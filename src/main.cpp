@@ -1,6 +1,7 @@
 #include "camera.h"
 #include "gl3renderer.h"
 #include "gui.h"
+#include "no_sal2.h"
 #include "orbitview.h"
 #include "platform.h"
 #include "scene.h"
@@ -12,6 +13,11 @@
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
+
+struct TreeContext {
+  Node *selected = nullptr;
+  Node *new_selected = nullptr;
+};
 
 int main(int argc, char **argv) {
   Platform platform;
@@ -42,6 +48,9 @@ int main(int argc, char **argv) {
       0, 0, 1, 0, //
       0, 0, 0, 1, //
   };
+
+  TreeContext context;
+
   while (auto size = platform.newFrame()) {
     // newFrame
     gui.newFrame();
@@ -70,6 +79,48 @@ int main(int argc, char **argv) {
     ImGuizmo::SetRect(vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
     ImGuizmo::DrawGrid(camera.view, camera.projection, m, 100);
     // ImGuizmo::DrawCubes(camera.view, camera.projection, m, 1);
+
+    context.selected = context.new_selected;
+    auto enter = [&context, &camera](Node &node,
+                                     const DirectX::XMFLOAT4X4 &parent) {
+      ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+      static ImGuiTreeNodeFlags base_flags =
+          ImGuiTreeNodeFlags_OpenOnArrow |
+          ImGuiTreeNodeFlags_OpenOnDoubleClick |
+          ImGuiTreeNodeFlags_SpanAvailWidth;
+      ImGuiTreeNodeFlags node_flags = base_flags;
+      auto is_selected = context.selected == &node;
+      if (is_selected) {
+        node_flags |= ImGuiTreeNodeFlags_Selected;
+
+        auto m = node.world(parent);
+
+        if (ImGuizmo::Manipulate(camera.view, camera.projection,
+                                 ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
+                                 (float *)&m, NULL, NULL, NULL, NULL)) {
+          // decompose feedback
+          node.setWorldMatrix(m, parent);
+        }
+      }
+
+      if (node.children.empty()) {
+        node_flags |=
+            ImGuiTreeNodeFlags_Leaf |
+            ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+      }
+
+      bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)node.index,
+                                         node_flags, "%s", node.name.c_str());
+      if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+        context.new_selected = &node;
+      }
+      return node.children.size() && node_open;
+    };
+    auto leave = [](Node &) { ImGui::TreePop(); };
+    ImGui::Begin("scene");
+    scene.traverse(enter, leave);
+    ImGui::End();
+
     gui.update();
     gui.render();
 

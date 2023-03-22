@@ -23,10 +23,6 @@ inline void from_json(const json &j, float3 &v) {
   v.y = j[1];
   v.z = j[2];
 }
-inline std::ostream &operator<<(std::ostream &os, const float3 &v) {
-  os << "{" << v.x << ", " << v.y << ", " << v.z << "}";
-  return os;
-}
 
 // quaternion
 inline void to_json(json &j, const quaternion &v) {
@@ -37,10 +33,6 @@ inline void from_json(const json &j, quaternion &v) {
   v.y = j[1];
   v.z = j[2];
   v.w = j[3];
-}
-inline std::ostream &operator<<(std::ostream &os, const quaternion &v) {
-  os << "{" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << "}";
-  return os;
 }
 
 class BinaryReader {
@@ -202,58 +194,52 @@ static std::vector<T> ReadAllBytes(const std::string &filename) {
   return buffer;
 }
 
-struct Node : public std::enable_shared_from_this<Node> {
-  uint32_t index;
-  std::string name;
-  float3 translation = {};
-  quaternion rotation = {};
-  float3 scale = {};
-  std::optional<uint32_t> mesh;
+Node::Node(uint32_t i, std::string_view name) : index(i), name(name) {}
 
-  std::list<std::shared_ptr<Node>> children;
-  std::weak_ptr<Node> parent;
-
-  Node(uint32_t i, std::string_view name) : index(i), name(name) {}
-  Node(const Node &) = delete;
-  Node &operator=(const Node &) = delete;
-
-  void addChild(const std::shared_ptr<Node> &child) {
-    if (auto current_parent = child->parent.lock()) {
-      current_parent->children.remove(child);
-    }
-    child->parent = shared_from_this();
-    children.push_back(child);
+void Node::addChild(const std::shared_ptr<Node> &child) {
+  if (auto current_parent = child->parent.lock()) {
+    current_parent->children.remove(child);
   }
+  child->parent = shared_from_this();
+  children.push_back(child);
+}
 
-  DirectX::XMFLOAT4X4 world(const DirectX::XMFLOAT4X4 &parent) const {
-    DirectX::XMFLOAT4X4 m;
-    auto t = DirectX::XMMatrixTranslation(translation.x, translation.y,
-                                          translation.z);
-    auto r = DirectX::XMMatrixRotationQuaternion(
-        DirectX::XMLoadFloat4((DirectX::XMFLOAT4 *)&rotation));
-    auto s = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
-    auto world = s * r * t * DirectX::XMLoadFloat4x4(&parent);
-    DirectX::XMStoreFloat4x4(&m, world);
-    return m;
-  }
+DirectX::XMFLOAT4X4 Node::world(const DirectX::XMFLOAT4X4 &parent) const {
+  DirectX::XMFLOAT4X4 m;
+  auto t =
+      DirectX::XMMatrixTranslation(translation.x, translation.y, translation.z);
+  auto r = DirectX::XMMatrixRotationQuaternion(
+      DirectX::XMLoadFloat4((DirectX::XMFLOAT4 *)&rotation));
+  auto s = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
+  auto world = s * r * t * DirectX::XMLoadFloat4x4(&parent);
+  DirectX::XMStoreFloat4x4(&m, world);
+  return m;
+}
 
-  void print(int level = 0) {
-    for (int i = 0; i < level; ++i) {
-      std::cout << "  ";
-    }
-    std::cout << name << std::endl;
-    for (auto child : children) {
-      child->print(level + 1);
-    }
+void Node::setWorldMatrix(const DirectX::XMFLOAT4X4 &world,
+                          const DirectX::XMFLOAT4X4 &parent) {
+  auto inv = DirectX::XMMatrixInverse(
+      nullptr, DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4 *)&parent));
+  auto local = DirectX::XMLoadFloat4x4(&world) * inv;
+
+  DirectX::XMVECTOR s;
+  DirectX::XMVECTOR r;
+  DirectX::XMVECTOR t;
+  if (DirectX::XMMatrixDecompose(&s, &r, &t, local)) {
+    DirectX::XMStoreFloat3((DirectX::XMFLOAT3 *)&scale, s);
+    DirectX::XMStoreFloat4((DirectX::XMFLOAT4 *)&rotation, r);
+    DirectX::XMStoreFloat3((DirectX::XMFLOAT3 *)&translation, t);
   }
-};
-inline std::ostream &operator<<(std::ostream &os, const Node &node) {
-  os << "Node[" << node.index << "]" << node.name << ": " << node.translation
-     << node.rotation << node.scale;
-  if (node.mesh) {
-    os << ", mesh: " << *node.mesh;
+}
+
+void Node::print(int level) {
+  for (int i = 0; i < level; ++i) {
+    std::cout << "  ";
   }
-  return os;
+  std::cout << name << std::endl;
+  for (auto child : children) {
+    child->print(level + 1);
+  }
 }
 
 void Scene::load(const char *path) {
@@ -369,15 +355,34 @@ void Scene::load(const char *path) {
   }
 }
 
+static DirectX::XMFLOAT4X4 IDENTITY{
+    1, 0, 0, 0, //
+    0, 1, 0, 0, //
+    0, 0, 1, 0, //
+    0, 0, 0, 1, //
+};
+
 void Scene::render(const Camera &camera, const RenderFunc &render) {
-  DirectX::XMFLOAT4X4 m{
-      1, 0, 0, 0, //
-      0, 1, 0, 0, //
-      0, 0, 1, 0, //
-      0, 0, 0, 1, //
-  };
   for (auto &root : m_roots) {
-    traverse(camera, render, root, m);
+    traverse(camera, render, root, IDENTITY);
+  }
+}
+
+void Scene::traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
+                     const DirectX::XMFLOAT4X4 &parent) {
+  if (node) {
+    if (enter(*node, parent)) {
+      DirectX::XMFLOAT4X4 m = node->world(parent);
+      for (auto &child : node->children) {
+        traverse(enter, leave, child.get(), m);
+      }
+      leave(*node);
+    }
+  } else {
+    // root
+    for (auto &child : m_roots) {
+      traverse(enter, leave, child.get(), IDENTITY);
+    }
   }
 }
 

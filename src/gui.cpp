@@ -92,14 +92,7 @@ std::optional<MouseEvent> Gui::backgroundMouseEvent() const {
   return event;
 }
 
-void Gui::newFrame() {
-  // Start the Dear ImGui frame
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
-}
-
-void DockSpace() {
+static void DockSpace() {
   // If you strip some features of, this demo is pretty much equivalent to
   // calling DockSpaceOverViewport()! In most cases you should be able to just
   // call DockSpaceOverViewport() and ignore all the code below! In this
@@ -221,10 +214,17 @@ void DockSpace() {
   ImGui::End();
 }
 
-void Gui::update() {
+void Gui::newFrame() {
+  // Start the Dear ImGui frame
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
 
   // dockspace
   DockSpace();
+}
+
+void Gui::update() {
 
   // // 1. Show the big demo window (Most of the sample code is in
   // // ImGui::ShowDemoWindow()! You can browse its code to learn more about

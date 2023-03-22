@@ -1,30 +1,9 @@
 #pragma once
+#include "scenetypes.h"
 #include <assert.h>
 #include <memory>
 #include <span>
 #include <vector>
-
-struct float2 {
-  float x;
-  float y;
-};
-struct float3 {
-  float x;
-  float y;
-  float z;
-};
-struct quaternion {
-  float x;
-  float y;
-  float z;
-  float w;
-};
-struct Vertex {
-  float3 position;
-  float3 normal;
-  float2 uv;
-};
-static_assert(sizeof(Vertex) == 32, "sizeof(Vertex)");
 
 class Material;
 struct Primitive {
