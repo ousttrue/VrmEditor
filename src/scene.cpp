@@ -472,10 +472,18 @@ void Scene::render(const Camera &camera, const RenderFunc &render) {
 
         auto root = DirectX::XMMatrixIdentity();
         auto rootInverse = root;
+        auto rootTranslation = root;
         if (auto root_index = skin->root) {
           auto rootNode = m_nodes[*root_index];
-          root = DirectX::XMLoadFloat4x4(&rootNode->world);
+          // rotation only ???
+          auto world = rootNode->world;
+          world._41 = 0;
+          world._42 = 0;
+          world._43 = 0;
+          root = DirectX::XMLoadFloat4x4(&world);
           rootInverse = DirectX::XMMatrixInverse(nullptr, root);
+          rootTranslation = DirectX::XMMatrixTranslation(
+              rootNode->world._41, rootNode->world._42, rootNode->world._43);
         }
 
         for (int i = 0; i < skin->joints.size(); ++i) {
