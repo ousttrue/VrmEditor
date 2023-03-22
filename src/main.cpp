@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
       if (is_selected) {
         node_flags |= ImGuiTreeNodeFlags_Selected;
 
-        auto m = node.world(parent);
+        auto m = node.world;
 
         if (ImGuizmo::Manipulate(camera.view, camera.projection,
                                  ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,

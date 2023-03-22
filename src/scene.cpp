@@ -16,6 +16,12 @@
 
 using json = nlohmann::json;
 
+const auto VERTEX_JOINT = "JOINTS_0";
+const auto VERTEX_WEIGHT = "WEIGHTS_0";
+const auto VERTEX_POSITION = "POSITION";
+const auto VERTEX_NORMAL = "NORMAL";
+const auto VERTEX_UV = "TEXCOORD_0";
+
 static DirectX::XMFLOAT4X4 IDENTITY{
     1, 0, 0, 0, //
     0, 1, 0, 0, //
@@ -67,15 +73,6 @@ inline void from_json(const json &j, DirectX::XMFLOAT4X4 &m) {
   m._43 = j[14];
   m._44 = j[15];
 }
-
-class Skin {
-  std::string m_name;
-
-public:
-  Skin(std::string_view name) : m_name(name) {}
-  std::vector<std::shared_ptr<Node>> joints;
-  std::vector<DirectX::XMFLOAT4X4> bindMatrices;
-};
 
 class BinaryReader {
   std::span<const uint8_t> m_data;
@@ -249,16 +246,14 @@ void Node::addChild(const std::shared_ptr<Node> &child) {
   children.push_back(child);
 }
 
-DirectX::XMFLOAT4X4 Node::world(const DirectX::XMFLOAT4X4 &parent) const {
-  DirectX::XMFLOAT4X4 m;
+void Node::calcWorld(const DirectX::XMFLOAT4X4 &parent) {
   auto t =
       DirectX::XMMatrixTranslation(translation.x, translation.y, translation.z);
   auto r = DirectX::XMMatrixRotationQuaternion(
       DirectX::XMLoadFloat4((DirectX::XMFLOAT4 *)&rotation));
   auto s = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
-  auto world = s * r * t * DirectX::XMLoadFloat4x4(&parent);
-  DirectX::XMStoreFloat4x4(&m, world);
-  return m;
+  DirectX::XMStoreFloat4x4(&world,
+                           s * r * t * DirectX::XMLoadFloat4x4(&parent));
 }
 
 bool Node::setLocalMatrix(const DirectX::XMFLOAT4X4 &local) {
@@ -351,13 +346,23 @@ void Scene::load(const char *path) {
 
       json attributes = prim["attributes"];
       auto offset =
-          ptr->addPosition(glb->accessor<float3>(attributes["POSITION"]));
-      if (attributes.find("NORMAL") != attributes.end()) {
-        ptr->setNormal(offset, glb->accessor<float3>(attributes.at("NORMAL")));
+          ptr->addPosition(glb->accessor<float3>(attributes[VERTEX_POSITION]));
+      if (attributes.find(VERTEX_NORMAL) != attributes.end()) {
+        ptr->setNormal(offset,
+                       glb->accessor<float3>(attributes.at(VERTEX_NORMAL)));
       }
-      if (attributes.find("TEXCOORD_0") != attributes.end()) {
-        ptr->setUv(offset, glb->accessor<float2>(attributes.at("TEXCOORD_0")));
+      if (attributes.find(VERTEX_UV) != attributes.end()) {
+        ptr->setUv(offset, glb->accessor<float2>(attributes.at(VERTEX_UV)));
       }
+
+      if (attributes.find(VERTEX_JOINT) != attributes.end() &&
+          attributes.find(VERTEX_WEIGHT) != attributes.end()) {
+        // skinning
+        ptr->setBoneSkinning(
+            offset, glb->accessor<ushort4>(attributes.at(VERTEX_JOINT)),
+            glb->accessor<float4>(attributes.at(VERTEX_WEIGHT)));
+      }
+
       {
         // std::cout << "indices: " << prim["indices"] << std::endl;
         auto [span, draw_count] = glb->indices(prim["indices"]);
@@ -422,24 +427,37 @@ void Scene::load(const char *path) {
     for (int i = 0; i < skins.size(); ++i) {
       auto &skin = skins[i];
       std::cout << skin << std::endl;
-      auto ptr =
-          std::make_shared<Skin>(skin.value("name", std::format("skin{}", i)));
+      auto ptr = std::make_shared<Skin>();
       m_skins.push_back(ptr);
 
+      ptr->name = skin.value("name", std::format("skin{}", i));
+
       for (auto &joint : skin["joints"]) {
-        ptr->joints.push_back(m_nodes[joint]);
+        ptr->joints.push_back(joint);
       }
 
       auto matrices =
           glb->accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"]);
       ptr->bindMatrices.assign(matrices.begin(), matrices.end());
+
+      assert(ptr->joints.size() == ptr->bindMatrices.size());
     }
   }
 }
 
 void Scene::render(const Camera &camera, const RenderFunc &render) {
-  for (auto &root : m_roots) {
-    traverse(camera, render, root, IDENTITY);
+  // update
+  auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
+    node.calcWorld(parent);
+    return true;
+  };
+  traverse(enter, {});
+
+  // render mesh
+  for (auto &node : m_nodes) {
+    if (auto mesh = node->mesh) {
+      render(camera, *m_meshes[*mesh], &node->world._11);
+    }
   }
 }
 
@@ -447,32 +465,17 @@ void Scene::traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
                      const DirectX::XMFLOAT4X4 &parent) {
   if (node) {
     if (enter(*node, parent)) {
-      DirectX::XMFLOAT4X4 m = node->world(parent);
       for (auto &child : node->children) {
-        traverse(enter, leave, child.get(), m);
+        traverse(enter, leave, child.get(), node->world);
       }
-      leave(*node);
+      if (leave) {
+        leave(*node);
+      }
     }
   } else {
     // root
     for (auto &child : m_roots) {
       traverse(enter, leave, child.get(), IDENTITY);
     }
-  }
-}
-
-void Scene::traverse(const Camera &camera, const RenderFunc &render,
-                     const std::shared_ptr<Node> &node,
-                     const DirectX::XMFLOAT4X4 &parent) {
-
-  DirectX::XMFLOAT4X4 m = node->world(parent);
-
-  if (node->mesh) {
-    auto mesh = m_meshes[*node->mesh];
-    render(camera, *mesh, (const float *)&m);
-  }
-
-  for (auto child : node->children) {
-    traverse(camera, render, child, m);
   }
 }

@@ -25,6 +25,8 @@ struct Mesh {
   std::vector<uint8_t> m_indices;
   std::vector<Primitive> m_primitives;
   uint32_t m_indexValueSize = 0;
+  //
+  std::vector<JointBinding> m_bindings;
 
   size_t verticesBytes() const { return m_vertices.size() * sizeof(Vertex); }
 
@@ -48,6 +50,19 @@ struct Mesh {
     assert(offset + values.size() == m_vertices.size());
     for (size_t i = 0; i < values.size(); ++i) {
       m_vertices[offset + i].uv = values[i];
+    }
+  }
+
+  void setBoneSkinning(uint32_t offset, std::span<const ushort4> joints,
+                       std::span<const float4> weights) {
+    assert(offset + joints.size() == m_vertices.size());
+    assert(offset + weights.size() == m_vertices.size());
+    m_bindings.resize(m_vertices.size());
+    for (size_t i = 0; i < joints.size(); ++i) {
+      m_bindings[offset + i] = {
+          .joints = joints[i],
+          .weights = weights[i],
+      };
     }
   }
 

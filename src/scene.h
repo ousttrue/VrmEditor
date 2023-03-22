@@ -14,13 +14,23 @@
 struct Camera;
 struct Mesh;
 
+struct Skin {
+  std::string name;
+  std::vector<uint32_t> joints;
+  std::vector<DirectX::XMFLOAT4X4> bindMatrices;
+};
+
 struct Node : public std::enable_shared_from_this<Node> {
   uint32_t index;
   std::string name;
   float3 translation = {};
   quaternion rotation = {};
   float3 scale = {};
+
+  DirectX::XMFLOAT4X4 world;
+
   std::optional<uint32_t> mesh;
+  std::shared_ptr<Skin> skin;
 
   std::list<std::shared_ptr<Node>> children;
   std::weak_ptr<Node> parent;
@@ -29,7 +39,7 @@ struct Node : public std::enable_shared_from_this<Node> {
   Node(const Node &) = delete;
   Node &operator=(const Node &) = delete;
   void addChild(const std::shared_ptr<Node> &child);
-  DirectX::XMFLOAT4X4 world(const DirectX::XMFLOAT4X4 &parent) const;
+  void calcWorld(const DirectX::XMFLOAT4X4 &parent);
   bool setLocalMatrix(const DirectX::XMFLOAT4X4 &local);
   bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world,
                       const DirectX::XMFLOAT4X4 &parent);
@@ -44,7 +54,6 @@ inline std::ostream &operator<<(std::ostream &os, const Node &node) {
   return os;
 }
 
-class Skin;
 class Image;
 class Material;
 using RenderFunc =
@@ -69,9 +78,4 @@ public:
   void render(const Camera &camera, const RenderFunc &render);
   void traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});
-
-private:
-  void traverse(const Camera &camera, const RenderFunc &render,
-                const std::shared_ptr<Node> &node,
-                const DirectX::XMFLOAT4X4 &parent);
 };

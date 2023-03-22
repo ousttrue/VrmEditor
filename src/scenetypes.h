@@ -15,6 +15,19 @@ inline std::ostream &operator<<(std::ostream &os, const float3 &v) {
   return os;
 }
 
+struct float4 {
+  float x;
+  float y;
+  float z;
+  float w;
+};
+struct ushort4 {
+  uint16_t joint0;
+  uint16_t joint1;
+  uint16_t joint2;
+  uint16_t joint3;
+};
+
 struct quaternion {
   float x;
   float y;
@@ -32,3 +45,8 @@ struct Vertex {
   float2 uv;
 };
 static_assert(sizeof(Vertex) == 32, "sizeof(Vertex)");
+
+struct JointBinding {
+  ushort4 joints;
+  float4 weights;
+};
