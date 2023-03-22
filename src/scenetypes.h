@@ -9,6 +9,14 @@ struct float3 {
   float x;
   float y;
   float z;
+
+  float3 &operator+=(const float3 &rhs) {
+    this->x += rhs.x;
+    this->y += rhs.y;
+    this->z += rhs.z;
+    return *this;
+  }
+  float3 operator*(float rhs) const { return {x * rhs, y * rhs, z * rhs}; }
 };
 inline std::ostream &operator<<(std::ostream &os, const float3 &v) {
   os << "{" << v.x << ", " << v.y << ", " << v.z << "}";
@@ -22,10 +30,10 @@ struct float4 {
   float w;
 };
 struct ushort4 {
-  uint16_t joint0;
-  uint16_t joint1;
-  uint16_t joint2;
-  uint16_t joint3;
+  uint16_t x;
+  uint16_t y;
+  uint16_t z;
+  uint16_t w;
 };
 
 struct quaternion {

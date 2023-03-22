@@ -1,5 +1,6 @@
 #pragma once
 #include "scenetypes.h"
+#include <DirectXMath.h>
 #include <assert.h>
 #include <memory>
 #include <span>
@@ -25,8 +26,9 @@ struct Mesh {
   std::vector<uint8_t> m_indices;
   std::vector<Primitive> m_primitives;
   uint32_t m_indexValueSize = 0;
-  //
+  // skinning
   std::vector<JointBinding> m_bindings;
+  std::vector<Vertex> m_updated;
 
   size_t verticesBytes() const { return m_vertices.size() * sizeof(Vertex); }
 
@@ -83,6 +85,37 @@ struct Mesh {
       m_indexValueSize = indexValueSize;
     } else {
       assert(indexValueSize == m_indexValueSize);
+    }
+  }
+
+  void add(float3 *dst, const float3 &src, float w,
+           const DirectX::XMFLOAT4X4 &m) {
+    if (w > 0) {
+      auto pos = DirectX::XMLoadFloat3((DirectX::XMFLOAT3 *)&src);
+      auto newPos =
+          DirectX::XMVector3Transform(pos, DirectX::XMLoadFloat4x4(&m));
+      float3 store;
+      DirectX::XMStoreFloat3((DirectX::XMFLOAT3 *)&store, newPos);
+      *dst += (store * w);
+    }
+  }
+
+  void skinning(std::span<DirectX::XMFLOAT4X4> skinningMatrices) {
+    m_updated.assign(m_vertices.begin(), m_vertices.end());
+    for (int i = 0; i < m_vertices.size(); ++i) {
+      auto src = m_vertices[i];
+      auto &dst = m_updated[i];
+      dst.position = {0, 0, 0};
+      dst.normal = {0, 0, 0};
+      auto binding = m_bindings[i];
+      add(&dst.position, src.position, binding.weights.x,
+          skinningMatrices[binding.joints.x]);
+      add(&dst.position, src.position, binding.weights.y,
+          skinningMatrices[binding.joints.y]);
+      add(&dst.position, src.position, binding.weights.z,
+          skinningMatrices[binding.joints.z]);
+      add(&dst.position, src.position, binding.weights.w,
+          skinningMatrices[binding.joints.w]);
     }
   }
 };

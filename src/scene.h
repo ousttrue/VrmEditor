@@ -18,6 +18,9 @@ struct Skin {
   std::string name;
   std::vector<uint32_t> joints;
   std::vector<DirectX::XMFLOAT4X4> bindMatrices;
+  // bindMatrix * node worldmatrix
+  std::vector<DirectX::XMFLOAT4X4> currentMatrices;
+  std::optional<uint32_t> root;
 };
 
 struct Node : public std::enable_shared_from_this<Node> {

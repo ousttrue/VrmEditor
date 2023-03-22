@@ -373,6 +373,32 @@ void Scene::load(const char *path) {
     }
   }
 
+  if (glb->gltf.find("skins") != glb->gltf.end()) {
+    auto skins = glb->gltf["skins"];
+    for (int i = 0; i < skins.size(); ++i) {
+      auto &skin = skins[i];
+      std::cout << skin << std::endl;
+      auto ptr = std::make_shared<Skin>();
+      m_skins.push_back(ptr);
+
+      ptr->name = skin.value("name", std::format("skin{}", i));
+
+      for (auto &joint : skin["joints"]) {
+        ptr->joints.push_back(joint);
+      }
+
+      auto matrices =
+          glb->accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"]);
+      ptr->bindMatrices.assign(matrices.begin(), matrices.end());
+
+      assert(ptr->joints.size() == ptr->bindMatrices.size());
+
+      if (skin.find("skeleton") != skin.end()) {
+        ptr->root = skin.at("skeleton");
+      }
+    }
+  }
+
   auto nodes = glb->gltf["nodes"];
   for (int i = 0; i < nodes.size(); ++i) {
     auto &node = nodes[i];
@@ -401,6 +427,11 @@ void Scene::load(const char *path) {
     }
     if (node.find("mesh") != node.end()) {
       ptr->mesh = node.at("mesh");
+
+      if (node.find("skin") != node.end()) {
+        int skin_index = node.at("skin");
+        ptr->skin = m_skins[skin_index];
+      }
     }
 
     std::cout << *ptr << std::endl;
@@ -421,28 +452,6 @@ void Scene::load(const char *path) {
       m_roots.back()->print();
     }
   }
-
-  if (glb->gltf.find("skins") != glb->gltf.end()) {
-    auto skins = glb->gltf["skins"];
-    for (int i = 0; i < skins.size(); ++i) {
-      auto &skin = skins[i];
-      std::cout << skin << std::endl;
-      auto ptr = std::make_shared<Skin>();
-      m_skins.push_back(ptr);
-
-      ptr->name = skin.value("name", std::format("skin{}", i));
-
-      for (auto &joint : skin["joints"]) {
-        ptr->joints.push_back(joint);
-      }
-
-      auto matrices =
-          glb->accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"]);
-      ptr->bindMatrices.assign(matrices.begin(), matrices.end());
-
-      assert(ptr->joints.size() == ptr->bindMatrices.size());
-    }
-  }
 }
 
 void Scene::render(const Camera &camera, const RenderFunc &render) {
@@ -455,8 +464,32 @@ void Scene::render(const Camera &camera, const RenderFunc &render) {
 
   // render mesh
   for (auto &node : m_nodes) {
-    if (auto mesh = node->mesh) {
-      render(camera, *m_meshes[*mesh], &node->world._11);
+    if (auto mesh_index = node->mesh) {
+      auto mesh = m_meshes[*mesh_index];
+
+      if (auto skin = node->skin) {
+        skin->currentMatrices.resize(skin->bindMatrices.size());
+
+        auto root = DirectX::XMMatrixIdentity();
+        auto rootInverse = root;
+        if (auto root_index = skin->root) {
+          auto rootNode = m_nodes[*root_index];
+          root = DirectX::XMLoadFloat4x4(&rootNode->world);
+          rootInverse = DirectX::XMMatrixInverse(nullptr, root);
+        }
+
+        for (int i = 0; i < skin->joints.size(); ++i) {
+          auto node = m_nodes[skin->joints[i]];
+          auto m = skin->bindMatrices[i];
+          DirectX::XMStoreFloat4x4(&skin->currentMatrices[i],
+                                   DirectX::XMLoadFloat4x4(&m) *
+                                       DirectX::XMLoadFloat4x4(&node->world) *
+                                       rootInverse);
+        }
+        mesh->skinning(skin->currentMatrices);
+      }
+
+      render(camera, *mesh, &node->world._11);
     }
   }
 }
