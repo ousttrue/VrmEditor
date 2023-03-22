@@ -51,11 +51,11 @@ int main(int argc, char **argv) {
 
   TreeContext context;
 
-  while (auto size = platform.newFrame()) {
+  while (auto info = platform.newFrame()) {
     // newFrame
     gui.newFrame();
-    camera.resize(size->width, size->height);
-    view.SetSize(size->width, size->height);
+    camera.resize(info->width, info->height);
+    view.SetSize(info->width, info->height);
     if (auto event = gui.backgroundMouseEvent()) {
       if (auto delta = event->rightDrag) {
         view.YawPitch(delta->x, delta->y);
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 
     // render view
     gl3r.clear(camera);
-    scene.render(camera, render);
+    scene.render(camera, render, info->time);
 
     // render gui
     ImGuizmo::BeginFrame();

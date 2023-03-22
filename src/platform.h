@@ -1,10 +1,12 @@
 #pragma once
+#include <chrono>
 #include <optional>
 #include <string>
 
-struct WindowSize {
+struct FrameInfo {
   int width;
   int height;
+  std::chrono::milliseconds time;
 };
 class Platform {
   struct GLFWwindow *m_window = nullptr;
@@ -14,6 +16,6 @@ public:
   Platform();
   ~Platform();
   GLFWwindow *createWindow(int width, int height, const char *title);
-  std::optional<WindowSize> newFrame();
+  std::optional<FrameInfo> newFrame();
   void present();
 };

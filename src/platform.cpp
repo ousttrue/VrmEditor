@@ -54,7 +54,7 @@ GLFWwindow *Platform::createWindow(int width, int height, const char *title) {
   return m_window;
 }
 
-std::optional<WindowSize> Platform::newFrame() {
+std::optional<FrameInfo> Platform::newFrame() {
   if (glfwWindowShouldClose(m_window)) {
     return {};
   }
@@ -72,7 +72,13 @@ std::optional<WindowSize> Platform::newFrame() {
   int width, height;
   glfwGetFramebufferSize(m_window, &width, &height);
 
-  return WindowSize{width, height};
+  auto seconds = glfwGetTime();
+
+  return FrameInfo{
+      .width = width,
+      .height = height,
+      .time = std::chrono::milliseconds(static_cast<long long>(seconds * 1000)),
+  };
 }
 
 void Platform::present() { glfwSwapBuffers(m_window); }

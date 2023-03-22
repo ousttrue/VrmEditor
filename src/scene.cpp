@@ -452,10 +452,56 @@ void Scene::load(const char *path) {
       m_roots.back()->print();
     }
   }
+
+  auto &animations = glb->gltf["animations"];
+  for (auto &animation : animations) {
+    auto ptr = std::make_shared<Animation>();
+    m_animations.push_back(ptr);
+
+    // samplers
+    auto &samplers = animation["samplers"];
+
+    // channels
+    auto &channels = animation["channels"];
+    for (auto &channel : channels) {
+      int sampler_index = channel.at("sampler");
+      auto sampler = samplers[sampler_index];
+
+      auto target = channel.at("target");
+      int node_index = target.at("node");
+      std::string_view path = target.at("path");
+      std::cout << node_index << std::endl;
+      std::cout << path << std::endl;
+
+      // time
+      int input_index = sampler.at("input");
+      auto times = glb->accessor<float>(input_index);
+      int output_index = sampler.at("output");
+
+      if (path == "translation") {
+        auto values = glb->accessor<float3>(output_index);
+        ptr->addTranslation(node_index, times, values);
+      } else if (path == "rotation") {
+        auto values = glb->accessor<quaternion>(output_index);
+        ptr->addRotation(node_index, times, values);
+      } else if (path == "scale") {
+        auto values = glb->accessor<float3>(output_index);
+        ptr->addScale(node_index, times, values);
+      } else {
+        assert(false);
+      }
+    }
+  }
 }
 
-void Scene::render(const Camera &camera, const RenderFunc &render) {
-  // update
+void Scene::render(const Camera &camera, const RenderFunc &render,
+                   std::chrono::milliseconds time) {
+  // update local
+  for (auto &animation : m_animations) {
+    animation->update(time, m_nodes);
+  }
+
+  // calc world
   auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
     node.calcWorld(parent);
     return true;
