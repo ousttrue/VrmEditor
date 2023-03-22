@@ -221,7 +221,7 @@ void DockSpace() {
   ImGui::End();
 }
 
-void Gui::render() {
+void Gui::update() {
 
   // dockspace
   DockSpace();
@@ -284,7 +284,9 @@ void Gui::render() {
   //     show_another_window = false;
   //   ImGui::End();
   // }
+}
 
+void Gui::render() {
   // Rendering
   ImGui::Render();
 

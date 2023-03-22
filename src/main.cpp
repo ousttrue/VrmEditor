@@ -5,6 +5,10 @@
 #include "platform.h"
 #include "scene.h"
 
+#include <imgui.h>
+
+#include <ImGuizmo.h>
+
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
@@ -32,6 +36,12 @@ int main(int argc, char **argv) {
     gl3r.render(camera, mesh, m);
   };
 
+  float m[16]{
+      1, 0, 0, 0, //
+      0, 1, 0, 0, //
+      0, 0, 1, 0, //
+      0, 0, 0, 1, //
+  };
   while (auto size = platform.newFrame()) {
     // newFrame
     gui.newFrame();
@@ -55,6 +65,12 @@ int main(int argc, char **argv) {
     scene.render(camera, render);
 
     // render gui
+    ImGuizmo::BeginFrame();
+    auto vp = ImGui::GetMainViewport();
+    ImGuizmo::SetRect(vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
+    ImGuizmo::DrawGrid(camera.view, camera.projection, m, 100);
+    // ImGuizmo::DrawCubes(camera.view, camera.projection, m, 1);
+    gui.update();
     gui.render();
 
     platform.present();

@@ -21,5 +21,6 @@ public:
   ~Gui();
   std::optional<MouseEvent> backgroundMouseEvent() const;
   void newFrame();
+  void update();
   void render();
 };
