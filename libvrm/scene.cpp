@@ -440,7 +440,7 @@ void Scene::render(const Camera &camera, const RenderFunc &render,
         if (auto root_index = skin->root) {
           auto rootNode = m_nodes[*root_index];
           // rotation only ???
-          auto world = rootNode->world;
+          auto world = rootNode->worldInit;
           world._41 = 0;
           world._42 = 0;
           world._43 = 0;
