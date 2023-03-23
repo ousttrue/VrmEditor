@@ -19,6 +19,7 @@ struct MorphVertex {
 struct MorphTarget {
   std::string name;
   std::vector<MorphVertex> m_vertices;
+  float weight = 0;
 
   size_t addPosition(std::span<const float3> values) {
     auto offset = m_vertices.size();
@@ -112,8 +113,8 @@ struct Mesh {
     });
   }
 
-  void add(float3 *dst, const float3 &src, float w,
-           const DirectX::XMFLOAT4X4 &m) {
+  void applySkinning(float3 *dst, const float3 &src, float w,
+                     const DirectX::XMFLOAT4X4 &m) {
     if (w > 0) {
       auto pos = DirectX::XMLoadFloat3((DirectX::XMFLOAT3 *)&src);
       auto newPos =
@@ -125,21 +126,38 @@ struct Mesh {
   }
 
   void skinning(std::span<DirectX::XMFLOAT4X4> skinningMatrices) {
-    m_updated.assign(m_vertices.begin(), m_vertices.end());
+    // clear & apply morph target
+    m_updated.clear();
     for (int i = 0; i < m_vertices.size(); ++i) {
-      auto src = m_vertices[i];
+      auto v = m_vertices[i];
+      for (auto &morphtarget : m_morphTargets) {
+        if (morphtarget->weight) {
+          v.position +=
+              morphtarget->m_vertices[i].position * morphtarget->weight;
+        }
+      }
+      m_updated.push_back(v);
+    }
+
+    // calc skinning
+    for (int i = 0; i < m_vertices.size(); ++i) {
+      auto src = m_updated[i];
       auto &dst = m_updated[i];
       dst.position = {0, 0, 0};
       dst.normal = {0, 0, 0};
       auto binding = m_bindings[i];
       if (auto w = binding.weights.x)
-        add(&dst.position, src.position, w, skinningMatrices[binding.joints.x]);
+        applySkinning(&dst.position, src.position, w,
+                      skinningMatrices[binding.joints.x]);
       if (auto w = binding.weights.y)
-        add(&dst.position, src.position, w, skinningMatrices[binding.joints.y]);
+        applySkinning(&dst.position, src.position, w,
+                      skinningMatrices[binding.joints.y]);
       if (auto w = binding.weights.z)
-        add(&dst.position, src.position, w, skinningMatrices[binding.joints.z]);
+        applySkinning(&dst.position, src.position, w,
+                      skinningMatrices[binding.joints.z]);
       if (auto w = binding.weights.w)
-        add(&dst.position, src.position, w, skinningMatrices[binding.joints.w]);
+        applySkinning(&dst.position, src.position, w,
+                      skinningMatrices[binding.joints.w]);
     }
   }
 };

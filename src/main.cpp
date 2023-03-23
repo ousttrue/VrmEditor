@@ -7,6 +7,7 @@
 #include <format>
 #include <imgui.h>
 #include <vrm/animation.h>
+#include <vrm/mesh.h>
 #include <vrm/node.h>
 #include <vrm/scene.h>
 
@@ -159,12 +160,24 @@ int main(int argc, char **argv) {
         if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
           context.new_selected = &node;
         }
+
         return node.children.size() && node_open;
       };
       auto leave = []() { ImGui::TreePop(); };
 
       ImGui::Begin("scene");
       scene.traverse(enter, leave);
+      ImGui::End();
+    }
+
+    if (context.selected) {
+      ImGui::Begin(context.selected->name.c_str());
+      if (auto mesh_index = context.selected->mesh) {
+        auto mesh = scene.m_meshes[*mesh_index];
+        for (auto &morph : mesh->m_morphTargets) {
+          ImGui::SliderFloat(morph->name.c_str(), &morph->weight, 0, 1);
+        }
+      }
       ImGui::End();
     }
 

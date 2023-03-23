@@ -231,10 +231,11 @@ void Scene::load(const char *path) {
         if (prim.find("targets") != prim.end()) {
           auto &targets = prim.at("targets");
           for (int i = 0; i < targets.size(); ++i) {
+            auto &target = targets[i];
             auto morph = ptr->getOrCreateMorphTarget(i);
             // std::cout << target << std::endl;
             auto morphOffset = morph->addPosition(
-                glb->accessor<float3>(attributes.at(VERTEX_POSITION)));
+                glb->accessor<float3>(target.at(VERTEX_POSITION)));
           }
         }
 
@@ -242,6 +243,20 @@ void Scene::load(const char *path) {
         addIndices(offset, ptr.get(), &*glb, prim["indices"],
                    prim.at("material"));
       }
+
+      // find morph target name
+      // 1. primitive.extras.targetNames
+      if (prim.find("extras") != prim.end()) {
+        auto &extras = prim.at("extras");
+        if (extras.find("targetNames") != extras.end()) {
+          auto &names = extras.at("targetNames");
+          // std::cout << names << std::endl;
+          for (int i = 0; i < names.size(); ++i) {
+            ptr->getOrCreateMorphTarget(i)->name = names[i];
+          }
+        }
+      }
+
       lastAtributes = &attributes;
     }
   }
@@ -407,6 +422,7 @@ void Scene::render(const Camera &camera, const RenderFunc &render,
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
 
+      // skinning
       if (auto skin = node->skin) {
         skin->currentMatrices.resize(skin->bindMatrices.size());
 
