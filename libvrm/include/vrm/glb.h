@@ -8,19 +8,29 @@
 
 using json = nlohmann::json;
 
-inline std::expected<size_t, std::string> component_size(int component_type) {
+enum class ComponentType {
+  BYTE = 5120,
+  UNSIGNED_BYTE = 5121,
+  SHORT = 5122,
+  UNSIGNED_SHORT = 5123,
+  UNSIGNED_INT = 5125,
+  FLOAT = 5126,
+};
+
+inline std::expected<size_t, std::string>
+component_size(ComponentType component_type) {
   switch (component_type) {
-  case 5120: // BYTE
+  case ComponentType::BYTE:
     return 1;
-  case 5121: // UNSIGNED_BYTE
+  case ComponentType::UNSIGNED_BYTE:
     return 1;
-  case 5122: // SHORT
+  case ComponentType::SHORT:
     return 2;
-  case 5123: // UNSIGNED_SHORT
+  case ComponentType::UNSIGNED_SHORT:
     return 2;
-  case 5125: // UNSIGNED_INT
+  case ComponentType::UNSIGNED_INT:
     return 4;
-  case 5126: // FLOAT
+  case ComponentType::FLOAT:
     return 4;
   default:
     return std::unexpected{"invalid component type"};
@@ -63,13 +73,13 @@ struct Glb {
   json gltf;
   std::span<const uint8_t> bin;
 
-  std::span<const uint8_t> buffer_view(int buffer_view_index) {
+  std::span<const uint8_t> buffer_view(int buffer_view_index) const {
     auto buffer_view = gltf["bufferViews"][buffer_view_index];
     // std::cout << buffer_view << std::endl;
     return bin.subspan(buffer_view["byteOffset"], buffer_view["byteLength"]);
   }
 
-  template <typename T> std::span<const T> accessor(int accessor_index) {
+  template <typename T> std::span<const T> accessor(int accessor_index) const {
     auto accessor = gltf["accessors"][accessor_index];
     // std::cout << accessor << std::endl;
     assert(*item_size(accessor) == sizeof(T));
@@ -80,11 +90,63 @@ struct Glb {
                               accessor["count"]);
   }
 
-  std::tuple<std::span<const uint8_t>, uint32_t> indices(int accessor_index) {
+  std::span<const uint8_t> uint8(int accessor_index) const {
     auto accessor = gltf["accessors"][accessor_index];
     // std::cout << accessor << std::endl;
+    assert(accessor["type"] == "SCALAR");
+    assert(accessor["componentType"] == ComponentType::UNSIGNED_BYTE);
     auto span = buffer_view(accessor["bufferView"]);
-    return {span, accessor["count"]};
+
+    int offset = accessor.value("byteOffset", 0);
+    return std::span<const uint8_t>((const uint8_t *)(span.data() + offset),
+                                    accessor["count"]);
+  }
+  std::span<const uint16_t> uint16(int accessor_index) const {
+    auto accessor = gltf["accessors"][accessor_index];
+    // std::cout << accessor << std::endl;
+    assert(accessor["type"] == "SCALAR");
+    assert(accessor["componentType"] == ComponentType::UNSIGNED_SHORT);
+    auto span = buffer_view(accessor["bufferView"]);
+
+    int offset = accessor.value("byteOffset", 0);
+    return std::span<const uint16_t>((const uint16_t *)(span.data() + offset),
+                                     accessor["count"]);
+  }
+  std::span<const uint32_t> uint32(int accessor_index) const {
+    auto accessor = gltf["accessors"][accessor_index];
+    // std::cout << accessor << std::endl;
+    assert(accessor["type"] == "SCALAR");
+    assert(accessor["componentType"] == ComponentType::UNSIGNED_INT);
+    auto span = buffer_view(accessor["bufferView"]);
+
+    int offset = accessor.value("byteOffset", 0);
+    return std::span<const uint32_t>((const uint32_t *)(span.data() + offset),
+                                     accessor["count"]);
+  }
+
+  std::tuple<std::span<const uint8_t>, uint32_t>
+  indices(int accessor_index) const {
+    auto accessor = gltf["accessors"][accessor_index];
+    switch ((ComponentType)accessor["componentType"]) {
+    case ComponentType::UNSIGNED_BYTE: {
+      auto span = uint8(accessor_index);
+      return {{(const uint8_t *)span.data(), span.size() * sizeof(span[0])},
+              (uint32_t)span.size()};
+    } break;
+    case ComponentType::UNSIGNED_SHORT: {
+      auto span = uint16(accessor_index);
+      return {{(const uint8_t *)span.data(), span.size() * sizeof(span[0])},
+              (uint32_t)span.size()};
+    } break;
+    case ComponentType::UNSIGNED_INT: {
+      auto span = uint32(accessor_index);
+      return {{(const uint8_t *)span.data(), span.size() * sizeof(span[0])},
+              (uint32_t)span.size()};
+    } break;
+
+    default:
+      throw std::runtime_error("invalid index type");
+    }
   }
 
   static std::optional<Glb> parse(std::span<const uint8_t> bytes);

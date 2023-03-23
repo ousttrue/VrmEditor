@@ -287,7 +287,8 @@ void Scene::load(const char *path) {
 
       if (node.find("skin") != node.end()) {
         int skin_index = node.at("skin");
-        ptr->skin = m_skins[skin_index];
+        auto skin = m_skins[skin_index];
+        ptr->skin = skin;
       }
     }
 
@@ -376,35 +377,35 @@ void Scene::render(const Camera &camera, const RenderFunc &render,
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
 
-      if (auto skin = node->skin) {
-        skin->currentMatrices.resize(skin->bindMatrices.size());
-
-        auto root = DirectX::XMMatrixIdentity();
-        auto rootInverse = root;
-        auto rootTranslation = root;
-        if (auto root_index = skin->root) {
-          auto rootNode = m_nodes[*root_index];
-          // rotation only ???
-          auto world = rootNode->world;
-          world._41 = 0;
-          world._42 = 0;
-          world._43 = 0;
-          root = DirectX::XMLoadFloat4x4(&world);
-          rootInverse = DirectX::XMMatrixInverse(nullptr, root);
-          rootTranslation = DirectX::XMMatrixTranslation(
-              rootNode->world._41, rootNode->world._42, rootNode->world._43);
-        }
-
-        for (int i = 0; i < skin->joints.size(); ++i) {
-          auto node = m_nodes[skin->joints[i]];
-          auto m = skin->bindMatrices[i];
-          DirectX::XMStoreFloat4x4(&skin->currentMatrices[i],
-                                   DirectX::XMLoadFloat4x4(&m) *
-                                       DirectX::XMLoadFloat4x4(&node->world) *
-                                       rootInverse);
-        }
-        mesh->skinning(skin->currentMatrices);
-      }
+      // if (auto skin = node->skin) {
+      //   skin->currentMatrices.resize(skin->bindMatrices.size());
+      //
+      //   auto root = DirectX::XMMatrixIdentity();
+      //   auto rootInverse = root;
+      //   auto rootTranslation = root;
+      //   if (auto root_index = skin->root) {
+      //     auto rootNode = m_nodes[*root_index];
+      //     // rotation only ???
+      //     auto world = rootNode->world;
+      //     world._41 = 0;
+      //     world._42 = 0;
+      //     world._43 = 0;
+      //     root = DirectX::XMLoadFloat4x4(&world);
+      //     rootInverse = DirectX::XMMatrixInverse(nullptr, root);
+      //     rootTranslation = DirectX::XMMatrixTranslation(
+      //         rootNode->world._41, rootNode->world._42, rootNode->world._43);
+      //   }
+      //
+      //   for (int i = 0; i < skin->joints.size(); ++i) {
+      //     auto node = m_nodes[skin->joints[i]];
+      //     auto m = skin->bindMatrices[i];
+      //     DirectX::XMStoreFloat4x4(&skin->currentMatrices[i],
+      //                              DirectX::XMLoadFloat4x4(&m) *
+      //                                  DirectX::XMLoadFloat4x4(&node->world)
+      //                                  * rootInverse);
+      //   }
+      //   mesh->skinning(skin->currentMatrices);
+      // }
 
       render(camera, *mesh, &node->world._11);
     }

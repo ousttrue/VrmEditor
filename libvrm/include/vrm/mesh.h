@@ -72,7 +72,10 @@ struct Mesh {
                   uint32_t count, std::shared_ptr<Material> material) {
     auto indexOffset = m_indices.size();
     m_indices.resize(indexOffset + values.size());
-    std::copy(values.begin(), values.end(), m_indices.data() + indexOffset);
+    // std::copy(values.begin(), values.end(), m_indices.data() + indexOffset);
+    for (int i = 0; i < values.size(); ++i) {
+      m_indices[indexOffset + i] = offset + values[i];
+    }
 
     m_primitives.push_back({
         .offset = static_cast<uint32_t>(indexOffset),

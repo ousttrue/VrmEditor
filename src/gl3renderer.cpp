@@ -1,38 +1,40 @@
 #include "gl3renderer.h"
 #include "camera.h"
-#include <vrm/material.h>
-#include <vrm/mesh.h>
 #include <GL/glew.h>
 #include <glo/shader.h>
 #include <glo/texture.h>
 #include <glo/vao.h>
 #include <iostream>
 #include <unordered_map>
+#include <vrm/material.h>
+#include <vrm/mesh.h>
 
-static const char *vertex_shader_text = R"(#version 130
+static const char *vertex_shader_text = R"(#version 400
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
-attribute vec3 vPosition;
-attribute vec3 vNormal;
-attribute vec2 vUv;
-varying vec3 normal;
-varying vec2 uv;
+in vec3 vPosition;
+in vec3 vNormal;
+in vec2 vUv;
+out vec3 normal;
+out vec2 uv;
 void main()
 {
-    gl_Position = Projection * View * Model * vec4(vPosition, 1.0);
-    normal = vNormal;
-    uv = vUv;
+  gl_Position = Projection * View * Model * vec4(vPosition, 1.0);
+  normal = vNormal;
+  uv = vUv;
 }
 )";
 
-static const char *fragment_shader_text = R"(#version 130
-varying vec3 normal;
-varying vec2 uv;
+static const char *fragment_shader_text = R"(#version 400
+in vec3 normal;
+in vec2 uv;
+out vec4 FragColor;
 uniform sampler2D colorTexture;
 void main()
 {
-    gl_FragColor = texture(colorTexture, uv);
+  vec4 texel = texture(colorTexture, uv);
+  FragColor = vec4(texel.rgb, 1);
 };
 )";
 
