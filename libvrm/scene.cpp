@@ -162,7 +162,6 @@ void Scene::load(const char *path) {
   auto &images = glb->gltf["images"];
   for (int i = 0; i < images.size(); ++i) {
     auto &image = images[i];
-    std::cout << image << std::endl;
     auto bytes = glb->buffer_view(image["bufferView"]);
 
     auto ptr =
@@ -179,7 +178,6 @@ void Scene::load(const char *path) {
   auto &materials = glb->gltf["materials"];
   for (int i = 0; i < materials.size(); ++i) {
     auto &material = materials[i];
-    std::cout << material << std::endl;
     auto ptr = std::make_shared<Material>(
         material.value("name", std::format("material{}", i)));
     m_materials.push_back(ptr);
@@ -197,11 +195,19 @@ void Scene::load(const char *path) {
   }
 
   for (auto &mesh : glb->gltf["meshes"]) {
-    for (auto prim : mesh["primitives"]) {
-      auto ptr = std::make_shared<Mesh>();
-      m_meshes.push_back(ptr);
+    auto ptr = std::make_shared<Mesh>();
+    m_meshes.push_back(ptr);
 
+    json *lastAtributes = nullptr;
+    for (auto prim : mesh["primitives"]) {
       json attributes = prim["attributes"];
+
+      if (lastAtributes && attributes == *lastAtributes) {
+        std::cout << "same attributes" << std::endl;
+      }
+
+      lastAtributes = &attributes;
+
       auto offset =
           ptr->addPosition(glb->accessor<float3>(attributes[VERTEX_POSITION]));
       if (attributes.find(VERTEX_NORMAL) != attributes.end()) {
@@ -221,7 +227,6 @@ void Scene::load(const char *path) {
       }
 
       {
-        // std::cout << "indices: " << prim["indices"] << std::endl;
         auto [span, draw_count] = glb->indices(prim["indices"]);
 
         int material_index = prim.at("material");
@@ -234,7 +239,6 @@ void Scene::load(const char *path) {
     auto skins = glb->gltf["skins"];
     for (int i = 0; i < skins.size(); ++i) {
       auto &skin = skins[i];
-      std::cout << skin << std::endl;
       auto ptr = std::make_shared<Skin>();
       m_skins.push_back(ptr);
 
@@ -266,7 +270,6 @@ void Scene::load(const char *path) {
     if (node.find("matrix") != node.end()) {
       // matrix
       auto m = node["matrix"];
-      // std::cout << m << std::endl;
       auto local = DirectX::XMFLOAT4X4{
           m[0],  m[1],  m[2],  m[3],  //
           m[4],  m[5],  m[6],  m[7],  //
@@ -291,8 +294,6 @@ void Scene::load(const char *path) {
         ptr->skin = skin;
       }
     }
-
-    std::cout << *ptr << std::endl;
   }
   for (int i = 0; i < nodes.size(); ++i) {
     auto &node = nodes[i];
@@ -307,7 +308,6 @@ void Scene::load(const char *path) {
     auto scene = glb->gltf["scenes"][0];
     for (auto &node : scene["nodes"]) {
       m_roots.push_back(m_nodes[node]);
-      m_roots.back()->print();
     }
   }
 
@@ -330,8 +330,6 @@ void Scene::load(const char *path) {
       auto target = channel.at("target");
       int node_index = target.at("node");
       std::string_view path = target.at("path");
-      std::cout << node_index << std::endl;
-      std::cout << path << std::endl;
 
       // time
       int input_index = sampler.at("input");
@@ -377,35 +375,35 @@ void Scene::render(const Camera &camera, const RenderFunc &render,
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
 
-      // if (auto skin = node->skin) {
-      //   skin->currentMatrices.resize(skin->bindMatrices.size());
-      //
-      //   auto root = DirectX::XMMatrixIdentity();
-      //   auto rootInverse = root;
-      //   auto rootTranslation = root;
-      //   if (auto root_index = skin->root) {
-      //     auto rootNode = m_nodes[*root_index];
-      //     // rotation only ???
-      //     auto world = rootNode->world;
-      //     world._41 = 0;
-      //     world._42 = 0;
-      //     world._43 = 0;
-      //     root = DirectX::XMLoadFloat4x4(&world);
-      //     rootInverse = DirectX::XMMatrixInverse(nullptr, root);
-      //     rootTranslation = DirectX::XMMatrixTranslation(
-      //         rootNode->world._41, rootNode->world._42, rootNode->world._43);
-      //   }
-      //
-      //   for (int i = 0; i < skin->joints.size(); ++i) {
-      //     auto node = m_nodes[skin->joints[i]];
-      //     auto m = skin->bindMatrices[i];
-      //     DirectX::XMStoreFloat4x4(&skin->currentMatrices[i],
-      //                              DirectX::XMLoadFloat4x4(&m) *
-      //                                  DirectX::XMLoadFloat4x4(&node->world)
-      //                                  * rootInverse);
-      //   }
-      //   mesh->skinning(skin->currentMatrices);
-      // }
+      if (auto skin = node->skin) {
+        skin->currentMatrices.resize(skin->bindMatrices.size());
+
+        auto root = DirectX::XMMatrixIdentity();
+        auto rootInverse = root;
+        auto rootTranslation = root;
+        if (auto root_index = skin->root) {
+          auto rootNode = m_nodes[*root_index];
+          // rotation only ???
+          auto world = rootNode->world;
+          world._41 = 0;
+          world._42 = 0;
+          world._43 = 0;
+          root = DirectX::XMLoadFloat4x4(&world);
+          rootInverse = DirectX::XMMatrixInverse(nullptr, root);
+          rootTranslation = DirectX::XMMatrixTranslation(
+              rootNode->world._41, rootNode->world._42, rootNode->world._43);
+        }
+
+        for (int i = 0; i < skin->joints.size(); ++i) {
+          auto node = m_nodes[skin->joints[i]];
+          auto m = skin->bindMatrices[i];
+          DirectX::XMStoreFloat4x4(&skin->currentMatrices[i],
+                                   DirectX::XMLoadFloat4x4(&m) *
+                                       DirectX::XMLoadFloat4x4(&node->world) *
+                                       rootInverse);
+        }
+        mesh->skinning(skin->currentMatrices);
+      }
 
       render(camera, *mesh, &node->world._11);
     }
