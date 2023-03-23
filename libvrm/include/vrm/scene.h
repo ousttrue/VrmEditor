@@ -18,7 +18,7 @@ struct Camera;
 struct Mesh;
 struct Skin;
 struct Node;
-class Animation;
+struct Animation;
 class Image;
 class Material;
 using RenderFunc =
@@ -27,7 +27,7 @@ using RenderFunc =
 using EnterFunc = std::function<bool(Node &, const DirectX::XMFLOAT4X4 &)>;
 using LeaveFunc = std::function<void(Node &)>;
 
-class Scene {
+struct Scene {
   std::vector<std::shared_ptr<Image>> m_images;
   std::vector<std::shared_ptr<Material>> m_materials;
   std::vector<std::shared_ptr<Mesh>> m_meshes;
@@ -36,7 +36,6 @@ class Scene {
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
 
-public:
   Scene() {}
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;

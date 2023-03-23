@@ -457,8 +457,10 @@ void Scene::load(const char *path) {
   }
 
   auto &animations = glb->gltf["animations"];
-  for (auto &animation : animations) {
-    auto ptr = std::make_shared<Animation>();
+  for (int i = 0; i < animations.size(); ++i) {
+    auto &animation = animations[i];
+    auto ptr = std::make_shared<Animation>(
+        animation.value("name", std::format("animation:{}", i)));
     m_animations.push_back(ptr);
 
     // samplers
@@ -483,13 +485,17 @@ void Scene::load(const char *path) {
 
       if (path == "translation") {
         auto values = glb->accessor<float3>(output_index);
-        ptr->addTranslation(node_index, times, values);
+        ptr->addTranslation(
+            node_index, times, values,
+            std::format("{}-translation", m_nodes[node_index]->name));
       } else if (path == "rotation") {
         auto values = glb->accessor<quaternion>(output_index);
-        ptr->addRotation(node_index, times, values);
+        ptr->addRotation(node_index, times, values,
+                         std::format("{}-rotation", m_nodes[node_index]->name));
       } else if (path == "scale") {
         auto values = glb->accessor<float3>(output_index);
-        ptr->addScale(node_index, times, values);
+        ptr->addScale(node_index, times, values,
+                      std::format("{}-scale", m_nodes[node_index]->name));
       } else {
         assert(false);
       }

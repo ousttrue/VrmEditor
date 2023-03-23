@@ -4,10 +4,11 @@
 #include "no_sal2.h"
 #include "orbitview.h"
 #include "platform.h"
-#include <vrm/scene.h>
-#include <vrm/node.h>
-
+#include <format>
 #include <imgui.h>
+#include <vrm/animation.h>
+#include <vrm/node.h>
+#include <vrm/scene.h>
 
 #include <ImGuizmo.h>
 #include <imgui_neo_sequencer.h>
@@ -132,15 +133,6 @@ int main(int argc, char **argv) {
 
     if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame,
                                  &endFrame)) {
-      // if (ImGui::BeginNeoGroup("Transform", &transformOpen)) {
-      //   std::vector<ImGui::FrameIndexType> keys = {0, 10, 24};
-      //   if (ImGui::BeginNeoTimeline("Position", keys)) {
-      //     ImGui::EndNeoTimeLine();
-      //   }
-      //   ImGui::EndNeoGroup();
-      // }
-      // scalbn
-
       // Timeline code here
       ImGui::EndNeoSequencer();
     }

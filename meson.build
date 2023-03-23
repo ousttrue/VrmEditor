@@ -2,7 +2,7 @@ project(
     'VrmEditor',
     'cpp',
     version: '0.1.0',
-    default_options: ['cpp_std=c++latest'],
+    default_options: [],
 )
 
 glew_dep = dependency('glew', default_options: ['default_library=static'])

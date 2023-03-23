@@ -108,14 +108,14 @@ struct Mesh {
       dst.position = {0, 0, 0};
       dst.normal = {0, 0, 0};
       auto binding = m_bindings[i];
-      add(&dst.position, src.position, binding.weights.x,
-          skinningMatrices[binding.joints.x]);
-      add(&dst.position, src.position, binding.weights.y,
-          skinningMatrices[binding.joints.y]);
-      add(&dst.position, src.position, binding.weights.z,
-          skinningMatrices[binding.joints.z]);
-      add(&dst.position, src.position, binding.weights.w,
-          skinningMatrices[binding.joints.w]);
+      if (auto w = binding.weights.x)
+        add(&dst.position, src.position, w, skinningMatrices[binding.joints.x]);
+      if (auto w = binding.weights.y)
+        add(&dst.position, src.position, w, skinningMatrices[binding.joints.y]);
+      if (auto w = binding.weights.z)
+        add(&dst.position, src.position, w, skinningMatrices[binding.joints.z]);
+      if (auto w = binding.weights.w)
+        add(&dst.position, src.position, w, skinningMatrices[binding.joints.w]);
     }
   }
 };
