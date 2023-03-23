@@ -380,6 +380,14 @@ void Scene::load(const char *path) {
       }
     }
   }
+
+  // calc world
+  auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
+    node.calcWorld(parent);
+    node.worldInit = node.world;
+    return true;
+  };
+  traverse(enter, {});
 }
 
 void Scene::addIndices(int vertex_offset, Mesh *mesh, Glb *glb,

@@ -17,6 +17,7 @@ struct Node : public std::enable_shared_from_this<Node> {
   float3 scale = {};
 
   DirectX::XMFLOAT4X4 world;
+  DirectX::XMFLOAT4X4 worldInit;
 
   std::optional<uint32_t> mesh;
   std::shared_ptr<Skin> skin;
