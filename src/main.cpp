@@ -5,6 +5,7 @@
 #include "orbitview.h"
 #include "platform.h"
 #include <vrm/scene.h>
+#include <vrm/node.h>
 
 #include <imgui.h>
 
@@ -131,13 +132,14 @@ int main(int argc, char **argv) {
 
     if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame,
                                  &endFrame)) {
-      if (ImGui::BeginNeoGroup("Transform", &transformOpen)) {
-        std::vector<ImGui::FrameIndexType> keys = {0, 10, 24};
-        if (ImGui::BeginNeoTimeline("Position", keys)) {
-          ImGui::EndNeoTimeLine();
-        }
-        ImGui::EndNeoGroup();
-      }
+      // if (ImGui::BeginNeoGroup("Transform", &transformOpen)) {
+      //   std::vector<ImGui::FrameIndexType> keys = {0, 10, 24};
+      //   if (ImGui::BeginNeoTimeline("Position", keys)) {
+      //     ImGui::EndNeoTimeLine();
+      //   }
+      //   ImGui::EndNeoGroup();
+      // }
+      // scalbn
 
       // Timeline code here
       ImGui::EndNeoSequencer();

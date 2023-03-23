@@ -10,9 +10,12 @@
 #include <span>
 #include <string>
 #include <vector>
+#include <vrm/animation.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
+#include <vrm/node.h>
 #include <vrm/scene.h>
+#include <vrm/skin.h>
 
 using json = nlohmann::json;
 
