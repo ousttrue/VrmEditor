@@ -3,6 +3,7 @@ vrm_lib = static_library(
     'vrm',
     [
         'scene.cpp',
+        'glb.cpp',
     ],
     include_directories: vrm_inc,
     dependencies: [stb_dep, json_dep],

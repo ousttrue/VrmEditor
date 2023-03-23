@@ -5,6 +5,7 @@
 #include <functional>
 #include <list>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <ostream>
 #include <span>
@@ -13,6 +14,8 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+
+using json = nlohmann::json;
 
 struct Camera;
 struct Mesh;
@@ -35,6 +38,7 @@ struct Scene {
   std::vector<std::shared_ptr<Node>> m_roots;
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
+  json gltf;
 
   Scene() {}
   Scene(const Scene &) = delete;
@@ -44,4 +48,5 @@ struct Scene {
               std::chrono::milliseconds time);
   void traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});
+  void traverse_json(json *j = nullptr);
 };

@@ -88,56 +88,65 @@ int main(int argc, char **argv) {
     ImGuizmo::DrawGrid(camera.view, camera.projection, m, 100);
     // ImGuizmo::DrawCubes(camera.view, camera.projection, m, 1);
 
-    context.selected = context.new_selected;
-    auto enter = [&context, &camera](Node &node,
-                                     const DirectX::XMFLOAT4X4 &parent) {
-      ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-      static ImGuiTreeNodeFlags base_flags =
-          ImGuiTreeNodeFlags_OpenOnArrow |
-          ImGuiTreeNodeFlags_OpenOnDoubleClick |
-          ImGuiTreeNodeFlags_SpanAvailWidth;
-      ImGuiTreeNodeFlags node_flags = base_flags;
-      auto is_selected = context.selected == &node;
-      if (is_selected) {
-        node_flags |= ImGuiTreeNodeFlags_Selected;
-
-        auto m = node.world;
-
-        if (ImGuizmo::Manipulate(camera.view, camera.projection,
-                                 ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
-                                 (float *)&m, NULL, NULL, NULL, NULL)) {
-          // decompose feedback
-          node.setWorldMatrix(m, parent);
-        }
-      }
-
-      if (node.children.empty()) {
-        node_flags |=
-            ImGuiTreeNodeFlags_Leaf |
-            ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-      }
-
-      bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)node.index,
-                                         node_flags, "%s", node.name.c_str());
-      if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-        context.new_selected = &node;
-      }
-      return node.children.size() && node_open;
-    };
-    auto leave = [](Node &) { ImGui::TreePop(); };
-    ImGui::Begin("scene");
-    scene.traverse(enter, leave);
-    ImGui::End();
-
-    ImGui::Begin("timeline");
-
-    if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame,
-                                 &endFrame)) {
-      // Timeline code here
-      ImGui::EndNeoSequencer();
+    {
+     ImGui::Begin("json");
+      scene.traverse_json();
+      ImGui::End();
     }
 
-    ImGui::End();
+    {
+      context.selected = context.new_selected;
+      auto enter = [&context, &camera](Node &node,
+                                       const DirectX::XMFLOAT4X4 &parent) {
+        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+        static ImGuiTreeNodeFlags base_flags =
+            ImGuiTreeNodeFlags_OpenOnArrow |
+            ImGuiTreeNodeFlags_OpenOnDoubleClick |
+            ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = base_flags;
+        auto is_selected = context.selected == &node;
+        if (is_selected) {
+          node_flags |= ImGuiTreeNodeFlags_Selected;
+
+          auto m = node.world;
+
+          if (ImGuizmo::Manipulate(camera.view, camera.projection,
+                                   ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
+                                   (float *)&m, NULL, NULL, NULL, NULL)) {
+            // decompose feedback
+            node.setWorldMatrix(m, parent);
+          }
+        }
+
+        if (node.children.empty()) {
+          node_flags |=
+              ImGuiTreeNodeFlags_Leaf |
+              ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+        }
+
+        bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)node.index,
+                                           node_flags, "%s", node.name.c_str());
+        if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+          context.new_selected = &node;
+        }
+        return node.children.size() && node_open;
+      };
+      auto leave = [](Node &) { ImGui::TreePop(); };
+
+      ImGui::Begin("scene");
+      scene.traverse(enter, leave);
+      ImGui::End();
+    }
+
+    {
+      ImGui::Begin("timeline");
+      if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame,
+                                   &endFrame)) {
+        // Timeline code here
+        ImGui::EndNeoSequencer();
+      }
+      ImGui::End();
+    }
 
     gui.update();
     gui.render();
