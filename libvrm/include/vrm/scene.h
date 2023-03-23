@@ -46,6 +46,12 @@ struct Scene {
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
   void load(const char *path);
+
+private:
+  void addIndices(int vertex_offset, Mesh *mesh, struct Glb *glb,
+                  int accessor_index, int material_index);
+
+public:
   void render(const Camera &camera, const RenderFunc &render,
               std::chrono::milliseconds time);
   void traverse(const EnterFunc &enter, const LeaveFunc &leave,

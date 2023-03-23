@@ -131,8 +131,8 @@ public:
 
     // load gpu resource
     auto vbo = glo::Vbo::Create(mesh.verticesBytes(), mesh.m_vertices.data());
-    auto ibo = glo::Ibo::Create(mesh.m_indices.size(), mesh.m_indices.data(),
-                                indexType(mesh.m_indexValueSize));
+    auto ibo = glo::Ibo::Create(mesh.indicesBytes(), mesh.m_indices.data(),
+                                GL_UNSIGNED_INT);
 
     glo::VertexLayout layouts[] = {
         {
@@ -178,19 +178,23 @@ public:
     auto drawable = std::shared_ptr<Drawable>(new Drawable);
     drawable->program = *program;
     drawable->vao = vao;
-    for (auto &submesh : mesh.m_primitives) {
+
+    uint32_t byteOffset = 0;
+    for (auto &primitive : mesh.m_primitives) {
 
       auto texture = m_white;
-      if (auto image = submesh.material->texture) {
+      if (auto image = primitive.material->texture) {
         texture = glo::Texture::Create(image->width(), image->height(),
                                        image->pixels());
       }
 
       drawable->submeshes.push_back({
-          .offset = submesh.offset,
-          .drawCount = submesh.drawCount,
+          .offset = byteOffset,
+          .drawCount = primitive.drawCount,
           .texture = texture,
       });
+      // GL_UNSIGNED_INT
+      byteOffset += primitive.drawCount * 4;
     }
 
     m_drawableMap.insert(std::make_pair(mesh.id, drawable));

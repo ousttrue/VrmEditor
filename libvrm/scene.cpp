@@ -204,34 +204,33 @@ void Scene::load(const char *path) {
 
       if (lastAtributes && attributes == *lastAtributes) {
         std::cout << "same attributes" << std::endl;
-      }
+        // for vrm shared vertex buffer
+        addIndices(0, ptr.get(), &*glb, prim.at("indices"),
+                   prim.at("material"));
+      } else {
+        // gltf. extedn vertex buffer
+        auto offset = ptr->addPosition(
+            glb->accessor<float3>(attributes[VERTEX_POSITION]));
+        if (attributes.find(VERTEX_NORMAL) != attributes.end()) {
+          ptr->setNormal(offset,
+                         glb->accessor<float3>(attributes.at(VERTEX_NORMAL)));
+        }
+        if (attributes.find(VERTEX_UV) != attributes.end()) {
+          ptr->setUv(offset, glb->accessor<float2>(attributes.at(VERTEX_UV)));
+        }
 
+        if (attributes.find(VERTEX_JOINT) != attributes.end() &&
+            attributes.find(VERTEX_WEIGHT) != attributes.end()) {
+          // skinning
+          ptr->setBoneSkinning(
+              offset, glb->accessor<ushort4>(attributes.at(VERTEX_JOINT)),
+              glb->accessor<float4>(attributes.at(VERTEX_WEIGHT)));
+        }
+
+        addIndices(offset, ptr.get(), &*glb, prim["indices"],
+                   prim.at("material"));
+      }
       lastAtributes = &attributes;
-
-      auto offset =
-          ptr->addPosition(glb->accessor<float3>(attributes[VERTEX_POSITION]));
-      if (attributes.find(VERTEX_NORMAL) != attributes.end()) {
-        ptr->setNormal(offset,
-                       glb->accessor<float3>(attributes.at(VERTEX_NORMAL)));
-      }
-      if (attributes.find(VERTEX_UV) != attributes.end()) {
-        ptr->setUv(offset, glb->accessor<float2>(attributes.at(VERTEX_UV)));
-      }
-
-      if (attributes.find(VERTEX_JOINT) != attributes.end() &&
-          attributes.find(VERTEX_WEIGHT) != attributes.end()) {
-        // skinning
-        ptr->setBoneSkinning(
-            offset, glb->accessor<ushort4>(attributes.at(VERTEX_JOINT)),
-            glb->accessor<float4>(attributes.at(VERTEX_WEIGHT)));
-      }
-
-      {
-        auto [span, draw_count] = glb->indices(prim["indices"]);
-
-        int material_index = prim.at("material");
-        ptr->addSubmesh(offset, span, draw_count, m_materials[material_index]);
-      }
     }
   }
 
@@ -353,6 +352,27 @@ void Scene::load(const char *path) {
         assert(false);
       }
     }
+  }
+}
+
+void Scene::addIndices(int vertex_offset, Mesh *mesh, Glb *glb,
+                       int accessor_index, int material_index) {
+  auto accessor = glb->gltf["accessors"][accessor_index];
+  switch ((ComponentType)accessor["componentType"]) {
+  case ComponentType::UNSIGNED_BYTE: {
+    auto span = glb->accessor<uint8_t>(accessor_index);
+    mesh->addSubmesh(vertex_offset, span, m_materials[material_index]);
+  } break;
+  case ComponentType::UNSIGNED_SHORT: {
+    auto span = glb->accessor<uint16_t>(accessor_index);
+    mesh->addSubmesh(vertex_offset, span, m_materials[material_index]);
+  } break;
+  case ComponentType::UNSIGNED_INT: {
+    auto span = glb->accessor<uint32_t>(accessor_index);
+    mesh->addSubmesh(vertex_offset, span, m_materials[material_index]);
+  } break;
+  default:
+    throw std::runtime_error("invalid index type");
   }
 }
 

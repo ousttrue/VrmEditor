@@ -8,7 +8,6 @@
 
 class Material;
 struct Primitive {
-  uint32_t offset;
   uint32_t drawCount;
   std::shared_ptr<Material> material;
 };
@@ -23,14 +22,18 @@ struct Mesh {
   Mesh &operator=(const Mesh &) = delete;
 
   std::vector<Vertex> m_vertices;
-  std::vector<uint8_t> m_indices;
+  std::vector<uint32_t> m_indices;
   std::vector<Primitive> m_primitives;
-  uint32_t m_indexValueSize = 0;
   // skinning
   std::vector<JointBinding> m_bindings;
   std::vector<Vertex> m_updated;
 
-  size_t verticesBytes() const { return m_vertices.size() * sizeof(Vertex); }
+  size_t verticesBytes() const {
+    return m_vertices.size() * sizeof(m_vertices[0]);
+  }
+  size_t indicesBytes() const {
+    return m_indices.size() * sizeof(m_indices[0]);
+  }
 
   size_t addPosition(std::span<const float3> values) {
     auto offset = m_vertices.size();
@@ -68,27 +71,18 @@ struct Mesh {
     }
   }
 
-  void addSubmesh(uint32_t offset, std::span<const uint8_t> values,
-                  uint32_t count, std::shared_ptr<Material> material) {
-    auto indexOffset = m_indices.size();
-    m_indices.resize(indexOffset + values.size());
-    // std::copy(values.begin(), values.end(), m_indices.data() + indexOffset);
-    for (int i = 0; i < values.size(); ++i) {
-      m_indices[indexOffset + i] = offset + values[i];
+  template <typename T>
+  void addSubmesh(uint32_t offset, std::span<const T> values,
+                  std::shared_ptr<Material> material) {
+    m_indices.reserve(m_indices.size() + values.size());
+    for (auto value : values) {
+      m_indices.push_back(offset + value);
     }
 
     m_primitives.push_back({
-        .offset = static_cast<uint32_t>(indexOffset),
-        .drawCount = count,
+        .drawCount = static_cast<uint32_t>(values.size()),
         .material = material,
     });
-
-    auto indexValueSize = values.size() / count;
-    if (m_indexValueSize == 0) {
-      m_indexValueSize = indexValueSize;
-    } else {
-      assert(indexValueSize == m_indexValueSize);
-    }
   }
 
   void add(float3 *dst, const float3 &src, float w,
