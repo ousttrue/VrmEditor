@@ -14,4 +14,5 @@ stb_dep = dependency('stb')
 im_neo_sequencer_dep = dependency('im_neo_sequencer')
 
 subdir('ImGuizmo')
+subdir('libvrm')
 subdir('src')

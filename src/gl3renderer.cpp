@@ -1,7 +1,7 @@
 #include "gl3renderer.h"
 #include "camera.h"
-#include "material.h"
-#include "mesh.h"
+#include <vrm/material.h>
+#include <vrm/mesh.h>
 #include <GL/glew.h>
 #include <glo/shader.h>
 #include <glo/texture.h>

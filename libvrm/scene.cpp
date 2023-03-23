@@ -1,6 +1,3 @@
-#include "scene.h"
-#include "material.h"
-#include "mesh.h"
 #include <DirectXMath.h>
 #include <array>
 #include <expected>
@@ -13,6 +10,9 @@
 #include <span>
 #include <string>
 #include <vector>
+#include <vrm/material.h>
+#include <vrm/mesh.h>
+#include <vrm/scene.h>
 
 using json = nlohmann::json;
 

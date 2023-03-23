@@ -4,7 +4,7 @@
 #include "no_sal2.h"
 #include "orbitview.h"
 #include "platform.h"
-#include "scene.h"
+#include <vrm/scene.h>
 
 #include <imgui.h>
 
