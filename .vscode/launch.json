@@ -11,8 +11,8 @@
             "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
             "args": [
                 // "${env:GLTF_SAMPLE_MODELS}/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"
-                // "${env:GLTF_SAMPLE_MODELS}/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"
-                "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm",
+                "${env:GLTF_SAMPLE_MODELS}/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"
+                // "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

@@ -89,8 +89,25 @@ int main(int argc, char **argv) {
     // ImGuizmo::DrawCubes(camera.view, camera.projection, m, 1);
 
     {
-     ImGui::Begin("json");
-      scene.traverse_json();
+      auto enter = [](json &item, const std::string &key) {
+        static ImGuiTreeNodeFlags base_flags =
+            ImGuiTreeNodeFlags_OpenOnArrow |
+            ImGuiTreeNodeFlags_OpenOnDoubleClick |
+            ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = base_flags;
+        auto is_leaf = !item.is_object() && !item.is_array();
+        if (is_leaf) {
+          node_flags |=
+              ImGuiTreeNodeFlags_Leaf |
+              ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+        }
+        bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)&item, node_flags,
+                                           "%s", key.c_str());
+        return node_open && !is_leaf;
+      };
+      auto leave = []() { ImGui::TreePop(); };
+      ImGui::Begin("json");
+      scene.traverse_json(enter, leave);
       ImGui::End();
     }
 
@@ -131,7 +148,7 @@ int main(int argc, char **argv) {
         }
         return node.children.size() && node_open;
       };
-      auto leave = [](Node &) { ImGui::TreePop(); };
+      auto leave = []() { ImGui::TreePop(); };
 
       ImGui::Begin("scene");
       scene.traverse(enter, leave);

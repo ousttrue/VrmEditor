@@ -28,7 +28,9 @@ using RenderFunc =
     std::function<void(const Camera &, const Mesh &, const float[16])>;
 
 using EnterFunc = std::function<bool(Node &, const DirectX::XMFLOAT4X4 &)>;
-using LeaveFunc = std::function<void(Node &)>;
+using LeaveFunc = std::function<void()>;
+using EnterJson = std::function<bool(json &, const std::string &key)>;
+using LeaveJson = std::function<void()>;
 
 struct Scene {
   std::vector<std::shared_ptr<Image>> m_images;
@@ -48,5 +50,6 @@ struct Scene {
               std::chrono::milliseconds time);
   void traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});
-  void traverse_json(json *j = nullptr);
+  void traverse_json(const EnterJson &enter, const LeaveJson &leave,
+                     json *j = nullptr, std::string_view key = {});
 };

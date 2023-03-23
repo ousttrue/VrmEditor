@@ -419,7 +419,7 @@ void Scene::traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
         traverse(enter, leave, child.get(), node->world);
       }
       if (leave) {
-        leave(*node);
+        leave();
       }
     }
   } else {
@@ -430,8 +430,28 @@ void Scene::traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
   }
 }
 
-void Scene::traverse_json(json *item) {
+void Scene::traverse_json(const EnterJson &enter, const LeaveJson &leave,
+                          json *item, std::string_view key) {
   if (!item) {
-    item = &gltf;
+    // root
+    for (auto &kv : gltf.items()) {
+      traverse_json(enter, leave, &kv.value(), kv.key());
+    }
+    return;
+  }
+
+  if (enter(*item, key.size() ? std::string{key.begin(), key.end()} : "")) {
+    if (item->is_object()) {
+      for (auto &kv : item->items()) {
+        traverse_json(enter, leave, &kv.value(), kv.key());
+      }
+    } else if (item->is_array()) {
+      for (int i = 0; i < item->size(); ++i) {
+        traverse_json(enter, leave, &(*item)[i], std::format("{}", i));
+      }
+    }
+    if (leave) {
+      leave();
+    }
   }
 }
