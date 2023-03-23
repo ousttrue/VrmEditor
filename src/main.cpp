@@ -101,8 +101,21 @@ int main(int argc, char **argv) {
               ImGuiTreeNodeFlags_Leaf |
               ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
         }
+        std::string label;
+        if (item.is_object()) {
+          if (item.find("name") != item.end()) {
+            label =
+                std::format("{}: {}", key, (std::string_view)item.at("name"));
+          } else {
+            label = std::format("{}: object", key);
+          }
+        } else if (item.is_array()) {
+          label = std::format("{}: [{}]", key, item.size());
+        } else {
+          label = std::format("{}: {}", key, item.dump());
+        }
         bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)&item, node_flags,
-                                           "%s", key.c_str());
+                                           "%s", label.c_str());
         return node_open && !is_leaf;
       };
       auto leave = []() { ImGui::TreePop(); };

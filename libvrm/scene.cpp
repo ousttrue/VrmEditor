@@ -208,7 +208,7 @@ void Scene::load(const char *path) {
         addIndices(0, ptr.get(), &*glb, prim.at("indices"),
                    prim.at("material"));
       } else {
-        // gltf. extedn vertex buffer
+        // extend vertex buffer
         auto offset = ptr->addPosition(
             glb->accessor<float3>(attributes[VERTEX_POSITION]));
         if (attributes.find(VERTEX_NORMAL) != attributes.end()) {
@@ -227,6 +227,18 @@ void Scene::load(const char *path) {
               glb->accessor<float4>(attributes.at(VERTEX_WEIGHT)));
         }
 
+        // extend morph target
+        if (prim.find("targets") != prim.end()) {
+          auto &targets = prim.at("targets");
+          for (int i = 0; i < targets.size(); ++i) {
+            auto morph = ptr->getOrCreateMorphTarget(i);
+            // std::cout << target << std::endl;
+            auto morphOffset = morph->addPosition(
+                glb->accessor<float3>(attributes.at(VERTEX_POSITION)));
+          }
+        }
+
+        // extend indices and add vertex offset
         addIndices(offset, ptr.get(), &*glb, prim["indices"],
                    prim.at("material"));
       }

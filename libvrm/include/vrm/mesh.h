@@ -12,6 +12,24 @@ struct Primitive {
   std::shared_ptr<Material> material;
 };
 
+struct MorphVertex {
+  float3 position;
+};
+
+struct MorphTarget {
+  std::string name;
+  std::vector<MorphVertex> m_vertices;
+
+  size_t addPosition(std::span<const float3> values) {
+    auto offset = m_vertices.size();
+    m_vertices.resize(offset + values.size());
+    for (size_t i = 0; i < values.size(); ++i) {
+      m_vertices[offset + i].position = values[i];
+    }
+    return offset;
+  }
+};
+
 struct Mesh {
   uint32_t id;
   Mesh() {
@@ -24,6 +42,8 @@ struct Mesh {
   std::vector<Vertex> m_vertices;
   std::vector<uint32_t> m_indices;
   std::vector<Primitive> m_primitives;
+  // morphtarget
+  std::vector<std::shared_ptr<MorphTarget>> m_morphTargets;
   // skinning
   std::vector<JointBinding> m_bindings;
   std::vector<Vertex> m_updated;
@@ -56,6 +76,13 @@ struct Mesh {
     for (size_t i = 0; i < values.size(); ++i) {
       m_vertices[offset + i].uv = values[i];
     }
+  }
+
+  std::shared_ptr<MorphTarget> getOrCreateMorphTarget(int index) {
+    while (index >= m_morphTargets.size()) {
+      m_morphTargets.push_back(std::make_shared<MorphTarget>());
+    }
+    return m_morphTargets[index];
   }
 
   void setBoneSkinning(uint32_t offset, std::span<const ushort4> joints,
