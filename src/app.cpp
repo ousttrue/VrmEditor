@@ -132,9 +132,9 @@ int App::run(int argc, char **argv) {
   }
 
   Gl3Renderer gl3r;
-  Gui gui(window, platform.glsl_version.c_str());
   OrbitView view;
 
+  gui_ = std::make_shared<Gui>(window, platform.glsl_version.c_str());
   scene_ = std::make_shared<Scene>();
 
   if (argc > 1) {
@@ -163,15 +163,15 @@ int App::run(int argc, char **argv) {
   int32_t endFrame = 64;
   // static bool transformOpen = false;
 
-  gui.m_docks.push_back(jsonDock());
-  gui.m_docks.push_back(sceneDock());
+  jsonDock();
+  sceneDock();
 
   while (auto info = platform.newFrame()) {
     // newFrame
-    gui.newFrame();
+    gui_->newFrame();
     camera.resize(info->width, info->height);
     view.SetSize(info->width, info->height);
-    if (auto event = gui.backgroundMouseEvent()) {
+    if (auto event = gui_->backgroundMouseEvent()) {
       if (auto delta = event->rightDrag) {
         view.YawPitch(delta->x, delta->y);
       }
@@ -194,8 +194,6 @@ int App::run(int argc, char **argv) {
     ImGuizmo::SetRect(vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
     ImGuizmo::DrawGrid(camera.view, camera.projection, m, 100);
     // ImGuizmo::DrawCubes(camera.view, camera.projection, m, 1);
-
-    context.selected = context.new_selected;
 
     {
       ImGui::Begin("timeline");
@@ -240,20 +238,9 @@ int App::run(int argc, char **argv) {
       ImGui::End();
     }
 
-    gui.update();
+    gui_->update();
 
-    if (context.selected) {
-      ImGui::Begin(context.selected->name.c_str());
-      if (auto mesh_index = context.selected->mesh) {
-        auto mesh = scene_->m_meshes[*mesh_index];
-        for (auto &morph : mesh->m_morphTargets) {
-          ImGui::SliderFloat(morph->name.c_str(), &morph->weight, 0, 1);
-        }
-      }
-      ImGui::End();
-    }
-
-    gui.render();
+    gui_->render();
 
     platform.present();
   }
@@ -261,14 +248,21 @@ int App::run(int argc, char **argv) {
   return 0;
 }
 
-Dock App::sceneDock() {
-  auto enter = [this](Node &node, const DirectX::XMFLOAT4X4 &parent) {
+struct TreeContext {
+  Node *selected = nullptr;
+  Node *new_selected = nullptr;
+};
+
+void App::sceneDock() {
+  auto context = std::make_shared<TreeContext>();
+
+  auto enter = [this, context](Node &node, const DirectX::XMFLOAT4X4 &parent) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     static ImGuiTreeNodeFlags base_flags =
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
         ImGuiTreeNodeFlags_SpanAvailWidth;
     ImGuiTreeNodeFlags node_flags = base_flags;
-    auto is_selected = context.selected == &node;
+    auto is_selected = context->selected == &node;
     if (is_selected) {
       node_flags |= ImGuiTreeNodeFlags_Selected;
 
@@ -291,19 +285,33 @@ Dock App::sceneDock() {
     bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)node.index, node_flags,
                                        "%s", node.name.c_str());
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-      context.new_selected = &node;
+      context->new_selected = &node;
     }
 
     return node.children.size() && node_open;
   };
   auto leave = []() { ImGui::TreePop(); };
 
-  return Dock("scene", [scene = scene_, enter, leave]() {
-    scene->traverse(enter, leave);
-  });
+  gui_->m_docks.push_back(
+      Dock("scene", [scene = scene_, enter, leave, context]() {
+        context->selected = context->new_selected;
+
+        if (context->selected) {
+          ImGui::Begin(context->selected->name.c_str());
+          if (auto mesh_index = context->selected->mesh) {
+            auto mesh = scene->m_meshes[*mesh_index];
+            for (auto &morph : mesh->m_morphTargets) {
+              ImGui::SliderFloat(morph->name.c_str(), &morph->weight, 0, 1);
+            }
+          }
+          ImGui::End();
+        }
+
+        scene->traverse(enter, leave);
+      }));
 }
 
-Dock App::jsonDock() {
+void App::jsonDock() {
 
   auto enter = [](json &item, const std::string &key) {
     static ImGuiTreeNodeFlags base_flags =
@@ -334,7 +342,7 @@ Dock App::jsonDock() {
   };
   auto leave = []() { ImGui::TreePop(); };
 
-  return Dock("json", [scene = scene_, enter, leave]() {
+  gui_->m_docks.push_back(Dock("json", [scene = scene_, enter, leave]() {
     scene->traverse_json(enter, leave);
-  });
+  }));
 }

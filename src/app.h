@@ -1,6 +1,5 @@
 #pragma once
 #include "camera.h"
-#include "gui.h"
 #include <filesystem>
 #include <functional>
 #include <list>
@@ -22,7 +21,7 @@ public:
 };
 
 struct Scene;
-
+class Gui;
 using AssetEnter =
     std::function<bool(const std::filesystem::path &path, uint64_t id)>;
 using AssetLeave = std::function<void()>;
@@ -40,18 +39,11 @@ public:
                 const std::filesystem::path &path = {});
 };
 
-struct Node;
-struct TreeContext {
-  Node *selected = nullptr;
-  Node *new_selected = nullptr;
-};
-
 class App {
   LuaEngine lua_;
+  std::shared_ptr<Gui> gui_;
   std::shared_ptr<Scene> scene_;
   std::list<std::shared_ptr<AssetDir>> assets_;
-
-  TreeContext context;
   Camera camera{};
 
   App();
@@ -71,6 +63,8 @@ public:
   bool addAssetDir(std::string_view name, const std::string &path);
 
 private:
-  Dock jsonDock();
-  Dock sceneDock();
+  void jsonDock();
+  void sceneDock();
+  void timelineDock();
+  void cameraDock();
 };
