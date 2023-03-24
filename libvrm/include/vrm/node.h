@@ -31,8 +31,7 @@ struct Node : public std::enable_shared_from_this<Node> {
   void addChild(const std::shared_ptr<Node> &child);
   void calcWorld(const DirectX::XMFLOAT4X4 &parent);
   bool setLocalMatrix(const DirectX::XMFLOAT4X4 &local);
-  bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world,
-                      const DirectX::XMFLOAT4X4 &parent);
+  bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world);
   void print(int level = 0);
 };
 inline std::ostream &operator<<(std::ostream &os, const Node &node) {

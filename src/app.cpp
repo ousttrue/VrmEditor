@@ -152,7 +152,6 @@ int App::run(int argc, char **argv) {
     }
   }
 
-  cameraViewDock();
   jsonDock();
   sceneDock();
   timelineDock();
@@ -162,7 +161,6 @@ int App::run(int argc, char **argv) {
     scene_->update(info->time);
     // newFrame
     gui_->newFrame();
-    ImGuizmo::BeginFrame();
     gui_->update();
 
     glViewport(0, 0, info->width, info->height);
@@ -176,12 +174,18 @@ int App::run(int argc, char **argv) {
   return 0;
 }
 
+struct TreeContext {
+  Node *selected = nullptr;
+  Node *new_selected = nullptr;
+};
+
 struct RenderTarget {
   Camera camera;
   OrbitView view;
   std::shared_ptr<glo::Fbo> fbo;
   float color[4];
   std::function<void(const Camera &camera)> render;
+  std::shared_ptr<TreeContext> selection;
 
   uint32_t clear(int width, int height) {
     if (width == 0 || height == 0) {
@@ -237,55 +241,23 @@ struct RenderTarget {
       }
       view.Update(camera.projection, camera.view);
       render(camera);
+
+      if (auto node = selection->selected) {
+        // TODO: conflict mouse event(left) with ImageButton
+        ImGuizmo::BeginFrame();
+        ImGuizmo::SetDrawlist();
+        ImGuizmo::SetRect(x, y, w, h);
+        auto m = node->world;
+        if (ImGuizmo::Manipulate(camera.view, camera.projection,
+                                 ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
+                                 (float *)&m, NULL, NULL, NULL, NULL)) {
+          // decompose feedback
+          node->setWorldMatrix(m);
+        }
+      }
     }
     fbo->Unbind();
   }
-};
-
-void App::cameraViewDock() {
-
-  auto rt = std::make_shared<RenderTarget>();
-  rt->color[0] = 0.2;
-  rt->color[1] = 0.2;
-  rt->color[2] = 0.2;
-  rt->color[3] = 1.0;
-
-  auto gl3r = std::make_shared<Gl3Renderer>();
-
-  rt->render = [scene = scene_, gl3r](const Camera &camera) {
-    gl3r->clear(camera);
-
-    RenderFunc render = [gl3r](const Camera &camera, const Mesh &mesh,
-                               const float m[16]) {
-      gl3r->render(camera, mesh, m);
-    };
-    scene->render(camera, render);
-  };
-
-  gui_->m_docks.push_back(Dock("view", [rt, scene = scene_](bool *p_open) {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
-    if (ImGui::Begin("render target", p_open,
-                     ImGuiWindowFlags_NoScrollbar |
-                         ImGuiWindowFlags_NoScrollWithMouse)) {
-      auto pos = ImGui::GetWindowPos();
-      pos.y += ImGui::GetFrameHeight();
-      auto size = ImGui::GetContentRegionAvail();
-      rt->show_fbo(pos.x, pos.y, size.x, size.y);
-    }
-
-    ImGui::End();
-    ImGui::PopStyleVar();
-  }));
-
-  //
-  // auto vp = ImGui::GetMainViewport();
-  // ImGuizmo::SetRect(vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
-  // ImGuizmo::DrawGrid(camera.view, camera.projection, m, 100);
-}
-
-struct TreeContext {
-  Node *selected = nullptr;
-  Node *new_selected = nullptr;
 };
 
 void App::sceneDock() {
@@ -297,27 +269,15 @@ void App::sceneDock() {
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
         ImGuiTreeNodeFlags_SpanAvailWidth;
     ImGuiTreeNodeFlags node_flags = base_flags;
-    auto is_selected = context->selected == &node;
-
-    // if (is_selected) {
-    //   node_flags |= ImGuiTreeNodeFlags_Selected;
-    //
-    //   auto m = node.world;
-    //
-    //   if (ImGuizmo::Manipulate(camera.view, camera.projection,
-    //                            ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
-    //                            (float *)&m, NULL, NULL, NULL, NULL)) {
-    //     // decompose feedback
-    //     node.setWorldMatrix(m, parent);
-    //   }
-    // }
 
     if (node.children.empty()) {
       node_flags |=
           ImGuiTreeNodeFlags_Leaf |
           ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
     }
-
+    if (context->selected == &node) {
+      node_flags |= ImGuiTreeNodeFlags_Selected;
+    }
     bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)node.index, node_flags,
                                        "%s", node.name.c_str());
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
@@ -356,6 +316,40 @@ void App::sceneDock() {
       }
       ImGui::End();
     }
+  }));
+
+  auto rt = std::make_shared<RenderTarget>();
+  rt->color[0] = 0.2;
+  rt->color[1] = 0.2;
+  rt->color[2] = 0.2;
+  rt->color[3] = 1.0;
+  rt->selection = context;
+
+  auto gl3r = std::make_shared<Gl3Renderer>();
+
+  rt->render = [scene = scene_, gl3r](const Camera &camera) {
+    gl3r->clear(camera);
+
+    RenderFunc render = [gl3r](const Camera &camera, const Mesh &mesh,
+                               const float m[16]) {
+      gl3r->render(camera, mesh, m);
+    };
+    scene->render(camera, render);
+  };
+
+  gui_->m_docks.push_back(Dock("view", [rt, scene = scene_](bool *p_open) {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
+    if (ImGui::Begin("render target", p_open,
+                     ImGuiWindowFlags_NoScrollbar |
+                         ImGuiWindowFlags_NoScrollWithMouse)) {
+      auto pos = ImGui::GetWindowPos();
+      pos.y += ImGui::GetFrameHeight();
+      auto size = ImGui::GetContentRegionAvail();
+      rt->show_fbo(pos.x, pos.y, size.x, size.y);
+    }
+
+    ImGui::End();
+    ImGui::PopStyleVar();
   }));
 }
 

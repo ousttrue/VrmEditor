@@ -35,10 +35,16 @@ bool Node::setLocalMatrix(const DirectX::XMFLOAT4X4 &local) {
   return true;
 }
 
-bool Node::setWorldMatrix(const DirectX::XMFLOAT4X4 &world,
-                          const DirectX::XMFLOAT4X4 &parent) {
-  auto inv = DirectX::XMMatrixInverse(
-      nullptr, DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4 *)&parent));
+bool Node::setWorldMatrix(const DirectX::XMFLOAT4X4 &world) {
+
+  DirectX::XMMATRIX parentMatrix;
+  if (auto parentNode = parent.lock()) {
+    parentMatrix = DirectX::XMLoadFloat4x4(&parentNode->world);
+  } else {
+    parentMatrix = DirectX::XMMatrixIdentity();
+  }
+
+  auto inv = DirectX::XMMatrixInverse(nullptr, parentMatrix);
   auto local = DirectX::XMLoadFloat4x4(&world) * inv;
 
   DirectX::XMFLOAT4X4 m;

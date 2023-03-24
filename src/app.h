@@ -62,7 +62,6 @@ public:
   bool addAssetDir(std::string_view name, const std::string &path);
 
 private:
-  void cameraViewDock();
   void jsonDock();
   void sceneDock();
   void timelineDock();
