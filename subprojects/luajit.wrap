@@ -1,0 +1,9 @@
+# https://github.com/franko/luajit
+[wrap-git]
+url = https://github.com/LuaJIT/LuaJIT.git
+revision = master
+depth = 1
+patch_directory = luajit 
+
+[provide]
+luajit = luajit_dep

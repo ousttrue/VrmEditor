@@ -14,6 +14,8 @@
 #include <ImGuizmo.h>
 #include <imgui_neo_sequencer.h>
 
+#include <lua.hpp>
+
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
@@ -23,6 +25,19 @@ struct TreeContext {
   Node *new_selected = nullptr;
 };
 
+class LuaEngine {
+  lua_State *L_ = nullptr;
+
+public:
+  LuaEngine() {
+    L_ = luaL_newstate();
+    luaL_openlibs(L_);
+  }
+  ~LuaEngine() { lua_close(L_); }
+
+  void eval(const std::string &script) { luaL_dostring(L_, script.c_str()); }
+};
+
 int main(int argc, char **argv) {
   Platform platform;
   auto window =
@@ -30,6 +45,13 @@ int main(int argc, char **argv) {
   if (!window) {
     return 1;
   }
+
+  LuaEngine lua;
+  lua.eval(R"(
+
+  print('hello luajit !');
+
+  )");
 
   Gl3Renderer gl3r;
   Gui gui(window, platform.glsl_version.c_str());

@@ -12,6 +12,10 @@ json_dep = subproject('json').get_variable('nlohmann_json_dep')
 glo_dep = dependency('glo')
 stb_dep = dependency('stb')
 im_neo_sequencer_dep = dependency('im_neo_sequencer')
+luajit_dep = subproject(
+    'luajit',
+    default_options: ['default_library=static'],
+).get_variable('lua_dep')
 
 subdir('ImGuizmo')
 subdir('libvrm')

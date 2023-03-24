@@ -15,5 +15,6 @@ executable(
         imguizmo_dep,
         vrm_dep,
         im_neo_sequencer_dep,
+        luajit_dep,
     ],
 )
