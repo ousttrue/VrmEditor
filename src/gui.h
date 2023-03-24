@@ -3,6 +3,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <string>
 
 struct Delta {
   int x;
@@ -16,17 +17,20 @@ struct MouseEvent {
 
 using DockShow = std::function<void(bool *popen)>;
 
-class Dock {
+struct Dock {
+  std::string name;
   DockShow on_show;
-
-public:
+  bool use_window = true;
   bool popen = true;
-  Dock(const DockShow &on_show) : on_show(on_show) {}
-  void show() {
-    if (popen) {
-      on_show(&popen);
-    }
+
+  Dock(std::string_view name, const DockShow &show)
+      : name(name), on_show(show), use_window(false) {}
+  Dock(std::string_view name, const std::function<void()> &show)
+      : name(name), on_show(on_show), use_window(true) {
+    on_show = [show](bool *) { show(); };
   }
+
+  void show();
 };
 
 class Gui {

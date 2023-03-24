@@ -8,6 +8,22 @@
 
 const auto DOCK_SPACE = "VRM_DOCKSPACE";
 
+void Dock::show() {
+  if (popen) {
+    // begin
+    if (use_window) {
+      if (ImGui::Begin(name.c_str(), &popen)) {
+        on_show(&popen);
+      }
+    } else {
+      on_show(&popen);
+    }
+    if (use_window) {
+      ImGui::End();
+    }
+  }
+}
+
 Gui::Gui(const void *window, const char *glsl_version) {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -68,7 +84,8 @@ Gui::Gui(const void *window, const char *glsl_version) {
   // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
   // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
 
-  m_docks.push_back(Dock([](bool *popen) { ImGui::ShowDemoWindow(popen); }));
+  m_docks.push_back(
+      Dock("demo", [](bool *popen) { ImGui::ShowDemoWindow(popen); }));
 }
 
 Gui::~Gui() {}
