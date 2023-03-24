@@ -25,6 +25,7 @@ struct Node;
 struct Animation;
 class Image;
 class Material;
+struct Vrm0;
 using RenderFunc =
     std::function<void(const Camera &, const Mesh &, const float[16])>;
 
@@ -42,6 +43,7 @@ struct Scene {
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
   json gltf;
+  std::shared_ptr<Vrm0> m_vrm0;
 
   void clear() {
     m_images.clear();

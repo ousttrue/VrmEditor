@@ -125,7 +125,7 @@ struct Mesh {
     }
   }
 
-  void skinning(std::span<DirectX::XMFLOAT4X4> skinningMatrices) {
+  void applyMorphTargetAndSkinning(std::span<DirectX::XMFLOAT4X4> skinningMatrices) {
     // clear & apply morph target
     m_updated.clear();
     for (int i = 0; i < m_vertices.size(); ++i) {

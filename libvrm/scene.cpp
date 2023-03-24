@@ -5,6 +5,7 @@
 #include "vrm/mesh.h"
 #include "vrm/node.h"
 #include "vrm/skin.h"
+#include "vrm/vrm0.h"
 #include <DirectXMath.h>
 #include <array>
 #include <expected>
@@ -73,6 +74,12 @@ inline void from_json(const json &j, DirectX::XMFLOAT4X4 &m) {
   m._42 = j[13];
   m._43 = j[14];
   m._44 = j[15];
+}
+
+inline void from_json(const json &j, Vrm0ExpressionMorphTargetBind &b) {
+  b.mesh = j.at("mesh");
+  b.index = j.at("index");
+  b.weight = j.at("weight");
 }
 
 template <typename T>
@@ -327,6 +334,44 @@ bool Scene::load(const std::filesystem::path &path) {
     }
   }
 
+  // vrm-0.x
+  if (glb->gltf.find("extensions") != glb->gltf.end()) {
+    auto &extensions = glb->gltf.at("extensions");
+    if (extensions.find("VRM") != extensions.end()) {
+      auto VRM = extensions.at("VRM");
+      m_vrm0 = std::make_shared<Vrm0>();
+
+      // exporterVersion
+      // firstPerson
+      // humanoid
+      // materialProperties
+      // meta
+      // secondaryAnimation
+      // specVersion
+
+      if (VRM.find("blendShapeMaster") != VRM.end()) {
+        auto &blendShapeMaster = VRM.at("blendShapeMaster");
+        if (blendShapeMaster.find("blendShapeGroups") !=
+            blendShapeMaster.end()) {
+          auto &blendShapeGroups = blendShapeMaster.at("blendShapeGroups");
+          for (auto &g : blendShapeGroups) {
+            // {"binds":[],"isBinary":false,"materialValues":[],"name":"Neutral","presetName":"neutral"}
+            std::cout << g << std::endl;
+            auto expression = m_vrm0->addBlendShape(
+                g.at("presetName"), g.at("name"), g.value("isBinary", false));
+            if (g.find("binds") != g.end()) {
+              for (Vrm0ExpressionMorphTargetBind bind : g.at("binds")) {
+                // [0-100] to [0-1]
+                bind.weight *= 0.01f;
+                expression->morphBinds.push_back(bind);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   // calc world
   auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
     node.calcWorld(parent);
@@ -406,7 +451,27 @@ void Scene::render(const Camera &camera, const RenderFunc &render,
                                        DirectX::XMLoadFloat4x4(&node->world) *
                                        rootInverse);
         }
-        mesh->skinning(skin->currentMatrices);
+
+        if (m_vrm0) {
+          // VRM0 expression to morphTarget
+
+          // clear
+          for (auto &mesh : m_meshes) {
+            for (auto &morph : mesh->m_morphTargets) {
+              morph->weight = 0;
+            }
+          }
+          // apply
+          for (auto &expression : m_vrm0->m_expressions) {
+            for (auto &morphTarget : expression->morphBinds) {
+              auto &mesh = m_meshes[morphTarget.mesh];
+              auto &morph = mesh->m_morphTargets[morphTarget.index];
+              morph->weight += morphTarget.weight * expression->weight;
+            }
+          }
+        }
+
+        mesh->applyMorphTargetAndSkinning(skin->currentMatrices);
       }
 
       render(camera, *mesh, &node->world._11);

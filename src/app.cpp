@@ -12,6 +12,7 @@
 #include <vrm/mesh.h>
 #include <vrm/node.h>
 #include <vrm/scene.h>
+#include <vrm/vrm0.h>
 
 #include <ImGuizmo.h>
 #include <imgui_neo_sequencer.h>
@@ -298,6 +299,15 @@ int App::run(int argc, char **argv) {
                                    &endFrame)) {
         // Timeline code here
         ImGui::EndNeoSequencer();
+      }
+      ImGui::End();
+    }
+
+    if (auto vrm = scene_->m_vrm0) {
+      ImGui::Begin("vrm-0.x");
+      for (auto expression : vrm->m_expressions) {
+        ImGui::SliderFloat(expression->label.c_str(), &expression->weight, 0,
+                           1);
       }
       ImGui::End();
     }
