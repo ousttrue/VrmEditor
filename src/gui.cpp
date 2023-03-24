@@ -9,14 +9,14 @@
 const auto DOCK_SPACE = "VRM_DOCKSPACE";
 
 void Dock::show() {
-  if (popen) {
+  if (p_open) {
     // begin
     if (use_window) {
-      if (ImGui::Begin(name.c_str(), &popen)) {
-        on_show(&popen);
+      if (ImGui::Begin(name.c_str(), &p_open)) {
+        on_show(&p_open);
       }
     } else {
-      on_show(&popen);
+      on_show(&p_open);
     }
     if (use_window) {
       ImGui::End();
@@ -62,7 +62,7 @@ Gui::Gui(const void *window, const char *glsl_version) {
   // them.
   // - AddFontFromFileTTF() will return the ImFont* so you can store it if you
   // need to select the font among multiple.
-  // - If the file cannot be loaded, the function will return NULL. Please
+  // - If the file cannot be loaded, the function will return nullptr. Please
   // handle those errors in your application (e.g. use an assertion, or display
   // an error and quit).
   // - The fonts will be rasterized at a given size (w/ oversampling) and stored
@@ -82,7 +82,7 @@ Gui::Gui(const void *window, const char *glsl_version) {
   // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
   // ImFont* font =
   // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
-  // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
+  // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
 
   m_docks.push_back(
       Dock("demo", [](bool *popen) { ImGui::ShowDemoWindow(popen); }));
@@ -111,7 +111,7 @@ std::optional<MouseEvent> Gui::backgroundMouseEvent() const {
   return event;
 }
 
-static void DockSpace() {
+void Gui::dockspace() {
   // If you strip some features of, this demo is pretty much equivalent to
   // calling DockSpaceOverViewport()! In most cases you should be able to just
   // call DockSpaceOverViewport() and ignore all the code below! In this
@@ -189,8 +189,8 @@ static void DockSpace() {
       // Disabling fullscreen would allow the window to be moved to the front of
       // other windows, which we can't undo at the moment without finer window
       // depth/z control.
-      ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-      ImGui::MenuItem("Padding", NULL, &opt_padding);
+      ImGui::MenuItem("Fullscreen", nullptr, &opt_fullscreen);
+      ImGui::MenuItem("Padding", nullptr, &opt_padding);
       ImGui::Separator();
 
       if (ImGui::MenuItem("Flag: NoSplit", "",
@@ -221,9 +221,19 @@ static void DockSpace() {
       }
       ImGui::Separator();
 
-      // if (ImGui::MenuItem("Close", NULL, false, p_open != NULL)){
+      // if (ImGui::MenuItem("Close", nullptr, false, p_open != nullptr)){
       //   *p_open = false;
       // }
+      ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Docks")) {
+      // Disabling fullscreen would allow the window to be moved to the front of
+      // other windows, which we can't undo at the moment without finer window
+      // depth/z control.
+      for (auto &dock : m_docks) {
+        ImGui::MenuItem(dock.name.c_str(), nullptr, &dock.p_open);
+      }
       ImGui::EndMenu();
     }
 
@@ -231,6 +241,10 @@ static void DockSpace() {
   }
 
   ImGui::End();
+
+  for (auto &dock : m_docks) {
+    dock.show();
+  }
 }
 
 void Gui::newFrame() {
@@ -239,14 +253,10 @@ void Gui::newFrame() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  DockSpace();
+  dockspace();
 }
 
 void Gui::update() {
-  for (auto &dock : m_docks) {
-    dock.show();
-  }
-
   //
   // // 2. Show a simple window that we create ourselves. We use a Begin/End
   // pair

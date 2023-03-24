@@ -21,7 +21,7 @@ struct Dock {
   std::string name;
   DockShow on_show;
   bool use_window = true;
-  bool popen = true;
+  bool p_open = true;
 
   Dock(std::string_view name, const DockShow &show)
       : name(name), on_show(show), use_window(false) {}
