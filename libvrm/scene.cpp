@@ -76,8 +76,8 @@ inline void from_json(const json &j, DirectX::XMFLOAT4X4 &m) {
 }
 
 template <typename T>
-static std::vector<T> ReadAllBytes(const std::string &filename) {
-  std::ifstream ifs(filename.c_str(), std::ios::binary | std::ios::ate);
+static std::vector<T> ReadAllBytes(const std::filesystem::path &path) {
+  std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
     return {};
   }
@@ -147,7 +147,7 @@ void Node::print(int level) {
   }
 }
 
-bool Scene::load(const char *path) {
+bool Scene::load(const std::filesystem::path &path) {
   auto bytes = ReadAllBytes<uint8_t>(path);
   if (bytes.empty()) {
     return false;
@@ -158,6 +158,8 @@ bool Scene::load(const char *path) {
     return false;
   }
   gltf = glb->gltf;
+
+  clear();
 
   auto &images = glb->gltf["images"];
   for (int i = 0; i < images.size(); ++i) {

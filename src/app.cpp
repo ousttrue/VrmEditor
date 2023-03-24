@@ -16,11 +16,20 @@
 #include <ImGuizmo.h>
 #include <imgui_neo_sequencer.h>
 
+#include <Windows.h>
 #include <lua.hpp>
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
+
+static std::string WideToMb(const wchar_t *src) {
+  auto l = WideCharToMultiByte(932, 0, src, -1, nullptr, 0, nullptr, nullptr);
+  std::string dst;
+  dst.resize(l);
+  l = WideCharToMultiByte(932, 0, src, -1, dst.data(), l, nullptr, nullptr);
+  return dst;
+}
 
 struct TreeContext {
   Node *selected = nullptr;
@@ -35,8 +44,17 @@ static int vrmeditor_load(lua_State *l) {
   return 1;
 }
 
+static int vrmeditor_add_asset_dir(lua_State *l) {
+  auto dir = luaL_checklstring(l, -1, nullptr);
+  auto name = luaL_checklstring(l, -2, nullptr);
+  auto succeeded = App::instance().addAssetDir(name, dir);
+  lua_pushboolean(App::instance().lua(), succeeded);
+  return 1;
+}
+
 static const struct luaL_Reg VrmEditorLuaModule[] = {
     {"load", vrmeditor_load},
+    {"add_asset_dir", vrmeditor_add_asset_dir},
     {NULL, NULL},
 };
 
@@ -59,6 +77,40 @@ void LuaEngine::dofile(const std::string &path) {
     std::cout << lua_tostring(L_, -1) << std::endl;
   }
 }
+AssetDir::AssetDir(std::string_view name, std::string_view path) : name_(name) {
+  root_ = path;
+}
+
+void AssetDir::traverse(const AssetEnter &enter, const AssetLeave &leave,
+                        const std::filesystem::path &path) {
+
+  if (path.empty()) {
+    // root
+    // traverse(enter, leave, root_);
+    for (auto e : std::filesystem::directory_iterator(root_)) {
+      traverse(enter, leave, e);
+    }
+    return;
+  }
+
+  uint64_t id;
+  auto found = idMap_.find(path);
+  if (found != idMap_.end()) {
+    id = found->second;
+  } else {
+    id = nextId_++;
+    idMap_.insert(std::make_pair(path, id));
+  }
+
+  if (enter(path, id)) {
+    if (std::filesystem::is_directory(path)) {
+      for (auto e : std::filesystem::directory_iterator(path)) {
+        traverse(enter, leave, e);
+      }
+    }
+    leave();
+  }
+}
 
 App::App() {}
 
@@ -66,7 +118,14 @@ App::~App() {}
 
 lua_State *App::lua() { return lua_.state(); }
 
-bool App::load(const std::string &path) { return scene_->load(path.c_str()); }
+bool App::load(const std::filesystem::path &path) { return scene_->load(path); }
+
+bool App::addAssetDir(std::string_view name, const std::string &path) {
+
+  assets_.push_back(std::make_shared<AssetDir>(name, path));
+
+  return true;
+}
 
 int App::run(int argc, char **argv) {
 
@@ -240,6 +299,30 @@ int App::run(int argc, char **argv) {
         // Timeline code here
         ImGui::EndNeoSequencer();
       }
+      ImGui::End();
+    }
+
+    for (auto asset : assets_) {
+      ImGui::Begin(asset->name().c_str());
+      auto enter = [](const std::filesystem::path &path, uint64_t id) {
+        static ImGuiTreeNodeFlags base_flags =
+            ImGuiTreeNodeFlags_OpenOnArrow |
+            ImGuiTreeNodeFlags_OpenOnDoubleClick |
+            ImGuiTreeNodeFlags_SpanAvailWidth;
+        if (std::filesystem::is_directory(path)) {
+          ImGuiTreeNodeFlags node_flags = base_flags;
+          return ImGui::TreeNodeEx((void *)(intptr_t)id, node_flags, "%ls",
+                                   path.filename().c_str());
+        } else {
+          auto mb = WideToMb(path.filename().c_str());
+          if (ImGui::Button(mb.c_str())) {
+            App::instance().load(path);
+          }
+          return false;
+        }
+      };
+      auto leave = []() { ImGui::TreePop(); };
+      asset->traverse(enter, leave);
       ImGui::End();
     }
 

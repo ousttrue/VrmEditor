@@ -2,6 +2,7 @@
 #include "scenetypes.h"
 #include <DirectXMath.h>
 #include <chrono>
+#include <filesystem>
 #include <functional>
 #include <list>
 #include <memory>
@@ -42,10 +43,21 @@ struct Scene {
   std::vector<std::shared_ptr<Animation>> m_animations;
   json gltf;
 
+  void clear() {
+    m_images.clear();
+    m_materials.clear();
+    m_meshes.clear();
+    m_nodes.clear();
+    m_roots.clear();
+    m_skins.clear();
+    m_animations.clear();
+    gltf = {};
+  }
+
   Scene() {}
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
-  bool load(const char *path);
+  bool load(const std::filesystem::path &path);
 
 private:
   void addIndices(int vertex_offset, Mesh *mesh, struct Glb *glb,
