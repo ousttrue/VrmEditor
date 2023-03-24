@@ -23,11 +23,15 @@ const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
 
-static std::string WideToMb(const wchar_t *src) {
-  auto l = WideCharToMultiByte(932, 0, src, -1, nullptr, 0, nullptr, nullptr);
+static std::string WideToMb(uint32_t cp, const wchar_t *src) {
+  auto l = WideCharToMultiByte(cp, 0, src, -1, nullptr, 0, nullptr, nullptr);
+  if (std::wstring(src).starts_with(L"Two")) {
+    auto a = 0;
+  }
   std::string dst;
   dst.resize(l);
-  l = WideCharToMultiByte(932, 0, src, -1, dst.data(), l, nullptr, nullptr);
+  l = WideCharToMultiByte(cp, 0, src, -1, dst.data(), l, nullptr, nullptr);
+  dst.push_back(0);
   return dst;
 }
 
@@ -158,94 +162,48 @@ int App::run(int argc, char **argv) {
       0, 0, 0, 1, //
   };
 
-  int32_t currentFrame = 0;
-  int32_t startFrame = -10;
-  int32_t endFrame = 64;
-  // static bool transformOpen = false;
-
+  cameraViewDock();
   jsonDock();
   sceneDock();
+  timelineDock();
+  assetsDock();
 
   while (auto info = platform.newFrame()) {
     // newFrame
     gui_->newFrame();
-    camera.resize(info->width, info->height);
-    view.SetSize(info->width, info->height);
-    if (auto event = gui_->backgroundMouseEvent()) {
-      if (auto delta = event->rightDrag) {
-        view.YawPitch(delta->x, delta->y);
-      }
-      if (auto delta = event->middleDrag) {
-        view.Shift(delta->x, delta->y);
-      }
-      if (auto wheel = event->wheel) {
-        view.Dolly(*wheel);
-      }
-    }
-    view.Update(camera.projection, camera.view);
-
-    // render view
-    gl3r.clear(camera);
-    scene_->render(camera, render, info->time);
-
-    // render gui
     ImGuizmo::BeginFrame();
-    auto vp = ImGui::GetMainViewport();
-    ImGuizmo::SetRect(vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
-    ImGuizmo::DrawGrid(camera.view, camera.projection, m, 100);
-    // ImGuizmo::DrawCubes(camera.view, camera.projection, m, 1);
-
-    {
-      ImGui::Begin("timeline");
-      if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame,
-                                   &endFrame)) {
-        // Timeline code here
-        ImGui::EndNeoSequencer();
-      }
-      ImGui::End();
-    }
-
-    if (auto vrm = scene_->m_vrm0) {
-      ImGui::Begin("vrm-0.x");
-      for (auto expression : vrm->m_expressions) {
-        ImGui::SliderFloat(expression->label.c_str(), &expression->weight, 0,
-                           1);
-      }
-      ImGui::End();
-    }
-
-    for (auto asset : assets_) {
-      ImGui::Begin(asset->name().c_str());
-      auto enter = [](const std::filesystem::path &path, uint64_t id) {
-        static ImGuiTreeNodeFlags base_flags =
-            ImGuiTreeNodeFlags_OpenOnArrow |
-            ImGuiTreeNodeFlags_OpenOnDoubleClick |
-            ImGuiTreeNodeFlags_SpanAvailWidth;
-        if (std::filesystem::is_directory(path)) {
-          ImGuiTreeNodeFlags node_flags = base_flags;
-          return ImGui::TreeNodeEx((void *)(intptr_t)id, node_flags, "%ls",
-                                   path.filename().c_str());
-        } else {
-          auto mb = WideToMb(path.filename().c_str());
-          if (ImGui::Button(mb.c_str())) {
-            App::instance().load(path);
-          }
-          return false;
-        }
-      };
-      auto leave = []() { ImGui::TreePop(); };
-      asset->traverse(enter, leave);
-      ImGui::End();
-    }
-
     gui_->update();
-
     gui_->render();
-
     platform.present();
   }
 
   return 0;
+}
+
+void App::cameraViewDock() {
+
+  // camera.resize(info->width, info->height);
+  // view.SetSize(info->width, info->height);
+  // if (auto event = gui_->backgroundMouseEvent()) {
+  //   if (auto delta = event->rightDrag) {
+  //     view.YawPitch(delta->x, delta->y);
+  //   }
+  //   if (auto delta = event->middleDrag) {
+  //     view.Shift(delta->x, delta->y);
+  //   }
+  //   if (auto wheel = event->wheel) {
+  //     view.Dolly(*wheel);
+  //   }
+  // }
+  // view.Update(camera.projection, camera.view);
+  //
+  // auto vp = ImGui::GetMainViewport();
+  // ImGuizmo::SetRect(vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
+  // ImGuizmo::DrawGrid(camera.view, camera.projection, m, 100);
+  //
+  // // render view
+  // gl3r.clear(camera);
+  // scene_->render(camera, render, info->time);
 }
 
 struct TreeContext {
@@ -296,19 +254,32 @@ void App::sceneDock() {
       Dock("scene", [scene = scene_, enter, leave, context]() {
         context->selected = context->new_selected;
 
-        if (context->selected) {
-          ImGui::Begin(context->selected->name.c_str());
-          if (auto mesh_index = context->selected->mesh) {
-            auto mesh = scene->m_meshes[*mesh_index];
-            for (auto &morph : mesh->m_morphTargets) {
-              ImGui::SliderFloat(morph->name.c_str(), &morph->weight, 0, 1);
-            }
-          }
-          ImGui::End();
-        }
-
         scene->traverse(enter, leave);
       }));
+
+  gui_->m_docks.push_back(Dock("selected", [scene = scene_, context]() {
+    if (context->selected) {
+      ImGui::Text("%s", context->selected->name.c_str());
+      if (auto mesh_index = context->selected->mesh) {
+        auto mesh = scene->m_meshes[*mesh_index];
+        for (auto &morph : mesh->m_morphTargets) {
+          ImGui::SliderFloat(morph->name.c_str(), &morph->weight, 0, 1);
+        }
+      }
+      // ImGui::End();
+    }
+  }));
+
+  gui_->m_docks.push_back(Dock("vrm-0.x", [scene = scene_]() {
+    if (auto vrm = scene->m_vrm0) {
+      ImGui::Begin("vrm-0.x");
+      for (auto expression : vrm->m_expressions) {
+        ImGui::SliderFloat(expression->label.c_str(), &expression->weight, 0,
+                           1);
+      }
+      ImGui::End();
+    }
+  }));
 }
 
 void App::jsonDock() {
@@ -345,4 +316,44 @@ void App::jsonDock() {
   gui_->m_docks.push_back(Dock("json", [scene = scene_, enter, leave]() {
     scene->traverse_json(enter, leave);
   }));
+}
+
+void App::timelineDock() {
+
+  gui_->m_docks.push_back(Dock("timeline", []() {
+    int32_t startFrame = 0;
+    int32_t endFrame = 200;
+    int32_t currentFrame = 0;
+    if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame,
+                                 &endFrame)) {
+      // Timeline code here
+      ImGui::EndNeoSequencer();
+    }
+  }));
+}
+
+void App::assetsDock() {
+  for (auto asset : assets_) {
+    auto enter = [](const std::filesystem::path &path, uint64_t id) {
+      static ImGuiTreeNodeFlags base_flags =
+          ImGuiTreeNodeFlags_OpenOnArrow |
+          ImGuiTreeNodeFlags_OpenOnDoubleClick |
+          ImGuiTreeNodeFlags_SpanAvailWidth;
+      auto mb = WideToMb(CP_OEMCP, path.filename().c_str());
+      if (std::filesystem::is_directory(path)) {
+        ImGuiTreeNodeFlags node_flags = base_flags;
+        return ImGui::TreeNodeEx((void *)(intptr_t)id, node_flags, "%s",
+                                 mb.c_str());
+      } else {
+        if (ImGui::Button(mb.c_str())) {
+          App::instance().load(path);
+        }
+        return false;
+      }
+    };
+    auto leave = []() { ImGui::TreePop(); };
+    gui_->m_docks.push_back(
+        Dock(std::format("asset: {}", asset->name()),
+             [asset, enter, leave]() { asset->traverse(enter, leave); }));
+  }
 }

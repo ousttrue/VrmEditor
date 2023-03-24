@@ -252,11 +252,10 @@ void Gui::newFrame() {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-
-  dockspace();
 }
 
 void Gui::update() {
+  dockspace();
   //
   // // 2. Show a simple window that we create ourselves. We use a Begin/End
   // pair
