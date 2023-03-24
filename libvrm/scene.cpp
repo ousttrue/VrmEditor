@@ -147,15 +147,15 @@ void Node::print(int level) {
   }
 }
 
-void Scene::load(const char *path) {
+bool Scene::load(const char *path) {
   auto bytes = ReadAllBytes<uint8_t>(path);
   if (bytes.empty()) {
-    return;
+    return false;
   }
 
   auto glb = Glb::parse(bytes);
   if (!glb) {
-    return;
+    return false;
   }
   gltf = glb->gltf;
 
@@ -203,7 +203,6 @@ void Scene::load(const char *path) {
       json attributes = prim["attributes"];
 
       if (lastAtributes && attributes == *lastAtributes) {
-        std::cout << "same attributes" << std::endl;
         // for vrm shared vertex buffer
         addIndices(0, ptr.get(), &*glb, prim.at("indices"),
                    prim.at("material"));
@@ -388,6 +387,8 @@ void Scene::load(const char *path) {
     return true;
   };
   traverse(enter, {});
+
+  return true;
 }
 
 void Scene::addIndices(int vertex_offset, Mesh *mesh, Glb *glb,

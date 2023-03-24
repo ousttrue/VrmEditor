@@ -5,6 +5,7 @@ executable(
         'gl3renderer.cpp',
         'gui.cpp',
         'platform.cpp',
+        'app.cpp',
     ],
     install: true,
     dependencies: [

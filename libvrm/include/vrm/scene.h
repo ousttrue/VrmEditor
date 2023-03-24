@@ -45,7 +45,7 @@ struct Scene {
   Scene() {}
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
-  void load(const char *path);
+  bool load(const char *path);
 
 private:
   void addIndices(int vertex_offset, Mesh *mesh, struct Glb *glb,
