@@ -1,3 +1,5 @@
+#include <gl/glew.h>
+
 #include "app.h"
 #include "gl3renderer.h"
 #include "gui.h"
@@ -6,6 +8,7 @@
 #include "platform.h"
 #include <format>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <iostream>
 #include <vrm/animation.h>
 #include <vrm/mesh.h>
@@ -18,6 +21,8 @@
 
 #include <Windows.h>
 #include <lua.hpp>
+
+#include <glo/fbo.h>
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
@@ -135,9 +140,6 @@ int App::run(int argc, char **argv) {
     return 1;
   }
 
-  Gl3Renderer gl3r;
-  OrbitView view;
-
   gui_ = std::make_shared<Gui>(window, platform.glsl_version.c_str());
   scene_ = std::make_shared<Scene>();
 
@@ -150,18 +152,6 @@ int App::run(int argc, char **argv) {
     }
   }
 
-  RenderFunc render = [&gl3r](const Camera &camera, const Mesh &mesh,
-                              const float m[16]) {
-    gl3r.render(camera, mesh, m);
-  };
-
-  float m[16]{
-      1, 0, 0, 0, //
-      0, 1, 0, 0, //
-      0, 0, 1, 0, //
-      0, 0, 0, 1, //
-  };
-
   cameraViewDock();
   jsonDock();
   sceneDock();
@@ -169,10 +159,16 @@ int App::run(int argc, char **argv) {
   assetsDock();
 
   while (auto info = platform.newFrame()) {
+    scene_->update(info->time);
     // newFrame
     gui_->newFrame();
     ImGuizmo::BeginFrame();
     gui_->update();
+
+    glViewport(0, 0, info->width, info->height);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     gui_->render();
     platform.present();
   }
@@ -180,30 +176,111 @@ int App::run(int argc, char **argv) {
   return 0;
 }
 
+struct RenderTarget {
+  Camera camera;
+  OrbitView view;
+  std::shared_ptr<glo::Fbo> fbo;
+  float color[4];
+  std::function<void(const Camera &camera)> render;
+
+  uint32_t clear(int width, int height) {
+    if (width == 0 || height == 0) {
+      return 0;
+    }
+
+    if (fbo) {
+      if (fbo->texture->width_ != width || fbo->texture->height_ != height) {
+        fbo = nullptr;
+      }
+    }
+    if (!fbo) {
+      fbo = glo::Fbo::Create(width, height);
+    }
+
+    fbo->Bind();
+    glViewport(0, 0, width, height);
+    glScissor(0, 0, width, height);
+    glClearColor(color[0] * color[3], color[1] * color[3], color[2] * color[3],
+                 color[3]);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearDepth(1.0f);
+    glDepthFunc(GL_LESS);
+    return fbo->texture->texture_;
+  }
+
+  void show_fbo(float x, float y, float w, float h) {
+    assert(w);
+    assert(h);
+    auto texture = clear(int(w), int(h));
+    if (texture) {
+      ImGui::ImageButton((ImTextureID)texture, {w, h}, {0, 1}, {1, 0}, 0,
+                         {1, 1, 1, 1}, {1, 1, 1, 1});
+      ImGui::ButtonBehavior(ImGui::GetCurrentContext()->LastItemData.Rect,
+                            ImGui::GetCurrentContext()->LastItemData.ID,
+                            nullptr, nullptr,
+                            ImGuiButtonFlags_MouseButtonMiddle |
+                                ImGuiButtonFlags_MouseButtonRight);
+      auto &io = ImGui::GetIO();
+
+      camera.resize(w, h);
+      view.SetSize(w, h);
+      if (ImGui::IsItemActive()) {
+        if (io.MouseDown[ImGuiMouseButton_Right]) {
+          view.YawPitch(io.MouseDelta.x, io.MouseDelta.y);
+        }
+        if (io.MouseDown[ImGuiMouseButton_Middle]) {
+          view.Shift(io.MouseDelta.x, io.MouseDelta.y);
+        }
+      }
+      if (ImGui::IsItemHovered()) {
+        view.Dolly(io.MouseWheel);
+      }
+      view.Update(camera.projection, camera.view);
+      render(camera);
+    }
+    fbo->Unbind();
+  }
+};
+
 void App::cameraViewDock() {
 
-  // camera.resize(info->width, info->height);
-  // view.SetSize(info->width, info->height);
-  // if (auto event = gui_->backgroundMouseEvent()) {
-  //   if (auto delta = event->rightDrag) {
-  //     view.YawPitch(delta->x, delta->y);
-  //   }
-  //   if (auto delta = event->middleDrag) {
-  //     view.Shift(delta->x, delta->y);
-  //   }
-  //   if (auto wheel = event->wheel) {
-  //     view.Dolly(*wheel);
-  //   }
-  // }
-  // view.Update(camera.projection, camera.view);
+  auto rt = std::make_shared<RenderTarget>();
+  rt->color[0] = 0.2;
+  rt->color[1] = 0.2;
+  rt->color[2] = 0.2;
+  rt->color[3] = 1.0;
+
+  auto gl3r = std::make_shared<Gl3Renderer>();
+
+  rt->render = [scene = scene_, gl3r](const Camera &camera) {
+    gl3r->clear(camera);
+
+    RenderFunc render = [gl3r](const Camera &camera, const Mesh &mesh,
+                               const float m[16]) {
+      gl3r->render(camera, mesh, m);
+    };
+    scene->render(camera, render);
+  };
+
+  gui_->m_docks.push_back(Dock("view", [rt, scene = scene_](bool *p_open) {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
+    if (ImGui::Begin("render target", p_open,
+                     ImGuiWindowFlags_NoScrollbar |
+                         ImGuiWindowFlags_NoScrollWithMouse)) {
+      auto pos = ImGui::GetWindowPos();
+      pos.y += ImGui::GetFrameHeight();
+      auto size = ImGui::GetContentRegionAvail();
+      rt->show_fbo(pos.x, pos.y, size.x, size.y);
+    }
+
+    ImGui::End();
+    ImGui::PopStyleVar();
+  }));
+
   //
   // auto vp = ImGui::GetMainViewport();
   // ImGuizmo::SetRect(vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
   // ImGuizmo::DrawGrid(camera.view, camera.projection, m, 100);
-  //
-  // // render view
-  // gl3r.clear(camera);
-  // scene_->render(camera, render, info->time);
 }
 
 struct TreeContext {
@@ -221,18 +298,19 @@ void App::sceneDock() {
         ImGuiTreeNodeFlags_SpanAvailWidth;
     ImGuiTreeNodeFlags node_flags = base_flags;
     auto is_selected = context->selected == &node;
-    if (is_selected) {
-      node_flags |= ImGuiTreeNodeFlags_Selected;
 
-      auto m = node.world;
-
-      if (ImGuizmo::Manipulate(camera.view, camera.projection,
-                               ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
-                               (float *)&m, NULL, NULL, NULL, NULL)) {
-        // decompose feedback
-        node.setWorldMatrix(m, parent);
-      }
-    }
+    // if (is_selected) {
+    //   node_flags |= ImGuiTreeNodeFlags_Selected;
+    //
+    //   auto m = node.world;
+    //
+    //   if (ImGuizmo::Manipulate(camera.view, camera.projection,
+    //                            ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
+    //                            (float *)&m, NULL, NULL, NULL, NULL)) {
+    //     // decompose feedback
+    //     node.setWorldMatrix(m, parent);
+    //   }
+    // }
 
     if (node.children.empty()) {
       node_flags |=
@@ -266,7 +344,6 @@ void App::sceneDock() {
           ImGui::SliderFloat(morph->name.c_str(), &morph->weight, 0, 1);
         }
       }
-      // ImGui::End();
     }
   }));
 

@@ -44,7 +44,6 @@ class App {
   std::shared_ptr<Gui> gui_;
   std::shared_ptr<Scene> scene_;
   std::list<std::shared_ptr<AssetDir>> assets_;
-  Camera camera{};
 
   App();
 

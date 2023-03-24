@@ -404,8 +404,7 @@ void Scene::addIndices(int vertex_offset, Mesh *mesh, Glb *glb,
   }
 }
 
-void Scene::render(const Camera &camera, const RenderFunc &render,
-                   std::chrono::milliseconds time) {
+void Scene::update(std::chrono::milliseconds time) {
   // update local
   for (auto &animation : m_animations) {
     animation->update(time, m_nodes);
@@ -418,7 +417,7 @@ void Scene::render(const Camera &camera, const RenderFunc &render,
   };
   traverse(enter, {});
 
-  // render mesh
+  // skinning
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
@@ -473,7 +472,15 @@ void Scene::render(const Camera &camera, const RenderFunc &render,
 
         mesh->applyMorphTargetAndSkinning(skin->currentMatrices);
       }
+    }
+  }
+}
 
+void Scene::render(const Camera &camera, const RenderFunc &render) {
+  // render mesh
+  for (auto &node : m_nodes) {
+    if (auto mesh_index = node->mesh) {
+      auto mesh = m_meshes[*mesh_index];
       render(camera, *mesh, &node->world._11);
     }
   }
