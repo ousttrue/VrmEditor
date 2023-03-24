@@ -1,4 +1,7 @@
 #pragma once
+#include <functional>
+#include <list>
+#include <memory>
 #include <optional>
 
 struct Delta {
@@ -11,16 +14,32 @@ struct MouseEvent {
   std::optional<int> wheel;
 };
 
-class Gui {
-  // Our state
-  bool show_demo_window = true;
-  bool show_another_window = false;
+using DockShow = std::function<void(bool *popen)>;
+
+class Dock {
+  DockShow on_show;
 
 public:
+  bool popen = true;
+  Dock(const DockShow &on_show) : on_show(on_show) {}
+  void show() {
+    if (popen) {
+      on_show(&popen);
+    }
+  }
+};
+
+class Gui {
+
+public:
+  std::list<Dock> m_docks;
   Gui(const void *window, const char *glsl_version);
   ~Gui();
   std::optional<MouseEvent> backgroundMouseEvent() const;
   void newFrame();
   void update();
   void render();
+
+private:
+  void dockspace();
 };

@@ -67,6 +67,8 @@ Gui::Gui(const void *window, const char *glsl_version) {
   // ImFont* font =
   // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
   // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
+
+  m_docks.push_back(Dock([](bool *popen) { ImGui::ShowDemoWindow(popen); }));
 }
 
 Gui::~Gui() {}
@@ -220,18 +222,14 @@ void Gui::newFrame() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  // dockspace
   DockSpace();
 }
 
 void Gui::update() {
+  for (auto &dock : m_docks) {
+    dock.show();
+  }
 
-  // // 1. Show the big demo window (Most of the sample code is in
-  // // ImGui::ShowDemoWindow()! You can browse its code to learn more about
-  // Dear
-  // // ImGui!).
-  // if (show_demo_window)
-  ImGui::ShowDemoWindow(&show_demo_window);
   //
   // // 2. Show a simple window that we create ourselves. We use a Begin/End
   // pair
