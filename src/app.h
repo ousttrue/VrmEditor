@@ -1,4 +1,6 @@
 #pragma once
+#include "camera.h"
+#include "gui.h"
 #include <filesystem>
 #include <functional>
 #include <list>
@@ -38,10 +40,19 @@ public:
                 const std::filesystem::path &path = {});
 };
 
+struct Node;
+struct TreeContext {
+  Node *selected = nullptr;
+  Node *new_selected = nullptr;
+};
+
 class App {
   LuaEngine lua_;
   std::shared_ptr<Scene> scene_;
   std::list<std::shared_ptr<AssetDir>> assets_;
+
+  TreeContext context;
+  Camera camera{};
 
   App();
 
@@ -58,4 +69,8 @@ public:
   // lua API
   bool load(const std::filesystem::path &path);
   bool addAssetDir(std::string_view name, const std::string &path);
+
+private:
+  Dock jsonDock();
+  Dock sceneDock();
 };

@@ -109,9 +109,9 @@ bool Scene::load(const std::filesystem::path &path) {
   if (!glb) {
     return false;
   }
-  gltf = glb->gltf;
-
   clear();
+
+  m_gltf = glb->gltf;
 
   auto &images = glb->gltf["images"];
   for (int i = 0; i < images.size(); ++i) {
@@ -502,7 +502,7 @@ void Scene::traverse_json(const EnterJson &enter, const LeaveJson &leave,
                           json *item, std::string_view key) {
   if (!item) {
     // root
-    for (auto &kv : gltf.items()) {
+    for (auto &kv : m_gltf.items()) {
       traverse_json(enter, leave, &kv.value(), kv.key());
     }
     return;

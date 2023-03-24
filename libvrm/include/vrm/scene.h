@@ -42,7 +42,7 @@ struct Scene {
   std::vector<std::shared_ptr<Node>> m_roots;
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
-  json gltf;
+  json m_gltf;
   std::shared_ptr<Vrm0> m_vrm0;
 
   void clear() {
@@ -53,7 +53,7 @@ struct Scene {
     m_roots.clear();
     m_skins.clear();
     m_animations.clear();
-    gltf = {};
+    m_gltf = {};
   }
 
   Scene() {}
