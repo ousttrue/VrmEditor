@@ -3,6 +3,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <string>
 
 struct Delta {
@@ -33,7 +34,22 @@ struct Dock {
   void show();
 };
 
+struct FontConfig {
+  // use default if empty
+  std::string font;
+};
+
+using Task = std::function<void()>;
+
 class Gui {
+  bool initialized_ = false;
+  const void *window_ = nullptr;
+
+  std::string glsl_version_;
+  std::queue<Task> tasks_;
+
+  int fontSize_ = 20;
+  std::vector<FontConfig> fonts_ = {{}};
 
 public:
   std::list<Dock> m_docks;
@@ -43,6 +59,8 @@ public:
   void newFrame();
   void update();
   void render();
+  void postTask(const Task &task) { tasks_.push(task); }
+  void loadFont();
 
 private:
   void dockspace();
