@@ -3,8 +3,12 @@
 ---@class vrmeditor
 vrmeditor = {}
 
----@param path string gltf, glb, vrm, fbx bvh, lua
-function vrmeditor.load(path) end
+---@param path string gltf, glb, vrm, fbx lua
+function vrmeditor.load_model(path) end
+
+---@param path string bvh
+---@param scale number auto scaling if 0
+function vrmeditor.load_motion(path, scale) end
 
 ---@param name string
 ---@param dir string to asset dir. ex. GLTF_SAMPLE_MODELS

@@ -19,4 +19,5 @@ luajit_dep = subproject(
 
 subdir('ImGuizmo')
 subdir('libvrm')
+subdir('bvhutil')
 subdir('src')

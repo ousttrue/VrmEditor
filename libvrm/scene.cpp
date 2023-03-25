@@ -109,7 +109,6 @@ bool Scene::load(const std::filesystem::path &path) {
   if (!glb) {
     return false;
   }
-  clear();
 
   m_gltf = glb->gltf;
 

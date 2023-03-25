@@ -6,6 +6,7 @@
 #include "no_sal2.h"
 #include "orbitview.h"
 #include "platform.h"
+#include <Bvh.h>
 #include <format>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -40,24 +41,34 @@ static std::string WideToMb(uint32_t cp, const wchar_t *src) {
   return dst;
 }
 
-static int vrmeditor_load(lua_State *l) {
+static int vrmeditor_load_model(lua_State *l) {
   auto path = luaL_checklstring(l, -1, nullptr);
 
-  auto succeeded = App::instance().load(path);
+  auto succeeded = App::instance().load_model(path);
+  lua_pushboolean(App::instance().lua(), succeeded);
+  return 1;
+}
+
+static int vrmeditor_load_motion(lua_State *l) {
+  auto path = luaL_checklstring(l, -2, nullptr);
+  auto scale = luaL_checknumber(l, -1);
+
+  auto succeeded = App::instance().load_motion(path, scale);
   lua_pushboolean(App::instance().lua(), succeeded);
   return 1;
 }
 
 static int vrmeditor_add_asset_dir(lua_State *l) {
-  auto dir = luaL_checklstring(l, -1, nullptr);
   auto name = luaL_checklstring(l, -2, nullptr);
+  auto dir = luaL_checklstring(l, -1, nullptr);
   auto succeeded = App::instance().addAssetDir(name, dir);
   lua_pushboolean(App::instance().lua(), succeeded);
   return 1;
 }
 
 static const struct luaL_Reg VrmEditorLuaModule[] = {
-    {"load", vrmeditor_load},
+    {"load_model", vrmeditor_load_model},
+    {"load_motion", vrmeditor_load_motion},
     {"add_asset_dir", vrmeditor_add_asset_dir},
     {NULL, NULL},
 };
@@ -116,13 +127,20 @@ void AssetDir::traverse(const AssetEnter &enter, const AssetLeave &leave,
   }
 }
 
-App::App() {}
+App::App() { scene_ = std::make_shared<Scene>(); }
 
 App::~App() {}
 
 lua_State *App::lua() { return lua_.state(); }
 
-bool App::load(const std::filesystem::path &path) { return scene_->load(path); }
+bool App::load_model(const std::filesystem::path &path) {
+  return scene_->load(path);
+}
+
+bool App::load_motion(const std::filesystem::path &path, float scaling) {
+  motion_ = Bvh::ParseFile(path);
+  return motion_ != nullptr;
+}
 
 bool App::addAssetDir(std::string_view name, const std::string &path) {
 
@@ -141,7 +159,6 @@ int App::run(int argc, char **argv) {
   }
 
   gui_ = std::make_shared<Gui>(window, platform.glsl_version.c_str());
-  scene_ = std::make_shared<Scene>();
 
   if (argc > 1) {
     std::string_view arg = argv[1];
@@ -412,7 +429,8 @@ void App::timelineDock() {
 
 void App::assetsDock() {
   for (auto asset : assets_) {
-    auto enter = [](const std::filesystem::path &path, uint64_t id) {
+    auto enter = [scene = scene_](const std::filesystem::path &path,
+                                  uint64_t id) {
       static ImGuiTreeNodeFlags base_flags =
           ImGuiTreeNodeFlags_OpenOnArrow |
           ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -424,7 +442,8 @@ void App::assetsDock() {
                                  mb.c_str());
       } else {
         if (ImGui::Button(mb.c_str())) {
-          App::instance().load(path);
+          scene->clear();
+          scene->load(path);
         }
         return false;
       }

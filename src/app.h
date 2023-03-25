@@ -21,6 +21,7 @@ public:
 };
 
 struct Scene;
+struct Bvh;
 class Gui;
 using AssetEnter =
     std::function<bool(const std::filesystem::path &path, uint64_t id)>;
@@ -44,6 +45,7 @@ class App {
   std::shared_ptr<Gui> gui_;
   std::shared_ptr<Scene> scene_;
   std::list<std::shared_ptr<AssetDir>> assets_;
+  std::shared_ptr<Bvh> motion_;
 
   App();
 
@@ -58,7 +60,8 @@ public:
   lua_State *lua();
   int run(int argc, char **argv);
   // lua API
-  bool load(const std::filesystem::path &path);
+  bool load_model(const std::filesystem::path &path);
+  bool load_motion(const std::filesystem::path &path, float scaling = 1.0f);
   bool addAssetDir(std::string_view name, const std::string &path);
 
 private:

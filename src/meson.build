@@ -17,5 +17,6 @@ executable(
         vrm_dep,
         im_neo_sequencer_dep,
         luajit_dep,
+        bvhutil_dep,
     ],
 )
