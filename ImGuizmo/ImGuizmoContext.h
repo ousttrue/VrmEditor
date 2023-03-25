@@ -1,6 +1,7 @@
 #pragma once
 #include <imgui.h>
 
+#include <functional>
 #include <imgui_internal.h>
 
 #ifdef USE_IMGUI_API
@@ -203,7 +204,7 @@ public:
   }
 };
 
-vec_t makeVect(float _x, float _y, float _z = 0.f, float _w = 0.f) {
+inline vec_t makeVect(float _x, float _y, float _z = 0.f, float _w = 0.f) {
   vec_t res;
   res.x = _x;
   res.y = _y;
@@ -211,7 +212,7 @@ vec_t makeVect(float _x, float _y, float _z = 0.f, float _w = 0.f) {
   res.w = _w;
   return res;
 }
-vec_t makeVect(ImVec2 v) {
+inline vec_t makeVect(ImVec2 v) {
   vec_t res;
   res.x = v.x;
   res.y = v.y;
@@ -219,22 +220,24 @@ vec_t makeVect(ImVec2 v) {
   res.w = 0.f;
   return res;
 }
-vec_t vec_t::operator*(float f) const {
+inline vec_t vec_t::operator*(float f) const {
   return makeVect(x * f, y * f, z * f, w * f);
 }
-vec_t vec_t::operator-() const { return makeVect(-x, -y, -z, -w); }
-vec_t vec_t::operator-(const vec_t &v) const {
+inline vec_t vec_t::operator-() const { return makeVect(-x, -y, -z, -w); }
+inline vec_t vec_t::operator-(const vec_t &v) const {
   return makeVect(x - v.x, y - v.y, z - v.z, w - v.w);
 }
-vec_t vec_t::operator+(const vec_t &v) const {
+inline vec_t vec_t::operator+(const vec_t &v) const {
   return makeVect(x + v.x, y + v.y, z + v.z, w + v.w);
 }
-vec_t vec_t::operator*(const vec_t &v) const {
+inline vec_t vec_t::operator*(const vec_t &v) const {
   return makeVect(x * v.x, y * v.y, z * v.z, w * v.w);
 }
-vec_t vec_t::Abs() const { return makeVect(fabsf(x), fabsf(y), fabsf(z)); }
+inline vec_t vec_t::Abs() const {
+  return makeVect(fabsf(x), fabsf(y), fabsf(z));
+}
 
-void FPU_MatrixF_x_MatrixF(const float *a, const float *b, float *r) {
+inline void FPU_MatrixF_x_MatrixF(const float *a, const float *b, float *r) {
   r[0] = a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12];
   r[1] = a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13];
   r[2] = a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14];
@@ -437,6 +440,8 @@ struct Context {
 
   bool mAllowAxisFlip = true;
   float mGizmoSizeClipSpace = 0.1f;
+
+  bool mAllowActiveHoverItem = false;
 };
 
 } // namespace IMGUIZMO_NAMESPACE

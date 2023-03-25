@@ -253,12 +253,14 @@ struct RenderTarget {
       if (auto node = selection->selected) {
         // TODO: conflict mouse event(left) with ImageButton
         auto m = node->world;
+        ImGuizmo::GetContext().mAllowActiveHoverItem = true;
         if (ImGuizmo::Manipulate(camera.view, camera.projection,
                                  ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
                                  (float *)&m, NULL, NULL, NULL, NULL)) {
           // decompose feedback
           node->setWorldMatrix(m);
         }
+        ImGuizmo::GetContext().mAllowActiveHoverItem = false;
       }
     }
     fbo->Unbind();
