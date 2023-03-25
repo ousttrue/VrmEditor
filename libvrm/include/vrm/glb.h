@@ -87,7 +87,7 @@ struct Glb {
 
     int offset = accessor.value("byteOffset", 0);
     return std::span<const T>((const T *)(span.data() + offset),
-                              accessor["count"]);
+                              accessor.at("count"));
   }
 
   static std::optional<Glb> parse(std::span<const uint8_t> bytes);

@@ -152,8 +152,8 @@ bool Scene::load(const std::filesystem::path &path) {
     m_meshes.push_back(ptr);
 
     json *lastAtributes = nullptr;
-    for (auto prim : mesh["primitives"]) {
-      json attributes = prim["attributes"];
+    for (auto &prim : mesh["primitives"]) {
+      json &attributes = prim.at("attributes");
 
       if (lastAtributes && attributes == *lastAtributes) {
         // for vrm shared vertex buffer
