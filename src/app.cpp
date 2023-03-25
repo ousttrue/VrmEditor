@@ -190,6 +190,8 @@ int App::run(int argc, char **argv) {
     platform.present();
   }
 
+  gui_ = nullptr;
+
   return 0;
 }
 
