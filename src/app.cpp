@@ -161,6 +161,8 @@ int App::run(int argc, char **argv) {
     scene_->update(info->time);
     // newFrame
     gui_->newFrame();
+    ImGuizmo::BeginFrame();
+
     gui_->update();
 
     glViewport(0, 0, info->width, info->height);
@@ -213,10 +215,14 @@ struct RenderTarget {
   }
 
   void show_fbo(float x, float y, float w, float h) {
+    ImGuizmo::SetDrawlist();
+    ImGuizmo::SetRect(x, y, w, h);
+
     assert(w);
     assert(h);
     auto texture = clear(int(w), int(h));
     if (texture) {
+      // image button. capture mouse event
       ImGui::ImageButton((ImTextureID)texture, {w, h}, {0, 1}, {1, 0}, 0,
                          {1, 1, 1, 1}, {1, 1, 1, 1});
       ImGui::ButtonBehavior(ImGui::GetCurrentContext()->LastItemData.Rect,
@@ -224,8 +230,9 @@ struct RenderTarget {
                             nullptr, nullptr,
                             ImGuiButtonFlags_MouseButtonMiddle |
                                 ImGuiButtonFlags_MouseButtonRight);
-      auto &io = ImGui::GetIO();
 
+      // update camera
+      auto &io = ImGui::GetIO();
       camera.resize(w, h);
       view.SetSize(w, h);
       if (ImGui::IsItemActive()) {
@@ -242,11 +249,9 @@ struct RenderTarget {
       view.Update(camera.projection, camera.view);
       render(camera);
 
+      // gizmo
       if (auto node = selection->selected) {
         // TODO: conflict mouse event(left) with ImageButton
-        ImGuizmo::BeginFrame();
-        ImGuizmo::SetDrawlist();
-        ImGuizmo::SetRect(x, y, w, h);
         auto m = node->world;
         if (ImGuizmo::Manipulate(camera.view, camera.projection,
                                  ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
