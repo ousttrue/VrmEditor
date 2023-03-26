@@ -31,11 +31,12 @@ public:
     return s_instance;
   }
   const std::shared_ptr<LuaEngine> &lua() const { return lua_; }
-  int run(int argc, char **argv);
+  int run();
   // lua API
   void clear_scene();
   bool load_model(const std::filesystem::path &path);
   bool load_motion(const std::filesystem::path &path, float scaling = 1.0f);
+  void load_lua(const std::filesystem::path &path);
   bool addAssetDir(std::string_view name, const std::string &path);
 
 private:

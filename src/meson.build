@@ -11,6 +11,7 @@ executable(
         'timeline.cpp',
     ],
     install: true,
+    gui_app: true,
     dependencies: [
         glew_dep,
         glfw_dep,

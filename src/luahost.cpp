@@ -1,5 +1,6 @@
 #include "luahost.h"
 #include "app.h"
+#include "windows_helper.h"
 #include <iostream>
 
 static int vrmeditor_load_model(lua_State *l) {
@@ -46,8 +47,11 @@ void LuaEngine::eval(const std::string &script) {
   luaL_dostring(L_, script.c_str());
 }
 
-void LuaEngine::dofile(const std::string &path) {
-  auto ret = luaL_dofile(L_, path.c_str());
+void LuaEngine::dofile(const std::filesystem::path &path) {
+
+  auto mb = WideToMb(CP_OEMCP, path.c_str());
+
+  auto ret = luaL_dofile(L_, mb.c_str());
   if (ret != 0) {
     std::cout << "luaL_dofile(): " << ret << std::endl;
     std::cout << lua_tostring(L_, -1) << std::endl;

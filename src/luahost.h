@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include <lua.hpp>
 #include <string>
 
@@ -10,5 +11,5 @@ public:
   ~LuaEngine();
   lua_State *state() { return L_; }
   void eval(const std::string &script);
-  void dofile(const std::string &path);
+  void dofile(const std::filesystem::path &path);
 };

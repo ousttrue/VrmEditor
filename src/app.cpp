@@ -71,6 +71,8 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
   return motion_ != nullptr;
 }
 
+void App::load_lua(const std::filesystem::path &path) { lua_->dofile(path); }
+
 bool App::addAssetDir(std::string_view name, const std::string &path) {
 
   assets_.push_back(std::make_shared<AssetDir>(name, path));
@@ -78,7 +80,7 @@ bool App::addAssetDir(std::string_view name, const std::string &path) {
   return true;
 }
 
-int App::run(int argc, char **argv) {
+int App::run() {
 
   Platform platform;
   auto window =
@@ -88,16 +90,6 @@ int App::run(int argc, char **argv) {
   }
 
   gui_ = std::make_shared<Gui>(window, platform.glsl_version.c_str());
-
-  if (argc > 1) {
-    std::string_view arg = argv[1];
-    if (arg.ends_with(".lua")) {
-      lua_->dofile(argv[1]);
-    } else {
-      std::cout << "usage: " << argv[0] << " {*.lua}" << std::endl;
-    }
-  }
-
   jsonDock();
   sceneDock();
   timelineDock();
