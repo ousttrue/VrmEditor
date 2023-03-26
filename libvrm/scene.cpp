@@ -431,16 +431,18 @@ void Scene::update() {
         auto rootInverse = root;
         auto rootTranslation = root;
         if (auto root_index = skin->root) {
-          auto rootNode = m_nodes[*root_index];
-          // rotation only ???
-          auto world = rootNode->worldInit;
-          world._41 = 0;
-          world._42 = 0;
-          world._43 = 0;
-          root = DirectX::XMLoadFloat4x4(&world);
+          // auto rootNode = m_nodes[*root_index];
+          // // rotation only ???
+          // auto world = rootNode->worldInit;
+          // world._41 = 0;
+          // world._42 = 0;
+          // world._43 = 0;
+          // root = DirectX::XMLoadFloat4x4(&world);
+          // rootInverse = DirectX::XMMatrixInverse(nullptr, root);
+          // rootTranslation = DirectX::XMMatrixTranslation(
+          //     rootNode->world._41, rootNode->world._42, rootNode->world._43);
+          root = DirectX::XMLoadFloat4x4(&node->world);
           rootInverse = DirectX::XMMatrixInverse(nullptr, root);
-          rootTranslation = DirectX::XMMatrixTranslation(
-              rootNode->world._41, rootNode->world._42, rootNode->world._43);
         }
 
         for (int i = 0; i < skin->joints.size(); ++i) {

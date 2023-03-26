@@ -42,7 +42,10 @@ App::App() {
 
 App::~App() {}
 
-void App::clear_scene() { scene_->clear(); }
+void App::clear_scene() {
+  timeline_->clear();
+  scene_->clear();
+}
 
 bool App::load_model(const std::filesystem::path &path) {
   if (!scene_->load(path)) {

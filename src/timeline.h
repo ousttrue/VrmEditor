@@ -25,6 +25,8 @@ public:
   Timeline();
   ~Timeline();
 
+  void clear() { m_sequences.clear(); }
+
   void setGlobal(std::chrono::milliseconds time) {
     m_global = time;
     for (auto &[k, v] : m_sequences) {
