@@ -30,6 +30,7 @@ public:
 
   bool is_end() const { return m_pos >= m_data.size(); }
 };
+
 std::optional<Glb> Glb::parse(std::span<const uint8_t> bytes) {
 
   BinaryReader r(bytes);

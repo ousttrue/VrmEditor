@@ -1,5 +1,7 @@
 #pragma once
 #include "camera.h"
+#include "platform.h"
+#include <chrono>
 #include <filesystem>
 #include <functional>
 #include <list>
@@ -41,6 +43,7 @@ public:
 };
 
 class App {
+  GlfwDuration time_;
   LuaEngine lua_;
   std::shared_ptr<Gui> gui_;
   std::shared_ptr<Scene> scene_;

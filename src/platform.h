@@ -3,10 +3,12 @@
 #include <optional>
 #include <string>
 
+using GlfwDuration = std::chrono::duration<double, std::ratio<1, 1>>;
+
 struct FrameInfo {
   int width;
   int height;
-  std::chrono::milliseconds time;
+  GlfwDuration time;
 };
 class Platform {
   struct GLFWwindow *m_window = nullptr;
