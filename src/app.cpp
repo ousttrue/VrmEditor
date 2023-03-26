@@ -68,6 +68,12 @@ bool App::load_model(const std::filesystem::path &path) {
 
 bool App::load_motion(const std::filesystem::path &path, float scaling) {
   motion_ = Bvh::ParseFile(path);
+
+  auto sequence = timeline_->addSequence("bvh", motion_->Duration());
+  sequence->callback = [](auto time, bool repeat) {
+    // motion_->update(time, scene->m_nodes, repeat);
+  };
+
   return motion_ != nullptr;
 }
 

@@ -29,6 +29,7 @@ struct Bvh {
   std::vector<float> frames;
   uint32_t frame_channel_count = 0;
   float max_height = 0;
+
   Bvh();
   ~Bvh();
   static std::shared_ptr<Bvh> ParseFile(const std::filesystem::path &file);
@@ -68,6 +69,15 @@ struct Bvh {
       scalingFactor = 0.01f;
     }
     return scalingFactor;
+  }
+
+  std::chrono::milliseconds Duration() const {
+    int channel_count = 0;
+    for (auto &joint : joints) {
+      channel_count += joint.channels.size();
+    }
+    auto duration = frame_time * (frames.size() / channel_count);
+    return std::chrono::duration_cast<std::chrono::milliseconds>(duration);
   }
 };
 
