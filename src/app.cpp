@@ -33,9 +33,6 @@ const auto WINDOW_TITLE = "VrmEditor";
 
 static std::string WideToMb(uint32_t cp, const wchar_t *src) {
   auto l = WideCharToMultiByte(cp, 0, src, -1, nullptr, 0, nullptr, nullptr);
-  if (std::wstring(src).starts_with(L"Two")) {
-    auto a = 0;
-  }
   std::string dst;
   dst.resize(l);
   l = WideCharToMultiByte(cp, 0, src, -1, dst.data(), l, nullptr, nullptr);
