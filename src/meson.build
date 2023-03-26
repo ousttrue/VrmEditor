@@ -6,6 +6,8 @@ executable(
         'gui.cpp',
         'platform.cpp',
         'app.cpp',
+        'luahost.cpp',
+        'assetdir.cpp',
     ],
     install: true,
     dependencies: [
