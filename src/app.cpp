@@ -3,12 +3,15 @@
 
 #include "app.h"
 #include "assetdir.h"
+#include "camera.h"
 #include "gl3renderer.h"
 #include "gui.h"
 #include "luahost.h"
 #include "no_sal2.h"
 #include "orbitview.h"
 #include "platform.h"
+#include "timeline.h"
+#include "windows_helper.h"
 #include <Bvh.h>
 #include <chrono>
 #include <format>
@@ -22,9 +25,7 @@
 #include <vrm/vrm0.h>
 
 #include <ImGuizmo.h>
-#include <imgui_neo_sequencer.h>
 
-#include <Windows.h>
 #include <lua.hpp>
 
 #include <glo/fbo.h>
@@ -33,24 +34,33 @@ const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
 
-static std::string WideToMb(uint32_t cp, const wchar_t *src) {
-  auto l = WideCharToMultiByte(cp, 0, src, -1, nullptr, 0, nullptr, nullptr);
-  std::string dst;
-  dst.resize(l);
-  l = WideCharToMultiByte(cp, 0, src, -1, dst.data(), l, nullptr, nullptr);
-  dst.push_back(0);
-  return dst;
-}
-
 App::App() {
   lua_ = std::make_shared<LuaEngine>();
   scene_ = std::make_shared<Scene>();
+  timeline_ = std::make_shared<Timeline>();
 }
 
 App::~App() {}
 
+void App::clear_scene() { scene_->clear(); }
+
 bool App::load_model(const std::filesystem::path &path) {
-  return scene_->load(path);
+  if (!scene_->load(path)) {
+    return false;
+  }
+
+  // bind time line
+  for (auto &animation : scene_->m_animations) {
+    auto sequence = timeline_->addSequence("gltf", animation->m_duration);
+    sequence->callback = [animation, scene = scene_](auto time, bool repeat) {
+      animation->update(time, scene->m_nodes, repeat);
+    };
+
+    // first animation only
+    break;
+  }
+
+  return true;
 }
 
 bool App::load_motion(const std::filesystem::path &path, float scaling) {
@@ -81,7 +91,7 @@ int App::run(int argc, char **argv) {
     if (arg.ends_with(".lua")) {
       lua_->dofile(argv[1]);
     } else {
-      scene_->load(argv[1]);
+      std::cout << "usage: " << argv[0] << " {*.lua}" << std::endl;
     }
   }
 
@@ -91,12 +101,13 @@ int App::run(int argc, char **argv) {
   assetsDock();
 
   while (auto info = platform.newFrame()) {
-    scene_->update(
+    // double sec to int64_t milliseconds
+    timeline_->setGlobal(
         std::chrono::duration_cast<std::chrono::milliseconds>(info->time));
+
     // newFrame
     gui_->newFrame();
     ImGuizmo::BeginFrame();
-    time_ = info->time;
 
     gui_->update();
 
@@ -424,18 +435,17 @@ public:
 };
 
 void App::timelineDock() {
-  auto timeline = std::make_shared<ImTimeline>();
+  auto timelineGui = std::make_shared<ImTimeline>();
 
-  gui_->m_docks.push_back(Dock("timeline", [this, timeline]() {
-    timeline->show(
-        std::chrono::duration_cast<std::chrono::milliseconds>(time_));
-  }));
+  gui_->m_docks.push_back(
+      Dock("timeline", [timeline = timeline_, timelineGui]() {
+        timelineGui->show(timeline->global());
+      }));
 }
 
 void App::assetsDock() {
   for (auto asset : assets_) {
-    auto enter = [scene = scene_](const std::filesystem::path &path,
-                                  uint64_t id) {
+    auto enter = [this](const std::filesystem::path &path, uint64_t id) {
       static ImGuiTreeNodeFlags base_flags =
           ImGuiTreeNodeFlags_OpenOnArrow |
           ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -447,8 +457,8 @@ void App::assetsDock() {
                                  mb.c_str());
       } else {
         if (ImGui::Button(mb.c_str())) {
-          scene->clear();
-          scene->load(path);
+          clear_scene();
+          load_model(path);
         }
         return false;
       }

@@ -44,8 +44,10 @@ struct Scene {
   std::vector<std::shared_ptr<Animation>> m_animations;
   json m_gltf;
   std::shared_ptr<Vrm0> m_vrm0;
+  bool m_updated = false;
 
   void clear() {
+    m_vrm0 = nullptr;
     m_images.clear();
     m_materials.clear();
     m_meshes.clear();
@@ -66,7 +68,7 @@ private:
                   int accessor_index, int material_index);
 
 public:
-  void update(std::chrono::milliseconds time);
+  void update();
   void render(const Camera &camera, const RenderFunc &render);
   void traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});

@@ -8,6 +8,7 @@ executable(
         'app.cpp',
         'luahost.cpp',
         'assetdir.cpp',
+        'timeline.cpp',
     ],
     install: true,
     dependencies: [

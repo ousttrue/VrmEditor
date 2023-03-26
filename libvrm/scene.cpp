@@ -331,6 +331,9 @@ bool Scene::load(const std::filesystem::path &path) {
         assert(false);
       }
     }
+
+    // set animation duration
+    ptr->m_duration = ptr->duration();
   }
 
   // vrm-0.x
@@ -403,10 +406,9 @@ void Scene::addIndices(int vertex_offset, Mesh *mesh, Glb *glb,
   }
 }
 
-void Scene::update(std::chrono::milliseconds time) {
-  // update local
-  for (auto &animation : m_animations) {
-    animation->update(time, m_nodes);
+void Scene::update() {
+  if (m_updated) {
+    return;
   }
 
   // calc world
@@ -473,9 +475,12 @@ void Scene::update(std::chrono::milliseconds time) {
       }
     }
   }
+  m_updated = true;
 }
 
 void Scene::render(const Camera &camera, const RenderFunc &render) {
+  update();
+
   // render mesh
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
@@ -483,6 +488,8 @@ void Scene::render(const Camera &camera, const RenderFunc &render) {
       render(camera, *mesh, &node->world._11);
     }
   }
+
+  m_updated = false;
 }
 
 void Scene::traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
