@@ -120,7 +120,7 @@ void Gui::loadFont() {
     if (font.font.empty()) {
       // default font
       ImFontConfig config;
-      config.SizePixels = fontSize_;
+      config.SizePixels = static_cast<float>(fontSize_);
       io.Fonts->AddFontDefault(&config);
     } else {
     }

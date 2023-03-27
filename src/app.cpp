@@ -17,6 +17,7 @@
 #include <BvhSolver.h>
 #include <chrono>
 #include <cuber/gl3/GlCubeRenderer.h>
+#include <cuber/gl3/GlLineRenderer.h>
 #include <format>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -101,10 +102,14 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
   rt->color[3] = 1.0;
 
   auto cuber = std::make_shared<cuber::gl3::GlCubeRenderer>();
+  auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
+  std::vector<grapho::LineVertex> lines;
+  cuber::PushGrid(lines);
 
-  rt->render = [cuber, solver](const Camera &camera) {
+  rt->render = [solver, cuber, liner, lines](const Camera &camera) {
     cuber->Render(camera.projection, camera.view, solver->instances_.data(),
                   solver->instances_.size());
+    liner->Render(camera.projection, camera.view, lines);
   };
 
   auto gl3r = std::make_shared<Gl3Renderer>();
@@ -237,11 +242,17 @@ void App::sceneDock() {
                 selection = context](const Camera &camera) {
     gl3r->clear(camera);
 
-    RenderFunc render = [gl3r](const Camera &camera, const Mesh &mesh,
-                               const float m[16]) {
+    auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
+    std::vector<grapho::LineVertex> lines;
+    cuber::PushGrid(lines);
+
+    RenderFunc render = [gl3r, liner, lines](const Camera &camera,
+                                             const Mesh &mesh,
+                                             const float m[16]) {
       gl3r->render(camera, mesh, m);
     };
     scene->render(camera, render);
+    liner->Render(camera.projection, camera.view, lines);
 
     // gizmo
     if (auto node = selection->selected) {

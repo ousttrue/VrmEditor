@@ -1,2 +1,8 @@
-[wrap-redirect]
-filename = cuber\subprojects\grapho.wrap
+[wrap-git]
+url = https://github.com/ousttrue/grapho.git
+revision = master
+depth = 1
+; patch_directory = grapho
+
+[provide]
+grapho = grapho_dep
