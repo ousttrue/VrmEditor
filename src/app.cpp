@@ -10,6 +10,7 @@
 #include "no_sal2.h"
 #include "orbitview.h"
 #include "platform.h"
+#include "rendertarget.h"
 #include "timeline.h"
 #include "windows_helper.h"
 #include <Bvh.h>
@@ -28,8 +29,6 @@
 
 #include <lua.hpp>
 
-#include <glo/fbo.h>
-
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
@@ -38,6 +37,15 @@ App::App() {
   lua_ = std::make_shared<LuaEngine>();
   scene_ = std::make_shared<Scene>();
   timeline_ = std::make_shared<Timeline>();
+
+  platform_ = std::make_shared<Platform>();
+  auto window =
+      platform_->createWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
+  if (!window) {
+    throw std::runtime_error("createWindow");
+  }
+
+  gui_ = std::make_shared<Gui>(window, platform_->glsl_version.c_str());
 }
 
 App::~App() {}
@@ -74,6 +82,28 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
     // motion_->update(time, scene->m_nodes, repeat);
   };
 
+  auto rt = std::make_shared<RenderTarget>();
+  rt->color[0] = 0.4;
+  rt->color[1] = 0.2;
+  rt->color[2] = 0.2;
+  rt->color[3] = 1.0;
+
+  auto gl3r = std::make_shared<Gl3Renderer>();
+
+  gui_->m_docks.push_back(Dock("motion", [rt](bool *p_open) {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
+    if (ImGui::Begin("motion", p_open,
+                     ImGuiWindowFlags_NoScrollbar |
+                         ImGuiWindowFlags_NoScrollWithMouse)) {
+      auto pos = ImGui::GetWindowPos();
+      pos.y += ImGui::GetFrameHeight();
+      auto size = ImGui::GetContentRegionAvail();
+      rt->show_fbo(pos.x, pos.y, size.x, size.y);
+    }
+    ImGui::End();
+    ImGui::PopStyleVar();
+  }));
+
   return motion_ != nullptr;
 }
 
@@ -88,20 +118,12 @@ bool App::addAssetDir(std::string_view name, const std::string &path) {
 
 int App::run() {
 
-  Platform platform;
-  auto window =
-      platform.createWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
-  if (!window) {
-    return 1;
-  }
-
-  gui_ = std::make_shared<Gui>(window, platform.glsl_version.c_str());
   jsonDock();
   sceneDock();
   timelineDock();
   assetsDock();
 
-  while (auto info = platform.newFrame()) {
+  while (auto info = platform_->newFrame()) {
     // double sec to int64_t milliseconds
     timeline_->setGlobal(
         std::chrono::duration_cast<std::chrono::milliseconds>(info->time));
@@ -117,10 +139,8 @@ int App::run() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     gui_->render();
-    platform.present();
+    platform_->present();
   }
-
-  gui_ = nullptr;
 
   return 0;
 }
@@ -128,92 +148,6 @@ int App::run() {
 struct TreeContext {
   Node *selected = nullptr;
   Node *new_selected = nullptr;
-};
-
-struct RenderTarget {
-  Camera camera;
-  OrbitView view;
-  std::shared_ptr<glo::Fbo> fbo;
-  float color[4];
-  std::function<void(const Camera &camera)> render;
-  std::shared_ptr<TreeContext> selection;
-
-  uint32_t clear(int width, int height) {
-    if (width == 0 || height == 0) {
-      return 0;
-    }
-
-    if (fbo) {
-      if (fbo->texture->width_ != width || fbo->texture->height_ != height) {
-        fbo = nullptr;
-      }
-    }
-    if (!fbo) {
-      fbo = glo::Fbo::Create(width, height);
-    }
-
-    fbo->Bind();
-    glViewport(0, 0, width, height);
-    glScissor(0, 0, width, height);
-    glClearColor(color[0] * color[3], color[1] * color[3], color[2] * color[3],
-                 color[3]);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearDepth(1.0f);
-    glDepthFunc(GL_LESS);
-    return fbo->texture->texture_;
-  }
-
-  void show_fbo(float x, float y, float w, float h) {
-    ImGuizmo::SetDrawlist();
-    ImGuizmo::SetRect(x, y, w, h);
-
-    assert(w);
-    assert(h);
-    auto texture = clear(int(w), int(h));
-    if (texture) {
-      // image button. capture mouse event
-      ImGui::ImageButton((ImTextureID)texture, {w, h}, {0, 1}, {1, 0}, 0,
-                         {1, 1, 1, 1}, {1, 1, 1, 1});
-      ImGui::ButtonBehavior(ImGui::GetCurrentContext()->LastItemData.Rect,
-                            ImGui::GetCurrentContext()->LastItemData.ID,
-                            nullptr, nullptr,
-                            ImGuiButtonFlags_MouseButtonMiddle |
-                                ImGuiButtonFlags_MouseButtonRight);
-
-      // update camera
-      auto &io = ImGui::GetIO();
-      camera.resize(w, h);
-      view.SetSize(w, h);
-      if (ImGui::IsItemActive()) {
-        if (io.MouseDown[ImGuiMouseButton_Right]) {
-          view.YawPitch(io.MouseDelta.x, io.MouseDelta.y);
-        }
-        if (io.MouseDown[ImGuiMouseButton_Middle]) {
-          view.Shift(io.MouseDelta.x, io.MouseDelta.y);
-        }
-      }
-      if (ImGui::IsItemHovered()) {
-        view.Dolly(io.MouseWheel);
-      }
-      view.Update(camera.projection, camera.view);
-      render(camera);
-
-      // gizmo
-      if (auto node = selection->selected) {
-        // TODO: conflict mouse event(left) with ImageButton
-        auto m = node->world;
-        ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-        if (ImGuizmo::Manipulate(camera.view, camera.projection,
-                                 ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
-                                 (float *)&m, NULL, NULL, NULL, NULL)) {
-          // decompose feedback
-          node->setWorldMatrix(m);
-        }
-        ImGuizmo::GetContext().mAllowActiveHoverItem = false;
-      }
-    }
-    fbo->Unbind();
-  }
 };
 
 void App::sceneDock() {
@@ -265,12 +199,10 @@ void App::sceneDock() {
 
   gui_->m_docks.push_back(Dock("vrm-0.x", [scene = scene_]() {
     if (auto vrm = scene->m_vrm0) {
-      ImGui::Begin("vrm-0.x");
       for (auto expression : vrm->m_expressions) {
         ImGui::SliderFloat(expression->label.c_str(), &expression->weight, 0,
                            1);
       }
-      ImGui::End();
     }
   }));
 
@@ -279,11 +211,11 @@ void App::sceneDock() {
   rt->color[1] = 0.2;
   rt->color[2] = 0.2;
   rt->color[3] = 1.0;
-  rt->selection = context;
 
   auto gl3r = std::make_shared<Gl3Renderer>();
 
-  rt->render = [scene = scene_, gl3r](const Camera &camera) {
+  rt->render = [scene = scene_, gl3r,
+                selection = context](const Camera &camera) {
     gl3r->clear(camera);
 
     RenderFunc render = [gl3r](const Camera &camera, const Mesh &mesh,
@@ -291,6 +223,20 @@ void App::sceneDock() {
       gl3r->render(camera, mesh, m);
     };
     scene->render(camera, render);
+
+    // gizmo
+    if (auto node = selection->selected) {
+      // TODO: conflict mouse event(left) with ImageButton
+      auto m = node->world;
+      ImGuizmo::GetContext().mAllowActiveHoverItem = true;
+      if (ImGuizmo::Manipulate(camera.view, camera.projection,
+                               ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
+                               (float *)&m, NULL, NULL, NULL, NULL)) {
+        // decompose feedback
+        node->setWorldMatrix(m);
+      }
+      ImGuizmo::GetContext().mAllowActiveHoverItem = false;
+    }
   };
 
   gui_->m_docks.push_back(Dock("view", [rt, scene = scene_](bool *p_open) {

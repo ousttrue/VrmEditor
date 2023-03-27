@@ -11,14 +11,16 @@ class Gui;
 class Timeline;
 class AssetDir;
 class LuaEngine;
+class Platform;
 
 class App {
   std::shared_ptr<LuaEngine> lua_;
-  std::shared_ptr<Gui> gui_;
   std::shared_ptr<Scene> scene_;
   std::list<std::shared_ptr<AssetDir>> assets_;
   std::shared_ptr<Bvh> motion_;
   std::shared_ptr<Timeline> timeline_;
+  std::shared_ptr<Platform> platform_;
+  std::shared_ptr<Gui> gui_;
 
   App();
 
