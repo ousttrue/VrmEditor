@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/ousttrue/cuber.git
+revision = master
+depth = 1
+; patch_directory = 
+
+[provide]
+cuber = cuber_dep

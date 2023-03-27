@@ -10,10 +10,10 @@ class BvhNode;
 class BvhSolver {
   std::vector<std::shared_ptr<BvhNode>> nodes_;
   std::shared_ptr<BvhNode> root_;
-  std::vector<DirectX::XMFLOAT4X4> instances_;
   float scaling_ = 1.0f;
 
 public:
+  std::vector<DirectX::XMFLOAT4X4> instances_;
   void Initialize(const std::shared_ptr<Bvh> &bvh);
   std::span<DirectX::XMFLOAT4X4> ResolveFrame(const BvhFrame &frame);
 

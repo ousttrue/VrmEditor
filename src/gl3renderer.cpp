@@ -1,9 +1,9 @@
 #include "gl3renderer.h"
 #include "camera.h"
 #include <GL/glew.h>
-#include <glo/shader.h>
-#include <glo/texture.h>
-#include <glo/vao.h>
+#include <grapho/gl3/shader.h>
+#include <grapho/gl3/texture.h>
+#include <grapho/gl3/vao.h>
 #include <iostream>
 #include <unordered_map>
 #include <vrm/material.h>
@@ -54,12 +54,12 @@ static GLenum indexType(int indexValueSize) {
 struct SubMesh {
   uint32_t offset;
   uint32_t drawCount;
-  std::shared_ptr<glo::Texture> texture;
+  std::shared_ptr<grapho::gl3::Texture> texture;
 };
 
 struct Drawable {
-  std::shared_ptr<glo::ShaderProgram> program;
-  std::shared_ptr<glo::Vao> vao;
+  std::shared_ptr<grapho::gl3::ShaderProgram> program;
+  std::shared_ptr<grapho::gl3::Vao> vao;
   std::vector<SubMesh> submeshes;
 
   void draw(const Camera &camera, const float m[16]) {
@@ -88,18 +88,12 @@ struct Drawable {
 
 class Gl3RendererImpl {
   std::unordered_map<uint32_t, std::shared_ptr<Drawable>> m_drawableMap;
-  std::shared_ptr<glo::Texture> m_white;
+  std::shared_ptr<grapho::gl3::Texture> m_white;
 
 public:
   Gl3RendererImpl() {
-    std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "GL_VENDOR: " << glGetString(GL_VENDOR) << std::endl;
-    if (glewInit() != GLEW_OK) {
-      throw std::runtime_error("glewInit");
-    }
-
     static uint8_t white[] = {255, 255, 255, 255};
-    m_white = glo::Texture::Create(1, 1, white);
+    m_white = grapho::gl3::Texture::Create(1, 1, white);
   }
 
   ~Gl3RendererImpl() {}
@@ -130,42 +124,43 @@ public:
     }
 
     // load gpu resource
-    auto vbo = glo::Vbo::Create(mesh.verticesBytes(), mesh.m_vertices.data());
-    auto ibo = glo::Ibo::Create(mesh.indicesBytes(), mesh.m_indices.data(),
-                                GL_UNSIGNED_INT);
+    auto vbo =
+        grapho::gl3::Vbo::Create(mesh.verticesBytes(), mesh.m_vertices.data());
+    auto ibo = grapho::gl3::Ibo::Create(mesh.indicesBytes(),
+                                        mesh.m_indices.data(), GL_UNSIGNED_INT);
 
-    glo::VertexLayout layouts[] = {
+    grapho::VertexLayout layouts[] = {
         {
             .id = {"vPosition", 0},
-            .type = glo::ValueType::Float,
+            .type = grapho::ValueType::Float,
             .count = 3,
             .offset = offsetof(Vertex, position),
             .stride = sizeof(Vertex),
         },
         {
             .id = {"vNormal", 1},
-            .type = glo::ValueType::Float,
+            .type = grapho::ValueType::Float,
             .count = 3,
             .offset = offsetof(Vertex, normal),
             .stride = sizeof(Vertex),
         },
         {
             .id = {"vUv", 0},
-            .type = glo::ValueType::Float,
+            .type = grapho::ValueType::Float,
             .count = 2,
             .offset = offsetof(Vertex, uv),
             .stride = sizeof(Vertex),
         },
     };
-    glo::VertexSlot slots[] = {
+    grapho::gl3::VertexSlot slots[] = {
         {.location = 0, .vbo = vbo},
         {.location = 1, .vbo = vbo},
         {.location = 2, .vbo = vbo},
     };
-    auto vao = glo::Vao::Create(layouts, slots, ibo);
+    auto vao = grapho::gl3::Vao::Create(layouts, slots, ibo);
 
-    auto program =
-        glo::ShaderProgram::Create(vertex_shader_text, fragment_shader_text);
+    auto program = grapho::gl3::ShaderProgram::Create(vertex_shader_text,
+                                                      fragment_shader_text);
     if (!program) {
       std::cout << program.error() << std::endl;
       return {};
@@ -184,8 +179,8 @@ public:
 
       auto texture = m_white;
       if (auto image = primitive.material->texture) {
-        texture = glo::Texture::Create(image->width(), image->height(),
-                                       image->pixels());
+        texture = grapho::gl3::Texture::Create(image->width(), image->height(),
+                                               image->pixels());
       }
 
       drawable->submeshes.push_back({

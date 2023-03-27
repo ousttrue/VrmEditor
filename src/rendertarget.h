@@ -2,7 +2,7 @@
 #include "camera.h"
 #include "orbitview.h"
 #include <functional>
-#include <glo/fbo.h>
+#include <grapho/gl3/fbo.h>
 #include <imgui.h>
 #include <memory>
 
@@ -11,7 +11,7 @@
 struct RenderTarget {
   Camera camera;
   OrbitView view;
-  std::shared_ptr<glo::Fbo> fbo;
+  std::shared_ptr<grapho::gl3::Fbo> fbo;
   float color[4];
   std::function<void(const Camera &camera)> render;
 
@@ -26,7 +26,7 @@ struct RenderTarget {
       }
     }
     if (!fbo) {
-      fbo = glo::Fbo::Create(width, height);
+      fbo = grapho::gl3::Fbo::Create(width, height);
     }
 
     fbo->Clear(color, 1.0f);

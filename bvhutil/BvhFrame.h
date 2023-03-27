@@ -1,4 +1,5 @@
 #pragma once
+#include <DirectXMath.h>
 #include <chrono>
 #include <ostream>
 #include <span>
@@ -26,9 +27,9 @@ inline std::ostream &operator<<(std::ostream &os, const BvhOffset &offset) {
 /// cos sin
 ///-sin cos
 ///
-///        [0, 1, 2]    
+///        [0, 1, 2]
 /// [x,y,z][3, 4, 5] => [0x + 3y + 6z][1x + 4y + 7z][2x + 5y + 8z]
-///        [6, 7, 8]    
+///        [6, 7, 8]
 ///
 struct BvhMat3 {
   float _0 = 1;
@@ -85,14 +86,15 @@ inline std::string_view to_str(BvhChannelTypes channelType) {
 }
 
 struct BvhChannels {
+  BvhOffset init;
   size_t startIndex;
-  BvhChannelTypes values[6] = {};
-  BvhChannelTypes operator[](size_t index) const { return values[index]; }
-  BvhChannelTypes &operator[](size_t index) { return values[index]; }
+  BvhChannelTypes types[6] = {};
+  BvhChannelTypes operator[](size_t index) const { return types[index]; }
+  BvhChannelTypes &operator[](size_t index) { return types[index]; }
   size_t size() const {
     size_t i = 0;
     for (; i < 6; ++i) {
-      if (values[i] == BvhChannelTypes::None) {
+      if (types[i] == BvhChannelTypes::None) {
         break;
       }
     }

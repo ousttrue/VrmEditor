@@ -14,7 +14,9 @@
 #include "timeline.h"
 #include "windows_helper.h"
 #include <Bvh.h>
+#include <BvhSolver.h>
 #include <chrono>
+#include <cuber/gl3/GlCubeRenderer.h>
 #include <format>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -43,6 +45,11 @@ App::App() {
       platform_->createWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
   if (!window) {
     throw std::runtime_error("createWindow");
+  }
+  std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
+  std::cout << "GL_VENDOR: " << glGetString(GL_VENDOR) << std::endl;
+  if (glewInit() != GLEW_OK) {
+    throw std::runtime_error("glewInit");
   }
 
   gui_ = std::make_shared<Gui>(window, platform_->glsl_version.c_str());
@@ -77,9 +84,14 @@ bool App::load_model(const std::filesystem::path &path) {
 bool App::load_motion(const std::filesystem::path &path, float scaling) {
   motion_ = Bvh::ParseFile(path);
 
+  auto solver = std::make_shared<BvhSolver>();
+  solver->Initialize(motion_);
+
   auto sequence = timeline_->addSequence("bvh", motion_->Duration());
-  sequence->callback = [](auto time, bool repeat) {
-    // motion_->update(time, scene->m_nodes, repeat);
+  sequence->callback = [this, solver](auto time, bool repeat) {
+    auto index = motion_->TimeToIndex(time);
+    auto frame = motion_->GetFrame(index);
+    solver->ResolveFrame(frame);
   };
 
   auto rt = std::make_shared<RenderTarget>();
@@ -87,6 +99,13 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
   rt->color[1] = 0.2;
   rt->color[2] = 0.2;
   rt->color[3] = 1.0;
+
+  auto cuber = std::make_shared<cuber::gl3::GlCubeRenderer>();
+
+  rt->render = [cuber, solver](const Camera &camera) {
+    cuber->Render(camera.projection, camera.view, solver->instances_.data(),
+                  solver->instances_.size());
+  };
 
   auto gl3r = std::make_shared<Gl3Renderer>();
 

@@ -222,6 +222,7 @@ private:
         if (!channels) {
           return false;
         }
+        channels->init = *offset;
         channels->startIndex = joints_.empty()
                                    ? 0
                                    : joints_.back().channels.startIndex +

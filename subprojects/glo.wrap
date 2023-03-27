@@ -1,8 +1,0 @@
-[wrap-git]
-url = https://github.com/ousttrue/glo.git
-revision = master
-depth = 1
-; patch_directory = glo
-
-[provide]
-glo = glo_dep

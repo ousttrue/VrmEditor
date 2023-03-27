@@ -16,11 +16,12 @@ executable(
         glew_dep,
         glfw_dep,
         imgui_dep,
-        glo_dep,
+        grapho_dep,
         imguizmo_dep,
         vrm_dep,
         im_neo_sequencer_dep,
         luajit_dep,
         bvhutil_dep,
+        cuber_dep,
     ],
 )
