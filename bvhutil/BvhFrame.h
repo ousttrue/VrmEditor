@@ -54,6 +54,11 @@ struct BvhMat3 {
   }
 };
 
+struct BvhTransform {
+  BvhMat3 Rotation;
+  BvhOffset Translation;
+};
+
 enum class BvhChannelTypes {
   None,
   Xposition,
@@ -122,5 +127,5 @@ struct BvhFrame {
   BvhTime time;
   std::span<const float> values;
 
-  std::tuple<BvhOffset, BvhMat3> Resolve(const BvhChannels &channels) const;
+  BvhTransform Resolve(const BvhChannels &channels) const;
 };

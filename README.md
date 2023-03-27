@@ -61,3 +61,18 @@ msvc17 or clang16 ?
 $ meson setup builddir -Dcpp_std=c++latest
 $ meson compile -C builddir
 ```
+
+## 命名規則方針
+
+- formatter clang-format: mozilla
+- class, struct name PascalCase
+- public member: PascalCase
+- non public member variable: prefix `m_`
+- free function: camelCase
+- static variable: prefix `s_`
+- global variable: prefix `g_`
+- non public memver function: camelCase
+- local variable: lower_snake
+- enum value: UPPER_SNAKE
+- enum class value: Pascal
+

@@ -4,9 +4,11 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vrm/humanoid.h>
 
 struct Scene;
 struct Bvh;
+struct BvhSolver;
 class Gui;
 class Timeline;
 class AssetDir;
@@ -17,8 +19,25 @@ class App {
   std::shared_ptr<LuaEngine> lua_;
   std::shared_ptr<Scene> scene_;
   std::list<std::shared_ptr<AssetDir>> assets_;
-  std::shared_ptr<Bvh> motion_;
+
   std::shared_ptr<Timeline> timeline_;
+
+  std::shared_ptr<Bvh> motion_;
+  std::shared_ptr<BvhSolver> motionSolver_;
+  std::vector<vrm::HumanBones> humanBoneMap_ = {
+      vrm::HumanBones::hips,          vrm::HumanBones::spine,
+      vrm::HumanBones::chest,         vrm::HumanBones::neck,
+      vrm::HumanBones::head,          vrm::HumanBones::leftShoulder,
+      vrm::HumanBones::leftUpperArm,  vrm::HumanBones::leftLowerArm,
+      vrm::HumanBones::leftHand,      vrm::HumanBones::rightShoulder,
+      vrm::HumanBones::rightUpperArm, vrm::HumanBones::rightLowerArm,
+      vrm::HumanBones::rightHand,     vrm::HumanBones::leftUpperLeg,
+      vrm::HumanBones::leftLowerLeg,  vrm::HumanBones::leftFoot,
+      vrm::HumanBones::leftToe,       vrm::HumanBones::rightUpperLeg,
+      vrm::HumanBones::rightLowerLeg, vrm::HumanBones::rightFoot,
+      vrm::HumanBones::rightToe,
+  };
+
   std::shared_ptr<Platform> platform_;
   std::shared_ptr<Gui> gui_;
 

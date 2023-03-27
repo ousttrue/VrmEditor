@@ -552,3 +552,24 @@ void Scene::traverse_json(const EnterJson &enter, const LeaveJson &leave,
     }
   }
 }
+
+void Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
+                         std::span<const DirectX::XMFLOAT4> rotations) {
+
+  assert(humanMap.size() == rotations.size());
+
+  if (m_vrm0) {
+    for (int i = 0; i < humanMap.size(); ++i) {
+      if (auto node = GetBoneNode(humanMap[i])) {
+        node->rotation = *((quaternion *)&rotations[i]);
+      }
+    }
+  }
+}
+
+std::shared_ptr<Node> Scene::GetBoneNode(vrm::HumanBones bone) {
+  if (auto node_index = m_vrm0->m_humanoid[(int)bone]) {
+    return m_nodes[*node_index];
+  }
+  return {};
+}

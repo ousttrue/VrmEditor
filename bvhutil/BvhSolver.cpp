@@ -19,6 +19,7 @@ void BvhSolver::PushJoint(const BvhJoint &joint) {
   auto node = std::make_shared<BvhNode>(joint);
   nodes_.push_back(node);
   instances_.push_back({});
+  localRotations.push_back({});
 
   if (nodes_.size() == 1) {
     root_ = node;
@@ -33,7 +34,9 @@ void BvhSolver::CalcShape() { root_->CalcShape(scaling_); }
 std::span<DirectX::XMFLOAT4X4> BvhSolver::ResolveFrame(const BvhFrame &frame) {
   auto span = std::span(instances_);
   auto it = span.begin();
-  root_->ResolveFrame(frame, DirectX::XMMatrixIdentity(), scaling_, it);
+  auto t_span = std::span(localRotations);
+  auto t = t_span.begin();
+  root_->ResolveFrame(frame, DirectX::XMMatrixIdentity(), scaling_, it, t);
   assert(it == span.end());
   return instances_;
 }

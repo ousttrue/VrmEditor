@@ -1,4 +1,5 @@
 #pragma once
+#include "humanoid.h"
 #include "scenetypes.h"
 #include <DirectXMath.h>
 #include <chrono>
@@ -74,4 +75,8 @@ public:
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});
   void traverse_json(const EnterJson &enter, const LeaveJson &leave,
                      json *j = nullptr, std::string_view key = {});
+
+  void SetHumanPose(std::span<const vrm::HumanBones> humanMap,
+                    std::span<const DirectX::XMFLOAT4> rotations);
+  std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
 };

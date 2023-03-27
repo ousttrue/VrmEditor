@@ -33,6 +33,7 @@ struct Node : public std::enable_shared_from_this<Node> {
   bool setLocalMatrix(const DirectX::XMFLOAT4X4 &local);
   bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world);
   void print(int level = 0);
+  void setWorldRotation(const DirectX::XMFLOAT4X4 &world);
 };
 inline std::ostream &operator<<(std::ostream &os, const Node &node) {
   os << "Node[" << node.index << "]" << node.name << ": " << node.translation

@@ -14,6 +14,7 @@ class BvhSolver {
 
 public:
   std::vector<DirectX::XMFLOAT4X4> instances_;
+  std::vector<DirectX::XMFLOAT4> localRotations;
   void Initialize(const std::shared_ptr<Bvh> &bvh);
   std::span<DirectX::XMFLOAT4X4> ResolveFrame(const BvhFrame &frame);
 

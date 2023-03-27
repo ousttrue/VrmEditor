@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 #include "humanbones.h"
 #include <optional>
 #include <ostream>

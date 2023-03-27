@@ -52,6 +52,30 @@ bool Node::setWorldMatrix(const DirectX::XMFLOAT4X4 &world) {
   return setLocalMatrix(m);
 }
 
+void Node::setWorldRotation(const DirectX::XMFLOAT4X4 &world) {
+
+  DirectX::XMMATRIX parentMatrix;
+  if (auto parentNode = parent.lock()) {
+    parentMatrix = DirectX::XMLoadFloat4x4(&parentNode->world);
+  } else {
+    parentMatrix = DirectX::XMMatrixIdentity();
+  }
+
+  auto inv = DirectX::XMMatrixInverse(nullptr, parentMatrix);
+  auto local = DirectX::XMLoadFloat4x4(&world) * inv;
+
+  DirectX::XMVECTOR s;
+  DirectX::XMVECTOR r;
+  DirectX::XMVECTOR t;
+  DirectX::XMMatrixDecompose(&s, &r, &t, local);
+
+  DirectX::XMStoreFloat4((DirectX::XMFLOAT4 *)&rotation, r);
+
+  DirectX::XMFLOAT4X4 pm;
+  DirectX::XMStoreFloat4x4(&pm, parentMatrix);
+  calcWorld(pm);
+}
+
 void Node::print(int level) {
   for (int i = 0; i < level; ++i) {
     std::cout << "  ";

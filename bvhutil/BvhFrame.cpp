@@ -49,34 +49,35 @@ BvhMat3 BvhMat3::RotateZDegrees(float degree) {
   };
 }
 
-std::tuple<BvhOffset, BvhMat3>
-BvhFrame::Resolve(const BvhChannels &channels) const {
-  BvhOffset pos = channels.init;
-  auto rot = BvhMat3{};
+BvhTransform BvhFrame::Resolve(const BvhChannels &channels) const {
+  BvhTransform t{
+      .Rotation = BvhMat3{},
+      .Translation = channels.init,
+  };
   auto index = channels.startIndex;
   for (int ch = 0; ch < channels.size(); ++ch, ++index) {
     switch (channels.types[ch]) {
     case BvhChannelTypes::Xposition:
-      pos.x = values[index];
+      t.Translation.x = values[index];
       break;
     case BvhChannelTypes::Yposition:
-      pos.y = values[index];
+      t.Translation.y = values[index];
       break;
     case BvhChannelTypes::Zposition:
-      pos.z = values[index];
+      t.Translation.z = values[index];
       break;
     case BvhChannelTypes::Xrotation:
-      rot = BvhMat3::RotateXDegrees(values[index]) * rot;
+      t.Rotation = BvhMat3::RotateXDegrees(values[index]) * t.Rotation;
       break;
     case BvhChannelTypes::Yrotation:
-      rot = BvhMat3::RotateYDegrees(values[index]) * rot;
+      t.Rotation = BvhMat3::RotateYDegrees(values[index]) * t.Rotation;
       break;
     case BvhChannelTypes::Zrotation:
-      rot = BvhMat3::RotateZDegrees(values[index]) * rot;
+      t.Rotation = BvhMat3::RotateZDegrees(values[index]) * t.Rotation;
       break;
     case BvhChannelTypes::None:
       break;
     }
   }
-  return {pos, rot};
+  return t;
 }

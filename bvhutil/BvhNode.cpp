@@ -73,19 +73,26 @@ void BvhNode::CalcShape(float scaling) {
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
                            float scaling,
-                           std::span<DirectX::XMFLOAT4X4>::iterator &out) {
-  auto [pos, rot] = frame.Resolve(joint_.channels);
+                           std::span<DirectX::XMFLOAT4X4>::iterator &out,
+                           std::span<DirectX::XMFLOAT4>::iterator &outLocal) {
+  auto transform = frame.Resolve(joint_.channels);
 
-  auto t = DirectX::XMMatrixTranslation(pos.x * scaling, pos.y * scaling,
-                                        pos.z * scaling);
-  auto r = DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3 *)&rot);
+  auto t = DirectX::XMMatrixTranslation(transform.Translation.x * scaling,
+                                        transform.Translation.y * scaling,
+                                        transform.Translation.z * scaling);
+  auto r =
+      DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3 *)&transform.Rotation);
+
+  DirectX::XMStoreFloat4(&*outLocal, DirectX::XMQuaternionRotationMatrix(r));
+
   auto local = r * t;
 
   m = local * m;
   auto shape = DirectX::XMLoadFloat4x4(&shape_);
   DirectX::XMStoreFloat4x4(&*out, shape * m);
   ++out;
+  ++outLocal;
   for (auto &child : children_) {
-    child->ResolveFrame(frame, m, scaling, out);
+    child->ResolveFrame(frame, m, scaling, out, outLocal);
   }
 }

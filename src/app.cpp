@@ -85,14 +85,19 @@ bool App::load_model(const std::filesystem::path &path) {
 bool App::load_motion(const std::filesystem::path &path, float scaling) {
   motion_ = Bvh::ParseFile(path);
 
-  auto solver = std::make_shared<BvhSolver>();
-  solver->Initialize(motion_);
+  motionSolver_ = std::make_shared<BvhSolver>();
+  motionSolver_->Initialize(motion_);
 
   auto sequence = timeline_->addSequence("bvh", motion_->Duration());
-  sequence->callback = [this, solver](auto time, bool repeat) {
+  sequence->callback = [this](auto time, bool repeat) {
     auto index = motion_->TimeToIndex(time);
     auto frame = motion_->GetFrame(index);
-    solver->ResolveFrame(frame);
+    motionSolver_->ResolveFrame(frame);
+
+    // apply vrm
+    if (scene_->m_vrm0) {
+      scene_->SetHumanPose(humanBoneMap_, motionSolver_->localRotations);
+    }
   };
 
   auto rt = std::make_shared<RenderTarget>();
@@ -106,9 +111,10 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
   std::vector<grapho::LineVertex> lines;
   cuber::PushGrid(lines);
 
-  rt->render = [solver, cuber, liner, lines](const Camera &camera) {
-    cuber->Render(camera.projection, camera.view, solver->instances_.data(),
-                  solver->instances_.size());
+  rt->render = [this, cuber, liner, lines](const Camera &camera) {
+    cuber->Render(camera.projection, camera.view,
+                  motionSolver_->instances_.data(),
+                  motionSolver_->instances_.size());
     liner->Render(camera.projection, camera.view, lines);
   };
 
