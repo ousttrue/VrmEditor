@@ -343,9 +343,23 @@ bool Scene::load(const std::filesystem::path &path) {
       auto VRM = extensions.at("VRM");
       m_vrm0 = std::make_shared<Vrm0>();
 
+      if (VRM.find("humanoid") != VRM.end()) {
+        auto &humanoid = VRM.at("humanoid");
+        if (humanoid.find("humanBones") != humanoid.end()) {
+          auto &humanBones = humanoid.at("humanBones");
+          // bone & node
+          for (auto &humanBone : humanBones) {
+            int index = humanBone.at("node");
+            std::string_view name = humanBone.at("bone");
+            // std::cout << name << ": " << index << std::endl;
+            m_vrm0->m_humanoid.setNode(name, vrm::VrmVersion::_0_x, index);
+          }
+          std::cout << m_vrm0->m_humanoid << std::endl;
+        }
+      }
+
       // exporterVersion
       // firstPerson
-      // humanoid
       // materialProperties
       // meta
       // secondaryAnimation
@@ -358,7 +372,7 @@ bool Scene::load(const std::filesystem::path &path) {
           auto &blendShapeGroups = blendShapeMaster.at("blendShapeGroups");
           for (auto &g : blendShapeGroups) {
             // {"binds":[],"isBinary":false,"materialValues":[],"name":"Neutral","presetName":"neutral"}
-            std::cout << g << std::endl;
+            // std::cout << g << std::endl;
             auto expression = m_vrm0->addBlendShape(
                 g.at("presetName"), g.at("name"), g.value("isBinary", false));
             if (g.find("binds") != g.end()) {

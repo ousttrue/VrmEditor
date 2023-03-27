@@ -1,4 +1,5 @@
 #pragma once
+#include "humanoid.h"
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -116,6 +117,8 @@ struct Expression {
 };
 
 struct Vrm0 {
+
+  vrm::Humanoid m_humanoid;
 
   std::vector<std::shared_ptr<Expression>> m_expressions;
 
