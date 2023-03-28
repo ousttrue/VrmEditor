@@ -3,34 +3,22 @@
 
 #include "app.h"
 #include "assetdir.h"
-#include "camera.h"
 #include "gl3renderer.h"
 #include "gui.h"
 #include "luahost.h"
-#include "no_sal2.h"
-#include "orbitview.h"
 #include "platform.h"
 #include "rendertarget.h"
 #include "timeline.h"
 #include "windows_helper.h"
 #include <Bvh.h>
 #include <BvhSolver.h>
-#include <chrono>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <format>
-#include <imgui.h>
-#include <imgui_internal.h>
 #include <iostream>
 #include <vrm/animation.h>
 #include <vrm/mesh.h>
-#include <vrm/node.h>
 #include <vrm/scene.h>
 #include <vrm/vrm0.h>
-
-#include <ImGuizmo.h>
-
-#include <lua.hpp>
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
@@ -103,10 +91,10 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
   };
 
   auto rt = std::make_shared<RenderTarget>();
-  rt->color[0] = 0.4;
-  rt->color[1] = 0.2;
-  rt->color[2] = 0.2;
-  rt->color[3] = 1.0;
+  rt->color[0] = 0.4f;
+  rt->color[1] = 0.2f;
+  rt->color[2] = 0.2f;
+  rt->color[3] = 1.0f;
 
   auto cuber = std::make_shared<cuber::gl3::GlCubeRenderer>();
   auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
@@ -157,8 +145,11 @@ int App::run() {
 
   while (auto info = platform_->newFrame()) {
     // double sec to int64_t milliseconds
-    timeline_->setGlobal(
-        std::chrono::duration_cast<std::chrono::milliseconds>(info->time));
+    auto time =
+        std::chrono::duration_cast<std::chrono::milliseconds>(info->time);
+    timeline_->setGlobal(time);
+
+    scene_->update(time);
 
     // newFrame
     gui_->newFrame();
@@ -239,10 +230,10 @@ void App::sceneDock() {
   }));
 
   auto rt = std::make_shared<RenderTarget>();
-  rt->color[0] = 0.2;
-  rt->color[1] = 0.2;
-  rt->color[2] = 0.2;
-  rt->color[3] = 1.0;
+  rt->color[0] = 0.2f;
+  rt->color[1] = 0.2f;
+  rt->color[2] = 0.2f;
+  rt->color[3] = 1.0f;
 
   auto gl3r = std::make_shared<Gl3Renderer>();
 
@@ -362,7 +353,7 @@ struct TimeDraw {
     drawList->AddLine({x, cursor.y}, {x, cursor.y + size.y}, color, 1.0f);
 
     char text[64];
-    sprintf_s(text, sizeof(text), "%ld", time.count());
+    sprintf_s(text, sizeof(text), "%lld", time.count());
     drawList->AddText({x, cursor.y}, color, text, nullptr);
 
     return true;
@@ -383,7 +374,7 @@ struct TimeDraw {
                       IM_COL32(255, 0, 0, 255), 1.0f);
 
     char text[64];
-    sprintf_s(text, sizeof(text), "%ld", time.count());
+    sprintf_s(text, sizeof(text), "%lld", time.count());
     drawList->AddText({x, cursor.y}, color, text, nullptr);
   }
 };

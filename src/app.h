@@ -4,11 +4,12 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 #include <vrm/humanoid.h>
 
 struct Scene;
 struct Bvh;
-struct BvhSolver;
+class BvhSolver;
 class Gui;
 class Timeline;
 class AssetDir;

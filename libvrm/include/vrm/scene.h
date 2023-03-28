@@ -1,6 +1,7 @@
 #pragma once
 #include "humanoid.h"
 #include "scenetypes.h"
+#include "springbone.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <filesystem>
@@ -45,7 +46,7 @@ struct Scene {
   std::vector<std::shared_ptr<Animation>> m_animations;
   nlohmann::json m_gltf;
   std::shared_ptr<vrm0::Vrm> m_vrm0;
-  bool m_updated = false;
+  std::shared_ptr<vrm::SpringSolver> m_spring;
 
   void clear() {
     m_vrm0 = nullptr;
@@ -59,7 +60,7 @@ struct Scene {
     m_gltf = {};
   }
 
-  Scene() {}
+  Scene();
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
   bool load(const std::filesystem::path &path);
@@ -69,7 +70,7 @@ private:
                   int accessor_index, int material_index);
 
 public:
-  void update();
+  void update(std::chrono::milliseconds delta);
   void render(const Camera &camera, const RenderFunc &render);
   void traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});

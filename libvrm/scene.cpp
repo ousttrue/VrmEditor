@@ -94,6 +94,8 @@ static std::vector<T> ReadAllBytes(const std::filesystem::path &path) {
   return buffer;
 }
 
+Scene::Scene() { m_spring = std::make_shared<vrm::SpringSolver>(); }
+
 bool Scene::load(const std::filesystem::path &path) {
   auto bytes = ReadAllBytes<uint8_t>(path);
   if (bytes.empty()) {
@@ -432,6 +434,20 @@ bool Scene::load(const std::filesystem::path &path) {
             m_vrm0->m_springs.push_back(ptr);
           }
         }
+
+        m_spring->Clear();
+        for (auto &spring : m_vrm0->m_springs) {
+          std::shared_ptr<Node> last;
+          for (int i = 0; i < spring->bones.size(); ++i) {
+            auto node_index = spring->bones[i];
+            auto current = m_nodes[node_index];
+            if (last) {
+              m_spring->Add(last, current, spring->dragForce,
+                            spring->stiffiness);
+            }
+            last = current;
+          }
+        }
       }
     }
   }
@@ -468,17 +484,18 @@ void Scene::addIndices(int vertex_offset, Mesh *mesh, Glb *glb,
   }
 }
 
-void Scene::update() {
-  if (m_updated) {
-    return;
-  }
-
+void Scene::update(std::chrono::milliseconds delta) {
   // calc world
   auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
     node.calcWorld(parent);
     return true;
   };
   traverse(enter, {});
+
+  // springbone
+  if (m_vrm0) {
+    m_spring->Update();
+  }
 
   // skinning
   for (auto &node : m_nodes) {
@@ -539,21 +556,15 @@ void Scene::update() {
       }
     }
   }
-  m_updated = true;
 }
 
 void Scene::render(const Camera &camera, const RenderFunc &render) {
-  update();
-
-  // render mesh
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
       render(camera, *mesh, &node->world._11);
     }
   }
-
-  m_updated = false;
 }
 
 void Scene::traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,

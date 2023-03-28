@@ -13,24 +13,25 @@ read, write, animation test.
     - [ ] lookat. bone
     - [ ] lookat. expression
     - [ ] springbone.
-    - [ ] humanoid.
+    - [x] humanoid.
   - [ ] vrm-1.0
 - [ ] gltf
-- [ ] bvh. WIP
+- [x] bvh
 - [ ] fbx
 
 ### material
 
-- [x] unlit.
-- [ ] pbr.
+- [x] unlit
+- [ ] pbr
 - [ ] mtoon(vrm-0.x)
 - [ ] mtoon(vrm-1.0)
 
 ### animation
 
 - [x] gltf. tranlsation, rotation, scaling. TODO: morphTarget
-- [ ] bvh. WIP
-- [ ] vrm. humanoid retarget
+- [x] bvh
+- [x] vrm0 from bvh
+- [ ] vrm1. humanoid retarget
 
 ### write
 
@@ -62,7 +63,7 @@ $ meson setup builddir -Dcpp_std=c++latest
 $ meson compile -C builddir
 ```
 
-## 命名規則方針
+## naming plan
 
 - formatter clang-format: mozilla
 - class, struct name PascalCase
@@ -73,6 +74,12 @@ $ meson compile -C builddir
 - global variable: prefix `g_`
 - non public memver function: camelCase
 - local variable: lower_snake
-- enum value: UPPER_SNAKE
+- const, enum value: UPPER_SNAKE
 - enum class value: Pascal
 
+### namespace
+
+- `vrm`
+- `vrm::v0`
+- `bvh`
+- `gltf`

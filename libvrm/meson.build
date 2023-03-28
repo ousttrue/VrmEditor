@@ -5,6 +5,7 @@ vrm_lib = static_library(
         'scene.cpp',
         'glb.cpp',
         'node.cpp',
+        'springbone.cpp',
     ],
     include_directories: vrm_inc,
     dependencies: [stb_dep, json_dep],
