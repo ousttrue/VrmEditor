@@ -13,7 +13,7 @@ struct Primitive {
 };
 
 struct MorphVertex {
-  float3 position;
+  DirectX::XMFLOAT3 position;
 };
 
 struct MorphTarget {
@@ -21,7 +21,7 @@ struct MorphTarget {
   std::vector<MorphVertex> m_vertices;
   float weight = 0;
 
-  size_t addPosition(std::span<const float3> values) {
+  size_t addPosition(std::span<const DirectX::XMFLOAT3> values) {
     auto offset = m_vertices.size();
     m_vertices.resize(offset + values.size());
     for (size_t i = 0; i < values.size(); ++i) {
@@ -56,7 +56,7 @@ struct Mesh {
     return m_indices.size() * sizeof(m_indices[0]);
   }
 
-  size_t addPosition(std::span<const float3> values) {
+  size_t addPosition(std::span<const DirectX::XMFLOAT3> values) {
     auto offset = m_vertices.size();
     m_vertices.resize(offset + values.size());
     for (size_t i = 0; i < values.size(); ++i) {
@@ -65,14 +65,14 @@ struct Mesh {
     return offset;
   }
 
-  void setNormal(uint32_t offset, std::span<const float3> values) {
+  void setNormal(uint32_t offset, std::span<const DirectX::XMFLOAT3> values) {
     assert(offset + values.size() == m_vertices.size());
     for (size_t i = 0; i < values.size(); ++i) {
       m_vertices[offset + i].normal = values[i];
     }
   }
 
-  void setUv(uint32_t offset, std::span<const float2> values) {
+  void setUv(uint32_t offset, std::span<const DirectX::XMFLOAT2> values) {
     assert(offset + values.size() == m_vertices.size());
     for (size_t i = 0; i < values.size(); ++i) {
       m_vertices[offset + i].uv = values[i];
@@ -87,7 +87,7 @@ struct Mesh {
   }
 
   void setBoneSkinning(uint32_t offset, std::span<const ushort4> joints,
-                       std::span<const float4> weights) {
+                       std::span<const DirectX::XMFLOAT4> weights) {
     assert(offset + joints.size() == m_vertices.size());
     assert(offset + weights.size() == m_vertices.size());
     m_bindings.resize(m_vertices.size());
@@ -113,19 +113,20 @@ struct Mesh {
     });
   }
 
-  void applySkinning(float3 *dst, const float3 &src, float w,
-                     const DirectX::XMFLOAT4X4 &m) {
+  void applySkinning(DirectX::XMFLOAT3 *dst, const DirectX::XMFLOAT3 &src,
+                     float w, const DirectX::XMFLOAT4X4 &m) {
     if (w > 0) {
-      auto pos = DirectX::XMLoadFloat3((DirectX::XMFLOAT3 *)&src);
+      auto pos = DirectX::XMLoadFloat3(&src);
       auto newPos =
           DirectX::XMVector3Transform(pos, DirectX::XMLoadFloat4x4(&m));
-      float3 store;
-      DirectX::XMStoreFloat3((DirectX::XMFLOAT3 *)&store, newPos);
+      DirectX::XMFLOAT3 store;
+      DirectX::XMStoreFloat3(&store, newPos);
       *dst += (store * w);
     }
   }
 
-  void applyMorphTargetAndSkinning(std::span<DirectX::XMFLOAT4X4> skinningMatrices) {
+  void
+  applyMorphTargetAndSkinning(std::span<DirectX::XMFLOAT4X4> skinningMatrices) {
     // clear & apply morph target
     m_updated.clear();
     for (int i = 0; i < m_vertices.size(); ++i) {

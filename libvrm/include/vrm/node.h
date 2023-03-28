@@ -12,9 +12,9 @@ struct Skin;
 struct Node : public std::enable_shared_from_this<Node> {
   uint32_t index;
   std::string name;
-  float3 translation = {};
-  quaternion rotation = {};
-  float3 scale = {};
+  DirectX::XMFLOAT3 translation = {};
+  DirectX::XMFLOAT4 rotation = {};
+  DirectX::XMFLOAT3 scale = {};
 
   DirectX::XMFLOAT4X4 world;
   DirectX::XMFLOAT4X4 worldInit;
@@ -53,8 +53,11 @@ struct Node : public std::enable_shared_from_this<Node> {
   void setWorldRotation(const DirectX::XMFLOAT4X4 &world);
 };
 inline std::ostream &operator<<(std::ostream &os, const Node &node) {
-  os << "Node[" << node.index << "]" << node.name << ": " << node.translation
-     << node.rotation << node.scale;
+  os << "Node[" << node.index << "]" << node.name
+      // << ": " << node.translation
+      // << node.rotation
+      // << node.scale
+      ;
   if (node.mesh) {
     os << ", mesh: " << *node.mesh;
   }

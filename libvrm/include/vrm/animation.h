@@ -35,9 +35,9 @@ template <typename T> struct Curve {
 
 struct Animation {
   std::string m_name;
-  std::unordered_map<uint32_t, Curve<float3>> m_translationMap;
-  std::unordered_map<uint32_t, Curve<quaternion>> m_rotationMap;
-  std::unordered_map<uint32_t, Curve<float3>> m_scaleMap;
+  std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_translationMap;
+  std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT4>> m_rotationMap;
+  std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_scaleMap;
   std::chrono::milliseconds m_duration;
 
   std::chrono::milliseconds duration() const {
@@ -59,26 +59,28 @@ struct Animation {
   Animation &operator=(const Animation &) = delete;
 
   void addTranslation(uint32_t node_index, std::span<const float> times,
-                      std::span<const float3> values, std::string_view name) {
+                      std::span<const DirectX::XMFLOAT3> values,
+                      std::string_view name) {
     m_translationMap.emplace(node_index,
-                             Curve<float3>{
+                             Curve<DirectX::XMFLOAT3>{
                                  .name = {name.begin(), name.end()},
                                  .times = {times.begin(), times.end()},
                                  .values = {values.begin(), values.end()},
                              });
   }
   void addRotation(uint32_t node_index, std::span<const float> times,
-                   std::span<const quaternion> values, std::string_view name) {
+                   std::span<const DirectX::XMFLOAT4> values, std::string_view name) {
     m_rotationMap.emplace(node_index,
-                          Curve<quaternion>{
+                          Curve<DirectX::XMFLOAT4>{
                               .name = {name.begin(), name.end()},
                               .times = {times.begin(), times.end()},
                               .values = {values.begin(), values.end()},
                           });
   }
   void addScale(uint32_t node_index, std::span<const float> times,
-                std::span<const float3> values, std::string_view name) {
-    m_scaleMap.emplace(node_index, Curve<float3>{
+                std::span<const DirectX::XMFLOAT3> values,
+                std::string_view name) {
+    m_scaleMap.emplace(node_index, Curve<DirectX::XMFLOAT3>{
                                        .name = {name.begin(), name.end()},
                                        .times = {times.begin(), times.end()},
                                        .values = {values.begin(), values.end()},

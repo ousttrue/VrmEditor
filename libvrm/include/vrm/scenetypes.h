@@ -1,34 +1,49 @@
 #pragma once
+#include <DirectXMath.h>
+#include <nlohmann/json.hpp>
 #include <ostream>
 
-struct float2 {
-  float x;
-  float y;
-};
-struct float3 {
-  float x;
-  float y;
-  float z;
-
-  float3 &operator+=(const float3 &rhs) {
-    this->x += rhs.x;
-    this->y += rhs.y;
-    this->z += rhs.z;
-    return *this;
-  }
-  float3 operator*(float rhs) const { return {x * rhs, y * rhs, z * rhs}; }
-};
-inline std::ostream &operator<<(std::ostream &os, const float3 &v) {
-  os << "{" << v.x << ", " << v.y << ", " << v.z << "}";
+inline DirectX::XMFLOAT3 &operator+=(DirectX::XMFLOAT3 &lhs,
+                                     const DirectX::XMFLOAT3 &rhs) {
+  lhs.x += rhs.x;
+  lhs.y += rhs.y;
+  lhs.z += rhs.z;
+  return lhs;
+}
+inline DirectX::XMFLOAT3 operator*(const DirectX::XMFLOAT3 &lhs, float rhs) {
+  return {lhs.x * rhs, lhs.y * rhs, lhs.z * rhs};
+}
+// inline std::ostream &operator<<(std::ostream &os, const DirectX::XMFLOAT3 &v)
+// {
+//   os << "{" << v.x << ", " << v.y << ", " << v.z << "}";
+//   return os;
+// }
+inline std::ostream &operator<<(std::ostream &os, const DirectX::XMFLOAT4 &v) {
+  os << "{" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << "}";
   return os;
 }
 
-struct float4 {
-  float x;
-  float y;
-  float z;
-  float w;
-};
+namespace DirectX {
+inline void to_json(nlohmann::json &j, const XMFLOAT3 &v) {
+  j = nlohmann::json{v.x, v.y, v.z};
+}
+inline void from_json(const nlohmann::json &j, XMFLOAT3 &v) {
+  v.x = j[0];
+  v.y = j[1];
+  v.z = j[2];
+}
+inline void to_json(nlohmann::json &j, const XMFLOAT4 &v) {
+  j = nlohmann::json{v.x, v.y, v.z, v.w};
+}
+inline void from_json(const nlohmann::json &j, XMFLOAT4 &v) {
+  v.x = j[0];
+  v.y = j[1];
+  v.z = j[2];
+  v.w = j[3];
+}
+
+} // namespace DirectX
+
 struct ushort4 {
   uint16_t x;
   uint16_t y;
@@ -36,25 +51,14 @@ struct ushort4 {
   uint16_t w;
 };
 
-struct quaternion {
-  float x;
-  float y;
-  float z;
-  float w;
-};
-inline std::ostream &operator<<(std::ostream &os, const quaternion &v) {
-  os << "{" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << "}";
-  return os;
-}
-
 struct Vertex {
-  float3 position;
-  float3 normal;
-  float2 uv;
+  DirectX::XMFLOAT3 position;
+  DirectX::XMFLOAT3 normal;
+  DirectX::XMFLOAT2 uv;
 };
 static_assert(sizeof(Vertex) == 32, "sizeof(Vertex)");
 
 struct JointBinding {
   ushort4 joints;
-  float4 weights;
+  DirectX::XMFLOAT4 weights;
 };

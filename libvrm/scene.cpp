@@ -32,25 +32,6 @@ static DirectX::XMFLOAT4X4 IDENTITY{
     0, 0, 0, 1, //
 };
 
-// float3
-inline void to_json(json &j, const float3 &v) { j = json{v.x, v.y, v.z}; }
-inline void from_json(const json &j, float3 &v) {
-  v.x = j[0];
-  v.y = j[1];
-  v.z = j[2];
-}
-
-// quaternion
-inline void to_json(json &j, const quaternion &v) {
-  j = json{v.x, v.y, v.z, v.w};
-}
-inline void from_json(const json &j, quaternion &v) {
-  v.x = j[0];
-  v.y = j[1];
-  v.z = j[2];
-  v.w = j[3];
-}
-
 // matrix
 inline void to_json(json &j, const DirectX::XMFLOAT4X4 &m) {
   j = json{
@@ -166,8 +147,9 @@ bool Scene::load(const std::filesystem::path &path) {
                    prim.at("material"));
       } else {
         // extend vertex buffer
-        auto positions = glb->accessor<float3>(attributes[VERTEX_POSITION]);
-        std::vector<float3> copy;
+        auto positions =
+            glb->accessor<DirectX::XMFLOAT3>(attributes[VERTEX_POSITION]);
+        std::vector<DirectX::XMFLOAT3> copy;
         if (m_vrm0) {
           copy.reserve(positions.size());
           for (auto &p : positions) {
@@ -177,11 +159,12 @@ bool Scene::load(const std::filesystem::path &path) {
         }
         auto offset = ptr->addPosition(positions);
         if (attributes.find(VERTEX_NORMAL) != attributes.end()) {
-          ptr->setNormal(offset,
-                         glb->accessor<float3>(attributes.at(VERTEX_NORMAL)));
+          ptr->setNormal(offset, glb->accessor<DirectX::XMFLOAT3>(
+                                     attributes.at(VERTEX_NORMAL)));
         }
         if (attributes.find(VERTEX_UV) != attributes.end()) {
-          ptr->setUv(offset, glb->accessor<float2>(attributes.at(VERTEX_UV)));
+          ptr->setUv(offset, glb->accessor<DirectX::XMFLOAT2>(
+                                 attributes.at(VERTEX_UV)));
         }
 
         if (attributes.find(VERTEX_JOINT) != attributes.end() &&
@@ -189,7 +172,7 @@ bool Scene::load(const std::filesystem::path &path) {
           // skinning
           ptr->setBoneSkinning(
               offset, glb->accessor<ushort4>(attributes.at(VERTEX_JOINT)),
-              glb->accessor<float4>(attributes.at(VERTEX_WEIGHT)));
+              glb->accessor<DirectX::XMFLOAT4>(attributes.at(VERTEX_WEIGHT)));
         }
 
         // extend morph target
@@ -200,7 +183,7 @@ bool Scene::load(const std::filesystem::path &path) {
             auto morph = ptr->getOrCreateMorphTarget(i);
             // std::cout << target << std::endl;
             auto morphOffset = morph->addPosition(
-                glb->accessor<float3>(target.at(VERTEX_POSITION)));
+                glb->accessor<DirectX::XMFLOAT3>(target.at(VERTEX_POSITION)));
           }
         }
 
@@ -280,15 +263,15 @@ bool Scene::load(const std::filesystem::path &path) {
       ptr->setLocalMatrix(local);
     } else {
       // T
-      ptr->translation = node.value("translation", float3{0, 0, 0});
+      ptr->translation = node.value("translation", DirectX::XMFLOAT3{0, 0, 0});
       if (m_vrm0) {
         auto t = ptr->translation;
         ptr->translation = {-t.x, t.y, -t.z};
       }
       // R
-      ptr->rotation = node.value("rotation", quaternion{0, 0, 0, 1});
+      ptr->rotation = node.value("rotation", DirectX::XMFLOAT4{0, 0, 0, 1});
       // S
-      ptr->scale = node.value("scale", float3{1, 1, 1});
+      ptr->scale = node.value("scale", DirectX::XMFLOAT3{1, 1, 1});
     }
     if (node.find("mesh") != node.end()) {
       ptr->mesh = node.at("mesh");
@@ -342,16 +325,16 @@ bool Scene::load(const std::filesystem::path &path) {
       int output_index = sampler.at("output");
 
       if (path == "translation") {
-        auto values = glb->accessor<float3>(output_index);
+        auto values = glb->accessor<DirectX::XMFLOAT3>(output_index);
         ptr->addTranslation(
             node_index, times, values,
             std::format("{}-translation", m_nodes[node_index]->name));
       } else if (path == "rotation") {
-        auto values = glb->accessor<quaternion>(output_index);
+        auto values = glb->accessor<DirectX::XMFLOAT4>(output_index);
         ptr->addRotation(node_index, times, values,
                          std::format("{}-rotation", m_nodes[node_index]->name));
       } else if (path == "scale") {
-        auto values = glb->accessor<float3>(output_index);
+        auto values = glb->accessor<DirectX::XMFLOAT3>(output_index);
         ptr->addScale(node_index, times, values,
                       std::format("{}-scale", m_nodes[node_index]->name));
       } else {
@@ -622,9 +605,9 @@ void Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
     for (int i = 0; i < humanMap.size(); ++i) {
       if (auto node = GetBoneNode(humanMap[i])) {
         if (i == 0) {
-          node->translation = *((float3 *)&rootPosition);
+          node->translation = rootPosition;
         }
-        node->rotation = *((quaternion *)&rotations[i]);
+        node->rotation = rotations[i];
       }
     }
   }

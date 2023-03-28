@@ -56,7 +56,7 @@ void SpringJoint::Update() {
   // update
   m_lastTailPosotion = currentTail;
   auto r = PosToRotation(nextTail);
-  Head->rotation = *((quaternion *)&r);
+  Head->rotation = r;
 }
 
 void SpringSolver::Add(const std::shared_ptr<Node> &head,

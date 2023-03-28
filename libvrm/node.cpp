@@ -14,8 +14,8 @@ void Node::addChild(const std::shared_ptr<Node> &child) {
 void Node::calcWorld(const DirectX::XMFLOAT4X4 &parent) {
   auto t =
       DirectX::XMMatrixTranslation(translation.x, translation.y, translation.z);
-  auto r = DirectX::XMMatrixRotationQuaternion(
-      DirectX::XMLoadFloat4((DirectX::XMFLOAT4 *)&rotation));
+  auto r =
+      DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&rotation));
   auto s = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
   DirectX::XMStoreFloat4x4(&world,
                            s * r * t * DirectX::XMLoadFloat4x4(&parent));
@@ -69,7 +69,7 @@ void Node::setWorldRotation(const DirectX::XMFLOAT4X4 &world) {
   DirectX::XMVECTOR t;
   DirectX::XMMatrixDecompose(&s, &r, &t, local);
 
-  DirectX::XMStoreFloat4((DirectX::XMFLOAT4 *)&rotation, r);
+  DirectX::XMStoreFloat4(&rotation, r);
 
   DirectX::XMFLOAT4X4 pm;
   DirectX::XMStoreFloat4x4(&pm, parentMatrix);
