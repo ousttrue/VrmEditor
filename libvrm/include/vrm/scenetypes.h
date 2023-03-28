@@ -10,7 +10,14 @@ inline DirectX::XMFLOAT3 &operator+=(DirectX::XMFLOAT3 &lhs,
   lhs.z += rhs.z;
   return lhs;
 }
-inline DirectX::XMFLOAT3 operator*(const DirectX::XMFLOAT3 &lhs, float rhs) {
+inline DirectX::XMFLOAT3 operator+(const DirectX::XMFLOAT3 &lhs,
+                                   const DirectX::XMFLOAT3 &rhs) {
+  return {lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z};
+}
+inline DirectX::XMFLOAT3 operator-(const DirectX::XMFLOAT3 &lhs,
+                                   const DirectX::XMFLOAT3 &rhs) {
+  return {lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z};
+}inline DirectX::XMFLOAT3 operator*(const DirectX::XMFLOAT3 &lhs, float rhs) {
   return {lhs.x * rhs, lhs.y * rhs, lhs.z * rhs};
 }
 // inline std::ostream &operator<<(std::ostream &os, const DirectX::XMFLOAT3 &v)

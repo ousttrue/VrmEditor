@@ -30,6 +30,19 @@ struct Node : public std::enable_shared_from_this<Node> {
   Node &operator=(const Node &) = delete;
   void addChild(const std::shared_ptr<Node> &child);
   void calcWorld(const DirectX::XMFLOAT4X4 &parent);
+  void calcWorld() {
+    if (auto p = parent.lock()) {
+      calcWorld(p->world);
+    } else {
+      DirectX::XMFLOAT4X4 identity{
+          1, 0, 0, 0, //
+          0, 1, 0, 0, //
+          0, 0, 1, 0, //
+          0, 0, 0, 1, //
+      };
+      calcWorld(identity);
+    }
+  }
   bool setLocalMatrix(const DirectX::XMFLOAT4X4 &local);
   bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world);
   DirectX::XMFLOAT3 worldPosition() const {

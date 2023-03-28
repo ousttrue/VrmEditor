@@ -25,6 +25,7 @@ public:
   float Stiffiness = 0;
 
 private:
+  DirectX::XMFLOAT3 m_currentTailPosition;
   DirectX::XMFLOAT3 m_lastTailPosotion;
   float m_tailLength;
   DirectX::XMFLOAT3 m_initLocalTailDir;
@@ -35,8 +36,8 @@ public:
               float stiffiness);
   void Update();
 
-  DirectX::XMFLOAT3 ForceTailPosition(const DirectX::XMFLOAT3 &nextTail) const;
-  DirectX::XMFLOAT4 PosToRotation(const DirectX::XMFLOAT3 &nextTail) const;
+  DirectX::XMFLOAT4
+  WorldPosToLocalRotation(const DirectX::XMFLOAT3 &nextTail) const;
 };
 
 class SpringSolver {

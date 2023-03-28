@@ -291,13 +291,19 @@ bool Scene::load(const std::filesystem::path &path) {
       }
     }
   }
-
   if (glb->gltf.find("scenes") != glb->gltf.end()) {
     auto scene = glb->gltf["scenes"][0];
     for (auto &node : scene["nodes"]) {
       m_roots.push_back(m_nodes[node]);
     }
   }
+  // calc world
+  auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
+    node.calcWorld(parent);
+    node.worldInit = node.world;
+    return true;
+  };
+  traverse(enter, {});
 
   auto &animations = glb->gltf["animations"];
   for (int i = 0; i < animations.size(); ++i) {
@@ -434,14 +440,6 @@ bool Scene::load(const std::filesystem::path &path) {
       }
     }
   }
-
-  // calc world
-  auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
-    node.calcWorld(parent);
-    node.worldInit = node.world;
-    return true;
-  };
-  traverse(enter, {});
 
   return true;
 }
