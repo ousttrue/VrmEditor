@@ -383,11 +383,12 @@ bool Scene::load(const std::filesystem::path &path) {
         }
       }
 
-      // exporterVersion
-      // firstPerson
-      // materialProperties
       // meta
       // specVersion
+      // exporterVersion
+
+      // firstPerson
+      // materialProperties
 
       if (VRM.find("blendShapeMaster") != VRM.end()) {
         auto &blendShapeMaster = VRM.at("blendShapeMaster");
@@ -412,20 +413,23 @@ bool Scene::load(const std::filesystem::path &path) {
 
       if (VRM.find("secondaryAnimation") != VRM.end()) {
         auto &secondaryAnimation = VRM.at("secondaryAnimation");
-        // std::cout << secondaryAnimation;
-        if (secondaryAnimation.find("boneGroups") != secondaryAnimation.end()) {
-          auto &boneGroups = secondaryAnimation.at("boneGroups");
-          for (auto &boneGroup : boneGroups) {
-            vrm0::Spring spring = boneGroup;
-            std::cout << spring << std::endl;
-          }
-        }
         if (secondaryAnimation.find("colliderGroups") !=
             secondaryAnimation.end()) {
           auto &colliderGroups = secondaryAnimation.at("colliderGroups");
           for (auto &colliderGroup : colliderGroups) {
-            vrm0::ColliderGroup collider = colliderGroup;
-            std::cout << collider << std::endl;
+            auto ptr = std::make_shared<vrm0::ColliderGroup>();
+            *ptr = colliderGroup;
+            std::cout << *ptr << std::endl;
+            m_vrm0->m_colliderGroups.push_back(ptr);
+          }
+        }
+        if (secondaryAnimation.find("boneGroups") != secondaryAnimation.end()) {
+          auto &boneGroups = secondaryAnimation.at("boneGroups");
+          for (auto &boneGroup : boneGroups) {
+            auto ptr = std::make_shared<vrm0::Spring>();
+            *ptr = boneGroup;
+            std::cout << *ptr << std::endl;
+            m_vrm0->m_springs.push_back(ptr);
           }
         }
       }

@@ -1,5 +1,6 @@
 #pragma once
 #include "humanoid.h"
+#include "springbone.h"
 #include <algorithm>
 #include <memory>
 #include <nlohmann/json.hpp>
@@ -126,8 +127,9 @@ struct Expression {
 struct Vrm {
 
   vrm::Humanoid m_humanoid;
-
   std::vector<std::shared_ptr<Expression>> m_expressions;
+  std::vector<std::shared_ptr<ColliderGroup>> m_colliderGroups;
+  std::vector<std::shared_ptr<Spring>> m_springs;
 
   std::shared_ptr<Expression> addBlendShape(const std::string &presetName,
                                             std::string_view name,
