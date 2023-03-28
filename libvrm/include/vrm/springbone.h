@@ -25,7 +25,6 @@ public:
   float Stiffiness = 0;
 
 private:
-  DirectX::XMFLOAT3 m_currentTailPosition;
   DirectX::XMFLOAT3 m_lastTailPosotion;
   float m_tailLength;
   DirectX::XMFLOAT3 m_initLocalTailDir;
@@ -46,8 +45,8 @@ class SpringSolver {
 
 public:
   void Clear() { m_joints.clear(); }
-  void Add(const std::shared_ptr<Node> &head, const std::shared_ptr<Node> &tail,
-           float dragForce, float stiffiness);
+  void Add(const std::shared_ptr<Node> &node, float dragForce, float stiffiness,
+           const std::shared_ptr<Node> &parent = {});
   void Update();
 };
 

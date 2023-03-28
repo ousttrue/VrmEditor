@@ -44,6 +44,28 @@ inline DirectX::XMFLOAT3 normalize(const DirectX::XMFLOAT3 &d) {
   return multiply(d, f);
 }
 
+inline DirectX::XMFLOAT3 cross(const DirectX::XMFLOAT3 &lhs,
+                               const DirectX::XMFLOAT3 &rhs) {
+  DirectX::XMFLOAT3 v;
+  DirectX::XMStoreFloat3(&v,
+                         DirectX::XMVector3Cross(DirectX::XMLoadFloat3(&lhs),
+                                                 DirectX::XMLoadFloat3(&rhs)));
+  return v;
+}
+
+inline float dot(const DirectX::XMFLOAT3 &lhs, const DirectX::XMFLOAT3 &rhs) {
+  auto dot = DirectX::XMVector3Dot(DirectX::XMLoadFloat3(&lhs),
+                                   DirectX::XMLoadFloat3(&rhs));
+  return DirectX::XMVectorGetX(dot);
+}
+
+inline DirectX::XMFLOAT4 axisAngle(const DirectX::XMFLOAT3 &axis, float angle) {
+  DirectX::XMFLOAT4 q;
+  DirectX::XMStoreFloat4(&q, DirectX::XMQuaternionRotationAxis(
+                                 DirectX::XMLoadFloat3(&axis), angle));
+  return q;
+}
+
 inline DirectX::XMFLOAT4 rotate_from_to(DirectX::XMFLOAT3 _lhs,
                                         DirectX::XMFLOAT3 _rhs) {
   _lhs = normalize(_lhs);

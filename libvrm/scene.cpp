@@ -426,15 +426,9 @@ bool Scene::load(const std::filesystem::path &path) {
 
         m_spring->Clear();
         for (auto &spring : m_vrm0->m_springs) {
-          std::shared_ptr<Node> last;
-          for (int i = 0; i < spring->bones.size(); ++i) {
-            auto node_index = spring->bones[i];
-            auto current = m_nodes[node_index];
-            if (last) {
-              m_spring->Add(last, current, spring->dragForce,
-                            spring->stiffiness);
-            }
-            last = current;
+          for (auto node_index : spring->bones) {
+            m_spring->Add(m_nodes[node_index], spring->dragForce,
+                          spring->stiffiness);
           }
         }
       }

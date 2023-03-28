@@ -1,6 +1,7 @@
 #include "vrm/springbone.h"
 #include "vrm/directxmath_util.h"
 #include "vrm/scenetypes.h"
+#include <iostream>
 
 namespace vrm {
 
@@ -9,10 +10,8 @@ SpringJoint::SpringJoint(const std::shared_ptr<Node> &head,
                          float stiffiness)
     : Head(head), Tail(tail), DragForce(dragForce), Stiffiness(stiffiness) {
 
-  Node *h = head.get();
-  Node *t = tail.get();
+  std::cout << head->name << "=>" << tail->name << std::endl;
 
-  m_currentTailPosition = tail->worldPosition();
   m_lastTailPosotion = tail->worldPosition();
   m_tailLength = dmath::distance(head->worldPosition(), tail->worldPosition());
   assert(m_tailLength);
@@ -28,11 +27,22 @@ SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3 &nextTail) const {
   DirectX::XMFLOAT3 localDir;
   DirectX::XMStoreFloat3(&localDir, DirectX::XMVector3Rotate(
                                         DirectX::XMLoadFloat3(&worldDir), inv));
-  return dmath::rotate_from_to(m_initLocalTailDir, localDir);
+
+  auto from = dmath::normalize(m_initLocalTailDir);
+  auto to = dmath::normalize(localDir);
+  auto axis = dmath::cross(from, to);
+  auto dot = dmath::dot(from, to);
+  if (abs(1.0f - dot) < 1E-3) {
+    return {0, 0, 0, 1};
+  } else {
+    auto angle = acos(dot);
+    auto q = dmath::axisAngle(axis, angle);
+    return q;
+  }
 }
 
 void SpringJoint::Update() {
-  auto currentTail = m_currentTailPosition;
+  auto currentTail = Tail->worldPosition();
   auto prevTail = m_lastTailPosotion;
 
   auto delta = currentTail - prevTail;
@@ -46,22 +56,26 @@ void SpringJoint::Update() {
       //     + external;          // 外力による移動量
       ;
 
-  // nextTail = ForceTailPosition(nextTail);
   auto position = Head->worldPosition();
   nextTail = position + dmath::normalize(nextTail - position) * m_tailLength;
 
   // update
   m_lastTailPosotion = currentTail;
-  m_currentTailPosition = nextTail;
 
   Head->rotation = WorldPosToLocalRotation(nextTail);
   Head->calcWorld();
 }
 
-void SpringSolver::Add(const std::shared_ptr<Node> &head,
-                       const std::shared_ptr<Node> &tail, float dragForce,
-                       float stiffiness) {
-  m_joints.push_back(SpringJoint(head, tail, dragForce, stiffiness));
+void SpringSolver::Add(const std::shared_ptr<Node> &node, float dragForce,
+                       float stiffiness, const std::shared_ptr<Node> &parent) {
+
+  if (parent) {
+    m_joints.push_back(SpringJoint(parent, node, dragForce, stiffiness));
+  }
+  for (auto &child : node->children) {
+    Add(child, dragForce, stiffiness, node);
+    break;
+  }
 }
 
 void SpringSolver::Update() {
