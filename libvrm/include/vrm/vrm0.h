@@ -2,10 +2,12 @@
 #include "humanoid.h"
 #include <algorithm>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <string_view>
 #include <vector>
 
+namespace vrm0 {
 enum class ExpressionPreset {
   unknown,
   neutral,
@@ -31,7 +33,7 @@ enum class ExpressionPreset {
   lookright,
 };
 
-struct Vrm0ExpressionMorphTargetBind {
+struct ExpressionMorphTargetBind {
   // mesh index
   int mesh;
   // blendshape index
@@ -39,6 +41,11 @@ struct Vrm0ExpressionMorphTargetBind {
   // max weight value(100)
   float weight;
 };
+inline void from_json(const nlohmann::json &j, ExpressionMorphTargetBind &b) {
+  b.mesh = j.at("mesh");
+  b.index = j.at("index");
+  b.weight = j.at("weight");
+}
 
 struct ExpressionMaterialBind {};
 
@@ -48,7 +55,7 @@ struct Expression {
   bool isBinary;
   std::string label;
   float weight = 0;
-  std::vector<Vrm0ExpressionMorphTargetBind> morphBinds;
+  std::vector<ExpressionMorphTargetBind> morphBinds;
   std::vector<ExpressionMaterialBind> materialBinds;
 
   Expression(std::string presetName, std::string_view name, bool isBinary)
@@ -116,7 +123,7 @@ struct Expression {
   }
 };
 
-struct Vrm0 {
+struct Vrm {
 
   vrm::Humanoid m_humanoid;
 
@@ -130,3 +137,5 @@ struct Vrm0 {
     return ptr;
   }
 };
+
+} // namespace vrm0

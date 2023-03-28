@@ -17,8 +17,6 @@
 #include <unordered_map>
 #include <vector>
 
-using json = nlohmann::json;
-
 struct Camera;
 struct Mesh;
 struct Skin;
@@ -26,13 +24,15 @@ struct Node;
 struct Animation;
 class Image;
 class Material;
-struct Vrm0;
+namespace vrm0 {
+struct Vrm;
+}
 using RenderFunc =
     std::function<void(const Camera &, const Mesh &, const float[16])>;
 
 using EnterFunc = std::function<bool(Node &, const DirectX::XMFLOAT4X4 &)>;
 using LeaveFunc = std::function<void()>;
-using EnterJson = std::function<bool(json &, const std::string &key)>;
+using EnterJson = std::function<bool(nlohmann::json &, const std::string &key)>;
 using LeaveJson = std::function<void()>;
 
 struct Scene {
@@ -43,8 +43,8 @@ struct Scene {
   std::vector<std::shared_ptr<Node>> m_roots;
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
-  json m_gltf;
-  std::shared_ptr<Vrm0> m_vrm0;
+  nlohmann::json m_gltf;
+  std::shared_ptr<vrm0::Vrm> m_vrm0;
   bool m_updated = false;
 
   void clear() {
@@ -74,7 +74,7 @@ public:
   void traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});
   void traverse_json(const EnterJson &enter, const LeaveJson &leave,
-                     json *j = nullptr, std::string_view key = {});
+                     nlohmann::json *j = nullptr, std::string_view key = {});
 
   void SetHumanPose(std::span<const vrm::HumanBones> humanMap,
                     const DirectX::XMFLOAT3 &rootPosition,

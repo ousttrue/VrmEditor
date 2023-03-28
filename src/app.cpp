@@ -295,7 +295,7 @@ void App::sceneDock() {
 
 void App::jsonDock() {
 
-  auto enter = [](json &item, const std::string &key) {
+  auto enter = [](nlohmann::json &item, const std::string &key) {
     static ImGuiTreeNodeFlags base_flags =
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
         ImGuiTreeNodeFlags_SpanAvailWidth;

@@ -5,6 +5,7 @@
 #include "vrm/mesh.h"
 #include "vrm/node.h"
 #include "vrm/skin.h"
+#include "vrm/springbone.h"
 #include "vrm/vrm0.h"
 #include <DirectXMath.h>
 #include <array>
@@ -76,12 +77,6 @@ inline void from_json(const json &j, DirectX::XMFLOAT4X4 &m) {
   m._44 = j[15];
 }
 
-inline void from_json(const json &j, Vrm0ExpressionMorphTargetBind &b) {
-  b.mesh = j.at("mesh");
-  b.index = j.at("index");
-  b.weight = j.at("weight");
-}
-
 template <typename T>
 static std::vector<T> ReadAllBytes(const std::filesystem::path &path) {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
@@ -116,7 +111,7 @@ bool Scene::load(const std::filesystem::path &path) {
     auto &extensions = glb->gltf.at("extensions");
     if (extensions.find("VRM") != extensions.end()) {
       auto VRM = extensions.at("VRM");
-      m_vrm0 = std::make_shared<Vrm0>();
+      m_vrm0 = std::make_shared<vrm0::Vrm>();
     }
   }
 
@@ -392,7 +387,6 @@ bool Scene::load(const std::filesystem::path &path) {
       // firstPerson
       // materialProperties
       // meta
-      // secondaryAnimation
       // specVersion
 
       if (VRM.find("blendShapeMaster") != VRM.end()) {
@@ -406,12 +400,32 @@ bool Scene::load(const std::filesystem::path &path) {
             auto expression = m_vrm0->addBlendShape(
                 g.at("presetName"), g.at("name"), g.value("isBinary", false));
             if (g.find("binds") != g.end()) {
-              for (Vrm0ExpressionMorphTargetBind bind : g.at("binds")) {
+              for (vrm0::ExpressionMorphTargetBind bind : g.at("binds")) {
                 // [0-100] to [0-1]
                 bind.weight *= 0.01f;
                 expression->morphBinds.push_back(bind);
               }
             }
+          }
+        }
+      }
+
+      if (VRM.find("secondaryAnimation") != VRM.end()) {
+        auto &secondaryAnimation = VRM.at("secondaryAnimation");
+        // std::cout << secondaryAnimation;
+        if (secondaryAnimation.find("boneGroups") != secondaryAnimation.end()) {
+          auto &boneGroups = secondaryAnimation.at("boneGroups");
+          for (auto &boneGroup : boneGroups) {
+            vrm0::Spring spring = boneGroup;
+            std::cout << spring << std::endl;
+          }
+        }
+        if (secondaryAnimation.find("colliderGroups") !=
+            secondaryAnimation.end()) {
+          auto &colliderGroups = secondaryAnimation.at("colliderGroups");
+          for (auto &colliderGroup : colliderGroups) {
+            vrm0::ColliderGroup collider = colliderGroup;
+            std::cout << collider << std::endl;
           }
         }
       }
