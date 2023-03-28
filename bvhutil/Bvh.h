@@ -12,8 +12,8 @@ struct BvhJoint {
   std::string name;
   uint16_t index;
   uint16_t parent;
-  BvhOffset localOffset;
-  BvhOffset worldOffset;
+  DirectX::XMFLOAT3 localOffset;
+  DirectX::XMFLOAT3 worldOffset;
   BvhChannels channels;
 };
 

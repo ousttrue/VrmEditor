@@ -240,7 +240,9 @@ private:
         });
         if (stack_.size()) {
           auto &parent = joints_[stack_.back()];
-          joints_.back().worldOffset += parent.worldOffset;
+          joints_.back().worldOffset.x += parent.worldOffset.x;
+          joints_.back().worldOffset.y += parent.worldOffset.y;
+          joints_.back().worldOffset.z += parent.worldOffset.z;
         }
 
         max_height_ = std::max(max_height_, joints_.back().worldOffset.y);
@@ -288,7 +290,7 @@ private:
     throw std::runtime_error("not reach here");
   }
 
-  std::optional<BvhOffset> ParseOffset() {
+  std::optional<DirectX::XMFLOAT3> ParseOffset() {
     if (!token_.expect("OFFSET", is_space)) {
       return {};
     }
@@ -305,7 +307,7 @@ private:
       return {};
     }
 
-    return BvhOffset{*x, *y, *z};
+    return DirectX::XMFLOAT3{*x, *y, *z};
   }
 
   std::optional<BvhChannels> ParseChannels() {

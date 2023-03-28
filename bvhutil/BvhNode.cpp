@@ -80,10 +80,14 @@ void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
   auto t = DirectX::XMMatrixTranslation(transform.Translation.x * scaling,
                                         transform.Translation.y * scaling,
                                         transform.Translation.z * scaling);
-  auto r =
-      DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3 *)&transform.Rotation);
+  // auto r =
+  //     DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3
+  //     *)&transform.Rotation);
+  auto r = DirectX::XMMatrixRotationQuaternion(
+      DirectX::XMLoadFloat4(&transform.Rotation));
 
-  DirectX::XMStoreFloat4(&*outLocal, DirectX::XMQuaternionRotationMatrix(r));
+  // DirectX::XMStoreFloat4(&*outLocal, DirectX::XMQuaternionRotationMatrix(r));
+  *outLocal = transform.Rotation;
 
   auto local = r * t;
 
