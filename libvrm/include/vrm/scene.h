@@ -77,6 +77,7 @@ public:
                      json *j = nullptr, std::string_view key = {});
 
   void SetHumanPose(std::span<const vrm::HumanBones> humanMap,
+                    const DirectX::XMFLOAT3 &rootPosition,
                     std::span<const DirectX::XMFLOAT4> rotations);
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
 };

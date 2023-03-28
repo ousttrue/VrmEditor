@@ -96,7 +96,9 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
 
     // apply vrm
     if (scene_->m_vrm0) {
-      scene_->SetHumanPose(humanBoneMap_, motionSolver_->localRotations);
+      auto &hips = motionSolver_->instances_[0];
+      scene_->SetHumanPose(humanBoneMap_, {hips._41, hips._42, hips._43},
+                           motionSolver_->localRotations);
     }
   };
 

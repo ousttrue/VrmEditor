@@ -112,6 +112,14 @@ bool Scene::load(const std::filesystem::path &path) {
 
   m_gltf = glb->gltf;
 
+  if (glb->gltf.find("extensions") != glb->gltf.end()) {
+    auto &extensions = glb->gltf.at("extensions");
+    if (extensions.find("VRM") != extensions.end()) {
+      auto VRM = extensions.at("VRM");
+      m_vrm0 = std::make_shared<Vrm0>();
+    }
+  }
+
   auto &images = glb->gltf["images"];
   for (int i = 0; i < images.size(); ++i) {
     auto &image = images[i];
@@ -161,8 +169,16 @@ bool Scene::load(const std::filesystem::path &path) {
                    prim.at("material"));
       } else {
         // extend vertex buffer
-        auto offset = ptr->addPosition(
-            glb->accessor<float3>(attributes[VERTEX_POSITION]));
+        auto positions = glb->accessor<float3>(attributes[VERTEX_POSITION]);
+        std::vector<float3> copy;
+        if (m_vrm0) {
+          copy.reserve(positions.size());
+          for (auto &p : positions) {
+            copy.push_back({-p.x, p.y, -p.z});
+          }
+          positions = copy;
+        }
+        auto offset = ptr->addPosition(positions);
         if (attributes.find(VERTEX_NORMAL) != attributes.end()) {
           ptr->setNormal(offset,
                          glb->accessor<float3>(attributes.at(VERTEX_NORMAL)));
@@ -228,6 +244,16 @@ bool Scene::load(const std::filesystem::path &path) {
 
       auto matrices =
           glb->accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"]);
+      std::vector<DirectX::XMFLOAT4X4> copy;
+      if (m_vrm0) {
+        copy.reserve(matrices.size());
+        for (auto &m : matrices) {
+          copy.push_back(m);
+          copy.back()._41 = -m._41;
+          copy.back()._43 = -m._43;
+        }
+        matrices = copy;
+      }
       ptr->bindMatrices.assign(matrices.begin(), matrices.end());
 
       assert(ptr->joints.size() == ptr->bindMatrices.size());
@@ -258,6 +284,10 @@ bool Scene::load(const std::filesystem::path &path) {
     } else {
       // T
       ptr->translation = node.value("translation", float3{0, 0, 0});
+      if (m_vrm0) {
+        auto t = ptr->translation;
+        ptr->translation = {-t.x, t.y, -t.z};
+      }
       // R
       ptr->rotation = node.value("rotation", quaternion{0, 0, 0, 1});
       // S
@@ -341,7 +371,7 @@ bool Scene::load(const std::filesystem::path &path) {
     auto &extensions = glb->gltf.at("extensions");
     if (extensions.find("VRM") != extensions.end()) {
       auto VRM = extensions.at("VRM");
-      m_vrm0 = std::make_shared<Vrm0>();
+      // m_vrm0 = std::make_shared<Vrm0>();
 
       if (VRM.find("humanoid") != VRM.end()) {
         auto &humanoid = VRM.at("humanoid");
@@ -554,6 +584,7 @@ void Scene::traverse_json(const EnterJson &enter, const LeaveJson &leave,
 }
 
 void Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
+                         const DirectX::XMFLOAT3 &rootPosition,
                          std::span<const DirectX::XMFLOAT4> rotations) {
 
   assert(humanMap.size() == rotations.size());
@@ -561,6 +592,9 @@ void Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
   if (m_vrm0) {
     for (int i = 0; i < humanMap.size(); ++i) {
       if (auto node = GetBoneNode(humanMap[i])) {
+        if (i == 0) {
+          node->translation = *((float3 *)&rootPosition);
+        }
         node->rotation = *((quaternion *)&rotations[i]);
       }
     }
