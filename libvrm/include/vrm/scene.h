@@ -31,7 +31,7 @@ struct Vrm;
 using RenderFunc =
     std::function<void(const Camera &, const Mesh &, const float[16])>;
 
-using EnterFunc = std::function<bool(Node &, const DirectX::XMFLOAT4X4 &)>;
+using EnterFunc = std::function<bool(Node &)>;
 using LeaveFunc = std::function<void()>;
 using EnterJson = std::function<bool(nlohmann::json &, const std::string &key)>;
 using LeaveJson = std::function<void()>;
@@ -74,7 +74,7 @@ public:
 
   void Render(const Camera &camera, const RenderFunc &render);
   void Traverse(const EnterFunc &enter, const LeaveFunc &leave,
-                Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});
+                Node *node = nullptr);
   void TraverseJson(const EnterJson &enter, const LeaveJson &leave,
                     nlohmann::json *j = nullptr, std::string_view key = {});
 

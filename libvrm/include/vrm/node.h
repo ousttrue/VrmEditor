@@ -15,9 +15,18 @@ struct Node : public std::enable_shared_from_this<Node> {
   DirectX::XMFLOAT3 translation = {};
   DirectX::XMFLOAT4 rotation = {};
   DirectX::XMFLOAT3 scale = {};
+  bool hasRotation() const {
+    if (rotation.x == 0 && rotation.y == 0 && rotation.z == 0 &&
+        rotation.w == 1) {
+      return false;
+    }
+    return true;
+  }
+  DirectX::XMFLOAT4X4 localInit;
 
   DirectX::XMFLOAT4X4 world;
   DirectX::XMFLOAT4X4 worldInit;
+  void init();
 
   std::optional<uint32_t> mesh;
   std::shared_ptr<Skin> skin;
@@ -29,26 +38,13 @@ struct Node : public std::enable_shared_from_this<Node> {
   Node(const Node &) = delete;
   Node &operator=(const Node &) = delete;
   void addChild(const std::shared_ptr<Node> &child);
-  void calcWorld(const DirectX::XMFLOAT4X4 &parent);
-  void calcWorld() {
-    if (auto p = parent.lock()) {
-      calcWorld(p->world);
-    } else {
-      DirectX::XMFLOAT4X4 identity{
-          1, 0, 0, 0, //
-          0, 1, 0, 0, //
-          0, 0, 1, 0, //
-          0, 0, 0, 1, //
-      };
-      calcWorld(identity);
-    }
-  }
+  void calcWorld(bool recursive = false);
   bool setLocalMatrix(const DirectX::XMFLOAT4X4 &local);
   bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world);
   DirectX::XMFLOAT3 worldPosition() const {
     return {world._41, world._42, world._43};
   }
-  void setWorldRotation(const DirectX::XMFLOAT4 &world);
+  void setWorldRotation(const DirectX::XMFLOAT4 &world, bool recursive = false);
   DirectX::XMFLOAT4 worldRotation() const {
     auto q =
         DirectX::XMQuaternionRotationMatrix(DirectX::XMLoadFloat4x4(&world));
@@ -83,7 +79,8 @@ struct Node : public std::enable_shared_from_this<Node> {
     }
   }
   void print(int level = 0);
-  void setWorldRotation(const DirectX::XMFLOAT4X4 &world);
+  void setWorldRotation(const DirectX::XMFLOAT4X4 &world,
+                        bool recursive = false);
 };
 inline std::ostream &operator<<(std::ostream &os, const Node &node) {
   os << "Node[" << node.index << "]" << node.name

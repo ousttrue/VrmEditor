@@ -299,9 +299,9 @@ bool Scene::Load(const std::filesystem::path &path) {
   }
 
   // calc world
-  auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
-    node.calcWorld(parent);
-    node.worldInit = node.world;
+  auto enter = [](Node &node) {
+    node.calcWorld();
+    node.init();
     return true;
   };
   Traverse(enter, {});
@@ -529,12 +529,12 @@ void Scene::Render(const Camera &camera, const RenderFunc &render) {
   }
 }
 
-void Scene::Traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
-                     const DirectX::XMFLOAT4X4 &parent) {
+void Scene::Traverse(const EnterFunc &enter, const LeaveFunc &leave,
+                     Node *node) {
   if (node) {
-    if (enter(*node, parent)) {
+    if (enter(*node)) {
       for (auto &child : node->children) {
-        Traverse(enter, leave, child.get(), node->world);
+        Traverse(enter, leave, child.get());
       }
       if (leave) {
         leave();
@@ -543,7 +543,7 @@ void Scene::Traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
   } else {
     // root
     for (auto &child : m_roots) {
-      Traverse(enter, leave, child.get(), IDENTITY);
+      Traverse(enter, leave, child.get());
     }
   }
 }
@@ -590,14 +590,12 @@ void Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
       }
     }
   }
-
-  UpdateAfterPose();
 }
 
 void Scene::UpdateAfterPose() {
   // calc world
-  auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
-    node.calcWorld(parent);
+  auto enter = [](Node &node) {
+    node.calcWorld();
     return true;
   };
   Traverse(enter, {});

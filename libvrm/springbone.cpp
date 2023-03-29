@@ -11,7 +11,8 @@ SpringJoint::SpringJoint(const std::shared_ptr<Node> &head,
                          float dragForce, float stiffiness)
     : Head(head), DragForce(dragForce), Stiffiness(stiffiness) {
 
-  m_currentTailPosotion = dmath::transform(localTailPosition, head->world);
+  m_currentTailPosotion =
+      dmath::transform(localTailPosition, head->parentWorld());
   m_lastTailPosotion = m_currentTailPosotion;
   m_tailLength = dmath::length(localTailPosition);
   assert(m_tailLength);
@@ -51,28 +52,41 @@ void SpringJoint::Update() {
   m_currentTailPosotion = nextTail;
   m_lastTailPosotion = currentTail;
   Head->rotation = WorldPosToLocalRotation(nextTail);
-  Head->calcWorld();
+  Head->calcWorld(false);
+  for (auto &child : Head->children) {
+    // ひとつ下まで
+    child->calcWorld(false);
+  }
 
-  gizmo::drawSphere(lastHead, {1, 1, 1, 1});
-  gizmo::drawSphere(Head->worldPosition(), {1, 0, 1, 1});
-  gizmo::drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
+  // gizmo::drawSphere(lastHead, {1, 1, 1, 1});
+  gizmo::drawSphere(Head->worldPosition(), {0, 1, 0, 1});
+  // gizmo::drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
 
-  gizmo::drawSphere(currentTail, {1, 1, 1, 1});
-  gizmo::drawSphere(nextTail, {0, 1, 0, 1});
-  gizmo::drawLine(currentTail, nextTail, {0, 1, 0, 1});
+  // gizmo::drawSphere(currentTail, {1, 1, 1, 1});
+  gizmo::drawSphere(nextTail, {1, 0, 1, 1});
+  // gizmo::drawLine(currentTail, nextTail, {0, 1, 0, 1});
 
   gizmo::drawLine(Head->worldPosition(), nextTail, {1, 1, 0, 1});
+
+  if (Head->children.size()) {
+    gizmo::drawSphere(Head->children.front()->worldPosition(), {1, 0, 0, 1});
+    gizmo::drawLine(Head->worldPosition(),
+                    Head->children.front()->worldPosition(), {1, 0, 0, 1});
+  }
 }
 
 DirectX::XMFLOAT4
 SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3 &nextTail) const {
   DirectX::XMFLOAT3 localNextTail;
-  auto parentWorld = Head->parentWorld();
+  auto world = Head->parentWorld();
+  auto localInit = Head->localInit;
   DirectX::XMStoreFloat3(
       &localNextTail, DirectX::XMVector3Transform(
                           DirectX::XMLoadFloat3(&nextTail),
                           DirectX::XMMatrixInverse(
-                              nullptr, DirectX::XMLoadFloat4x4(&parentWorld))));
+                              nullptr, DirectX::XMMatrixMultiply(
+                                           DirectX::XMLoadFloat4x4(&localInit),
+                                           DirectX::XMLoadFloat4x4(&world)))));
   return dmath::rotate_from_to(m_initLocalTailDir, localNextTail);
 }
 

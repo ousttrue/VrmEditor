@@ -3,6 +3,16 @@
 
 Node::Node(uint32_t i, std::string_view name) : index(i), name(name) {}
 
+void Node::init() {
+  worldInit = world;
+  auto t =
+      DirectX::XMMatrixTranslation(translation.x, translation.y, translation.z);
+  auto r =
+      DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&rotation));
+  auto s = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
+  DirectX::XMStoreFloat4x4(&localInit, s * r * t);
+}
+
 void Node::addChild(const std::shared_ptr<Node> &child) {
   if (auto current_parent = child->parent.lock()) {
     current_parent->children.remove(child);
@@ -11,14 +21,30 @@ void Node::addChild(const std::shared_ptr<Node> &child) {
   children.push_back(child);
 }
 
-void Node::calcWorld(const DirectX::XMFLOAT4X4 &parent) {
+void Node::calcWorld(bool recursive) {
+  DirectX::XMFLOAT4X4 parentWorld{
+      1, 0, 0, 0, //
+      0, 1, 0, 0, //
+      0, 0, 1, 0, //
+      0, 0, 0, 1, //
+  };
+  if (auto p = parent.lock()) {
+    parentWorld = p->world;
+  }
+
   auto t =
       DirectX::XMMatrixTranslation(translation.x, translation.y, translation.z);
   auto r =
       DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&rotation));
   auto s = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
   DirectX::XMStoreFloat4x4(&world,
-                           s * r * t * DirectX::XMLoadFloat4x4(&parent));
+                           s * r * t * DirectX::XMLoadFloat4x4(&parentWorld));
+
+  if (recursive) {
+    for (auto &child : children) {
+      child->calcWorld(true);
+    }
+  }
 }
 
 bool Node::setLocalMatrix(const DirectX::XMFLOAT4X4 &local) {
@@ -52,16 +78,16 @@ bool Node::setWorldMatrix(const DirectX::XMFLOAT4X4 &world) {
   return setLocalMatrix(m);
 }
 
-void Node::setWorldRotation(const DirectX::XMFLOAT4 &world) {
+void Node::setWorldRotation(const DirectX::XMFLOAT4 &world, bool recursive) {
   auto parent = parentWorldRotation();
   DirectX::XMStoreFloat4(&rotation, DirectX::XMQuaternionMultiply(
                                         DirectX::XMLoadFloat4(&world),
                                         DirectX::XMQuaternionInverse(
                                             DirectX::XMLoadFloat4(&parent))));
-  calcWorld();
+  calcWorld(recursive);
 }
 
-void Node::setWorldRotation(const DirectX::XMFLOAT4X4 &world) {
+void Node::setWorldRotation(const DirectX::XMFLOAT4X4 &world, bool recursive) {
 
   DirectX::XMMATRIX parentMatrix;
   if (auto parentNode = parent.lock()) {
@@ -80,9 +106,7 @@ void Node::setWorldRotation(const DirectX::XMFLOAT4X4 &world) {
 
   DirectX::XMStoreFloat4(&rotation, r);
 
-  DirectX::XMFLOAT4X4 pm;
-  DirectX::XMStoreFloat4x4(&pm, parentMatrix);
-  calcWorld(pm);
+  calcWorld(recursive);
 }
 
 void Node::print(int level) {

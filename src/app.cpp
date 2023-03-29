@@ -29,6 +29,9 @@ App::App() {
   lua_ = std::make_shared<LuaEngine>();
   scene_ = std::make_shared<Scene>();
   m_timeline = std::make_shared<Timeline>();
+  m_timeline->OnTimeChanged = [scene = scene_](auto time) {
+    scene->UpdateAfterPose();
+  };
 
   platform_ = std::make_shared<Platform>();
   auto window =
@@ -66,7 +69,6 @@ bool App::load_model(const std::filesystem::path &path) {
     track->Callbacks.push_back(
         [animation, scene = scene_](auto time, bool repeat) {
           animation->update(time, scene->m_nodes, repeat);
-          scene->UpdateAfterPose();
         });
 
     // first animation only
@@ -191,7 +193,7 @@ void App::sceneDock() {
   //
   auto context = std::make_shared<TreeContext>();
 
-  auto enter = [this, context](Node &node, const DirectX::XMFLOAT4X4 &parent) {
+  auto enter = [this, context](Node &node) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     static ImGuiTreeNodeFlags base_flags =
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -206,8 +208,19 @@ void App::sceneDock() {
     if (context->selected == &node) {
       node_flags |= ImGuiTreeNodeFlags_Selected;
     }
+
+    bool hasRotation = node.hasRotation();
+    if (hasRotation) {
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
+    }
+
     bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)node.index, node_flags,
                                        "%s", node.name.c_str());
+
+    if (hasRotation) {
+      ImGui::PopStyleColor();
+    }
+
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
       context->new_selected = &node;
     }
