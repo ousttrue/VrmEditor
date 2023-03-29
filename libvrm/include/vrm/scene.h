@@ -38,6 +38,9 @@ using EnterJson = std::function<bool(nlohmann::json &, const std::string &key)>;
 using LeaveJson = std::function<void()>;
 
 struct Scene {
+  bool m_isPlaying = false;
+  std::shared_ptr<Timeline> m_timeline;
+
   std::vector<std::shared_ptr<Image>> m_images;
   std::vector<std::shared_ptr<Material>> m_materials;
   std::vector<std::shared_ptr<Mesh>> m_meshes;

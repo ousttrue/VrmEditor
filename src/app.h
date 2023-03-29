@@ -11,7 +11,7 @@ struct Scene;
 struct Bvh;
 class BvhSolver;
 class Gui;
-class Timeline;
+struct Timeline;
 class AssetDir;
 class LuaEngine;
 class Platform;
@@ -21,7 +21,7 @@ class App {
   std::shared_ptr<Scene> scene_;
   std::list<std::shared_ptr<AssetDir>> assets_;
 
-  std::shared_ptr<Timeline> timeline_;
+  std::shared_ptr<Timeline> m_timeline;
 
   std::shared_ptr<Bvh> motion_;
   std::shared_ptr<BvhSolver> motionSolver_;

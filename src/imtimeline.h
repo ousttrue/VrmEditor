@@ -3,6 +3,7 @@
 #include <chrono>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <vrm/timeline.h>
 
 // cursor
 // start      end
@@ -15,12 +16,14 @@ struct TimeDraw {
   Time start;
   Time end;
   ImU32 color = IM_COL32_BLACK;
-  TimeDraw(const ImVec2 &cursor, const ImVec2 &size, Time start,
-           std::chrono::milliseconds end)
+  TimeDraw(const ImVec2 &cursor, const ImVec2 &size, Time start, Time end)
       : cursor(cursor), size(size), start(start), end(end) {}
+  // 1seconds / 100 pixel
+  // pixels to seconds is 0.01
+  // half 0.005
   TimeDraw(const ImVec2 &cursor, const ImVec2 &size, Time center)
-      : TimeDraw(cursor, size, center - Time((int64_t)size.x * 5),
-                 center + Time((int64_t)size.x * 5)) {}
+      : TimeDraw(cursor, size, center - Time((double)size.x * 0.005),
+                 center + Time((double)size.x * 0.005)) {}
   bool drawLine(ImDrawList *drawList, Time time) {
 
     if (time < start) {
@@ -31,7 +34,7 @@ struct TimeDraw {
     }
 
     auto delta = time - start;
-    auto x = cursor.x + delta.count() * 100;
+    auto x = cursor.x + (float)delta.count() * 100;
     drawList->AddLine({x, cursor.y}, {x, cursor.y + size.y}, color, 1.0f);
 
     char text[64];
@@ -43,14 +46,14 @@ struct TimeDraw {
 
   void drawLines(ImDrawList *drawList) {
     auto count = (int)start.count();
-    for (auto current = Time(count); current < end; current += Time(1)) {
+    for (auto current = Time(count); current < end; current += Time(1.0)) {
       drawLine(drawList, current);
     }
   }
 
   void drawNow(ImDrawList *drawList, Time time) {
     auto delta = time - start;
-    auto x = cursor.x + delta.count() * 100;
+    auto x = cursor.x + (float)delta.count() * 100;
     drawList->AddLine({x, cursor.y}, {x, cursor.y + size.y},
                       IM_COL32(255, 0, 0, 255), 1.0f);
 

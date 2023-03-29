@@ -5,6 +5,7 @@
 #include "assetdir.h"
 #include "gl3renderer.h"
 #include "gui.h"
+#include "imtimeline.h"
 #include "luahost.h"
 #include "platform.h"
 #include "rendertarget.h"
@@ -27,7 +28,7 @@ const auto WINDOW_TITLE = "VrmEditor";
 App::App() {
   lua_ = std::make_shared<LuaEngine>();
   scene_ = std::make_shared<Scene>();
-  timeline_ = std::make_shared<Timeline>();
+  m_timeline = std::make_shared<Timeline>();
 
   platform_ = std::make_shared<Platform>();
   auto window =
@@ -50,7 +51,7 @@ App::App() {
 App::~App() {}
 
 void App::clear_scene() {
-  timeline_->clear();
+  m_timeline->Tracks.clear();
   scene_->clear();
 }
 
@@ -61,8 +62,8 @@ bool App::load_model(const std::filesystem::path &path) {
 
   // bind time line
   for (auto &animation : scene_->m_animations) {
-    auto track = timeline_->addTrack("gltf", animation->m_duration);
-    track->callback = [animation, scene = scene_](auto time, bool repeat) {
+    auto track = m_timeline->AddTrack("gltf", animation->m_duration);
+    track->Callback = [animation, scene = scene_](auto time, bool repeat) {
       animation->update(time, scene->m_nodes, repeat);
     };
 
@@ -79,8 +80,8 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
   motionSolver_ = std::make_shared<BvhSolver>();
   motionSolver_->Initialize(motion_);
 
-  auto track = timeline_->addTrack("bvh", motion_->Duration());
-  track->callback = [this](auto time, bool repeat) {
+  auto track = m_timeline->AddTrack("bvh", motion_->Duration());
+  track->Callback = [this](auto time, bool repeat) {
     auto index = motion_->TimeToIndex(time);
     auto frame = motion_->GetFrame(index);
     motionSolver_->ResolveFrame(frame);
@@ -149,7 +150,7 @@ int App::run() {
   while (auto info = platform_->newFrame()) {
     // double sec to int64_t milliseconds
     auto time = std::chrono::duration_cast<Time>(info->time);
-    timeline_->setGlobal(time);
+    m_timeline->SetTime(time);
 
     gizmo::clear();
     scene_->update(time);
@@ -320,101 +321,12 @@ void App::jsonDock() {
   }));
 }
 
-// cursor
-// start      end
-// +-----------+
-// |           |
-// +-----------+
-struct TimeDraw {
-  ImVec2 cursor;
-  ImVec2 size;
-  Time start;
-  Time end;
-  ImU32 color = IM_COL32_BLACK;
-  TimeDraw(const ImVec2 &cursor, const ImVec2 &size, Time start, Time end)
-      : cursor(cursor), size(size), start(start), end(end) {}
-  // 1seconds / 100 pixel
-  // pixels to seconds is 0.01
-  // half 0.005
-  TimeDraw(const ImVec2 &cursor, const ImVec2 &size, Time center)
-      : TimeDraw(cursor, size, center - Time((double)size.x * 0.005),
-                 center + Time((double)size.x * 0.005)) {}
-  bool drawLine(ImDrawList *drawList, Time time) {
-
-    if (time < start) {
-      return false;
-    }
-    if (time > end) {
-      return false;
-    }
-
-    auto delta = time - start;
-    auto x = cursor.x + (float)delta.count() * 100;
-    drawList->AddLine({x, cursor.y}, {x, cursor.y + size.y}, color, 1.0f);
-
-    char text[64];
-    sprintf_s(text, sizeof(text), "%.2lf", time.count());
-    drawList->AddText({x, cursor.y}, color, text, nullptr);
-
-    return true;
-  }
-
-  void drawLines(ImDrawList *drawList) {
-    auto count = (int)start.count();
-    for (auto current = Time(count); current < end; current += Time(1.0)) {
-      drawLine(drawList, current);
-    }
-  }
-
-  void drawNow(ImDrawList *drawList, Time time) {
-    auto delta = time - start;
-    auto x = cursor.x + (float)delta.count() * 100;
-    drawList->AddLine({x, cursor.y}, {x, cursor.y + size.y},
-                      IM_COL32(255, 0, 0, 255), 1.0f);
-
-    char text[64];
-    sprintf_s(text, sizeof(text), "%.2lf", time.count());
-    drawList->AddText({x, cursor.y}, color, text, nullptr);
-  }
-};
-
-class ImTimeline {
-public:
-  ImTimeline() {}
-  ~ImTimeline() {}
-
-  void show(Time now, const ImVec2 &size = {0, 0}) {
-    // ImGuiContext &g = *GImGui;
-    // ImGuiWindow *window = ImGui::GetCurrentWindow();
-    // const auto &imStyle = ImGui::GetStyle();
-    const auto drawList = ImGui::GetWindowDrawList();
-    const auto cursor = ImGui::GetCursorScreenPos();
-    const auto area = ImGui::GetContentRegionAvail();
-    // const auto cursorBasePos = ImGui::GetCursorScreenPos() + window->Scroll;
-
-    auto textSize = ImGui::CalcTextSize(" ");
-    auto lineheight = textSize.y;
-
-    auto realSize = ImFloor(size);
-    if (realSize.x <= 0.0f)
-      realSize.x = ImMax(4.0f, area.x);
-    if (realSize.y <= 0.0f)
-      realSize.y = ImMax(4.0f, lineheight);
-
-    TimeDraw(cursor, {realSize.x, lineheight + lineheight}, now)
-        .drawNow(drawList, now);
-
-    TimeDraw({cursor.x, cursor.y + lineheight}, realSize, now)
-        .drawLines(drawList);
-  }
-};
-
 void App::timelineDock() {
   auto timelineGui = std::make_shared<ImTimeline>();
 
   gui_->m_docks.push_back(
-      Dock("timeline", [timeline = timeline_, timelineGui]() {
-        timelineGui->show(timeline->global());
+      Dock("timeline", [timeline = m_timeline, timelineGui]() {
+        timelineGui->show(timeline->CurrentTime);
       }));
 }
 

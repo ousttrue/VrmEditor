@@ -9,7 +9,6 @@ vrm_lib = static_library(
         'node.cpp',
         'springbone.cpp',
         'gizmo.cpp',
-        'timeline.cpp',
     ],
     include_directories: vrm_inc,
     dependencies: dependencies,
