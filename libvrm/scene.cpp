@@ -459,7 +459,7 @@ void Scene::addIndices(int vertex_offset, Mesh *mesh, Glb *glb,
   }
 }
 
-void Scene::update(std::chrono::milliseconds delta) {
+void Scene::update(Time delta) {
   // calc world
   auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
     node.calcWorld(parent);

@@ -1,7 +1,7 @@
 #include "vrm/springbone.h"
+#include "vrm/dmath.h"
+#include "vrm/gizmo.h"
 #include "vrm/scenetypes.h"
-#include <dmath.h>
-#include <gizmo.h>
 #include <iostream>
 
 namespace vrm {

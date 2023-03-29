@@ -1,4 +1,5 @@
 #include "platform.h"
+#include <vrm/timeline.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <stdexcept>
@@ -77,7 +78,7 @@ std::optional<FrameInfo> Platform::newFrame() {
   return FrameInfo{
       .width = width,
       .height = height,
-      .time = std::chrono::milliseconds(static_cast<long long>(seconds * 1000)),
+      .time = Time(seconds),
   };
 }
 

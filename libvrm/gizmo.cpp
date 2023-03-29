@@ -1,5 +1,5 @@
-#include "gizmo.h"
-#include "dmath.h"
+#include "vrm/gizmo.h"
+#include "vrm/dmath.h"
 
 std::vector<grapho::LineVertex> g_lines;
 size_t g_keep = 0;
@@ -11,7 +11,7 @@ void fix() { g_keep = g_lines.size(); }
 void clear() { g_lines.resize(g_keep); }
 
 void drawLine(const DirectX::XMFLOAT3 &p0, const DirectX::XMFLOAT3 &p1,
-                 const grapho::RGBA &color) {
+              const grapho::RGBA &color) {
 
   g_lines.push_back({
       .position = {p0.x, p0.y, p0.z},
@@ -36,29 +36,29 @@ void drawSphere(const DirectX::XMFLOAT3 &pos, const DirectX::XMFLOAT4 &color) {
   // \  /
   //  \/
   drawLine(dmath::add(pos, points[0]), dmath::add(pos, points[1]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[1]), dmath::add(pos, points[2]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[2]), dmath::add(pos, points[3]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[3]), dmath::add(pos, points[4]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[0]), dmath::add(pos, points[4]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[1]), dmath::add(pos, points[4]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[2]), dmath::add(pos, points[4]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[3]), dmath::add(pos, points[4]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[0]), dmath::add(pos, points[5]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[1]), dmath::add(pos, points[5]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[2]), dmath::add(pos, points[5]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
   drawLine(dmath::add(pos, points[3]), dmath::add(pos, points[5]),
-       *((grapho::RGBA *)&color));
+           *((grapho::RGBA *)&color));
 }
 
 } // namespace gizmo

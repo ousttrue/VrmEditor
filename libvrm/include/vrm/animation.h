@@ -1,7 +1,7 @@
 #pragma once
 #include "node.h"
 #include "scenetypes.h"
-#include <chrono>
+#include "timeline.h"
 #include <span>
 #include <unordered_map>
 #include <vector>
@@ -38,9 +38,9 @@ struct Animation {
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_translationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT4>> m_rotationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_scaleMap;
-  std::chrono::milliseconds m_duration;
+  Time m_duration;
 
-  std::chrono::milliseconds duration() const {
+  Time duration() const {
     float sec = 0;
     for (auto &[k, v] : m_translationMap) {
       sec = std::max(sec, v.maxSeconds());
@@ -51,7 +51,7 @@ struct Animation {
     for (auto &[k, v] : m_scaleMap) {
       sec = std::max(sec, v.maxSeconds());
     }
-    return std::chrono::milliseconds(static_cast<int64_t>(sec * 1000));
+    return Time(static_cast<int64_t>(sec * 1000));
   }
 
   Animation(std::string_view name) : m_name(name) {}
@@ -69,7 +69,8 @@ struct Animation {
                              });
   }
   void addRotation(uint32_t node_index, std::span<const float> times,
-                   std::span<const DirectX::XMFLOAT4> values, std::string_view name) {
+                   std::span<const DirectX::XMFLOAT4> values,
+                   std::string_view name) {
     m_rotationMap.emplace(node_index,
                           Curve<DirectX::XMFLOAT4>{
                               .name = {name.begin(), name.end()},
@@ -87,9 +88,9 @@ struct Animation {
                                    });
   }
 
-  void update(std::chrono::milliseconds time,
-              std::span<std::shared_ptr<Node>> nodes, bool repeat = false) {
-    float seconds = time.count() * 0.001f;
+  void update(Time time, std::span<std::shared_ptr<Node>> nodes,
+              bool repeat = false) {
+    float seconds = time.count();
     for (auto &[k, v] : m_translationMap) {
       auto node = nodes[k];
       node->translation = v.getValue(seconds, repeat);

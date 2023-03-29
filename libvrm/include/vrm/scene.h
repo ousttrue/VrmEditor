@@ -2,6 +2,7 @@
 #include "humanoid.h"
 #include "scenetypes.h"
 #include "springbone.h"
+#include "timeline.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <filesystem>
@@ -70,7 +71,7 @@ private:
                   int accessor_index, int material_index);
 
 public:
-  void update(std::chrono::milliseconds delta);
+  void update(Time delta);
   void render(const Camera &camera, const RenderFunc &render);
   void traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});

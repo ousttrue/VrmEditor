@@ -8,15 +8,14 @@
 #include "luahost.h"
 #include "platform.h"
 #include "rendertarget.h"
-#include "timeline.h"
 #include "windows_helper.h"
 #include <Bvh.h>
 #include <BvhSolver.h>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <gizmo.h>
 #include <iostream>
 #include <vrm/animation.h>
+#include <vrm/gizmo.h>
 #include <vrm/mesh.h>
 #include <vrm/scene.h>
 #include <vrm/vrm0.h>
@@ -62,8 +61,8 @@ bool App::load_model(const std::filesystem::path &path) {
 
   // bind time line
   for (auto &animation : scene_->m_animations) {
-    auto sequence = timeline_->addSequence("gltf", animation->m_duration);
-    sequence->callback = [animation, scene = scene_](auto time, bool repeat) {
+    auto track = timeline_->addTrack("gltf", animation->m_duration);
+    track->callback = [animation, scene = scene_](auto time, bool repeat) {
       animation->update(time, scene->m_nodes, repeat);
     };
 
@@ -80,8 +79,8 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
   motionSolver_ = std::make_shared<BvhSolver>();
   motionSolver_->Initialize(motion_);
 
-  auto sequence = timeline_->addSequence("bvh", motion_->Duration());
-  sequence->callback = [this](auto time, bool repeat) {
+  auto track = timeline_->addTrack("bvh", motion_->Duration());
+  track->callback = [this](auto time, bool repeat) {
     auto index = motion_->TimeToIndex(time);
     auto frame = motion_->GetFrame(index);
     motionSolver_->ResolveFrame(frame);
@@ -149,8 +148,7 @@ int App::run() {
 
   while (auto info = platform_->newFrame()) {
     // double sec to int64_t milliseconds
-    auto time =
-        std::chrono::duration_cast<std::chrono::milliseconds>(info->time);
+    auto time = std::chrono::duration_cast<Time>(info->time);
     timeline_->setGlobal(time);
 
     gizmo::clear();
@@ -330,18 +328,18 @@ void App::jsonDock() {
 struct TimeDraw {
   ImVec2 cursor;
   ImVec2 size;
-  std::chrono::milliseconds start;
-  std::chrono::milliseconds end;
+  Time start;
+  Time end;
   ImU32 color = IM_COL32_BLACK;
-  TimeDraw(const ImVec2 &cursor, const ImVec2 &size,
-           std::chrono::milliseconds start, std::chrono::milliseconds end)
+  TimeDraw(const ImVec2 &cursor, const ImVec2 &size, Time start, Time end)
       : cursor(cursor), size(size), start(start), end(end) {}
-  TimeDraw(const ImVec2 &cursor, const ImVec2 &size,
-           std::chrono::milliseconds center)
-      : TimeDraw(cursor, size,
-                 center - std::chrono::milliseconds((int64_t)size.x * 5),
-                 center + std::chrono::milliseconds((int64_t)size.x * 5)) {}
-  bool drawLine(ImDrawList *drawList, std::chrono::milliseconds time) {
+  // 1seconds / 100 pixel
+  // pixels to seconds is 0.01
+  // half 0.005
+  TimeDraw(const ImVec2 &cursor, const ImVec2 &size, Time center)
+      : TimeDraw(cursor, size, center - Time((double)size.x * 0.005),
+                 center + Time((double)size.x * 0.005)) {}
+  bool drawLine(ImDrawList *drawList, Time time) {
 
     if (time < start) {
       return false;
@@ -351,32 +349,31 @@ struct TimeDraw {
     }
 
     auto delta = time - start;
-    auto x = cursor.x + delta.count() * 0.1f;
+    auto x = cursor.x + (float)delta.count() * 100;
     drawList->AddLine({x, cursor.y}, {x, cursor.y + size.y}, color, 1.0f);
 
     char text[64];
-    sprintf_s(text, sizeof(text), "%lld", time.count());
+    sprintf_s(text, sizeof(text), "%.2lf", time.count());
     drawList->AddText({x, cursor.y}, color, text, nullptr);
 
     return true;
   }
 
   void drawLines(ImDrawList *drawList) {
-    auto count = start.count() / 1000;
-    for (auto current = std::chrono::milliseconds(count * 1000); current < end;
-         current += std::chrono::milliseconds(1000)) {
+    auto count = (int)start.count();
+    for (auto current = Time(count); current < end; current += Time(1.0)) {
       drawLine(drawList, current);
     }
   }
 
-  void drawNow(ImDrawList *drawList, std::chrono::milliseconds time) {
+  void drawNow(ImDrawList *drawList, Time time) {
     auto delta = time - start;
-    auto x = cursor.x + delta.count() * 0.1f;
+    auto x = cursor.x + (float)delta.count() * 100;
     drawList->AddLine({x, cursor.y}, {x, cursor.y + size.y},
                       IM_COL32(255, 0, 0, 255), 1.0f);
 
     char text[64];
-    sprintf_s(text, sizeof(text), "%lld", time.count());
+    sprintf_s(text, sizeof(text), "%.2lf", time.count());
     drawList->AddText({x, cursor.y}, color, text, nullptr);
   }
 };
@@ -386,7 +383,7 @@ public:
   ImTimeline() {}
   ~ImTimeline() {}
 
-  void show(std::chrono::milliseconds now, const ImVec2 &size = {0, 0}) {
+  void show(Time now, const ImVec2 &size = {0, 0}) {
     // ImGuiContext &g = *GImGui;
     // ImGuiWindow *window = ImGui::GetCurrentWindow();
     // const auto &imStyle = ImGui::GetStyle();

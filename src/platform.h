@@ -2,13 +2,12 @@
 #include <chrono>
 #include <optional>
 #include <string>
-
-using GlfwDuration = std::chrono::duration<double, std::ratio<1, 1>>;
+#include <vrm/timeline.h>
 
 struct FrameInfo {
   int width;
   int height;
-  GlfwDuration time;
+  Time time;
 };
 class Platform {
   struct GLFWwindow *m_window = nullptr;
