@@ -23,5 +23,6 @@ executable(
         luajit_dep,
         bvhutil_dep,
         cuber_dep,
+        geometry_dep,
     ],
 )

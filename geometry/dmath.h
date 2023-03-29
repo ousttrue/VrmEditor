@@ -3,20 +3,6 @@
 #include <math.h>
 
 namespace dmath {
-// inline DirectX::XMVECTOR loadFloat3(float x, float y, float z) {
-//   DirectX::XMFLOAT3 v{x, y, z};
-//   return DirectX::XMFLOAT3(DirectX::XMLoadFloat3(&v));
-// }
-
-// inline DirectX::XMVECTOR load(const DirectX::XMFLOAT3 &v) {
-//   return DirectX::XMLoadFloat3(&v);
-// }
-//
-// inline DirectX::XMFLOAT3 store(DirectX::XMVECTOR &v) {
-//   DirectX::XMFLOAT3 store;
-//   DirectX::XMStoreFloat3(&store, v);
-//   return store;
-// }
 
 inline DirectX::XMFLOAT3 add(const DirectX::XMFLOAT3 &lhs,
                              const DirectX::XMFLOAT3 &rhs) {
@@ -99,10 +85,8 @@ inline DirectX::XMFLOAT4 axisAngle(const DirectX::XMFLOAT3 &axis, float angle) {
 
 inline DirectX::XMFLOAT4 rotate_from_to(DirectX::XMFLOAT3 _lhs,
                                         DirectX::XMFLOAT3 _rhs) {
-  _lhs = normalized(_lhs);
-  auto lhs = DirectX::XMLoadFloat3(&_lhs);
-  _rhs = normalized(_rhs);
-  auto rhs = DirectX::XMLoadFloat3(&_rhs);
+  auto lhs = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&_lhs));
+  auto rhs = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&_rhs));
   auto axis = DirectX::XMVector3Cross(lhs, rhs);
   auto dot = DirectX::XMVector3Dot(lhs, rhs);
   auto angle = acos(DirectX::XMVectorGetX(dot));

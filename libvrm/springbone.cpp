@@ -1,6 +1,6 @@
 #include "vrm/springbone.h"
-#include "vrm/directxmath_util.h"
 #include "vrm/scenetypes.h"
+#include <dmath.h>
 #include <iostream>
 
 namespace vrm {
