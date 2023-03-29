@@ -1,6 +1,7 @@
 #include "vrm/springbone.h"
 #include "vrm/scenetypes.h"
 #include <dmath.h>
+#include <gizmo.h>
 #include <iostream>
 
 namespace vrm {
@@ -18,8 +19,13 @@ SpringJoint::SpringJoint(const std::shared_ptr<Node> &head,
 }
 
 void SpringJoint::Update() {
+
   auto currentTail = m_currentTailPosotion;
+  gizmo::drawSphere(currentTail, {0, 1, 0, 1});
+  gizmo::drawLine(Head->worldPosition(), currentTail, {0, 1, 0, 1});
+
   auto prevTail = m_lastTailPosotion;
+  gizmo::drawSphere(prevTail, {1, 0, 0, 1});
 
   // auto delta = currentTail - prevTail;
 

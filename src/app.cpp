@@ -14,6 +14,7 @@
 #include <BvhSolver.h>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
+#include <gizmo.h>
 #include <iostream>
 #include <vrm/animation.h>
 #include <vrm/mesh.h>
@@ -42,6 +43,9 @@ App::App() {
   }
 
   gui_ = std::make_shared<Gui>(window, platform_->glsl_version.c_str());
+
+  cuber::PushGrid(gizmo::lines());
+  gizmo::fix();
 }
 
 App::~App() {}
@@ -149,6 +153,7 @@ int App::run() {
         std::chrono::duration_cast<std::chrono::milliseconds>(info->time);
     timeline_->setGlobal(time);
 
+    gizmo::clear();
     scene_->update(time);
 
     // newFrame
@@ -242,16 +247,13 @@ void App::sceneDock() {
     gl3r->clear(camera);
 
     auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
-    std::vector<grapho::LineVertex> lines;
-    cuber::PushGrid(lines);
 
-    RenderFunc render = [gl3r, liner, lines](const Camera &camera,
-                                             const Mesh &mesh,
-                                             const float m[16]) {
+    RenderFunc render = [gl3r, liner](const Camera &camera, const Mesh &mesh,
+                                      const float m[16]) {
       gl3r->render(camera, mesh, m);
     };
     scene->render(camera, render);
-    liner->Render(camera.projection, camera.view, lines);
+    liner->Render(camera.projection, camera.view, gizmo::lines());
 
     // gizmo
     if (auto node = selection->selected) {
