@@ -38,7 +38,7 @@ struct Animation {
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_translationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT4>> m_rotationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_scaleMap;
-  Time m_duration;
+  // Time m_duration;
 
   Time duration() const {
     float sec = 0;
@@ -51,7 +51,7 @@ struct Animation {
     for (auto &[k, v] : m_scaleMap) {
       sec = std::max(sec, v.maxSeconds());
     }
-    return Time(static_cast<int64_t>(sec * 1000));
+    return Time(sec);
   }
 
   Animation(std::string_view name) : m_name(name) {}

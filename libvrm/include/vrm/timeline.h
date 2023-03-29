@@ -15,33 +15,50 @@ using OnTime = std::function<void(Time, bool loop)>;
 struct Track {
   std::string Name;
   Time Duration;
-  OnTime Callback;
+  std::list<OnTime> Callbacks;
   bool Loop = true;
   bool IsPlaying = true;
   std::optional<Time> StartTime;
+
+  void SetTime(Time time) {
+    if (!IsPlaying) {
+      return;
+    }
+    Time delta;
+    if (auto startTime = StartTime) {
+      // already started
+      delta = time - *startTime;
+    } else {
+      // start track
+      // delta is zero
+      StartTime = time;
+    }
+    for (auto &callback : Callbacks) {
+      callback(delta, Loop);
+    }
+  }
 };
 
 struct Timeline {
+  bool IsPlaying = false;
   Time CurrentTime;
   std::vector<std::shared_ptr<Track>> Tracks;
 
-  void SetTime(Time time) {
+  void SetTime(Time time, bool force = false) {
+    if (force) {
+
+    } else if (!IsPlaying) {
+      return;
+    }
     CurrentTime = time;
     for (auto &track : Tracks) {
-      if (track->IsPlaying) {
-        if (auto startTime = track->StartTime) {
-          auto delta = time - *startTime;
-          track->Callback(delta, track->Loop);
-        } else {
-          // start track
-          track->StartTime = time;
-          track->Callback({}, track->Loop);
-        }
-      }
+      track->SetTime(time);
     }
   }
 
-  void SetDeltaTime(Time time) { SetTime(CurrentTime + time); }
+  void SetDeltaTime(Time time, bool force = false) {
+    SetTime(CurrentTime + time, force);
+  }
 
   std::shared_ptr<Track> AddTrack(const std::string &name, Time duration) {
     auto track = std::make_shared<Track>();

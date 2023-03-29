@@ -62,10 +62,12 @@ bool App::load_model(const std::filesystem::path &path) {
 
   // bind time line
   for (auto &animation : scene_->m_animations) {
-    auto track = m_timeline->AddTrack("gltf", animation->m_duration);
-    track->Callback = [animation, scene = scene_](auto time, bool repeat) {
-      animation->update(time, scene->m_nodes, repeat);
-    };
+    auto track = m_timeline->AddTrack("gltf", animation->duration());
+    track->Callbacks.push_back(
+        [animation, scene = scene_](auto time, bool repeat) {
+          animation->update(time, scene->m_nodes, repeat);
+          scene->UpdateAfterPose();
+        });
 
     // first animation only
     break;
@@ -81,7 +83,7 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
   motionSolver_->Initialize(motion_);
 
   auto track = m_timeline->AddTrack("bvh", motion_->Duration());
-  track->Callback = [this](auto time, bool repeat) {
+  track->Callbacks.push_back([this](auto time, bool repeat) {
     auto index = motion_->TimeToIndex(time);
     auto frame = motion_->GetFrame(index);
     motionSolver_->ResolveFrame(frame);
@@ -92,7 +94,7 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
       scene_->SetHumanPose(humanBoneMap_, {hips._41, hips._42, hips._43},
                            motionSolver_->localRotations);
     }
-  };
+  });
 
   auto rt = std::make_shared<RenderTarget>();
   rt->color[0] = 0.4f;
@@ -149,15 +151,15 @@ int App::run() {
 
   std::optional<Time> lastTime;
   while (auto info = platform_->newFrame()) {
-    // double sec to int64_t milliseconds
-    auto time = std::chrono::duration_cast<Time>(info->time);
-    m_timeline->SetTime(time);
+    auto time = info->time;
 
-    gizmo::clear();
+    if (m_timeline->IsPlaying) {
+      gizmo::clear();
+    }
     if (lastTime) {
-      scene_->UpdateDeltaTime(time - *lastTime);
+      m_timeline->SetDeltaTime(time - *lastTime);
     } else {
-      scene_->UpdateDeltaTime(time);
+      m_timeline->SetDeltaTime({}, true);
     }
     lastTime = time;
 
@@ -214,18 +216,8 @@ void App::sceneDock() {
   };
   auto leave = []() { ImGui::TreePop(); };
 
-  auto timelineGui = std::make_shared<ImTimeline>();
   gui_->m_docks.push_back(
-      Dock("scene", [scene = scene_, enter, leave, context, timelineGui]() {
-        ImGui::Checkbox("IsPlaying", &scene->m_isPlaying);
-        ImGui::BeginDisabled(scene->m_isPlaying);
-        if (ImGui::Button("next frame")) {
-          scene->m_timeline->SetDeltaTime(Time(1.0 / 60));
-        }
-        ImGui::EndDisabled();
-
-        timelineGui->show(scene->m_timeline);
-
+      Dock("scene", [scene = scene_, enter, leave, context]() {
         context->selected = context->new_selected;
         scene->Traverse(enter, leave);
       }));

@@ -2,7 +2,6 @@
 #include "humanoid.h"
 #include "scenetypes.h"
 #include "springbone.h"
-#include "timeline.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <filesystem>
@@ -38,9 +37,6 @@ using EnterJson = std::function<bool(nlohmann::json &, const std::string &key)>;
 using LeaveJson = std::function<void()>;
 
 struct Scene {
-  bool m_isPlaying = true;
-  std::shared_ptr<Timeline> m_timeline;
-
   std::vector<std::shared_ptr<Image>> m_images;
   std::vector<std::shared_ptr<Material>> m_materials;
   std::vector<std::shared_ptr<Mesh>> m_meshes;
@@ -74,7 +70,8 @@ private:
                   int accessor_index, int material_index);
 
 public:
-  void UpdateDeltaTime(Time delta);
+  void UpdateAfterPose();
+
   void Render(const Camera &camera, const RenderFunc &render);
   void Traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});

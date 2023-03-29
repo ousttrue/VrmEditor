@@ -75,10 +75,7 @@ static std::vector<T> ReadAllBytes(const std::filesystem::path &path) {
   return buffer;
 }
 
-Scene::Scene() {
-  m_spring = std::make_shared<vrm::SpringSolver>();
-  m_timeline = std::make_shared<Timeline>();
-}
+Scene::Scene() { m_spring = std::make_shared<vrm::SpringSolver>(); }
 
 bool Scene::Load(const std::filesystem::path &path) {
   auto bytes = ReadAllBytes<uint8_t>(path);
@@ -300,6 +297,7 @@ bool Scene::Load(const std::filesystem::path &path) {
       m_roots.push_back(m_nodes[node]);
     }
   }
+
   // calc world
   auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
     node.calcWorld(parent);
@@ -352,7 +350,7 @@ bool Scene::Load(const std::filesystem::path &path) {
     }
 
     // set animation duration
-    ptr->m_duration = ptr->duration();
+    // ptr->m_duration = ptr->duration();
   }
 
   // vrm-0.x
@@ -462,23 +460,7 @@ void Scene::AddIndices(int vertex_offset, Mesh *mesh, Glb *glb,
   }
 }
 
-void Scene::UpdateDeltaTime(Time delta) {
-  if (m_isPlaying) {
-    m_timeline->SetDeltaTime(delta);
-  }
-
-  // calc world
-  auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
-    node.calcWorld(parent);
-    return true;
-  };
-  Traverse(enter, {});
-
-  // springbone
-  if (m_vrm0) {
-    m_spring->Update();
-  }
-
+void Scene::Render(const Camera &camera, const RenderFunc &render) {
   // skinning
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
@@ -538,9 +520,7 @@ void Scene::UpdateDeltaTime(Time delta) {
       }
     }
   }
-}
 
-void Scene::Render(const Camera &camera, const RenderFunc &render) {
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
@@ -609,6 +589,22 @@ void Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
         node->rotation = rotations[i];
       }
     }
+  }
+
+  UpdateAfterPose();
+}
+
+void Scene::UpdateAfterPose() {
+  // calc world
+  auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
+    node.calcWorld(parent);
+    return true;
+  };
+  Traverse(enter, {});
+
+  // springbone
+  if (m_vrm0) {
+    m_spring->Update();
   }
 }
 

@@ -26,6 +26,7 @@ void SpringJoint::Update() {
 
   auto prevTail = m_lastTailPosotion;
   gizmo::drawSphere(prevTail, {1, 0, 0, 1});
+  gizmo::drawLine(Head->worldPosition(), prevTail, {1, 0, 0, 1});
 
   // auto delta = currentTail - prevTail;
 

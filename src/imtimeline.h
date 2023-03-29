@@ -1,9 +1,12 @@
 #pragma once
 #define IMGUI_DEFINE_MATH_OPERATORS 1
 #include <chrono>
+#include <format>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <math.h>
 #include <memory>
+#include <vrm/gizmo.h>
 #include <vrm/timeline.h>
 
 // cursor
@@ -76,6 +79,14 @@ public:
 
   void show(const std::shared_ptr<Timeline> &timeline,
             const ImVec2 &size = {0, 0}) {
+    ImGui::Checkbox("IsPlaying", &timeline->IsPlaying);
+    ImGui::BeginDisabled(timeline->IsPlaying);
+    if (ImGui::Button("next frame")) {
+      gizmo::clear();
+      timeline->SetDeltaTime(Time(1.0 / 60), true);
+    }
+    ImGui::EndDisabled();
+
     // ImGuiContext &g = *GImGui;
     // ImGuiWindow *window = ImGui::GetCurrentWindow();
     // const auto &imStyle = ImGui::GetStyle();
@@ -107,8 +118,25 @@ public:
       if (auto startTime = track->StartTime) {
         auto left = draw.GetX(*startTime);
         auto right = draw.GetX(*startTime + track->Duration);
-        drawList->AddRectFilled({left, cursor.y},
-                                {right, cursor.y + lineheight}, IM_COL32_WHITE);
+        if (track->Loop) {
+          auto width = right - left;
+          int count = static_cast<int>(left / width);
+          auto x = left + width * count;
+          for (; x > cursor.x; x -= width) {
+          }
+          for (; x + width < cursor.x; x += width) {
+          }
+          for (; x < cursor.x + area.x; x += width) {
+            drawList->AddRectFilled({x, cursor.y},
+                                    {x + width, cursor.y + lineheight},
+                                    IM_COL32_WHITE);
+            drawList->AddLine({x, cursor.y}, {x, cursor.y + lineheight},
+                              IM_COL32_BLACK);
+          }
+        } else {
+          drawList->AddRectFilled(
+              {left, cursor.y}, {right, cursor.y + lineheight}, IM_COL32_WHITE);
+        }
       } else {
         // not playing
       }
