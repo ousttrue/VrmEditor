@@ -46,7 +46,8 @@ inline DirectX::XMFLOAT4 multiply(const DirectX::XMFLOAT4 &lhs,
 }
 
 inline float length(const DirectX::XMFLOAT3 &d) {
-  return sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+  return DirectX::XMVectorGetX(
+      DirectX::XMVector3Length(DirectX::XMLoadFloat3(&d)));
 }
 
 inline float distance(const DirectX::XMFLOAT3 &lhs,

@@ -37,6 +37,7 @@ public:
 
   DirectX::XMFLOAT4
   WorldPosToLocalRotation(const DirectX::XMFLOAT3 &nextTail) const;
+  void DrawGizmo();
 };
 
 class SpringSolver {

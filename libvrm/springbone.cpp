@@ -18,15 +18,18 @@ SpringJoint::SpringJoint(const std::shared_ptr<Node> &head,
   m_initLocalTailDir = dmath::normalized(localTailPosition);
 }
 
+void SpringJoint::DrawGizmo() {
+  gizmo::drawSphere(Head->worldPosition(), {1, 1, 1, 1});
+  gizmo::drawSphere(m_currentTailPosotion, {0, 1, 0, 1});
+  gizmo::drawLine(Head->worldPosition(), m_currentTailPosotion, {0, 1, 0, 1});
+
+  gizmo::drawSphere(m_lastTailPosotion, {1, 0, 0, 1});
+  gizmo::drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
+}
+
 void SpringJoint::Update() {
-
   auto currentTail = m_currentTailPosotion;
-  gizmo::drawSphere(currentTail, {0, 1, 0, 1});
-  gizmo::drawLine(Head->worldPosition(), currentTail, {0, 1, 0, 1});
-
-  auto prevTail = m_lastTailPosotion;
-  gizmo::drawSphere(prevTail, {1, 0, 0, 1});
-  gizmo::drawLine(Head->worldPosition(), prevTail, {1, 0, 0, 1});
+  // auto prevTail = m_lastTailPosotion;
 
   // auto delta = currentTail - prevTail;
 
@@ -42,20 +45,35 @@ void SpringJoint::Update() {
   auto position = Head->worldPosition();
   nextTail = position + dmath::normalized(nextTail - position) * m_tailLength;
 
+  auto lastHead = Head->worldPosition();
+
   // update
   m_currentTailPosotion = nextTail;
   m_lastTailPosotion = currentTail;
+  Head->rotation = WorldPosToLocalRotation(nextTail);
+  Head->calcWorld();
 
-  Head->setWorldRotation(WorldPosToLocalRotation(nextTail));
+  gizmo::drawSphere(lastHead, {1, 1, 1, 1});
+  gizmo::drawSphere(Head->worldPosition(), {1, 0, 1, 1});
+  gizmo::drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
+
+  gizmo::drawSphere(currentTail, {1, 1, 1, 1});
+  gizmo::drawSphere(nextTail, {0, 1, 0, 1});
+  gizmo::drawLine(currentTail, nextTail, {0, 1, 0, 1});
+
+  gizmo::drawLine(Head->worldPosition(), nextTail, {1, 1, 0, 1});
 }
 
 DirectX::XMFLOAT4
 SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3 &nextTail) const {
-  auto parent_r = Head->parentWorldRotation();
-  auto world_tail_dir = dmath::rotate(m_initLocalTailDir, parent_r);
-  auto from_to =
-      dmath::rotate_from_to(world_tail_dir, nextTail - Head->worldPosition());
-  return dmath::multiply(from_to, parent_r);
+  DirectX::XMFLOAT3 localNextTail;
+  auto parentWorld = Head->parentWorld();
+  DirectX::XMStoreFloat3(
+      &localNextTail, DirectX::XMVector3Transform(
+                          DirectX::XMLoadFloat3(&nextTail),
+                          DirectX::XMMatrixInverse(
+                              nullptr, DirectX::XMLoadFloat4x4(&parentWorld))));
+  return dmath::rotate_from_to(m_initLocalTailDir, localNextTail);
 }
 
 void SpringSolver::Add(const std::shared_ptr<Node> &node, float dragForce,

@@ -56,6 +56,18 @@ struct Node : public std::enable_shared_from_this<Node> {
     DirectX::XMStoreFloat4(&tmp, q);
     return tmp;
   }
+  DirectX::XMFLOAT4X4 parentWorld() const {
+    if (auto p = parent.lock()) {
+      return p->world;
+    } else {
+      return {
+          1, 0, 0, 0, //
+          0, 1, 0, 0, //
+          0, 0, 1, 0, //
+          0, 0, 0, 1, //
+      };
+    }
+  }
   DirectX::XMFLOAT4 parentWorldRotation() const {
     if (auto p = parent.lock()) {
       return p->worldRotation();
