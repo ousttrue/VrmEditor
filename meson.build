@@ -18,7 +18,6 @@ luajit_dep = subproject(
 ).get_variable('lua_dep')
 cuber_dep = dependency('cuber')
 
-subdir('geometry')
 subdir('ImGuizmo')
 subdir('libvrm')
 subdir('bvhutil')

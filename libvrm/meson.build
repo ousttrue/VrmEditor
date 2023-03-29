@@ -1,4 +1,6 @@
+directxmath_dep = dependency('directxmath')
 vrm_inc = include_directories('include')
+dependencies = [stb_dep, json_dep, directxmath_dep, grapho_dep]
 vrm_lib = static_library(
     'vrm',
     [
@@ -6,12 +8,13 @@ vrm_lib = static_library(
         'glb.cpp',
         'node.cpp',
         'springbone.cpp',
+        'gizmo.cpp',
     ],
     include_directories: vrm_inc,
-    dependencies: [stb_dep, json_dep, geometry_dep],
+    dependencies: dependencies,
 )
 vrm_dep = declare_dependency(
     link_with: vrm_lib,
     include_directories: vrm_inc,
-    dependencies: [stb_dep, json_dep],
+    dependencies: dependencies,
 )
