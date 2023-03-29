@@ -75,9 +75,12 @@ static std::vector<T> ReadAllBytes(const std::filesystem::path &path) {
   return buffer;
 }
 
-Scene::Scene() { m_spring = std::make_shared<vrm::SpringSolver>(); }
+Scene::Scene() {
+  m_spring = std::make_shared<vrm::SpringSolver>();
+  m_timeline = std::make_shared<Timeline>();
+}
 
-bool Scene::load(const std::filesystem::path &path) {
+bool Scene::Load(const std::filesystem::path &path) {
   auto bytes = ReadAllBytes<uint8_t>(path);
   if (bytes.empty()) {
     return false;
@@ -143,7 +146,7 @@ bool Scene::load(const std::filesystem::path &path) {
 
       if (lastAtributes && attributes == *lastAtributes) {
         // for vrm shared vertex buffer
-        addIndices(0, ptr.get(), &*glb, prim.at("indices"),
+        AddIndices(0, ptr.get(), &*glb, prim.at("indices"),
                    prim.at("material"));
       } else {
         // extend vertex buffer
@@ -188,7 +191,7 @@ bool Scene::load(const std::filesystem::path &path) {
         }
 
         // extend indices and add vertex offset
-        addIndices(offset, ptr.get(), &*glb, prim["indices"],
+        AddIndices(offset, ptr.get(), &*glb, prim["indices"],
                    prim.at("material"));
       }
 
@@ -303,7 +306,7 @@ bool Scene::load(const std::filesystem::path &path) {
     node.worldInit = node.world;
     return true;
   };
-  traverse(enter, {});
+  Traverse(enter, {});
 
   auto &animations = glb->gltf["animations"];
   for (int i = 0; i < animations.size(); ++i) {
@@ -438,7 +441,7 @@ bool Scene::load(const std::filesystem::path &path) {
   return true;
 }
 
-void Scene::addIndices(int vertex_offset, Mesh *mesh, Glb *glb,
+void Scene::AddIndices(int vertex_offset, Mesh *mesh, Glb *glb,
                        int accessor_index, int material_index) {
   auto accessor = glb->gltf["accessors"][accessor_index];
   switch ((ComponentType)accessor["componentType"]) {
@@ -459,13 +462,17 @@ void Scene::addIndices(int vertex_offset, Mesh *mesh, Glb *glb,
   }
 }
 
-void Scene::update(Time delta) {
+void Scene::UpdateDeltaTime(Time delta) {
+  if (m_isPlaying) {
+    m_timeline->SetDeltaTime(delta);
+  }
+
   // calc world
   auto enter = [](Node &node, const DirectX::XMFLOAT4X4 &parent) {
     node.calcWorld(parent);
     return true;
   };
-  traverse(enter, {});
+  Traverse(enter, {});
 
   // springbone
   if (m_vrm0) {
@@ -533,7 +540,7 @@ void Scene::update(Time delta) {
   }
 }
 
-void Scene::render(const Camera &camera, const RenderFunc &render) {
+void Scene::Render(const Camera &camera, const RenderFunc &render) {
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
@@ -542,12 +549,12 @@ void Scene::render(const Camera &camera, const RenderFunc &render) {
   }
 }
 
-void Scene::traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
+void Scene::Traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
                      const DirectX::XMFLOAT4X4 &parent) {
   if (node) {
     if (enter(*node, parent)) {
       for (auto &child : node->children) {
-        traverse(enter, leave, child.get(), node->world);
+        Traverse(enter, leave, child.get(), node->world);
       }
       if (leave) {
         leave();
@@ -556,17 +563,17 @@ void Scene::traverse(const EnterFunc &enter, const LeaveFunc &leave, Node *node,
   } else {
     // root
     for (auto &child : m_roots) {
-      traverse(enter, leave, child.get(), IDENTITY);
+      Traverse(enter, leave, child.get(), IDENTITY);
     }
   }
 }
 
-void Scene::traverse_json(const EnterJson &enter, const LeaveJson &leave,
-                          json *item, std::string_view key) {
+void Scene::TraverseJson(const EnterJson &enter, const LeaveJson &leave,
+                         json *item, std::string_view key) {
   if (!item) {
     // root
     for (auto &kv : m_gltf.items()) {
-      traverse_json(enter, leave, &kv.value(), kv.key());
+      TraverseJson(enter, leave, &kv.value(), kv.key());
     }
     return;
   }
@@ -574,11 +581,11 @@ void Scene::traverse_json(const EnterJson &enter, const LeaveJson &leave,
   if (enter(*item, key.size() ? std::string{key.begin(), key.end()} : "")) {
     if (item->is_object()) {
       for (auto &kv : item->items()) {
-        traverse_json(enter, leave, &kv.value(), kv.key());
+        TraverseJson(enter, leave, &kv.value(), kv.key());
       }
     } else if (item->is_array()) {
       for (int i = 0; i < item->size(); ++i) {
-        traverse_json(enter, leave, &(*item)[i], std::format("{}", i));
+        TraverseJson(enter, leave, &(*item)[i], std::format("{}", i));
       }
     }
     if (leave) {

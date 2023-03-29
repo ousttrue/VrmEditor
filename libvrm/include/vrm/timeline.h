@@ -13,6 +13,8 @@ using Time = std::chrono::duration<double, std::ratio<1, 1>>;
 using OnTime = std::function<void(Time, bool loop)>;
 
 struct Track {
+  std::string Name;
+  Time Duration;
   OnTime Callback;
   bool Loop = true;
   bool IsPlaying = true;
@@ -21,27 +23,31 @@ struct Track {
 
 struct Timeline {
   Time CurrentTime;
-  std::unordered_map<std::string, std::shared_ptr<Track>> Tracks;
+  std::vector<std::shared_ptr<Track>> Tracks;
 
   void SetTime(Time time) {
     CurrentTime = time;
-    for (auto &[k, v] : Tracks) {
-      if (v->IsPlaying) {
-        if (auto startTime = v->StartTime) {
+    for (auto &track : Tracks) {
+      if (track->IsPlaying) {
+        if (auto startTime = track->StartTime) {
           auto delta = time - *startTime;
-          v->Callback(delta, v->Loop);
+          track->Callback(delta, track->Loop);
         } else {
           // start track
-          v->StartTime = time;
-          v->Callback({}, v->Loop);
+          track->StartTime = time;
+          track->Callback({}, track->Loop);
         }
       }
     }
   }
 
+  void SetDeltaTime(Time time) { SetTime(CurrentTime + time); }
+
   std::shared_ptr<Track> AddTrack(const std::string &name, Time duration) {
-    auto seq = std::make_shared<Track>();
-    Tracks.insert({name, seq});
-    return seq;
+    auto track = std::make_shared<Track>();
+    track->Name = name;
+    track->Duration = duration;
+    Tracks.push_back(track);
+    return track;
   }
 };

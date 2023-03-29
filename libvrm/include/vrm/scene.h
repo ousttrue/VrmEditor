@@ -38,7 +38,7 @@ using EnterJson = std::function<bool(nlohmann::json &, const std::string &key)>;
 using LeaveJson = std::function<void()>;
 
 struct Scene {
-  bool m_isPlaying = false;
+  bool m_isPlaying = true;
   std::shared_ptr<Timeline> m_timeline;
 
   std::vector<std::shared_ptr<Image>> m_images;
@@ -52,7 +52,7 @@ struct Scene {
   std::shared_ptr<vrm0::Vrm> m_vrm0;
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
-  void clear() {
+  void Clear() {
     m_vrm0 = nullptr;
     m_images.clear();
     m_materials.clear();
@@ -67,19 +67,19 @@ struct Scene {
   Scene();
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
-  bool load(const std::filesystem::path &path);
+  bool Load(const std::filesystem::path &path);
 
 private:
-  void addIndices(int vertex_offset, Mesh *mesh, struct Glb *glb,
+  void AddIndices(int vertex_offset, Mesh *mesh, struct Glb *glb,
                   int accessor_index, int material_index);
 
 public:
-  void update(Time delta);
-  void render(const Camera &camera, const RenderFunc &render);
-  void traverse(const EnterFunc &enter, const LeaveFunc &leave,
+  void UpdateDeltaTime(Time delta);
+  void Render(const Camera &camera, const RenderFunc &render);
+  void Traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr, const DirectX::XMFLOAT4X4 &parent = {});
-  void traverse_json(const EnterJson &enter, const LeaveJson &leave,
-                     nlohmann::json *j = nullptr, std::string_view key = {});
+  void TraverseJson(const EnterJson &enter, const LeaveJson &leave,
+                    nlohmann::json *j = nullptr, std::string_view key = {});
 
   void SetHumanPose(std::span<const vrm::HumanBones> humanMap,
                     const DirectX::XMFLOAT3 &rootPosition,

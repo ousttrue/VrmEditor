@@ -52,11 +52,11 @@ App::~App() {}
 
 void App::clear_scene() {
   m_timeline->Tracks.clear();
-  scene_->clear();
+  scene_->Clear();
 }
 
 bool App::load_model(const std::filesystem::path &path) {
-  if (!scene_->load(path)) {
+  if (!scene_->Load(path)) {
     return false;
   }
 
@@ -147,13 +147,19 @@ int App::run() {
   timelineDock();
   assetsDock();
 
+  std::optional<Time> lastTime;
   while (auto info = platform_->newFrame()) {
     // double sec to int64_t milliseconds
     auto time = std::chrono::duration_cast<Time>(info->time);
     m_timeline->SetTime(time);
 
     gizmo::clear();
-    scene_->update(time);
+    if (lastTime) {
+      scene_->UpdateDeltaTime(time - *lastTime);
+    } else {
+      scene_->UpdateDeltaTime(time);
+    }
+    lastTime = time;
 
     // newFrame
     gui_->newFrame();
@@ -178,6 +184,9 @@ struct TreeContext {
 };
 
 void App::sceneDock() {
+  //
+  // scene tree
+  //
   auto context = std::make_shared<TreeContext>();
 
   auto enter = [this, context](Node &node, const DirectX::XMFLOAT4X4 &parent) {
@@ -205,11 +214,20 @@ void App::sceneDock() {
   };
   auto leave = []() { ImGui::TreePop(); };
 
+  auto timelineGui = std::make_shared<ImTimeline>();
   gui_->m_docks.push_back(
-      Dock("scene", [scene = scene_, enter, leave, context]() {
-        context->selected = context->new_selected;
+      Dock("scene", [scene = scene_, enter, leave, context, timelineGui]() {
+        ImGui::Checkbox("IsPlaying", &scene->m_isPlaying);
+        ImGui::BeginDisabled(scene->m_isPlaying);
+        if (ImGui::Button("next frame")) {
+          scene->m_timeline->SetDeltaTime(Time(1.0 / 60));
+        }
+        ImGui::EndDisabled();
 
-        scene->traverse(enter, leave);
+        timelineGui->show(scene->m_timeline);
+
+        context->selected = context->new_selected;
+        scene->Traverse(enter, leave);
       }));
 
   gui_->m_docks.push_back(Dock("selected", [scene = scene_, context]() {
@@ -233,6 +251,9 @@ void App::sceneDock() {
     }
   }));
 
+  //
+  // 3d view
+  //
   auto rt = std::make_shared<RenderTarget>();
   rt->color[0] = 0.2f;
   rt->color[1] = 0.2f;
@@ -251,7 +272,7 @@ void App::sceneDock() {
                                       const float m[16]) {
       gl3r->render(camera, mesh, m);
     };
-    scene->render(camera, render);
+    scene->Render(camera, render);
     liner->Render(camera.projection, camera.view, gizmo::lines());
 
     // gizmo
@@ -317,7 +338,7 @@ void App::jsonDock() {
   auto leave = []() { ImGui::TreePop(); };
 
   gui_->m_docks.push_back(Dock("json", [scene = scene_, enter, leave]() {
-    scene->traverse_json(enter, leave);
+    scene->TraverseJson(enter, leave);
   }));
 }
 
@@ -326,7 +347,7 @@ void App::timelineDock() {
 
   gui_->m_docks.push_back(
       Dock("timeline", [timeline = m_timeline, timelineGui]() {
-        timelineGui->show(timeline->CurrentTime);
+        timelineGui->show(timeline);
       }));
 }
 
