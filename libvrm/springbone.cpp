@@ -30,28 +30,34 @@ void SpringJoint::DrawGizmo() {
 
 void SpringJoint::Update() {
   auto currentTail = m_currentTailPosotion;
-  // auto prevTail = m_lastTailPosotion;
 
-  // auto delta = currentTail - prevTail;
+  auto delta = currentTail - m_lastTailPosotion;
 
   // verlet積分で次の位置を計算
   auto nextTail = currentTail
-      // 前フレームの移動を継続する
-      // + delta * (1.0f - DragForce)
-      //     + ParentRotation * LocalRotation * m_boneAxis *
-      //           stiffnessForce // 親の回転による子ボーンの移動目標
-      //     + external;          // 外力による移動量
+                  // 前フレームの移動を継続する
+                  + delta * (1.0f - DragForce)
+                  // 親の回転による子ボーンの移動目標
+                  + dmath::rotate(m_initLocalTailDir * Stiffiness * 0.01f,
+                                  Head->parentWorldRotation())
+      // 外力による移動量
+      // + external;
       ;
+
+  assert(!std::isnan(nextTail.x));
 
   auto position = Head->worldPosition();
   nextTail = position + dmath::normalized(nextTail - position) * m_tailLength;
 
-  auto lastHead = Head->worldPosition();
+  auto head = Head.get();
+  assert(!std::isnan(nextTail.x));
 
   // update
   m_currentTailPosotion = nextTail;
   m_lastTailPosotion = currentTail;
-  Head->rotation = WorldPosToLocalRotation(nextTail);
+  auto newLocalRotation = WorldPosToLocalRotation(nextTail);
+  assert(!std::isnan(newLocalRotation.x));
+  Head->rotation = newLocalRotation;
   Head->calcWorld(false);
   for (auto &child : Head->children) {
     // ひとつ下まで
@@ -79,15 +85,23 @@ DirectX::XMFLOAT4
 SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3 &nextTail) const {
   DirectX::XMFLOAT3 localNextTail;
   auto world = Head->parentWorld();
+  assert(!std::isnan(world._41));
   auto localInit = Head->localInit;
-  DirectX::XMStoreFloat3(
-      &localNextTail, DirectX::XMVector3Transform(
-                          DirectX::XMLoadFloat3(&nextTail),
-                          DirectX::XMMatrixInverse(
-                              nullptr, DirectX::XMMatrixMultiply(
+
+  DirectX::XMVECTOR det;
+  DirectX::XMStoreFloat3(&localNextTail,
+                         DirectX::XMVector3Transform(
+                             DirectX::XMLoadFloat3(&nextTail),
+                             DirectX::XMMatrixInverse(
+                                 &det, DirectX::XMMatrixMultiply(
                                            DirectX::XMLoadFloat4x4(&localInit),
                                            DirectX::XMLoadFloat4x4(&world)))));
-  return dmath::rotate_from_to(m_initLocalTailDir, localNextTail);
+
+  assert(DirectX::XMVectorGetX(det) != 0);
+
+  auto r = dmath::rotate_from_to(m_initLocalTailDir, localNextTail);
+  assert(!std::isnan(r.x));
+  return r;
 }
 
 void SpringSolver::Add(const std::shared_ptr<Node> &node, float dragForce,

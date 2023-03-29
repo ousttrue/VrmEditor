@@ -13,12 +13,13 @@ void Node::init() {
   DirectX::XMStoreFloat4x4(&localInit, s * r * t);
 }
 
-void Node::addChild(const std::shared_ptr<Node> &child) {
+void Node::addChild(const std::shared_ptr<Node> &parent,
+                    const std::shared_ptr<Node> &child) {
   if (auto current_parent = child->parent.lock()) {
     current_parent->children.remove(child);
   }
-  child->parent = shared_from_this();
-  children.push_back(child);
+  child->parent = parent;
+  parent->children.push_back(child);
 }
 
 void Node::calcWorld(bool recursive) {
@@ -39,6 +40,8 @@ void Node::calcWorld(bool recursive) {
   auto s = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
   DirectX::XMStoreFloat4x4(&world,
                            s * r * t * DirectX::XMLoadFloat4x4(&parentWorld));
+
+  assert(!std::isnan(world._41));
 
   if (recursive) {
     for (auto &child : children) {

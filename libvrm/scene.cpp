@@ -287,7 +287,7 @@ bool Scene::Load(const std::filesystem::path &path) {
     auto &node = nodes[i];
     if (node.find("children") != node.end()) {
       for (auto child : node.at("children")) {
-        m_nodes[i]->addChild(m_nodes[child]);
+        Node::addChild(m_nodes[i], m_nodes[child]);
       }
     }
   }

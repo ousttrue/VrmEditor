@@ -9,7 +9,7 @@
 #include <string_view>
 
 struct Skin;
-struct Node : public std::enable_shared_from_this<Node> {
+struct Node {
   uint32_t index;
   std::string name;
   DirectX::XMFLOAT3 translation = {};
@@ -37,7 +37,8 @@ struct Node : public std::enable_shared_from_this<Node> {
   Node(uint32_t i, std::string_view name);
   Node(const Node &) = delete;
   Node &operator=(const Node &) = delete;
-  void addChild(const std::shared_ptr<Node> &child);
+  static void addChild(const std::shared_ptr<Node> &parent,
+                       const std::shared_ptr<Node> &child);
   void calcWorld(bool recursive = false);
   bool setLocalMatrix(const DirectX::XMFLOAT4X4 &local);
   bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world);
