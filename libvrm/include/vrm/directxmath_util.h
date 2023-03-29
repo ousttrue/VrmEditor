@@ -8,15 +8,15 @@ namespace dmath {
 //   return DirectX::XMFLOAT3(DirectX::XMLoadFloat3(&v));
 // }
 
-inline DirectX::XMVECTOR load(const DirectX::XMFLOAT3 &v) {
-  return DirectX::XMLoadFloat3(&v);
-}
-
-inline DirectX::XMFLOAT3 store(DirectX::XMVECTOR &v) {
-  DirectX::XMFLOAT3 store;
-  DirectX::XMStoreFloat3(&store, v);
-  return store;
-}
+// inline DirectX::XMVECTOR load(const DirectX::XMFLOAT3 &v) {
+//   return DirectX::XMLoadFloat3(&v);
+// }
+//
+// inline DirectX::XMFLOAT3 store(DirectX::XMVECTOR &v) {
+//   DirectX::XMFLOAT3 store;
+//   DirectX::XMStoreFloat3(&store, v);
+//   return store;
+// }
 
 inline DirectX::XMFLOAT3 add(const DirectX::XMFLOAT3 &lhs,
                              const DirectX::XMFLOAT3 &rhs) {
@@ -32,14 +32,45 @@ inline DirectX::XMFLOAT3 multiply(const DirectX::XMFLOAT3 &lhs, float scalar) {
   return {lhs.x * scalar, lhs.y * scalar, lhs.z * scalar};
 }
 
-inline float distance(const DirectX::XMFLOAT3 &lhs,
-                      const DirectX::XMFLOAT3 &rhs) {
-  auto d = subtract(lhs, rhs);
+inline DirectX::XMFLOAT3 transform(const DirectX::XMFLOAT3 &lhs,
+                                   const DirectX::XMFLOAT4X4 &m) {
+  DirectX::XMFLOAT3 tmp;
+  DirectX::XMStoreFloat3(
+      &tmp, DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&lhs),
+                                        DirectX::XMLoadFloat4x4(&m)));
+  return tmp;
+}
+
+inline DirectX::XMFLOAT3 rotate(const DirectX::XMFLOAT3 &lhs,
+                                const DirectX::XMFLOAT4 &r) {
+  DirectX::XMFLOAT3 tmp;
+  DirectX::XMStoreFloat3(&tmp,
+                         DirectX::XMVector3Rotate(DirectX::XMLoadFloat3(&lhs),
+                                                  DirectX::XMLoadFloat4(&r)));
+  return tmp;
+}
+
+inline DirectX::XMFLOAT4 multiply(const DirectX::XMFLOAT4 &lhs,
+                                  const DirectX::XMFLOAT4 &rhs) {
+  DirectX::XMFLOAT4 tmp;
+  DirectX::XMStoreFloat4(
+      &tmp, DirectX::XMQuaternionMultiply(DirectX::XMLoadFloat4(&lhs),
+                                          DirectX::XMLoadFloat4(&rhs)));
+  return tmp;
+}
+
+inline float length(const DirectX::XMFLOAT3 &d) {
   return sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
 }
 
-inline DirectX::XMFLOAT3 normalize(const DirectX::XMFLOAT3 &d) {
-  auto len = sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+inline float distance(const DirectX::XMFLOAT3 &lhs,
+                      const DirectX::XMFLOAT3 &rhs) {
+  auto d = subtract(lhs, rhs);
+  return length(d);
+}
+
+inline DirectX::XMFLOAT3 normalized(const DirectX::XMFLOAT3 &d) {
+  auto len = length(d);
   auto f = 1.0f / len;
   return multiply(d, f);
 }
@@ -68,13 +99,13 @@ inline DirectX::XMFLOAT4 axisAngle(const DirectX::XMFLOAT3 &axis, float angle) {
 
 inline DirectX::XMFLOAT4 rotate_from_to(DirectX::XMFLOAT3 _lhs,
                                         DirectX::XMFLOAT3 _rhs) {
-  _lhs = normalize(_lhs);
+  _lhs = normalized(_lhs);
   auto lhs = DirectX::XMLoadFloat3(&_lhs);
-  _rhs = normalize(_rhs);
+  _rhs = normalized(_rhs);
   auto rhs = DirectX::XMLoadFloat3(&_rhs);
   auto axis = DirectX::XMVector3Cross(lhs, rhs);
-  auto theta = DirectX::XMVector3Dot(lhs, rhs);
-  auto angle = acos(DirectX::XMVectorGetX(theta));
+  auto dot = DirectX::XMVector3Dot(lhs, rhs);
+  auto angle = acos(DirectX::XMVectorGetX(dot));
   auto q = DirectX::XMQuaternionRotationAxis(axis, angle);
   DirectX::XMFLOAT4 tmp;
   DirectX::XMStoreFloat4(&tmp, q);

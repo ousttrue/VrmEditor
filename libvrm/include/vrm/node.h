@@ -48,6 +48,7 @@ struct Node : public std::enable_shared_from_this<Node> {
   DirectX::XMFLOAT3 worldPosition() const {
     return {world._41, world._42, world._43};
   }
+  void setWorldRotation(const DirectX::XMFLOAT4 &world);
   DirectX::XMFLOAT4 worldRotation() const {
     auto q =
         DirectX::XMQuaternionRotationMatrix(DirectX::XMLoadFloat4x4(&world));
@@ -60,6 +61,13 @@ struct Node : public std::enable_shared_from_this<Node> {
       return p->worldRotation();
     } else {
       return {0, 0, 0, 1};
+    }
+  }
+  DirectX::XMFLOAT3 parentWorldPosition() const {
+    if (auto p = parent.lock()) {
+      return p->worldPosition();
+    } else {
+      return {0, 0, 0};
     }
   }
   void print(int level = 0);

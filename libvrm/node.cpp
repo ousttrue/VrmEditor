@@ -52,6 +52,15 @@ bool Node::setWorldMatrix(const DirectX::XMFLOAT4X4 &world) {
   return setLocalMatrix(m);
 }
 
+void Node::setWorldRotation(const DirectX::XMFLOAT4 &world) {
+  auto parent = parentWorldRotation();
+  DirectX::XMStoreFloat4(&rotation, DirectX::XMQuaternionMultiply(
+                                        DirectX::XMLoadFloat4(&world),
+                                        DirectX::XMQuaternionInverse(
+                                            DirectX::XMLoadFloat4(&parent))));
+  calcWorld();
+}
+
 void Node::setWorldRotation(const DirectX::XMFLOAT4X4 &world) {
 
   DirectX::XMMATRIX parentMatrix;
