@@ -18,9 +18,9 @@ executable(
         grapho_dep,
         imguizmo_dep,
         vrm_dep,
-        im_neo_sequencer_dep,
         luajit_dep,
         bvhutil_dep,
         cuber_dep,
+        imgui_filedialog_dep,
     ],
 )

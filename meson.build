@@ -18,6 +18,12 @@ luajit_dep = subproject(
 ).get_variable('lua_dep')
 cuber_dep = dependency('cuber')
 imguizmo_dep = subproject('ImGuizmo').get_variable('imguizmo_dep')
+imgui_filedialog_dep = subproject(
+    'ImGuiFileDialog',
+).get_variable('imgui_filedialog_dep')
+# im_filedialog_dep = subproject(
+#     'ImFileDialog',
+# ).get_variable('im_filedialog_dep')
 subdir('libvrm')
 subdir('bvhutil')
 subdir('src')

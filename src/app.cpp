@@ -12,6 +12,7 @@
 #include "windows_helper.h"
 #include <Bvh.h>
 #include <BvhSolver.h>
+#include <ImGuiFileDialog.h>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <iostream>
@@ -141,6 +142,26 @@ bool App::AddAssetDir(std::string_view name, const std::string &path) {
   return true;
 }
 
+static void drawGui() {
+  // open Dialog Simple
+  if (ImGui::Button("Open File Dialog"))
+    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File",
+                                            ".cpp,.h,.hpp", ".");
+
+  // display
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+    // action if OK
+    if (ImGuiFileDialog::Instance()->IsOk()) {
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+      // action
+    }
+
+    // close
+    ImGuiFileDialog::Instance()->Close();
+  }
+}
+
 int App::Run() {
 
   jsonDock();
@@ -165,6 +186,7 @@ int App::Run() {
     ImGuizmo::BeginFrame();
 
     m_gui->DockSpace();
+    drawGui();
 
     glViewport(0, 0, info->width, info->height);
     glClearColor(0, 0, 0, 0);

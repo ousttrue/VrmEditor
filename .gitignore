@@ -2,6 +2,8 @@
 !/subprojects/*.wrap
 !/subprojects/packagefiles
 !/subprojects/ImGuizmo
+!/subprojects/ImGuiFileDialog
+!/subprojects/ImFileDialog
 /builddir/
 /prefix/
 
