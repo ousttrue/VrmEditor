@@ -17,15 +17,17 @@ class LuaEngine;
 class Platform;
 
 class App {
-  std::shared_ptr<LuaEngine> lua_;
-  std::shared_ptr<Scene> scene_;
-  std::list<std::shared_ptr<AssetDir>> assets_;
+  std::shared_ptr<Platform> m_platform;
+  std::shared_ptr<Gui> m_gui;
+  std::shared_ptr<LuaEngine> m_lua;
+  std::list<std::shared_ptr<AssetDir>> m_assets;
 
   std::shared_ptr<Timeline> m_timeline;
+  std::shared_ptr<Scene> m_scene;
 
-  std::shared_ptr<Bvh> motion_;
-  std::shared_ptr<BvhSolver> motionSolver_;
-  std::vector<vrm::HumanBones> humanBoneMap_ = {
+  std::shared_ptr<Bvh> m_motion;
+  std::shared_ptr<BvhSolver> m_motionSolver;
+  std::vector<vrm::HumanBones> m_humanBoneMap = {
       vrm::HumanBones::hips,          vrm::HumanBones::spine,
       vrm::HumanBones::chest,         vrm::HumanBones::neck,
       vrm::HumanBones::head,          vrm::HumanBones::leftShoulder,
@@ -39,9 +41,6 @@ class App {
       vrm::HumanBones::rightToe,
   };
 
-  std::shared_ptr<Platform> platform_;
-  std::shared_ptr<Gui> gui_;
-
   App();
 
 public:
@@ -52,7 +51,7 @@ public:
     static App s_instance;
     return s_instance;
   }
-  const std::shared_ptr<LuaEngine> &lua() const { return lua_; }
+  const std::shared_ptr<LuaEngine> &lua() const { return m_lua; }
   int run();
   // lua API
   void clear_scene();
