@@ -177,9 +177,19 @@ bool Scene::Load(const std::filesystem::path &path,
         if (attributes.find(VERTEX_JOINT) != attributes.end() &&
             attributes.find(VERTEX_WEIGHT) != attributes.end()) {
           // skinning
-          ptr->setBoneSkinning(
-              offset, m_gltf.accessor<ushort4>(attributes.at(VERTEX_JOINT)),
-              m_gltf.accessor<DirectX::XMFLOAT4>(attributes.at(VERTEX_WEIGHT)));
+          int joint_accessor = attributes.at(VERTEX_JOINT);
+          switch (*item_size(m_gltf.json["accessors"][joint_accessor])) {
+          case 8:
+            ptr->setBoneSkinning(offset,
+                                 m_gltf.accessor<ushort4>(joint_accessor),
+                                 m_gltf.accessor<DirectX::XMFLOAT4>(
+                                     attributes.at(VERTEX_WEIGHT)));
+            break;
+
+          default:
+            // not implemented
+            return false;
+          }
         }
 
         // extend morph target
