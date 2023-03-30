@@ -22,7 +22,7 @@ def process(gltf_dir: pathlib.Path, path: pathlib.Path):
 
 std::filesystem::path get_path(std::string_view relative) {
   std::filesystem::path base = std::getenv("GLTF_SAMPLE_MODELS");
-  return base / relative;
+  return base / "2.0" / relative;
 }
 
 """
