@@ -20,6 +20,13 @@ const std::string BASE64_PREFIX[]{
     "data:application/gltf-buffer;base64,",
 };
 
+inline bool has(const nlohmann::json &obj, std::string_view key) {
+  if (!obj.is_object()) {
+    return false;
+  }
+  return obj.find(key) != obj.end();
+}
+
 enum class ComponentType {
   BYTE = 5120,
   UNSIGNED_BYTE = 5121,

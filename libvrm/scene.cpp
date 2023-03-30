@@ -83,7 +83,7 @@ Scene::Load(const std::filesystem::path &path,
     return std::unexpected{"json parse"};
   }
 
-  if (m_gltf.json.find("extensionsRequired") != m_gltf.json.end()) {
+  if (has(m_gltf.json, "extensionsRequired")) {
     for (auto &ex : m_gltf.json.at("extensionsRequired")) {
       if (ex == "KHR_draco_mesh_compression") {
         return std::unexpected{"KHR_draco_mesh_compression"};
@@ -94,9 +94,9 @@ Scene::Load(const std::filesystem::path &path,
     }
   }
 
-  if (m_gltf.json.find("extensions") != m_gltf.json.end()) {
+  if (has(m_gltf.json, "extensions")) {
     auto &extensions = m_gltf.json.at("extensions");
-    if (extensions.find("VRM") != extensions.end()) {
+    if (has(extensions, "VRM")) {
       auto VRM = extensions.at("VRM");
       m_vrm0 = std::make_shared<vrm0::Vrm>();
     }
@@ -124,10 +124,9 @@ Scene::Load(const std::filesystem::path &path,
     auto ptr = std::make_shared<Material>(
         material.value("name", std::format("material{}", i)));
     m_materials.push_back(ptr);
-    if (material.find("pbrMetallicRoughness") != material.end()) {
+    if (has(material, "pbrMetallicRoughness")) {
       auto pbrMetallicRoughness = material.at("pbrMetallicRoughness");
-      if (pbrMetallicRoughness.find("baseColorTexture") !=
-          pbrMetallicRoughness.end()) {
+      if (has(pbrMetallicRoughness, "baseColorTexture")) {
         auto &baseColorTexture = pbrMetallicRoughness.at("baseColorTexture");
         int texture_index = baseColorTexture.at("index");
         auto texture = textures.at(texture_index);
@@ -161,17 +160,16 @@ Scene::Load(const std::filesystem::path &path,
           positions = copy;
         }
         auto offset = ptr->addPosition(positions);
-        if (attributes.find(VERTEX_NORMAL) != attributes.end()) {
+        if (has(attributes, VERTEX_NORMAL)) {
           ptr->setNormal(offset, m_gltf.accessor<DirectX::XMFLOAT3>(
                                      attributes.at(VERTEX_NORMAL)));
         }
-        if (attributes.find(VERTEX_UV) != attributes.end()) {
+        if (has(attributes, VERTEX_UV)) {
           ptr->setUv(offset, m_gltf.accessor<DirectX::XMFLOAT2>(
                                  attributes.at(VERTEX_UV)));
         }
 
-        if (attributes.find(VERTEX_JOINT) != attributes.end() &&
-            attributes.find(VERTEX_WEIGHT) != attributes.end()) {
+        if (has(attributes, VERTEX_JOINT) && has(attributes, VERTEX_WEIGHT)) {
           // skinning
           int joint_accessor = attributes.at(VERTEX_JOINT);
           switch (*item_size(m_gltf.json["accessors"][joint_accessor])) {
@@ -189,7 +187,7 @@ Scene::Load(const std::filesystem::path &path,
         }
 
         // extend morph target
-        if (prim.find("targets") != prim.end()) {
+        if (has(prim, "targets")) {
           auto &targets = prim.at("targets");
           for (int i = 0; i < targets.size(); ++i) {
             auto &target = targets[i];
@@ -206,9 +204,9 @@ Scene::Load(const std::filesystem::path &path,
 
       // find morph target name
       // 1. primitive.extras.targetNames
-      if (prim.find("extras") != prim.end()) {
+      if (has(prim, "extras")) {
         auto &extras = prim.at("extras");
-        if (extras.find("targetNames") != extras.end()) {
+        if (has(extras, "targetNames")) {
           auto &names = extras.at("targetNames");
           // std::cout << names << std::endl;
           for (int i = 0; i < names.size(); ++i) {
@@ -221,7 +219,7 @@ Scene::Load(const std::filesystem::path &path,
     }
   }
 
-  if (m_gltf.json.find("skins") != m_gltf.json.end()) {
+  if (has(m_gltf.json, "skins")) {
     auto skins = m_gltf.json["skins"];
     for (int i = 0; i < skins.size(); ++i) {
       auto &skin = skins[i];
@@ -250,7 +248,7 @@ Scene::Load(const std::filesystem::path &path,
 
       assert(ptr->joints.size() == ptr->bindMatrices.size());
 
-      if (skin.find("skeleton") != skin.end()) {
+      if (has(skin, "skeleton")) {
         ptr->root = skin.at("skeleton");
       }
     }
@@ -263,7 +261,7 @@ Scene::Load(const std::filesystem::path &path,
     auto ptr = std::make_shared<Node>(i, name);
     m_nodes.push_back(ptr);
 
-    if (node.find("matrix") != node.end()) {
+    if (has(node, "matrix")) {
       // matrix
       auto m = node["matrix"];
       auto local = DirectX::XMFLOAT4X4{
@@ -285,10 +283,10 @@ Scene::Load(const std::filesystem::path &path,
       // S
       ptr->scale = node.value("scale", DirectX::XMFLOAT3{1, 1, 1});
     }
-    if (node.find("mesh") != node.end()) {
+    if (has(node, "mesh")) {
       ptr->mesh = node.at("mesh");
 
-      if (node.find("skin") != node.end()) {
+      if (has(node, "skin")) {
         int skin_index = node.at("skin");
         auto skin = m_skins[skin_index];
         ptr->skin = skin;
@@ -297,13 +295,13 @@ Scene::Load(const std::filesystem::path &path,
   }
   for (int i = 0; i < nodes.size(); ++i) {
     auto &node = nodes[i];
-    if (node.find("children") != node.end()) {
+    if (has(node, "children")) {
       for (auto child : node.at("children")) {
         Node::addChild(m_nodes[i], m_nodes[child]);
       }
     }
   }
-  if (m_gltf.json.find("scenes") != m_gltf.json.end()) {
+  if (has(m_gltf.json, "scenes")) {
     auto scene = m_gltf.json["scenes"][0];
     for (auto &node : scene["nodes"]) {
       m_roots.push_back(m_nodes[node]);
@@ -370,15 +368,15 @@ Scene::Load(const std::filesystem::path &path,
   }
 
   // vrm-0.x
-  if (m_gltf.json.find("extensions") != m_gltf.json.end()) {
+  if (has(m_gltf.json, "extensions")) {
     auto &extensions = m_gltf.json.at("extensions");
-    if (extensions.find("VRM") != extensions.end()) {
+    if (has(extensions, "VRM")) {
       auto VRM = extensions.at("VRM");
       // m_vrm0 = std::make_shared<Vrm0>();
 
-      if (VRM.find("humanoid") != VRM.end()) {
+      if (has(VRM, "humanoid")) {
         auto &humanoid = VRM.at("humanoid");
-        if (humanoid.find("humanBones") != humanoid.end()) {
+        if (has(humanoid, "humanBones")) {
           auto &humanBones = humanoid.at("humanBones");
           // bone & node
           for (auto &humanBone : humanBones) {
@@ -398,17 +396,16 @@ Scene::Load(const std::filesystem::path &path,
       // firstPerson
       // materialProperties
 
-      if (VRM.find("blendShapeMaster") != VRM.end()) {
+      if (has(VRM, "blendShapeMaster")) {
         auto &blendShapeMaster = VRM.at("blendShapeMaster");
-        if (blendShapeMaster.find("blendShapeGroups") !=
-            blendShapeMaster.end()) {
+        if (has(blendShapeMaster, "blendShapeGroups")) {
           auto &blendShapeGroups = blendShapeMaster.at("blendShapeGroups");
           for (auto &g : blendShapeGroups) {
             // {"binds":[],"isBinary":false,"materialValues":[],"name":"Neutral","presetName":"neutral"}
             // std::cout << g << std::endl;
             auto expression = m_vrm0->addBlendShape(
                 g.at("presetName"), g.at("name"), g.value("isBinary", false));
-            if (g.find("binds") != g.end()) {
+            if (has(g, "binds")) {
               for (vrm0::ExpressionMorphTargetBind bind : g.at("binds")) {
                 // [0-100] to [0-1]
                 bind.weight *= 0.01f;
@@ -419,10 +416,9 @@ Scene::Load(const std::filesystem::path &path,
         }
       }
 
-      if (VRM.find("secondaryAnimation") != VRM.end()) {
+      if (has(VRM, "secondaryAnimation")) {
         auto &secondaryAnimation = VRM.at("secondaryAnimation");
-        if (secondaryAnimation.find("colliderGroups") !=
-            secondaryAnimation.end()) {
+        if (has(secondaryAnimation, "colliderGroups")) {
           auto &colliderGroups = secondaryAnimation.at("colliderGroups");
           for (auto &colliderGroup : colliderGroups) {
             auto ptr = std::make_shared<vrm0::ColliderGroup>();
@@ -431,7 +427,7 @@ Scene::Load(const std::filesystem::path &path,
             m_vrm0->m_colliderGroups.push_back(ptr);
           }
         }
-        if (secondaryAnimation.find("boneGroups") != secondaryAnimation.end()) {
+        if (has(secondaryAnimation, "boneGroups")) {
           auto &boneGroups = secondaryAnimation.at("boneGroups");
           for (auto &boneGroup : boneGroups) {
             auto ptr = std::make_shared<vrm0::Spring>();
