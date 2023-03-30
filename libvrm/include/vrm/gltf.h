@@ -15,6 +15,11 @@ const auto VERTEX_POSITION = "POSITION";
 const auto VERTEX_NORMAL = "NORMAL";
 const auto VERTEX_UV = "TEXCOORD_0";
 
+const std::string BASE64_PREFIX[]{
+    "data:application/octet-stream;base64,",
+    "data:application/gltf-buffer;base64,",
+};
+
 enum class ComponentType {
   BYTE = 5120,
   UNSIGNED_BYTE = 5121,
@@ -94,9 +99,12 @@ struct Gltf {
       // external file. maybe glTF. not glb.
       // std::cout << buffer << std::endl;
       std::string_view uri = buffer.at("uri");
+      if (uri.starts_with("data:")) {
+        throw std::runtime_error("base64 not implemented");
+      }
+
       auto bin = m_dir->GetBuffer(uri);
       return bin.subspan(buffer_view["byteOffset"], buffer_view["byteLength"]);
-
     } else {
       // glb
       return bin.subspan(buffer_view["byteOffset"], buffer_view["byteLength"]);
