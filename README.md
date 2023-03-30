@@ -12,7 +12,7 @@ read, write, animation test.
     - [ ] expression. material
     - [ ] lookat. bone
     - [ ] lookat. expression
-    - [ ] springbone.
+    - [x] springbone. basic without collision.
     - [x] humanoid.
   - [ ] vrm-1.0
 - [ ] gltf
@@ -67,13 +67,18 @@ $ meson compile -C builddir
 
 - formatter clang-format: mozilla
 - class, struct name PascalCase
+- free function: lower_snake
+- non public memver function: lower_snake
+
+### variables
+
+Naming conventions for variables with a wider scope than local variables.
+
+- local variable: camelCase
 - public member: PascalCase
 - non public member variable: prefix `m_`
-- free function: camelCase
 - static variable: prefix `s_`
 - global variable: prefix `g_`
-- non public memver function: camelCase
-- local variable: lower_snake
 - const, enum value: UPPER_SNAKE
 - enum class value: Pascal
 

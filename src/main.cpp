@@ -51,16 +51,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   RedirectIOToConsole();
 
-  auto &app = App::instance();
+  auto &app = App::Instance();
 
   if (__argc > 1) {
     std::string_view arg = __argv[1];
     if (arg.ends_with(".lua")) {
-      app.load_lua(__argv[1]);
+      app.LoadLua(__argv[1]);
     } else {
-      app.load_model(__argv[1]);
+      app.LoadModel(__argv[1]);
     }
   }
 
-  return app.run();
+  return app.Run();
 }

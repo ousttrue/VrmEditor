@@ -47,18 +47,18 @@ public:
   ~App();
   App(const App &) = delete;
   App &operator=(const App &) = delete;
-  static App &instance() {
+  static App &Instance() {
     static App s_instance;
     return s_instance;
   }
-  const std::shared_ptr<LuaEngine> &lua() const { return m_lua; }
-  int run();
+  const std::shared_ptr<LuaEngine> &Lua() const { return m_lua; }
+  int Run();
   // lua API
-  void clear_scene();
-  bool load_model(const std::filesystem::path &path);
-  bool load_motion(const std::filesystem::path &path, float scaling = 1.0f);
-  void load_lua(const std::filesystem::path &path);
-  bool addAssetDir(std::string_view name, const std::string &path);
+  void ClearScene();
+  bool LoadModel(const std::filesystem::path &path);
+  bool LoadMotion(const std::filesystem::path &path, float scaling = 1.0f);
+  void LoadLua(const std::filesystem::path &path);
+  bool AddAssetDir(std::string_view name, const std::string &path);
 
 private:
   void jsonDock();

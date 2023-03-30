@@ -6,8 +6,8 @@
 static int vrmeditor_load_model(lua_State *l) {
   auto path = luaL_checklstring(l, -1, nullptr);
 
-  auto succeeded = App::instance().load_model(path);
-  lua_pushboolean(App::instance().lua()->state(), succeeded);
+  auto succeeded = App::Instance().LoadModel(path);
+  lua_pushboolean(App::Instance().Lua()->state(), succeeded);
   return 1;
 }
 
@@ -15,16 +15,16 @@ static int vrmeditor_load_motion(lua_State *l) {
   auto path = luaL_checklstring(l, -2, nullptr);
   auto scale = luaL_checknumber(l, -1);
 
-  auto succeeded = App::instance().load_motion(path, scale);
-  lua_pushboolean(App::instance().lua()->state(), succeeded);
+  auto succeeded = App::Instance().LoadMotion(path, scale);
+  lua_pushboolean(App::Instance().Lua()->state(), succeeded);
   return 1;
 }
 
 static int vrmeditor_add_asset_dir(lua_State *l) {
   auto name = luaL_checklstring(l, -2, nullptr);
   auto dir = luaL_checklstring(l, -1, nullptr);
-  auto succeeded = App::instance().addAssetDir(name, dir);
-  lua_pushboolean(App::instance().lua()->state(), succeeded);
+  auto succeeded = App::Instance().AddAssetDir(name, dir);
+  lua_pushboolean(App::Instance().Lua()->state(), succeeded);
   return 1;
 }
 

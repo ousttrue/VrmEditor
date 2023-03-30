@@ -50,12 +50,12 @@ App::App() {
 
 App::~App() {}
 
-void App::clear_scene() {
+void App::ClearScene() {
   m_timeline->Tracks.clear();
   m_scene->Clear();
 }
 
-bool App::load_model(const std::filesystem::path &path) {
+bool App::LoadModel(const std::filesystem::path &path) {
   if (!m_scene->Load(path)) {
     return false;
   }
@@ -75,7 +75,7 @@ bool App::load_model(const std::filesystem::path &path) {
   return true;
 }
 
-bool App::load_motion(const std::filesystem::path &path, float scaling) {
+bool App::LoadMotion(const std::filesystem::path &path, float scaling) {
   m_motion = Bvh::ParseFile(path);
 
   m_motionSolver = std::make_shared<BvhSolver>();
@@ -91,7 +91,7 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
     if (m_scene->m_vrm0) {
       auto &hips = m_motionSolver->instances_[0];
       m_scene->SetHumanPose(m_humanBoneMap, {hips._41, hips._42, hips._43},
-                           m_motionSolver->localRotations);
+                            m_motionSolver->localRotations);
     }
   });
 
@@ -132,16 +132,16 @@ bool App::load_motion(const std::filesystem::path &path, float scaling) {
   return m_motion != nullptr;
 }
 
-void App::load_lua(const std::filesystem::path &path) { m_lua->dofile(path); }
+void App::LoadLua(const std::filesystem::path &path) { m_lua->dofile(path); }
 
-bool App::addAssetDir(std::string_view name, const std::string &path) {
+bool App::AddAssetDir(std::string_view name, const std::string &path) {
 
   m_assets.push_back(std::make_shared<AssetDir>(name, path));
 
   return true;
 }
 
-int App::run() {
+int App::Run() {
 
   jsonDock();
   sceneDock();
@@ -365,8 +365,8 @@ void App::assetsDock() {
                                  mb.c_str());
       } else {
         if (ImGui::Button(mb.c_str())) {
-          clear_scene();
-          load_model(path);
+          ClearScene();
+          LoadModel(path);
         }
         return false;
       }
