@@ -37,6 +37,13 @@ TEST(VrmLoad, 2CylinderEngine_glTF_Embedded) {
   EXPECT_TRUE(result) << result.error();
 }
 
+TEST(VrmLoad, ABeautifulGame_glTF) {
+  auto path = get_path("ABeautifulGame/glTF/ABeautifulGame.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
 TEST(VrmLoad, AlphaBlendModeTest_glTF) {
   auto path = get_path("AlphaBlendModeTest/glTF/AlphaBlendModeTest.gltf");
   Scene scene;
@@ -387,6 +394,13 @@ TEST(VrmLoad, BrainStem_glTF_Embedded) {
   EXPECT_TRUE(result) << result.error();
 }
 
+TEST(VrmLoad, BrainStem_glTF_Meshopt) {
+  auto path = get_path("BrainStem/glTF-Meshopt/BrainStem.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
 TEST(VrmLoad, Buggy_glTF) {
   auto path = get_path("Buggy/glTF/Buggy.gltf");
   Scene scene;
@@ -562,6 +576,13 @@ TEST(VrmLoad, DragonAttenuation_glTF_Binary) {
   EXPECT_TRUE(result) << result.error();
 }
 
+TEST(VrmLoad, DragonAttenuation_glTF_Meshopt) {
+  auto path = get_path("DragonAttenuation/glTF-Meshopt/DragonAttenuation.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
 TEST(VrmLoad, Duck_glTF) {
   auto path = get_path("Duck/glTF/Duck.gltf");
   Scene scene;
@@ -646,13 +667,6 @@ TEST(VrmLoad, Fox_glTF_Binary) {
   EXPECT_TRUE(result) << result.error();
 }
 
-TEST(VrmLoad, Fox_glTF_Embedded) {
-  auto path = get_path("Fox/glTF-Embedded/Fox.gltf");
-  Scene scene;
-  auto result = scene.Load(path);
-  EXPECT_TRUE(result) << result.error();
-}
-
 TEST(VrmLoad, GearboxAssy_glTF) {
   auto path = get_path("GearboxAssy/glTF/GearboxAssy.gltf");
   Scene scene;
@@ -716,6 +730,20 @@ TEST(VrmLoad, IridescenceDielectricSpheres_glTF) {
   EXPECT_TRUE(result) << result.error();
 }
 
+TEST(VrmLoad, IridescenceLamp_glTF) {
+  auto path = get_path("IridescenceLamp/glTF/IridescenceLamp.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
+TEST(VrmLoad, IridescenceLamp_glTF_Binary) {
+  auto path = get_path("IridescenceLamp/glTF-Binary/IridescenceLamp.glb");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
 TEST(VrmLoad, IridescenceMetallicSpheres_glTF) {
   auto path = get_path("IridescenceMetallicSpheres/glTF/IridescenceMetallicSpheres.gltf");
   Scene scene;
@@ -774,6 +802,20 @@ TEST(VrmLoad, Lantern_glTF_Draco) {
 
 TEST(VrmLoad, Lantern_glTF_Quantized) {
   auto path = get_path("Lantern/glTF-Quantized/Lantern.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
+TEST(VrmLoad, LightsPunctualLamp_glTF) {
+  auto path = get_path("LightsPunctualLamp/glTF/LightsPunctualLamp.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
+TEST(VrmLoad, LightsPunctualLamp_glTF_Binary) {
+  auto path = get_path("LightsPunctualLamp/glTF-Binary/LightsPunctualLamp.glb");
   Scene scene;
   auto result = scene.Load(path);
   EXPECT_TRUE(result) << result.error();
@@ -877,6 +919,20 @@ TEST(VrmLoad, MosquitoInAmber_glTF_Binary) {
   EXPECT_TRUE(result) << result.error();
 }
 
+TEST(VrmLoad, MultipleScenes_glTF) {
+  auto path = get_path("MultipleScenes/glTF/MultipleScenes.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
+TEST(VrmLoad, MultipleScenes_glTF_Embedded) {
+  auto path = get_path("MultipleScenes/glTF-Embedded/MultipleScenes.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
 TEST(VrmLoad, MultiUVTest_glTF) {
   auto path = get_path("MultiUVTest/glTF/MultiUVTest.gltf");
   Scene scene;
@@ -893,6 +949,20 @@ TEST(VrmLoad, MultiUVTest_glTF_Binary) {
 
 TEST(VrmLoad, MultiUVTest_glTF_Embedded) {
   auto path = get_path("MultiUVTest/glTF-Embedded/MultiUVTest.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
+TEST(VrmLoad, NegativeScaleTest_glTF) {
+  auto path = get_path("NegativeScaleTest/glTF/NegativeScaleTest.gltf");
+  Scene scene;
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
+}
+
+TEST(VrmLoad, NegativeScaleTest_glTF_Binary) {
+  auto path = get_path("NegativeScaleTest/glTF-Binary/NegativeScaleTest.glb");
   Scene scene;
   auto result = scene.Load(path);
   EXPECT_TRUE(result) << result.error();

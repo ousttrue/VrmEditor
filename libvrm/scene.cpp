@@ -147,11 +147,18 @@ Scene::Load(const std::filesystem::path &path,
 
     nlohmann::json *lastAtributes = nullptr;
     for (auto &prim : mesh["primitives"]) {
-      nlohmann::json &attributes = prim.at("attributes");
+      std::shared_ptr<Material> material;
+      if (has(prim, "material")) {
+        material = m_materials[prim.at("material")];
+      } else {
+        // TODO: default material
+        return std::unexpected{"default material is not implemented"};
+      }
 
+      nlohmann::json &attributes = prim.at("attributes");
       if (lastAtributes && attributes == *lastAtributes) {
         // for vrm shared vertex buffer
-        AddIndices(0, ptr.get(), prim.at("indices"), prim.at("material"));
+        AddIndices(0, ptr.get(), prim.at("indices"), material);
       } else {
         // extend vertex buffer
         auto positions =
@@ -204,7 +211,7 @@ Scene::Load(const std::filesystem::path &path,
         }
 
         // extend indices and add vertex offset
-        AddIndices(offset, ptr.get(), prim["indices"], prim.at("material"));
+        AddIndices(offset, ptr.get(), prim["indices"], material);
       }
 
       // find morph target name
@@ -457,20 +464,20 @@ Scene::Load(const std::filesystem::path &path,
 }
 
 void Scene::AddIndices(int vertex_offset, Mesh *mesh, int accessor_index,
-                       int material_index) {
+                       const std::shared_ptr<Material> &material) {
   auto accessor = m_gltf.json["accessors"][accessor_index];
   switch ((ComponentType)accessor["componentType"]) {
   case ComponentType::UNSIGNED_BYTE: {
     auto span = m_gltf.accessor<uint8_t>(accessor_index);
-    mesh->addSubmesh(vertex_offset, span, m_materials[material_index]);
+    mesh->addSubmesh(vertex_offset, span, material);
   } break;
   case ComponentType::UNSIGNED_SHORT: {
     auto span = m_gltf.accessor<uint16_t>(accessor_index);
-    mesh->addSubmesh(vertex_offset, span, m_materials[material_index]);
+    mesh->addSubmesh(vertex_offset, span, material);
   } break;
   case ComponentType::UNSIGNED_INT: {
     auto span = m_gltf.accessor<uint32_t>(accessor_index);
-    mesh->addSubmesh(vertex_offset, span, m_materials[material_index]);
+    mesh->addSubmesh(vertex_offset, span, material);
   } break;
   default:
     throw std::runtime_error("invalid index type");

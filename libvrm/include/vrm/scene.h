@@ -71,7 +71,7 @@ struct Scene {
                                         std::span<const uint8_t> bin_chunk);
 
   void AddIndices(int vertex_offset, Mesh *mesh, int accessor_index,
-                  int material_index);
+                  const std::shared_ptr<Material> &material);
 
   void SyncHierarchy();
 
