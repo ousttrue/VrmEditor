@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-std::vector<uint8_t> ReadAllBytes(const std::filesystem::path &path) {
+inline std::vector<uint8_t> ReadAllBytes(const std::filesystem::path &path) {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
     return {};

@@ -87,6 +87,17 @@ bool Scene::Load(const std::filesystem::path &path,
     return false;
   }
 
+  if (m_gltf.json.find("extensionsRequired") != m_gltf.json.end()) {
+    for (auto &ex : m_gltf.json.at("extensionsRequired")) {
+      if (ex == "KHR_draco_mesh_compression") {
+        return false;
+      }
+      if (ex == "KHR_mesh_quantization") {
+        return false;
+      }
+    }
+  }
+
   if (m_gltf.json.find("extensions") != m_gltf.json.end()) {
     auto &extensions = m_gltf.json.at("extensions");
     if (extensions.find("VRM") != extensions.end()) {
@@ -339,6 +350,9 @@ bool Scene::Load(const std::filesystem::path &path,
         auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index);
         ptr->addScale(node_index, times, values,
                       std::format("{}-scale", m_nodes[node_index]->name));
+      } else if (path == "weights") {
+        // TODO: not implemented
+        return false;
       } else {
         assert(false);
       }
