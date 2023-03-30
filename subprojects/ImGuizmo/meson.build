@@ -1,3 +1,5 @@
+project('ImGuizmo', 'cpp')
+imgui_dep = dependency('imgui', default_options: ['default_library=static'])
 imguizmo_inc = include_directories('.')
 imguizmo_lib = static_library(
     'imguizmo',

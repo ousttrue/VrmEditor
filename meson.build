@@ -7,7 +7,7 @@ project(
 
 glew_dep = dependency('glew', default_options: ['default_library=static'])
 glfw_dep = dependency('glfw3', default_options: ['default_library=static'])
-imgui_dep = dependency('imgui')
+imgui_dep = dependency('imgui', default_options: ['default_library=static'])
 json_dep = subproject('json').get_variable('nlohmann_json_dep')
 grapho_dep = dependency('grapho')
 stb_dep = dependency('stb')
@@ -17,8 +17,7 @@ luajit_dep = subproject(
     default_options: ['default_library=static'],
 ).get_variable('lua_dep')
 cuber_dep = dependency('cuber')
-
-subdir('ImGuizmo')
+imguizmo_dep = subproject('ImGuizmo').get_variable('imguizmo_dep')
 subdir('libvrm')
 subdir('bvhutil')
 subdir('src')
