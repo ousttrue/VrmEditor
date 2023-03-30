@@ -7,7 +7,8 @@ TEMPLATE = """
 TEST(VrmLoad, {name}) {{
   auto path = get_path("{relative}");
   Scene scene;
-  EXPECT_TRUE(scene.Load(path));
+  auto result = scene.Load(path);
+  EXPECT_TRUE(result) << result.error();
 }}
 """
 

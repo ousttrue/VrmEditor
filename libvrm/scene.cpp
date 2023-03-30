@@ -19,12 +19,6 @@
 #include <string>
 #include <vector>
 
-const auto VERTEX_JOINT = "JOINTS_0";
-const auto VERTEX_WEIGHT = "WEIGHTS_0";
-const auto VERTEX_POSITION = "POSITION";
-const auto VERTEX_NORMAL = "NORMAL";
-const auto VERTEX_UV = "TEXCOORD_0";
-
 static DirectX::XMFLOAT4X4 IDENTITY{
     1, 0, 0, 0, //
     0, 1, 0, 0, //
@@ -60,10 +54,11 @@ inline void from_json(const nlohmann::json &j, DirectX::XMFLOAT4X4 &m) {
 
 Scene::Scene() { m_spring = std::make_shared<vrm::SpringSolver>(); }
 
-bool Scene::Load(const std::filesystem::path &path) {
+std::expected<void, std::string>
+Scene::Load(const std::filesystem::path &path) {
   auto bytes = ReadAllBytes(path);
   if (bytes.empty()) {
-    return false;
+    return std::unexpected{std::format("fail to read: {}", path.string())};
   }
 
   if (auto glb = Glb::parse(bytes)) {
@@ -75,25 +70,26 @@ bool Scene::Load(const std::filesystem::path &path) {
   return Load(path, bytes, {});
 }
 
-bool Scene::Load(const std::filesystem::path &path,
-                 std::span<const uint8_t> json_chunk,
-                 std::span<const uint8_t> bin_chunk) {
+std::expected<void, std::string>
+Scene::Load(const std::filesystem::path &path,
+            std::span<const uint8_t> json_chunk,
+            std::span<const uint8_t> bin_chunk) {
 
   try {
     auto parsed = nlohmann::json::parse(json_chunk);
     auto dir = std::make_shared<Directory>(path.parent_path());
     m_gltf = {dir, parsed, bin_chunk};
   } catch (nlohmann::json::parse_error &e) {
-    return false;
+    return std::unexpected{"json parse"};
   }
 
   if (m_gltf.json.find("extensionsRequired") != m_gltf.json.end()) {
     for (auto &ex : m_gltf.json.at("extensionsRequired")) {
       if (ex == "KHR_draco_mesh_compression") {
-        return false;
+        return std::unexpected{"KHR_draco_mesh_compression"};
       }
       if (ex == "KHR_mesh_quantization") {
-        return false;
+        return std::unexpected{"KHR_mesh_quantization"};
       }
     }
   }
@@ -188,7 +184,7 @@ bool Scene::Load(const std::filesystem::path &path,
 
           default:
             // not implemented
-            return false;
+            return std::unexpected{"JOINTS_0 is not ushort4"};
           }
         }
 
@@ -362,9 +358,10 @@ bool Scene::Load(const std::filesystem::path &path,
                       std::format("{}-scale", m_nodes[node_index]->name));
       } else if (path == "weights") {
         // TODO: not implemented
-        return false;
+        return std::unexpected{"animation path 'weights' is not implemented"};
       } else {
-        assert(false);
+        return std::unexpected{
+            std::format("animation path {} is not implemented", path)};
       }
     }
 
@@ -455,7 +452,7 @@ bool Scene::Load(const std::filesystem::path &path,
     }
   }
 
-  return true;
+  return {};
 }
 
 void Scene::AddIndices(int vertex_offset, Mesh *mesh, int accessor_index,

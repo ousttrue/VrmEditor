@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "gltf_samples_gen.py",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/tests/gltf_samples_gen.py",

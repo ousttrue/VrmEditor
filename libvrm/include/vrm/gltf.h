@@ -9,6 +9,12 @@
 #include <string_view>
 #include <unordered_map>
 
+const auto VERTEX_JOINT = "JOINTS_0";
+const auto VERTEX_WEIGHT = "WEIGHTS_0";
+const auto VERTEX_POSITION = "POSITION";
+const auto VERTEX_NORMAL = "NORMAL";
+const auto VERTEX_UV = "TEXCOORD_0";
+
 enum class ComponentType {
   BYTE = 5120,
   UNSIGNED_BYTE = 5121,
@@ -88,13 +94,8 @@ struct Gltf {
       // external file. maybe glTF. not glb.
       // std::cout << buffer << std::endl;
       std::string_view uri = buffer.at("uri");
-      if (uri.starts_with("uri:")) {
-        auto bin = m_dir->GetBuffer(uri.substr(4));
-        return bin.subspan(buffer_view["byteOffset"],
-                           buffer_view["byteLength"]);
-      } else {
-        throw std::runtime_error("invalid");
-      }
+      auto bin = m_dir->GetBuffer(uri);
+      return bin.subspan(buffer_view["byteOffset"], buffer_view["byteLength"]);
 
     } else {
       // glb

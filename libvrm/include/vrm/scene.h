@@ -5,6 +5,7 @@
 #include "springbone.h"
 #include <DirectXMath.h>
 #include <chrono>
+#include <expected>
 #include <filesystem>
 #include <functional>
 #include <list>
@@ -64,10 +65,10 @@ struct Scene {
   Scene();
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
-  bool Load(const std::filesystem::path &path);
-  bool Load(const std::filesystem::path &path,
-            std::span<const uint8_t> json_chunk,
-            std::span<const uint8_t> bin_chunk);
+  std::expected<void, std::string> Load(const std::filesystem::path &path);
+  std::expected<void, std::string> Load(const std::filesystem::path &path,
+                                        std::span<const uint8_t> json_chunk,
+                                        std::span<const uint8_t> bin_chunk);
 
   void AddIndices(int vertex_offset, Mesh *mesh, int accessor_index,
                   int material_index);
