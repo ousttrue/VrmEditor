@@ -1,5 +1,6 @@
 #pragma once
-#include "vrm/node.h"
+#include "node.h"
+#include "timeline.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <memory>
@@ -43,12 +44,14 @@ public:
 class SpringSolver {
 
   std::vector<SpringJoint> m_joints;
+  Time m_lastTime = {};
 
 public:
   void Clear() { m_joints.clear(); }
   void Add(const std::shared_ptr<Node> &node, float dragForce,
            float stiffiness);
-  void Update();
+  void Update(Time time);
+  void DrawGizmo();
 };
 
 } // namespace vrm

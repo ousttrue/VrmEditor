@@ -20,12 +20,29 @@ SpringJoint::SpringJoint(const std::shared_ptr<Node> &head,
 }
 
 void SpringJoint::DrawGizmo() {
-  gizmo::drawSphere(Head->worldPosition(), {1, 1, 1, 1});
-  gizmo::drawSphere(m_currentTailPosotion, {0, 1, 0, 1});
-  gizmo::drawLine(Head->worldPosition(), m_currentTailPosotion, {0, 1, 0, 1});
+  // gizmo::drawSphere(Head->worldPosition(), {1, 1, 1, 1});
+  // gizmo::drawSphere(m_currentTailPosotion, {0, 1, 0, 1});
+  // gizmo::drawLine(Head->worldPosition(), m_currentTailPosotion, {0, 1, 0,
+  // 1});
+  //
+  // gizmo::drawSphere(m_lastTailPosotion, {1, 0, 0, 1});
+  // gizmo::drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
 
-  gizmo::drawSphere(m_lastTailPosotion, {1, 0, 0, 1});
-  gizmo::drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
+  // gizmo::drawSphere(lastHead, {1, 1, 1, 1});
+  gizmo::drawSphere(Head->worldPosition(), {0, 1, 0, 1});
+  // gizmo::drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
+
+  // gizmo::drawSphere(currentTail, {1, 1, 1, 1});
+  gizmo::drawSphere(m_currentTailPosotion, {1, 0, 1, 1});
+  // gizmo::drawLine(currentTail, nextTail, {0, 1, 0, 1});
+
+  gizmo::drawLine(Head->worldPosition(), m_currentTailPosotion, {1, 1, 0, 1});
+
+  if (Head->children.size()) {
+    gizmo::drawSphere(Head->children.front()->worldPosition(), {1, 0, 0, 1});
+    gizmo::drawLine(Head->worldPosition(),
+                    Head->children.front()->worldPosition(), {1, 0, 0, 1});
+  }
 }
 
 void SpringJoint::Update() {
@@ -62,22 +79,6 @@ void SpringJoint::Update() {
   for (auto &child : Head->children) {
     // ひとつ下まで
     child->calcWorld(false);
-  }
-
-  // gizmo::drawSphere(lastHead, {1, 1, 1, 1});
-  gizmo::drawSphere(Head->worldPosition(), {0, 1, 0, 1});
-  // gizmo::drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
-
-  // gizmo::drawSphere(currentTail, {1, 1, 1, 1});
-  gizmo::drawSphere(nextTail, {1, 0, 1, 1});
-  // gizmo::drawLine(currentTail, nextTail, {0, 1, 0, 1});
-
-  gizmo::drawLine(Head->worldPosition(), nextTail, {1, 1, 0, 1});
-
-  if (Head->children.size()) {
-    gizmo::drawSphere(Head->children.front()->worldPosition(), {1, 0, 0, 1});
-    gizmo::drawLine(Head->worldPosition(),
-                    Head->children.front()->worldPosition(), {1, 0, 0, 1});
   }
 }
 
@@ -133,9 +134,21 @@ void SpringSolver::Add(const std::shared_ptr<Node> &node, float dragForce,
   }
 }
 
-void SpringSolver::Update() {
+void SpringSolver::Update(Time time) {
+  bool doUpdate = time != m_lastTime;
+  m_lastTime = time;
+  if (!doUpdate) {
+    return;
+  }
+
   for (auto &joint : m_joints) {
     joint.Update();
+  }
+}
+
+void SpringSolver::DrawGizmo() {
+  for (auto &joint : m_joints) {
+    joint.DrawGizmo();
   }
 }
 

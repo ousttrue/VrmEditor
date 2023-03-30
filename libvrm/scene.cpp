@@ -460,7 +460,14 @@ void Scene::AddIndices(int vertex_offset, Mesh *mesh, Glb *glb,
   }
 }
 
-void Scene::Render(const Camera &camera, const RenderFunc &render) {
+void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
+  SyncHierarchy();
+
+  // springbone
+  if (m_vrm0) {
+    m_spring->Update(time);
+  }
+
   // skinning
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
@@ -527,6 +534,10 @@ void Scene::Render(const Camera &camera, const RenderFunc &render) {
       render(camera, *mesh, &node->world._11);
     }
   }
+
+  if (m_vrm0) {
+    m_spring->DrawGizmo();
+  }
 }
 
 void Scene::Traverse(const EnterFunc &enter, const LeaveFunc &leave,
@@ -592,18 +603,13 @@ void Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
   }
 }
 
-void Scene::UpdateAfterPose() {
+void Scene::SyncHierarchy() {
   // calc world
   auto enter = [](Node &node) {
     node.calcWorld();
     return true;
   };
   Traverse(enter, {});
-
-  // springbone
-  if (m_vrm0) {
-    m_spring->Update();
-  }
 }
 
 std::shared_ptr<Node> Scene::GetBoneNode(vrm::HumanBones bone) {

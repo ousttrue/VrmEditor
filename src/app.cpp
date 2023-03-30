@@ -29,9 +29,6 @@ App::App() {
   lua_ = std::make_shared<LuaEngine>();
   scene_ = std::make_shared<Scene>();
   m_timeline = std::make_shared<Timeline>();
-  m_timeline->OnTimeChanged = [scene = scene_](auto time) {
-    scene->UpdateAfterPose();
-  };
 
   platform_ = std::make_shared<Platform>();
   auto window =
@@ -155,9 +152,7 @@ int App::run() {
   while (auto info = platform_->newFrame()) {
     auto time = info->time;
 
-    if (m_timeline->IsPlaying) {
-      gizmo::clear();
-    }
+    gizmo::clear();
     if (lastTime) {
       m_timeline->SetDeltaTime(time - *lastTime);
     } else {
@@ -267,7 +262,7 @@ void App::sceneDock() {
 
   auto gl3r = std::make_shared<Gl3Renderer>();
 
-  rt->render = [scene = scene_, gl3r,
+  rt->render = [timeline = m_timeline, scene = scene_, gl3r,
                 selection = context](const Camera &camera) {
     gl3r->clear(camera);
 
@@ -277,7 +272,7 @@ void App::sceneDock() {
                                       const float m[16]) {
       gl3r->render(camera, mesh, m);
     };
-    scene->Render(camera, render);
+    scene->Render(timeline->CurrentTime, camera, render);
     liner->Render(camera.projection, camera.view, gizmo::lines());
 
     // gizmo
@@ -348,7 +343,7 @@ void App::jsonDock() {
 }
 
 void App::timelineDock() {
-  auto timelineGui = std::make_shared<ImTimeline>();
+  auto timelineGui = std::make_shared<ImTimeline>(scene_);
 
   gui_->m_docks.push_back(
       Dock("timeline", [timeline = m_timeline, timelineGui]() {

@@ -65,19 +65,16 @@ struct Scene {
   Scene &operator=(const Scene &) = delete;
   bool Load(const std::filesystem::path &path);
 
-private:
   void AddIndices(int vertex_offset, Mesh *mesh, struct Glb *glb,
                   int accessor_index, int material_index);
 
-public:
-  void UpdateAfterPose();
+  void SyncHierarchy();
 
-  void Render(const Camera &camera, const RenderFunc &render);
+  void Render(Time time, const Camera &camera, const RenderFunc &render);
   void Traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 Node *node = nullptr);
   void TraverseJson(const EnterJson &enter, const LeaveJson &leave,
                     nlohmann::json *j = nullptr, std::string_view key = {});
-
   void SetHumanPose(std::span<const vrm::HumanBones> humanMap,
                     const DirectX::XMFLOAT3 &rootPosition,
                     std::span<const DirectX::XMFLOAT4> rotations);

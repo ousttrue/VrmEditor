@@ -7,6 +7,7 @@
 #include <math.h>
 #include <memory>
 #include <vrm/gizmo.h>
+#include <vrm/scene.h>
 #include <vrm/timeline.h>
 
 // cursor
@@ -73,8 +74,10 @@ struct TimeGeometry {
 };
 
 class ImTimeline {
+  std::shared_ptr<Scene> m_scene;
+
 public:
-  ImTimeline() {}
+  ImTimeline(const std::shared_ptr<Scene> &scene) : m_scene(scene) {}
   ~ImTimeline() {}
 
   void show(const std::shared_ptr<Timeline> &timeline,
@@ -82,7 +85,6 @@ public:
     ImGui::Checkbox("IsPlaying", &timeline->IsPlaying);
     ImGui::BeginDisabled(timeline->IsPlaying);
     if (ImGui::Button("next frame")) {
-      gizmo::clear();
       timeline->SetDeltaTime(Time(1.0 / 60), true);
     }
     ImGui::EndDisabled();
