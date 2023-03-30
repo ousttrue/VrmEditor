@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/juliettef/IconFontCppHeaders.git
+revision = main
+depth = 1
+patch_directory = IconFontCppHeaders 
+
+[provide]
+iconfont_cpp_headers = iconfont_cpp_headers_dep

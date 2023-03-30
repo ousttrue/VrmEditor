@@ -55,6 +55,7 @@ public:
   int Run();
   // lua API
   void ClearScene();
+  const std::shared_ptr<Gui> &GetGui() const { return m_gui; }
   bool LoadModel(const std::filesystem::path &path);
   bool LoadMotion(const std::filesystem::path &path, float scaling = 1.0f);
   void LoadLua(const std::filesystem::path &path);

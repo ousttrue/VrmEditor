@@ -1,10 +1,15 @@
 #include "gui.h"
+#include "app.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <IconsFontAwesome5.h>
+#include <ImGuiFileDialog.h>
 #include <iostream>
+
+const auto OPEN_FILE_DIALOG = "OPEN_FILE_DIALOG";
 
 const auto DOCK_SPACE = "VRM_DOCKSPACE";
 
@@ -94,12 +99,40 @@ Gui::Gui(const void *window, const char *glsl_version)
     // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
     // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
   }));
+
+  ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir, nullptr,
+                                            ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
+                                            " "); // for all dirs
 }
 
 Gui::~Gui() {
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_Shutdown();
   ImGui_ImplOpenGL3_Shutdown();
+}
+
+bool Gui::SetFont(const std::filesystem::path &path) {
+  if (!std::filesystem::exists(path)) {
+    return false;
+  }
+  m_baseFont = path;
+  return true;
+}
+
+bool Gui::AddJapaneseFont(const std::filesystem::path &path) {
+  if (!std::filesystem::exists(path)) {
+    return false;
+  }
+  m_japanseseFont = path;
+  return true;
+}
+
+bool Gui::AddIconFont(const std::filesystem::path &path) {
+  if (!std::filesystem::exists(path)) {
+    return false;
+  }
+  m_iconFont = path;
+  return true;
 }
 
 void Gui::LoadFont() {
@@ -116,14 +149,32 @@ void Gui::LoadFont() {
   ImGui_ImplGlfw_InitForOpenGL((GLFWwindow *)m_window, true);
   m_initialized = true;
 
-  for (auto &font : m_fonts) {
-    if (font.Font.empty()) {
-      // default font
-      ImFontConfig config;
-      config.SizePixels = static_cast<float>(m_fontSize);
-      io.Fonts->AddFontDefault(&config);
-    } else {
-    }
+  ImFontConfig config;
+  config.SizePixels = static_cast<float>(m_fontSize);
+  if (m_baseFont.string().size()) {
+    io.Fonts->AddFontFromFileTTF(m_baseFont.string().c_str(),
+                                 static_cast<float>(m_fontSize));
+  } else {
+    // default font
+    io.Fonts->AddFontDefault(&config);
+  }
+
+  config.MergeMode = true;
+  if (m_japanseseFont.string().size()) {
+    io.Fonts->AddFontFromFileTTF(m_japanseseFont.string().c_str(),
+                                 config.SizePixels, &config,
+                                 io.Fonts->GetGlyphRangesJapanese());
+  }
+
+  if (m_iconFont.string().size()) {
+    // static const ImWchar icons_ranges[] = {0xf000, 0xf3ff, 0};
+    static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_16_FA, 0};
+    auto iconFontSize = static_cast<float>(m_fontSize * 2.0f / 3.0f);
+    config.PixelSnapH = true;
+    config.GlyphMinAdvanceX = iconFontSize;
+    config.SizePixels = iconFontSize;
+    io.Fonts->AddFontFromFileTTF(m_iconFont.string().c_str(), config.SizePixels,
+                                 &config, icons_ranges);
   }
 
   io.Fonts->Build();
@@ -240,6 +291,8 @@ void Gui::DockSpace() {
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       if (ImGui::MenuItem("Open", "")) {
+        ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE_DIALOG, "Choose File",
+                                                ".glb,.vrm,.gltf,.bvh", ".");
       }
       if (ImGui::MenuItem("Save", "")) {
       }
@@ -305,6 +358,26 @@ void Gui::DockSpace() {
 
   for (auto &dock : m_docks) {
     dock.Show();
+  }
+
+  // display
+  if (ImGuiFileDialog::Instance()->Display(OPEN_FILE_DIALOG)) {
+    // action if OK
+    if (ImGuiFileDialog::Instance()->IsOk()) {
+      auto path =
+          std::filesystem::path(ImGuiFileDialog::Instance()->GetCurrentPath()) /
+          ImGuiFileDialog::Instance()->GetFilePathName();
+      // action
+      // std::cout << filePathName << "::" << filePath << std::endl;
+      if (std::filesystem::exists(path)) {
+        if (!App::Instance().LoadModel(path)) {
+          std::cout << "fail to load: " << path << std::endl;
+        }
+      }
+    }
+
+    // close
+    ImGuiFileDialog::Instance()->Close();
   }
 }
 

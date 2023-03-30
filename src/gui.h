@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include <functional>
 #include <list>
 #include <memory>
@@ -35,11 +36,6 @@ struct Dock {
   void Show();
 };
 
-struct FontConfig {
-  // use default if empty
-  std::string Font;
-};
-
 using Task = std::function<void()>;
 
 class Gui {
@@ -50,7 +46,9 @@ class Gui {
   std::queue<Task> m_tasks;
 
   int m_fontSize = 20;
-  std::vector<FontConfig> m_fonts = {{}};
+  std::filesystem::path m_baseFont;
+  std::filesystem::path m_japanseseFont;
+  std::filesystem::path m_iconFont;
 
 public:
   std::list<Dock> m_docks;
@@ -61,5 +59,10 @@ public:
   void DockSpace();
   void Render();
   void PostTask(const Task &task) { m_tasks.push(task); }
+
   void LoadFont();
+  void SetFontSize(int size) { m_fontSize = size; }
+  bool SetFont(const std::filesystem::path &path);
+  bool AddJapaneseFont(const std::filesystem::path &path);
+  bool AddIconFont(const std::filesystem::path &path);
 };

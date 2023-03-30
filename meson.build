@@ -24,6 +24,7 @@ imgui_filedialog_dep = subproject(
 # im_filedialog_dep = subproject(
 #     'ImFileDialog',
 # ).get_variable('im_filedialog_dep')
+iconfont_cpp_headers_dep = dependency('iconfont_cpp_headers')
 subdir('libvrm')
 subdir('bvhutil')
 subdir('src')

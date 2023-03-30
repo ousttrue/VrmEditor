@@ -3,6 +3,9 @@
 ---@class vrmeditor
 vrmeditor = {}
 
+---@param path string ttf file path
+function vrmeditor.add_icon_font(path) end
+
 ---@param path string gltf, glb, vrm, fbx lua
 function vrmeditor.load_model(path) end
 
