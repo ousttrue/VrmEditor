@@ -1,4 +1,5 @@
 #pragma once
+#include "gltf.h"
 #include "humanoid.h"
 #include "scenetypes.h"
 #include "springbone.h"
@@ -44,7 +45,7 @@ struct Scene {
   std::vector<std::shared_ptr<Node>> m_roots;
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
-  nlohmann::json m_gltf;
+  Gltf m_gltf;
   std::shared_ptr<vrm0::Vrm> m_vrm0;
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
@@ -64,9 +65,12 @@ struct Scene {
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
   bool Load(const std::filesystem::path &path);
+  bool Load(const std::filesystem::path &path,
+            std::span<const uint8_t> json_chunk,
+            std::span<const uint8_t> bin_chunk);
 
-  void AddIndices(int vertex_offset, Mesh *mesh, struct Glb *glb,
-                  int accessor_index, int material_index);
+  void AddIndices(int vertex_offset, Mesh *mesh, int accessor_index,
+                  int material_index);
 
   void SyncHierarchy();
 

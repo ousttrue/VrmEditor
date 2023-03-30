@@ -33,13 +33,13 @@ static DirectX::XMFLOAT4X4 IDENTITY{
 };
 
 // matrix
-inline void to_json(json &j, const DirectX::XMFLOAT4X4 &m) {
-  j = json{
+inline void to_json(nlohmann::json &j, const DirectX::XMFLOAT4X4 &m) {
+  j = nlohmann::json{
       m._11, m._12, m._13, m._14, m._21, m._22, m._23, m._24,
       m._31, m._32, m._33, m._34, m._41, m._42, m._43, m._44,
   };
 }
-inline void from_json(const json &j, DirectX::XMFLOAT4X4 &m) {
+inline void from_json(const nlohmann::json &j, DirectX::XMFLOAT4X4 &m) {
   m._11 = j[0];
   m._12 = j[1];
   m._13 = j[2];
@@ -58,50 +58,47 @@ inline void from_json(const json &j, DirectX::XMFLOAT4X4 &m) {
   m._44 = j[15];
 }
 
-template <typename T>
-static std::vector<T> ReadAllBytes(const std::filesystem::path &path) {
-  std::ifstream ifs(path, std::ios::binary | std::ios::ate);
-  if (!ifs) {
-    return {};
-  }
-  auto pos = ifs.tellg();
-  auto size = pos / sizeof(T);
-  if (pos % sizeof(T)) {
-    ++size;
-  }
-  std::vector<T> buffer(size);
-  ifs.seekg(0, std::ios::beg);
-  ifs.read((char *)buffer.data(), pos);
-  return buffer;
-}
-
 Scene::Scene() { m_spring = std::make_shared<vrm::SpringSolver>(); }
 
 bool Scene::Load(const std::filesystem::path &path) {
-  auto bytes = ReadAllBytes<uint8_t>(path);
+  auto bytes = ReadAllBytes(path);
   if (bytes.empty()) {
     return false;
   }
 
-  auto glb = Glb::parse(bytes);
-  if (!glb) {
+  if (auto glb = Glb::parse(bytes)) {
+    // as glb
+    return Load(path, glb->json, glb->bin);
+  }
+
+  // try gltf
+  return Load(path, bytes, {});
+}
+
+bool Scene::Load(const std::filesystem::path &path,
+                 std::span<const uint8_t> json_chunk,
+                 std::span<const uint8_t> bin_chunk) {
+
+  try {
+    auto parsed = nlohmann::json::parse(json_chunk);
+    auto dir = std::make_shared<Directory>(path.parent_path());
+    m_gltf = {dir, parsed, bin_chunk};
+  } catch (nlohmann::json::parse_error &e) {
     return false;
   }
 
-  m_gltf = glb->gltf;
-
-  if (glb->gltf.find("extensions") != glb->gltf.end()) {
-    auto &extensions = glb->gltf.at("extensions");
+  if (m_gltf.json.find("extensions") != m_gltf.json.end()) {
+    auto &extensions = m_gltf.json.at("extensions");
     if (extensions.find("VRM") != extensions.end()) {
       auto VRM = extensions.at("VRM");
       m_vrm0 = std::make_shared<vrm0::Vrm>();
     }
   }
 
-  auto &images = glb->gltf["images"];
+  auto &images = m_gltf.json["images"];
   for (int i = 0; i < images.size(); ++i) {
     auto &image = images[i];
-    auto bytes = glb->buffer_view(image["bufferView"]);
+    auto bytes = m_gltf.buffer_view(image["bufferView"]);
 
     auto ptr =
         std::make_shared<Image>(image.value("name", std::format("image{}", i)));
@@ -112,9 +109,9 @@ bool Scene::Load(const std::filesystem::path &path) {
     m_images.push_back(ptr);
   }
 
-  auto &textures = glb->gltf["textures"];
+  auto &textures = m_gltf.json["textures"];
 
-  auto &materials = glb->gltf["materials"];
+  auto &materials = m_gltf.json["materials"];
   for (int i = 0; i < materials.size(); ++i) {
     auto &material = materials[i];
     auto ptr = std::make_shared<Material>(
@@ -133,22 +130,21 @@ bool Scene::Load(const std::filesystem::path &path) {
     }
   }
 
-  for (auto &mesh : glb->gltf["meshes"]) {
+  for (auto &mesh : m_gltf.json["meshes"]) {
     auto ptr = std::make_shared<Mesh>();
     m_meshes.push_back(ptr);
 
-    json *lastAtributes = nullptr;
+    nlohmann::json *lastAtributes = nullptr;
     for (auto &prim : mesh["primitives"]) {
-      json &attributes = prim.at("attributes");
+      nlohmann::json &attributes = prim.at("attributes");
 
       if (lastAtributes && attributes == *lastAtributes) {
         // for vrm shared vertex buffer
-        AddIndices(0, ptr.get(), &*glb, prim.at("indices"),
-                   prim.at("material"));
+        AddIndices(0, ptr.get(), prim.at("indices"), prim.at("material"));
       } else {
         // extend vertex buffer
         auto positions =
-            glb->accessor<DirectX::XMFLOAT3>(attributes[VERTEX_POSITION]);
+            m_gltf.accessor<DirectX::XMFLOAT3>(attributes[VERTEX_POSITION]);
         std::vector<DirectX::XMFLOAT3> copy;
         if (m_vrm0) {
           copy.reserve(positions.size());
@@ -159,11 +155,11 @@ bool Scene::Load(const std::filesystem::path &path) {
         }
         auto offset = ptr->addPosition(positions);
         if (attributes.find(VERTEX_NORMAL) != attributes.end()) {
-          ptr->setNormal(offset, glb->accessor<DirectX::XMFLOAT3>(
+          ptr->setNormal(offset, m_gltf.accessor<DirectX::XMFLOAT3>(
                                      attributes.at(VERTEX_NORMAL)));
         }
         if (attributes.find(VERTEX_UV) != attributes.end()) {
-          ptr->setUv(offset, glb->accessor<DirectX::XMFLOAT2>(
+          ptr->setUv(offset, m_gltf.accessor<DirectX::XMFLOAT2>(
                                  attributes.at(VERTEX_UV)));
         }
 
@@ -171,8 +167,8 @@ bool Scene::Load(const std::filesystem::path &path) {
             attributes.find(VERTEX_WEIGHT) != attributes.end()) {
           // skinning
           ptr->setBoneSkinning(
-              offset, glb->accessor<ushort4>(attributes.at(VERTEX_JOINT)),
-              glb->accessor<DirectX::XMFLOAT4>(attributes.at(VERTEX_WEIGHT)));
+              offset, m_gltf.accessor<ushort4>(attributes.at(VERTEX_JOINT)),
+              m_gltf.accessor<DirectX::XMFLOAT4>(attributes.at(VERTEX_WEIGHT)));
         }
 
         // extend morph target
@@ -183,13 +179,12 @@ bool Scene::Load(const std::filesystem::path &path) {
             auto morph = ptr->getOrCreateMorphTarget(i);
             // std::cout << target << std::endl;
             auto morphOffset = morph->addPosition(
-                glb->accessor<DirectX::XMFLOAT3>(target.at(VERTEX_POSITION)));
+                m_gltf.accessor<DirectX::XMFLOAT3>(target.at(VERTEX_POSITION)));
           }
         }
 
         // extend indices and add vertex offset
-        AddIndices(offset, ptr.get(), &*glb, prim["indices"],
-                   prim.at("material"));
+        AddIndices(offset, ptr.get(), prim["indices"], prim.at("material"));
       }
 
       // find morph target name
@@ -209,8 +204,8 @@ bool Scene::Load(const std::filesystem::path &path) {
     }
   }
 
-  if (glb->gltf.find("skins") != glb->gltf.end()) {
-    auto skins = glb->gltf["skins"];
+  if (m_gltf.json.find("skins") != m_gltf.json.end()) {
+    auto skins = m_gltf.json["skins"];
     for (int i = 0; i < skins.size(); ++i) {
       auto &skin = skins[i];
       auto ptr = std::make_shared<Skin>();
@@ -223,7 +218,7 @@ bool Scene::Load(const std::filesystem::path &path) {
       }
 
       auto matrices =
-          glb->accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"]);
+          m_gltf.accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"]);
       std::vector<DirectX::XMFLOAT4X4> copy;
       if (m_vrm0) {
         copy.reserve(matrices.size());
@@ -244,7 +239,7 @@ bool Scene::Load(const std::filesystem::path &path) {
     }
   }
 
-  auto nodes = glb->gltf["nodes"];
+  auto nodes = m_gltf.json["nodes"];
   for (int i = 0; i < nodes.size(); ++i) {
     auto &node = nodes[i];
     auto name = node.value("name", std::format("node:{}", i));
@@ -291,8 +286,8 @@ bool Scene::Load(const std::filesystem::path &path) {
       }
     }
   }
-  if (glb->gltf.find("scenes") != glb->gltf.end()) {
-    auto scene = glb->gltf["scenes"][0];
+  if (m_gltf.json.find("scenes") != m_gltf.json.end()) {
+    auto scene = m_gltf.json["scenes"][0];
     for (auto &node : scene["nodes"]) {
       m_roots.push_back(m_nodes[node]);
     }
@@ -306,7 +301,7 @@ bool Scene::Load(const std::filesystem::path &path) {
   };
   Traverse(enter, {});
 
-  auto &animations = glb->gltf["animations"];
+  auto &animations = m_gltf.json["animations"];
   for (int i = 0; i < animations.size(); ++i) {
     auto &animation = animations[i];
     auto ptr = std::make_shared<Animation>(
@@ -328,20 +323,20 @@ bool Scene::Load(const std::filesystem::path &path) {
 
       // time
       int input_index = sampler.at("input");
-      auto times = glb->accessor<float>(input_index);
+      auto times = m_gltf.accessor<float>(input_index);
       int output_index = sampler.at("output");
 
       if (path == "translation") {
-        auto values = glb->accessor<DirectX::XMFLOAT3>(output_index);
+        auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index);
         ptr->addTranslation(
             node_index, times, values,
             std::format("{}-translation", m_nodes[node_index]->name));
       } else if (path == "rotation") {
-        auto values = glb->accessor<DirectX::XMFLOAT4>(output_index);
+        auto values = m_gltf.accessor<DirectX::XMFLOAT4>(output_index);
         ptr->addRotation(node_index, times, values,
                          std::format("{}-rotation", m_nodes[node_index]->name));
       } else if (path == "scale") {
-        auto values = glb->accessor<DirectX::XMFLOAT3>(output_index);
+        auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index);
         ptr->addScale(node_index, times, values,
                       std::format("{}-scale", m_nodes[node_index]->name));
       } else {
@@ -354,8 +349,8 @@ bool Scene::Load(const std::filesystem::path &path) {
   }
 
   // vrm-0.x
-  if (glb->gltf.find("extensions") != glb->gltf.end()) {
-    auto &extensions = glb->gltf.at("extensions");
+  if (m_gltf.json.find("extensions") != m_gltf.json.end()) {
+    auto &extensions = m_gltf.json.at("extensions");
     if (extensions.find("VRM") != extensions.end()) {
       auto VRM = extensions.at("VRM");
       // m_vrm0 = std::make_shared<Vrm0>();
@@ -439,20 +434,20 @@ bool Scene::Load(const std::filesystem::path &path) {
   return true;
 }
 
-void Scene::AddIndices(int vertex_offset, Mesh *mesh, Glb *glb,
-                       int accessor_index, int material_index) {
-  auto accessor = glb->gltf["accessors"][accessor_index];
+void Scene::AddIndices(int vertex_offset, Mesh *mesh, int accessor_index,
+                       int material_index) {
+  auto accessor = m_gltf.json["accessors"][accessor_index];
   switch ((ComponentType)accessor["componentType"]) {
   case ComponentType::UNSIGNED_BYTE: {
-    auto span = glb->accessor<uint8_t>(accessor_index);
+    auto span = m_gltf.accessor<uint8_t>(accessor_index);
     mesh->addSubmesh(vertex_offset, span, m_materials[material_index]);
   } break;
   case ComponentType::UNSIGNED_SHORT: {
-    auto span = glb->accessor<uint16_t>(accessor_index);
+    auto span = m_gltf.accessor<uint16_t>(accessor_index);
     mesh->addSubmesh(vertex_offset, span, m_materials[material_index]);
   } break;
   case ComponentType::UNSIGNED_INT: {
-    auto span = glb->accessor<uint32_t>(accessor_index);
+    auto span = m_gltf.accessor<uint32_t>(accessor_index);
     mesh->addSubmesh(vertex_offset, span, m_materials[material_index]);
   } break;
   default:
@@ -490,7 +485,8 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
           // root = DirectX::XMLoadFloat4x4(&world);
           // rootInverse = DirectX::XMMatrixInverse(nullptr, root);
           // rootTranslation = DirectX::XMMatrixTranslation(
-          //     rootNode->world._41, rootNode->world._42, rootNode->world._43);
+          //     rootNode->world._41, rootNode->world._42,
+          //     rootNode->world._43);
           root = DirectX::XMLoadFloat4x4(&node->world);
           rootInverse = DirectX::XMMatrixInverse(nullptr, root);
         }
@@ -560,10 +556,10 @@ void Scene::Traverse(const EnterFunc &enter, const LeaveFunc &leave,
 }
 
 void Scene::TraverseJson(const EnterJson &enter, const LeaveJson &leave,
-                         json *item, std::string_view key) {
+                         nlohmann::json *item, std::string_view key) {
   if (!item) {
     // root
-    for (auto &kv : m_gltf.items()) {
+    for (auto &kv : m_gltf.json.items()) {
       TraverseJson(enter, leave, &kv.value(), kv.key());
     }
     return;

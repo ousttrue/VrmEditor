@@ -52,8 +52,7 @@ std::optional<Glb> Glb::parse(std::span<const uint8_t> bytes) {
       // first chunk must "JSON"
       return {};
     }
-    auto gltf = r.string_view(chunk_length);
-    glb.gltf = json::parse(gltf);
+    glb.json = r.span(chunk_length);
   }
   if (!r.is_end()) {
     auto chunk_length = r.get<uint32_t>();
