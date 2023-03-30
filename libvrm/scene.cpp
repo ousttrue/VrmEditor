@@ -105,13 +105,18 @@ Scene::Load(const std::filesystem::path &path,
   auto &images = m_gltf.json["images"];
   for (int i = 0; i < images.size(); ++i) {
     auto &image = images[i];
-    auto bytes = m_gltf.buffer_view(image["bufferView"]);
-
-    auto ptr =
-        std::make_shared<Image>(image.value("name", std::format("image{}", i)));
-    if (ptr->load(bytes)) {
-
+    std::span<const uint8_t> bytes;
+    if (has(image, "bufferView")) {
+      bytes = m_gltf.buffer_view(image.at("bufferView"));
+    } else if (has(image, "uri")) {
+      bytes = m_gltf.m_dir->GetBuffer(image.at("uri"));
     } else {
+      return std::unexpected{"not bufferView nor uri"};
+    }
+    auto name = image.value("name", std::format("image{}", i));
+    auto ptr = std::make_shared<Image>(name);
+    if (!ptr->load(bytes)) {
+      return std::unexpected{name};
     }
     m_images.push_back(ptr);
   }
