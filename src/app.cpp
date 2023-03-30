@@ -161,16 +161,16 @@ int App::Run() {
     lastTime = time;
 
     // newFrame
-    m_gui->newFrame();
+    m_gui->NewFrame();
     ImGuizmo::BeginFrame();
 
-    m_gui->update();
+    m_gui->DockSpace();
 
     glViewport(0, 0, info->width, info->height);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    m_gui->render();
+    m_gui->Render();
     m_platform->present();
   }
 

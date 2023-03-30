@@ -8,24 +8,24 @@
 
 const auto DOCK_SPACE = "VRM_DOCKSPACE";
 
-void Dock::show() {
-  if (p_open) {
+void Dock::Show() {
+  if (IsOpen) {
     // begin
-    if (use_window) {
-      if (ImGui::Begin(name.c_str(), &p_open)) {
-        on_show(&p_open);
+    if (UseWindow) {
+      if (ImGui::Begin(Name.c_str(), &IsOpen)) {
+        OnShow(&IsOpen);
       }
     } else {
-      on_show(&p_open);
+      OnShow(&IsOpen);
     }
-    if (use_window) {
+    if (UseWindow) {
       ImGui::End();
     }
   }
 }
 
 Gui::Gui(const void *window, const char *glsl_version)
-    : window_(window), glsl_version_(glsl_version) {
+    : m_window(window), m_glsl_version(glsl_version) {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -59,11 +59,11 @@ Gui::Gui(const void *window, const char *glsl_version)
   m_docks.push_back(
       Dock("metrics", [](bool *p_open) { ImGui::ShowMetricsWindow(p_open); }));
 
-  postTask([this]() { loadFont(); });
+  PostTask([this]() { LoadFont(); });
 
   m_docks.push_back(Dock("font", [this]() {
-    if (ImGui::SliderInt("fontSize", &fontSize_, 10, 50)) {
-      postTask([this]() { loadFont(); });
+    if (ImGui::SliderInt("fontSize", &m_fontSize, 10, 50)) {
+      PostTask([this]() { LoadFont(); });
     }
 
     // Load Fonts
@@ -102,25 +102,25 @@ Gui::~Gui() {
   ImGui_ImplOpenGL3_Shutdown();
 }
 
-void Gui::loadFont() {
+void Gui::LoadFont() {
 
   ImGuiIO &io = ImGui::GetIO();
 
-  if (initialized_) {
+  if (m_initialized) {
     io.Fonts->Clear();
     ImGui_ImplGlfw_Shutdown();
     ImGui_ImplOpenGL3_Shutdown();
   }
   // Setup Platform/Renderer backends
-  ImGui_ImplOpenGL3_Init(glsl_version_.c_str());
-  ImGui_ImplGlfw_InitForOpenGL((GLFWwindow *)window_, true);
-  initialized_ = true;
+  ImGui_ImplOpenGL3_Init(m_glsl_version.c_str());
+  ImGui_ImplGlfw_InitForOpenGL((GLFWwindow *)m_window, true);
+  m_initialized = true;
 
-  for (auto &font : fonts_) {
-    if (font.font.empty()) {
+  for (auto &font : m_fonts) {
+    if (font.Font.empty()) {
       // default font
       ImFontConfig config;
-      config.SizePixels = static_cast<float>(fontSize_);
+      config.SizePixels = static_cast<float>(m_fontSize);
       io.Fonts->AddFontDefault(&config);
     } else {
     }
@@ -129,28 +129,42 @@ void Gui::loadFont() {
   io.Fonts->Build();
 }
 
-std::optional<MouseEvent> Gui::backgroundMouseEvent() const {
+std::optional<MouseEvent> Gui::BackgroundMouseEvent() const {
   MouseEvent event{};
 
   auto &io = ImGui::GetIO();
   if (!io.WantCaptureMouse) {
     // mouse event is consumed by ImGui
     if (io.MouseDown[1]) {
-      event.rightDrag = Delta{static_cast<int>(io.MouseDelta.x),
+      event.RightDrag = Delta{static_cast<int>(io.MouseDelta.x),
                               static_cast<int>(io.MouseDelta.y)};
     }
     if (io.MouseDown[2]) {
-      event.middleDrag = Delta{static_cast<int>(io.MouseDelta.x),
+      event.MiddleDrag = Delta{static_cast<int>(io.MouseDelta.x),
                                static_cast<int>(io.MouseDelta.y)};
     }
     if (io.MouseWheel) {
-      event.wheel = static_cast<int>(io.MouseWheel);
+      event.Wheel = static_cast<int>(io.MouseWheel);
     }
   }
   return event;
 }
 
-void Gui::dockspace() {
+void Gui::NewFrame() {
+
+  if (!m_tasks.empty()) {
+    // dequeue task
+    m_tasks.front()();
+    m_tasks.pop();
+  }
+
+  // Start the Dear ImGui frame
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+}
+
+void Gui::DockSpace() {
   // If you strip some features of, this demo is pretty much equivalent to
   // calling DockSpaceOverViewport()! In most cases you should be able to just
   // call DockSpaceOverViewport() and ignore all the code below! In this
@@ -224,6 +238,14 @@ void Gui::dockspace() {
   }
 
   if (ImGui::BeginMenuBar()) {
+    if (ImGui::BeginMenu("File")) {
+      if (ImGui::MenuItem("Open", "")) {
+      }
+      if (ImGui::MenuItem("Save", "")) {
+      }
+      ImGui::EndMenu();
+    }
+
     if (ImGui::BeginMenu("Options")) {
       // Disabling fullscreen would allow the window to be moved to the front of
       // other windows, which we can't undo at the moment without finer window
@@ -271,7 +293,7 @@ void Gui::dockspace() {
       // other windows, which we can't undo at the moment without finer window
       // depth/z control.
       for (auto &dock : m_docks) {
-        ImGui::MenuItem(dock.name.c_str(), nullptr, &dock.p_open);
+        ImGui::MenuItem(dock.Name.c_str(), nullptr, &dock.IsOpen);
       }
       ImGui::EndMenu();
     }
@@ -282,81 +304,11 @@ void Gui::dockspace() {
   ImGui::End();
 
   for (auto &dock : m_docks) {
-    dock.show();
+    dock.Show();
   }
 }
 
-void Gui::newFrame() {
-
-  if (!tasks_.empty()) {
-    // dequeue task
-    tasks_.front()();
-    tasks_.pop();
-  }
-
-  // Start the Dear ImGui frame
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
-}
-
-void Gui::update() {
-  dockspace();
-  //
-  // // 2. Show a simple window that we create ourselves. We use a Begin/End
-  // pair
-  // // to create a named window.
-  // {
-  //   static float f = 0.0f;
-  //   static int counter = 0;
-  //
-  //   ImGui::Begin("Hello, world!"); // Create a window called "Hello,
-  //   world!"
-  //                                  // and append into it.
-  //
-  //   ImGui::Text("This is some useful text."); // Display some text (you can
-  //                                             // use a format strings too)
-  //   ImGui::Checkbox(
-  //       "Demo Window",
-  //       &show_demo_window); // Edit bools storing our window open/close
-  //       state
-  //   ImGui::Checkbox("Another Window", &show_another_window);
-  //
-  //   ImGui::SliderFloat("float", &f, 0.0f,
-  //                      1.0f); // Edit 1 float using a slider from 0.0f
-  //                      to 1.0f
-  //   ImGui::ColorEdit3(
-  //       "clear color",
-  //       (float *)&clear_color); // Edit 3 floats representing a color
-  //
-  //   if (ImGui::Button("Button")) // Buttons return true when clicked (most
-  //                                // widgets return true when
-  //                                edited/activated)
-  //     counter++;
-  //   ImGui::SameLine();
-  //   ImGui::Text("counter = %d", counter);
-  //
-  //   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-  //               1000.0f / io.Framerate, io.Framerate);
-  //   ImGui::End();
-  // }
-  //
-  // // 3. Show another simple window.
-  // if (show_another_window) {
-  //   ImGui::Begin(
-  //       "Another Window",
-  //       &show_another_window); // Pass a pointer to our bool variable (the
-  //                              // window will have a closing button that
-  //                              will
-  //                              // clear the bool when clicked)
-  //   ImGui::Text("Hello from another window!");
-  //   if (ImGui::Button("Close Me"))
-  //     show_another_window = false;
-  //   ImGui::End();
-  // }
-}
-
-void Gui::render() {
+void Gui::Render() {
   // Rendering
   ImGui::Render();
 
