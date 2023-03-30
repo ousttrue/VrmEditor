@@ -79,4 +79,6 @@ struct Scene {
                     const DirectX::XMFLOAT3 &rootPosition,
                     std::span<const DirectX::XMFLOAT4> rotations);
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
+
+  std::vector<uint8_t> ToGlb() const;
 };

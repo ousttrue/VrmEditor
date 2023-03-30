@@ -53,8 +53,10 @@ public:
   }
   const std::shared_ptr<LuaEngine> &Lua() const { return m_lua; }
   int Run();
-  // lua API
+  bool WriteScene(const std::filesystem::path &path);
   void ClearScene();
+
+  // expose to lua
   const std::shared_ptr<Gui> &GetGui() const { return m_gui; }
   bool LoadModel(const std::filesystem::path &path);
   bool LoadMotion(const std::filesystem::path &path, float scaling = 1.0f);

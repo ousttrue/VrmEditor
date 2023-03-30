@@ -618,3 +618,8 @@ std::shared_ptr<Node> Scene::GetBoneNode(vrm::HumanBones bone) {
   }
   return {};
 }
+
+std::vector<uint8_t> Scene::ToGlb() const {
+  std::vector<uint8_t> bytes;
+  return bytes;
+}

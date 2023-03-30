@@ -10,6 +10,7 @@
 #include <iostream>
 
 const auto OPEN_FILE_DIALOG = "OPEN_FILE_DIALOG";
+const auto SAVE_FILE_DIALOG = "SAVE_FILE_DIALOG";
 
 const auto DOCK_SPACE = "VRM_DOCKSPACE";
 
@@ -290,11 +291,15 @@ void Gui::DockSpace() {
 
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("File")) {
+      static auto filters = ".vrm,.glb,.gltf,.fbx";
       if (ImGui::MenuItem("Open", "")) {
-        ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE_DIALOG, "Choose File",
-                                                ".glb,.vrm,.gltf,.bvh", ".");
+        ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE_DIALOG, "Open",
+                                                filters, ".");
       }
       if (ImGui::MenuItem("Save", "")) {
+        ImGuiFileDialog::Instance()->OpenDialog(
+            SAVE_FILE_DIALOG, "Save", filters, ".", "out", 1, nullptr,
+            ImGuiFileDialogFlags_ConfirmOverwrite);
       }
       ImGui::EndMenu();
     }
@@ -373,6 +378,22 @@ void Gui::DockSpace() {
         if (!App::Instance().LoadModel(path)) {
           std::cout << "fail to load: " << path << std::endl;
         }
+      }
+    }
+
+    // close
+    ImGuiFileDialog::Instance()->Close();
+  }
+  if (ImGuiFileDialog::Instance()->Display(SAVE_FILE_DIALOG)) {
+    // action if OK
+    if (ImGuiFileDialog::Instance()->IsOk()) {
+      auto path =
+          std::filesystem::path(ImGuiFileDialog::Instance()->GetCurrentPath()) /
+          ImGuiFileDialog::Instance()->GetFilePathName();
+      // action
+      // std::cout << filePathName << "::" << filePath << std::endl;
+      if (!App::Instance().WriteScene(path)) {
+        std::cout << "fail to write: " << path << std::endl;
       }
     }
 

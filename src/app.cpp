@@ -14,6 +14,7 @@
 #include <BvhSolver.h>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
+#include <fstream>
 #include <iostream>
 #include <vrm/animation.h>
 #include <vrm/gizmo.h>
@@ -53,6 +54,18 @@ App::~App() {}
 void App::ClearScene() {
   m_timeline->Tracks.clear();
   m_scene->Clear();
+}
+
+bool App::WriteScene(const std::filesystem::path &path) {
+  auto bytes = m_scene->ToGlb();
+  if (bytes.size()) {
+    std::ofstream ofs(path);
+    if (ofs) {
+      ofs.write((const char *)bytes.data(), bytes.size());
+      return true;
+    }
+  }
+  return false;
 }
 
 bool App::LoadModel(const std::filesystem::path &path) {
