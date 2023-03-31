@@ -39,6 +39,8 @@ struct Dock {
 using Task = std::function<void()>;
 
 class Gui {
+  std::filesystem::path m_current;
+
   bool m_initialized = false;
   const void *m_window = nullptr;
 

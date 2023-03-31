@@ -101,9 +101,20 @@ Gui::Gui(const void *window, const char *glsl_version)
     // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
   }));
 
-  ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir, nullptr,
-                                            ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
-                                            " "); // for all dirs
+  ImGuiFileDialog::Instance()->SetFileStyle(
+      IGFD_FileStyleByTypeDir, nullptr, ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
+      (const char *)u8" "); // for all dirs
+
+  std::filesystem::path user_home = std::getenv("USERPROFILE");
+
+  ImGuiFileDialog::Instance()->prBookmarks.push_back({
+      .name = "Home",
+      .path = (const char *)user_home.u8string().c_str(),
+  });
+  ImGuiFileDialog::Instance()->prBookmarks.push_back({
+      .name = "Desktop",
+      .path = (const char *)(user_home / "Desktop").u8string().c_str(),
+  });
 }
 
 Gui::~Gui() {
@@ -291,15 +302,15 @@ void Gui::DockSpace() {
 
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      static auto filters = ".vrm,.glb,.gltf,.fbx";
+      static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh";
       if (ImGui::MenuItem("Open", "")) {
-        ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE_DIALOG, "Open",
-                                                filters, ".");
+        ImGuiFileDialog::Instance()->OpenDialog(
+            OPEN_FILE_DIALOG, "Open", filters, m_current.string().c_str());
       }
       if (ImGui::MenuItem("Save", "")) {
         ImGuiFileDialog::Instance()->OpenDialog(
-            SAVE_FILE_DIALOG, "Save", filters, ".", "out", 1, nullptr,
-            ImGuiFileDialogFlags_ConfirmOverwrite);
+            SAVE_FILE_DIALOG, "Save", filters, m_current.string().c_str(),
+            "out", 1, nullptr, ImGuiFileDialogFlags_ConfirmOverwrite);
       }
       ImGui::EndMenu();
     }
@@ -375,6 +386,7 @@ void Gui::DockSpace() {
       // action
       // std::cout << filePathName << "::" << filePath << std::endl;
       if (std::filesystem::exists(path)) {
+        m_current = path.parent_path();
         if (!App::Instance().LoadModel(path)) {
           std::cout << "fail to load: " << path << std::endl;
         }
@@ -392,6 +404,7 @@ void Gui::DockSpace() {
           ImGuiFileDialog::Instance()->GetFilePathName();
       // action
       // std::cout << filePathName << "::" << filePath << std::endl;
+      m_current = path.parent_path();
       if (!App::Instance().WriteScene(path)) {
         std::cout << "fail to write: " << path << std::endl;
       }
