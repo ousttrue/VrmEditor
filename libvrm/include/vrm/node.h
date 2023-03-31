@@ -4,6 +4,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <span>
 #include <stdint.h>
 #include <string>
 #include <string_view>
@@ -29,6 +30,9 @@ struct Node {
   void init();
 
   std::optional<uint32_t> mesh;
+  // morph target animation
+  std::span<const float> m_weights;
+
   std::shared_ptr<Skin> skin;
 
   std::list<std::shared_ptr<Node>> children;

@@ -368,7 +368,18 @@ Scene::Load(const std::filesystem::path &path,
                       std::format("{}-scale", m_nodes[node_index]->name));
       } else if (path == "weights") {
         // TODO: not implemented
-        return std::unexpected{"animation path 'weights' is not implemented"};
+        auto values = m_gltf.accessor<float>(output_index);
+        auto node = m_nodes[node_index];
+        if (auto mesh_index = node->mesh) {
+          auto mesh = m_meshes[*mesh_index];
+          if (values.size() != mesh->m_morphTargets.size() * times.size()) {
+            return std::unexpected{"animation-weights: size not match"};
+          }
+          ptr->addWeights(node_index, times, values,
+                          std::format("{}-weights", node->name));
+        } else {
+          return std::unexpected{"animation-weights: no node.mesh"};
+        }
       } else {
         return std::unexpected{
             std::format("animation path {} is not implemented", path)};
@@ -501,23 +512,10 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
       if (auto skin = node->skin) {
         skin->currentMatrices.resize(skin->bindMatrices.size());
 
-        auto root = DirectX::XMMatrixIdentity();
-        auto rootInverse = root;
-        auto rootTranslation = root;
+        auto rootInverse = DirectX::XMMatrixIdentity();
         if (auto root_index = skin->root) {
-          // auto rootNode = m_nodes[*root_index];
-          // // rotation only ???
-          // auto world = rootNode->worldInit;
-          // world._41 = 0;
-          // world._42 = 0;
-          // world._43 = 0;
-          // root = DirectX::XMLoadFloat4x4(&world);
-          // rootInverse = DirectX::XMMatrixInverse(nullptr, root);
-          // rootTranslation = DirectX::XMMatrixTranslation(
-          //     rootNode->world._41, rootNode->world._42,
-          //     rootNode->world._43);
-          root = DirectX::XMLoadFloat4x4(&node->world);
-          rootInverse = DirectX::XMMatrixInverse(nullptr, root);
+          rootInverse = DirectX::XMMatrixInverse(
+              nullptr, DirectX::XMLoadFloat4x4(&node->world));
         }
 
         for (int i = 0; i < skin->joints.size(); ++i) {
@@ -529,22 +527,22 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
                                        rootInverse);
         }
 
+        // glTF morph target animation
+        // if (!m_weightsMap.empty()) {
+        //   for (auto &[mesh_index, weights] : m_weightsMap) {
+        //     auto &morph_mesh = m_meshes[mesh_index];
+        //     assert(morph_mesh->m_morphTargets.size() == weights.size());
+        //     for (int i = 0; i < weights.size(); ++i) {
+        //       morph_mesh->m_morphTargets[i]->weight = weights[i];
+        //     }
+        //   }
+        // }
+
         if (m_vrm0) {
           // VRM0 expression to morphTarget
-
-          // clear
-          for (auto &mesh : m_meshes) {
-            for (auto &morph : mesh->m_morphTargets) {
-              morph->weight = 0;
-            }
-          }
-          // apply
-          for (auto &expression : m_vrm0->m_expressions) {
-            for (auto &morphTarget : expression->morphBinds) {
-              auto &mesh = m_meshes[morphTarget.mesh];
-              auto &morph = mesh->m_morphTargets[morphTarget.index];
-              morph->weight += morphTarget.weight * expression->weight;
-            }
+          for (auto &[k, v] : m_vrm0->EvalMorphTargetMap()) {
+            auto &morph_mesh = m_meshes[k.MeshIndex];
+            morph_mesh->m_morphTargets[k.MorphIndex]->weight = v;
           }
         }
 
