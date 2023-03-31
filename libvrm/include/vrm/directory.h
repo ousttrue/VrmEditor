@@ -21,22 +21,39 @@ ReadAllBytes(const std::filesystem::path &path) {
   return buffer;
 }
 
+const std::string BASE64_PREFIX[]{
+    "data:application/octet-stream;base64,",
+    "data:application/gltf-buffer;base64,",
+};
+
 struct Directory {
   std::filesystem::path Base;
   std::unordered_map<std::filesystem::path, std::vector<uint8_t>> FileCaches;
 
   std::expected<std::span<const uint8_t>, std::string>
-  GetBuffer(std::string_view relative) {
-    auto path = Base / relative;
-    auto found = FileCaches.find(path);
+  GetBuffer(std::string_view uri) {
+    auto found = FileCaches.find(uri);
     if (found != FileCaches.end()) {
       // use cache
       return found->second;
     }
 
+    if (uri.starts_with("data:")) {
+      // return std::unexpected{"base64 not implemented"};
+      for (auto &prefix : BASE64_PREFIX) {
+        if (uri.starts_with(prefix)) {
+          auto decoded = gltf::Decode(uri.substr(std::size(prefix)));
+          FileCaches.insert({uri, decoded});
+          return FileCaches[uri];
+        }
+      }
+      return std::unexpected{"not implemented base64"};
+    }
+
+    auto path = Base / uri;
     if (auto bytes = ReadAllBytes(path)) {
-      FileCaches.insert({path, *bytes});
-      return FileCaches[path];
+      FileCaches.insert({uri, *bytes});
+      return FileCaches[uri];
     } else {
       return bytes;
     }

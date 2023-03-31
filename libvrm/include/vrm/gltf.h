@@ -1,4 +1,5 @@
 #pragma once
+#include "base64.h"
 #include "directory.h"
 #include <expected>
 #include <filesystem>
@@ -14,11 +15,6 @@ const auto VERTEX_WEIGHT = "WEIGHTS_0";
 const auto VERTEX_POSITION = "POSITION";
 const auto VERTEX_NORMAL = "NORMAL";
 const auto VERTEX_UV = "TEXCOORD_0";
-
-const std::string BASE64_PREFIX[]{
-    "data:application/octet-stream;base64,",
-    "data:application/gltf-buffer;base64,",
-};
 
 inline bool has(const nlohmann::json &obj, std::string_view key) {
   if (!obj.is_object()) {
@@ -104,13 +100,7 @@ struct Gltf {
     int buffer_index = buffer_view.at("buffer");
     auto buffer = json["buffers"][buffer_index];
     if (buffer.find("uri") != buffer.end()) {
-      // external file. maybe glTF. not glb.
-      // std::cout << buffer << std::endl;
       std::string_view uri = buffer.at("uri");
-      if (uri.starts_with("data:")) {
-        return std::unexpected{"base64 not implemented"};
-      }
-
       if (auto buffer = m_dir->GetBuffer(uri)) {
         return buffer->subspan(buffer_view.value("byteOffset", 0),
                                buffer_view.at("byteLength"));
