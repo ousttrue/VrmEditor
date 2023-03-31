@@ -115,7 +115,8 @@ struct Gltf {
                          buffer_view.at("byteLength"));
     } else {
       // glb
-      return bin.subspan(buffer_view["byteOffset"], buffer_view["byteLength"]);
+      return bin.subspan(buffer_view.value("byteOffset", 0),
+                         buffer_view.at("byteLength"));
     }
   }
 
