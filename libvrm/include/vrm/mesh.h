@@ -19,7 +19,6 @@ struct MorphVertex {
 struct MorphTarget {
   std::string name;
   std::vector<MorphVertex> m_vertices;
-  float weight = 0;
 
   size_t addPosition(std::span<const DirectX::XMFLOAT3> values) {
     auto offset = m_vertices.size();
@@ -43,11 +42,10 @@ struct Mesh {
   std::vector<Vertex> m_vertices;
   std::vector<uint32_t> m_indices;
   std::vector<Primitive> m_primitives;
-  // morphtarget
-  std::vector<std::shared_ptr<MorphTarget>> m_morphTargets;
   // skinning
   std::vector<JointBinding> m_bindings;
-  std::vector<Vertex> m_updated;
+  // morphtarget
+  std::vector<std::shared_ptr<MorphTarget>> m_morphTargets;
 
   size_t verticesBytes() const {
     return m_vertices.size() * sizeof(m_vertices[0]);
@@ -112,6 +110,16 @@ struct Mesh {
         .material = material,
     });
   }
+};
+
+struct MeshInstance {
+  // morph targets
+  std::vector<float> weights;
+  // skinning
+  std::vector<Vertex> m_updated;
+
+  MeshInstance(const std::shared_ptr<Mesh> &mesh)
+      : weights(mesh->m_morphTargets.size()), m_updated(mesh->m_vertices) {}
 
   void applySkinning(DirectX::XMFLOAT3 *dst, const DirectX::XMFLOAT3 &src,
                      float w, const DirectX::XMFLOAT4X4 &m) {
@@ -126,27 +134,28 @@ struct Mesh {
   }
 
   void
-  applyMorphTargetAndSkinning(std::span<DirectX::XMFLOAT4X4> skinningMatrices) {
+  applyMorphTargetAndSkinning(const Mesh &mesh,
+                              std::span<DirectX::XMFLOAT4X4> skinningMatrices) {
     // clear & apply morph target
     m_updated.clear();
-    for (int i = 0; i < m_vertices.size(); ++i) {
-      auto v = m_vertices[i];
-      for (auto &morphtarget : m_morphTargets) {
-        if (morphtarget->weight) {
-          v.position +=
-              morphtarget->m_vertices[i].position * morphtarget->weight;
+    for (int i = 0; i < mesh.m_vertices.size(); ++i) {
+      auto v = mesh.m_vertices[i];
+      for (int j = 0; j < weights.size(); ++j) {
+        auto &morphtarget = mesh.m_morphTargets[j];
+        if (weights[j]) {
+          v.position += morphtarget->m_vertices[i].position * weights[j];
         }
       }
       m_updated.push_back(v);
     }
 
     // calc skinning
-    for (int i = 0; i < m_vertices.size(); ++i) {
+    for (int i = 0; i < mesh.m_vertices.size(); ++i) {
       auto src = m_updated[i];
       auto &dst = m_updated[i];
       dst.position = {0, 0, 0};
       dst.normal = {0, 0, 0};
-      auto binding = m_bindings[i];
+      auto binding = mesh.m_bindings[i];
       if (auto w = binding.weights.x)
         applySkinning(&dst.position, src.position, w,
                       skinningMatrices[binding.joints.x]);

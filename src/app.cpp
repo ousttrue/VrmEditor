@@ -248,8 +248,10 @@ void App::sceneDock() {
       ImGui::Text("%s", context->selected->name.c_str());
       if (auto mesh_index = context->selected->mesh) {
         auto mesh = scene->m_meshes[*mesh_index];
-        for (auto &morph : mesh->m_morphTargets) {
-          ImGui::SliderFloat(morph->name.c_str(), &morph->weight, 0, 1);
+        auto instance = scene->GetMeshInstanceForNode(context->selected->index);
+        for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
+          auto &morph = mesh->m_morphTargets[i];
+          ImGui::SliderFloat(morph->name.c_str(), &instance->weights[i], 0, 1);
         }
       }
     }
@@ -282,8 +284,9 @@ void App::sceneDock() {
     auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
     RenderFunc render = [gl3r, liner](const Camera &camera, const Mesh &mesh,
+                                      const MeshInstance &instance,
                                       const float m[16]) {
-      gl3r->render(camera, mesh, m);
+      gl3r->render(camera, mesh, instance, m);
     };
     scene->Render(timeline->CurrentTime, camera, render);
     liner->Render(camera.projection, camera.view, gizmo::lines());

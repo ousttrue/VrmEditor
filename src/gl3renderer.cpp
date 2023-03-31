@@ -105,12 +105,14 @@ public:
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 
-  void render(const Camera &camera, const Mesh &mesh, const float m[16]) {
+  void render(const Camera &camera, const Mesh &mesh,
+              const MeshInstance &instance, const float m[16]) {
     auto drawable = getOrCreate(mesh);
 
-    if (mesh.m_updated.size()) {
-      drawable->vao->slots_[0].vbo->Upload(
-          mesh.m_updated.size() * sizeof(Vertex), mesh.m_updated.data());
+    if (instance.m_updated.size()) {
+      drawable->vao->slots_[0].vbo->Upload(instance.m_updated.size() *
+                                               sizeof(Vertex),
+                                           instance.m_updated.data());
       // m_updated.clear();
     }
 
@@ -205,6 +207,6 @@ Gl3Renderer::~Gl3Renderer() { delete m_impl; }
 void Gl3Renderer::clear(const Camera &camera) { m_impl->clear(camera); }
 
 void Gl3Renderer::render(const Camera &camera, const Mesh &mesh,
-                         const float m[16]) {
-  m_impl->render(camera, mesh, m);
+                         const MeshInstance &instance, const float m[16]) {
+  m_impl->render(camera, mesh, instance, m);
 }

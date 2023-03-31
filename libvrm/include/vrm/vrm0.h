@@ -127,7 +127,7 @@ struct Expression {
 // using MorphTargetKey = std::tuple<uint16_t, uint16_t>;
 union MorphTargetKey {
   struct {
-    uint16_t MeshIndex;
+    uint16_t NodeIndex;
     uint16_t MorphIndex;
   };
   uint32_t Hash;
@@ -159,18 +159,19 @@ struct Vrm {
     return ptr;
   }
 
-  const std::unordered_map<MorphTargetKey, float> &EvalMorphTargetMap() {
+  const std::unordered_map<MorphTargetKey, float> &
+  EvalMorphTargetMap(const std::function<uint32_t(uint32_t)> &MeshToNode) {
     // clear
     m_morphTargetMap.clear();
     // apply
     for (auto &expression : m_expressions) {
-      for (auto &morphTarget : expression->morphBinds) {
+      for (auto &bind : expression->morphBinds) {
         MorphTargetKey key{
-            .MeshIndex = static_cast<uint16_t>(morphTarget.mesh),
-            .MorphIndex = static_cast<uint16_t>(morphTarget.index),
+            .NodeIndex = static_cast<uint16_t>(MeshToNode(bind.mesh)),
+            .MorphIndex = static_cast<uint16_t>(bind.index),
         };
         auto found = m_morphTargetMap.find(key);
-        auto weight = morphTarget.weight * expression->weight;
+        auto weight = bind.weight * expression->weight;
         if (found != m_morphTargetMap.end()) {
           found->second += weight;
         } else {
@@ -178,7 +179,6 @@ struct Vrm {
         }
       }
     }
-
     return m_morphTargetMap;
   }
 };

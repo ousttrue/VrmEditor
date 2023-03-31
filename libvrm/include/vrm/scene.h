@@ -22,6 +22,7 @@
 
 struct Camera;
 struct Mesh;
+struct MeshInstance;
 struct Skin;
 struct Node;
 struct Animation;
@@ -30,8 +31,8 @@ class Material;
 namespace vrm0 {
 struct Vrm;
 }
-using RenderFunc =
-    std::function<void(const Camera &, const Mesh &, const float[16])>;
+using RenderFunc = std::function<void(const Camera &, const Mesh &,
+                                      const MeshInstance &, const float[16])>;
 
 using EnterFunc = std::function<bool(Node &)>;
 using LeaveFunc = std::function<void()>;
@@ -39,6 +40,7 @@ using EnterJson = std::function<bool(nlohmann::json &, const std::string &key)>;
 using LeaveJson = std::function<void()>;
 
 struct Scene {
+  Gltf m_gltf;
   std::vector<std::shared_ptr<Image>> m_images;
   std::vector<std::shared_ptr<Material>> m_materials;
   std::vector<std::shared_ptr<Mesh>> m_meshes;
@@ -46,8 +48,11 @@ struct Scene {
   std::vector<std::shared_ptr<Node>> m_roots;
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
-  Gltf m_gltf;
   std::shared_ptr<vrm0::Vrm> m_vrm0;
+
+  // runtime
+  std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<MeshInstance>>
+      m_meshInstanceMap;
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
   void Clear() {
@@ -65,6 +70,12 @@ struct Scene {
   Scene();
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
+
+  std::shared_ptr<MeshInstance> GetMeshInstanceForNode(int index) {
+    auto node = m_nodes[index];
+    return m_meshInstanceMap[node];
+  }
+
   std::expected<void, std::string> Load(const std::filesystem::path &path);
   std::expected<void, std::string> Load(const std::filesystem::path &path,
                                         std::span<const uint8_t> json_chunk,

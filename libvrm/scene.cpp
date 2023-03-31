@@ -205,8 +205,17 @@ Scene::Load(const std::filesystem::path &path,
             auto &target = targets[i];
             auto morph = ptr->getOrCreateMorphTarget(i);
             // std::cout << target << std::endl;
-            auto morphOffset = morph->addPosition(
-                m_gltf.accessor<DirectX::XMFLOAT3>(target.at(VERTEX_POSITION)));
+            auto positions =
+                m_gltf.accessor<DirectX::XMFLOAT3>(target.at(VERTEX_POSITION));
+            std::vector<DirectX::XMFLOAT3> copy;
+            if (m_vrm0) {
+              copy.reserve(positions.size());
+              for (auto &p : positions) {
+                copy.push_back({-p.x, p.y, -p.z});
+              }
+              positions = copy;
+            }
+            auto morphOffset = morph->addPosition(positions);
           }
         }
 
@@ -296,13 +305,17 @@ Scene::Load(const std::filesystem::path &path,
       ptr->scale = node.value("scale", DirectX::XMFLOAT3{1, 1, 1});
     }
     if (has(node, "mesh")) {
-      ptr->mesh = node.at("mesh");
+      auto mesh_index = node.at("mesh");
+      ptr->mesh = mesh_index;
 
       if (has(node, "skin")) {
         int skin_index = node.at("skin");
         auto skin = m_skins[skin_index];
         ptr->skin = skin;
       }
+
+      auto instance = std::make_shared<MeshInstance>(m_meshes[mesh_index]);
+      m_meshInstanceMap.insert({ptr, instance});
     }
   }
   for (int i = 0; i < nodes.size(); ++i) {
@@ -503,10 +516,27 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
     m_spring->Update(time);
   }
 
+  if (m_vrm0) {
+    // VRM0 expression to morphTarget
+    auto meshToNode = [nodes = m_nodes](uint32_t mi) {
+      for (auto &node : nodes) {
+        if (node->mesh == mi) {
+          return (uint32_t)node->index;
+        }
+      }
+      return (uint32_t)-1;
+    };
+    for (auto &[k, v] : m_vrm0->EvalMorphTargetMap(meshToNode)) {
+      auto &morph_node = m_nodes[k.NodeIndex];
+      m_meshInstanceMap[morph_node]->weights[k.MorphIndex] = v;
+    }
+  }
+
   // skinning
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
+      auto &instance = m_meshInstanceMap[node];
 
       // skinning
       if (auto skin = node->skin) {
@@ -538,15 +568,7 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
         //   }
         // }
 
-        if (m_vrm0) {
-          // VRM0 expression to morphTarget
-          for (auto &[k, v] : m_vrm0->EvalMorphTargetMap()) {
-            auto &morph_mesh = m_meshes[k.MeshIndex];
-            morph_mesh->m_morphTargets[k.MorphIndex]->weight = v;
-          }
-        }
-
-        mesh->applyMorphTargetAndSkinning(skin->currentMatrices);
+        instance->applyMorphTargetAndSkinning(*mesh, skin->currentMatrices);
       }
     }
   }
@@ -554,7 +576,8 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
-      render(camera, *mesh, &node->world._11);
+      auto instance = m_meshInstanceMap[node];
+      render(camera, *mesh, *instance, &node->world._11);
     }
   }
 
