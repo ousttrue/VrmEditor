@@ -54,7 +54,7 @@ inline void from_json(const nlohmann::json &j, DirectX::XMFLOAT4X4 &m) {
 
 Scene::Scene() { m_spring = std::make_shared<vrm::SpringSolver>(); }
 
-std::expected<void, std::string>
+std::expected<bool, std::string>
 Scene::Load(const std::filesystem::path &path) {
   if (auto bytes = ReadAllBytes(path)) {
     if (auto glb = Glb::parse(*bytes)) {
@@ -70,7 +70,7 @@ Scene::Load(const std::filesystem::path &path) {
   }
 }
 
-std::expected<void, std::string>
+std::expected<bool, std::string>
 Scene::Load(const std::filesystem::path &path,
             std::span<const uint8_t> json_chunk,
             std::span<const uint8_t> bin_chunk) {
@@ -548,10 +548,10 @@ Scene::Load(const std::filesystem::path &path,
     }
   }
 
-  return {};
+  return true;
 }
 
-std::expected<void, std::string>
+std::expected<bool, std::string>
 Scene::AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
                   const std::shared_ptr<gltf::Material> &material) {
   auto accessor = m_gltf.json["accessors"][accessor_index];
@@ -559,6 +559,7 @@ Scene::AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
   case ComponentType::UNSIGNED_BYTE: {
     if (auto span = m_gltf.accessor<uint8_t>(accessor_index)) {
       mesh->addSubmesh(vertex_offset, *span, material);
+      return true;
     } else {
       return std::unexpected{span.error()};
     }
@@ -566,6 +567,7 @@ Scene::AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
   case ComponentType::UNSIGNED_SHORT: {
     if (auto span = m_gltf.accessor<uint16_t>(accessor_index)) {
       mesh->addSubmesh(vertex_offset, *span, material);
+      return true;
     } else {
       return std::unexpected{span.error()};
     }
@@ -573,6 +575,7 @@ Scene::AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
   case ComponentType::UNSIGNED_INT: {
     if (auto span = m_gltf.accessor<uint32_t>(accessor_index)) {
       mesh->addSubmesh(vertex_offset, *span, material);
+      return true;
     } else {
       return std::unexpected{span.error()};
     }

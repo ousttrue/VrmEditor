@@ -72,12 +72,12 @@ struct Scene {
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
 
-  std::expected<void, std::string> Load(const std::filesystem::path &path);
-  std::expected<void, std::string> Load(const std::filesystem::path &path,
+  std::expected<bool, std::string> Load(const std::filesystem::path &path);
+  std::expected<bool, std::string> Load(const std::filesystem::path &path,
                                         std::span<const uint8_t> json_chunk,
                                         std::span<const uint8_t> bin_chunk);
 
-  std::expected<void, std::string>
+  std::expected<bool, std::string>
   AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
              const std::shared_ptr<gltf::Material> &material);
 

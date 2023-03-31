@@ -69,23 +69,24 @@ bool App::WriteScene(const std::filesystem::path &path) {
 }
 
 bool App::LoadModel(const std::filesystem::path &path) {
-  if (!m_scene->Load(path)) {
+  if (auto result = m_scene->Load(path)) {
+    // bind time line
+    for (auto &animation : m_scene->m_animations) {
+      auto track = m_timeline->AddTrack("gltf", animation->duration());
+      track->Callbacks.push_back(
+          [animation, scene = m_scene](auto time, bool repeat) {
+            animation->update(time, scene->m_nodes, repeat);
+          });
+
+      // first animation only
+      break;
+    }
+
+    return true;
+  } else {
+    std::cout << result.error();
     return false;
   }
-
-  // bind time line
-  for (auto &animation : m_scene->m_animations) {
-    auto track = m_timeline->AddTrack("gltf", animation->duration());
-    track->Callbacks.push_back(
-        [animation, scene = m_scene](auto time, bool repeat) {
-          animation->update(time, scene->m_nodes, repeat);
-        });
-
-    // first animation only
-    break;
-  }
-
-  return true;
 }
 
 bool App::LoadMotion(const std::filesystem::path &path, float scaling) {
