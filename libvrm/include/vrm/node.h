@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 
+namespace gltf {
 struct Skin;
 struct MeshInstance;
 struct Node {
@@ -99,3 +100,4 @@ inline std::ostream &operator<<(std::ostream &os, const Node &node) {
   }
   return os;
 }
+} // namespace gltf

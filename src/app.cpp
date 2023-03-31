@@ -191,8 +191,8 @@ int App::Run() {
 }
 
 struct TreeContext {
-  Node *selected = nullptr;
-  Node *new_selected = nullptr;
+  gltf::Node *selected = nullptr;
+  gltf::Node *new_selected = nullptr;
 };
 
 void App::sceneDock() {
@@ -201,7 +201,7 @@ void App::sceneDock() {
   //
   auto context = std::make_shared<TreeContext>();
 
-  auto enter = [this, context](Node &node) {
+  auto enter = [this, context](gltf::Node &node) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     static ImGuiTreeNodeFlags base_flags =
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -283,11 +283,11 @@ void App::sceneDock() {
 
     auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
-    RenderFunc render = [gl3r, liner](const Camera &camera, const Mesh &mesh,
-                                      const MeshInstance &instance,
-                                      const float m[16]) {
-      gl3r->render(camera, mesh, instance, m);
-    };
+    RenderFunc render =
+        [gl3r, liner](const Camera &camera, const gltf::Mesh &mesh,
+                      const gltf::MeshInstance &instance, const float m[16]) {
+          gl3r->render(camera, mesh, instance, m);
+        };
     scene->Render(timeline->CurrentTime, camera, render);
     liner->Render(camera.projection, camera.view, gizmo::lines());
 

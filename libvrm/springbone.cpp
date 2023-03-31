@@ -6,7 +6,7 @@
 
 namespace vrm {
 
-SpringJoint::SpringJoint(const std::shared_ptr<Node> &head,
+SpringJoint::SpringJoint(const std::shared_ptr<gltf::Node> &head,
                          const DirectX::XMFLOAT3 &localTailPosition,
                          float dragForce, float stiffiness)
     : Head(head), DragForce(dragForce), Stiffiness(stiffiness) {
@@ -105,7 +105,7 @@ SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3 &nextTail) const {
   return r;
 }
 
-void SpringSolver::Add(const std::shared_ptr<Node> &node, float dragForce,
+void SpringSolver::Add(const std::shared_ptr<gltf::Node> &node, float dragForce,
                        float stiffiness) {
 
   DirectX::XMFLOAT3 localTailPosition;

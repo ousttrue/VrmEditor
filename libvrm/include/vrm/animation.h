@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
+namespace gltf {
 template <typename T> struct Curve {
   std::string name;
   std::vector<float> times;
@@ -160,3 +161,4 @@ struct Animation {
     }
   }
 };
+} // namespace gltf

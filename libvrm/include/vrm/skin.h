@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+namespace gltf {
 struct Skin {
   std::string name;
   std::vector<uint32_t> joints;
@@ -13,3 +14,4 @@ struct Skin {
   std::vector<DirectX::XMFLOAT4X4> currentMatrices;
   std::optional<uint32_t> root;
 };
+} // namespace gltf

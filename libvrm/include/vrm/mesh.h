@@ -6,6 +6,8 @@
 #include <span>
 #include <vector>
 
+namespace gltf {
+
 class Material;
 struct Primitive {
   uint32_t drawCount;
@@ -173,3 +175,5 @@ struct MeshInstance {
     }
   }
 };
+
+} // namespace gltf

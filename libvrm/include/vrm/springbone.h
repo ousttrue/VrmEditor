@@ -11,13 +11,11 @@
 #include <stdint.h>
 #include <vector>
 
-struct Node;
-
 namespace vrm {
 
 class SpringJoint {
 public:
-  std::shared_ptr<Node> Head;
+  std::shared_ptr<gltf::Node> Head;
   // 減衰[0~1]
   float DragForce = 0;
   // 剛性。初期姿勢への復元力[0~]
@@ -31,7 +29,7 @@ private:
   DirectX::XMFLOAT3 m_initLocalTailDir;
 
 public:
-  SpringJoint(const std::shared_ptr<Node> &head,
+  SpringJoint(const std::shared_ptr<gltf::Node> &head,
               const DirectX::XMFLOAT3 &localTailPosition, float dragForce,
               float stiffiness);
   void Update();
@@ -48,7 +46,7 @@ class SpringSolver {
 
 public:
   void Clear() { m_joints.clear(); }
-  void Add(const std::shared_ptr<Node> &node, float dragForce,
+  void Add(const std::shared_ptr<gltf::Node> &node, float dragForce,
            float stiffiness);
   void Update(Time time);
   void DrawGizmo();

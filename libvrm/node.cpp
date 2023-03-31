@@ -1,6 +1,7 @@
 #include "vrm/node.h"
 #include <iostream>
 
+namespace gltf {
 Node::Node(uint32_t i, std::string_view name) : index(i), name(name) {}
 
 void Node::init() {
@@ -121,3 +122,4 @@ void Node::print(int level) {
     child->print(level + 1);
   }
 }
+} // namespace gltf

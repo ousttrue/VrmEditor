@@ -114,7 +114,7 @@ Scene::Load(const std::filesystem::path &path,
       return std::unexpected{"not bufferView nor uri"};
     }
     auto name = image.value("name", std::format("image{}", i));
-    auto ptr = std::make_shared<Image>(name);
+    auto ptr = std::make_shared<gltf::Image>(name);
     if (!ptr->load(bytes)) {
       return std::unexpected{name};
     }
@@ -126,7 +126,7 @@ Scene::Load(const std::filesystem::path &path,
   auto &materials = m_gltf.json["materials"];
   for (int i = 0; i < materials.size(); ++i) {
     auto &material = materials[i];
-    auto ptr = std::make_shared<Material>(
+    auto ptr = std::make_shared<gltf::Material>(
         material.value("name", std::format("material{}", i)));
     m_materials.push_back(ptr);
     if (has(material, "pbrMetallicRoughness")) {
@@ -142,12 +142,12 @@ Scene::Load(const std::filesystem::path &path,
   }
 
   for (auto &mesh : m_gltf.json["meshes"]) {
-    auto ptr = std::make_shared<Mesh>();
+    auto ptr = std::make_shared<gltf::Mesh>();
     m_meshes.push_back(ptr);
 
     nlohmann::json *lastAtributes = nullptr;
     for (auto &prim : mesh["primitives"]) {
-      std::shared_ptr<Material> material;
+      std::shared_ptr<gltf::Material> material;
       if (has(prim, "material")) {
         material = m_materials[prim.at("material")];
       } else {
@@ -244,7 +244,7 @@ Scene::Load(const std::filesystem::path &path,
     auto skins = m_gltf.json["skins"];
     for (int i = 0; i < skins.size(); ++i) {
       auto &skin = skins[i];
-      auto ptr = std::make_shared<Skin>();
+      auto ptr = std::make_shared<gltf::Skin>();
       m_skins.push_back(ptr);
 
       ptr->name = skin.value("name", std::format("skin{}", i));
@@ -279,7 +279,7 @@ Scene::Load(const std::filesystem::path &path,
   for (int i = 0; i < nodes.size(); ++i) {
     auto &node = nodes[i];
     auto name = node.value("name", std::format("node:{}", i));
-    auto ptr = std::make_shared<Node>(i, name);
+    auto ptr = std::make_shared<gltf::Node>(i, name);
     m_nodes.push_back(ptr);
 
     if (has(node, "matrix")) {
@@ -314,14 +314,15 @@ Scene::Load(const std::filesystem::path &path,
         ptr->skin = skin;
       }
 
-      ptr->Instance = std::make_shared<MeshInstance>(m_meshes[mesh_index]);
+      ptr->Instance =
+          std::make_shared<gltf::MeshInstance>(m_meshes[mesh_index]);
     }
   }
   for (int i = 0; i < nodes.size(); ++i) {
     auto &node = nodes[i];
     if (has(node, "children")) {
       for (auto child : node.at("children")) {
-        Node::addChild(m_nodes[i], m_nodes[child]);
+        gltf::Node::addChild(m_nodes[i], m_nodes[child]);
       }
     }
   }
@@ -333,7 +334,7 @@ Scene::Load(const std::filesystem::path &path,
   }
 
   // calc world
-  auto enter = [](Node &node) {
+  auto enter = [](gltf::Node &node) {
     node.calcWorld();
     node.init();
     return true;
@@ -343,7 +344,7 @@ Scene::Load(const std::filesystem::path &path,
   auto &animations = m_gltf.json["animations"];
   for (int i = 0; i < animations.size(); ++i) {
     auto &animation = animations[i];
-    auto ptr = std::make_shared<Animation>(
+    auto ptr = std::make_shared<gltf::Animation>(
         animation.value("name", std::format("animation:{}", i)));
     m_animations.push_back(ptr);
 
@@ -486,8 +487,8 @@ Scene::Load(const std::filesystem::path &path,
   return {};
 }
 
-void Scene::AddIndices(int vertex_offset, Mesh *mesh, int accessor_index,
-                       const std::shared_ptr<Material> &material) {
+void Scene::AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
+                       const std::shared_ptr<gltf::Material> &material) {
   auto accessor = m_gltf.json["accessors"][accessor_index];
   switch ((ComponentType)accessor["componentType"]) {
   case ComponentType::UNSIGNED_BYTE: {
@@ -580,7 +581,7 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
 }
 
 void Scene::Traverse(const EnterFunc &enter, const LeaveFunc &leave,
-                     Node *node) {
+                     gltf::Node *node) {
   if (node) {
     if (enter(*node)) {
       for (auto &child : node->children) {
@@ -644,14 +645,14 @@ void Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
 
 void Scene::SyncHierarchy() {
   // calc world
-  auto enter = [](Node &node) {
+  auto enter = [](gltf::Node &node) {
     node.calcWorld();
     return true;
   };
   Traverse(enter, {});
 }
 
-std::shared_ptr<Node> Scene::GetBoneNode(vrm::HumanBones bone) {
+std::shared_ptr<gltf::Node> Scene::GetBoneNode(vrm::HumanBones bone) {
   if (auto node_index = m_vrm0->m_humanoid[(int)bone]) {
     return m_nodes[*node_index];
   }

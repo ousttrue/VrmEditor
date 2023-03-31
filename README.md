@@ -69,7 +69,7 @@ $ meson compile -C builddir
 ## naming plan
 
 - formatter clang-format: mozilla
-- class, struct name PascalCase
+- class, struct name PascalCase => camelCase. conflict public member name
 - free function: lower_snake
 - non public memver function: lower_snake
 
