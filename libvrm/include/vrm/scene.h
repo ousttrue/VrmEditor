@@ -51,8 +51,6 @@ struct Scene {
   std::shared_ptr<vrm0::Vrm> m_vrm0;
 
   // runtime
-  std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<MeshInstance>>
-      m_meshInstanceMap;
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
   void Clear() {
@@ -70,11 +68,6 @@ struct Scene {
   Scene();
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
-
-  std::shared_ptr<MeshInstance> GetMeshInstanceForNode(int index) {
-    auto node = m_nodes[index];
-    return m_meshInstanceMap[node];
-  }
 
   std::expected<void, std::string> Load(const std::filesystem::path &path);
   std::expected<void, std::string> Load(const std::filesystem::path &path,

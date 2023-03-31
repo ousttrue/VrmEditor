@@ -1,4 +1,5 @@
 #pragma once
+#include "mesh.h"
 #include "scenetypes.h"
 #include <DirectXMath.h>
 #include <list>
@@ -10,6 +11,7 @@
 #include <string_view>
 
 struct Skin;
+struct MeshInstance;
 struct Node {
   uint32_t index;
   std::string name;
@@ -30,8 +32,7 @@ struct Node {
   void init();
 
   std::optional<uint32_t> mesh;
-  // morph target animation
-  std::span<const float> m_weights;
+  std::shared_ptr<MeshInstance> Instance;
 
   std::shared_ptr<Skin> skin;
 

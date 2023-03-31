@@ -155,7 +155,8 @@ struct Animation {
     }
     for (auto &[k, v] : m_weightsMap) {
       auto node = nodes[k];
-      node->m_weights = v.getValue(seconds, repeat);
+      auto values = v.getValue(seconds, repeat);
+      node->Instance->weights.assign(values.begin(), values.end());
     }
   }
 };

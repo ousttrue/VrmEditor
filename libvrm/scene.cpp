@@ -314,8 +314,7 @@ Scene::Load(const std::filesystem::path &path,
         ptr->skin = skin;
       }
 
-      auto instance = std::make_shared<MeshInstance>(m_meshes[mesh_index]);
-      m_meshInstanceMap.insert({ptr, instance});
+      ptr->Instance = std::make_shared<MeshInstance>(m_meshes[mesh_index]);
     }
   }
   for (int i = 0; i < nodes.size(); ++i) {
@@ -528,15 +527,18 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
     };
     for (auto &[k, v] : m_vrm0->EvalMorphTargetMap(meshToNode)) {
       auto &morph_node = m_nodes[k.NodeIndex];
-      m_meshInstanceMap[morph_node]->weights[k.MorphIndex] = v;
+      morph_node->Instance->weights[k.MorphIndex] = v;
     }
   }
 
   // skinning
+
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
-      auto &instance = m_meshInstanceMap[node];
+
+      // mesh animation
+      std::span<DirectX::XMFLOAT4X4> skinningMatrices;
 
       // skinning
       if (auto skin = node->skin) {
@@ -557,27 +559,18 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
                                        rootInverse);
         }
 
-        // glTF morph target animation
-        // if (!m_weightsMap.empty()) {
-        //   for (auto &[mesh_index, weights] : m_weightsMap) {
-        //     auto &morph_mesh = m_meshes[mesh_index];
-        //     assert(morph_mesh->m_morphTargets.size() == weights.size());
-        //     for (int i = 0; i < weights.size(); ++i) {
-        //       morph_mesh->m_morphTargets[i]->weight = weights[i];
-        //     }
-        //   }
-        // }
-
-        instance->applyMorphTargetAndSkinning(*mesh, skin->currentMatrices);
+        skinningMatrices = skin->currentMatrices;
       }
+
+      // apply morphtarget & skinning
+      node->Instance->applyMorphTargetAndSkinning(*mesh, skinningMatrices);
     }
   }
 
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
-      auto instance = m_meshInstanceMap[node];
-      render(camera, *mesh, *instance, &node->world._11);
+      render(camera, *mesh, *node->Instance, &node->world._11);
     }
   }
 

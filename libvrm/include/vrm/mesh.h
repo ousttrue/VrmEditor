@@ -150,24 +150,26 @@ struct MeshInstance {
     }
 
     // calc skinning
-    for (int i = 0; i < mesh.m_vertices.size(); ++i) {
-      auto src = m_updated[i];
-      auto &dst = m_updated[i];
-      dst.position = {0, 0, 0};
-      dst.normal = {0, 0, 0};
-      auto binding = mesh.m_bindings[i];
-      if (auto w = binding.weights.x)
-        applySkinning(&dst.position, src.position, w,
-                      skinningMatrices[binding.joints.x]);
-      if (auto w = binding.weights.y)
-        applySkinning(&dst.position, src.position, w,
-                      skinningMatrices[binding.joints.y]);
-      if (auto w = binding.weights.z)
-        applySkinning(&dst.position, src.position, w,
-                      skinningMatrices[binding.joints.z]);
-      if (auto w = binding.weights.w)
-        applySkinning(&dst.position, src.position, w,
-                      skinningMatrices[binding.joints.w]);
+    if (skinningMatrices.size()) {
+      for (int i = 0; i < mesh.m_vertices.size(); ++i) {
+        auto src = m_updated[i];
+        auto &dst = m_updated[i];
+        dst.position = {0, 0, 0};
+        dst.normal = {0, 0, 0};
+        auto binding = mesh.m_bindings[i];
+        if (auto w = binding.weights.x)
+          applySkinning(&dst.position, src.position, w,
+                        skinningMatrices[binding.joints.x]);
+        if (auto w = binding.weights.y)
+          applySkinning(&dst.position, src.position, w,
+                        skinningMatrices[binding.joints.y]);
+        if (auto w = binding.weights.z)
+          applySkinning(&dst.position, src.position, w,
+                        skinningMatrices[binding.joints.z]);
+        if (auto w = binding.weights.w)
+          applySkinning(&dst.position, src.position, w,
+                        skinningMatrices[binding.joints.w]);
+      }
     }
   }
 };

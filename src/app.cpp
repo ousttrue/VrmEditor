@@ -248,7 +248,7 @@ void App::sceneDock() {
       ImGui::Text("%s", context->selected->name.c_str());
       if (auto mesh_index = context->selected->mesh) {
         auto mesh = scene->m_meshes[*mesh_index];
-        auto instance = scene->GetMeshInstanceForNode(context->selected->index);
+        auto instance = context->selected->Instance;
         for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
           auto &morph = mesh->m_morphTargets[i];
           ImGui::SliderFloat(morph->name.c_str(), &instance->weights[i], 0, 1);
