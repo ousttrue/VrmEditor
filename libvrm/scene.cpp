@@ -151,8 +151,8 @@ Scene::Load(const std::filesystem::path &path,
       if (has(prim, "material")) {
         material = m_materials[prim.at("material")];
       } else {
-        // TODO: default material
-        return std::unexpected{"default material is not implemented"};
+        // default material
+        material = std::make_shared<gltf::Material>("default");
       }
 
       nlohmann::json &attributes = prim.at("attributes");
