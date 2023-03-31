@@ -77,8 +77,9 @@ struct Scene {
                                         std::span<const uint8_t> json_chunk,
                                         std::span<const uint8_t> bin_chunk);
 
-  void AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
-                  const std::shared_ptr<gltf::Material> &material);
+  std::expected<void, std::string>
+  AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
+             const std::shared_ptr<gltf::Material> &material);
 
   void SyncHierarchy();
 
