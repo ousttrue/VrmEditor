@@ -1,8 +1,10 @@
 #include "luahost.h"
 #include "app.h"
 #include "gui.h"
-#include "windows_helper.h"
 #include <iostream>
+#ifdef _WIN32
+#include "windows_helper.h"
+#endif
 
 static int vrmeditor_set_font_size(lua_State *l) {
   auto size = luaL_checknumber(l, 1);
@@ -80,7 +82,11 @@ void LuaEngine::eval(const std::string &script) {
 
 void LuaEngine::dofile(const std::filesystem::path &path) {
 
+#if _WIN32
   auto mb = WideToMb(CP_OEMCP, path.c_str());
+#else
+  auto mb = path.c_str();
+#endif
 
   auto ret = luaL_dofile(L_, mb.c_str());
   if (ret != 0) {

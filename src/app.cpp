@@ -9,7 +9,6 @@
 #include "luahost.h"
 #include "platform.h"
 #include "rendertarget.h"
-#include "windows_helper.h"
 #include <Bvh.h>
 #include <BvhSolver.h>
 #include <cuber/gl3/GlCubeRenderer.h>
@@ -22,6 +21,9 @@
 #include <vrm/mesh.h>
 #include <vrm/scene.h>
 #include <vrm/vrm0.h>
+#ifdef _WIN32
+#include "windows_helper.h"
+#endif
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
@@ -379,7 +381,12 @@ void App::assetsDock() {
           ImGuiTreeNodeFlags_OpenOnArrow |
           ImGuiTreeNodeFlags_OpenOnDoubleClick |
           ImGuiTreeNodeFlags_SpanAvailWidth;
-      auto mb = WideToMb(CP_OEMCP, path.filename().c_str());
+#if _WIN32
+      auto mb = WideToMb(CP_OEMCP, path.c_str());
+#else
+      auto mb = path.c_str();
+#endif
+
       if (std::filesystem::is_directory(path)) {
         ImGuiTreeNodeFlags node_flags = base_flags;
         return ImGui::TreeNodeEx((void *)(intptr_t)id, node_flags, "%s",
