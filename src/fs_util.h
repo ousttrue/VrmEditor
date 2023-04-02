@@ -1,13 +1,23 @@
 #pragma once
-#include <cstdio>
 #include <filesystem>
+
+#ifdef _WIN32
+#include <Windows.h>
 
 inline std::filesystem::path
 get_home()
 {
-#ifdef _WIN32
-  return std::getnenv("USERPROFILE");
-#else
-  return std::getenv("HOME");
-#endif
+  char buf[1024];
+  GetEnvironmentVariableA("USERPROFILE", buf, sizeof(buf));
+  return buf;
 }
+
+#else
+#include <cstdio>
+
+inline std::filesystem::path
+get_home()
+{
+  return std::getenv("HOME");
+}
+#endif
