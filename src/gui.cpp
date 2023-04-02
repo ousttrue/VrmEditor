@@ -14,12 +14,14 @@ const auto SAVE_FILE_DIALOG = "SAVE_FILE_DIALOG";
 
 const auto DOCK_SPACE = "VRM_DOCKSPACE";
 
-void Dock::Show() {
+void
+Dock::Show()
+{
   if (IsOpen) {
     // begin
     if (UseWindow) {
-      ImGui::SetNextWindowPos({100, 100}, ImGuiCond_FirstUseEver);
-      ImGui::SetNextWindowSize({100, 100}, ImGuiCond_FirstUseEver);
+      ImGui::SetNextWindowPos({ 100, 100 }, ImGuiCond_FirstUseEver);
+      ImGui::SetNextWindowSize({ 100, 100 }, ImGuiCond_FirstUseEver);
       if (ImGui::Begin(Name.c_str(), &IsOpen)) {
         OnShow(&IsOpen);
       }
@@ -32,17 +34,19 @@ void Dock::Show() {
   }
 }
 
-Gui::Gui(const void *window, const char *glsl_version)
-    : m_window(window), m_glsl_version(glsl_version) {
+Gui::Gui(const void* window, const char* glsl_version)
+  : m_window(window)
+  , m_glsl_version(glsl_version)
+{
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
+  ImGuiIO& io = ImGui::GetIO();
+
   io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableGamepad;            // Enable Gamepad Controls
+    ImGuiConfigFlags_NavEnableGamepad;              // Enable Gamepad Controls
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
 #ifdef _WIN32
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport /
@@ -57,17 +61,17 @@ Gui::Gui(const void *window, const char *glsl_version)
 
   // When viewports are enabled we tweak WindowRounding/WindowBg so platform
   // windows can look identical to regular ones.
-  ImGuiStyle &style = ImGui::GetStyle();
+  ImGuiStyle& style = ImGui::GetStyle();
   if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     style.WindowRounding = 0.0f;
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
 
   m_docks.push_back(
-      Dock("demo", [](bool *p_open) { ImGui::ShowDemoWindow(p_open); }));
+    Dock("demo", [](bool* p_open) { ImGui::ShowDemoWindow(p_open); }));
 
   m_docks.push_back(
-      Dock("metrics", [](bool *p_open) { ImGui::ShowMetricsWindow(p_open); }));
+    Dock("metrics", [](bool* p_open) { ImGui::ShowMetricsWindow(p_open); }));
 
   PostTask([this]() { LoadFont(); });
 
@@ -106,8 +110,10 @@ Gui::Gui(const void *window, const char *glsl_version)
   }));
 
   ImGuiFileDialog::Instance()->SetFileStyle(
-      IGFD_FileStyleByTypeDir, nullptr, ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
-      (const char *)u8" "); // for all dirs
+    IGFD_FileStyleByTypeDir,
+    nullptr,
+    ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
+    (const char*)u8" "); // for all dirs
 
 #if _WIN32
   std::filesystem::path user_home = std::getenv("USERPROFILE");
@@ -116,22 +122,25 @@ Gui::Gui(const void *window, const char *glsl_version)
 #endif
 
   ImGuiFileDialog::Instance()->prBookmarks.push_back({
-      .name = "Home",
-      .path = (const char *)user_home.u8string().c_str(),
+    .name = "Home",
+    .path = (const char*)user_home.u8string().c_str(),
   });
   ImGuiFileDialog::Instance()->prBookmarks.push_back({
-      .name = "Desktop",
-      .path = (const char *)(user_home / "Desktop").u8string().c_str(),
+    .name = "Desktop",
+    .path = (const char*)(user_home / "Desktop").u8string().c_str(),
   });
 }
 
-Gui::~Gui() {
+Gui::~Gui()
+{
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_Shutdown();
   ImGui_ImplOpenGL3_Shutdown();
 }
 
-bool Gui::SetFont(const std::filesystem::path &path) {
+bool
+Gui::SetFont(const std::filesystem::path& path)
+{
   if (!std::filesystem::exists(path)) {
     return false;
   }
@@ -139,7 +148,9 @@ bool Gui::SetFont(const std::filesystem::path &path) {
   return true;
 }
 
-bool Gui::AddJapaneseFont(const std::filesystem::path &path) {
+bool
+Gui::AddJapaneseFont(const std::filesystem::path& path)
+{
   if (!std::filesystem::exists(path)) {
     return false;
   }
@@ -147,7 +158,9 @@ bool Gui::AddJapaneseFont(const std::filesystem::path &path) {
   return true;
 }
 
-bool Gui::AddIconFont(const std::filesystem::path &path) {
+bool
+Gui::AddIconFont(const std::filesystem::path& path)
+{
   if (!std::filesystem::exists(path)) {
     return false;
   }
@@ -155,9 +168,11 @@ bool Gui::AddIconFont(const std::filesystem::path &path) {
   return true;
 }
 
-void Gui::LoadFont() {
+void
+Gui::LoadFont()
+{
 
-  ImGuiIO &io = ImGui::GetIO();
+  ImGuiIO& io = ImGui::GetIO();
 
   if (m_initialized) {
     io.Fonts->Clear();
@@ -166,7 +181,7 @@ void Gui::LoadFont() {
   }
   // Setup Platform/Renderer backends
   ImGui_ImplOpenGL3_Init(m_glsl_version.c_str());
-  ImGui_ImplGlfw_InitForOpenGL((GLFWwindow *)m_window, true);
+  ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)m_window, true);
   m_initialized = true;
 
   ImFontConfig config;
@@ -182,37 +197,40 @@ void Gui::LoadFont() {
   config.MergeMode = true;
   if (m_japanseseFont.string().size()) {
     io.Fonts->AddFontFromFileTTF(m_japanseseFont.string().c_str(),
-                                 config.SizePixels, &config,
+                                 config.SizePixels,
+                                 &config,
                                  io.Fonts->GetGlyphRangesJapanese());
   }
 
   if (m_iconFont.string().size()) {
     // static const ImWchar icons_ranges[] = {0xf000, 0xf3ff, 0};
-    static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_16_FA, 0};
+    static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
     auto iconFontSize = static_cast<float>(m_fontSize * 2.0f / 3.0f);
     config.PixelSnapH = true;
     config.GlyphMinAdvanceX = iconFontSize;
     config.SizePixels = iconFontSize;
-    io.Fonts->AddFontFromFileTTF(m_iconFont.string().c_str(), config.SizePixels,
-                                 &config, icons_ranges);
+    io.Fonts->AddFontFromFileTTF(
+      m_iconFont.string().c_str(), config.SizePixels, &config, icons_ranges);
   }
 
   io.Fonts->Build();
 }
 
-std::optional<MouseEvent> Gui::BackgroundMouseEvent() const {
+std::optional<MouseEvent>
+Gui::BackgroundMouseEvent() const
+{
   MouseEvent event{};
 
-  auto &io = ImGui::GetIO();
+  auto& io = ImGui::GetIO();
   if (!io.WantCaptureMouse) {
     // mouse event is consumed by ImGui
     if (io.MouseDown[1]) {
-      event.RightDrag = Delta{static_cast<int>(io.MouseDelta.x),
-                              static_cast<int>(io.MouseDelta.y)};
+      event.RightDrag = Delta{ static_cast<int>(io.MouseDelta.x),
+                               static_cast<int>(io.MouseDelta.y) };
     }
     if (io.MouseDown[2]) {
-      event.MiddleDrag = Delta{static_cast<int>(io.MouseDelta.x),
-                               static_cast<int>(io.MouseDelta.y)};
+      event.MiddleDrag = Delta{ static_cast<int>(io.MouseDelta.x),
+                                static_cast<int>(io.MouseDelta.y) };
     }
     if (io.MouseWheel) {
       event.Wheel = static_cast<int>(io.MouseWheel);
@@ -221,7 +239,9 @@ std::optional<MouseEvent> Gui::BackgroundMouseEvent() const {
   return event;
 }
 
-void Gui::NewFrame() {
+void
+Gui::NewFrame()
+{
 
   if (!m_tasks.empty()) {
     // dequeue task
@@ -235,7 +255,9 @@ void Gui::NewFrame() {
   ImGui::NewFrame();
 }
 
-void Gui::DockSpace() {
+void
+Gui::DockSpace()
+{
   // If you strip some features of, this demo is pretty much equivalent to
   // calling DockSpaceOverViewport()! In most cases you should be able to just
   // call DockSpaceOverViewport() and ignore all the code below! In this
@@ -255,15 +277,15 @@ void Gui::DockSpace() {
   static bool opt_fullscreen = true;
   static bool opt_padding = false;
   static ImGuiDockNodeFlags dockspace_flags =
-      ImGuiDockNodeFlags_PassthruCentralNode;
+    ImGuiDockNodeFlags_PassthruCentralNode;
 
   // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window
   // not dockable into, because it would be confusing to have two docking
   // targets within each others.
   ImGuiWindowFlags window_flags =
-      ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+    ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
   if (opt_fullscreen) {
-    const ImGuiViewport *viewport = ImGui::GetMainViewport();
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
     ImGui::SetNextWindowViewport(viewport->ID);
@@ -272,7 +294,7 @@ void Gui::DockSpace() {
     window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
     window_flags |=
-        ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+      ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
   } else {
     dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
   }
@@ -300,7 +322,7 @@ void Gui::DockSpace() {
     ImGui::PopStyleVar(2);
 
   // Submit the DockSpace
-  ImGuiIO &io = ImGui::GetIO();
+  ImGuiIO& io = ImGui::GetIO();
   if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
     ImGuiID dockspace_id = ImGui::GetID(DOCK_SPACE);
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
@@ -313,12 +335,18 @@ void Gui::DockSpace() {
       static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh";
       if (ImGui::MenuItem("Open", "")) {
         ImGuiFileDialog::Instance()->OpenDialog(
-            OPEN_FILE_DIALOG, "Open", filters, m_current.string().c_str());
+          OPEN_FILE_DIALOG, "Open", filters, m_current.string().c_str());
       }
       if (ImGui::MenuItem("Save", "")) {
         ImGuiFileDialog::Instance()->OpenDialog(
-            SAVE_FILE_DIALOG, "Save", filters, m_current.string().c_str(),
-            "out", 1, nullptr, ImGuiFileDialogFlags_ConfirmOverwrite);
+          SAVE_FILE_DIALOG,
+          "Save",
+          filters,
+          m_current.string().c_str(),
+          "out",
+          1,
+          nullptr,
+          ImGuiFileDialogFlags_ConfirmOverwrite);
       }
       ImGui::EndMenu();
     }
@@ -331,30 +359,35 @@ void Gui::DockSpace() {
       ImGui::MenuItem("Padding", nullptr, &opt_padding);
       ImGui::Separator();
 
-      if (ImGui::MenuItem("Flag: NoSplit", "",
+      if (ImGui::MenuItem("Flag: NoSplit",
+                          "",
                           (dockspace_flags & ImGuiDockNodeFlags_NoSplit) !=
-                              0)) {
+                            0)) {
         dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
       }
-      if (ImGui::MenuItem("Flag: NoResize", "",
+      if (ImGui::MenuItem("Flag: NoResize",
+                          "",
                           (dockspace_flags & ImGuiDockNodeFlags_NoResize) !=
-                              0)) {
+                            0)) {
         dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
       }
-      if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "",
+      if (ImGui::MenuItem("Flag: NoDockingInCentralNode",
+                          "",
                           (dockspace_flags &
                            ImGuiDockNodeFlags_NoDockingInCentralNode) != 0)) {
         dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
       }
       if (ImGui::MenuItem(
-              "Flag: AutoHideTabBar", "",
-              (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) {
+            "Flag: AutoHideTabBar",
+            "",
+            (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) {
         dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
       }
       if (ImGui::MenuItem(
-              "Flag: PassthruCentralNode", "",
-              (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0,
-              opt_fullscreen)) {
+            "Flag: PassthruCentralNode",
+            "",
+            (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0,
+            opt_fullscreen)) {
         dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode;
       }
       ImGui::Separator();
@@ -369,7 +402,7 @@ void Gui::DockSpace() {
       // Disabling fullscreen would allow the window to be moved to the front of
       // other windows, which we can't undo at the moment without finer window
       // depth/z control.
-      for (auto &dock : m_docks) {
+      for (auto& dock : m_docks) {
         ImGui::MenuItem(dock.Name.c_str(), nullptr, &dock.IsOpen);
       }
       ImGui::EndMenu();
@@ -380,7 +413,7 @@ void Gui::DockSpace() {
 
   ImGui::End();
 
-  for (auto &dock : m_docks) {
+  for (auto& dock : m_docks) {
     dock.Show();
   }
 
@@ -389,8 +422,8 @@ void Gui::DockSpace() {
     // action if OK
     if (ImGuiFileDialog::Instance()->IsOk()) {
       auto path =
-          std::filesystem::path(ImGuiFileDialog::Instance()->GetCurrentPath()) /
-          ImGuiFileDialog::Instance()->GetFilePathName();
+        std::filesystem::path(ImGuiFileDialog::Instance()->GetCurrentPath()) /
+        ImGuiFileDialog::Instance()->GetFilePathName();
       // action
       // std::cout << filePathName << "::" << filePath << std::endl;
       if (std::filesystem::exists(path)) {
@@ -408,8 +441,8 @@ void Gui::DockSpace() {
     // action if OK
     if (ImGuiFileDialog::Instance()->IsOk()) {
       auto path =
-          std::filesystem::path(ImGuiFileDialog::Instance()->GetCurrentPath()) /
-          ImGuiFileDialog::Instance()->GetFilePathName();
+        std::filesystem::path(ImGuiFileDialog::Instance()->GetCurrentPath()) /
+        ImGuiFileDialog::Instance()->GetFilePathName();
       // action
       // std::cout << filePathName << "::" << filePath << std::endl;
       m_current = path.parent_path();
@@ -423,13 +456,15 @@ void Gui::DockSpace() {
   }
 }
 
-void Gui::Render() {
+void
+Gui::Render()
+{
   // Rendering
   ImGui::Render();
 
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-  auto &io = ImGui::GetIO();
+  auto& io = ImGui::GetIO();
 
   // Update and Render additional Platform Windows
   // (Platform functions may change the current OpenGL context, so we
@@ -437,7 +472,7 @@ void Gui::Render() {
   //  For this specific demo app we could also call
   //  glfwMakeContextCurrent(window) directly)
   if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-    GLFWwindow *backup_current_context = glfwGetCurrentContext();
+    GLFWwindow* backup_current_context = glfwGetCurrentContext();
     ImGui::UpdatePlatformWindows();
     ImGui::RenderPlatformWindowsDefault();
     glfwMakeContextCurrent(backup_current_context);

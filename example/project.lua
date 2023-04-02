@@ -28,8 +28,22 @@ ok = vrmeditor.add_icon_font(icon_font)
 print(ok, icon_font)
 
 local gltf_sample_models = os.getenv "GLTF_SAMPLE_MODELS"
-print(gltf_sample_models)
-ok = vrmeditor.add_asset_dir("gltf samples", gltf_sample_models .. "/2.0")
+if gltf_sample_models then
+  print(gltf_sample_models)
+  ok = vrmeditor.add_asset_dir("gltf", gltf_sample_models .. "/2.0")
+end
+
+local vrm_samples = os.getenv "VRM_SAMPLES"
+if vrm_samples then
+  print(vrm_samples)
+  ok = vrmeditor.add_asset_dir("vrm", vrm_samples)
+end
+
+local bvh_samples = os.getenv "BVH_SAMPLES"
+if bvh_samples then
+  print(bvh_samples)
+  ok = vrmeditor.add_asset_dir("bvh", bvh_samples)
+end
 
 local alicia = "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm"
 ok = vrmeditor.load_model(alicia)

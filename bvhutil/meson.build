@@ -1,5 +1,3 @@
-directxmath_dep = dependency('directxmath')
-
 bvhutil_lib = static_library(
     'bvhutil',
     [

@@ -29,14 +29,15 @@ const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
 
-App::App() {
+App::App()
+{
   m_lua = std::make_shared<LuaEngine>();
   m_scene = std::make_shared<Scene>();
   m_timeline = std::make_shared<Timeline>();
 
   m_platform = std::make_shared<Platform>();
   auto window =
-      m_platform->createWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
+    m_platform->createWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
   if (!window) {
     throw std::runtime_error("createWindow");
   }
@@ -54,32 +55,38 @@ App::App() {
 
 App::~App() {}
 
-void App::ClearScene() {
+void
+App::ClearScene()
+{
   m_timeline->Tracks.clear();
   m_scene->Clear();
 }
 
-bool App::WriteScene(const std::filesystem::path &path) {
+bool
+App::WriteScene(const std::filesystem::path& path)
+{
   auto bytes = m_scene->ToGlb();
   if (bytes.size()) {
     std::ofstream ofs(path);
     if (ofs) {
-      ofs.write((const char *)bytes.data(), bytes.size());
+      ofs.write((const char*)bytes.data(), bytes.size());
       return true;
     }
   }
   return false;
 }
 
-bool App::LoadModel(const std::filesystem::path &path) {
+bool
+App::LoadModel(const std::filesystem::path& path)
+{
   if (auto result = m_scene->Load(path)) {
     // bind time line
-    for (auto &animation : m_scene->m_animations) {
+    for (auto& animation : m_scene->m_animations) {
       auto track = m_timeline->AddTrack("gltf", animation->duration());
       track->Callbacks.push_back(
-          [animation, scene = m_scene](auto time, bool repeat) {
-            animation->update(time, scene->m_nodes, repeat);
-          });
+        [animation, scene = m_scene](auto time, bool repeat) {
+          animation->update(time, scene->m_nodes, repeat);
+        });
 
       // first animation only
       break;
@@ -92,7 +99,9 @@ bool App::LoadModel(const std::filesystem::path &path) {
   }
 }
 
-bool App::LoadMotion(const std::filesystem::path &path, float scaling) {
+bool
+App::LoadMotion(const std::filesystem::path& path, float scaling)
+{
   m_motion = Bvh::ParseFile(path);
   if (!m_motion) {
     return false;
@@ -109,8 +118,9 @@ bool App::LoadMotion(const std::filesystem::path &path, float scaling) {
 
     // apply vrm
     if (m_scene->m_vrm0) {
-      auto &hips = m_motionSolver->instances_[0];
-      m_scene->SetHumanPose(m_humanBoneMap, {hips._41, hips._42, hips._43},
+      auto& hips = m_motionSolver->instances_[0];
+      m_scene->SetHumanPose(m_humanBoneMap,
+                            { hips._41, hips._42, hips._43 },
                             m_motionSolver->localRotations);
     }
   });
@@ -126,8 +136,9 @@ bool App::LoadMotion(const std::filesystem::path &path, float scaling) {
   std::vector<grapho::LineVertex> lines;
   cuber::PushGrid(lines);
 
-  rt->render = [this, cuber, liner, lines](const Camera &camera) {
-    cuber->Render(camera.projection, camera.view,
+  rt->render = [this, cuber, liner, lines](const Camera& camera) {
+    cuber->Render(camera.projection,
+                  camera.view,
                   m_motionSolver->instances_.data(),
                   m_motionSolver->instances_.size());
     liner->Render(camera.projection, camera.view, lines);
@@ -135,11 +146,12 @@ bool App::LoadMotion(const std::filesystem::path &path, float scaling) {
 
   auto gl3r = std::make_shared<Gl3Renderer>();
 
-  m_gui->m_docks.push_back(Dock("motion", [rt](bool *p_open) {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
-    if (ImGui::Begin("motion", p_open,
+  m_gui->m_docks.push_back(Dock("motion", [rt](bool* p_open) {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+    if (ImGui::Begin("motion",
+                     p_open,
                      ImGuiWindowFlags_NoScrollbar |
-                         ImGuiWindowFlags_NoScrollWithMouse)) {
+                       ImGuiWindowFlags_NoScrollWithMouse)) {
       auto pos = ImGui::GetWindowPos();
       pos.y += ImGui::GetFrameHeight();
       auto size = ImGui::GetContentRegionAvail();
@@ -152,16 +164,24 @@ bool App::LoadMotion(const std::filesystem::path &path, float scaling) {
   return m_motion != nullptr;
 }
 
-void App::LoadLua(const std::filesystem::path &path) { m_lua->dofile(path); }
+void
+App::LoadLua(const std::filesystem::path& path)
+{
+  m_lua->dofile(path);
+}
 
-bool App::AddAssetDir(std::string_view name, const std::string &path) {
+bool
+App::AddAssetDir(std::string_view name, const std::string& path)
+{
 
   m_assets.push_back(std::make_shared<AssetDir>(name, path));
 
   return true;
 }
 
-int App::Run() {
+int
+App::Run()
+{
 
   jsonDock();
   sceneDock();
@@ -197,28 +217,31 @@ int App::Run() {
   return 0;
 }
 
-struct TreeContext {
-  gltf::Node *selected = nullptr;
-  gltf::Node *new_selected = nullptr;
+struct TreeContext
+{
+  gltf::Node* selected = nullptr;
+  gltf::Node* new_selected = nullptr;
 };
 
-void App::sceneDock() {
+void
+App::sceneDock()
+{
   //
   // scene tree
   //
   auto context = std::make_shared<TreeContext>();
 
-  auto enter = [this, context](gltf::Node &node) {
+  auto enter = [context](gltf::Node& node) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     static ImGuiTreeNodeFlags base_flags =
-        ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
-        ImGuiTreeNodeFlags_SpanAvailWidth;
+      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+      ImGuiTreeNodeFlags_SpanAvailWidth;
     ImGuiTreeNodeFlags node_flags = base_flags;
 
     if (node.children.empty()) {
       node_flags |=
-          ImGuiTreeNodeFlags_Leaf |
-          ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+        ImGuiTreeNodeFlags_Leaf |
+        ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
     }
     if (context->selected == &node) {
       node_flags |= ImGuiTreeNodeFlags_Selected;
@@ -229,8 +252,8 @@ void App::sceneDock() {
       ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
     }
 
-    bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)node.index, node_flags,
-                                       "%s", node.name.c_str());
+    bool node_open = ImGui::TreeNodeEx(
+      (void*)(intptr_t)node.index, node_flags, "%s", node.name.c_str());
 
     if (hasRotation) {
       ImGui::PopStyleColor();
@@ -245,10 +268,10 @@ void App::sceneDock() {
   auto leave = []() { ImGui::TreePop(); };
 
   m_gui->m_docks.push_back(
-      Dock("scene", [scene = m_scene, enter, leave, context]() {
-        context->selected = context->new_selected;
-        scene->Traverse(enter, leave);
-      }));
+    Dock("scene", [scene = m_scene, enter, leave, context]() {
+      context->selected = context->new_selected;
+      scene->Traverse(enter, leave);
+    }));
 
   m_gui->m_docks.push_back(Dock("selected", [scene = m_scene, context]() {
     if (context->selected) {
@@ -257,7 +280,7 @@ void App::sceneDock() {
         auto mesh = scene->m_meshes[*mesh_index];
         auto instance = context->selected->Instance;
         for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
-          auto &morph = mesh->m_morphTargets[i];
+          auto& morph = mesh->m_morphTargets[i];
           ImGui::SliderFloat(morph->name.c_str(), &instance->weights[i], 0, 1);
         }
       }
@@ -267,8 +290,8 @@ void App::sceneDock() {
   m_gui->m_docks.push_back(Dock("vrm-0.x", [scene = m_scene]() {
     if (auto vrm = scene->m_vrm0) {
       for (auto expression : vrm->m_expressions) {
-        ImGui::SliderFloat(expression->label.c_str(), &expression->weight, 0,
-                           1);
+        ImGui::SliderFloat(
+          expression->label.c_str(), &expression->weight, 0, 1);
       }
     }
   }));
@@ -284,17 +307,20 @@ void App::sceneDock() {
 
   auto gl3r = std::make_shared<Gl3Renderer>();
 
-  rt->render = [timeline = m_timeline, scene = m_scene, gl3r,
-                selection = context](const Camera &camera) {
+  rt->render = [timeline = m_timeline,
+                scene = m_scene,
+                gl3r,
+                selection = context](const Camera& camera) {
     gl3r->clear(camera);
 
     auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
-    RenderFunc render =
-        [gl3r, liner](const Camera &camera, const gltf::Mesh &mesh,
-                      const gltf::MeshInstance &instance, const float m[16]) {
-          gl3r->render(camera, mesh, instance, m);
-        };
+    RenderFunc render = [gl3r, liner](const Camera& camera,
+                                      const gltf::Mesh& mesh,
+                                      const gltf::MeshInstance& instance,
+                                      const float m[16]) {
+      gl3r->render(camera, mesh, instance, m);
+    };
     scene->Render(timeline->CurrentTime, camera, render);
     liner->Render(camera.projection, camera.view, gizmo::lines());
 
@@ -303,9 +329,14 @@ void App::sceneDock() {
       // TODO: conflict mouse event(left) with ImageButton
       auto m = node->world;
       ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-      if (ImGuizmo::Manipulate(camera.view, camera.projection,
-                               ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
-                               (float *)&m, nullptr, nullptr, nullptr,
+      if (ImGuizmo::Manipulate(camera.view,
+                               camera.projection,
+                               ImGuizmo::UNIVERSAL,
+                               ImGuizmo::LOCAL,
+                               (float*)&m,
+                               nullptr,
+                               nullptr,
+                               nullptr,
                                nullptr)) {
         // decompose feedback
         node->setWorldMatrix(m);
@@ -314,11 +345,12 @@ void App::sceneDock() {
     }
   };
 
-  m_gui->m_docks.push_back(Dock("view", [rt, scene = m_scene](bool *p_open) {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
-    if (ImGui::Begin("render target", p_open,
+  m_gui->m_docks.push_back(Dock("view", [rt, scene = m_scene](bool* p_open) {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+    if (ImGui::Begin("render target",
+                     p_open,
                      ImGuiWindowFlags_NoScrollbar |
-                         ImGuiWindowFlags_NoScrollWithMouse)) {
+                       ImGuiWindowFlags_NoScrollWithMouse)) {
       auto pos = ImGui::GetWindowPos();
       pos.y += ImGui::GetFrameHeight();
       auto size = ImGui::GetContentRegionAvail();
@@ -330,18 +362,20 @@ void App::sceneDock() {
   }));
 }
 
-void App::jsonDock() {
+void
+App::jsonDock()
+{
 
-  auto enter = [](nlohmann::json &item, const std::string &key) {
+  auto enter = [](nlohmann::json& item, const std::string& key) {
     static ImGuiTreeNodeFlags base_flags =
-        ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
-        ImGuiTreeNodeFlags_SpanAvailWidth;
+      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+      ImGuiTreeNodeFlags_SpanAvailWidth;
     ImGuiTreeNodeFlags node_flags = base_flags;
     auto is_leaf = !item.is_object() && !item.is_array();
     if (is_leaf) {
       node_flags |=
-          ImGuiTreeNodeFlags_Leaf |
-          ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+        ImGuiTreeNodeFlags_Leaf |
+        ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
     }
     std::stringstream ss;
 
@@ -358,33 +392,36 @@ void App::jsonDock() {
       ss << key << ": " << item.dump();
     }
     auto label = ss.str();
-    bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)&item, node_flags,
-                                       "%s", label.c_str());
+    bool node_open = ImGui::TreeNodeEx(
+      (void*)(intptr_t)&item, node_flags, "%s", label.c_str());
     return node_open && !is_leaf;
   };
   auto leave = []() { ImGui::TreePop(); };
 
-  m_gui->m_docks.push_back(Dock("json", [scene = m_scene, enter, leave]() {
+  m_gui->m_docks.push_back(Dock("gltf", [scene = m_scene, enter, leave]() {
     scene->TraverseJson(enter, leave);
   }));
 }
 
-void App::timelineDock() {
+void
+App::timelineDock()
+{
   auto timelineGui = std::make_shared<ImTimeline>(m_scene);
 
   m_gui->m_docks.push_back(
-      Dock("timeline", [timeline = m_timeline, timelineGui]() {
-        timelineGui->show(timeline);
-      }));
+    Dock("timeline", [timeline = m_timeline, timelineGui]() {
+      timelineGui->show(timeline);
+    }));
 }
 
-void App::assetsDock() {
+void
+App::assetsDock()
+{
   for (auto asset : m_assets) {
-    auto enter = [this](const std::filesystem::path &path, uint64_t id) {
+    auto enter = [this](const std::filesystem::path& path, uint64_t id) {
       static ImGuiTreeNodeFlags base_flags =
-          ImGuiTreeNodeFlags_OpenOnArrow |
-          ImGuiTreeNodeFlags_OpenOnDoubleClick |
-          ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+        ImGuiTreeNodeFlags_SpanAvailWidth;
 
 #if _WIN32
       auto name = WideToMb(CP_OEMCP, path.filename().c_str());
@@ -394,19 +431,23 @@ void App::assetsDock() {
 
       if (std::filesystem::is_directory(path)) {
         ImGuiTreeNodeFlags node_flags = base_flags;
-        return ImGui::TreeNodeEx((void *)(intptr_t)id, node_flags, "%s",
-                                 name.c_str());
+        return ImGui::TreeNodeEx(
+          (void*)(intptr_t)id, node_flags, "%s", name.c_str());
       } else {
         if (ImGui::Button(name.c_str())) {
-          ClearScene();
-          LoadModel(path);
+          if (path.extension().u8string().ends_with(u8".bvh")) {
+            LoadMotion(path);
+          } else {
+            ClearScene();
+            LoadModel(path);
+          }
         }
         return false;
       }
     };
     auto leave = []() { ImGui::TreePop(); };
     m_gui->m_docks.push_back(
-        Dock(std::string("asset: ") + asset->name(),
-             [asset, enter, leave]() { asset->traverse(enter, leave); }));
+      Dock(std::string("[") + asset->name() + "]",
+           [asset, enter, leave]() { asset->traverse(enter, leave); }));
   }
 }

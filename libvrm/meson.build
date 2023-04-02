@@ -1,4 +1,3 @@
-directxmath_dep = dependency('directxmath')
 vrm_inc = include_directories('include')
 dependencies = [stb_dep, json_dep, directxmath_dep, grapho_dep]
 vrm_lib = static_library(

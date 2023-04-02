@@ -8,7 +8,7 @@ project(
 glew_dep = dependency('glew', default_options: ['default_library=static'])
 glfw_dep = dependency('glfw3', default_options: ['default_library=static'])
 imgui_dep = dependency('imgui', default_options: ['default_library=static'])
-json_dep = subproject('json').get_variable('nlohmann_json_dep')
+json_dep = dependency('nlohmann_json', include_type: 'system')
 grapho_dep = dependency('grapho')
 stb_dep = dependency('stb')
 im_neo_sequencer_dep = dependency('im_neo_sequencer')
@@ -25,6 +25,7 @@ imgui_filedialog_dep = subproject(
 #     'ImFileDialog',
 # ).get_variable('im_filedialog_dep')
 iconfont_cpp_headers_dep = dependency('iconfont_cpp_headers')
+directxmath_dep = dependency('directxmath', include_type: 'system')
 subdir('libvrm')
 subdir('bvhutil')
 subdir('src')

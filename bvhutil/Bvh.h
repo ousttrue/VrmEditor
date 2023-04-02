@@ -8,7 +8,8 @@
 #include <span>
 #include <vector>
 
-struct BvhJoint {
+struct BvhJoint
+{
   std::string name;
   uint16_t index;
   uint16_t parent;
@@ -17,12 +18,15 @@ struct BvhJoint {
   BvhChannels channels;
 };
 
-inline std::ostream &operator<<(std::ostream &os, const BvhJoint &joint) {
+inline std::ostream&
+operator<<(std::ostream& os, const BvhJoint& joint)
+{
   os << joint.name << ": " << joint.worldOffset << " " << joint.channels;
   return os;
 }
 
-struct Bvh {
+struct Bvh
+{
   std::vector<BvhJoint> joints;
   std::vector<BvhJoint> endsites;
   BvhTime frame_time = {};
@@ -31,18 +35,20 @@ struct Bvh {
   float max_height = 0;
   Bvh();
   ~Bvh();
-  static std::shared_ptr<Bvh> ParseFile(const std::filesystem::path &file);
+  static std::shared_ptr<Bvh> ParseFile(const std::filesystem::path& file);
   bool Parse(std::string_view src);
   uint32_t FrameCount() const { return frames.size() / frame_channel_count; }
-  const BvhJoint *GetParent(int parent) const {
-    for (auto &joint : joints) {
+  const BvhJoint* GetParent(int parent) const
+  {
+    for (auto& joint : joints) {
       if (joint.parent == parent) {
         return &joint;
       }
     }
     return nullptr;
   }
-  int TimeToIndex(BvhTime time) const {
+  int TimeToIndex(BvhTime time) const
+  {
     auto div = time / frame_time;
     auto index = (int)div;
     if (index >= FrameCount()) {
@@ -50,15 +56,17 @@ struct Bvh {
     }
     return index;
   }
-  BvhFrame GetFrame(int index) const {
+  BvhFrame GetFrame(int index) const
+  {
     auto begin = frames.data() + index * frame_channel_count;
     return {
-        .index = index,
-        .time = frame_time * index,
-        .values = {begin, begin + frame_channel_count},
+      .index = index,
+      .time = frame_time * index,
+      .values = { begin, begin + frame_channel_count },
     };
   }
-  float GuessScaling() const {
+  float GuessScaling() const
+  {
     // guess bvh scale
     float scalingFactor = 1.0f;
     if (max_height < 2) {
@@ -69,21 +77,24 @@ struct Bvh {
     }
     return scalingFactor;
   }
-  std::chrono::milliseconds Duration() const {
+  std::chrono::milliseconds Duration() const
+  {
     int channel_count = 0;
-    for (auto &joint : joints) {
+    for (auto& joint : joints) {
       channel_count += joint.channels.size();
     }
     return std::chrono::duration_cast<std::chrono::milliseconds>(
-        frame_time * (frames.size() / channel_count));
+      frame_time * (frames.size() / channel_count));
   }
 };
 
-inline std::ostream &operator<<(std::ostream &os, const Bvh &bvh) {
-  int channel_count = 0;
-  for (auto &joint : bvh.joints) {
-    channel_count += joint.channels.size();
-  }
+inline std::ostream&
+operator<<(std::ostream& os, const Bvh& bvh)
+{
+  // int channel_count = 0;
+  // for (auto &joint : bvh.joints) {
+  //   channel_count += joint.channels.size();
+  // }
 
   os << "<BVH: "
      << bvh.joints.size()
