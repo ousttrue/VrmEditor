@@ -1,11 +1,16 @@
 #include "assetdir.h"
 
-AssetDir::AssetDir(std::string_view name, std::string_view path) : name_(name) {
+AssetDir::AssetDir(std::string_view name, std::string_view path)
+  : name_(name)
+{
   root_ = path;
 }
 
-void AssetDir::traverse(const AssetEnter &enter, const AssetLeave &leave,
-                        const std::filesystem::path &path) {
+void
+AssetDir::traverse(const AssetEnter& enter,
+                   const AssetLeave& leave,
+                   const std::filesystem::path& path)
+{
 
   if (path.empty()) {
     // root
@@ -17,12 +22,18 @@ void AssetDir::traverse(const AssetEnter &enter, const AssetLeave &leave,
   }
 
   uint64_t id;
-  auto found = idMap_.find(path);
+  auto key = path.u8string();
+  for (auto& c : key) {
+    if (c == '\\') {
+      c = '/';
+    }
+  }
+  auto found = idMap_.find(key);
   if (found != idMap_.end()) {
     id = found->second;
   } else {
     id = nextId_++;
-    idMap_.insert(std::make_pair(path, id));
+    idMap_.insert(std::make_pair(key, id));
   }
 
   if (enter(path, id)) {
