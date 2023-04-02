@@ -15,6 +15,7 @@ struct Timeline;
 class AssetDir;
 class LuaEngine;
 class Platform;
+class OrbitView;
 
 class App
 {
@@ -25,6 +26,7 @@ class App
 
   std::shared_ptr<Timeline> m_timeline;
   std::shared_ptr<Scene> m_scene;
+  std::shared_ptr<OrbitView> m_view;
 
   std::shared_ptr<Bvh> m_motion;
   std::shared_ptr<BvhSolver> m_motionSolver;

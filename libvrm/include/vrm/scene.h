@@ -33,16 +33,18 @@ class Material;
 namespace vrm0 {
 struct Vrm;
 }
-using RenderFunc =
-    std::function<void(const ViewProjection &, const gltf::Mesh &,
-                       const gltf::MeshInstance &, const float[16])>;
+using RenderFunc = std::function<void(const ViewProjection&,
+                                      const gltf::Mesh&,
+                                      const gltf::MeshInstance&,
+                                      const float[16])>;
 
-using EnterFunc = std::function<bool(gltf::Node &)>;
+using EnterFunc = std::function<bool(gltf::Node&)>;
 using LeaveFunc = std::function<void()>;
-using EnterJson = std::function<bool(nlohmann::json &, const std::string &key)>;
+using EnterJson = std::function<bool(nlohmann::json&, const std::string& key)>;
 using LeaveJson = std::function<void()>;
 
-struct Scene {
+struct Scene
+{
   Gltf m_gltf;
   std::vector<std::shared_ptr<gltf::Image>> m_images;
   std::vector<std::shared_ptr<gltf::Material>> m_materials;
@@ -56,7 +58,8 @@ struct Scene {
   // runtime
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
-  void Clear() {
+  void Clear()
+  {
     m_vrm0 = nullptr;
     m_images.clear();
     m_materials.clear();
@@ -69,29 +72,38 @@ struct Scene {
   }
 
   Scene();
-  Scene(const Scene &) = delete;
-  Scene &operator=(const Scene &) = delete;
+  Scene(const Scene&) = delete;
+  Scene& operator=(const Scene&) = delete;
 
-  std::expected<bool, std::string> Load(const std::filesystem::path &path);
-  std::expected<bool, std::string> Load(const std::filesystem::path &path,
+  std::expected<bool, std::string> Load(const std::filesystem::path& path);
+  std::expected<bool, std::string> Load(const std::filesystem::path& path,
                                         std::span<const uint8_t> json_chunk,
                                         std::span<const uint8_t> bin_chunk);
 
-  std::expected<bool, std::string>
-  AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
-             const std::shared_ptr<gltf::Material> &material);
+  std::expected<bool, std::string> AddIndices(
+    int vertex_offset,
+    gltf::Mesh* mesh,
+    int accessor_index,
+    const std::shared_ptr<gltf::Material>& material);
 
   void SyncHierarchy();
 
-  void Render(Time time, const ViewProjection &camera, const RenderFunc &render);
-  void Traverse(const EnterFunc &enter, const LeaveFunc &leave,
-                gltf::Node *node = nullptr);
-  void TraverseJson(const EnterJson &enter, const LeaveJson &leave,
-                    nlohmann::json *j = nullptr, std::string_view key = {});
+  void Render(Time time,
+              const ViewProjection& camera,
+              const RenderFunc& render);
+  void Traverse(const EnterFunc& enter,
+                const LeaveFunc& leave,
+                gltf::Node* node = nullptr);
+  void TraverseJson(const EnterJson& enter,
+                    const LeaveJson& leave,
+                    nlohmann::json* j = nullptr,
+                    std::string_view key = {});
   void SetHumanPose(std::span<const vrm::HumanBones> humanMap,
-                    const DirectX::XMFLOAT3 &rootPosition,
+                    const DirectX::XMFLOAT3& rootPosition,
                     std::span<const DirectX::XMFLOAT4> rotations);
   std::shared_ptr<gltf::Node> GetBoneNode(vrm::HumanBones bone);
 
   std::vector<uint8_t> ToGlb() const;
+
+  BoundingBox GetBoundingBox() const;
 };

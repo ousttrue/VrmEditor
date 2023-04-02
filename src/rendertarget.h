@@ -11,10 +11,15 @@
 struct RenderTarget
 {
   ViewProjection camera;
-  OrbitView view;
+  std::shared_ptr<OrbitView> view;
   std::shared_ptr<grapho::gl3::Fbo> fbo;
   float color[4];
   std::function<void(const ViewProjection& camera)> render;
+
+  RenderTarget(const std::shared_ptr<OrbitView>& view)
+    : view(view)
+  {
+  }
 
   uint32_t clear(int width, int height)
   {
@@ -63,19 +68,19 @@ struct RenderTarget
       // update camera
       auto& io = ImGui::GetIO();
       camera.resize((int)w, (int)h);
-      view.SetSize((int)w, (int)h);
+      view->SetSize((int)w, (int)h);
       if (ImGui::IsItemActive()) {
         if (io.MouseDown[ImGuiMouseButton_Right]) {
-          view.YawPitch((int)io.MouseDelta.x, (int)io.MouseDelta.y);
+          view->YawPitch((int)io.MouseDelta.x, (int)io.MouseDelta.y);
         }
         if (io.MouseDown[ImGuiMouseButton_Middle]) {
-          view.Shift((int)io.MouseDelta.x, (int)io.MouseDelta.y);
+          view->Shift((int)io.MouseDelta.x, (int)io.MouseDelta.y);
         }
       }
       if (ImGui::IsItemHovered()) {
-        view.Dolly((int)io.MouseWheel);
+        view->Dolly((int)io.MouseWheel);
       }
-      view.Update(camera.projection, camera.view);
+      view->Update(camera.projection, camera.view);
       if (render) {
         render(camera);
       }

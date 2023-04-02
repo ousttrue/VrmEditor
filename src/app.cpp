@@ -33,6 +33,7 @@ App::App()
 {
   m_lua = std::make_shared<LuaEngine>();
   m_scene = std::make_shared<Scene>();
+  m_view = std::make_shared<OrbitView>();
   m_timeline = std::make_shared<Timeline>();
 
   m_platform = std::make_shared<Platform>();
@@ -93,8 +94,8 @@ App::LoadModel(const std::filesystem::path& path)
     }
 
     // update view position
-    // auto [min, max] = m_scene->GetBoundingBox();
-    // m_vi
+    auto bb = m_scene->GetBoundingBox();
+    m_view->Fit(bb.Min, bb.Max);
 
     return true;
   } else {
@@ -134,7 +135,7 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
 void
 App::motionDock()
 {
-  auto rt = std::make_shared<RenderTarget>();
+  auto rt = std::make_shared<RenderTarget>(std::make_shared<OrbitView>());
   rt->color[0] = 0.4f;
   rt->color[1] = 0.2f;
   rt->color[2] = 0.2f;
@@ -308,7 +309,7 @@ App::sceneDock()
   //
   // 3d view
   //
-  auto rt = std::make_shared<RenderTarget>();
+  auto rt = std::make_shared<RenderTarget>(m_view);
   rt->color[0] = 0.2f;
   rt->color[1] = 0.2f;
   rt->color[2] = 0.2f;

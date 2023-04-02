@@ -46,10 +46,11 @@ read, write, animation test.
 
 ## UI
 
-### configuration
+### imgui / configuration
 
-- [ ] ~/.config/vrmeditor/imgui.ini
+- [x] imgui.ini => ~/.vrmeditor.ini
 - [ ] ~/.config/vrmeditor/init.lua
+- [ ] tree / indent
 
 ### assets
 
@@ -61,10 +62,11 @@ read, write, animation test.
 - [ ] 󰑮 : bvh
 - [ ]  : image
 - [ ]  : text
+- [ ] sort
 
 ### 3D view
 
-- [ ] Fit camera frustum to bounding box when load
+- [x] Fit camera frustum to bounding box when load
 - [x] TR gizmo
 - [ ] gizmo undo / history
 
@@ -116,6 +118,16 @@ read, write, animation test.
 - [ ]  : play
 - [ ]  : stop
 - [ ] 󰒭 : next
+
+## tests
+
+### gltf
+
+### vrm
+
+### bvh
+
+### fbx
 
 ## dependencies
 
