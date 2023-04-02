@@ -55,11 +55,14 @@ read, write, animation test.
 
 ## build
 
-msvc17 or clang16 ?
-
-- c++23 std::expected
-- c++20 std::span, std::format
-- c++17 std::string_view, std::filesystem, std::optional
+|                  | msvc17      | clang16          |
+| ---------------- | ----------- | ---------------- |
+| std::format      | `c++latest` |                  |
+| std::expected    | `c++latest` | `c++2b` `libc++` |
+| std::span        | `c++latest` | `c++20`          |
+| std::string_view | `c++latest` | `c++20`          |
+| std::filesystem  | `c++latest` | `c++20`          |
+| std::optional    | `c++latest` | `c++20`          |
 
 ```
 $ meson setup builddir -Dcpp_std=c++latest

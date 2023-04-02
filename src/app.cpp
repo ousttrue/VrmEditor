@@ -16,6 +16,7 @@
 #include <cuber/gl3/GlLineRenderer.h>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <vrm/animation.h>
 #include <vrm/gizmo.h>
 #include <vrm/mesh.h>
@@ -336,18 +337,21 @@ void App::jsonDock() {
           ImGuiTreeNodeFlags_Leaf |
           ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
     }
-    std::string label;
+    std::stringstream ss;
+
+    // std::string label;
     if (item.is_object()) {
       if (item.find("name") != item.end()) {
-        label = std::format("{}: {}", key, (std::string_view)item.at("name"));
+        ss << key << ": " << (std::string_view)item.at("name");
       } else {
-        label = std::format("{}: object", key);
+        ss << key << ": object";
       }
     } else if (item.is_array()) {
-      label = std::format("{}: [{}]", key, item.size());
+      ss << key << ": [" << item.size() << "]";
     } else {
-      label = std::format("{}: {}", key, item.dump());
+      ss << key << ": " << item.dump();
     }
+    auto label = ss.str();
     bool node_open = ImGui::TreeNodeEx((void *)(intptr_t)&item, node_flags,
                                        "%s", label.c_str());
     return node_open && !is_leaf;
@@ -390,7 +394,7 @@ void App::assetsDock() {
     };
     auto leave = []() { ImGui::TreePop(); };
     m_gui->m_docks.push_back(
-        Dock(std::format("asset: {}", asset->name()),
+        Dock(std::string("asset: ") + asset->name(),
              [asset, enter, leave]() { asset->traverse(enter, leave); }));
   }
 }

@@ -10,7 +10,6 @@
 #include <DirectXMath.h>
 #include <array>
 #include <expected>
-#include <format>
 #include <fstream>
 #include <iostream>
 #include <list>
@@ -121,7 +120,9 @@ Scene::Load(const std::filesystem::path &path,
     } else {
       return std::unexpected{"not bufferView nor uri"};
     }
-    auto name = image.value("name", std::format("image{}", i));
+    std::stringstream ss;
+    ss << "image" << i;
+    auto name = image.value("name", ss.str());
     auto ptr = std::make_shared<gltf::Image>(name);
     if (!ptr->load(bytes)) {
       return std::unexpected{name};
@@ -134,8 +135,10 @@ Scene::Load(const std::filesystem::path &path,
   auto &materials = m_gltf.json["materials"];
   for (int i = 0; i < materials.size(); ++i) {
     auto &material = materials[i];
-    auto ptr = std::make_shared<gltf::Material>(
-        material.value("name", std::format("material{}", i)));
+    std::stringstream ss;
+    ss << "material" << i;
+    auto ptr =
+        std::make_shared<gltf::Material>(material.value("name", ss.str()));
     m_materials.push_back(ptr);
     if (has(material, "pbrMetallicRoughness")) {
       auto pbrMetallicRoughness = material.at("pbrMetallicRoughness");
@@ -291,7 +294,9 @@ Scene::Load(const std::filesystem::path &path,
       auto ptr = std::make_shared<gltf::Skin>();
       m_skins.push_back(ptr);
 
-      ptr->name = skin.value("name", std::format("skin{}", i));
+      std::stringstream ss;
+      ss << "skin" << i;
+      ptr->name = skin.value("name", ss.str());
 
       for (auto &joint : skin["joints"]) {
         ptr->joints.push_back(joint);
@@ -327,7 +332,9 @@ Scene::Load(const std::filesystem::path &path,
   auto nodes = m_gltf.json["nodes"];
   for (int i = 0; i < nodes.size(); ++i) {
     auto &node = nodes[i];
-    auto name = node.value("name", std::format("node:{}", i));
+    std::stringstream ss;
+    ss << "node" << i;
+    auto name = node.value("name", ss.str());
     auto ptr = std::make_shared<gltf::Node>(i, name);
     m_nodes.push_back(ptr);
 
@@ -393,8 +400,10 @@ Scene::Load(const std::filesystem::path &path,
   auto &animations = m_gltf.json["animations"];
   for (int i = 0; i < animations.size(); ++i) {
     auto &animation = animations[i];
-    auto ptr = std::make_shared<gltf::Animation>(
-        animation.value("name", std::format("animation:{}", i)));
+    std::stringstream ss;
+    ss << "animation" << i;
+    auto ptr =
+        std::make_shared<gltf::Animation>(animation.value("name", ss.str()));
     m_animations.push_back(ptr);
 
     // samplers
@@ -408,7 +417,7 @@ Scene::Load(const std::filesystem::path &path,
 
       auto target = channel.at("target");
       int node_index = target.at("node");
-      std::string_view path = target.at("path");
+      std::string path = target.at("path");
 
       // time
       int input_index = sampler.at("input");
@@ -416,24 +425,22 @@ Scene::Load(const std::filesystem::path &path,
         int output_index = sampler.at("output");
         if (path == "translation") {
           if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
-            ptr->addTranslation(
-                node_index, *times, *values,
-                std::format("{}-translation", m_nodes[node_index]->name));
+            ptr->addTranslation(node_index, *times, *values,
+                                m_nodes[node_index]->name + "-translation");
           } else {
             return std::unexpected{values.error()};
           }
         } else if (path == "rotation") {
           if (auto values = m_gltf.accessor<DirectX::XMFLOAT4>(output_index)) {
-            ptr->addRotation(
-                node_index, *times, *values,
-                std::format("{}-rotation", m_nodes[node_index]->name));
+            ptr->addRotation(node_index, *times, *values,
+                             m_nodes[node_index]->name + "-rotation");
           } else {
             return std::unexpected{values.error()};
           }
         } else if (path == "scale") {
           if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
             ptr->addScale(node_index, *times, *values,
-                          std::format("{}-scale", m_nodes[node_index]->name));
+                          m_nodes[node_index]->name + "-scale");
           } else {
             return std::unexpected{values.error()};
           }
@@ -447,7 +454,7 @@ Scene::Load(const std::filesystem::path &path,
                 return std::unexpected{"animation-weights: size not match"};
               }
               ptr->addWeights(node_index, *times, *values,
-                              std::format("{}-weights", node->name));
+                              node->name + "-weights");
             } else {
               return std::unexpected{"animation-weights: no node.mesh"};
             }
@@ -455,8 +462,7 @@ Scene::Load(const std::filesystem::path &path,
             return std::unexpected{values.error()};
           }
         } else {
-          return std::unexpected{
-              std::format("animation path {} is not implemented", path)};
+          return std::unexpected{"animation path is not implemented: " + path};
         }
       } else {
         return std::unexpected{times.error()};
@@ -693,7 +699,9 @@ void Scene::TraverseJson(const EnterJson &enter, const LeaveJson &leave,
       }
     } else if (item->is_array()) {
       for (int i = 0; i < item->size(); ++i) {
-        TraverseJson(enter, leave, &(*item)[i], std::format("{}", i));
+        std::stringstream ss;
+        ss << i;
+        TraverseJson(enter, leave, &(*item)[i], ss.str());
       }
     }
     if (leave) {

@@ -1,7 +1,6 @@
 #pragma once
 #define IMGUI_DEFINE_MATH_OPERATORS 1
 #include <chrono>
-#include <format>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <math.h>
