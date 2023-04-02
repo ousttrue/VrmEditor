@@ -1,5 +1,5 @@
 #include "gl3renderer.h"
-#include "camera.h"
+#include "viewporjection.h"
 #include <GL/glew.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/texture.h>
@@ -51,7 +51,7 @@ struct Drawable
   std::shared_ptr<grapho::gl3::Vao> vao;
   std::vector<SubMesh> submeshes;
 
-  void draw(const Camera& camera, const float m[16])
+  void draw(const ViewProjection& camera, const float m[16])
   {
     // state
     glEnable(GL_CULL_FACE);
@@ -90,7 +90,7 @@ public:
 
   ~Gl3RendererImpl() {}
 
-  void clear(const Camera& camera)
+  void clear(const ViewProjection& camera)
   {
     glViewport(0, 0, camera.width(), camera.height());
     glClearColor(
@@ -98,7 +98,7 @@ public:
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 
-  void render(const Camera& camera,
+  void render(const ViewProjection& camera,
               const gltf::Mesh& mesh,
               const gltf::MeshInstance& instance,
               const float m[16])
@@ -207,13 +207,13 @@ Gl3Renderer::~Gl3Renderer()
 }
 
 void
-Gl3Renderer::clear(const Camera& camera)
+Gl3Renderer::clear(const ViewProjection& camera)
 {
   m_impl->clear(camera);
 }
 
 void
-Gl3Renderer::render(const Camera& camera,
+Gl3Renderer::render(const ViewProjection& camera,
                     const gltf::Mesh& mesh,
                     const gltf::MeshInstance& instance,
                     const float m[16])

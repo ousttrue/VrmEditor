@@ -92,6 +92,10 @@ App::LoadModel(const std::filesystem::path& path)
       break;
     }
 
+    // update view position
+    // auto [min, max] = m_scene->GetBoundingBox();
+    // m_vi
+
     return true;
   } else {
     std::cout << result.error();
@@ -141,7 +145,7 @@ App::motionDock()
   std::vector<grapho::LineVertex> lines;
   cuber::PushGrid(lines);
 
-  rt->render = [this, cuber, liner, lines](const Camera& camera) {
+  rt->render = [this, cuber, liner, lines](const ViewProjection& camera) {
     if (m_motionSolver) {
       cuber->Render(camera.projection,
                     camera.view,
@@ -315,12 +319,12 @@ App::sceneDock()
   rt->render = [timeline = m_timeline,
                 scene = m_scene,
                 gl3r,
-                selection = context](const Camera& camera) {
+                selection = context](const ViewProjection& camera) {
     gl3r->clear(camera);
 
     auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
-    RenderFunc render = [gl3r, liner](const Camera& camera,
+    RenderFunc render = [gl3r, liner](const ViewProjection& camera,
                                       const gltf::Mesh& mesh,
                                       const gltf::MeshInstance& instance,
                                       const float m[16]) {

@@ -1,6 +1,6 @@
 #pragma once
 
-struct Camera;
+struct ViewProjection;
 namespace gltf {
 struct Mesh;
 struct MeshInstance;
@@ -12,7 +12,7 @@ class Gl3Renderer {
 public:
   Gl3Renderer();
   ~Gl3Renderer();
-  void clear(const Camera &camera);
-  void render(const Camera &camera, const gltf::Mesh &mesh,
+  void clear(const ViewProjection &camera);
+  void render(const ViewProjection &camera, const gltf::Mesh &mesh,
               const gltf::MeshInstance &instance, const float m[16]);
 };

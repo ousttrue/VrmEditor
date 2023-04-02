@@ -1,6 +1,6 @@
 #pragma once
 
-struct Camera {
+struct ViewProjection {
   float viewport[4];
   float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
   float view[16];

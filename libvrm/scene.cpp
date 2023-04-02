@@ -592,7 +592,7 @@ Scene::AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
   }
 }
 
-void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
+void Scene::Render(Time time, const ViewProjection &camera, const RenderFunc &render) {
   SyncHierarchy();
 
   // springbone

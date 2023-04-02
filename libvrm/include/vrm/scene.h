@@ -20,7 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
-struct Camera;
+struct ViewProjection;
 namespace gltf {
 struct Mesh;
 struct MeshInstance;
@@ -34,7 +34,7 @@ namespace vrm0 {
 struct Vrm;
 }
 using RenderFunc =
-    std::function<void(const Camera &, const gltf::Mesh &,
+    std::function<void(const ViewProjection &, const gltf::Mesh &,
                        const gltf::MeshInstance &, const float[16])>;
 
 using EnterFunc = std::function<bool(gltf::Node &)>;
@@ -83,7 +83,7 @@ struct Scene {
 
   void SyncHierarchy();
 
-  void Render(Time time, const Camera &camera, const RenderFunc &render);
+  void Render(Time time, const ViewProjection &camera, const RenderFunc &render);
   void Traverse(const EnterFunc &enter, const LeaveFunc &leave,
                 gltf::Node *node = nullptr);
   void TraverseJson(const EnterJson &enter, const LeaveJson &leave,
