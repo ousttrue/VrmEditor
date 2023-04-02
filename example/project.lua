@@ -14,7 +14,7 @@ end
 
 local home, is_windows = get_home()
 
-vrmeditor.set_font_size(22)
+vrmeditor.set_font_size(is_windows and 22 or 16)
 -- local base_font = "C:/Windows/Fonts/verdana.ttf"
 -- vrmeditor.set_font(base_font)
 

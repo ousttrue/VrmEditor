@@ -46,28 +46,57 @@ read, write, animation test.
 
 ## UI
 
+### configuration
+
+- [ ] ~/.config/vrmeditor/imgui.ini
+- [ ] ~/.config/vrmeditor/init.lua
+
+### assets
+
+- [ ]  : folder
+- [ ]  : gltf
+- [ ] 󰕣 : glb
+- [ ] 󰋦 : vrm
+- [ ] 󰕠 : fbx
+- [ ] 󰑮 : bvh
+- [ ]  : image
+- [ ]  : text
+
 ### 3D view
 
+- [ ] Fit camera frustum to bounding box when load
 - [ ] TR gizmo
 
 ### json
 
-- [ ] image icon
-- [ ] text icon
-- [ ] accessor/buffer_view icon
+- [ ]  : image icon
+- [ ]  : text icon
+- [ ]  : buffer_view icon
+- [ ]  : accessor icon
+- [ ] selected
+
+### resource
+
+- [ ]  : texture
+- [ ]  : material
+- [ ] 󰕣 : mesh
 - [ ] selected
 
 ### scene
 
-- [ ] mesh icon
-- [ ] humanoid icon
-- [ ] spring icon
-- [ ] spring collider icon
+- [ ] 󰕣 : mesh icon
+- [ ] 󰂹 : humanoid icon
+- [ ] 󰚟 : spring icon
+- [ ] 󱥔 : spring collider icon
 - [ ] selected
 
 ### humanoid
 
-- [ ] bone selector
+- [ ] 󰂹 : bone selector
+  - [ ]  : hips
+  - [ ] 󱍞 : head
+  - [ ] 󰹆 : hand-left
+  - [ ] 󰹇 : hand-right
 - [ ] node assign
 - [ ] pose input stream
 
@@ -80,8 +109,12 @@ read, write, animation test.
 
 ### timeline
 
-- [ ] track seek
+- [x] track
+  - [ ] seek
 - [ ] keyframe
+- [ ]  : play
+- [ ]  : stop
+- [ ] 󰒭 : next
 
 ## dependencies
 
