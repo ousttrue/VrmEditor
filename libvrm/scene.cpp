@@ -15,6 +15,7 @@
 #include <list>
 #include <optional>
 #include <span>
+#include <sstream>
 #include <string>
 #include <vector>
 

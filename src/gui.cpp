@@ -105,7 +105,11 @@ Gui::Gui(const void *window, const char *glsl_version)
       IGFD_FileStyleByTypeDir, nullptr, ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
       (const char *)u8" "); // for all dirs
 
+#if _WIN32
   std::filesystem::path user_home = std::getenv("USERPROFILE");
+#else
+  std::filesystem::path user_home = std::getenv("HOME");
+#endif
 
   ImGuiFileDialog::Instance()->prBookmarks.push_back({
       .name = "Home",

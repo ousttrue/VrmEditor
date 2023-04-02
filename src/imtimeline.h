@@ -5,6 +5,7 @@
 #include <imgui_internal.h>
 #include <math.h>
 #include <memory>
+#include <sstream>
 #include <vrm/gizmo.h>
 #include <vrm/scene.h>
 #include <vrm/timeline.h>
@@ -35,6 +36,8 @@ struct TimeGeometry {
   TimeGeometry(const ImVec2 &cursor, const ImVec2 &size, Time center)
       : TimeGeometry(cursor, size, center - Time((double)size.x * 0.005),
                      center + Time((double)size.x * 0.005)) {}
+
+  std::string m_buffer;
   bool DrawLine(ImDrawList *drawList, Time time) {
 
     if (time < Start) {
@@ -47,9 +50,12 @@ struct TimeGeometry {
     auto x = GetX(time);
     drawList->AddLine({x, Cursor.y}, {x, Cursor.y + Size.y}, Color, 1.0f);
 
-    char text[64];
-    sprintf_s(text, sizeof(text), "%.2lf", time.count());
-    drawList->AddText({x, Cursor.y}, Color, text, nullptr);
+    m_buffer.clear();
+    std::ostringstream ss(m_buffer);
+    ss << time.count();
+    // sprintf_s(text, sizeof(text), "%.2lf", time.count());
+    drawList->AddText({x, Cursor.y}, Color, m_buffer.data(),
+                      m_buffer.data() + m_buffer.size());
 
     return true;
   }
@@ -64,9 +70,12 @@ struct TimeGeometry {
   float DrawNow(ImDrawList *drawList, Time time) {
     auto x = GetX(time);
 
-    char text[64];
-    sprintf_s(text, sizeof(text), "%.2lf", time.count());
-    drawList->AddText({x, Cursor.y}, Color, text, nullptr);
+    m_buffer.clear();
+    std::ostringstream ss(m_buffer);
+    // sprintf_s(text, sizeof(text), "%.2lf", time.count());
+    ss << time.count();
+    drawList->AddText({x, Cursor.y}, Color, m_buffer.data(),
+                      m_buffer.data() + m_buffer.size());
 
     return x;
   }

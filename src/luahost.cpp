@@ -85,7 +85,7 @@ void LuaEngine::dofile(const std::filesystem::path &path) {
 #if _WIN32
   auto mb = WideToMb(CP_OEMCP, path.c_str());
 #else
-  auto mb = path.c_str();
+  auto mb = path.string();
 #endif
 
   auto ret = luaL_dofile(L_, mb.c_str());

@@ -10,15 +10,14 @@
 #include <stack>
 #include <stdlib.h>
 
-template <typename T> std::optional<T> to_num(std::string_view view) {
-  T value;
-  auto [ptr, ec] =
-      std::from_chars(view.data(), view.data() + view.size(), value);
-  if (ec == std::errc{}) {
-    return value;
-  } else {
-    return {};
-  }
+template <typename T> std::optional<T> to_num(const std::string &src);
+
+template <> std::optional<int> to_num<int>(const std::string &src) {
+  return std::stoi(src);
+}
+
+template <> std::optional<float> to_num<float>(const std::string &src) {
+  return std::stof(src);
 }
 
 using It = std::string_view::iterator;
@@ -65,7 +64,7 @@ public:
     if (!n) {
       return {};
     }
-    if (auto value = to_num<T>(*n)) {
+    if (auto value = to_num<T>(std::string(n->begin(), n->end()))) {
       return *value;
     } else {
       return {};

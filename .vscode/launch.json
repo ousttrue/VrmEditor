@@ -28,6 +28,16 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "externalTerminal"
-        }
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "(Linux) Launch",
+            "program": "${workspaceFolder}/prefix/bin/vrmeditor",
+            "args": [
+                "${workspaceFolder}/example/project.lua",
+            ],
+            "cwd": "${workspaceFolder}"
+        },
     ]
 }

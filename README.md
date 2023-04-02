@@ -57,8 +57,9 @@ read, write, animation test.
 
 |                  | msvc17      | clang16          |
 | ---------------- | ----------- | ---------------- |
-| std::format      | `c++latest` |                  |
+| std::spanstream  |             |                  |
 | std::expected    | `c++latest` | `c++2b` `libc++` |
+| std::format      | `c++latest` |                  |
 | std::span        | `c++latest` | `c++20`          |
 | std::string_view | `c++latest` | `c++20`          |
 | std::filesystem  | `c++latest` | `c++20`          |

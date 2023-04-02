@@ -85,10 +85,11 @@ inline std::ostream &operator<<(std::ostream &os, const Bvh &bvh) {
     channel_count += joint.channels.size();
   }
 
-  os << "<BVH: " << bvh.joints.size()
-     << " joints: " << (bvh.frames.size() / channel_count) //
-     << " frames/" << bvh.frame_time                       //
-     << " max_height: " << bvh.max_height                  //
+  os << "<BVH: "
+     << bvh.joints.size()
+     // << " joints: " << (bvh.frames.size() / channel_count) //
+     // << " frames/" << bvh.frame_time                       //
+     // << " max_height: " << bvh.max_height                  //
      << std::endl;
   for (auto joint : bvh.joints) {
     os << "  " << joint << std::endl;

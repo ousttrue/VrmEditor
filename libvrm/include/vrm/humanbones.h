@@ -143,6 +143,9 @@ inline std::optional<HumanBones> HumanBoneFromName(std::string_view boneName,
       return HumanBones::rightThumbProximal;
     }
     break;
+
+  default:
+    break;
   }
 
   for (int i = 0; i < std::size(HumanBonesNames); ++i) {

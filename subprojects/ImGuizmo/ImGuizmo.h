@@ -102,7 +102,7 @@ void EditTransform(const Camera& camera, matrix_t& matrix)
    }
    ImGuiIO& io = ImGui::GetIO();
    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-   ImGuizmo::Manipulate(camera.mView.m16, camera.mProjection.m16, mCurrentGizmoOperation, mCurrentGizmoMode, matrix.m16, NULL, useSnap ? &snap.x : NULL);
+   ImGuizmo::Manipulate(camera.mView.m16, camera.mProjection.m16, mCurrentGizmoOperation, mCurrentGizmoMode, matrix.m16, nullptr, useSnap ? &snap.x : nullptr);
 }
 #endif
 #pragma once
@@ -170,9 +170,10 @@ IMGUI_API void DrawGrid(const float *view, const float *projection,
 
 IMGUI_API bool Manipulate(const float *view, const float *projection,
                           OPERATION operation, MODE mode, float *matrix,
-                          float *deltaMatrix = NULL, const float *snap = NULL,
-                          const float *localBounds = NULL,
-                          const float *boundsSnap = NULL);
+                          float *deltaMatrix = nullptr,
+                          const float *snap = nullptr,
+                          const float *localBounds = nullptr,
+                          const float *boundsSnap = nullptr);
 //
 // Please note that this cubeview is patented by Autodesk :
 // https://patents.google.com/patent/US7782319B2/en It seems to be a defensive

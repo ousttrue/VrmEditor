@@ -1,5 +1,5 @@
 #define IMGUI_DEFINE_MATH_OPERATORS 1
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 #include "app.h"
 #include "assetdir.h"
@@ -302,7 +302,8 @@ void App::sceneDock() {
       ImGuizmo::GetContext().mAllowActiveHoverItem = true;
       if (ImGuizmo::Manipulate(camera.view, camera.projection,
                                ImGuizmo::UNIVERSAL, ImGuizmo::LOCAL,
-                               (float *)&m, NULL, NULL, NULL, NULL)) {
+                               (float *)&m, nullptr, nullptr, nullptr,
+                               nullptr)) {
         // decompose feedback
         node->setWorldMatrix(m);
       }
@@ -384,7 +385,7 @@ void App::assetsDock() {
 #if _WIN32
       auto mb = WideToMb(CP_OEMCP, path.c_str());
 #else
-      auto mb = path.c_str();
+      auto mb = path;
 #endif
 
       if (std::filesystem::is_directory(path)) {

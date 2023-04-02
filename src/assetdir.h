@@ -13,7 +13,7 @@ class AssetDir {
   std::string name_;
   std::filesystem::path root_;
 
-  std::unordered_map<std::filesystem::path, uint64_t> idMap_;
+  std::unordered_map<std::string, uint64_t> idMap_;
   uint64_t nextId_ = 1;
 
 public:

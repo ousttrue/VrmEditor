@@ -1,4 +1,5 @@
 #pragma once
+#include "base64.h"
 #include <expected>
 #include <filesystem>
 #include <fstream>
@@ -28,11 +29,11 @@ const std::string BASE64_PREFIX[]{
 
 struct Directory {
   std::filesystem::path Base;
-  std::unordered_map<std::filesystem::path, std::vector<uint8_t>> FileCaches;
+  std::unordered_map<std::string, std::vector<uint8_t>> FileCaches;
 
   std::expected<std::span<const uint8_t>, std::string>
   GetBuffer(std::string_view uri) {
-    auto found = FileCaches.find(uri);
+    auto found = FileCaches.find({uri.begin(), uri.end()});
     if (found != FileCaches.end()) {
       // use cache
       return found->second;
@@ -43,8 +44,9 @@ struct Directory {
       for (auto &prefix : BASE64_PREFIX) {
         if (uri.starts_with(prefix)) {
           auto decoded = gltf::Decode(uri.substr(std::size(prefix)));
-          FileCaches.insert({uri, decoded});
-          return FileCaches[uri];
+          std::string key{uri.begin(), uri.end()};
+          FileCaches.insert({key, decoded});
+          return FileCaches[key];
         }
       }
       return std::unexpected{"not implemented base64"};
@@ -52,8 +54,9 @@ struct Directory {
 
     auto path = Base / uri;
     if (auto bytes = ReadAllBytes(path)) {
-      FileCaches.insert({uri, *bytes});
-      return FileCaches[uri];
+      std::string key{uri.begin(), uri.end()};
+      FileCaches.insert({key, *bytes});
+      return FileCaches[key];
     } else {
       return bytes;
     }
