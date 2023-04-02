@@ -15,16 +15,23 @@
 // +-----------+
 // |           |
 // +-----------+
-struct TimeGeometry {
+struct TimeGeometry
+{
   ImVec2 Cursor;
   ImVec2 Size;
   Time Start;
   Time End;
   ImU32 Color = IM_COL32_BLACK;
-  TimeGeometry(const ImVec2 &cursor, const ImVec2 &size, Time start, Time end)
-      : Cursor(cursor), Size(size), Start(start), End(end) {}
+  TimeGeometry(const ImVec2& cursor, const ImVec2& size, Time start, Time end)
+    : Cursor(cursor)
+    , Size(size)
+    , Start(start)
+    , End(end)
+  {
+  }
 
-  float GetX(Time time) {
+  float GetX(Time time)
+  {
     auto delta = time - Start;
     auto x = Cursor.x + (float)delta.count() * 100;
     return x;
@@ -33,12 +40,16 @@ struct TimeGeometry {
   // 1seconds / 100 pixel
   // pixels to seconds is 0.01
   // half 0.005
-  TimeGeometry(const ImVec2 &cursor, const ImVec2 &size, Time center)
-      : TimeGeometry(cursor, size, center - Time((double)size.x * 0.005),
-                     center + Time((double)size.x * 0.005)) {}
+  TimeGeometry(const ImVec2& cursor, const ImVec2& size, Time center)
+    : TimeGeometry(cursor,
+                   size,
+                   center - Time((double)size.x * 0.005),
+                   center + Time((double)size.x * 0.005))
+  {
+  }
 
-  std::string m_buffer;
-  bool DrawLine(ImDrawList *drawList, Time time) {
+  bool DrawLine(ImDrawList* drawList, Time time)
+  {
 
     if (time < Start) {
       return false;
@@ -48,48 +59,49 @@ struct TimeGeometry {
     }
 
     auto x = GetX(time);
-    drawList->AddLine({x, Cursor.y}, {x, Cursor.y + Size.y}, Color, 1.0f);
+    drawList->AddLine({ x, Cursor.y }, { x, Cursor.y + Size.y }, Color, 1.0f);
 
-    m_buffer.clear();
-    std::ostringstream ss(m_buffer);
-    ss << time.count();
-    // sprintf_s(text, sizeof(text), "%.2lf", time.count());
-    drawList->AddText({x, Cursor.y}, Color, m_buffer.data(),
-                      m_buffer.data() + m_buffer.size());
+    char text[64];
+    auto len = snprintf(text, sizeof(text), "%.2lf", time.count());
+    drawList->AddText({ x, Cursor.y }, Color, text, text + len);
 
     return true;
   }
 
-  void DrawLines(ImDrawList *drawList) {
+  void DrawLines(ImDrawList* drawList)
+  {
     auto count = (int)Start.count();
     for (auto current = Time(count); current < End; current += Time(1.0)) {
       DrawLine(drawList, current);
     }
   }
 
-  float DrawNow(ImDrawList *drawList, Time time) {
+  float DrawNow(ImDrawList* drawList, Time time)
+  {
     auto x = GetX(time);
 
-    m_buffer.clear();
-    std::ostringstream ss(m_buffer);
-    // sprintf_s(text, sizeof(text), "%.2lf", time.count());
-    ss << time.count();
-    drawList->AddText({x, Cursor.y}, Color, m_buffer.data(),
-                      m_buffer.data() + m_buffer.size());
+    char text[64];
+    auto len = snprintf(text, sizeof(text), "%.2lf", time.count());
+    drawList->AddText({ x, Cursor.y }, Color, text, text + len);
 
     return x;
   }
 };
 
-class ImTimeline {
+class ImTimeline
+{
   std::shared_ptr<Scene> m_scene;
 
 public:
-  ImTimeline(const std::shared_ptr<Scene> &scene) : m_scene(scene) {}
+  ImTimeline(const std::shared_ptr<Scene>& scene)
+    : m_scene(scene)
+  {
+  }
   ~ImTimeline() {}
 
-  void show(const std::shared_ptr<Timeline> &timeline,
-            const ImVec2 &size = {0, 0}) {
+  void show(const std::shared_ptr<Timeline>& timeline,
+            const ImVec2& size = { 0, 0 })
+  {
     ImGui::Checkbox("IsPlaying", &timeline->IsPlaying);
     ImGui::BeginDisabled(timeline->IsPlaying);
     if (ImGui::Button("next frame")) {
@@ -116,14 +128,15 @@ public:
       realSize.y = ImMax(4.0f, lineheight);
 
     auto now = timeline->CurrentTime;
-    auto nowX = TimeGeometry(cursor, {realSize.x, lineheight + lineheight}, now)
-                    .DrawNow(drawList, now);
+    auto nowX =
+      TimeGeometry(cursor, { realSize.x, lineheight + lineheight }, now)
+        .DrawNow(drawList, now);
     cursor.y += lineheight;
 
     TimeGeometry(cursor, realSize, now).DrawLines(drawList);
     cursor.y += lineheight;
 
-    for (auto &track : timeline->Tracks) {
+    for (auto& track : timeline->Tracks) {
       TimeGeometry draw(cursor, realSize, now);
       if (auto startTime = track->StartTime) {
         auto left = draw.GetX(*startTime);
@@ -137,15 +150,16 @@ public:
           for (; x + width < cursor.x; x += width) {
           }
           for (; x < cursor.x + area.x; x += width) {
-            drawList->AddRectFilled({x, cursor.y},
-                                    {x + width, cursor.y + lineheight},
+            drawList->AddRectFilled({ x, cursor.y },
+                                    { x + width, cursor.y + lineheight },
                                     IM_COL32_WHITE);
-            drawList->AddLine({x, cursor.y}, {x, cursor.y + lineheight},
-                              IM_COL32_BLACK);
+            drawList->AddLine(
+              { x, cursor.y }, { x, cursor.y + lineheight }, IM_COL32_BLACK);
           }
         } else {
-          drawList->AddRectFilled(
-              {left, cursor.y}, {right, cursor.y + lineheight}, IM_COL32_WHITE);
+          drawList->AddRectFilled({ left, cursor.y },
+                                  { right, cursor.y + lineheight },
+                                  IM_COL32_WHITE);
         }
       } else {
         // not playing
@@ -157,8 +171,8 @@ public:
     }
 
     // center line
-    drawList->AddLine({nowX, top}, {nowX, cursor.y}, IM_COL32(255, 0, 0, 255),
-                      1.0f);
+    drawList->AddLine(
+      { nowX, top }, { nowX, cursor.y }, IM_COL32(255, 0, 0, 255), 1.0f);
 
     ImGui::SetCursorScreenPos(cursor);
   }
