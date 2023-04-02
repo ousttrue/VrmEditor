@@ -4,20 +4,25 @@ read, write, animation test.
 
 ## features
 
-### load
+### import/export
 
-- [x] glb. partial WIP
+- [x] gltf import
+- [x] glb
+  - [x] import
+  - [ ] export
   - [ ] vrm-0.x
     - [x] expression. morhtarget
     - [ ] expression. material
     - [ ] lookat. bone
     - [ ] lookat. expression
-    - [x] springbone. basic without collision.
-    - [x] humanoid.
+    - [x] springbone. basic without collision
+    - [x] humanoid
   - [ ] vrm-1.0
-- [ ] gltf
-- [x] bvh
-- [ ] fbx
+  - [ ] vrm-animation
+    - [ ] import
+    - [ ] export
+- [x] bvh import
+- [ ] fbx import
 
 ### material
 
@@ -39,6 +44,45 @@ read, write, animation test.
 - [ ] vrm-0.x
 - [ ] vrm-1.0
 
+## UI
+
+### 3D view
+
+- [ ] TR gizmo
+
+### json
+
+- [ ] image icon
+- [ ] text icon
+- [ ] accessor/buffer_view icon
+- [ ] selected
+
+### scene
+
+- [ ] mesh icon
+- [ ] humanoid icon
+- [ ] spring icon
+- [ ] spring collider icon
+- [ ] selected
+
+### humanoid
+
+- [ ] bone selector
+- [ ] node assign
+- [ ] pose input stream
+
+### vrm
+
+- [ ] meta
+- [ ] expression
+- [ ] lookat
+- [ ] firstperson
+
+### timeline
+
+- [ ] track seek
+- [ ] keyframe
+
 ## dependencies
 
 - imgui
@@ -55,15 +99,15 @@ read, write, animation test.
 
 ## build
 
-|                  | msvc17      | clang16          |
-| ---------------- | ----------- | ---------------- |
-| std::spanstream  |             |                  |
-| std::expected    | `c++latest` | `c++2b` `libc++` |
-| std::format      | `c++latest` |                  |
-| std::span        | `c++latest` | `c++20`          |
-| std::string_view | `c++latest` | `c++20`          |
-| std::filesystem  | `c++latest` | `c++20`          |
-| std::optional    | `c++latest` | `c++20`          |
+|                  | msvc17      | clang16          |          |
+| ---------------- | ----------- | ---------------- | -------- |
+| std::spanstream  |             |                  | not used |
+| std::expected    | `c++latest` | `c++2b` `libc++` | OK       |
+| std::format      | `c++latest` |                  | removed  |
+| std::span        | `c++latest` | `c++20`          | OK       |
+| std::string_view | `c++latest` | `c++20`          | OK       |
+| std::filesystem  | `c++latest` | `c++20`          | OK       |
+| std::optional    | `c++latest` | `c++20`          | OK       |
 
 ```
 $ meson setup builddir -Dcpp_std=c++latest

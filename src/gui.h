@@ -12,6 +12,7 @@ struct Delta {
   int X;
   int Y;
 };
+
 struct MouseEvent {
   std::optional<Delta> RightDrag;
   std::optional<Delta> MiddleDrag;

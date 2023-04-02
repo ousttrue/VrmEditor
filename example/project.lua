@@ -1,10 +1,29 @@
+---@return string home
+---@return boolean is_windows
+local function get_home()
+  local home = os.getenv "USERPROFILE"
+  if home then
+    return home, true
+  end
+  home = os.getenv "HOME"
+  if home then
+    return home, false
+  end
+  os.exit()
+end
+
+local home, is_windows = get_home()
+
 vrmeditor.set_font_size(22)
 -- local base_font = "C:/Windows/Fonts/verdana.ttf"
 -- vrmeditor.set_font(base_font)
-local japanese_font = "C:/Windows/Fonts/msgothic.ttc"
+
+local icon_font = home .. "/.fonts/HackGenNerdConsole-Regular.ttf"
+local japanese_font = is_windows and "C:/Windows/Fonts/msgothic.ttc" or icon_font
+
 local ok = vrmeditor.add_japanese_font(japanese_font)
 print(ok, japanese_font)
-local icon_font = os.getenv "USERPROFILE" .. "/.fonts/HackGenNerdConsole-Regular.ttf"
+
 ok = vrmeditor.add_icon_font(icon_font)
 print(ok, icon_font)
 

@@ -18,6 +18,8 @@ void Dock::Show() {
   if (IsOpen) {
     // begin
     if (UseWindow) {
+      ImGui::SetNextWindowPos({100, 100}, ImGuiCond_FirstUseEver);
+      ImGui::SetNextWindowSize({100, 100}, ImGuiCond_FirstUseEver);
       if (ImGui::Begin(Name.c_str(), &IsOpen)) {
         OnShow(&IsOpen);
       }
@@ -40,10 +42,12 @@ Gui::Gui(const void *window, const char *glsl_version)
   io.ConfigFlags |=
       ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableGamepad;              // Enable Gamepad Controls
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
+      ImGuiConfigFlags_NavEnableGamepad;            // Enable Gamepad Controls
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
+#ifdef _WIN32
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport /
                                                       // Platform Windows
+#endif
   // io.ConfigViewportsNoAutoMerge = true;
   // io.ConfigViewportsNoTaskBarIcon = true;
 

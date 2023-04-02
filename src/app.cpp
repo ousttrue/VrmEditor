@@ -94,6 +94,9 @@ bool App::LoadModel(const std::filesystem::path &path) {
 
 bool App::LoadMotion(const std::filesystem::path &path, float scaling) {
   m_motion = Bvh::ParseFile(path);
+  if (!m_motion) {
+    return false;
+  }
 
   m_motionSolver = std::make_shared<BvhSolver>();
   m_motionSolver->Initialize(m_motion);
@@ -382,18 +385,19 @@ void App::assetsDock() {
           ImGuiTreeNodeFlags_OpenOnArrow |
           ImGuiTreeNodeFlags_OpenOnDoubleClick |
           ImGuiTreeNodeFlags_SpanAvailWidth;
+
 #if _WIN32
-      auto mb = WideToMb(CP_OEMCP, path.c_str());
+      auto name = WideToMb(CP_OEMCP, path.filename().c_str());
 #else
-      auto mb = path;
+      auto name = path.filename();
 #endif
 
       if (std::filesystem::is_directory(path)) {
         ImGuiTreeNodeFlags node_flags = base_flags;
         return ImGui::TreeNodeEx((void *)(intptr_t)id, node_flags, "%s",
-                                 mb.c_str());
+                                 name.c_str());
       } else {
-        if (ImGui::Button(mb.c_str())) {
+        if (ImGui::Button(name.c_str())) {
           ClearScene();
           LoadModel(path);
         }
