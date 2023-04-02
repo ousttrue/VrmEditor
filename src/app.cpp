@@ -124,7 +124,12 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
                             m_motionSolver->localRotations);
     }
   });
+  return true;
+}
 
+void
+App::motionDock()
+{
   auto rt = std::make_shared<RenderTarget>();
   rt->color[0] = 0.4f;
   rt->color[1] = 0.2f;
@@ -137,10 +142,12 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
   cuber::PushGrid(lines);
 
   rt->render = [this, cuber, liner, lines](const Camera& camera) {
-    cuber->Render(camera.projection,
-                  camera.view,
-                  m_motionSolver->instances_.data(),
-                  m_motionSolver->instances_.size());
+    if (m_motionSolver) {
+      cuber->Render(camera.projection,
+                    camera.view,
+                    m_motionSolver->instances_.data(),
+                    m_motionSolver->instances_.size());
+    }
     liner->Render(camera.projection, camera.view, lines);
   };
 
@@ -160,8 +167,6 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
     ImGui::End();
     ImGui::PopStyleVar();
   }));
-
-  return m_motion != nullptr;
 }
 
 void
@@ -182,11 +187,11 @@ App::AddAssetDir(std::string_view name, const std::string& path)
 int
 App::Run()
 {
-
   jsonDock();
   sceneDock();
   timelineDock();
   assetsDock();
+  motionDock();
 
   std::optional<Time> lastTime;
   while (auto info = m_platform->newFrame()) {
@@ -331,7 +336,7 @@ App::sceneDock()
       ImGuizmo::GetContext().mAllowActiveHoverItem = true;
       if (ImGuizmo::Manipulate(camera.view,
                                camera.projection,
-                               ImGuizmo::UNIVERSAL,
+                               ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
                                ImGuizmo::LOCAL,
                                (float*)&m,
                                nullptr,

@@ -44,13 +44,13 @@ Gui::Gui(const void* window, const char* glsl_version)
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
 
-  auto dir = get_home() / ".cache/vrmeditor";
-  if (!std::filesystem::exists(dir)) {
-    // mkdir
-    std::cout << "create: " << dir << std::endl;
-    std::filesystem::create_directories(dir);
-  }
-  auto file = dir / "imgui.ini";
+  // auto dir = get_home() / ".cache/vrmeditor";
+  // if (!std::filesystem::exists(dir)) {
+  //   // mkdir
+  //   std::cout << "create: " << dir << std::endl;
+  //   std::filesystem::create_directories(dir);
+  // }
+  auto file = get_home() / ".vrmeditor.ini";
   m_imgui_ini = file.u8string();
 
   io.IniFilename = (const char*)m_imgui_ini.c_str();
