@@ -54,23 +54,23 @@ inline void from_json(const nlohmann::json &j, DirectX::XMFLOAT4X4 &m) {
 
 Scene::Scene() { m_spring = std::make_shared<vrm::SpringSolver>(); }
 
-std::expected<void, std::string>
+std::expected<bool, std::string>
 Scene::Load(const std::filesystem::path &path) {
-  auto bytes = ReadAllBytes(path);
-  if (bytes.empty()) {
-    return std::unexpected{std::format("fail to read: {}", path.string())};
-  }
+  if (auto bytes = ReadAllBytes(path)) {
+    if (auto glb = Glb::parse(*bytes)) {
+      // as glb
+      return Load(path, glb->json, glb->bin);
+    }
 
-  if (auto glb = Glb::parse(bytes)) {
-    // as glb
-    return Load(path, glb->json, glb->bin);
-  }
+    // try gltf
+    return Load(path, *bytes, {});
 
-  // try gltf
-  return Load(path, bytes, {});
+  } else {
+    return std::unexpected{bytes.error()};
+  }
 }
 
-std::expected<void, std::string>
+std::expected<bool, std::string>
 Scene::Load(const std::filesystem::path &path,
             std::span<const uint8_t> json_chunk,
             std::span<const uint8_t> bin_chunk) {
@@ -107,14 +107,22 @@ Scene::Load(const std::filesystem::path &path,
     auto &image = images[i];
     std::span<const uint8_t> bytes;
     if (has(image, "bufferView")) {
-      bytes = m_gltf.buffer_view(image.at("bufferView"));
+      if (auto buffer_view = m_gltf.buffer_view(image.at("bufferView"))) {
+        bytes = *buffer_view;
+      } else {
+        return std::unexpected{buffer_view.error()};
+      }
     } else if (has(image, "uri")) {
-      bytes = m_gltf.m_dir->GetBuffer(image.at("uri"));
+      if (auto buffer_view = m_gltf.m_dir->GetBuffer(image.at("uri"))) {
+        bytes = *buffer_view;
+      } else {
+        return std::unexpected{buffer_view.error()};
+      }
     } else {
       return std::unexpected{"not bufferView nor uri"};
     }
     auto name = image.value("name", std::format("image{}", i));
-    auto ptr = std::make_shared<Image>(name);
+    auto ptr = std::make_shared<gltf::Image>(name);
     if (!ptr->load(bytes)) {
       return std::unexpected{name};
     }
@@ -126,7 +134,7 @@ Scene::Load(const std::filesystem::path &path,
   auto &materials = m_gltf.json["materials"];
   for (int i = 0; i < materials.size(); ++i) {
     auto &material = materials[i];
-    auto ptr = std::make_shared<Material>(
+    auto ptr = std::make_shared<gltf::Material>(
         material.value("name", std::format("material{}", i)));
     m_materials.push_back(ptr);
     if (has(material, "pbrMetallicRoughness")) {
@@ -142,27 +150,37 @@ Scene::Load(const std::filesystem::path &path,
   }
 
   for (auto &mesh : m_gltf.json["meshes"]) {
-    auto ptr = std::make_shared<Mesh>();
+    auto ptr = std::make_shared<gltf::Mesh>();
     m_meshes.push_back(ptr);
 
     nlohmann::json *lastAtributes = nullptr;
     for (auto &prim : mesh["primitives"]) {
-      std::shared_ptr<Material> material;
+      std::shared_ptr<gltf::Material> material;
       if (has(prim, "material")) {
         material = m_materials[prim.at("material")];
       } else {
-        // TODO: default material
-        return std::unexpected{"default material is not implemented"};
+        // default material
+        material = std::make_shared<gltf::Material>("default");
       }
 
       nlohmann::json &attributes = prim.at("attributes");
       if (lastAtributes && attributes == *lastAtributes) {
         // for vrm shared vertex buffer
-        AddIndices(0, ptr.get(), prim.at("indices"), material);
+        if (auto expected =
+                AddIndices(0, ptr.get(), prim.at("indices"), material)) {
+          // OK
+        } else {
+          return std::unexpected{expected.error()};
+        }
       } else {
         // extend vertex buffer
-        auto positions =
-            m_gltf.accessor<DirectX::XMFLOAT3>(attributes[VERTEX_POSITION]);
+        std::span<const DirectX::XMFLOAT3> positions;
+        if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
+                attributes[VERTEX_POSITION])) {
+          positions = *accessor;
+        } else {
+          return std::unexpected{accessor.error()};
+        }
         std::vector<DirectX::XMFLOAT3> copy;
         if (m_vrm0) {
           copy.reserve(positions.size());
@@ -172,13 +190,23 @@ Scene::Load(const std::filesystem::path &path,
           positions = copy;
         }
         auto offset = ptr->addPosition(positions);
+
         if (has(attributes, VERTEX_NORMAL)) {
-          ptr->setNormal(offset, m_gltf.accessor<DirectX::XMFLOAT3>(
-                                     attributes.at(VERTEX_NORMAL)));
+          if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
+                  attributes.at(VERTEX_NORMAL))) {
+            ptr->setNormal(offset, *accessor);
+          } else {
+            return std::unexpected{accessor.error()};
+          }
         }
+
         if (has(attributes, VERTEX_UV)) {
-          ptr->setUv(offset, m_gltf.accessor<DirectX::XMFLOAT2>(
-                                 attributes.at(VERTEX_UV)));
+          if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT2>(
+                  attributes.at(VERTEX_UV))) {
+            ptr->setUv(offset, *accessor);
+          } else {
+            return std::unexpected{accessor.error()};
+          }
         }
 
         if (has(attributes, VERTEX_JOINT) && has(attributes, VERTEX_WEIGHT)) {
@@ -186,10 +214,16 @@ Scene::Load(const std::filesystem::path &path,
           int joint_accessor = attributes.at(VERTEX_JOINT);
           switch (*item_size(m_gltf.json["accessors"][joint_accessor])) {
           case 8:
-            ptr->setBoneSkinning(offset,
-                                 m_gltf.accessor<ushort4>(joint_accessor),
-                                 m_gltf.accessor<DirectX::XMFLOAT4>(
-                                     attributes.at(VERTEX_WEIGHT)));
+            if (auto accessor = m_gltf.accessor<ushort4>(joint_accessor)) {
+              if (auto accessor_w = m_gltf.accessor<DirectX::XMFLOAT4>(
+                      attributes.at(VERTEX_WEIGHT))) {
+                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
+              } else {
+                return std::unexpected{accessor_w.error()};
+              }
+            } else {
+              return std::unexpected{accessor.error()};
+            }
             break;
 
           default:
@@ -205,13 +239,32 @@ Scene::Load(const std::filesystem::path &path,
             auto &target = targets[i];
             auto morph = ptr->getOrCreateMorphTarget(i);
             // std::cout << target << std::endl;
-            auto morphOffset = morph->addPosition(
-                m_gltf.accessor<DirectX::XMFLOAT3>(target.at(VERTEX_POSITION)));
+            std::span<const DirectX::XMFLOAT3> positions;
+            if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
+                    target.at(VERTEX_POSITION))) {
+              positions = *accessor;
+            } else {
+              return std::unexpected{accessor.error()};
+            }
+            std::vector<DirectX::XMFLOAT3> copy;
+            if (m_vrm0) {
+              copy.reserve(positions.size());
+              for (auto &p : positions) {
+                copy.push_back({-p.x, p.y, -p.z});
+              }
+              positions = copy;
+            }
+            auto morphOffset = morph->addPosition(positions);
           }
         }
 
         // extend indices and add vertex offset
-        AddIndices(offset, ptr.get(), prim["indices"], material);
+        if (auto expected =
+                AddIndices(offset, ptr.get(), prim["indices"], material)) {
+          // OK
+        } else {
+          return std::unexpected{expected.error()};
+        }
       }
 
       // find morph target name
@@ -235,7 +288,7 @@ Scene::Load(const std::filesystem::path &path,
     auto skins = m_gltf.json["skins"];
     for (int i = 0; i < skins.size(); ++i) {
       auto &skin = skins[i];
-      auto ptr = std::make_shared<Skin>();
+      auto ptr = std::make_shared<gltf::Skin>();
       m_skins.push_back(ptr);
 
       ptr->name = skin.value("name", std::format("skin{}", i));
@@ -244,8 +297,13 @@ Scene::Load(const std::filesystem::path &path,
         ptr->joints.push_back(joint);
       }
 
-      auto matrices =
-          m_gltf.accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"]);
+      std::span<const DirectX::XMFLOAT4X4> matrices;
+      if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT4X4>(
+              skin["inverseBindMatrices"])) {
+        matrices = *accessor;
+      } else {
+        return std::unexpected{accessor.error()};
+      }
       std::vector<DirectX::XMFLOAT4X4> copy;
       if (m_vrm0) {
         copy.reserve(matrices.size());
@@ -270,7 +328,7 @@ Scene::Load(const std::filesystem::path &path,
   for (int i = 0; i < nodes.size(); ++i) {
     auto &node = nodes[i];
     auto name = node.value("name", std::format("node:{}", i));
-    auto ptr = std::make_shared<Node>(i, name);
+    auto ptr = std::make_shared<gltf::Node>(i, name);
     m_nodes.push_back(ptr);
 
     if (has(node, "matrix")) {
@@ -296,20 +354,24 @@ Scene::Load(const std::filesystem::path &path,
       ptr->scale = node.value("scale", DirectX::XMFLOAT3{1, 1, 1});
     }
     if (has(node, "mesh")) {
-      ptr->mesh = node.at("mesh");
+      auto mesh_index = node.at("mesh");
+      ptr->mesh = mesh_index;
 
       if (has(node, "skin")) {
         int skin_index = node.at("skin");
         auto skin = m_skins[skin_index];
         ptr->skin = skin;
       }
+
+      ptr->Instance =
+          std::make_shared<gltf::MeshInstance>(m_meshes[mesh_index]);
     }
   }
   for (int i = 0; i < nodes.size(); ++i) {
     auto &node = nodes[i];
     if (has(node, "children")) {
       for (auto child : node.at("children")) {
-        Node::addChild(m_nodes[i], m_nodes[child]);
+        gltf::Node::addChild(m_nodes[i], m_nodes[child]);
       }
     }
   }
@@ -321,7 +383,7 @@ Scene::Load(const std::filesystem::path &path,
   }
 
   // calc world
-  auto enter = [](Node &node) {
+  auto enter = [](gltf::Node &node) {
     node.calcWorld();
     node.init();
     return true;
@@ -331,7 +393,7 @@ Scene::Load(const std::filesystem::path &path,
   auto &animations = m_gltf.json["animations"];
   for (int i = 0; i < animations.size(); ++i) {
     auto &animation = animations[i];
-    auto ptr = std::make_shared<Animation>(
+    auto ptr = std::make_shared<gltf::Animation>(
         animation.value("name", std::format("animation:{}", i)));
     m_animations.push_back(ptr);
 
@@ -350,28 +412,54 @@ Scene::Load(const std::filesystem::path &path,
 
       // time
       int input_index = sampler.at("input");
-      auto times = m_gltf.accessor<float>(input_index);
-      int output_index = sampler.at("output");
-
-      if (path == "translation") {
-        auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index);
-        ptr->addTranslation(
-            node_index, times, values,
-            std::format("{}-translation", m_nodes[node_index]->name));
-      } else if (path == "rotation") {
-        auto values = m_gltf.accessor<DirectX::XMFLOAT4>(output_index);
-        ptr->addRotation(node_index, times, values,
-                         std::format("{}-rotation", m_nodes[node_index]->name));
-      } else if (path == "scale") {
-        auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index);
-        ptr->addScale(node_index, times, values,
-                      std::format("{}-scale", m_nodes[node_index]->name));
-      } else if (path == "weights") {
-        // TODO: not implemented
-        return std::unexpected{"animation path 'weights' is not implemented"};
+      if (auto times = m_gltf.accessor<float>(input_index)) {
+        int output_index = sampler.at("output");
+        if (path == "translation") {
+          if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
+            ptr->addTranslation(
+                node_index, *times, *values,
+                std::format("{}-translation", m_nodes[node_index]->name));
+          } else {
+            return std::unexpected{values.error()};
+          }
+        } else if (path == "rotation") {
+          if (auto values = m_gltf.accessor<DirectX::XMFLOAT4>(output_index)) {
+            ptr->addRotation(
+                node_index, *times, *values,
+                std::format("{}-rotation", m_nodes[node_index]->name));
+          } else {
+            return std::unexpected{values.error()};
+          }
+        } else if (path == "scale") {
+          if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
+            ptr->addScale(node_index, *times, *values,
+                          std::format("{}-scale", m_nodes[node_index]->name));
+          } else {
+            return std::unexpected{values.error()};
+          }
+        } else if (path == "weights") {
+          if (auto values = m_gltf.accessor<float>(output_index)) {
+            auto node = m_nodes[node_index];
+            if (auto mesh_index = node->mesh) {
+              auto mesh = m_meshes[*mesh_index];
+              if (values->size() !=
+                  mesh->m_morphTargets.size() * times->size()) {
+                return std::unexpected{"animation-weights: size not match"};
+              }
+              ptr->addWeights(node_index, *times, *values,
+                              std::format("{}-weights", node->name));
+            } else {
+              return std::unexpected{"animation-weights: no node.mesh"};
+            }
+          } else {
+            return std::unexpected{values.error()};
+          }
+        } else {
+          return std::unexpected{
+              std::format("animation path {} is not implemented", path)};
+        }
       } else {
-        return std::unexpected{
-            std::format("animation path {} is not implemented", path)};
+        return std::unexpected{times.error()};
       }
     }
 
@@ -460,27 +548,40 @@ Scene::Load(const std::filesystem::path &path,
     }
   }
 
-  return {};
+  return true;
 }
 
-void Scene::AddIndices(int vertex_offset, Mesh *mesh, int accessor_index,
-                       const std::shared_ptr<Material> &material) {
+std::expected<bool, std::string>
+Scene::AddIndices(int vertex_offset, gltf::Mesh *mesh, int accessor_index,
+                  const std::shared_ptr<gltf::Material> &material) {
   auto accessor = m_gltf.json["accessors"][accessor_index];
   switch ((ComponentType)accessor["componentType"]) {
   case ComponentType::UNSIGNED_BYTE: {
-    auto span = m_gltf.accessor<uint8_t>(accessor_index);
-    mesh->addSubmesh(vertex_offset, span, material);
+    if (auto span = m_gltf.accessor<uint8_t>(accessor_index)) {
+      mesh->addSubmesh(vertex_offset, *span, material);
+      return true;
+    } else {
+      return std::unexpected{span.error()};
+    }
   } break;
   case ComponentType::UNSIGNED_SHORT: {
-    auto span = m_gltf.accessor<uint16_t>(accessor_index);
-    mesh->addSubmesh(vertex_offset, span, material);
+    if (auto span = m_gltf.accessor<uint16_t>(accessor_index)) {
+      mesh->addSubmesh(vertex_offset, *span, material);
+      return true;
+    } else {
+      return std::unexpected{span.error()};
+    }
   } break;
   case ComponentType::UNSIGNED_INT: {
-    auto span = m_gltf.accessor<uint32_t>(accessor_index);
-    mesh->addSubmesh(vertex_offset, span, material);
+    if (auto span = m_gltf.accessor<uint32_t>(accessor_index)) {
+      mesh->addSubmesh(vertex_offset, *span, material);
+      return true;
+    } else {
+      return std::unexpected{span.error()};
+    }
   } break;
   default:
-    throw std::runtime_error("invalid index type");
+    return std::unexpected{"invalid index type"};
   }
 }
 
@@ -492,32 +593,39 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
     m_spring->Update(time);
   }
 
+  if (m_vrm0) {
+    // VRM0 expression to morphTarget
+    auto meshToNode = [nodes = m_nodes](uint32_t mi) {
+      for (auto &node : nodes) {
+        if (node->mesh == mi) {
+          return (uint32_t)node->index;
+        }
+      }
+      return (uint32_t)-1;
+    };
+    for (auto &[k, v] : m_vrm0->EvalMorphTargetMap(meshToNode)) {
+      auto &morph_node = m_nodes[k.NodeIndex];
+      morph_node->Instance->weights[k.MorphIndex] = v;
+    }
+  }
+
   // skinning
+
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
+
+      // mesh animation
+      std::span<DirectX::XMFLOAT4X4> skinningMatrices;
 
       // skinning
       if (auto skin = node->skin) {
         skin->currentMatrices.resize(skin->bindMatrices.size());
 
-        auto root = DirectX::XMMatrixIdentity();
-        auto rootInverse = root;
-        auto rootTranslation = root;
+        auto rootInverse = DirectX::XMMatrixIdentity();
         if (auto root_index = skin->root) {
-          // auto rootNode = m_nodes[*root_index];
-          // // rotation only ???
-          // auto world = rootNode->worldInit;
-          // world._41 = 0;
-          // world._42 = 0;
-          // world._43 = 0;
-          // root = DirectX::XMLoadFloat4x4(&world);
-          // rootInverse = DirectX::XMMatrixInverse(nullptr, root);
-          // rootTranslation = DirectX::XMMatrixTranslation(
-          //     rootNode->world._41, rootNode->world._42,
-          //     rootNode->world._43);
-          root = DirectX::XMLoadFloat4x4(&node->world);
-          rootInverse = DirectX::XMMatrixInverse(nullptr, root);
+          rootInverse = DirectX::XMMatrixInverse(
+              nullptr, DirectX::XMLoadFloat4x4(&node->world));
         }
 
         for (int i = 0; i < skin->joints.size(); ++i) {
@@ -529,34 +637,18 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
                                        rootInverse);
         }
 
-        if (m_vrm0) {
-          // VRM0 expression to morphTarget
-
-          // clear
-          for (auto &mesh : m_meshes) {
-            for (auto &morph : mesh->m_morphTargets) {
-              morph->weight = 0;
-            }
-          }
-          // apply
-          for (auto &expression : m_vrm0->m_expressions) {
-            for (auto &morphTarget : expression->morphBinds) {
-              auto &mesh = m_meshes[morphTarget.mesh];
-              auto &morph = mesh->m_morphTargets[morphTarget.index];
-              morph->weight += morphTarget.weight * expression->weight;
-            }
-          }
-        }
-
-        mesh->applyMorphTargetAndSkinning(skin->currentMatrices);
+        skinningMatrices = skin->currentMatrices;
       }
+
+      // apply morphtarget & skinning
+      node->Instance->applyMorphTargetAndSkinning(*mesh, skinningMatrices);
     }
   }
 
   for (auto &node : m_nodes) {
     if (auto mesh_index = node->mesh) {
       auto mesh = m_meshes[*mesh_index];
-      render(camera, *mesh, &node->world._11);
+      render(camera, *mesh, *node->Instance, &node->world._11);
     }
   }
 
@@ -566,7 +658,7 @@ void Scene::Render(Time time, const Camera &camera, const RenderFunc &render) {
 }
 
 void Scene::Traverse(const EnterFunc &enter, const LeaveFunc &leave,
-                     Node *node) {
+                     gltf::Node *node) {
   if (node) {
     if (enter(*node)) {
       for (auto &child : node->children) {
@@ -630,14 +722,14 @@ void Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
 
 void Scene::SyncHierarchy() {
   // calc world
-  auto enter = [](Node &node) {
+  auto enter = [](gltf::Node &node) {
     node.calcWorld();
     return true;
   };
   Traverse(enter, {});
 }
 
-std::shared_ptr<Node> Scene::GetBoneNode(vrm::HumanBones bone) {
+std::shared_ptr<gltf::Node> Scene::GetBoneNode(vrm::HumanBones bone) {
   if (auto node_index = m_vrm0->m_humanoid[(int)bone]) {
     return m_nodes[*node_index];
   }

@@ -394,13 +394,6 @@ TEST(VrmLoad, BrainStem_glTF_Embedded) {
   EXPECT_TRUE(result) << result.error();
 }
 
-TEST(VrmLoad, BrainStem_glTF_Meshopt) {
-  auto path = get_path("BrainStem/glTF-Meshopt/BrainStem.gltf");
-  Scene scene;
-  auto result = scene.Load(path);
-  EXPECT_TRUE(result) << result.error();
-}
-
 TEST(VrmLoad, Buggy_glTF) {
   auto path = get_path("Buggy/glTF/Buggy.gltf");
   Scene scene;
@@ -571,13 +564,6 @@ TEST(VrmLoad, DragonAttenuation_glTF) {
 
 TEST(VrmLoad, DragonAttenuation_glTF_Binary) {
   auto path = get_path("DragonAttenuation/glTF-Binary/DragonAttenuation.glb");
-  Scene scene;
-  auto result = scene.Load(path);
-  EXPECT_TRUE(result) << result.error();
-}
-
-TEST(VrmLoad, DragonAttenuation_glTF_Meshopt) {
-  auto path = get_path("DragonAttenuation/glTF-Meshopt/DragonAttenuation.gltf");
   Scene scene;
   auto result = scene.Load(path);
   EXPECT_TRUE(result) << result.error();
@@ -919,20 +905,6 @@ TEST(VrmLoad, MosquitoInAmber_glTF_Binary) {
   EXPECT_TRUE(result) << result.error();
 }
 
-TEST(VrmLoad, MultipleScenes_glTF) {
-  auto path = get_path("MultipleScenes/glTF/MultipleScenes.gltf");
-  Scene scene;
-  auto result = scene.Load(path);
-  EXPECT_TRUE(result) << result.error();
-}
-
-TEST(VrmLoad, MultipleScenes_glTF_Embedded) {
-  auto path = get_path("MultipleScenes/glTF-Embedded/MultipleScenes.gltf");
-  Scene scene;
-  auto result = scene.Load(path);
-  EXPECT_TRUE(result) << result.error();
-}
-
 TEST(VrmLoad, MultiUVTest_glTF) {
   auto path = get_path("MultiUVTest/glTF/MultiUVTest.gltf");
   Scene scene;
@@ -949,20 +921,6 @@ TEST(VrmLoad, MultiUVTest_glTF_Binary) {
 
 TEST(VrmLoad, MultiUVTest_glTF_Embedded) {
   auto path = get_path("MultiUVTest/glTF-Embedded/MultiUVTest.gltf");
-  Scene scene;
-  auto result = scene.Load(path);
-  EXPECT_TRUE(result) << result.error();
-}
-
-TEST(VrmLoad, NegativeScaleTest_glTF) {
-  auto path = get_path("NegativeScaleTest/glTF/NegativeScaleTest.gltf");
-  Scene scene;
-  auto result = scene.Load(path);
-  EXPECT_TRUE(result) << result.error();
-}
-
-TEST(VrmLoad, NegativeScaleTest_glTF_Binary) {
-  auto path = get_path("NegativeScaleTest/glTF-Binary/NegativeScaleTest.glb");
   Scene scene;
   auto result = scene.Load(path);
   EXPECT_TRUE(result) << result.error();

@@ -1,14 +1,18 @@
 #pragma once
+#include "mesh.h"
 #include "scenetypes.h"
 #include <DirectXMath.h>
 #include <list>
 #include <memory>
 #include <optional>
+#include <span>
 #include <stdint.h>
 #include <string>
 #include <string_view>
 
+namespace gltf {
 struct Skin;
+struct MeshInstance;
 struct Node {
   uint32_t index;
   std::string name;
@@ -29,6 +33,8 @@ struct Node {
   void init();
 
   std::optional<uint32_t> mesh;
+  std::shared_ptr<MeshInstance> Instance;
+
   std::shared_ptr<Skin> skin;
 
   std::list<std::shared_ptr<Node>> children;
@@ -94,3 +100,4 @@ inline std::ostream &operator<<(std::ostream &os, const Node &node) {
   }
   return os;
 }
+} // namespace gltf

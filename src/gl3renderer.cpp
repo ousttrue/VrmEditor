@@ -105,19 +105,21 @@ public:
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 
-  void render(const Camera &camera, const Mesh &mesh, const float m[16]) {
+  void render(const Camera &camera, const gltf::Mesh &mesh,
+              const gltf::MeshInstance &instance, const float m[16]) {
     auto drawable = getOrCreate(mesh);
 
-    if (mesh.m_updated.size()) {
-      drawable->vao->slots_[0].vbo->Upload(
-          mesh.m_updated.size() * sizeof(Vertex), mesh.m_updated.data());
+    if (instance.m_updated.size()) {
+      drawable->vao->slots_[0].vbo->Upload(instance.m_updated.size() *
+                                               sizeof(Vertex),
+                                           instance.m_updated.data());
       // m_updated.clear();
     }
 
     drawable->draw(camera, m);
   }
 
-  std::shared_ptr<Drawable> getOrCreate(const Mesh &mesh) {
+  std::shared_ptr<Drawable> getOrCreate(const gltf::Mesh &mesh) {
     auto found = m_drawableMap.find(mesh.id);
     if (found != m_drawableMap.end()) {
       return found->second;
@@ -204,7 +206,8 @@ Gl3Renderer::~Gl3Renderer() { delete m_impl; }
 
 void Gl3Renderer::clear(const Camera &camera) { m_impl->clear(camera); }
 
-void Gl3Renderer::render(const Camera &camera, const Mesh &mesh,
+void Gl3Renderer::render(const Camera &camera, const gltf::Mesh &mesh,
+                         const gltf::MeshInstance &instance,
                          const float m[16]) {
-  m_impl->render(camera, mesh, m);
+  m_impl->render(camera, mesh, instance, m);
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "base64.h"
 #include "directory.h"
 #include <expected>
 #include <filesystem>
@@ -14,11 +15,6 @@ const auto VERTEX_WEIGHT = "WEIGHTS_0";
 const auto VERTEX_POSITION = "POSITION";
 const auto VERTEX_NORMAL = "NORMAL";
 const auto VERTEX_UV = "TEXCOORD_0";
-
-const std::string BASE64_PREFIX[]{
-    "data:application/octet-stream;base64,",
-    "data:application/gltf-buffer;base64,",
-};
 
 inline bool has(const nlohmann::json &obj, std::string_view key) {
   if (!obj.is_object()) {
@@ -96,37 +92,41 @@ struct Gltf {
   nlohmann::json json;
   std::span<const uint8_t> bin;
 
-  std::span<const uint8_t> buffer_view(int buffer_view_index) const {
+  std::expected<std::span<const uint8_t>, std::string>
+  buffer_view(int buffer_view_index) const {
     auto buffer_view = json["bufferViews"][buffer_view_index];
     // std::cout << buffer_view << std::endl;
 
     int buffer_index = buffer_view.at("buffer");
     auto buffer = json["buffers"][buffer_index];
     if (buffer.find("uri") != buffer.end()) {
-      // external file. maybe glTF. not glb.
-      // std::cout << buffer << std::endl;
       std::string_view uri = buffer.at("uri");
-      if (uri.starts_with("data:")) {
-        throw std::runtime_error("base64 not implemented");
+      if (auto buffer = m_dir->GetBuffer(uri)) {
+        return buffer->subspan(buffer_view.value("byteOffset", 0),
+                               buffer_view.at("byteLength"));
+      } else {
+        return buffer;
       }
-
-      auto bin = m_dir->GetBuffer(uri);
-      return bin.subspan(buffer_view.value("byteOffset", 0),
-                         buffer_view.at("byteLength"));
     } else {
       // glb
-      return bin.subspan(buffer_view["byteOffset"], buffer_view["byteLength"]);
+      return bin.subspan(buffer_view.value("byteOffset", 0),
+                         buffer_view.at("byteLength"));
     }
   }
 
-  template <typename T> std::span<const T> accessor(int accessor_index) const {
+  template <typename T>
+  std::expected<std::span<const T>, std::string>
+  accessor(int accessor_index) const {
     auto accessor = json["accessors"][accessor_index];
     // std::cout << accessor << std::endl;
     assert(*item_size(accessor) == sizeof(T));
-    auto span = buffer_view(accessor["bufferView"]);
+    if (auto span = buffer_view(accessor["bufferView"])) {
+      int offset = accessor.value("byteOffset", 0);
+      return std::span<const T>((const T *)(span->data() + offset),
+                                accessor.at("count"));
 
-    int offset = accessor.value("byteOffset", 0);
-    return std::span<const T>((const T *)(span.data() + offset),
-                              accessor.at("count"));
+    } else {
+      return std::unexpected{span.error()};
+    }
   }
 };

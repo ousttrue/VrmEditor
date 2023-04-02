@@ -69,23 +69,24 @@ bool App::WriteScene(const std::filesystem::path &path) {
 }
 
 bool App::LoadModel(const std::filesystem::path &path) {
-  if (!m_scene->Load(path)) {
+  if (auto result = m_scene->Load(path)) {
+    // bind time line
+    for (auto &animation : m_scene->m_animations) {
+      auto track = m_timeline->AddTrack("gltf", animation->duration());
+      track->Callbacks.push_back(
+          [animation, scene = m_scene](auto time, bool repeat) {
+            animation->update(time, scene->m_nodes, repeat);
+          });
+
+      // first animation only
+      break;
+    }
+
+    return true;
+  } else {
+    std::cout << result.error();
     return false;
   }
-
-  // bind time line
-  for (auto &animation : m_scene->m_animations) {
-    auto track = m_timeline->AddTrack("gltf", animation->duration());
-    track->Callbacks.push_back(
-        [animation, scene = m_scene](auto time, bool repeat) {
-          animation->update(time, scene->m_nodes, repeat);
-        });
-
-    // first animation only
-    break;
-  }
-
-  return true;
 }
 
 bool App::LoadMotion(const std::filesystem::path &path, float scaling) {
@@ -191,8 +192,8 @@ int App::Run() {
 }
 
 struct TreeContext {
-  Node *selected = nullptr;
-  Node *new_selected = nullptr;
+  gltf::Node *selected = nullptr;
+  gltf::Node *new_selected = nullptr;
 };
 
 void App::sceneDock() {
@@ -201,7 +202,7 @@ void App::sceneDock() {
   //
   auto context = std::make_shared<TreeContext>();
 
-  auto enter = [this, context](Node &node) {
+  auto enter = [this, context](gltf::Node &node) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     static ImGuiTreeNodeFlags base_flags =
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -248,8 +249,10 @@ void App::sceneDock() {
       ImGui::Text("%s", context->selected->name.c_str());
       if (auto mesh_index = context->selected->mesh) {
         auto mesh = scene->m_meshes[*mesh_index];
-        for (auto &morph : mesh->m_morphTargets) {
-          ImGui::SliderFloat(morph->name.c_str(), &morph->weight, 0, 1);
+        auto instance = context->selected->Instance;
+        for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
+          auto &morph = mesh->m_morphTargets[i];
+          ImGui::SliderFloat(morph->name.c_str(), &instance->weights[i], 0, 1);
         }
       }
     }
@@ -281,10 +284,11 @@ void App::sceneDock() {
 
     auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
-    RenderFunc render = [gl3r, liner](const Camera &camera, const Mesh &mesh,
-                                      const float m[16]) {
-      gl3r->render(camera, mesh, m);
-    };
+    RenderFunc render =
+        [gl3r, liner](const Camera &camera, const gltf::Mesh &mesh,
+                      const gltf::MeshInstance &instance, const float m[16]) {
+          gl3r->render(camera, mesh, instance, m);
+        };
     scene->Render(timeline->CurrentTime, camera, render);
     liner->Render(camera.projection, camera.view, gizmo::lines());
 

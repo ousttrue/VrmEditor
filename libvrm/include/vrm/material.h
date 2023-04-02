@@ -6,6 +6,7 @@
 #include <string_view>
 #include <vector>
 
+namespace gltf {
 class Image {
 
   std::string m_name;
@@ -40,3 +41,4 @@ public:
   Material(std::string_view name) : m_name(name) {}
   std::shared_ptr<Image> texture;
 };
+} // namespace gltf

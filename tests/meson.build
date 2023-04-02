@@ -3,6 +3,7 @@ executable(
     'tests',
     [
         'gltf_samples.cpp',
+        'base64.cpp',
     ],
     install: true,
     dependencies: [gtest_main_dep, vrm_dep],

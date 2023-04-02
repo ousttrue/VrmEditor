@@ -28,7 +28,7 @@ read, write, animation test.
 
 ### animation
 
-- [x] gltf. tranlsation, rotation, scaling. TODO: morphTarget
+- [x] gltf. tranlsation, rotation, scaling and weights.
 - [x] bvh
 - [x] vrm0 from bvh
 - [ ] vrm1. humanoid retarget
@@ -43,12 +43,15 @@ read, write, animation test.
 
 - imgui
   - ImGuizmo
+  - ImGuiFileDialog
 - glfw3
 - glew
 - DirectXMath
 - nlohmann-json
 - lua-jit
 - stb
+- IconFontCppHeaders
+- googletest
 
 ## build
 
@@ -66,7 +69,7 @@ $ meson compile -C builddir
 ## naming plan
 
 - formatter clang-format: mozilla
-- class, struct name PascalCase
+- class, struct name PascalCase => camelCase. conflict public member name
 - free function: lower_snake
 - non public memver function: lower_snake
 

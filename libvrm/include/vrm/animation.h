@@ -6,10 +6,12 @@
 #include <unordered_map>
 #include <vector>
 
+namespace gltf {
 template <typename T> struct Curve {
   std::string name;
   std::vector<float> times;
   std::vector<T> values;
+  float maxSeconds() const { return times.empty() ? 0 : times.back(); }
 
   T getValue(float time, bool repeat) const {
     if (!repeat && time > times.back()) {
@@ -29,8 +31,40 @@ template <typename T> struct Curve {
     }
     return values.back();
   }
+};
 
+struct WeightsCurve {
+  std::string name;
+  std::vector<float> times;
+  std::vector<float> values;
+  // times.size() * weights == values.size()
+  const uint32_t weightsCount;
   float maxSeconds() const { return times.empty() ? 0 : times.back(); }
+
+  std::span<const float> span(size_t index) const {
+    auto begin = index * weightsCount;
+    return {values.data() + begin, values.data() + begin + weightsCount};
+  }
+
+  std::span<const float> getValue(float time, bool repeat) const {
+    if (!repeat && time > times.back()) {
+      return span(times.size() - 1);
+    }
+
+    while (time > times.back()) {
+      time -= times.back();
+      if (time < 0) {
+        time = 0;
+      }
+    }
+    for (int i = 0; i < times.size(); ++i) {
+      if (times[i] > time) {
+        return span(i);
+      }
+    }
+
+    return span(times.size() - 1);
+  }
 };
 
 struct Animation {
@@ -38,7 +72,7 @@ struct Animation {
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_translationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT4>> m_rotationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_scaleMap;
-  // Time m_duration;
+  std::unordered_map<uint32_t, WeightsCurve> m_weightsMap;
 
   Time duration() const {
     float sec = 0;
@@ -49,6 +83,9 @@ struct Animation {
       sec = std::max(sec, v.maxSeconds());
     }
     for (auto &[k, v] : m_scaleMap) {
+      sec = std::max(sec, v.maxSeconds());
+    }
+    for (auto &[k, v] : m_weightsMap) {
       sec = std::max(sec, v.maxSeconds());
     }
     return Time(sec);
@@ -68,6 +105,7 @@ struct Animation {
                                  .values = {values.begin(), values.end()},
                              });
   }
+
   void addRotation(uint32_t node_index, std::span<const float> times,
                    std::span<const DirectX::XMFLOAT4> values,
                    std::string_view name) {
@@ -78,6 +116,7 @@ struct Animation {
                               .values = {values.begin(), values.end()},
                           });
   }
+
   void addScale(uint32_t node_index, std::span<const float> times,
                 std::span<const DirectX::XMFLOAT3> values,
                 std::string_view name) {
@@ -86,6 +125,18 @@ struct Animation {
                                        .times = {times.begin(), times.end()},
                                        .values = {values.begin(), values.end()},
                                    });
+  }
+
+  void addWeights(uint32_t node_index, std::span<const float> times,
+                  std::span<const float> values, std::string_view name) {
+    m_weightsMap.emplace(
+        node_index,
+        WeightsCurve{
+            .name = {name.begin(), name.end()},
+            .times = {times.begin(), times.end()},
+            .values = {values.begin(), values.end()},
+            .weightsCount = static_cast<uint32_t>(values.size() / times.size()),
+        });
   }
 
   void update(Time time, std::span<std::shared_ptr<Node>> nodes,
@@ -103,5 +154,11 @@ struct Animation {
       auto node = nodes[k];
       node->scale = v.getValue(seconds, repeat);
     }
+    for (auto &[k, v] : m_weightsMap) {
+      auto node = nodes[k];
+      auto values = v.getValue(seconds, repeat);
+      node->Instance->weights.assign(values.begin(), values.end());
+    }
   }
 };
+} // namespace gltf
