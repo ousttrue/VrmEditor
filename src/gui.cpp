@@ -1,5 +1,6 @@
 #include "gui.h"
 #include "app.h"
+#include "fs_util.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -42,6 +43,17 @@ Gui::Gui(const void* window, const char* glsl_version)
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
+
+  auto dir = get_home() / ".cache/vrmeditor";
+  if (!std::filesystem::exists(dir)) {
+    // mkdir
+    std::cout << "create: " << dir << std::endl;
+    std::filesystem::create_directories(dir);
+  }
+  auto file = dir / "imgui.ini";
+  m_imgui_ini = file.u8string();
+
+  io.IniFilename = (const char*)m_imgui_ini.c_str();
 
   io.ConfigFlags |=
     ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls

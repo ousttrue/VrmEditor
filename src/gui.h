@@ -8,30 +8,39 @@
 #include <string>
 #include <string_view>
 
-struct Delta {
+struct Delta
+{
   int X;
   int Y;
 };
 
-struct MouseEvent {
+struct MouseEvent
+{
   std::optional<Delta> RightDrag;
   std::optional<Delta> MiddleDrag;
   std::optional<int> Wheel;
 };
 
-using DockShow = std::function<void(bool *popen)>;
+using DockShow = std::function<void(bool* popen)>;
 
-struct Dock {
+struct Dock
+{
   std::string Name;
   DockShow OnShow;
   bool UseWindow = true;
   bool IsOpen = true;
 
-  Dock(std::string_view name, const DockShow &show)
-      : Name(name), OnShow(show), UseWindow(false) {}
-  Dock(std::string_view name, const std::function<void()> &show)
-      : Name(name), UseWindow(true) {
-    OnShow = [show](bool *) { show(); };
+  Dock(std::string_view name, const DockShow& show)
+    : Name(name)
+    , OnShow(show)
+    , UseWindow(false)
+  {
+  }
+  Dock(std::string_view name, const std::function<void()>& show)
+    : Name(name)
+    , UseWindow(true)
+  {
+    OnShow = [show](bool*) { show(); };
   }
 
   void Show();
@@ -39,11 +48,13 @@ struct Dock {
 
 using Task = std::function<void()>;
 
-class Gui {
+class Gui
+{
+  std::u8string m_imgui_ini;
   std::filesystem::path m_current;
 
   bool m_initialized = false;
-  const void *m_window = nullptr;
+  const void* m_window = nullptr;
 
   std::string m_glsl_version;
   std::queue<Task> m_tasks;
@@ -55,17 +66,17 @@ class Gui {
 
 public:
   std::list<Dock> m_docks;
-  Gui(const void *window, const char *glsl_version);
+  Gui(const void* window, const char* glsl_version);
   ~Gui();
   std::optional<MouseEvent> BackgroundMouseEvent() const;
   void NewFrame();
   void DockSpace();
   void Render();
-  void PostTask(const Task &task) { m_tasks.push(task); }
+  void PostTask(const Task& task) { m_tasks.push(task); }
 
   void LoadFont();
   void SetFontSize(int size) { m_fontSize = size; }
-  bool SetFont(const std::filesystem::path &path);
-  bool AddJapaneseFont(const std::filesystem::path &path);
-  bool AddIconFont(const std::filesystem::path &path);
+  bool SetFont(const std::filesystem::path& path);
+  bool AddJapaneseFont(const std::filesystem::path& path);
+  bool AddIconFont(const std::filesystem::path& path);
 };

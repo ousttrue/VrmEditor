@@ -14,6 +14,9 @@ end
 
 local home, is_windows = get_home()
 
+--
+-- font settings
+--
 vrmeditor.set_font_size(is_windows and 22 or 16)
 -- local base_font = "C:/Windows/Fonts/verdana.ttf"
 -- vrmeditor.set_font(base_font)
@@ -27,6 +30,9 @@ print(ok, japanese_font)
 ok = vrmeditor.add_icon_font(icon_font)
 print(ok, icon_font)
 
+--
+-- add assets
+--
 local gltf_sample_models = os.getenv "GLTF_SAMPLE_MODELS"
 if gltf_sample_models then
   print(gltf_sample_models)
@@ -45,10 +51,22 @@ if bvh_samples then
   ok = vrmeditor.add_asset_dir("bvh", bvh_samples)
 end
 
+local fbx_samples = os.getenv "FBX_SAMPLES"
+if fbx_samples then
+  print(fbx_samples)
+  ok = vrmeditor.add_asset_dir("fbx", fbx_samples)
+end
+
+--
+-- load model
+--
 local alicia = "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm"
 ok = vrmeditor.load_model(alicia)
 print(ok, alicia)
 
+--
+-- load motion
+--
 local bvh = "../UniVRM/Assets/VRM10_Samples/VRM10Viewer/Motions/vrm10viewer_test_motion.txt"
 ok = vrmeditor.load_motion(bvh, 0)
 print(ok, bvh)
