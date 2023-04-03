@@ -1,4 +1,6 @@
 #include "assetdir.h"
+#include "app.h"
+#include "fs_util.h"
 #include "windows_helper.h"
 #include <imgui.h>
 
@@ -79,6 +81,9 @@ AssetDir::CreateDock(const LoadFunc& callback)
     std::string("[") + Name() + "]",
     [this, enter, leave]() {
       if (ImGui::Button(" Open")) {
+        App::Instance().Log(LogLevel::Info)
+          << "open: " << (const char*)root_.u8string().c_str();
+        shell_open(root_);
       }
       ImGui::SameLine();
       if (ImGui::Button("󰑓 Reload")) {

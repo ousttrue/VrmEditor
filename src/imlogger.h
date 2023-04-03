@@ -60,8 +60,11 @@ public:
   void Push(std::string_view msg) { m_ss << msg; }
   void End()
   {
-    Logs.push_back({ .Level = m_level, .Message = m_ss.str() });
-    m_ss.clear();
+    auto str = m_ss.str();
+    m_ss.str("");
+    if (str.size()) {
+      Logs.push_back({ .Level = m_level, .Message = str });
+    }
   }
 
   void AddLog(LogLevel level, std::string_view msg)
