@@ -16,7 +16,7 @@ SpringJoint::SpringJoint(const std::shared_ptr<gltf::Node>& head,
 {
 
   m_currentTailPosotion =
-    dmath::transform(localTailPosition, head->parentWorld());
+    dmath::transform(localTailPosition, head->ParentWorld());
   m_lastTailPosotion = m_currentTailPosotion;
   m_tailLength = dmath::length(localTailPosition);
   assert(m_tailLength);
@@ -35,19 +35,19 @@ SpringJoint::DrawGizmo()
   // gizmo::drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
 
   // gizmo::drawSphere(lastHead, {1, 1, 1, 1});
-  gizmo::drawSphere(Head->worldPosition(), { 0, 1, 0, 1 });
+  gizmo::drawSphere(Head->WorldPosition(), { 0, 1, 0, 1 });
   // gizmo::drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
 
   // gizmo::drawSphere(currentTail, {1, 1, 1, 1});
   gizmo::drawSphere(m_currentTailPosotion, { 1, 0, 1, 1 });
   // gizmo::drawLine(currentTail, nextTail, {0, 1, 0, 1});
 
-  gizmo::drawLine(Head->worldPosition(), m_currentTailPosotion, { 1, 1, 0, 1 });
+  gizmo::drawLine(Head->WorldPosition(), m_currentTailPosotion, { 1, 1, 0, 1 });
 
   if (Head->Children.size()) {
-    gizmo::drawSphere(Head->Children.front()->worldPosition(), { 1, 0, 0, 1 });
-    gizmo::drawLine(Head->worldPosition(),
-                    Head->Children.front()->worldPosition(),
+    gizmo::drawSphere(Head->Children.front()->WorldPosition(), { 1, 0, 0, 1 });
+    gizmo::drawLine(Head->WorldPosition(),
+                    Head->Children.front()->WorldPosition(),
                     { 1, 0, 0, 1 });
   }
 }
@@ -65,14 +65,14 @@ SpringJoint::Update()
                   + delta * (1.0f - DragForce)
                   // 親の回転による子ボーンの移動目標
                   + dmath::rotate(m_initLocalTailDir * Stiffiness * 0.01f,
-                                  Head->parentWorldRotation())
+                                  Head->ParentWorldRotation())
     // 外力による移動量
     // + external;
     ;
 
   assert(!std::isnan(nextTail.x));
 
-  auto position = Head->worldPosition();
+  auto position = Head->WorldPosition();
   nextTail = position + dmath::normalized(nextTail - position) * m_tailLength;
 
   // auto head = Head.get();
@@ -84,10 +84,10 @@ SpringJoint::Update()
   auto newLocalRotation = WorldPosToLocalRotation(nextTail);
   assert(!std::isnan(newLocalRotation.x));
   Head->Transform.Rotation = newLocalRotation;
-  Head->calcWorld(false);
+  Head->CalcWorldMatrix(false);
   for (auto& child : Head->Children) {
     // ひとつ下まで
-    child->calcWorld(false);
+    child->CalcWorldMatrix(false);
   }
 }
 
@@ -95,7 +95,7 @@ DirectX::XMFLOAT4
 SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3& nextTail) const
 {
   DirectX::XMFLOAT3 localNextTail;
-  auto world = Head->parentWorld();
+  auto world = Head->ParentWorld();
   assert(!std::isnan(world._41));
   auto localInit = Head->LocalInitialMatrix;
 
@@ -131,9 +131,9 @@ SpringSolver::Add(const std::shared_ptr<gltf::Node>& node,
       break;
     }
   } else {
-    auto delta = node->worldPosition() - node->parentWorldPosition();
+    auto delta = node->WorldPosition() - node->ParentWorldPosition();
     auto childPosition =
-      node->worldPosition() + dmath::normalized(delta) * 0.07f;
+      node->WorldPosition() + dmath::normalized(delta) * 0.07f;
 
     DirectX::XMStoreFloat3(
       &localTailPosition,

@@ -171,7 +171,7 @@ Scene::Parse()
     auto& node = nodes[i];
     if (has(node, "children")) {
       for (auto child : node.at("children")) {
-        gltf::Node::addChild(m_nodes[i], m_nodes[child]);
+        gltf::Node::AddChild(m_nodes[i], m_nodes[child]);
       }
     }
   }
@@ -184,7 +184,7 @@ Scene::Parse()
 
   // calc world
   auto enter = [](gltf::Node& node) {
-    node.calcWorld();
+    node.CalcWorldMatrix();
     node.CalcInitialMatrix();
     return true;
   };
@@ -463,7 +463,7 @@ Scene::ParseNode(int i, const nlohmann::json& node)
       m[8],  m[9],  m[10], m[11], //
       m[12], m[13], m[14], m[15], //
     };
-    ptr->setLocalMatrix(local);
+    ptr->SetLocalMatrix(local);
   } else {
     // T
     ptr->Transform.Translation = node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
@@ -874,7 +874,7 @@ Scene::SyncHierarchy()
 {
   // calc world
   auto enter = [](gltf::Node& node) {
-    node.calcWorld();
+    node.CalcWorldMatrix();
     return true;
   };
   Traverse(enter, {});

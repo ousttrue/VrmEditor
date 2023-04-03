@@ -30,7 +30,6 @@ struct Node {
 
   DirectX::XMFLOAT4X4 LocalInitialMatrix;
   DirectX::XMFLOAT4X4 WorldInitialMatrix;
-  void CalcInitialMatrix();
 
   std::list<std::shared_ptr<Node>> Children;
   std::weak_ptr<Node> Parent;
@@ -43,15 +42,21 @@ struct Node {
   Node(uint32_t i, std::string_view name);
   Node(const Node &) = delete;
   Node &operator=(const Node &) = delete;
-  static void addChild(const std::shared_ptr<Node> &parent,
+
+  static void AddChild(const std::shared_ptr<Node> &parent,
                        const std::shared_ptr<Node> &child);
-  void calcWorld(bool recursive = false);
-  bool setLocalMatrix(const DirectX::XMFLOAT4X4 &local);
-  bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world);
-  DirectX::XMFLOAT3 worldPosition() const {
+
+  void CalcInitialMatrix();
+
+  bool SetLocalMatrix(const DirectX::XMFLOAT4X4 &local);
+
+  void CalcWorldMatrix(bool recursive = false);
+  bool SetWorldMatrix(const DirectX::XMFLOAT4X4 &world);
+  DirectX::XMFLOAT3 WorldPosition() const {
     return {WorldMatrix._41, WorldMatrix._42, WorldMatrix._43};
   }
-  void setWorldRotation(const DirectX::XMFLOAT4 &world, bool recursive = false);
+  void SetWorldRotation(const DirectX::XMFLOAT4 &world, bool recursive = false);
+  void SetWorldRotation(const DirectX::XMFLOAT4X4 &world, bool recursive = false);
   DirectX::XMFLOAT4 worldRotation() const {
     auto q =
         DirectX::XMQuaternionRotationMatrix(DirectX::XMLoadFloat4x4(&WorldMatrix));
@@ -59,7 +64,8 @@ struct Node {
     DirectX::XMStoreFloat4(&tmp, q);
     return tmp;
   }
-  DirectX::XMFLOAT4X4 parentWorld() const {
+
+  DirectX::XMFLOAT4X4 ParentWorld() const {
     if (auto p = Parent.lock()) {
       return p->WorldMatrix;
     } else {
@@ -71,23 +77,21 @@ struct Node {
       };
     }
   }
-  DirectX::XMFLOAT4 parentWorldRotation() const {
+  DirectX::XMFLOAT4 ParentWorldRotation() const {
     if (auto p = Parent.lock()) {
       return p->worldRotation();
     } else {
       return {0, 0, 0, 1};
     }
   }
-  DirectX::XMFLOAT3 parentWorldPosition() const {
+  DirectX::XMFLOAT3 ParentWorldPosition() const {
     if (auto p = Parent.lock()) {
-      return p->worldPosition();
+      return p->WorldPosition();
     } else {
       return {0, 0, 0};
     }
   }
-  void print(int level = 0);
-  void setWorldRotation(const DirectX::XMFLOAT4X4 &world,
-                        bool recursive = false);
+  void Print(int level = 0);
 };
 inline std::ostream &operator<<(std::ostream &os, const Node &node) {
   os << "Node[" << node.Index << "]" << node.Name

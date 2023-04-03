@@ -17,7 +17,7 @@ Node::CalcInitialMatrix()
 }
 
 void
-Node::addChild(const std::shared_ptr<Node>& parent,
+Node::AddChild(const std::shared_ptr<Node>& parent,
                const std::shared_ptr<Node>& child)
 {
   if (auto current_parent = child->Parent.lock()) {
@@ -28,7 +28,7 @@ Node::addChild(const std::shared_ptr<Node>& parent,
 }
 
 void
-Node::calcWorld(bool recursive)
+Node::CalcWorldMatrix(bool recursive)
 {
   DirectX::XMFLOAT4X4 parentWorld{
     1, 0, 0, 0, //
@@ -52,13 +52,13 @@ Node::calcWorld(bool recursive)
 
   if (recursive) {
     for (auto& child : Children) {
-      child->calcWorld(true);
+      child->CalcWorldMatrix(true);
     }
   }
 }
 
 bool
-Node::setLocalMatrix(const DirectX::XMFLOAT4X4& local)
+Node::SetLocalMatrix(const DirectX::XMFLOAT4X4& local)
 {
   DirectX::XMVECTOR s;
   DirectX::XMVECTOR r;
@@ -74,7 +74,7 @@ Node::setLocalMatrix(const DirectX::XMFLOAT4X4& local)
 }
 
 bool
-Node::setWorldMatrix(const DirectX::XMFLOAT4X4& world)
+Node::SetWorldMatrix(const DirectX::XMFLOAT4X4& world)
 {
 
   DirectX::XMMATRIX parentMatrix;
@@ -89,23 +89,23 @@ Node::setWorldMatrix(const DirectX::XMFLOAT4X4& world)
 
   DirectX::XMFLOAT4X4 m;
   DirectX::XMStoreFloat4x4(&m, local);
-  return setLocalMatrix(m);
+  return SetLocalMatrix(m);
 }
 
 void
-Node::setWorldRotation(const DirectX::XMFLOAT4& world, bool recursive)
+Node::SetWorldRotation(const DirectX::XMFLOAT4& world, bool recursive)
 {
-  auto parent = parentWorldRotation();
+  auto parent = ParentWorldRotation();
   DirectX::XMStoreFloat4(
     &Transform.Rotation,
     DirectX::XMQuaternionMultiply(
       DirectX::XMLoadFloat4(&world),
       DirectX::XMQuaternionInverse(DirectX::XMLoadFloat4(&parent))));
-  calcWorld(recursive);
+  CalcWorldMatrix(recursive);
 }
 
 void
-Node::setWorldRotation(const DirectX::XMFLOAT4X4& world, bool recursive)
+Node::SetWorldRotation(const DirectX::XMFLOAT4X4& world, bool recursive)
 {
 
   DirectX::XMMATRIX parentMatrix;
@@ -125,18 +125,18 @@ Node::setWorldRotation(const DirectX::XMFLOAT4X4& world, bool recursive)
 
   DirectX::XMStoreFloat4(&Transform.Rotation, r);
 
-  calcWorld(recursive);
+  CalcWorldMatrix(recursive);
 }
 
 void
-Node::print(int level)
+Node::Print(int level)
 {
   for (int i = 0; i < level; ++i) {
     std::cout << "  ";
   }
   std::cout << Name << std::endl;
   for (auto child : Children) {
-    child->print(level + 1);
+    child->Print(level + 1);
   }
 }
 } // namespace gltf

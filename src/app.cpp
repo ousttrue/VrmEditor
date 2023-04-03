@@ -428,7 +428,7 @@ App::sceneDock()
                                nullptr,
                                nullptr)) {
         // decompose feedback
-        node->setWorldMatrix(m);
+        node->SetWorldMatrix(m);
       }
       ImGuizmo::GetContext().mAllowActiveHoverItem = false;
     }
