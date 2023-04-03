@@ -11,13 +11,14 @@ read, write, animation test.
   - [x] import
   - [ ] export
   - [ ] vrm-0.x
-    - [x] expression. morhtarget
+    - [x] expression. morphtarget
     - [ ] expression. material
     - [ ] lookat. bone
     - [ ] lookat. expression
     - [x] springbone. basic without collision
     - [x] humanoid
   - [ ] vrm-1.0
+    - [x] humanoid
   - [ ] vrm-animation
     - [ ] import
     - [ ] export
@@ -134,6 +135,7 @@ read, write, animation test.
 - imgui
   - ImGuizmo
   - ImGuiFileDialog
+  - ImNodes
 - glfw3
 - glew
 - DirectXMath
@@ -190,5 +192,6 @@ Naming conventions for variables with a wider scope than local variables.
 
 - `vrm`
 - `vrm::v0`
+- `vrm::v1`
 - `bvh`
 - `gltf`
