@@ -70,24 +70,24 @@ from_json(const nlohmann::json& j, XMFLOAT4& v)
 
 struct ushort4
 {
-  uint16_t x;
-  uint16_t y;
-  uint16_t z;
-  uint16_t w;
+  uint16_t X;
+  uint16_t Y;
+  uint16_t Z;
+  uint16_t W;
 };
 
 struct Vertex
 {
-  DirectX::XMFLOAT3 position;
-  DirectX::XMFLOAT3 normal;
-  DirectX::XMFLOAT2 uv;
+  DirectX::XMFLOAT3 Position;
+  DirectX::XMFLOAT3 Normal;
+  DirectX::XMFLOAT2 Uv;
 };
 static_assert(sizeof(Vertex) == 32, "sizeof(Vertex)");
 
 struct JointBinding
 {
-  ushort4 joints;
-  DirectX::XMFLOAT4 weights;
+  ushort4 Joints;
+  DirectX::XMFLOAT4 Weights;
 };
 
 struct BoundingBox
@@ -111,5 +111,20 @@ struct BoundingBox
     Max.x = std::max(Max.x, p.x);
     Max.y = std::max(Max.y, p.y);
     Max.z = std::max(Max.z, p.z);
+  }
+};
+
+struct EuclideanTransform
+{
+  DirectX::XMFLOAT4 Rotation;
+  DirectX::XMFLOAT3 Translation;
+
+  bool HasRotation() const
+  {
+    if (Rotation.x == 0 && Rotation.y == 0 && Rotation.z == 0 &&
+        (Rotation.w == 1 || Rotation.w == -1)) {
+      return false;
+    }
+    return true;
   }
 };

@@ -14,31 +14,31 @@ namespace gltf {
 struct Skin;
 struct MeshInstance;
 struct Node {
-  uint32_t index;
-  std::string name;
-  DirectX::XMFLOAT3 translation = {};
-  DirectX::XMFLOAT4 rotation = {};
-  DirectX::XMFLOAT3 scale = {};
-  bool hasRotation() const {
-    if (rotation.x == 0 && rotation.y == 0 && rotation.z == 0 &&
-        rotation.w == 1) {
-      return false;
-    }
-    return true;
+  uint32_t Index;
+  std::string Name;
+  EuclideanTransform Transform;
+  DirectX::XMFLOAT3 Translation()const
+  {
+    return Transform.Translation;
   }
-  DirectX::XMFLOAT4X4 localInit;
+  DirectX::XMFLOAT4 Rotation()const
+  {
+    return Transform.Rotation;
+  }
+  DirectX::XMFLOAT3 Scale = {};
+  DirectX::XMFLOAT4X4 WorldMatrix;
 
-  DirectX::XMFLOAT4X4 world;
-  DirectX::XMFLOAT4X4 worldInit;
-  void init();
+  DirectX::XMFLOAT4X4 LocalInitialMatrix;
+  DirectX::XMFLOAT4X4 WorldInitialMatrix;
+  void CalcInitialMatrix();
 
-  std::optional<uint32_t> mesh;
+  std::list<std::shared_ptr<Node>> Children;
+  std::weak_ptr<Node> Parent;
+
+  std::optional<uint32_t> Mesh;
   std::shared_ptr<MeshInstance> Instance;
 
-  std::shared_ptr<Skin> skin;
-
-  std::list<std::shared_ptr<Node>> children;
-  std::weak_ptr<Node> parent;
+  std::shared_ptr<Skin> Skin;
 
   Node(uint32_t i, std::string_view name);
   Node(const Node &) = delete;
@@ -49,19 +49,19 @@ struct Node {
   bool setLocalMatrix(const DirectX::XMFLOAT4X4 &local);
   bool setWorldMatrix(const DirectX::XMFLOAT4X4 &world);
   DirectX::XMFLOAT3 worldPosition() const {
-    return {world._41, world._42, world._43};
+    return {WorldMatrix._41, WorldMatrix._42, WorldMatrix._43};
   }
   void setWorldRotation(const DirectX::XMFLOAT4 &world, bool recursive = false);
   DirectX::XMFLOAT4 worldRotation() const {
     auto q =
-        DirectX::XMQuaternionRotationMatrix(DirectX::XMLoadFloat4x4(&world));
+        DirectX::XMQuaternionRotationMatrix(DirectX::XMLoadFloat4x4(&WorldMatrix));
     DirectX::XMFLOAT4 tmp;
     DirectX::XMStoreFloat4(&tmp, q);
     return tmp;
   }
   DirectX::XMFLOAT4X4 parentWorld() const {
-    if (auto p = parent.lock()) {
-      return p->world;
+    if (auto p = Parent.lock()) {
+      return p->WorldMatrix;
     } else {
       return {
           1, 0, 0, 0, //
@@ -72,14 +72,14 @@ struct Node {
     }
   }
   DirectX::XMFLOAT4 parentWorldRotation() const {
-    if (auto p = parent.lock()) {
+    if (auto p = Parent.lock()) {
       return p->worldRotation();
     } else {
       return {0, 0, 0, 1};
     }
   }
   DirectX::XMFLOAT3 parentWorldPosition() const {
-    if (auto p = parent.lock()) {
+    if (auto p = Parent.lock()) {
       return p->worldPosition();
     } else {
       return {0, 0, 0};
@@ -90,13 +90,13 @@ struct Node {
                         bool recursive = false);
 };
 inline std::ostream &operator<<(std::ostream &os, const Node &node) {
-  os << "Node[" << node.index << "]" << node.name
+  os << "Node[" << node.Index << "]" << node.Name
       // << ": " << node.translation
       // << node.rotation
       // << node.scale
       ;
-  if (node.mesh) {
-    os << ", mesh: " << *node.mesh;
+  if (node.Mesh) {
+    os << ", mesh: " << *node.Mesh;
   }
   return os;
 }

@@ -185,7 +185,7 @@ Scene::Parse()
   // calc world
   auto enter = [](gltf::Node& node) {
     node.calcWorld();
-    node.init();
+    node.CalcInitialMatrix();
     return true;
   };
   Traverse(enter, {});
@@ -466,24 +466,25 @@ Scene::ParseNode(int i, const nlohmann::json& node)
     ptr->setLocalMatrix(local);
   } else {
     // T
-    ptr->translation = node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
+    ptr->Transform.Translation = node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
     if (m_vrm0) {
-      auto t = ptr->translation;
-      ptr->translation = { -t.x, t.y, -t.z };
+      // rotate: Y180
+      auto t = ptr->Transform.Translation;
+      ptr->Transform.Translation = { -t.x, t.y, -t.z };
     }
     // R
-    ptr->rotation = node.value("rotation", DirectX::XMFLOAT4{ 0, 0, 0, 1 });
+    ptr->Transform.Rotation = node.value("rotation", DirectX::XMFLOAT4{ 0, 0, 0, 1 });
     // S
-    ptr->scale = node.value("scale", DirectX::XMFLOAT3{ 1, 1, 1 });
+    ptr->Scale = node.value("scale", DirectX::XMFLOAT3{ 1, 1, 1 });
   }
   if (has(node, "mesh")) {
     auto mesh_index = node.at("mesh");
-    ptr->mesh = mesh_index;
+    ptr->Mesh = mesh_index;
 
     if (has(node, "skin")) {
       int skin_index = node.at("skin");
       auto skin = m_skins[skin_index];
-      ptr->skin = skin;
+      ptr->Skin = skin;
     }
 
     ptr->Instance = std::make_shared<gltf::MeshInstance>(m_meshes[mesh_index]);
@@ -521,7 +522,7 @@ Scene::ParseAnimation(int i, const nlohmann::json& animation)
           ptr->addTranslation(node_index,
                               *times,
                               *values,
-                              m_nodes[node_index]->name + "-translation");
+                              m_nodes[node_index]->Name + "-translation");
         } else {
           return std::unexpected{ values.error() };
         }
@@ -530,27 +531,27 @@ Scene::ParseAnimation(int i, const nlohmann::json& animation)
           ptr->addRotation(node_index,
                            *times,
                            *values,
-                           m_nodes[node_index]->name + "-rotation");
+                           m_nodes[node_index]->Name + "-rotation");
         } else {
           return std::unexpected{ values.error() };
         }
       } else if (path == "scale") {
         if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
           ptr->addScale(
-            node_index, *times, *values, m_nodes[node_index]->name + "-scale");
+            node_index, *times, *values, m_nodes[node_index]->Name + "-scale");
         } else {
           return std::unexpected{ values.error() };
         }
       } else if (path == "weights") {
         if (auto values = m_gltf.accessor<float>(output_index)) {
           auto node = m_nodes[node_index];
-          if (auto mesh_index = node->mesh) {
+          if (auto mesh_index = node->Mesh) {
             auto mesh = m_meshes[*mesh_index];
             if (values->size() != mesh->m_morphTargets.size() * times->size()) {
               return std::unexpected{ "animation-weights: size not match" };
             }
             ptr->addWeights(
-              node_index, *times, *values, node->name + "-weights");
+              node_index, *times, *values, node->Name + "-weights");
           } else {
             return std::unexpected{ "animation-weights: no node.mesh" };
           }
@@ -739,8 +740,8 @@ Scene::Render(Time time, const ViewProjection& camera, const RenderFunc& render)
     // VRM0 expression to morphTarget
     auto meshToNode = [nodes = m_nodes](uint32_t mi) {
       for (auto& node : nodes) {
-        if (node->mesh == mi) {
-          return (uint32_t)node->index;
+        if (node->Mesh == mi) {
+          return (uint32_t)node->Index;
         }
       }
       return (uint32_t)-1;
@@ -754,20 +755,20 @@ Scene::Render(Time time, const ViewProjection& camera, const RenderFunc& render)
   // skinning
 
   for (auto& node : m_nodes) {
-    if (auto mesh_index = node->mesh) {
+    if (auto mesh_index = node->Mesh) {
       auto mesh = m_meshes[*mesh_index];
 
       // mesh animation
       std::span<DirectX::XMFLOAT4X4> skinningMatrices;
 
       // skinning
-      if (auto skin = node->skin) {
+      if (auto skin = node->Skin) {
         skin->currentMatrices.resize(skin->bindMatrices.size());
 
         auto rootInverse = DirectX::XMMatrixIdentity();
         if (auto root_index = skin->root) {
           rootInverse = DirectX::XMMatrixInverse(
-            nullptr, DirectX::XMLoadFloat4x4(&node->world));
+            nullptr, DirectX::XMLoadFloat4x4(&node->WorldMatrix));
         }
 
         for (int i = 0; i < skin->joints.size(); ++i) {
@@ -775,7 +776,7 @@ Scene::Render(Time time, const ViewProjection& camera, const RenderFunc& render)
           auto m = skin->bindMatrices[i];
           DirectX::XMStoreFloat4x4(&skin->currentMatrices[i],
                                    DirectX::XMLoadFloat4x4(&m) *
-                                     DirectX::XMLoadFloat4x4(&node->world) *
+                                     DirectX::XMLoadFloat4x4(&node->WorldMatrix) *
                                      rootInverse);
         }
 
@@ -788,9 +789,9 @@ Scene::Render(Time time, const ViewProjection& camera, const RenderFunc& render)
   }
 
   for (auto& node : m_nodes) {
-    if (auto mesh_index = node->mesh) {
+    if (auto mesh_index = node->Mesh) {
       auto mesh = m_meshes[*mesh_index];
-      render(camera, *mesh, *node->Instance, &node->world._11);
+      render(camera, *mesh, *node->Instance, &node->WorldMatrix._11);
     }
   }
 
@@ -806,7 +807,7 @@ Scene::Traverse(const EnterFunc& enter,
 {
   if (node) {
     if (enter(*node)) {
-      for (auto& child : node->children) {
+      for (auto& child : node->Children) {
         Traverse(enter, leave, child.get());
       }
       if (leave) {
@@ -861,9 +862,9 @@ Scene::SetHumanPose(const vrm::HumanPose& pose)
   for (int i = 0; i < pose.Bones.size(); ++i) {
     if (auto node = GetBoneNode(pose.Bones[i])) {
       if (i == 0) {
-        node->translation = pose.RootPosition;
+        node->Transform.Translation = pose.RootPosition;
       }
-      node->rotation = pose.Rotations[i];
+      node->Transform.Rotation = pose.Rotations[i];
     }
   }
 }
@@ -900,10 +901,10 @@ Scene::GetBoundingBox() const
 {
   BoundingBox bb{};
   for (auto& node : m_nodes) {
-    if (auto mesh_index = node->mesh) {
+    if (auto mesh_index = node->Mesh) {
       auto mesh_bb = m_meshes[*mesh_index]->GetBoundingBox();
-      bb.Extend(dmath::transform(mesh_bb.Min, node->world));
-      bb.Extend(dmath::transform(mesh_bb.Max, node->world));
+      bb.Extend(dmath::transform(mesh_bb.Min, node->WorldMatrix));
+      bb.Extend(dmath::transform(mesh_bb.Max, node->WorldMatrix));
     }
   }
   return bb;

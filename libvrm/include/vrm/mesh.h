@@ -69,7 +69,7 @@ struct Mesh
     auto offset = m_vertices.size();
     m_vertices.resize(offset + values.size());
     for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[offset + i].position = values[i];
+      m_vertices[offset + i].Position = values[i];
     }
     return offset;
   }
@@ -78,7 +78,7 @@ struct Mesh
   {
     assert(offset + values.size() == m_vertices.size());
     for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[offset + i].normal = values[i];
+      m_vertices[offset + i].Normal = values[i];
     }
   }
 
@@ -86,7 +86,7 @@ struct Mesh
   {
     assert(offset + values.size() == m_vertices.size());
     for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[offset + i].uv = values[i];
+      m_vertices[offset + i].Uv = values[i];
     }
   }
 
@@ -107,8 +107,8 @@ struct Mesh
     m_bindings.resize(m_vertices.size());
     for (size_t i = 0; i < joints.size(); ++i) {
       m_bindings[offset + i] = {
-        .joints = joints[i],
-        .weights = weights[i],
+        .Joints = joints[i],
+        .Weights = weights[i],
       };
     }
   }
@@ -133,7 +133,7 @@ struct Mesh
   {
     BoundingBox bb;
     for (auto v : m_vertices) {
-      bb.Extend(v.position);
+      bb.Extend(v.Position);
     }
     return bb;
   }
@@ -178,7 +178,7 @@ struct MeshInstance
       for (int j = 0; j < weights.size(); ++j) {
         auto& morphtarget = mesh.m_morphTargets[j];
         if (weights[j]) {
-          v.position += morphtarget->m_vertices[i].position * weights[j];
+          v.Position += morphtarget->m_vertices[i].position * weights[j];
         }
       }
       m_updated.push_back(v);
@@ -189,21 +189,21 @@ struct MeshInstance
       for (int i = 0; i < mesh.m_vertices.size(); ++i) {
         auto src = m_updated[i];
         auto& dst = m_updated[i];
-        dst.position = { 0, 0, 0 };
-        dst.normal = { 0, 0, 0 };
+        dst.Position = { 0, 0, 0 };
+        dst.Normal = { 0, 0, 0 };
         auto binding = mesh.m_bindings[i];
-        if (auto w = binding.weights.x)
+        if (auto w = binding.Weights.x)
           applySkinning(
-            &dst.position, src.position, w, skinningMatrices[binding.joints.x]);
-        if (auto w = binding.weights.y)
+            &dst.Position, src.Position, w, skinningMatrices[binding.Joints.X]);
+        if (auto w = binding.Weights.y)
           applySkinning(
-            &dst.position, src.position, w, skinningMatrices[binding.joints.y]);
-        if (auto w = binding.weights.z)
+            &dst.Position, src.Position, w, skinningMatrices[binding.Joints.Y]);
+        if (auto w = binding.Weights.z)
           applySkinning(
-            &dst.position, src.position, w, skinningMatrices[binding.joints.z]);
-        if (auto w = binding.weights.w)
+            &dst.Position, src.Position, w, skinningMatrices[binding.Joints.Z]);
+        if (auto w = binding.Weights.w)
           applySkinning(
-            &dst.position, src.position, w, skinningMatrices[binding.joints.w]);
+            &dst.Position, src.Position, w, skinningMatrices[binding.Joints.W]);
       }
     }
   }

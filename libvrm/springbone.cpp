@@ -44,10 +44,10 @@ SpringJoint::DrawGizmo()
 
   gizmo::drawLine(Head->worldPosition(), m_currentTailPosotion, { 1, 1, 0, 1 });
 
-  if (Head->children.size()) {
-    gizmo::drawSphere(Head->children.front()->worldPosition(), { 1, 0, 0, 1 });
+  if (Head->Children.size()) {
+    gizmo::drawSphere(Head->Children.front()->worldPosition(), { 1, 0, 0, 1 });
     gizmo::drawLine(Head->worldPosition(),
-                    Head->children.front()->worldPosition(),
+                    Head->Children.front()->worldPosition(),
                     { 1, 0, 0, 1 });
   }
 }
@@ -83,9 +83,9 @@ SpringJoint::Update()
   m_lastTailPosotion = currentTail;
   auto newLocalRotation = WorldPosToLocalRotation(nextTail);
   assert(!std::isnan(newLocalRotation.x));
-  Head->rotation = newLocalRotation;
+  Head->Transform.Rotation = newLocalRotation;
   Head->calcWorld(false);
-  for (auto& child : Head->children) {
+  for (auto& child : Head->Children) {
     // ひとつ下まで
     child->calcWorld(false);
   }
@@ -97,7 +97,7 @@ SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3& nextTail) const
   DirectX::XMFLOAT3 localNextTail;
   auto world = Head->parentWorld();
   assert(!std::isnan(world._41));
-  auto localInit = Head->localInit;
+  auto localInit = Head->LocalInitialMatrix;
 
   DirectX::XMVECTOR det;
   DirectX::XMStoreFloat3(
@@ -123,9 +123,9 @@ SpringSolver::Add(const std::shared_ptr<gltf::Node>& node,
 {
 
   DirectX::XMFLOAT3 localTailPosition;
-  if (node->children.size()) {
-    for (auto& child : node->children) {
-      localTailPosition = child->translation;
+  if (node->Children.size()) {
+    for (auto& child : node->Children) {
+      localTailPosition = child->Transform.Translation;
       m_joints.push_back(
         SpringJoint(node, localTailPosition, dragForce, stiffiness));
       break;
@@ -140,10 +140,10 @@ SpringSolver::Add(const std::shared_ptr<gltf::Node>& node,
       DirectX::XMVector3Transform(
         DirectX::XMLoadFloat3(&childPosition),
         DirectX::XMMatrixInverse(nullptr,
-                                 DirectX::XMLoadFloat4x4(&node->world))));
+                                 DirectX::XMLoadFloat4x4(&node->WorldMatrix))));
   }
 
-  for (auto& child : node->children) {
+  for (auto& child : node->Children) {
     Add(child, dragForce, stiffiness);
   }
 }

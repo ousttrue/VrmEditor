@@ -144,15 +144,15 @@ struct Animation {
     float seconds = time.count();
     for (auto &[k, v] : m_translationMap) {
       auto node = nodes[k];
-      node->translation = v.getValue(seconds, repeat);
+      node->Transform.Translation = v.getValue(seconds, repeat);
     }
     for (auto &[k, v] : m_rotationMap) {
       auto node = nodes[k];
-      node->rotation = v.getValue(seconds, repeat);
+      node->Transform.Rotation = v.getValue(seconds, repeat);
     }
     for (auto &[k, v] : m_scaleMap) {
       auto node = nodes[k];
-      node->scale = v.getValue(seconds, repeat);
+      node->Scale = v.getValue(seconds, repeat);
     }
     for (auto &[k, v] : m_weightsMap) {
       auto node = nodes[k];

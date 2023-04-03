@@ -294,7 +294,7 @@ App::sceneDock()
       ImGuiTreeNodeFlags_SpanAvailWidth;
     ImGuiTreeNodeFlags node_flags = base_flags;
 
-    if (node.children.empty()) {
+    if (node.Children.empty()) {
       node_flags |=
         ImGuiTreeNodeFlags_Leaf |
         ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
@@ -303,13 +303,13 @@ App::sceneDock()
       node_flags |= ImGuiTreeNodeFlags_Selected;
     }
 
-    bool hasRotation = node.hasRotation();
+    bool hasRotation = node.Transform.HasRotation();
     if (hasRotation) {
       ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
     }
 
     bool node_open = ImGui::TreeNodeEx(
-      (void*)(intptr_t)node.index, node_flags, "%s", node.name.c_str());
+      (void*)(intptr_t)node.Index, node_flags, "%s", node.Name.c_str());
 
     if (hasRotation) {
       ImGui::PopStyleColor();
@@ -319,7 +319,7 @@ App::sceneDock()
       context->new_selected = &node;
     }
 
-    return node.children.size() && node_open;
+    return node.Children.size() && node_open;
   };
   auto leave = []() { ImGui::TreePop(); };
 
@@ -349,8 +349,8 @@ App::sceneDock()
                                    true,
                                    ImGuiWindowFlags_None)) {
                if (context->selected) {
-                 ImGui::Text("%s", context->selected->name.c_str());
-                 if (auto mesh_index = context->selected->mesh) {
+                 ImGui::Text("%s", context->selected->Name.c_str());
+                 if (auto mesh_index = context->selected->Mesh) {
                    auto mesh = scene->m_meshes[*mesh_index];
                    auto instance = context->selected->Instance;
                    for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
@@ -416,7 +416,7 @@ App::sceneDock()
     // gizmo
     if (auto node = selection->selected) {
       // TODO: conflict mouse event(left) with ImageButton
-      auto m = node->world;
+      auto m = node->WorldMatrix;
       ImGuizmo::GetContext().mAllowActiveHoverItem = true;
       if (ImGuizmo::Manipulate(camera.view,
                                camera.projection,
