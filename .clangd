@@ -1,3 +1,2 @@
 CompileFlags:
-  Remove: [-std=c++latest]
-  Add: ["/std:c++latest"]
+  Add: [/std:c++latest, -std=c++latest]
