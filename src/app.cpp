@@ -5,9 +5,9 @@
 #include "assetdir.h"
 #include "gl3renderer.h"
 #include "gui.h"
+#include "imhumanoid.h"
 #include "imlogger.h"
 #include "imtimeline.h"
-#include "imhumanoid.h"
 #include "luahost.h"
 #include "platform.h"
 #include "rendertarget.h"
@@ -141,9 +141,9 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
     // apply vrm
     if (m_scene->m_vrm0) {
       auto& hips = m_motionSolver->instances_[0];
-      m_scene->SetHumanPose(m_humanBoneMap,
-                            { hips._41, hips._42, hips._43 },
-                            m_motionSolver->localRotations);
+      m_scene->SetHumanPose({ .RootPosition = { hips._41, hips._42, hips._43 },
+                              .Bones = m_humanBoneMap,
+                              .Rotations = m_motionSolver->localRotations });
     }
   });
   return true;

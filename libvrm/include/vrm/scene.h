@@ -1,6 +1,7 @@
 #pragma once
 #include "gltf.h"
 #include "humanoid.h"
+#include "humanpose.h"
 #include "scenetypes.h"
 #include "springbone.h"
 #include <DirectXMath.h>
@@ -104,9 +105,7 @@ struct Scene
                     const LeaveJson& leave,
                     nlohmann::json* j = nullptr,
                     std::string_view key = {});
-  void SetHumanPose(std::span<const vrm::HumanBones> humanMap,
-                    const DirectX::XMFLOAT3& rootPosition,
-                    std::span<const DirectX::XMFLOAT4> rotations);
+  void SetHumanPose(const vrm::HumanPose &pose);
   std::shared_ptr<gltf::Node> GetBoneNode(vrm::HumanBones bone);
 
   std::vector<uint8_t> ToGlb() const;

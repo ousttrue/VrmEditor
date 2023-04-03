@@ -859,20 +859,18 @@ Scene::TraverseJson(const EnterJson& enter,
 }
 
 void
-Scene::SetHumanPose(std::span<const vrm::HumanBones> humanMap,
-                    const DirectX::XMFLOAT3& rootPosition,
-                    std::span<const DirectX::XMFLOAT4> rotations)
+Scene::SetHumanPose(const vrm::HumanPose &pose)
 {
 
-  assert(humanMap.size() == rotations.size());
+  assert(pose.Bones.size() == pose.Rotations.size());
 
   if (m_vrm0) {
-    for (int i = 0; i < humanMap.size(); ++i) {
-      if (auto node = GetBoneNode(humanMap[i])) {
+    for (int i = 0; i < pose.Bones.size(); ++i) {
+      if (auto node = GetBoneNode(pose.Bones[i])) {
         if (i == 0) {
-          node->translation = rootPosition;
+          node->translation = pose.RootPosition;
         }
-        node->rotation = rotations[i];
+        node->rotation = pose.Rotations[i];
       }
     }
   }
