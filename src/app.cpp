@@ -307,24 +307,48 @@ App::sceneDock()
   auto leave = []() { ImGui::TreePop(); };
 
   m_gui->m_docks.push_back(
-    Dock("scene", [scene = m_scene, enter, leave, context]() {
-      context->selected = context->new_selected;
-      scene->Traverse(enter, leave);
-    }));
+    Dock("scene",
+         [scene = m_scene, enter, leave, context, gui = m_gui](bool* p_open) {
+           if (ImGui::Begin("scene", p_open, ImGuiWindowFlags_NoScrollbar)) {
+             auto size = ImGui::GetContentRegionAvail();
 
-  m_gui->m_docks.push_back(Dock("selected", [scene = m_scene, context]() {
-    if (context->selected) {
-      ImGui::Text("%s", context->selected->name.c_str());
-      if (auto mesh_index = context->selected->mesh) {
-        auto mesh = scene->m_meshes[*mesh_index];
-        auto instance = context->selected->Instance;
-        for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
-          auto& morph = mesh->m_morphTargets[i];
-          ImGui::SliderFloat(morph->name.c_str(), &instance->weights[i], 0, 1);
-        }
-      }
-    }
-  }));
+             context->selected = context->new_selected;
+             // ImGui::BeginGroup();
+             if (ImGui::BeginChild("##scene-tree",
+                                   { size.x, size.y / 2 },
+                                   true,
+                                   ImGuiWindowFlags_None)) {
+               // ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing,
+               // gui->m_fontSize / 4);
+               scene->Traverse(enter, leave);
+               // ImGui::PopStyleVar();
+             }
+             ImGui::EndChild();
+             // ImGui::EndGroup();
+
+             // ImGui::BeginGroup();
+             if (ImGui::BeginChild("##scene-selected",
+                                   { size.x, size.y / 2 },
+                                   true,
+                                   ImGuiWindowFlags_None)) {
+               if (context->selected) {
+                 ImGui::Text("%s", context->selected->name.c_str());
+                 if (auto mesh_index = context->selected->mesh) {
+                   auto mesh = scene->m_meshes[*mesh_index];
+                   auto instance = context->selected->Instance;
+                   for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
+                     auto& morph = mesh->m_morphTargets[i];
+                     ImGui::SliderFloat(
+                       morph->name.c_str(), &instance->weights[i], 0, 1);
+                   }
+                 }
+               }
+             }
+             ImGui::EndChild();
+             // ImGui::EndGroup();
+           }
+           ImGui::End();
+         }));
 
   m_gui->m_docks.push_back(Dock("vrm-0.x", [scene = m_scene]() {
     if (auto vrm = scene->m_vrm0) {
