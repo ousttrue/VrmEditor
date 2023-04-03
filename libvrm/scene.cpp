@@ -87,8 +87,8 @@ Scene::Load(const std::filesystem::path& path,
     return std::unexpected{ "json parse" };
   }
 
-  if (has(m_gltf.json, "extensionsRequired")) {
-    for (auto& ex : m_gltf.json.at("extensionsRequired")) {
+  if (has(m_gltf.Json, "extensionsRequired")) {
+    for (auto& ex : m_gltf.Json.at("extensionsRequired")) {
       if (ex == "KHR_draco_mesh_compression") {
         return std::unexpected{ "KHR_draco_mesh_compression" };
       }
@@ -98,15 +98,15 @@ Scene::Load(const std::filesystem::path& path,
     }
   }
 
-  if (has(m_gltf.json, "extensions")) {
-    auto& extensions = m_gltf.json.at("extensions");
+  if (has(m_gltf.Json, "extensions")) {
+    auto& extensions = m_gltf.Json.at("extensions");
     if (has(extensions, "VRM")) {
       auto VRM = extensions.at("VRM");
       m_vrm0 = std::make_shared<vrm0::Vrm>();
     }
   }
 
-  auto& images = m_gltf.json["images"];
+  auto& images = m_gltf.Json["images"];
   for (int i = 0; i < images.size(); ++i) {
     auto& image = images[i];
     std::span<const uint8_t> bytes;
@@ -117,7 +117,7 @@ Scene::Load(const std::filesystem::path& path,
         return std::unexpected{ buffer_view.error() };
       }
     } else if (has(image, "uri")) {
-      if (auto buffer_view = m_gltf.m_dir->GetBuffer(image.at("uri"))) {
+      if (auto buffer_view = m_gltf.Dir->GetBuffer(image.at("uri"))) {
         bytes = *buffer_view;
       } else {
         return std::unexpected{ buffer_view.error() };
@@ -135,9 +135,9 @@ Scene::Load(const std::filesystem::path& path,
     m_images.push_back(ptr);
   }
 
-  auto& textures = m_gltf.json["textures"];
+  auto& textures = m_gltf.Json["textures"];
 
-  auto& materials = m_gltf.json["materials"];
+  auto& materials = m_gltf.Json["materials"];
   for (int i = 0; i < materials.size(); ++i) {
     auto& material = materials[i];
     std::stringstream ss;
@@ -157,7 +157,7 @@ Scene::Load(const std::filesystem::path& path,
     }
   }
 
-  for (auto& mesh : m_gltf.json["meshes"]) {
+  for (auto& mesh : m_gltf.Json["meshes"]) {
     auto ptr = std::make_shared<gltf::Mesh>();
     m_meshes.push_back(ptr);
 
@@ -222,7 +222,7 @@ Scene::Load(const std::filesystem::path& path,
           // skinning
           int joint_accessor = attributes.at(gltf::VERTEX_JOINT);
           switch (
-            *gltf::item_size(m_gltf.json.at("accessors").at(joint_accessor))) {
+            *gltf::item_size(m_gltf.Json.at("accessors").at(joint_accessor))) {
             case 8:
               if (auto accessor = m_gltf.accessor<ushort4>(joint_accessor)) {
                 if (auto accessor_w = m_gltf.accessor<DirectX::XMFLOAT4>(
@@ -294,8 +294,8 @@ Scene::Load(const std::filesystem::path& path,
     }
   }
 
-  if (has(m_gltf.json, "skins")) {
-    auto skins = m_gltf.json["skins"];
+  if (has(m_gltf.Json, "skins")) {
+    auto skins = m_gltf.Json["skins"];
     for (int i = 0; i < skins.size(); ++i) {
       auto& skin = skins[i];
       auto ptr = std::make_shared<gltf::Skin>();
@@ -336,7 +336,7 @@ Scene::Load(const std::filesystem::path& path,
     }
   }
 
-  auto nodes = m_gltf.json["nodes"];
+  auto nodes = m_gltf.Json["nodes"];
   for (int i = 0; i < nodes.size(); ++i) {
     auto& node = nodes[i];
     std::stringstream ss;
@@ -390,8 +390,8 @@ Scene::Load(const std::filesystem::path& path,
       }
     }
   }
-  if (has(m_gltf.json, "scenes")) {
-    auto scene = m_gltf.json["scenes"][0];
+  if (has(m_gltf.Json, "scenes")) {
+    auto scene = m_gltf.Json["scenes"][0];
     for (auto& node : scene["nodes"]) {
       m_roots.push_back(m_nodes[node]);
     }
@@ -405,7 +405,7 @@ Scene::Load(const std::filesystem::path& path,
   };
   Traverse(enter, {});
 
-  auto& animations = m_gltf.json["animations"];
+  auto& animations = m_gltf.Json["animations"];
   for (int i = 0; i < animations.size(); ++i) {
     auto& animation = animations[i];
     std::stringstream ss;
@@ -489,8 +489,8 @@ Scene::Load(const std::filesystem::path& path,
   }
 
   // vrm-0.x
-  if (has(m_gltf.json, "extensions")) {
-    auto& extensions = m_gltf.json.at("extensions");
+  if (has(m_gltf.Json, "extensions")) {
+    auto& extensions = m_gltf.Json.at("extensions");
     if (has(extensions, "VRM")) {
       auto VRM = extensions.at("VRM");
       // m_vrm0 = std::make_shared<Vrm0>();
@@ -578,7 +578,7 @@ Scene::AddIndices(int vertex_offset,
                   int accessor_index,
                   const std::shared_ptr<gltf::Material>& material)
 {
-  auto accessor = m_gltf.json["accessors"][accessor_index];
+  auto accessor = m_gltf.Json["accessors"][accessor_index];
   switch ((gltf::ComponentType)accessor["componentType"]) {
     case gltf::ComponentType::UNSIGNED_BYTE: {
       if (auto span = m_gltf.accessor<uint8_t>(accessor_index)) {
@@ -713,7 +713,7 @@ Scene::TraverseJson(const EnterJson& enter,
 {
   if (!item) {
     // root
-    for (auto& kv : m_gltf.json.items()) {
+    for (auto& kv : m_gltf.Json.items()) {
       TraverseJson(enter, leave, &kv.value(), kv.key());
     }
     return;

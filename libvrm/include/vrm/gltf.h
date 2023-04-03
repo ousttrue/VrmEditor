@@ -14,9 +14,12 @@ inline bool
 has(const nlohmann::json& obj, std::string_view key)
 {
   if (!obj.is_object()) {
-    return false;
+    return {};
   }
-  return obj.find(key) != obj.end();
+  if (obj.find(key) == obj.end()) {
+    return {};
+  }
+  return true;
 }
 
 namespace gltf {
@@ -95,23 +98,22 @@ item_size(const nlohmann::json& accessor)
 
 struct Gltf
 {
-
-  std::shared_ptr<Directory> m_dir;
-
-  nlohmann::json json;
-  std::span<const uint8_t> bin;
+  std::shared_ptr<Directory> Dir;
+  nlohmann::json Json;
+  std::span<const uint8_t> Bin;
 
   std::expected<std::span<const uint8_t>, std::string> buffer_view(
     int buffer_view_index) const
   {
-    auto buffer_view = json["bufferViews"][buffer_view_index];
+    auto buffer_view = Json.at("bufferViews").at(buffer_view_index);
     // std::cout << buffer_view << std::endl;
 
     int buffer_index = buffer_view.at("buffer");
-    auto buffer = json["buffers"][buffer_index];
-    if (buffer.find("uri") != buffer.end()) {
+    auto buffer = Json.at("buffers").at(buffer_index);
+    if (has(buffer, "uri")) {
+      // external file
       std::string_view uri = buffer.at("uri");
-      if (auto buffer = m_dir->GetBuffer(uri)) {
+      if (auto buffer = Dir->GetBuffer(uri)) {
         return buffer->subspan(buffer_view.value("byteOffset", 0),
                                buffer_view.at("byteLength"));
       } else {
@@ -119,7 +121,7 @@ struct Gltf
       }
     } else {
       // glb
-      return bin.subspan(buffer_view.value("byteOffset", 0),
+      return Bin.subspan(buffer_view.value("byteOffset", 0),
                          buffer_view.at("byteLength"));
     }
   }
@@ -128,16 +130,22 @@ struct Gltf
   std::expected<std::span<const T>, std::string> accessor(
     int accessor_index) const
   {
-    auto accessor = json["accessors"][accessor_index];
+    auto accessor = Json.at("accessors").at(accessor_index);
     // std::cout << accessor << std::endl;
     assert(*item_size(accessor) == sizeof(T));
-    if (auto span = buffer_view(accessor["bufferView"])) {
-      int offset = accessor.value("byteOffset", 0);
-      return std::span<const T>((const T*)(span->data() + offset),
-                                accessor.at("count"));
+    if (has(accessor, "sparse")) {
+      return std::unexpected{ "sparse not implemented" };
+    } else if (has(accessor, "bufferView")) {
+      if (auto span = buffer_view(accessor["bufferView"])) {
+        int offset = accessor.value("byteOffset", 0);
+        return std::span<const T>((const T*)(span->data() + offset),
+                                  accessor.at("count"));
 
+      } else {
+        return std::unexpected{ span.error() };
+      }
     } else {
-      return std::unexpected{ span.error() };
+      return std::unexpected{ "sparse nor bufferView" };
     }
   }
 };

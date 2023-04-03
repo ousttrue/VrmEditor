@@ -15,7 +15,6 @@
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <fstream>
-#include <iostream>
 #include <sstream>
 #include <vrm/animation.h>
 #include <vrm/gizmo.h>
@@ -114,7 +113,7 @@ App::LoadModel(const std::filesystem::path& path)
 
     return true;
   } else {
-    std::cout << result.error();
+    Log(LogLevel::Error) << result.error();
     return false;
   }
 }
