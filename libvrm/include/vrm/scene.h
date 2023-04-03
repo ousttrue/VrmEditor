@@ -130,4 +130,9 @@ private:
   std::expected<std::shared_ptr<gltf::Node>, std::string> ParseNode(
     int i,
     const nlohmann::json& node);
+  std::expected<std::shared_ptr<gltf::Animation>, std::string> ParseAnimation(
+    int i,
+    const nlohmann::json& animation);
+  std::expected<std::shared_ptr<vrm::v0::Vrm>, std::string> ParseVrm0();
+  std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string> ParseVrm1();
 };

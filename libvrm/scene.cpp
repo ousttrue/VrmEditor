@@ -192,165 +192,26 @@ Scene::Parse()
 
   auto& animations = m_gltf.Json["animations"];
   for (int i = 0; i < animations.size(); ++i) {
-    auto& animation = animations[i];
-    std::stringstream ss;
-    ss << "animation" << i;
-    auto ptr =
-      std::make_shared<gltf::Animation>(animation.value("name", ss.str()));
-    m_animations.push_back(ptr);
-
-    // samplers
-    auto& samplers = animation["samplers"];
-
-    // channels
-    auto& channels = animation["channels"];
-    for (auto& channel : channels) {
-      int sampler_index = channel.at("sampler");
-      auto sampler = samplers[sampler_index];
-
-      auto target = channel.at("target");
-      int node_index = target.at("node");
-      std::string path = target.at("path");
-
-      // time
-      int input_index = sampler.at("input");
-      if (auto times = m_gltf.accessor<float>(input_index)) {
-        int output_index = sampler.at("output");
-        if (path == "translation") {
-          if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
-            ptr->addTranslation(node_index,
-                                *times,
-                                *values,
-                                m_nodes[node_index]->name + "-translation");
-          } else {
-            return std::unexpected{ values.error() };
-          }
-        } else if (path == "rotation") {
-          if (auto values = m_gltf.accessor<DirectX::XMFLOAT4>(output_index)) {
-            ptr->addRotation(node_index,
-                             *times,
-                             *values,
-                             m_nodes[node_index]->name + "-rotation");
-          } else {
-            return std::unexpected{ values.error() };
-          }
-        } else if (path == "scale") {
-          if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
-            ptr->addScale(node_index,
-                          *times,
-                          *values,
-                          m_nodes[node_index]->name + "-scale");
-          } else {
-            return std::unexpected{ values.error() };
-          }
-        } else if (path == "weights") {
-          if (auto values = m_gltf.accessor<float>(output_index)) {
-            auto node = m_nodes[node_index];
-            if (auto mesh_index = node->mesh) {
-              auto mesh = m_meshes[*mesh_index];
-              if (values->size() !=
-                  mesh->m_morphTargets.size() * times->size()) {
-                return std::unexpected{ "animation-weights: size not match" };
-              }
-              ptr->addWeights(
-                node_index, *times, *values, node->name + "-weights");
-            } else {
-              return std::unexpected{ "animation-weights: no node.mesh" };
-            }
-          } else {
-            return std::unexpected{ values.error() };
-          }
-        } else {
-          return std::unexpected{ "animation path is not implemented: " +
-                                  path };
-        }
-      } else {
-        return std::unexpected{ times.error() };
-      }
+    if (auto animation = ParseAnimation(i, animations.at(i))) {
+      m_animations.push_back(*animation);
+    } else {
+      return std::unexpected{ animation.error() };
     }
-
-    // set animation duration
-    // ptr->m_duration = ptr->duration();
   }
 
-  // vrm-0.x
-  if (has(m_gltf.Json, "extensions")) {
-    auto& extensions = m_gltf.Json.at("extensions");
-    if (has(extensions, "VRM")) {
-      auto VRM = extensions.at("VRM");
-      // m_vrm0 = std::make_shared<Vrm0>();
+  if (m_vrm0) {
+    if (auto vrm0 = ParseVrm0()) {
+      m_vrm0 = *vrm0;
+    } else {
+      return std::unexpected{ vrm0.error() };
+    }
+  }
 
-      if (has(VRM, "humanoid")) {
-        auto& humanoid = VRM.at("humanoid");
-        if (has(humanoid, "humanBones")) {
-          auto& humanBones = humanoid.at("humanBones");
-          // bone & node
-          for (auto& humanBone : humanBones) {
-            int index = humanBone.at("node");
-            std::string_view name = humanBone.at("bone");
-            // std::cout << name << ": " << index << std::endl;
-            m_vrm0->m_humanoid.setNode(name, vrm::VrmVersion::_0_x, index);
-          }
-          std::cout << m_vrm0->m_humanoid << std::endl;
-        }
-      }
-
-      // meta
-      // specVersion
-      // exporterVersion
-
-      // firstPerson
-      // materialProperties
-
-      if (has(VRM, "blendShapeMaster")) {
-        auto& blendShapeMaster = VRM.at("blendShapeMaster");
-        if (has(blendShapeMaster, "blendShapeGroups")) {
-          auto& blendShapeGroups = blendShapeMaster.at("blendShapeGroups");
-          for (auto& g : blendShapeGroups) {
-            // {"binds":[],"isBinary":false,"materialValues":[],"name":"Neutral","presetName":"neutral"}
-            // std::cout << g << std::endl;
-            auto expression = m_vrm0->addBlendShape(
-              g.at("presetName"), g.at("name"), g.value("isBinary", false));
-            if (has(g, "binds")) {
-              for (vrm::v0::ExpressionMorphTargetBind bind : g.at("binds")) {
-                // [0-100] to [0-1]
-                bind.weight *= 0.01f;
-                expression->morphBinds.push_back(bind);
-              }
-            }
-          }
-        }
-      }
-
-      if (has(VRM, "secondaryAnimation")) {
-        auto& secondaryAnimation = VRM.at("secondaryAnimation");
-        if (has(secondaryAnimation, "colliderGroups")) {
-          auto& colliderGroups = secondaryAnimation.at("colliderGroups");
-          for (auto& colliderGroup : colliderGroups) {
-            auto ptr = std::make_shared<vrm::v0::ColliderGroup>();
-            *ptr = colliderGroup;
-            std::cout << *ptr << std::endl;
-            m_vrm0->m_colliderGroups.push_back(ptr);
-          }
-        }
-        if (has(secondaryAnimation, "boneGroups")) {
-          auto& boneGroups = secondaryAnimation.at("boneGroups");
-          for (auto& boneGroup : boneGroups) {
-            auto ptr = std::make_shared<vrm::v0::Spring>();
-            *ptr = boneGroup;
-            std::cout << *ptr << std::endl;
-            m_vrm0->m_springs.push_back(ptr);
-          }
-        }
-
-        m_spring->Clear();
-        for (auto& spring : m_vrm0->m_springs) {
-          for (auto node_index : spring->bones) {
-            m_spring->Add(
-              m_nodes[node_index], spring->dragForce, spring->stiffiness);
-          }
-        }
-      }
+  if (m_vrm1) {
+    if (auto vrm1 = ParseVrm1()) {
+      m_vrm1 = *vrm1;
+    } else {
+      return std::unexpected{ vrm1.error() };
     }
   }
 
@@ -628,6 +489,178 @@ Scene::ParseNode(int i, const nlohmann::json& node)
     ptr->Instance = std::make_shared<gltf::MeshInstance>(m_meshes[mesh_index]);
   }
   return ptr;
+}
+
+std::expected<std::shared_ptr<gltf::Animation>, std::string>
+Scene::ParseAnimation(int i, const nlohmann::json& animation)
+{
+  std::stringstream ss;
+  ss << "animation" << i;
+  auto ptr =
+    std::make_shared<gltf::Animation>(animation.value("name", ss.str()));
+
+  // samplers
+  auto& samplers = animation["samplers"];
+
+  // channels
+  auto& channels = animation["channels"];
+  for (auto& channel : channels) {
+    int sampler_index = channel.at("sampler");
+    auto sampler = samplers[sampler_index];
+
+    auto target = channel.at("target");
+    int node_index = target.at("node");
+    std::string path = target.at("path");
+
+    // time
+    int input_index = sampler.at("input");
+    if (auto times = m_gltf.accessor<float>(input_index)) {
+      int output_index = sampler.at("output");
+      if (path == "translation") {
+        if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
+          ptr->addTranslation(node_index,
+                              *times,
+                              *values,
+                              m_nodes[node_index]->name + "-translation");
+        } else {
+          return std::unexpected{ values.error() };
+        }
+      } else if (path == "rotation") {
+        if (auto values = m_gltf.accessor<DirectX::XMFLOAT4>(output_index)) {
+          ptr->addRotation(node_index,
+                           *times,
+                           *values,
+                           m_nodes[node_index]->name + "-rotation");
+        } else {
+          return std::unexpected{ values.error() };
+        }
+      } else if (path == "scale") {
+        if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
+          ptr->addScale(
+            node_index, *times, *values, m_nodes[node_index]->name + "-scale");
+        } else {
+          return std::unexpected{ values.error() };
+        }
+      } else if (path == "weights") {
+        if (auto values = m_gltf.accessor<float>(output_index)) {
+          auto node = m_nodes[node_index];
+          if (auto mesh_index = node->mesh) {
+            auto mesh = m_meshes[*mesh_index];
+            if (values->size() != mesh->m_morphTargets.size() * times->size()) {
+              return std::unexpected{ "animation-weights: size not match" };
+            }
+            ptr->addWeights(
+              node_index, *times, *values, node->name + "-weights");
+          } else {
+            return std::unexpected{ "animation-weights: no node.mesh" };
+          }
+        } else {
+          return std::unexpected{ values.error() };
+        }
+      } else {
+        return std::unexpected{ "animation path is not implemented: " + path };
+      }
+    } else {
+      return std::unexpected{ times.error() };
+    }
+  }
+
+  return ptr;
+}
+
+std::expected<std::shared_ptr<vrm::v0::Vrm>, std::string>
+Scene::ParseVrm0()
+{
+  if (!has(m_gltf.Json, "extensions")) {
+    return std::unexpected{ "no extensions" };
+  }
+  auto& extensions = m_gltf.Json.at("extensions");
+
+  if (!has(extensions, "VRM")) {
+    return std::unexpected{ "no extensions.VRM" };
+  }
+  auto VRM = extensions.at("VRM");
+
+  auto ptr = std::make_shared<vrm::v0::Vrm>();
+
+  if (has(VRM, "humanoid")) {
+    auto& humanoid = VRM.at("humanoid");
+    if (has(humanoid, "humanBones")) {
+      auto& humanBones = humanoid.at("humanBones");
+      // bone & node
+      for (auto& humanBone : humanBones) {
+        int index = humanBone.at("node");
+        std::string_view name = humanBone.at("bone");
+        // std::cout << name << ": " << index << std::endl;
+        ptr->m_humanoid.setNode(name, vrm::VrmVersion::_0_x, index);
+      }
+      std::cout << ptr->m_humanoid << std::endl;
+    }
+  }
+
+  // meta
+  // specVersion
+  // exporterVersion
+
+  // firstPerson
+  // materialProperties
+
+  if (has(VRM, "blendShapeMaster")) {
+    auto& blendShapeMaster = VRM.at("blendShapeMaster");
+    if (has(blendShapeMaster, "blendShapeGroups")) {
+      auto& blendShapeGroups = blendShapeMaster.at("blendShapeGroups");
+      for (auto& g : blendShapeGroups) {
+        // {"binds":[],"isBinary":false,"materialValues":[],"name":"Neutral","presetName":"neutral"}
+        // std::cout << g << std::endl;
+        auto expression = ptr->addBlendShape(
+          g.at("presetName"), g.at("name"), g.value("isBinary", false));
+        if (has(g, "binds")) {
+          for (vrm::v0::ExpressionMorphTargetBind bind : g.at("binds")) {
+            // [0-100] to [0-1]
+            bind.weight *= 0.01f;
+            expression->morphBinds.push_back(bind);
+          }
+        }
+      }
+    }
+  }
+
+  if (has(VRM, "secondaryAnimation")) {
+    auto& secondaryAnimation = VRM.at("secondaryAnimation");
+    if (has(secondaryAnimation, "colliderGroups")) {
+      auto& colliderGroups = secondaryAnimation.at("colliderGroups");
+      for (auto& colliderGroup : colliderGroups) {
+        auto group = std::make_shared<vrm::v0::ColliderGroup>();
+        *group = colliderGroup;
+        std::cout << *group << std::endl;
+        ptr->m_colliderGroups.push_back(group);
+      }
+    }
+    if (has(secondaryAnimation, "boneGroups")) {
+      auto& boneGroups = secondaryAnimation.at("boneGroups");
+      for (auto& boneGroup : boneGroups) {
+        auto spring = std::make_shared<vrm::v0::Spring>();
+        *spring = boneGroup;
+        std::cout << *spring << std::endl;
+        ptr->m_springs.push_back(spring);
+      }
+    }
+
+    m_spring->Clear();
+    for (auto& spring : ptr->m_springs) {
+      for (auto node_index : spring->bones) {
+        m_spring->Add(
+          m_nodes[node_index], spring->dragForce, spring->stiffiness);
+      }
+    }
+  }
+  return ptr;
+}
+
+std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string>
+Scene::ParseVrm1()
+{
+  return std::unexpected{ "TODO" };
 }
 
 std::expected<bool, std::string>
