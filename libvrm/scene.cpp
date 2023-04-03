@@ -183,8 +183,8 @@ Scene::Load(const std::filesystem::path& path,
       } else {
         // extend vertex buffer
         std::span<const DirectX::XMFLOAT3> positions;
-        if (auto accessor =
-              m_gltf.accessor<DirectX::XMFLOAT3>(attributes[VERTEX_POSITION])) {
+        if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
+              attributes[gltf::VERTEX_POSITION])) {
           positions = *accessor;
         } else {
           return std::unexpected{ accessor.error() };
@@ -199,32 +199,34 @@ Scene::Load(const std::filesystem::path& path,
         }
         auto offset = ptr->addPosition(positions);
 
-        if (has(attributes, VERTEX_NORMAL)) {
+        if (has(attributes, gltf::VERTEX_NORMAL)) {
           if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
-                attributes.at(VERTEX_NORMAL))) {
+                attributes.at(gltf::VERTEX_NORMAL))) {
             ptr->setNormal(offset, *accessor);
           } else {
             return std::unexpected{ accessor.error() };
           }
         }
 
-        if (has(attributes, VERTEX_UV)) {
-          if (auto accessor =
-                m_gltf.accessor<DirectX::XMFLOAT2>(attributes.at(VERTEX_UV))) {
+        if (has(attributes, gltf::VERTEX_UV)) {
+          if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT2>(
+                attributes.at(gltf::VERTEX_UV))) {
             ptr->setUv(offset, *accessor);
           } else {
             return std::unexpected{ accessor.error() };
           }
         }
 
-        if (has(attributes, VERTEX_JOINT) && has(attributes, VERTEX_WEIGHT)) {
+        if (has(attributes, gltf::VERTEX_JOINT) &&
+            has(attributes, gltf::VERTEX_WEIGHT)) {
           // skinning
-          int joint_accessor = attributes.at(VERTEX_JOINT);
-          switch (*item_size(m_gltf.json["accessors"][joint_accessor])) {
+          int joint_accessor = attributes.at(gltf::VERTEX_JOINT);
+          switch (
+            *gltf::item_size(m_gltf.json.at("accessors").at(joint_accessor))) {
             case 8:
               if (auto accessor = m_gltf.accessor<ushort4>(joint_accessor)) {
                 if (auto accessor_w = m_gltf.accessor<DirectX::XMFLOAT4>(
-                      attributes.at(VERTEX_WEIGHT))) {
+                      attributes.at(gltf::VERTEX_WEIGHT))) {
                   ptr->setBoneSkinning(offset, *accessor, *accessor_w);
                 } else {
                   return std::unexpected{ accessor_w.error() };
@@ -249,7 +251,7 @@ Scene::Load(const std::filesystem::path& path,
             // std::cout << target << std::endl;
             std::span<const DirectX::XMFLOAT3> positions;
             if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
-                  target.at(VERTEX_POSITION))) {
+                  target.at(gltf::VERTEX_POSITION))) {
               positions = *accessor;
             } else {
               return std::unexpected{ accessor.error() };
@@ -577,8 +579,8 @@ Scene::AddIndices(int vertex_offset,
                   const std::shared_ptr<gltf::Material>& material)
 {
   auto accessor = m_gltf.json["accessors"][accessor_index];
-  switch ((ComponentType)accessor["componentType"]) {
-    case ComponentType::UNSIGNED_BYTE: {
+  switch ((gltf::ComponentType)accessor["componentType"]) {
+    case gltf::ComponentType::UNSIGNED_BYTE: {
       if (auto span = m_gltf.accessor<uint8_t>(accessor_index)) {
         mesh->addSubmesh(vertex_offset, *span, material);
         return true;
@@ -586,7 +588,7 @@ Scene::AddIndices(int vertex_offset,
         return std::unexpected{ span.error() };
       }
     } break;
-    case ComponentType::UNSIGNED_SHORT: {
+    case gltf::ComponentType::UNSIGNED_SHORT: {
       if (auto span = m_gltf.accessor<uint16_t>(accessor_index)) {
         mesh->addSubmesh(vertex_offset, *span, material);
         return true;
@@ -594,7 +596,7 @@ Scene::AddIndices(int vertex_offset,
         return std::unexpected{ span.error() };
       }
     } break;
-    case ComponentType::UNSIGNED_INT: {
+    case gltf::ComponentType::UNSIGNED_INT: {
       if (auto span = m_gltf.accessor<uint32_t>(accessor_index)) {
         mesh->addSubmesh(vertex_offset, *span, material);
         return true;

@@ -45,7 +45,7 @@ using LeaveJson = std::function<void()>;
 
 struct Scene
 {
-  Gltf m_gltf;
+  gltf::Gltf m_gltf;
   std::vector<std::shared_ptr<gltf::Image>> m_images;
   std::vector<std::shared_ptr<gltf::Material>> m_materials;
   std::vector<std::shared_ptr<gltf::Mesh>> m_meshes;
