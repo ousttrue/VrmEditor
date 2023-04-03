@@ -1,6 +1,7 @@
 #pragma once
 #include "base64.h"
 #include "directory.h"
+#include <algorithm>
 #include <expected>
 #include <filesystem>
 #include <iostream>
@@ -126,6 +127,23 @@ struct Gltf
     }
   }
 
+  template<typename S, typename T>
+  std::expected<bool, std::string> SetSparseValue(std::span<const S> indices,
+                                                  uint32_t buffer_view_index,
+                                                  std::span<T> dst) const
+  {
+    if (auto span = buffer_view(buffer_view_index)) {
+      assert(indices.size() == span->size() / sizeof(T));
+      auto p = (const T*)span->data();
+      for (int i = 0; i < indices.size(); ++i) {
+        dst[i] = p[indices[i]];
+      }
+    } else {
+      return std::unexpected{ span.error() };
+    }
+  }
+
+  mutable std::vector<uint8_t> m_sparseBuffer;
   template<typename T>
   std::expected<std::span<const T>, std::string> accessor(
     int accessor_index) const
@@ -133,13 +151,75 @@ struct Gltf
     auto accessor = Json.at("accessors").at(accessor_index);
     // std::cout << accessor << std::endl;
     assert(*item_size(accessor) == sizeof(T));
+    int count = accessor.at("count");
     if (has(accessor, "sparse")) {
-      return std::unexpected{ "sparse not implemented" };
+      auto sparse = accessor.at("sparse");
+      m_sparseBuffer.resize(count * sizeof(T));
+      auto begin = (T*)m_sparseBuffer.data();
+      auto sparse_span = std::span<T>(begin, begin + count);
+      if (has(accessor, "bufferView")) {
+        // non zero sparse
+        return std::unexpected{ "non zero sparse not implemented" };
+      } else {
+        // zero fill
+        T zero = {};
+        std::fill(sparse_span.begin(), sparse_span.end(), zero);
+      }
+      int sparse_count = sparse.at("count");
+      auto sparse_indices = sparse.at("indices");
+      auto sparse_values = sparse.at("values");
+      switch ((gltf::ComponentType)sparse_indices.at("componentType")) {
+        case gltf::ComponentType::UNSIGNED_BYTE:
+          if (auto sparse_indices_bytes =
+                buffer_view(sparse_indices.at("bufferView"))) {
+            auto begin = (const uint8_t*)sparse_indices_bytes->data();
+            auto indices_span = std::span(begin, begin + sparse_count);
+            if (auto ok = SetSparseValue(
+                  indices_span, sparse_values.at("bufferView"), sparse_span)) {
+              return sparse_span;
+            } else {
+              return std::unexpected{ ok.error() };
+            }
+          } else {
+            return std::unexpected{ sparse_indices_bytes.error() };
+          }
+        case gltf::ComponentType::UNSIGNED_SHORT:
+          if (auto sparse_indices_bytes =
+                buffer_view(sparse_indices.at("bufferView"))) {
+            auto begin = (const uint16_t*)sparse_indices_bytes->data();
+            auto indices_span = std::span(begin, begin + sparse_count);
+            if (auto ok = SetSparseValue(
+                  indices_span, sparse_values.at("bufferView"), sparse_span)) {
+              return sparse_span;
+            } else {
+              return std::unexpected{ ok.error() };
+            }
+          } else {
+            return std::unexpected{ sparse_indices_bytes.error() };
+          }
+        case gltf::ComponentType::UNSIGNED_INT:
+          if (auto sparse_indices_bytes =
+                buffer_view(sparse_indices.at("bufferView"))) {
+            auto begin = (const uint32_t*)sparse_indices_bytes->data();
+            auto indices_span = std::span(begin, begin + sparse_count);
+            if (auto ok = SetSparseValue(
+                  indices_span, sparse_values.at("bufferView"), sparse_span)) {
+
+              return sparse_span;
+            } else {
+              return std::unexpected{ ok.error() };
+            }
+          } else {
+            return std::unexpected{ sparse_indices_bytes.error() };
+          }
+        default:
+          return std::unexpected{ "sparse.indices: unknown" };
+      }
+      throw std::runtime_error("not implemented");
     } else if (has(accessor, "bufferView")) {
       if (auto span = buffer_view(accessor["bufferView"])) {
         int offset = accessor.value("byteOffset", 0);
-        return std::span<const T>((const T*)(span->data() + offset),
-                                  accessor.at("count"));
+        return std::span<const T>((const T*)(span->data() + offset), count);
 
       } else {
         return std::unexpected{ span.error() };
