@@ -1,13 +1,15 @@
 #include "assetdir.h"
+#include "windows_helper.h"
+#include <imgui.h>
 
-AssetDir::AssetDir(std::string_view name, std::string_view path)
+AssetDir::AssetDir(std::string_view name, const std::filesystem::path& path)
   : name_(name)
 {
   root_ = path;
 }
 
 void
-AssetDir::traverse(const AssetEnter& enter,
+AssetDir::Traverse(const AssetEnter& enter,
                    const AssetLeave& leave,
                    const std::filesystem::path& path)
 {
@@ -16,7 +18,7 @@ AssetDir::traverse(const AssetEnter& enter,
     // root
     // traverse(enter, leave, root_);
     for (auto e : std::filesystem::directory_iterator(root_)) {
-      traverse(enter, leave, e);
+      Traverse(enter, leave, e);
     }
     return;
   }
@@ -39,9 +41,50 @@ AssetDir::traverse(const AssetEnter& enter,
   if (enter(path, id)) {
     if (std::filesystem::is_directory(path)) {
       for (auto e : std::filesystem::directory_iterator(path)) {
-        traverse(enter, leave, e);
+        Traverse(enter, leave, e);
       }
     }
     leave();
   }
+}
+
+Dock
+AssetDir::CreateDock(const LoadFunc& callback)
+{
+
+  auto enter = [callback](const std::filesystem::path& path, uint64_t id) {
+    static ImGuiTreeNodeFlags base_flags =
+      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+      ImGuiTreeNodeFlags_SpanAvailWidth;
+
+#if _WIN32
+    auto name = WideToMb(CP_OEMCP, path.filename().c_str());
+#else
+    auto name = path.filename();
+#endif
+
+    if (std::filesystem::is_directory(path)) {
+      ImGuiTreeNodeFlags node_flags = base_flags;
+      return ImGui::TreeNodeEx(
+        (void*)(intptr_t)id, node_flags, "%s", name.c_str());
+    } else {
+      if (ImGui::Button(name.c_str())) {
+        callback(path);
+      }
+      return false;
+    }
+  };
+  auto leave = []() { ImGui::TreePop(); };
+  return Dock{
+    std::string("[") + Name() + "]",
+    [this, enter, leave]() {
+      if (ImGui::Button(" Open")) {
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("󰑓 Reload")) {
+      }
+      ImGui::Separator();
+      Traverse(enter, leave);
+    },
+  };
 }

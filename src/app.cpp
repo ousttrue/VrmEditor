@@ -5,6 +5,7 @@
 #include "assetdir.h"
 #include "gl3renderer.h"
 #include "gui.h"
+#include "imlogger.h"
 #include "imtimeline.h"
 #include "luahost.h"
 #include "platform.h"
@@ -31,6 +32,7 @@ const auto WINDOW_TITLE = "VrmEditor";
 
 App::App()
 {
+  m_logger = std::make_shared<ImLogger>();
   m_lua = std::make_shared<LuaEngine>();
   m_scene = std::make_shared<Scene>();
   m_view = std::make_shared<OrbitView>();
@@ -42,8 +44,9 @@ App::App()
   if (!window) {
     throw std::runtime_error("createWindow");
   }
-  std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
-  std::cout << "GL_VENDOR: " << glGetString(GL_VENDOR) << std::endl;
+
+  Log(LogLevel::Info) << "GL_VERSION: " << glGetString(GL_VERSION);
+  Log(LogLevel::Info) << "GL_VENDOR: " << glGetString(GL_VENDOR);
   if (glewInit() != GLEW_OK) {
     throw std::runtime_error("glewInit");
   }
@@ -55,6 +58,18 @@ App::App()
 }
 
 App::~App() {}
+
+LogStream
+App::Log(LogLevel level)
+{
+  return {
+    m_logger->Begin(level),
+    [logger = m_logger]() {
+      // flush
+      logger->End();
+    },
+  };
+}
 
 void
 App::ClearScene()
@@ -181,10 +196,25 @@ App::LoadLua(const std::filesystem::path& path)
 }
 
 bool
-App::AddAssetDir(std::string_view name, const std::string& path)
+App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 {
+  if (!std::filesystem::is_directory(path)) {
+    return false;
+  }
 
   m_assets.push_back(std::make_shared<AssetDir>(name, path));
+
+  auto callback = [this](const std::filesystem::path& path) {
+    if (path.extension().u8string().ends_with(u8".bvh")) {
+      LoadMotion(path);
+    } else {
+      ClearScene();
+      LoadModel(path);
+    }
+  };
+
+  auto dock = m_assets.back()->CreateDock(callback);
+  m_gui->m_docks.push_back(dock);
 
   return true;
 }
@@ -195,8 +225,8 @@ App::Run()
   jsonDock();
   sceneDock();
   timelineDock();
-  assetsDock();
   motionDock();
+  loggerDock();
 
   std::optional<Time> lastTime;
   while (auto info = m_platform->newFrame()) {
@@ -425,39 +455,8 @@ App::timelineDock()
 }
 
 void
-App::assetsDock()
+App::loggerDock()
 {
-  for (auto asset : m_assets) {
-    auto enter = [this](const std::filesystem::path& path, uint64_t id) {
-      static ImGuiTreeNodeFlags base_flags =
-        ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
-        ImGuiTreeNodeFlags_SpanAvailWidth;
-
-#if _WIN32
-      auto name = WideToMb(CP_OEMCP, path.filename().c_str());
-#else
-      auto name = path.filename();
-#endif
-
-      if (std::filesystem::is_directory(path)) {
-        ImGuiTreeNodeFlags node_flags = base_flags;
-        return ImGui::TreeNodeEx(
-          (void*)(intptr_t)id, node_flags, "%s", name.c_str());
-      } else {
-        if (ImGui::Button(name.c_str())) {
-          if (path.extension().u8string().ends_with(u8".bvh")) {
-            LoadMotion(path);
-          } else {
-            ClearScene();
-            LoadModel(path);
-          }
-        }
-        return false;
-      }
-    };
-    auto leave = []() { ImGui::TreePop(); };
-    m_gui->m_docks.push_back(
-      Dock(std::string("[") + asset->name() + "]",
-           [asset, enter, leave]() { asset->traverse(enter, leave); }));
-  }
+  m_gui->m_docks.push_back(
+    Dock("logger", [logger = m_logger]() { logger->Draw(); }));
 }

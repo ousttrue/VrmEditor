@@ -1,4 +1,5 @@
 #pragma once
+#include "imlogger.h"
 #include <filesystem>
 #include <list>
 #include <memory>
@@ -16,6 +17,7 @@ class AssetDir;
 class LuaEngine;
 class Platform;
 class OrbitView;
+class ImLogger;
 
 class App
 {
@@ -23,6 +25,7 @@ class App
   std::shared_ptr<Gui> m_gui;
   std::shared_ptr<LuaEngine> m_lua;
   std::list<std::shared_ptr<AssetDir>> m_assets;
+  std::shared_ptr<ImLogger> m_logger;
 
   std::shared_ptr<Timeline> m_timeline;
   std::shared_ptr<Scene> m_scene;
@@ -55,6 +58,8 @@ public:
     static App s_instance;
     return s_instance;
   }
+  LogStream Log(LogLevel level);
+
   const std::shared_ptr<LuaEngine>& Lua() const { return m_lua; }
   int Run();
   bool WriteScene(const std::filesystem::path& path);
@@ -65,12 +70,12 @@ public:
   bool LoadModel(const std::filesystem::path& path);
   bool LoadMotion(const std::filesystem::path& path, float scaling = 1.0f);
   void LoadLua(const std::filesystem::path& path);
-  bool AddAssetDir(std::string_view name, const std::string& path);
+  bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
 
 private:
   void jsonDock();
   void sceneDock();
   void timelineDock();
-  void assetsDock();
   void motionDock();
+  void loggerDock();
 };
