@@ -79,15 +79,23 @@ Scene::Load(const std::filesystem::path& path,
             std::span<const uint8_t> json_chunk,
             std::span<const uint8_t> bin_chunk)
 {
-
   try {
     auto parsed = nlohmann::json::parse(json_chunk);
     auto dir = std::make_shared<Directory>(path.parent_path());
     m_gltf = { dir, parsed, bin_chunk };
+    return Parse();
   } catch (nlohmann::json::parse_error& e) {
-    return std::unexpected{ "json parse" };
+    return std::unexpected{ e.what() };
+  } catch (nlohmann::json::type_error& e) {
+    return std::unexpected{ e.what() };
+  } catch (std::runtime_error& e) {
+    return std::unexpected{ e.what() };
   }
+}
 
+std::expected<bool, std::string>
+Scene::Parse()
+{
   if (has(m_gltf.Json, "extensionsRequired")) {
     for (auto& ex : m_gltf.Json.at("extensionsRequired")) {
       if (ex == "KHR_draco_mesh_compression") {
@@ -113,119 +121,50 @@ Scene::Load(const std::filesystem::path& path,
 
   auto& images = m_gltf.Json.at("images");
   for (int i = 0; i < images.size(); ++i) {
-    auto& image = images.at(i);
-    if (auto parsed = ParseImage(i, image)) {
-      m_images.push_back(*parsed);
+    if (auto image = ParseImage(i, images.at(i))) {
+      m_images.push_back(*image);
     } else {
-      return std::unexpected{ parsed.error() };
+      return std::unexpected{ image.error() };
     }
   }
 
   auto& materials = m_gltf.Json.at("materials");
   for (int i = 0; i < materials.size(); ++i) {
-    auto& material = materials[i];
-    if (auto parsed = ParseMaterial(i, material)) {
-      m_materials.push_back(*parsed);
+    if (auto material = ParseMaterial(i, materials.at(i))) {
+      m_materials.push_back(*material);
     } else {
-      return std::unexpected{ parsed.error() };
+      return std::unexpected{ material.error() };
     }
   }
 
-  auto& meshes = m_gltf.Json.at("meshes");
-  for (int i = 0; i < meshes.size(); ++i) {
-    if (auto mesh = ParseMesh(i, meshes.at(i))) {
-      m_meshes.push_back(*mesh);
-    } else {
-      return std::unexpected{ mesh.error() };
+  if (has(m_gltf.Json, "meshes")) {
+    auto& meshes = m_gltf.Json.at("meshes");
+    for (int i = 0; i < meshes.size(); ++i) {
+      if (auto mesh = ParseMesh(i, meshes.at(i))) {
+        m_meshes.push_back(*mesh);
+      } else {
+        return std::unexpected{ mesh.error() };
+      }
     }
   }
 
   if (has(m_gltf.Json, "skins")) {
     auto skins = m_gltf.Json["skins"];
     for (int i = 0; i < skins.size(); ++i) {
-      auto& skin = skins[i];
-      auto ptr = std::make_shared<gltf::Skin>();
-      m_skins.push_back(ptr);
-
-      std::stringstream ss;
-      ss << "skin" << i;
-      ptr->name = skin.value("name", ss.str());
-
-      for (auto& joint : skin["joints"]) {
-        ptr->joints.push_back(joint);
-      }
-
-      std::span<const DirectX::XMFLOAT4X4> matrices;
-      if (auto accessor =
-            m_gltf.accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"])) {
-        matrices = *accessor;
+      if (auto skin = ParseSkin(i, skins.at(i))) {
+        m_skins.push_back(*skin);
       } else {
-        return std::unexpected{ accessor.error() };
-      }
-      std::vector<DirectX::XMFLOAT4X4> copy;
-      if (m_vrm0) {
-        copy.reserve(matrices.size());
-        for (auto& m : matrices) {
-          copy.push_back(m);
-          copy.back()._41 = -m._41;
-          copy.back()._43 = -m._43;
-        }
-        matrices = copy;
-      }
-      ptr->bindMatrices.assign(matrices.begin(), matrices.end());
-
-      assert(ptr->joints.size() == ptr->bindMatrices.size());
-
-      if (has(skin, "skeleton")) {
-        ptr->root = skin.at("skeleton");
+        return std::unexpected{ skin.error() };
       }
     }
   }
 
   auto nodes = m_gltf.Json["nodes"];
   for (int i = 0; i < nodes.size(); ++i) {
-    auto& node = nodes[i];
-    std::stringstream ss;
-    ss << "node" << i;
-    auto name = node.value("name", ss.str());
-    auto ptr = std::make_shared<gltf::Node>(i, name);
-    m_nodes.push_back(ptr);
-
-    if (has(node, "matrix")) {
-      // matrix
-      auto m = node["matrix"];
-      auto local = DirectX::XMFLOAT4X4{
-        m[0],  m[1],  m[2],  m[3],  //
-        m[4],  m[5],  m[6],  m[7],  //
-        m[8],  m[9],  m[10], m[11], //
-        m[12], m[13], m[14], m[15], //
-      };
-      ptr->setLocalMatrix(local);
+    if (auto node = ParseNode(i, nodes.at(i))) {
+      m_nodes.push_back(*node);
     } else {
-      // T
-      ptr->translation =
-        node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
-      if (m_vrm0) {
-        auto t = ptr->translation;
-        ptr->translation = { -t.x, t.y, -t.z };
-      }
-      // R
-      ptr->rotation = node.value("rotation", DirectX::XMFLOAT4{ 0, 0, 0, 1 });
-      // S
-      ptr->scale = node.value("scale", DirectX::XMFLOAT3{ 1, 1, 1 });
-    }
-    if (has(node, "mesh")) {
-      auto mesh_index = node.at("mesh");
-      ptr->mesh = mesh_index;
-
-      if (has(node, "skin")) {
-        int skin_index = node.at("skin");
-        auto skin = m_skins[skin_index];
-        ptr->skin = skin;
-      }
-
-      ptr->Instance =
-        std::make_shared<gltf::MeshInstance>(m_meshes[mesh_index]);
+      return std::unexpected{ node.error() };
     }
   }
   for (int i = 0; i < nodes.size(); ++i) {
@@ -602,6 +541,91 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
     }
 
     lastAtributes = &attributes;
+  }
+  return ptr;
+}
+
+std::expected<std::shared_ptr<gltf::Skin>, std::string>
+Scene::ParseSkin(int i, const nlohmann::json& skin)
+{
+  auto ptr = std::make_shared<gltf::Skin>();
+
+  std::stringstream ss;
+  ss << "skin" << i;
+  ptr->name = skin.value("name", ss.str());
+
+  for (auto& joint : skin["joints"]) {
+    ptr->joints.push_back(joint);
+  }
+
+  std::span<const DirectX::XMFLOAT4X4> matrices;
+  if (auto accessor =
+        m_gltf.accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"])) {
+    matrices = *accessor;
+  } else {
+    return std::unexpected{ accessor.error() };
+  }
+  std::vector<DirectX::XMFLOAT4X4> copy;
+  if (m_vrm0) {
+    copy.reserve(matrices.size());
+    for (auto& m : matrices) {
+      copy.push_back(m);
+      copy.back()._41 = -m._41;
+      copy.back()._43 = -m._43;
+    }
+    matrices = copy;
+  }
+  ptr->bindMatrices.assign(matrices.begin(), matrices.end());
+
+  assert(ptr->joints.size() == ptr->bindMatrices.size());
+
+  if (has(skin, "skeleton")) {
+    ptr->root = skin.at("skeleton");
+  }
+  return ptr;
+}
+
+std::expected<std::shared_ptr<gltf::Node>, std::string>
+Scene::ParseNode(int i, const nlohmann::json& node)
+{
+  std::stringstream ss;
+  ss << "node" << i;
+  auto name = node.value("name", ss.str());
+  auto ptr = std::make_shared<gltf::Node>(i, name);
+
+  if (has(node, "matrix")) {
+    // matrix
+    auto m = node["matrix"];
+    auto local = DirectX::XMFLOAT4X4{
+      m[0],  m[1],  m[2],  m[3],  //
+      m[4],  m[5],  m[6],  m[7],  //
+      m[8],  m[9],  m[10], m[11], //
+      m[12], m[13], m[14], m[15], //
+    };
+    ptr->setLocalMatrix(local);
+  } else {
+    // T
+    ptr->translation = node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
+    if (m_vrm0) {
+      auto t = ptr->translation;
+      ptr->translation = { -t.x, t.y, -t.z };
+    }
+    // R
+    ptr->rotation = node.value("rotation", DirectX::XMFLOAT4{ 0, 0, 0, 1 });
+    // S
+    ptr->scale = node.value("scale", DirectX::XMFLOAT3{ 1, 1, 1 });
+  }
+  if (has(node, "mesh")) {
+    auto mesh_index = node.at("mesh");
+    ptr->mesh = mesh_index;
+
+    if (has(node, "skin")) {
+      int skin_index = node.at("skin");
+      auto skin = m_skins[skin_index];
+      ptr->skin = skin;
+    }
+
+    ptr->Instance = std::make_shared<gltf::MeshInstance>(m_meshes[mesh_index]);
   }
   return ptr;
 }

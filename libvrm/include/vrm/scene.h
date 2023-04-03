@@ -114,6 +114,7 @@ struct Scene
   BoundingBox GetBoundingBox() const;
 
 private:
+  std::expected<bool, std::string> Parse();
   std::expected<std::shared_ptr<gltf::Image>, std::string> ParseImage(
     int i,
     const nlohmann::json& image);
@@ -123,4 +124,10 @@ private:
   std::expected<std::shared_ptr<gltf::Mesh>, std::string> ParseMesh(
     int i,
     const nlohmann::json& mesh);
+  std::expected<std::shared_ptr<gltf::Skin>, std::string> ParseSkin(
+    int i,
+    const nlohmann::json& skin);
+  std::expected<std::shared_ptr<gltf::Node>, std::string> ParseNode(
+    int i,
+    const nlohmann::json& node);
 };
