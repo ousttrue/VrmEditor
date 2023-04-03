@@ -21,6 +21,7 @@
 #include <vrm/mesh.h>
 #include <vrm/scene.h>
 #include <vrm/vrm0.h>
+#include <vrm/vrm1.h>
 #ifdef _WIN32
 #include "windows_helper.h"
 #endif
@@ -350,12 +351,20 @@ App::sceneDock()
            ImGui::End();
          }));
 
-  m_gui->m_docks.push_back(Dock("vrm-0.x", [scene = m_scene]() {
+  m_gui->m_docks.push_back(Dock("vrm", [scene = m_scene]() {
     if (auto vrm = scene->m_vrm0) {
+      ImGui::LabelText("%s", "vrm-0.x");
       for (auto expression : vrm->m_expressions) {
         ImGui::SliderFloat(
           expression->label.c_str(), &expression->weight, 0, 1);
       }
+    }
+    if (auto vrm = scene->m_vrm1) {
+      ImGui::LabelText("%s", "vrm-1.0");
+      // for (auto expression : vrm->m_expressions) {
+      //   ImGui::SliderFloat(
+      //     expression->label.c_str(), &expression->weight, 0, 1);
+      // }
     }
   }));
 

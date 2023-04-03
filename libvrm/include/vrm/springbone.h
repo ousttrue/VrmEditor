@@ -13,7 +13,8 @@
 
 namespace vrm {
 
-class SpringJoint {
+class SpringJoint
+{
 public:
   std::shared_ptr<gltf::Node> Head;
   // 減衰[0~1]
@@ -29,34 +30,36 @@ private:
   DirectX::XMFLOAT3 m_initLocalTailDir;
 
 public:
-  SpringJoint(const std::shared_ptr<gltf::Node> &head,
-              const DirectX::XMFLOAT3 &localTailPosition, float dragForce,
+  SpringJoint(const std::shared_ptr<gltf::Node>& head,
+              const DirectX::XMFLOAT3& localTailPosition,
+              float dragForce,
               float stiffiness);
   void Update();
 
-  DirectX::XMFLOAT4
-  WorldPosToLocalRotation(const DirectX::XMFLOAT3 &nextTail) const;
+  DirectX::XMFLOAT4 WorldPosToLocalRotation(
+    const DirectX::XMFLOAT3& nextTail) const;
   void DrawGizmo();
 };
 
-class SpringSolver {
+class SpringSolver
+{
 
   std::vector<SpringJoint> m_joints;
   Time m_lastTime = {};
 
 public:
   void Clear() { m_joints.clear(); }
-  void Add(const std::shared_ptr<gltf::Node> &node, float dragForce,
+  void Add(const std::shared_ptr<gltf::Node>& node,
+           float dragForce,
            float stiffiness);
   void Update(Time time);
   void DrawGizmo();
 };
 
-} // namespace vrm
+namespace v0 {
 
-namespace vrm0 {
-
-struct Spring {
+struct Spring
+{
   std::string comment;
   float stiffiness = 0;
   float gravityPower = 0;
@@ -67,19 +70,23 @@ struct Spring {
   std::vector<uint32_t> bones;
   std::vector<uint32_t> colliderGroups;
 };
-inline void from_json(const nlohmann::json &j, Spring &spring) {
+inline void
+from_json(const nlohmann::json& j, Spring& spring)
+{
   spring.stiffiness = j.at("stiffiness");
   spring.dragForce = j.at("dragForce");
   if (j.find("bones") != j.end()) {
-    auto &bones = j.at("bones");
+    auto& bones = j.at("bones");
     spring.bones.assign(bones.begin(), bones.end());
   }
   if (j.find("colliderGroups") != j.end()) {
-    auto &colliderGroups = j.at("colliderGroups");
+    auto& colliderGroups = j.at("colliderGroups");
     spring.colliderGroups.assign(colliderGroups.begin(), colliderGroups.end());
   }
 }
-inline std::ostream &operator<<(std::ostream &os, const Spring &spring) {
+inline std::ostream&
+operator<<(std::ostream& os, const Spring& spring)
+{
   os << "<spring";
   if (spring.comment.size()) {
     os << " \"" << spring.comment << "\"";
@@ -115,35 +122,43 @@ inline std::ostream &operator<<(std::ostream &os, const Spring &spring) {
   return os;
 }
 
-struct ColliderItem {
+struct ColliderItem
+{
   DirectX::XMFLOAT3 offset;
   float radius = 0;
 };
-inline void from_json(const nlohmann::json &j, ColliderItem &collider) {
+inline void
+from_json(const nlohmann::json& j, ColliderItem& collider)
+{
   // collider.node = j.at("node");
   // auto &colliders = j.at("colliders");
   // collider.colliders.assign(colliders.begin(), colliders.end());
   collider.radius = j.at("radius");
 }
-inline std::ostream &operator<<(std::ostream &os,
-                                const ColliderItem &collider) {
+inline std::ostream&
+operator<<(std::ostream& os, const ColliderItem& collider)
+{
   os << "(";
   os << collider.radius;
   os << ")";
   return os;
 }
 
-struct ColliderGroup {
+struct ColliderGroup
+{
   uint32_t node = 0;
   std::vector<ColliderItem> colliders;
 };
-inline void from_json(const nlohmann::json &j, ColliderGroup &colliderGroup) {
+inline void
+from_json(const nlohmann::json& j, ColliderGroup& colliderGroup)
+{
   colliderGroup.node = j.at("node");
-  auto &colliders = j.at("colliders");
+  auto& colliders = j.at("colliders");
   colliderGroup.colliders.assign(colliders.begin(), colliders.end());
 }
-inline std::ostream &operator<<(std::ostream &os,
-                                const ColliderGroup &colliderGroup) {
+inline std::ostream&
+operator<<(std::ostream& os, const ColliderGroup& colliderGroup)
+{
   os << "<colliderGroup";
   os << " node:" << colliderGroup.node;
   os << " colliders: [";
@@ -158,4 +173,5 @@ inline std::ostream &operator<<(std::ostream &os,
   return os;
 }
 
-} // namespace vrm0
+}
+}

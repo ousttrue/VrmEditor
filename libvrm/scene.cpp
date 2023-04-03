@@ -8,6 +8,7 @@
 #include "vrm/skin.h"
 #include "vrm/springbone.h"
 #include "vrm/vrm0.h"
+#include "vrm/vrm1.h"
 #include <DirectXMath.h>
 #include <array>
 #include <expected>
@@ -102,195 +103,40 @@ Scene::Load(const std::filesystem::path& path,
     auto& extensions = m_gltf.Json.at("extensions");
     if (has(extensions, "VRM")) {
       auto VRM = extensions.at("VRM");
-      m_vrm0 = std::make_shared<vrm0::Vrm>();
+      // TODO: meta
+      m_vrm0 = std::make_shared<vrm::v0::Vrm>();
+    }
+    if (has(extensions, "VRMC_vrm")) {
+      m_vrm1 = std::make_shared<vrm::v1::Vrm>();
     }
   }
 
-  auto& images = m_gltf.Json["images"];
+  auto& images = m_gltf.Json.at("images");
   for (int i = 0; i < images.size(); ++i) {
-    auto& image = images[i];
-    std::span<const uint8_t> bytes;
-    if (has(image, "bufferView")) {
-      if (auto buffer_view = m_gltf.buffer_view(image.at("bufferView"))) {
-        bytes = *buffer_view;
-      } else {
-        return std::unexpected{ buffer_view.error() };
-      }
-    } else if (has(image, "uri")) {
-      if (auto buffer_view = m_gltf.Dir->GetBuffer(image.at("uri"))) {
-        bytes = *buffer_view;
-      } else {
-        return std::unexpected{ buffer_view.error() };
-      }
+    auto& image = images.at(i);
+    if (auto parsed = ParseImage(i, image)) {
+      m_images.push_back(*parsed);
     } else {
-      return std::unexpected{ "not bufferView nor uri" };
+      return std::unexpected{ parsed.error() };
     }
-    std::stringstream ss;
-    ss << "image" << i;
-    auto name = image.value("name", ss.str());
-    auto ptr = std::make_shared<gltf::Image>(name);
-    if (!ptr->load(bytes)) {
-      return std::unexpected{ name };
-    }
-    m_images.push_back(ptr);
   }
 
-  auto& textures = m_gltf.Json["textures"];
-
-  auto& materials = m_gltf.Json["materials"];
+  auto& materials = m_gltf.Json.at("materials");
   for (int i = 0; i < materials.size(); ++i) {
     auto& material = materials[i];
-    std::stringstream ss;
-    ss << "material" << i;
-    auto ptr =
-      std::make_shared<gltf::Material>(material.value("name", ss.str()));
-    m_materials.push_back(ptr);
-    if (has(material, "pbrMetallicRoughness")) {
-      auto pbrMetallicRoughness = material.at("pbrMetallicRoughness");
-      if (has(pbrMetallicRoughness, "baseColorTexture")) {
-        auto& baseColorTexture = pbrMetallicRoughness.at("baseColorTexture");
-        int texture_index = baseColorTexture.at("index");
-        auto texture = textures.at(texture_index);
-        int image_index = texture["source"];
-        ptr->texture = m_images[image_index];
-      }
+    if (auto parsed = ParseMaterial(i, material)) {
+      m_materials.push_back(*parsed);
+    } else {
+      return std::unexpected{ parsed.error() };
     }
   }
 
-  for (auto& mesh : m_gltf.Json["meshes"]) {
-    auto ptr = std::make_shared<gltf::Mesh>();
-    m_meshes.push_back(ptr);
-
-    nlohmann::json* lastAtributes = nullptr;
-    for (auto& prim : mesh["primitives"]) {
-      std::shared_ptr<gltf::Material> material;
-      if (has(prim, "material")) {
-        material = m_materials[prim.at("material")];
-      } else {
-        // default material
-        material = std::make_shared<gltf::Material>("default");
-      }
-
-      nlohmann::json& attributes = prim.at("attributes");
-      if (lastAtributes && attributes == *lastAtributes) {
-        // for vrm shared vertex buffer
-        if (auto expected =
-              AddIndices(0, ptr.get(), prim.at("indices"), material)) {
-          // OK
-        } else {
-          return std::unexpected{ expected.error() };
-        }
-      } else {
-        // extend vertex buffer
-        std::span<const DirectX::XMFLOAT3> positions;
-        if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
-              attributes[gltf::VERTEX_POSITION])) {
-          positions = *accessor;
-        } else {
-          return std::unexpected{ accessor.error() };
-        }
-        std::vector<DirectX::XMFLOAT3> copy;
-        if (m_vrm0) {
-          copy.reserve(positions.size());
-          for (auto& p : positions) {
-            copy.push_back({ -p.x, p.y, -p.z });
-          }
-          positions = copy;
-        }
-        auto offset = ptr->addPosition(positions);
-
-        if (has(attributes, gltf::VERTEX_NORMAL)) {
-          if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
-                attributes.at(gltf::VERTEX_NORMAL))) {
-            ptr->setNormal(offset, *accessor);
-          } else {
-            return std::unexpected{ accessor.error() };
-          }
-        }
-
-        if (has(attributes, gltf::VERTEX_UV)) {
-          if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT2>(
-                attributes.at(gltf::VERTEX_UV))) {
-            ptr->setUv(offset, *accessor);
-          } else {
-            return std::unexpected{ accessor.error() };
-          }
-        }
-
-        if (has(attributes, gltf::VERTEX_JOINT) &&
-            has(attributes, gltf::VERTEX_WEIGHT)) {
-          // skinning
-          int joint_accessor = attributes.at(gltf::VERTEX_JOINT);
-          switch (
-            *gltf::item_size(m_gltf.Json.at("accessors").at(joint_accessor))) {
-            case 8:
-              if (auto accessor = m_gltf.accessor<ushort4>(joint_accessor)) {
-                if (auto accessor_w = m_gltf.accessor<DirectX::XMFLOAT4>(
-                      attributes.at(gltf::VERTEX_WEIGHT))) {
-                  ptr->setBoneSkinning(offset, *accessor, *accessor_w);
-                } else {
-                  return std::unexpected{ accessor_w.error() };
-                }
-              } else {
-                return std::unexpected{ accessor.error() };
-              }
-              break;
-
-            default:
-              // not implemented
-              return std::unexpected{ "JOINTS_0 is not ushort4" };
-          }
-        }
-
-        // extend morph target
-        if (has(prim, "targets")) {
-          auto& targets = prim.at("targets");
-          for (int i = 0; i < targets.size(); ++i) {
-            auto& target = targets[i];
-            auto morph = ptr->getOrCreateMorphTarget(i);
-            // std::cout << target << std::endl;
-            std::span<const DirectX::XMFLOAT3> positions;
-            if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
-                  target.at(gltf::VERTEX_POSITION))) {
-              positions = *accessor;
-            } else {
-              return std::unexpected{ accessor.error() };
-            }
-            std::vector<DirectX::XMFLOAT3> copy;
-            if (m_vrm0) {
-              copy.reserve(positions.size());
-              for (auto& p : positions) {
-                copy.push_back({ -p.x, p.y, -p.z });
-              }
-              positions = copy;
-            }
-            /*auto morphOffset =*/morph->addPosition(positions);
-          }
-        }
-
-        // extend indices and add vertex offset
-        if (auto expected =
-              AddIndices(offset, ptr.get(), prim["indices"], material)) {
-          // OK
-        } else {
-          return std::unexpected{ expected.error() };
-        }
-      }
-
-      // find morph target name
-      // 1. primitive.extras.targetNames
-      if (has(prim, "extras")) {
-        auto& extras = prim.at("extras");
-        if (has(extras, "targetNames")) {
-          auto& names = extras.at("targetNames");
-          // std::cout << names << std::endl;
-          for (int i = 0; i < names.size(); ++i) {
-            ptr->getOrCreateMorphTarget(i)->name = names[i];
-          }
-        }
-      }
-
-      lastAtributes = &attributes;
+  auto& meshes = m_gltf.Json.at("meshes");
+  for (int i = 0; i < meshes.size(); ++i) {
+    if (auto mesh = ParseMesh(i, meshes.at(i))) {
+      m_meshes.push_back(*mesh);
+    } else {
+      return std::unexpected{ mesh.error() };
     }
   }
 
@@ -527,7 +373,7 @@ Scene::Load(const std::filesystem::path& path,
             auto expression = m_vrm0->addBlendShape(
               g.at("presetName"), g.at("name"), g.value("isBinary", false));
             if (has(g, "binds")) {
-              for (vrm0::ExpressionMorphTargetBind bind : g.at("binds")) {
+              for (vrm::v0::ExpressionMorphTargetBind bind : g.at("binds")) {
                 // [0-100] to [0-1]
                 bind.weight *= 0.01f;
                 expression->morphBinds.push_back(bind);
@@ -542,7 +388,7 @@ Scene::Load(const std::filesystem::path& path,
         if (has(secondaryAnimation, "colliderGroups")) {
           auto& colliderGroups = secondaryAnimation.at("colliderGroups");
           for (auto& colliderGroup : colliderGroups) {
-            auto ptr = std::make_shared<vrm0::ColliderGroup>();
+            auto ptr = std::make_shared<vrm::v0::ColliderGroup>();
             *ptr = colliderGroup;
             std::cout << *ptr << std::endl;
             m_vrm0->m_colliderGroups.push_back(ptr);
@@ -551,7 +397,7 @@ Scene::Load(const std::filesystem::path& path,
         if (has(secondaryAnimation, "boneGroups")) {
           auto& boneGroups = secondaryAnimation.at("boneGroups");
           for (auto& boneGroup : boneGroups) {
-            auto ptr = std::make_shared<vrm0::Spring>();
+            auto ptr = std::make_shared<vrm::v0::Spring>();
             *ptr = boneGroup;
             std::cout << *ptr << std::endl;
             m_vrm0->m_springs.push_back(ptr);
@@ -570,6 +416,194 @@ Scene::Load(const std::filesystem::path& path,
   }
 
   return true;
+}
+
+std::expected<std::shared_ptr<gltf::Image>, std::string>
+Scene::ParseImage(int i, const nlohmann::json& image)
+{
+  std::span<const uint8_t> bytes;
+  if (has(image, "bufferView")) {
+    if (auto buffer_view = m_gltf.buffer_view(image.at("bufferView"))) {
+      bytes = *buffer_view;
+    } else {
+      return std::unexpected{ buffer_view.error() };
+    }
+  } else if (has(image, "uri")) {
+    if (auto buffer_view = m_gltf.Dir->GetBuffer(image.at("uri"))) {
+      bytes = *buffer_view;
+    } else {
+      return std::unexpected{ buffer_view.error() };
+    }
+  } else {
+    return std::unexpected{ "not bufferView nor uri" };
+  }
+  std::stringstream ss;
+  ss << "image" << i;
+  auto name = image.value("name", ss.str());
+  auto ptr = std::make_shared<gltf::Image>(name);
+  if (!ptr->load(bytes)) {
+    return std::unexpected{ name };
+  }
+  return ptr;
+}
+
+std::expected<std::shared_ptr<gltf::Material>, std::string>
+Scene::ParseMaterial(int i, const nlohmann::json& material)
+{
+  std::stringstream ss;
+  ss << "material" << i;
+
+  auto& textures = m_gltf.Json.at("textures");
+  auto ptr = std::make_shared<gltf::Material>(material.value("name", ss.str()));
+  if (has(material, "pbrMetallicRoughness")) {
+    auto pbrMetallicRoughness = material.at("pbrMetallicRoughness");
+    if (has(pbrMetallicRoughness, "baseColorTexture")) {
+      auto& baseColorTexture = pbrMetallicRoughness.at("baseColorTexture");
+      int texture_index = baseColorTexture.at("index");
+      auto texture = textures.at(texture_index);
+      int image_index = texture["source"];
+      ptr->texture = m_images[image_index];
+    }
+  }
+  return ptr;
+}
+
+std::expected<std::shared_ptr<gltf::Mesh>, std::string>
+Scene::ParseMesh(int i, const nlohmann::json& mesh)
+{
+  auto ptr = std::make_shared<gltf::Mesh>();
+  const nlohmann::json* lastAtributes = nullptr;
+  for (auto& prim : mesh["primitives"]) {
+    std::shared_ptr<gltf::Material> material;
+    if (has(prim, "material")) {
+      material = m_materials[prim.at("material")];
+    } else {
+      // default material
+      material = std::make_shared<gltf::Material>("default");
+    }
+
+    const nlohmann::json& attributes = prim.at("attributes");
+    if (lastAtributes && attributes == *lastAtributes) {
+      // for vrm shared vertex buffer
+      if (auto expected =
+            AddIndices(0, ptr.get(), prim.at("indices"), material)) {
+        // OK
+      } else {
+        return std::unexpected{ expected.error() };
+      }
+    } else {
+      // extend vertex buffer
+      std::span<const DirectX::XMFLOAT3> positions;
+      if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
+            attributes[gltf::VERTEX_POSITION])) {
+        positions = *accessor;
+      } else {
+        return std::unexpected{ accessor.error() };
+      }
+      std::vector<DirectX::XMFLOAT3> copy;
+      if (m_vrm0) {
+        copy.reserve(positions.size());
+        for (auto& p : positions) {
+          copy.push_back({ -p.x, p.y, -p.z });
+        }
+        positions = copy;
+      }
+      auto offset = ptr->addPosition(positions);
+
+      if (has(attributes, gltf::VERTEX_NORMAL)) {
+        if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
+              attributes.at(gltf::VERTEX_NORMAL))) {
+          ptr->setNormal(offset, *accessor);
+        } else {
+          return std::unexpected{ accessor.error() };
+        }
+      }
+
+      if (has(attributes, gltf::VERTEX_UV)) {
+        if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT2>(
+              attributes.at(gltf::VERTEX_UV))) {
+          ptr->setUv(offset, *accessor);
+        } else {
+          return std::unexpected{ accessor.error() };
+        }
+      }
+
+      if (has(attributes, gltf::VERTEX_JOINT) &&
+          has(attributes, gltf::VERTEX_WEIGHT)) {
+        // skinning
+        int joint_accessor = attributes.at(gltf::VERTEX_JOINT);
+        switch (
+          *gltf::item_size(m_gltf.Json.at("accessors").at(joint_accessor))) {
+          case 8:
+            if (auto accessor = m_gltf.accessor<ushort4>(joint_accessor)) {
+              if (auto accessor_w = m_gltf.accessor<DirectX::XMFLOAT4>(
+                    attributes.at(gltf::VERTEX_WEIGHT))) {
+                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
+              } else {
+                return std::unexpected{ accessor_w.error() };
+              }
+            } else {
+              return std::unexpected{ accessor.error() };
+            }
+            break;
+
+          default:
+            // not implemented
+            return std::unexpected{ "JOINTS_0 is not ushort4" };
+        }
+      }
+
+      // extend morph target
+      if (has(prim, "targets")) {
+        auto& targets = prim.at("targets");
+        for (int i = 0; i < targets.size(); ++i) {
+          auto& target = targets[i];
+          auto morph = ptr->getOrCreateMorphTarget(i);
+          // std::cout << target << std::endl;
+          std::span<const DirectX::XMFLOAT3> positions;
+          if (auto accessor = m_gltf.accessor<DirectX::XMFLOAT3>(
+                target.at(gltf::VERTEX_POSITION))) {
+            positions = *accessor;
+          } else {
+            return std::unexpected{ accessor.error() };
+          }
+          std::vector<DirectX::XMFLOAT3> copy;
+          if (m_vrm0) {
+            copy.reserve(positions.size());
+            for (auto& p : positions) {
+              copy.push_back({ -p.x, p.y, -p.z });
+            }
+            positions = copy;
+          }
+          /*auto morphOffset =*/morph->addPosition(positions);
+        }
+      }
+
+      // extend indices and add vertex offset
+      if (auto expected =
+            AddIndices(offset, ptr.get(), prim["indices"], material)) {
+        // OK
+      } else {
+        return std::unexpected{ expected.error() };
+      }
+    }
+
+    // find morph target name
+    // 1. primitive.extras.targetNames
+    if (has(prim, "extras")) {
+      auto& extras = prim.at("extras");
+      if (has(extras, "targetNames")) {
+        auto& names = extras.at("targetNames");
+        // std::cout << names << std::endl;
+        for (int i = 0; i < names.size(); ++i) {
+          ptr->getOrCreateMorphTarget(i)->name = names[i];
+        }
+      }
+    }
+
+    lastAtributes = &attributes;
+  }
+  return ptr;
 }
 
 std::expected<bool, std::string>

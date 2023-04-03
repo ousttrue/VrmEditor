@@ -138,6 +138,7 @@ struct Gltf
       for (int i = 0; i < indices.size(); ++i) {
         dst[i] = p[indices[i]];
       }
+      return true;
     } else {
       return std::unexpected{ span.error() };
     }

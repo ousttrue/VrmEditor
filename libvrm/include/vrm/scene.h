@@ -30,8 +30,13 @@ struct Animation;
 class Image;
 class Material;
 } // namespace gltf
-namespace vrm0 {
+namespace vrm {
+namespace v0 {
 struct Vrm;
+}
+namespace v1 {
+struct Vrm;
+}
 }
 using RenderFunc = std::function<void(const ViewProjection&,
                                       const gltf::Mesh&,
@@ -53,7 +58,8 @@ struct Scene
   std::vector<std::shared_ptr<gltf::Node>> m_roots;
   std::vector<std::shared_ptr<gltf::Skin>> m_skins;
   std::vector<std::shared_ptr<gltf::Animation>> m_animations;
-  std::shared_ptr<vrm0::Vrm> m_vrm0;
+  std::shared_ptr<vrm::v0::Vrm> m_vrm0;
+  std::shared_ptr<vrm::v1::Vrm> m_vrm1;
 
   // runtime
   std::shared_ptr<vrm::SpringSolver> m_spring;
@@ -106,4 +112,15 @@ struct Scene
   std::vector<uint8_t> ToGlb() const;
 
   BoundingBox GetBoundingBox() const;
+
+private:
+  std::expected<std::shared_ptr<gltf::Image>, std::string> ParseImage(
+    int i,
+    const nlohmann::json& image);
+  std::expected<std::shared_ptr<gltf::Material>, std::string> ParseMaterial(
+    int i,
+    const nlohmann::json& material);
+  std::expected<std::shared_ptr<gltf::Mesh>, std::string> ParseMesh(
+    int i,
+    const nlohmann::json& mesh);
 };
