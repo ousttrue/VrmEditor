@@ -156,7 +156,14 @@ read, write, animation test.
 | std::optional    | `c++latest` | `c++20`          | OK       |
 
 ```
+# msvc17
 $ meson setup builddir -Dcpp_std=c++latest
+$ meson compile -C builddir
+```
+
+```
+# clang16 on Ubuntu22.04
+$ meson setup builddir -Dcpp_std=c++2b
 $ meson compile -C builddir
 ```
 
