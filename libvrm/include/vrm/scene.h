@@ -59,6 +59,8 @@ struct Scene
   std::vector<std::shared_ptr<gltf::Node>> m_roots;
   std::vector<std::shared_ptr<gltf::Skin>> m_skins;
   std::vector<std::shared_ptr<gltf::Animation>> m_animations;
+
+  vrm::Humanoid m_humanoid;
   std::shared_ptr<vrm::v0::Vrm> m_vrm0;
   std::shared_ptr<vrm::v1::Vrm> m_vrm1;
 

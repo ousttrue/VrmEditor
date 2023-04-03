@@ -159,7 +159,6 @@ namespace vrm::v0 {
 struct Vrm
 {
 
-  vrm::Humanoid m_humanoid;
   std::vector<std::shared_ptr<Expression>> m_expressions;
   std::vector<std::shared_ptr<ColliderGroup>> m_colliderGroups;
   std::vector<std::shared_ptr<Spring>> m_springs;

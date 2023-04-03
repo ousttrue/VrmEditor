@@ -7,6 +7,8 @@
 #include <string_view>
 #include <vector>
 #include <vrm/humanoid.h>
+#include <vrm/humanpose.h>
+#include <functional>
 
 struct Scene;
 struct Bvh;
@@ -18,6 +20,8 @@ class LuaEngine;
 class Platform;
 class OrbitView;
 class ImLogger;
+
+using OnPose = std::function<void(const vrm::HumanPose&)>;
 
 class App
 {
@@ -47,6 +51,8 @@ class App
     vrm::HumanBones::rightToe,
   };
 
+  std::list<OnPose> m_poseCallbacks;
+
   App();
 
 public:
@@ -71,6 +77,13 @@ public:
   bool LoadMotion(const std::filesystem::path& path, float scaling = 1.0f);
   void LoadLua(const std::filesystem::path& path);
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
+  void SetHumanPose(const vrm::HumanPose &pose)
+  {
+    for(auto &callback: m_poseCallbacks)
+    {
+      callback(pose);
+    }
+  }
 
 private:
   void jsonDock();

@@ -592,9 +592,8 @@ Scene::ParseVrm0()
         int index = humanBone.at("node");
         std::string_view name = humanBone.at("bone");
         // std::cout << name << ": " << index << std::endl;
-        ptr->m_humanoid.setNode(name, vrm::VrmVersion::_0_x, index);
+        m_humanoid.setNode(name, vrm::VrmVersion::_0_x, index);
       }
-      std::cout << ptr->m_humanoid << std::endl;
     }
   }
 
@@ -671,19 +670,15 @@ Scene::ParseVrm1()
   auto VRMC_vrm = extensions.at("VRMC_vrm");
 
   auto ptr = std::make_shared<vrm::v1::Vrm>();
-  if(has(VRMC_vrm, "humanoid"))
-  {
-    auto &humanoid = VRMC_vrm.at("humanoid");
-    if(has(humanoid, "humanBones"))
-    {
-      auto &humanBones = humanoid.at("humanBones");
-      for(auto &kv: humanBones.items())
-      {
-        if(auto bone = vrm::HumanBoneFromName(kv.key(), vrm::VrmVersion::_1_0))
-        {
-          ptr->m_humanoid[(int)*bone] = (int)kv.value().at("node");
-        }
-        else{
+  if (has(VRMC_vrm, "humanoid")) {
+    auto& humanoid = VRMC_vrm.at("humanoid");
+    if (has(humanoid, "humanBones")) {
+      auto& humanBones = humanoid.at("humanBones");
+      for (auto& kv : humanBones.items()) {
+        if (auto bone =
+              vrm::HumanBoneFromName(kv.key(), vrm::VrmVersion::_1_0)) {
+          m_humanoid[(int)*bone] = (int)kv.value().at("node");
+        } else {
           std::cout << kv.key() << std::endl;
         }
       }
@@ -859,19 +854,16 @@ Scene::TraverseJson(const EnterJson& enter,
 }
 
 void
-Scene::SetHumanPose(const vrm::HumanPose &pose)
+Scene::SetHumanPose(const vrm::HumanPose& pose)
 {
-
   assert(pose.Bones.size() == pose.Rotations.size());
 
-  if (m_vrm0) {
-    for (int i = 0; i < pose.Bones.size(); ++i) {
-      if (auto node = GetBoneNode(pose.Bones[i])) {
-        if (i == 0) {
-          node->translation = pose.RootPosition;
-        }
-        node->rotation = pose.Rotations[i];
+  for (int i = 0; i < pose.Bones.size(); ++i) {
+    if (auto node = GetBoneNode(pose.Bones[i])) {
+      if (i == 0) {
+        node->translation = pose.RootPosition;
       }
+      node->rotation = pose.Rotations[i];
     }
   }
 }
@@ -890,7 +882,7 @@ Scene::SyncHierarchy()
 std::shared_ptr<gltf::Node>
 Scene::GetBoneNode(vrm::HumanBones bone)
 {
-  if (auto node_index = m_vrm0->m_humanoid[(int)bone]) {
+  if (auto node_index = m_humanoid[(int)bone]) {
     return m_nodes[*node_index];
   }
   return {};

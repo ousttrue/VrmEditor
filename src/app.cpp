@@ -40,6 +40,11 @@ App::App()
   m_view = std::make_shared<OrbitView>();
   m_timeline = std::make_shared<Timeline>();
 
+  // pose to scene
+  m_poseCallbacks.push_back([scene = m_scene](const vrm::HumanPose& pose) {
+    scene->SetHumanPose(pose);
+  });
+
   m_platform = std::make_shared<Platform>();
   auto window =
     m_platform->createWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
@@ -76,7 +81,6 @@ App::Log(LogLevel level)
 void
 App::ClearScene()
 {
-  m_timeline->Tracks.clear();
   m_scene->Clear();
 }
 
@@ -138,13 +142,11 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
     auto frame = m_motion->GetFrame(index);
     m_motionSolver->ResolveFrame(frame);
 
-    // apply vrm
-    if (m_scene->m_vrm0) {
-      auto& hips = m_motionSolver->instances_[0];
-      m_scene->SetHumanPose({ .RootPosition = { hips._41, hips._42, hips._43 },
-                              .Bones = m_humanBoneMap,
-                              .Rotations = m_motionSolver->localRotations });
-    }
+    // human pose to scene
+    auto& hips = m_motionSolver->instances_[0];
+    SetHumanPose({ .RootPosition = { hips._41, hips._42, hips._43 },
+                   .Bones = m_humanBoneMap,
+                   .Rotations = m_motionSolver->localRotations });
   });
   return true;
 }
@@ -366,9 +368,9 @@ App::sceneDock()
          }));
 
   m_gui->m_docks.push_back(Dock("vrm", [scene = m_scene]() {
+    ImHumanoid::Show(scene->m_humanoid);
     if (auto vrm = scene->m_vrm0) {
       ImGui::Text("%s", "vrm-0.x");
-      ImHumanoid::Show(vrm->m_humanoid);
       for (auto expression : vrm->m_expressions) {
         ImGui::SliderFloat(
           expression->label.c_str(), &expression->weight, 0, 1);
@@ -376,7 +378,6 @@ App::sceneDock()
     }
     if (auto vrm = scene->m_vrm1) {
       ImGui::Text("%s", "vrm-1.0");
-      ImHumanoid::Show(vrm->m_humanoid);
       // for (auto expression : vrm->m_expressions) {
       //   ImGui::SliderFloat(
       //     expression->label.c_str(), &expression->weight, 0, 1);
