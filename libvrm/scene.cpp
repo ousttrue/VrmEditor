@@ -660,7 +660,37 @@ Scene::ParseVrm0()
 std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string>
 Scene::ParseVrm1()
 {
-  return std::unexpected{ "TODO" };
+  if (!has(m_gltf.Json, "extensions")) {
+    return std::unexpected{ "no extensions" };
+  }
+  auto& extensions = m_gltf.Json.at("extensions");
+
+  if (!has(extensions, "VRMC_vrm")) {
+    return std::unexpected{ "no extensions.VRMC_vrm" };
+  }
+  auto VRMC_vrm = extensions.at("VRMC_vrm");
+
+  auto ptr = std::make_shared<vrm::v1::Vrm>();
+  if(has(VRMC_vrm, "humanoid"))
+  {
+    auto &humanoid = VRMC_vrm.at("humanoid");
+    if(has(humanoid, "humanBones"))
+    {
+      auto &humanBones = humanoid.at("humanBones");
+      for(auto &kv: humanBones.items())
+      {
+        if(auto bone = vrm::HumanBoneFromName(kv.key(), vrm::VrmVersion::_1_0))
+        {
+          ptr->m_humanoid[(int)*bone] = (int)kv.value().at("node");
+        }
+        else{
+          std::cout << kv.key() << std::endl;
+        }
+      }
+    }
+  }
+
+  return ptr;
 }
 
 std::expected<bool, std::string>

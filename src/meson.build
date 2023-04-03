@@ -23,5 +23,6 @@ executable(
         cuber_dep,
         imgui_filedialog_dep,
         iconfont_cpp_headers_dep,
+        imnodes_dep,
     ],
 )

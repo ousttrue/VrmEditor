@@ -26,6 +26,7 @@ imgui_filedialog_dep = subproject(
 # ).get_variable('im_filedialog_dep')
 iconfont_cpp_headers_dep = dependency('iconfont_cpp_headers')
 directxmath_dep = dependency('directxmath', include_type: 'system')
+imnodes_dep = dependency('imnodes')
 subdir('libvrm')
 subdir('bvhutil')
 subdir('src')

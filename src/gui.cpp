@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 #include <IconsFontAwesome5.h>
 #include <ImGuiFileDialog.h>
+#include <imnodes.h>
 #include <iostream>
 
 const auto OPEN_FILE_DIALOG = "OPEN_FILE_DIALOG";
@@ -43,6 +44,7 @@ Gui::Gui(const void* window, const char* glsl_version)
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
+  ImNodes::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
 
   // auto dir = get_home() / ".cache/vrmeditor";
@@ -159,6 +161,9 @@ Gui::SetFont(const std::filesystem::path& path)
   }
   m_baseFont = path;
   return true;
+
+  ImNodes::DestroyContext();
+  ImGui::DestroyContext();
 }
 
 bool

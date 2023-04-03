@@ -7,6 +7,7 @@
 #include "gui.h"
 #include "imlogger.h"
 #include "imtimeline.h"
+#include "imhumanoid.h"
 #include "luahost.h"
 #include "platform.h"
 #include "rendertarget.h"
@@ -15,6 +16,7 @@
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <fstream>
+#include <imnodes.h>
 #include <sstream>
 #include <vrm/animation.h>
 #include <vrm/gizmo.h>
@@ -187,6 +189,18 @@ App::motionDock()
     ImGui::End();
     ImGui::PopStyleVar();
   }));
+
+  m_gui->m_docks.push_back(Dock("input-stream", []() {
+    const int hardcoded_node_id = 1;
+
+    ImNodes::BeginNodeEditor();
+
+    ImNodes::BeginNode(hardcoded_node_id);
+    ImGui::Dummy(ImVec2(80.0f, 45.0f));
+    ImNodes::EndNode();
+
+    ImNodes::EndNodeEditor();
+  }));
 }
 
 void
@@ -353,14 +367,16 @@ App::sceneDock()
 
   m_gui->m_docks.push_back(Dock("vrm", [scene = m_scene]() {
     if (auto vrm = scene->m_vrm0) {
-      ImGui::LabelText("%s", "vrm-0.x");
+      ImGui::Text("%s", "vrm-0.x");
+      ImHumanoid::Show(vrm->m_humanoid);
       for (auto expression : vrm->m_expressions) {
         ImGui::SliderFloat(
           expression->label.c_str(), &expression->weight, 0, 1);
       }
     }
     if (auto vrm = scene->m_vrm1) {
-      ImGui::LabelText("%s", "vrm-1.0");
+      ImGui::Text("%s", "vrm-1.0");
+      ImHumanoid::Show(vrm->m_humanoid);
       // for (auto expression : vrm->m_expressions) {
       //   ImGui::SliderFloat(
       //     expression->label.c_str(), &expression->weight, 0, 1);
