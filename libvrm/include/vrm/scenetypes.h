@@ -127,4 +127,12 @@ struct EuclideanTransform
     }
     return true;
   }
+
+  DirectX::XMMATRIX Matrix() const
+  {
+    auto r = DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&Rotation));
+    auto t =
+      DirectX::XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
+    return DirectX::XMMatrixMultiply(r, t);
+  }
 };

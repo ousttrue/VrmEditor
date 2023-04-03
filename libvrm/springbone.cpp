@@ -97,7 +97,7 @@ SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3& nextTail) const
   DirectX::XMFLOAT3 localNextTail;
   auto world = Head->ParentWorld();
   assert(!std::isnan(world._41));
-  auto localInit = Head->LocalInitialMatrix;
+  auto localInit = Head->InitialMatrix();
 
   DirectX::XMVECTOR det;
   DirectX::XMStoreFloat3(

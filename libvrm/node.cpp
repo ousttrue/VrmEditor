@@ -13,7 +13,8 @@ void
 Node::CalcInitialMatrix()
 {
   WorldInitialMatrix = WorldMatrix;
-  LocalInitialMatrix = dmath::trs(Translation(), Rotation(), Scale);
+  InitialTransform= Transform;
+  InitialScale = Scale;
 }
 
 void
