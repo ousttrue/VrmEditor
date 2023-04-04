@@ -86,10 +86,10 @@ struct Scene
   Scene(const Scene&) = delete;
   Scene& operator=(const Scene&) = delete;
 
-  std::expected<bool, std::string> Load(const std::filesystem::path& path);
-  std::expected<bool, std::string> Load(const std::filesystem::path& path,
-                                        std::span<const uint8_t> json_chunk,
-                                        std::span<const uint8_t> bin_chunk);
+  std::expected<bool, std::string> LoadPath(const std::filesystem::path& path);
+  std::expected<bool, std::string> Load(std::span<const uint8_t> json_chunk,
+                                        std::span<const uint8_t> bin_chunk,
+                                        const std::shared_ptr<Directory> &dir = nullptr);
 
   std::expected<bool, std::string> AddIndices(
     int vertex_offset,

@@ -1,5 +1,7 @@
+#include <string>
+
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
-auto SRC = R"({
+const std::string SRC = R"({
   "scene": 0,
   "scenes" : [
     {
@@ -71,15 +73,19 @@ auto SRC = R"({
 })";
 
 #include <gtest/gtest.h>
-// #include <stdint.h>
-// #include <string>
-// #include <string_view>
+#include <vrm/exporter.h>
+#include <vrm/glb.h>
 #include <vrm/scene.h>
-// auto DECODED = "ABCDEFG";
-// auto ENCODED = "QUJDREVGRw==";
 
-TEST(GlbExport, minimal) {
-  // auto encoded = gltf::Encode(DECODED);
-  // EXPECT_EQ(encoded, ENCODED);
+TEST(GlbExport, minimal)
+{
+  gltf::Scene scene;
+  std::span<const uint8_t> span{ (const uint8_t*)SRC.data(),
+                                 (const uint8_t*)SRC.data() + SRC.size() };
+  EXPECT_TRUE(scene.Load(span, {}, nullptr));
+  gltf::Exporter exporter;
+  auto data = exporter.Export(scene);
+  EXPECT_TRUE(data.size());
+  auto parsed = gltf::Glb::parse(data);
+  EXPECT_TRUE(parsed);
 }
-

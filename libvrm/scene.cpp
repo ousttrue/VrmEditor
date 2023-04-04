@@ -59,16 +59,18 @@ Scene::Scene()
 }
 
 std::expected<bool, std::string>
-Scene::Load(const std::filesystem::path& path)
+Scene::LoadPath(const std::filesystem::path& path)
 {
   if (auto bytes = ReadAllBytes(path)) {
+    auto dir = std::make_shared<Directory>(path.parent_path());
+
     if (auto glb = Glb::parse(*bytes)) {
       // as glb
-      return Load(path, glb->json, glb->bin);
+      return Load(glb->json, glb->bin, dir);
     }
 
     // try gltf
-    return Load(path, *bytes, {});
+    return Load(*bytes, {}, dir);
 
   } else {
     return std::unexpected{ bytes.error() };
@@ -76,14 +78,16 @@ Scene::Load(const std::filesystem::path& path)
 }
 
 std::expected<bool, std::string>
-Scene::Load(const std::filesystem::path& path,
-            std::span<const uint8_t> json_chunk,
-            std::span<const uint8_t> bin_chunk)
+Scene::Load(std::span<const uint8_t> json_chunk,
+            std::span<const uint8_t> bin_chunk,
+            const std::shared_ptr<Directory>& dir)
 {
   try {
     auto parsed = nlohmann::json::parse(json_chunk);
-    auto dir = std::make_shared<Directory>(path.parent_path());
     m_gltf = { dir, parsed, bin_chunk };
+    if (!m_gltf.Dir) {
+      m_gltf.Dir = std::make_shared<Directory>();
+    }
     return Parse();
   } catch (nlohmann::json::parse_error& e) {
     return std::unexpected{ e.what() };

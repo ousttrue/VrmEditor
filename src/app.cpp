@@ -87,7 +87,7 @@ App::WriteScene(const std::filesystem::path& path)
 bool
 App::LoadModel(const std::filesystem::path& path)
 {
-  if (auto result = m_scene->Load(path)) {
+  if (auto result = m_scene->LoadPath(path)) {
     // bind time line
     for (auto& animation : m_scene->m_animations) {
       auto track = m_timeline->AddTrack("gltf", animation->duration());

@@ -7,7 +7,7 @@ TEMPLATE = """
 TEST(VrmLoad, {name}) {{
   auto path = get_path("{relative}");
   gltf::Scene scene;
-  auto result = scene.Load(path);
+  auto result = scene.LoadPath(path);
   EXPECT_TRUE(result) << result.error();
 }}
 """
