@@ -109,8 +109,10 @@ public:
       ImGui::End();
     }));
 
+    addDock(
+      Dock("humanoid", [scene]() { ImHumanoid::Show(scene->m_humanoid); }));
+
     addDock(Dock("vrm", [scene]() {
-      ImHumanoid::Show(scene->m_humanoid);
       if (auto vrm = scene->m_vrm0) {
         ImGui::Text("%s", "vrm-0.x");
         for (auto expression : vrm->m_expressions) {

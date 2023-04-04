@@ -20,7 +20,7 @@ Platform::~Platform() {
   glfwTerminate();
 }
 
-GLFWwindow *Platform::createWindow(int width, int height, const char *title) {
+GLFWwindow *Platform::CreateWindow(int width, int height, const char *title) {
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
   // Decide GL+GLSL versions
@@ -55,7 +55,7 @@ GLFWwindow *Platform::createWindow(int width, int height, const char *title) {
   return m_window;
 }
 
-std::optional<FrameInfo> Platform::newFrame() {
+std::optional<FrameInfo> Platform::NewFrame() {
   if (glfwWindowShouldClose(m_window)) {
     return {};
   }
@@ -76,10 +76,16 @@ std::optional<FrameInfo> Platform::newFrame() {
   auto seconds = glfwGetTime();
 
   return FrameInfo{
-      .width = width,
-      .height = height,
-      .time = Time(seconds),
+      .Width = width,
+      .Height = height,
+      .Time = Time(seconds),
   };
 }
 
-void Platform::present() { glfwSwapBuffers(m_window); }
+void Platform::Present() { glfwSwapBuffers(m_window); }
+
+
+void Platform::SetTitle(const std::string &title)
+{
+  glfwSetWindowTitle(m_window, title.c_str());
+}

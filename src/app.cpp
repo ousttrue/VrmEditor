@@ -33,7 +33,7 @@ App::App()
 
   m_platform = std::make_shared<Platform>();
   auto window =
-    m_platform->createWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
+    m_platform->CreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
   if (!window) {
     throw std::runtime_error("createWindow");
   }
@@ -104,6 +104,7 @@ App::LoadModel(const std::filesystem::path& path)
     auto bb = m_scene->GetBoundingBox();
     m_view->Fit(bb.Min, bb.Max);
 
+    Log(LogLevel::Info) << path;
     return true;
   } else {
     Log(LogLevel::Error) << result.error();
@@ -114,12 +115,14 @@ App::LoadModel(const std::filesystem::path& path)
 bool
 App::LoadMotion(const std::filesystem::path& path, float scaling)
 {
+  Log(LogLevel::Info) << path;
   return m_motion->LoadMotion(path, scaling, m_timeline);
 }
 
 void
 App::LoadLua(const std::filesystem::path& path)
 {
+  Log(LogLevel::Info) << path;
   m_lua->dofile(path);
 }
 
@@ -138,12 +141,15 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
     } else {
       ClearScene();
       LoadModel(path);
+
+      m_platform->SetTitle(path.string());
     }
   };
 
   auto dock = m_assets.back()->CreateDock(callback);
   m_gui->m_docks.push_back(dock);
 
+  Log(LogLevel::Info) << name << " => "<< path;
   return true;
 }
 
@@ -160,8 +166,8 @@ App::Run()
   ImLogger::Create(addDock, m_logger);
 
   std::optional<Time> lastTime;
-  while (auto info = m_platform->newFrame()) {
-    auto time = info->time;
+  while (auto info = m_platform->NewFrame()) {
+    auto time = info->Time;
 
     gizmo::clear();
     if (lastTime) {
@@ -177,12 +183,12 @@ App::Run()
 
     m_gui->DockSpace();
 
-    glViewport(0, 0, info->width, info->height);
+    glViewport(0, 0, info->Width, info->Height);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_gui->Render();
-    m_platform->present();
+    m_platform->Present();
   }
 
   return 0;

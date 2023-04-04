@@ -5,10 +5,11 @@
 #include <vrm/timeline.h>
 
 struct FrameInfo {
-  int width;
-  int height;
-  Time time;
+  int Width;
+  int Height;
+  Time Time;
 };
+
 class Platform {
   struct GLFWwindow *m_window = nullptr;
 
@@ -16,7 +17,8 @@ public:
   std::string glsl_version;
   Platform();
   ~Platform();
-  GLFWwindow *createWindow(int width, int height, const char *title);
-  std::optional<FrameInfo> newFrame();
-  void present();
+  GLFWwindow *CreateWindow(int width, int height, const char *title);
+  std::optional<FrameInfo> NewFrame();
+  void Present();
+  void SetTitle(const std::string &title);
 };

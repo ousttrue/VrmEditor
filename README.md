@@ -17,6 +17,7 @@ read, write, animation test.
     - [ ] lookat. expression
     - [x] springbone. basic without collision
     - [x] humanoid
+      - [ ] retarget Y180 rotation.
   - [ ] vrm-1.0
     - [ ] expression. morphtarget
     - [ ] expression. material
@@ -47,6 +48,8 @@ read, write, animation test.
 - [x] bvh
 - [x] vrm0 from bvh
 - [x] vrm1. humanoid retarget
+- [ ] linear interpolation
+- [ ] cubic interpolation
 
 ### write
 

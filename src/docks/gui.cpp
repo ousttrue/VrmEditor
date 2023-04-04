@@ -84,9 +84,11 @@ Gui::Gui(const void* window, const char* glsl_version)
 
   m_docks.push_back(
     Dock("demo", [](bool* p_open) { ImGui::ShowDemoWindow(p_open); }));
+  m_docks.back().IsOpen = false;
 
   m_docks.push_back(
     Dock("metrics", [](bool* p_open) { ImGui::ShowMetricsWindow(p_open); }));
+  m_docks.back().IsOpen = false;
 
   PostTask([this]() { LoadFont(); });
 
@@ -123,6 +125,7 @@ Gui::Gui(const void* window, const char* glsl_version)
     // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
     // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
   }));
+  m_docks.back().IsOpen = false;
 
   ImGuiFileDialog::Instance()->SetFileStyle(
     IGFD_FileStyleByTypeDir,
