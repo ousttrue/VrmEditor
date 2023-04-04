@@ -92,7 +92,7 @@ struct Scene
   std::expected<bool, std::string> AddIndices(
     int vertex_offset,
     gltf::Mesh* mesh,
-    int accessor_index,
+    const nlohmann::json &prim,
     const std::shared_ptr<gltf::Material>& material);
 
   void SyncHierarchy();

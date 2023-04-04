@@ -260,9 +260,9 @@ Scene::ParseMaterial(int i, const nlohmann::json& material)
 {
   std::stringstream ss;
   ss << "material" << i;
-
-  auto& textures = m_gltf.Json.at("textures");
   auto ptr = std::make_shared<gltf::Material>(material.value("name", ss.str()));
+
+  auto& textures = m_gltf.Json["textures"];
   if (has(material, "pbrMetallicRoughness")) {
     auto pbrMetallicRoughness = material.at("pbrMetallicRoughness");
     if (has(pbrMetallicRoughness, "baseColorTexture")) {
@@ -293,8 +293,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
     const nlohmann::json& attributes = prim.at("attributes");
     if (lastAtributes && attributes == *lastAtributes) {
       // for vrm shared vertex buffer
-      if (auto expected =
-            AddIndices(0, ptr.get(), prim.at("indices"), material)) {
+      if (auto expected = AddIndices(0, ptr.get(), prim, material)) {
         // OK
       } else {
         return std::unexpected{ expected.error() };
@@ -388,8 +387,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
       }
 
       // extend indices and add vertex offset
-      if (auto expected =
-            AddIndices(offset, ptr.get(), prim.at("indices"), material)) {
+      if (auto expected = AddIndices(offset, ptr.get(), prim, material)) {
         // OK
       } else {
         return std::unexpected{ expected.error() };
@@ -702,37 +700,49 @@ Scene::ParseVrm1()
 std::expected<bool, std::string>
 Scene::AddIndices(int vertex_offset,
                   gltf::Mesh* mesh,
-                  int accessor_index,
+                  const nlohmann::json& prim,
                   const std::shared_ptr<gltf::Material>& material)
 {
-  auto accessor = m_gltf.Json.at("accessors").at(accessor_index);
-  switch ((gltf::ComponentType)accessor.at("componentType")) {
-    case gltf::ComponentType::UNSIGNED_BYTE: {
-      if (auto span = m_gltf.accessor<uint8_t>(accessor_index)) {
-        mesh->addSubmesh(vertex_offset, *span, material);
-        return true;
-      } else {
-        return std::unexpected{ span.error() };
-      }
-    } break;
-    case gltf::ComponentType::UNSIGNED_SHORT: {
-      if (auto span = m_gltf.accessor<uint16_t>(accessor_index)) {
-        mesh->addSubmesh(vertex_offset, *span, material);
-        return true;
-      } else {
-        return std::unexpected{ span.error() };
-      }
-    } break;
-    case gltf::ComponentType::UNSIGNED_INT: {
-      if (auto span = m_gltf.accessor<uint32_t>(accessor_index)) {
-        mesh->addSubmesh(vertex_offset, *span, material);
-        return true;
-      } else {
-        return std::unexpected{ span.error() };
-      }
-    } break;
-    default:
-      return std::unexpected{ "invalid index type" };
+  if (has(prim, "indices")) {
+    int accessor_index = prim.at("indices");
+    auto accessor = m_gltf.Json.at("accessors").at(accessor_index);
+    switch ((gltf::ComponentType)accessor.at("componentType")) {
+      case gltf::ComponentType::UNSIGNED_BYTE: {
+        if (auto span = m_gltf.accessor<uint8_t>(accessor_index)) {
+          mesh->addSubmesh(vertex_offset, *span, material);
+          return true;
+        } else {
+          return std::unexpected{ span.error() };
+        }
+      } break;
+      case gltf::ComponentType::UNSIGNED_SHORT: {
+        if (auto span = m_gltf.accessor<uint16_t>(accessor_index)) {
+          mesh->addSubmesh(vertex_offset, *span, material);
+          return true;
+        } else {
+          return std::unexpected{ span.error() };
+        }
+      } break;
+      case gltf::ComponentType::UNSIGNED_INT: {
+        if (auto span = m_gltf.accessor<uint32_t>(accessor_index)) {
+          mesh->addSubmesh(vertex_offset, *span, material);
+          return true;
+        } else {
+          return std::unexpected{ span.error() };
+        }
+      } break;
+      default:
+        return std::unexpected{ "invalid index type" };
+    }
+  } else {
+    std::vector<uint32_t> indices;
+    auto vertex_count = mesh->m_vertices.size();
+    indices.reserve(vertex_count);
+    for (int i = 0; i < vertex_count; ++i) {
+      indices.push_back(i);
+    }
+    mesh->addSubmesh<uint32_t>(vertex_offset, indices, material);
+    return true;
   }
 }
 
