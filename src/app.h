@@ -1,6 +1,7 @@
 #pragma once
-#include "imlogger.h"
+#include "docks/imlogger.h"
 #include <filesystem>
+#include <functional>
 #include <list>
 #include <memory>
 #include <string>
@@ -8,7 +9,6 @@
 #include <vector>
 #include <vrm/humanoid.h>
 #include <vrm/humanpose.h>
-#include <functional>
 
 struct Scene;
 struct Bvh;
@@ -21,7 +21,6 @@ class Platform;
 class OrbitView;
 class ImLogger;
 struct MotionSource;
-
 
 class App
 {
@@ -61,7 +60,4 @@ public:
   bool LoadMotion(const std::filesystem::path& path, float scaling = 1.0f);
   void LoadLua(const std::filesystem::path& path);
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
-
-private:
-  void loggerDock();
 };

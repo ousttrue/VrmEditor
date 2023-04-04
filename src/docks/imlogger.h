@@ -1,4 +1,5 @@
 #pragma once
+#include "gui.h"
 #include <functional>
 #include <imgui.h>
 #include <ostream>
@@ -42,6 +43,12 @@ class ImLogger
 
 public:
   ImLogger() { Clear(); }
+
+  static void Create(const AddDockFunc& addDock,
+                     const std::shared_ptr<ImLogger>& logger)
+  {
+    addDock(Dock("logger", [logger]() { logger->Draw(); }));
+  }
 
   void Clear()
   {

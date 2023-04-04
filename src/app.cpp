@@ -8,23 +8,10 @@
 #include "docks/motion_dock.h"
 #include "docks/scene_dock.h"
 #include "docks/imtimeline.h"
-#include "imlogger.h"
+#include "docks/imlogger.h"
 #include "luahost.h"
 #include "platform.h"
-#include <Bvh.h>
-#include <BvhSolver.h>
-#include <fstream>
-#include <imnodes.h>
-#include <sstream>
 #include <vrm/animation.h>
-#include <vrm/gizmo.h>
-#include <vrm/mesh.h>
-#include <vrm/scene.h>
-#include <vrm/vrm0.h>
-#include <vrm/vrm1.h>
-#ifdef _WIN32
-#include "windows_helper.h"
-#endif
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
@@ -170,8 +157,7 @@ App::Run()
   SceneDock::Create(addDock, m_scene, m_view, m_timeline);
   MotionDock::Create(addDock, m_motion);
   ImTimeline::Create(addDock, m_timeline);
-
-  loggerDock();
+  ImLogger::Create(addDock, m_logger);
 
   std::optional<Time> lastTime;
   while (auto info = m_platform->newFrame()) {
@@ -202,9 +188,3 @@ App::Run()
   return 0;
 }
 
-void
-App::loggerDock()
-{
-  m_gui->m_docks.push_back(
-    Dock("logger", [logger = m_logger]() { logger->Draw(); }));
-}
