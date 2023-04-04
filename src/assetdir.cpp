@@ -1,7 +1,6 @@
 #include "assetdir.h"
 #include "app.h"
 #include "fs_util.h"
-#include "windows_helper.h"
 #include <imgui.h>
 
 AssetDir::AssetDir(std::string_view name, const std::filesystem::path& path)

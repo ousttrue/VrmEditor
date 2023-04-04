@@ -1,3 +1,5 @@
+#include <cstddef>
+
 #include "luahost.h"
 #include "app.h"
 #include "docks/gui.h"

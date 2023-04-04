@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include <sstream>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -34,10 +35,20 @@ shell_open(const std::filesystem::path& path)
 
 #else
 #include <cstdio>
+#include <stdlib.h>
 
 inline std::filesystem::path
 get_home()
 {
   return std::getenv("HOME");
 }
+
+inline void
+shell_open(const std::filesystem::path& path)
+{
+  std::stringstream ss;
+  ss << path;
+  system(ss.str().c_str());
+}
+
 #endif
