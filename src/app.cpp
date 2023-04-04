@@ -5,16 +5,14 @@
 #include "assetdir.h"
 #include "docks/gui.h"
 #include "docks/json_dock.h"
+#include "docks/motion_dock.h"
 #include "docks/scene_dock.h"
-// #include "imhumanoid.h"
 #include "imlogger.h"
 #include "imtimeline.h"
 #include "luahost.h"
 #include "platform.h"
 #include <Bvh.h>
 #include <BvhSolver.h>
-#include <cuber/gl3/GlCubeRenderer.h>
-#include <cuber/gl3/GlLineRenderer.h>
 #include <fstream>
 #include <imnodes.h>
 #include <sstream>
@@ -39,9 +37,10 @@ App::App()
   m_scene = std::make_shared<Scene>();
   m_view = std::make_shared<OrbitView>();
   m_timeline = std::make_shared<Timeline>();
+  m_motion = std::make_shared<MotionSource>();
 
   // pose to scene
-  m_poseCallbacks.push_back([scene = m_scene](const vrm::HumanPose& pose) {
+  m_motion->PoseCallbacks.push_back([scene = m_scene](const vrm::HumanPose& pose) {
     scene->SetHumanPose(pose);
   });
 
@@ -128,81 +127,7 @@ App::LoadModel(const std::filesystem::path& path)
 bool
 App::LoadMotion(const std::filesystem::path& path, float scaling)
 {
-  m_motion = Bvh::ParseFile(path);
-  if (!m_motion) {
-    return false;
-  }
-
-  m_motionSolver = std::make_shared<BvhSolver>();
-  m_motionSolver->Initialize(m_motion);
-
-  auto track = m_timeline->AddTrack("bvh", m_motion->Duration());
-  track->Callbacks.push_back([this](auto time, bool repeat) {
-    auto index = m_motion->TimeToIndex(time);
-    auto frame = m_motion->GetFrame(index);
-    m_motionSolver->ResolveFrame(frame);
-
-    // human pose to scene
-    auto& hips = m_motionSolver->instances_[0];
-    SetHumanPose({ .RootPosition = { hips._41, hips._42, hips._43 },
-                   .Bones = m_humanBoneMap,
-                   .Rotations = m_motionSolver->localRotations });
-  });
-  return true;
-}
-
-void
-App::motionDock()
-{
-  auto rt = std::make_shared<RenderTarget>(std::make_shared<OrbitView>());
-  rt->color[0] = 0.4f;
-  rt->color[1] = 0.2f;
-  rt->color[2] = 0.2f;
-  rt->color[3] = 1.0f;
-
-  auto cuber = std::make_shared<cuber::gl3::GlCubeRenderer>();
-  auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
-  std::vector<grapho::LineVertex> lines;
-  cuber::PushGrid(lines);
-
-  rt->render = [this, cuber, liner, lines](const ViewProjection& camera) {
-    if (m_motionSolver) {
-      cuber->Render(camera.projection,
-                    camera.view,
-                    m_motionSolver->instances_.data(),
-                    m_motionSolver->instances_.size());
-    }
-    liner->Render(camera.projection, camera.view, lines);
-  };
-
-  auto gl3r = std::make_shared<Gl3Renderer>();
-
-  m_gui->m_docks.push_back(Dock("motion", [rt](bool* p_open) {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-    if (ImGui::Begin("motion",
-                     p_open,
-                     ImGuiWindowFlags_NoScrollbar |
-                       ImGuiWindowFlags_NoScrollWithMouse)) {
-      auto pos = ImGui::GetWindowPos();
-      pos.y += ImGui::GetFrameHeight();
-      auto size = ImGui::GetContentRegionAvail();
-      rt->show_fbo(pos.x, pos.y, size.x, size.y);
-    }
-    ImGui::End();
-    ImGui::PopStyleVar();
-  }));
-
-  m_gui->m_docks.push_back(Dock("input-stream", []() {
-    const int hardcoded_node_id = 1;
-
-    ImNodes::BeginNodeEditor();
-
-    ImNodes::BeginNode(hardcoded_node_id);
-    ImGui::Dummy(ImVec2(80.0f, 45.0f));
-    ImNodes::EndNode();
-
-    ImNodes::EndNodeEditor();
-  }));
+  return m_motion->LoadMotion(path, scaling, m_timeline);
 }
 
 void
@@ -238,15 +163,14 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 int
 App::Run()
 {
-  auto addDock = [gui=m_gui](const Dock &dock)
-  {
+  auto addDock = [gui = m_gui](const Dock& dock) {
     gui->m_docks.push_back(dock);
   };
   JsonDock::Create(addDock, m_scene);
   SceneDock::Create(addDock, m_scene, m_view, m_timeline);
-  
+  MotionDock::Create(addDock, m_motion);
+
   timelineDock();
-  motionDock();
   loggerDock();
 
   std::optional<Time> lastTime;
@@ -277,10 +201,6 @@ App::Run()
 
   return 0;
 }
-
-
-
-
 
 void
 App::timelineDock()

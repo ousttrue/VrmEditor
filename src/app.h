@@ -20,8 +20,8 @@ class LuaEngine;
 class Platform;
 class OrbitView;
 class ImLogger;
+struct MotionSource;
 
-using OnPose = std::function<void(const vrm::HumanPose&)>;
 
 class App
 {
@@ -35,23 +35,7 @@ class App
   std::shared_ptr<Scene> m_scene;
   std::shared_ptr<OrbitView> m_view;
 
-  std::shared_ptr<Bvh> m_motion;
-  std::shared_ptr<BvhSolver> m_motionSolver;
-  std::vector<vrm::HumanBones> m_humanBoneMap = {
-    vrm::HumanBones::hips,          vrm::HumanBones::spine,
-    vrm::HumanBones::chest,         vrm::HumanBones::neck,
-    vrm::HumanBones::head,          vrm::HumanBones::leftShoulder,
-    vrm::HumanBones::leftUpperArm,  vrm::HumanBones::leftLowerArm,
-    vrm::HumanBones::leftHand,      vrm::HumanBones::rightShoulder,
-    vrm::HumanBones::rightUpperArm, vrm::HumanBones::rightLowerArm,
-    vrm::HumanBones::rightHand,     vrm::HumanBones::leftUpperLeg,
-    vrm::HumanBones::leftLowerLeg,  vrm::HumanBones::leftFoot,
-    vrm::HumanBones::leftToe,       vrm::HumanBones::rightUpperLeg,
-    vrm::HumanBones::rightLowerLeg, vrm::HumanBones::rightFoot,
-    vrm::HumanBones::rightToe,
-  };
-
-  std::list<OnPose> m_poseCallbacks;
+  std::shared_ptr<MotionSource> m_motion;
 
   App();
 
@@ -77,16 +61,8 @@ public:
   bool LoadMotion(const std::filesystem::path& path, float scaling = 1.0f);
   void LoadLua(const std::filesystem::path& path);
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
-  void SetHumanPose(const vrm::HumanPose &pose)
-  {
-    for(auto &callback: m_poseCallbacks)
-    {
-      callback(pose);
-    }
-  }
 
 private:
   void timelineDock();
-  void motionDock();
   void loggerDock();
 };
