@@ -21,17 +21,16 @@ struct Node
   // local
   EuclideanTransform Transform;
   DirectX::XMFLOAT3 Scale = { 1, 1, 1 };
-  DirectX::XMMATRIX Matrix()const
+  DirectX::XMMATRIX Matrix() const
   {
     return DirectX::XMMatrixMultiply(
-      DirectX::XMMatrixScaling(Scale.x, Scale.y, Scale.z),
-      Transform.Matrix());
+      DirectX::XMMatrixScaling(Scale.x, Scale.y, Scale.z), Transform.Matrix());
   }
 
   // world
   EuclideanTransform WorldTransform;
   DirectX::XMFLOAT3 WorldScale = { 1, 1, 1 };
-  DirectX::XMMATRIX WorldMatrix()const
+  DirectX::XMMATRIX WorldMatrix() const
   {
     return DirectX::XMMatrixMultiply(
       DirectX::XMMatrixScaling(WorldScale.x, WorldScale.y, WorldScale.z),
@@ -110,6 +109,7 @@ struct Node
   }
   void Print(int level = 0);
 };
+
 inline std::ostream&
 operator<<(std::ostream& os, const Node& node)
 {

@@ -769,17 +769,15 @@ Scene::Render(Time time, const ViewProjection& camera, const RenderFunc& render)
 
         auto rootInverse = DirectX::XMMatrixIdentity();
         if (auto root_index = skin->root) {
-          rootInverse = DirectX::XMMatrixInverse(
-            nullptr, node->WorldMatrix());
+          rootInverse = DirectX::XMMatrixInverse(nullptr, node->WorldMatrix());
         }
 
         for (int i = 0; i < skin->joints.size(); ++i) {
           auto node = m_nodes[skin->joints[i]];
           auto m = skin->bindMatrices[i];
-          DirectX::XMStoreFloat4x4(
-            &skin->currentMatrices[i],
-            DirectX::XMLoadFloat4x4(&m) *
-              node->WorldMatrix() * rootInverse);
+          DirectX::XMStoreFloat4x4(&skin->currentMatrices[i],
+                                   DirectX::XMLoadFloat4x4(&m) *
+                                     node->WorldMatrix() * rootInverse);
         }
 
         skinningMatrices = skin->currentMatrices;
@@ -868,7 +866,21 @@ Scene::SetHumanPose(const vrm::HumanPose& pose)
       if (i == 0) {
         node->Transform.Translation = pose.RootPosition;
       }
-      node->Transform.Rotation = pose.Rotations[i];
+
+      auto worldInitial =
+        DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation);
+      auto q = DirectX::XMLoadFloat4(&pose.Rotations[i]);
+      auto worldInitialInv = DirectX::XMQuaternionInverse(worldInitial);
+      auto localInitial =
+        DirectX::XMLoadFloat4(&node->InitialTransform.Rotation);
+
+      // # retarget
+      // normalized local rotation to unormalized hierarchy.
+      DirectX::XMStoreFloat4(&node->Transform.Rotation,
+        DirectX::XMQuaternionMultiply(
+          DirectX::XMQuaternionMultiply(
+            DirectX::XMQuaternionMultiply(worldInitial, q), worldInitialInv),
+          localInitial));
     }
   }
 }

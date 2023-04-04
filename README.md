@@ -18,10 +18,19 @@ read, write, animation test.
     - [x] springbone. basic without collision
     - [x] humanoid
   - [ ] vrm-1.0
+    - [ ] expression. morphtarget
+    - [ ] expression. material
+    - [ ] lookat. bone
+    - [ ] lookat. expression
+    - [ ] springbone. basic without collision
     - [x] humanoid
+    - [ ] constraint
   - [ ] vrm-animation
     - [ ] import
     - [ ] export
+    - [ ] humanoid
+    - [ ] expression
+    - [ ] lookat
 - [x] bvh import
 - [ ] fbx import
 
@@ -37,7 +46,7 @@ read, write, animation test.
 - [x] gltf. tranlsation, rotation, scaling and weights.
 - [x] bvh
 - [x] vrm0 from bvh
-- [ ] vrm1. humanoid retarget
+- [x] vrm1. humanoid retarget
 
 ### write
 
