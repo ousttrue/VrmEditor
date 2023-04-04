@@ -145,7 +145,7 @@ MotionDock::Create(const AddDockFunc& addDock,
   cuber::PushGrid(lines);
 
   rt->render =
-    [cuber, liner, lines, motion_source](const gltf::ViewProjection& camera) {
+    [cuber, liner, lines, motion_source](const ViewProjection& camera) {
       if (motion_source->MotionSolver) {
         cuber->Render(camera.projection,
                       camera.view,

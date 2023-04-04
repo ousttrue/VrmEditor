@@ -141,19 +141,19 @@ public:
     auto gl3r = std::make_shared<Gl3Renderer>();
 
     rt->render = [timeline, scene, gl3r, selection = context](
-                   const gltf::ViewProjection& camera) {
+                   const ViewProjection& camera) {
       gl3r->clear(camera);
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
       gltf::RenderFunc render = [gl3r,
-                                 liner](const gltf::ViewProjection& camera,
+                                 liner, &camera](
                                         const gltf::Mesh& mesh,
                                         const gltf::MeshInstance& instance,
                                         const float m[16]) {
         gl3r->render(camera, mesh, instance, m);
       };
-      scene->Render(timeline->CurrentTime, camera, render);
+      scene->Render(timeline->CurrentTime, render);
       liner->Render(camera.projection, camera.view, gizmo::lines());
 
       // gizmo

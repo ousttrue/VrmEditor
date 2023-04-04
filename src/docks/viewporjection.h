@@ -1,6 +1,5 @@
 #pragma once
 
-namespace gltf {
 struct ViewProjection
 {
   float viewport[4];
@@ -21,4 +20,3 @@ struct ViewProjection
   float premul_b() const { return clear_color[2] * clear_color[3]; }
   float alpha() const { return clear_color[3]; }
 };
-}
