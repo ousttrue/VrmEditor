@@ -1,12 +1,15 @@
 #pragma once
 
-struct ViewProjection {
+namespace gltf {
+struct ViewProjection
+{
   float viewport[4];
-  float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
+  float clear_color[4] = { 0.45f, 0.55f, 0.60f, 1.00f };
   float view[16];
   float projection[16];
 
-  void resize(int width, int height) {
+  void resize(int width, int height)
+  {
     viewport[2] = static_cast<float>(width);
     viewport[3] = static_cast<float>(height);
   }
@@ -18,3 +21,4 @@ struct ViewProjection {
   float premul_b() const { return clear_color[2] * clear_color[3]; }
   float alpha() const { return clear_color[3]; }
 };
+}

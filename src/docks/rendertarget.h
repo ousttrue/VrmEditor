@@ -1,20 +1,20 @@
 #pragma once
 #include "orbitview.h"
-#include "viewporjection.h"
 #include <functional>
 #include <grapho/gl3/fbo.h>
 #include <imgui.h>
 #include <memory>
+#include <vrm/viewporjection.h>
 
 #include <ImGuizmo.h>
 
 struct RenderTarget
 {
-  ViewProjection camera;
+  gltf::ViewProjection camera;
   std::shared_ptr<OrbitView> view;
   std::shared_ptr<grapho::gl3::Fbo> fbo;
   float color[4];
-  std::function<void(const ViewProjection& camera)> render;
+  std::function<void(const gltf::ViewProjection& camera)> render;
 
   RenderTarget(const std::shared_ptr<OrbitView>& view)
     : view(view)

@@ -21,16 +21,6 @@
 #include <unordered_map>
 #include <vector>
 
-struct ViewProjection;
-namespace gltf {
-struct Mesh;
-struct MeshInstance;
-struct Skin;
-struct Node;
-struct Animation;
-class Image;
-class Material;
-} // namespace gltf
 namespace vrm {
 namespace v0 {
 struct Vrm;
@@ -41,6 +31,14 @@ struct Vrm;
 }
 
 namespace gltf {
+struct ViewProjection;
+struct Mesh;
+struct MeshInstance;
+struct Skin;
+struct Node;
+struct Animation;
+class Image;
+class Material;
 using RenderFunc = std::function<void(const ViewProjection&,
                                       const gltf::Mesh&,
                                       const gltf::MeshInstance&,
