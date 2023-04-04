@@ -63,6 +63,5 @@ public:
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
 
 private:
-  void timelineDock();
   void loggerDock();
 };

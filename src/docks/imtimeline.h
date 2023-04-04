@@ -1,5 +1,6 @@
 #pragma once
 #define IMGUI_DEFINE_MATH_OPERATORS 1
+#include "gui.h"
 #include <chrono>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -90,14 +91,14 @@ struct TimeGeometry
 
 class ImTimeline
 {
-  std::shared_ptr<Scene> m_scene;
-
 public:
-  ImTimeline(const std::shared_ptr<Scene>& scene)
-    : m_scene(scene)
+  static void Create(const AddDockFunc& addDock,
+                     const std::shared_ptr<Timeline>& timeline)
   {
+    auto timelineGui = std::make_shared<ImTimeline>();
+    addDock(Dock("timeline",
+                 [timeline, timelineGui]() { timelineGui->show(timeline); }));
   }
-  ~ImTimeline() {}
 
   void show(const std::shared_ptr<Timeline>& timeline,
             const ImVec2& size = { 0, 0 })

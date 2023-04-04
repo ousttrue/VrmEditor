@@ -7,8 +7,8 @@
 #include "docks/json_dock.h"
 #include "docks/motion_dock.h"
 #include "docks/scene_dock.h"
+#include "docks/imtimeline.h"
 #include "imlogger.h"
-#include "imtimeline.h"
 #include "luahost.h"
 #include "platform.h"
 #include <Bvh.h>
@@ -169,8 +169,8 @@ App::Run()
   JsonDock::Create(addDock, m_scene);
   SceneDock::Create(addDock, m_scene, m_view, m_timeline);
   MotionDock::Create(addDock, m_motion);
+  ImTimeline::Create(addDock, m_timeline);
 
-  timelineDock();
   loggerDock();
 
   std::optional<Time> lastTime;
@@ -200,17 +200,6 @@ App::Run()
   }
 
   return 0;
-}
-
-void
-App::timelineDock()
-{
-  auto timelineGui = std::make_shared<ImTimeline>(m_scene);
-
-  m_gui->m_docks.push_back(
-    Dock("timeline", [timeline = m_timeline, timelineGui]() {
-      timelineGui->show(timeline);
-    }));
 }
 
 void
