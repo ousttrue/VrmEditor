@@ -10,7 +10,9 @@
 #include <vrm/humanoid.h>
 #include <vrm/humanpose.h>
 
+namespace gltf{
 struct Scene;
+}
 struct Bvh;
 class BvhSolver;
 class Gui;
@@ -31,7 +33,7 @@ class App
   std::shared_ptr<ImLogger> m_logger;
 
   std::shared_ptr<Timeline> m_timeline;
-  std::shared_ptr<Scene> m_scene;
+  std::shared_ptr<gltf::Scene> m_scene;
   std::shared_ptr<OrbitView> m_view;
 
   std::shared_ptr<MotionSource> m_motion;

@@ -22,7 +22,7 @@ class SceneDock
 
 public:
   static void Create(const AddDockFunc& addDock,
-                     const std::shared_ptr<Scene>& scene,
+                     const std::shared_ptr<gltf::Scene>& scene,
                      const std::shared_ptr<OrbitView>& view,
                      const std::shared_ptr<Timeline>& timeline)
   {
@@ -146,7 +146,7 @@ public:
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
-      RenderFunc render = [gl3r, liner](const ViewProjection& camera,
+      gltf::RenderFunc render = [gl3r, liner](const ViewProjection& camera,
                                         const gltf::Mesh& mesh,
                                         const gltf::MeshInstance& instance,
                                         const float m[16]) {

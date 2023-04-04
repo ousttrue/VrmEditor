@@ -11,7 +11,7 @@ class JsonDock
 public:
   static std::stringstream s_ss;
   static void Create(const AddDockFunc& addDock,
-                     const std::shared_ptr<Scene>& scene)
+                     const std::shared_ptr<gltf::Scene>& scene)
   {
 
     auto enter = [](nlohmann::json& item, const std::string& key) {

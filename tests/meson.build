@@ -4,6 +4,7 @@ executable(
     [
         'gltf_samples.cpp',
         'base64.cpp',
+        'glb_export.cpp',
     ],
     install: true,
     dependencies: [gtest_main_dep, vrm_dep],

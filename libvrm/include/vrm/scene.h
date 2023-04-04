@@ -39,6 +39,8 @@ namespace v1 {
 struct Vrm;
 }
 }
+
+namespace gltf {
 using RenderFunc = std::function<void(const ViewProjection&,
                                       const gltf::Mesh&,
                                       const gltf::MeshInstance&,
@@ -92,7 +94,7 @@ struct Scene
   std::expected<bool, std::string> AddIndices(
     int vertex_offset,
     gltf::Mesh* mesh,
-    const nlohmann::json &prim,
+    const nlohmann::json& prim,
     const std::shared_ptr<gltf::Material>& material);
 
   void SyncHierarchy();
@@ -107,7 +109,7 @@ struct Scene
                     const LeaveJson& leave,
                     nlohmann::json* j = nullptr,
                     std::string_view key = {});
-  void SetHumanPose(const vrm::HumanPose &pose);
+  void SetHumanPose(const vrm::HumanPose& pose);
   std::shared_ptr<gltf::Node> GetBoneNode(vrm::HumanBones bone);
 
   std::vector<uint8_t> ToGlb() const;
@@ -137,3 +139,4 @@ private:
   std::expected<std::shared_ptr<vrm::v0::Vrm>, std::string> ParseVrm0();
   std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string> ParseVrm1();
 };
+}

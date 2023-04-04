@@ -6,7 +6,7 @@ HERE = pathlib.Path(__file__).parent
 TEMPLATE = """
 TEST(VrmLoad, {name}) {{
   auto path = get_path("{relative}");
-  Scene scene;
+  gltf::Scene scene;
   auto result = scene.Load(path);
   EXPECT_TRUE(result) << result.error();
 }}
