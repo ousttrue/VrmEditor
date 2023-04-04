@@ -17,3 +17,5 @@ imnodes_dep = declare_dependency(
     dependencies: [imgui_dep],
 )
 meson.override_dependency('imnodes', imnodes_dep)
+
+subdir('example')
