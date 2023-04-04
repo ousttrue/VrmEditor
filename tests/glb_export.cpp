@@ -82,7 +82,7 @@ TEST(GlbExport, minimal)
   gltf::Scene scene;
   std::span<const uint8_t> span{ (const uint8_t*)SRC.data(),
                                  (const uint8_t*)SRC.data() + SRC.size() };
-  EXPECT_TRUE(scene.Load(span, {}, nullptr));
+  EXPECT_TRUE(scene.Load(span));
   gltf::Exporter exporter;
   auto data = exporter.Export(scene);
   EXPECT_TRUE(data.size());
