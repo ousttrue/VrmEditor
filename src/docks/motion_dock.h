@@ -66,6 +66,19 @@ struct MotionSource
   }
 };
 
+struct GraphPin
+{
+  std::string Name;
+};
+
+struct GraphNode
+{
+  std::string Prefix;
+  std::string Name;
+  std::vector<GraphPin> Outputs;
+  std::vector<GraphPin> Inputs;
+};
+
 class MotionDock
 {
 public:
