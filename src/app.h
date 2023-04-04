@@ -86,7 +86,6 @@ public:
   }
 
 private:
-  void jsonDock();
   void sceneDock();
   void timelineDock();
   void motionDock();

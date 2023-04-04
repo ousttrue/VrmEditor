@@ -3,11 +3,12 @@ executable(
     [
         'main.cpp',
         'gl3renderer.cpp',
-        'gui.cpp',
         'platform.cpp',
         'app.cpp',
         'luahost.cpp',
         'assetdir.cpp',
+        'docks/gui.cpp',
+        'docks/json_dock.cpp',
     ],
     install: true,
     gui_app: true,

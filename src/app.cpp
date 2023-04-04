@@ -4,7 +4,8 @@
 #include "app.h"
 #include "assetdir.h"
 #include "gl3renderer.h"
-#include "gui.h"
+#include "docks/gui.h"
+#include "docks/json_dock.h"
 #include "imhumanoid.h"
 #include "imlogger.h"
 #include "imtimeline.h"
@@ -238,7 +239,7 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 int
 App::Run()
 {
-  jsonDock();
+  m_gui->m_docks.push_back(JsonDock::Create(m_scene));
   sceneDock();
   timelineDock();
   motionDock();
@@ -452,46 +453,7 @@ App::sceneDock()
   }));
 }
 
-void
-App::jsonDock()
-{
 
-  auto enter = [](nlohmann::json& item, const std::string& key) {
-    static ImGuiTreeNodeFlags base_flags =
-      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
-      ImGuiTreeNodeFlags_SpanAvailWidth;
-    ImGuiTreeNodeFlags node_flags = base_flags;
-    auto is_leaf = !item.is_object() && !item.is_array();
-    if (is_leaf) {
-      node_flags |=
-        ImGuiTreeNodeFlags_Leaf |
-        ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-    }
-    std::stringstream ss;
-
-    // std::string label;
-    if (item.is_object()) {
-      if (item.find("name") != item.end()) {
-        ss << key << ": " << (std::string_view)item.at("name");
-      } else {
-        ss << key << ": object";
-      }
-    } else if (item.is_array()) {
-      ss << key << ": [" << item.size() << "]";
-    } else {
-      ss << key << ": " << item.dump();
-    }
-    auto label = ss.str();
-    bool node_open = ImGui::TreeNodeEx(
-      (void*)(intptr_t)&item, node_flags, "%s", label.c_str());
-    return node_open && !is_leaf;
-  };
-  auto leave = []() { ImGui::TreePop(); };
-
-  m_gui->m_docks.push_back(Dock("gltf", [scene = m_scene, enter, leave]() {
-    scene->TraverseJson(enter, leave);
-  }));
-}
 
 void
 App::timelineDock()

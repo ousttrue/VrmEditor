@@ -1,6 +1,6 @@
 #include "luahost.h"
 #include "app.h"
-#include "gui.h"
+#include "docks/gui.h"
 #include <iostream>
 #ifdef _WIN32
 #include "windows_helper.h"
