@@ -119,21 +119,25 @@ Scene::Parse()
     }
   }
 
-  auto& images = m_gltf.Json.at("images");
-  for (int i = 0; i < images.size(); ++i) {
-    if (auto image = ParseImage(i, images.at(i))) {
-      m_images.push_back(*image);
-    } else {
-      return std::unexpected{ image.error() };
+  if (has(m_gltf.Json, "images")) {
+    auto& images = m_gltf.Json.at("images");
+    for (int i = 0; i < images.size(); ++i) {
+      if (auto image = ParseImage(i, images.at(i))) {
+        m_images.push_back(*image);
+      } else {
+        return std::unexpected{ image.error() };
+      }
     }
   }
 
-  auto& materials = m_gltf.Json.at("materials");
-  for (int i = 0; i < materials.size(); ++i) {
-    if (auto material = ParseMaterial(i, materials.at(i))) {
-      m_materials.push_back(*material);
-    } else {
-      return std::unexpected{ material.error() };
+  if (has(m_gltf.Json, "materials")) {
+    auto& materials = m_gltf.Json.at("materials");
+    for (int i = 0; i < materials.size(); ++i) {
+      if (auto material = ParseMaterial(i, materials.at(i))) {
+        m_materials.push_back(*material);
+      } else {
+        return std::unexpected{ material.error() };
+      }
     }
   }
 
@@ -149,7 +153,7 @@ Scene::Parse()
   }
 
   if (has(m_gltf.Json, "skins")) {
-    auto skins = m_gltf.Json["skins"];
+    auto skins = m_gltf.Json.at("skins");
     for (int i = 0; i < skins.size(); ++i) {
       if (auto skin = ParseSkin(i, skins.at(i))) {
         m_skins.push_back(*skin);
@@ -159,25 +163,27 @@ Scene::Parse()
     }
   }
 
-  auto nodes = m_gltf.Json["nodes"];
-  for (int i = 0; i < nodes.size(); ++i) {
-    if (auto node = ParseNode(i, nodes.at(i))) {
-      m_nodes.push_back(*node);
-    } else {
-      return std::unexpected{ node.error() };
+  if (has(m_gltf.Json, "nodes")) {
+    auto nodes = m_gltf.Json.at("nodes");
+    for (int i = 0; i < nodes.size(); ++i) {
+      if (auto node = ParseNode(i, nodes.at(i))) {
+        m_nodes.push_back(*node);
+      } else {
+        return std::unexpected{ node.error() };
+      }
     }
-  }
-  for (int i = 0; i < nodes.size(); ++i) {
-    auto& node = nodes[i];
-    if (has(node, "children")) {
-      for (auto child : node.at("children")) {
-        gltf::Node::AddChild(m_nodes[i], m_nodes[child]);
+    for (int i = 0; i < nodes.size(); ++i) {
+      auto& node = nodes.at(i);
+      if (has(node, "children")) {
+        for (auto child : node.at("children")) {
+          gltf::Node::AddChild(m_nodes[i], m_nodes[child]);
+        }
       }
     }
   }
   if (has(m_gltf.Json, "scenes")) {
-    auto scene = m_gltf.Json["scenes"][0];
-    for (auto& node : scene["nodes"]) {
+    auto scene = m_gltf.Json.at("scenes").at(0);
+    for (auto& node : scene.at("nodes")) {
       m_roots.push_back(m_nodes[node]);
     }
   }
@@ -190,12 +196,14 @@ Scene::Parse()
   };
   Traverse(enter, {});
 
-  auto& animations = m_gltf.Json["animations"];
-  for (int i = 0; i < animations.size(); ++i) {
-    if (auto animation = ParseAnimation(i, animations.at(i))) {
-      m_animations.push_back(*animation);
-    } else {
-      return std::unexpected{ animation.error() };
+  if (has(m_gltf.Json, "animations")) {
+    auto& animations = m_gltf.Json.at("animations");
+    for (int i = 0; i < animations.size(); ++i) {
+      if (auto animation = ParseAnimation(i, animations.at(i))) {
+        m_animations.push_back(*animation);
+      } else {
+        return std::unexpected{ animation.error() };
+      }
     }
   }
 
@@ -261,7 +269,7 @@ Scene::ParseMaterial(int i, const nlohmann::json& material)
       auto& baseColorTexture = pbrMetallicRoughness.at("baseColorTexture");
       int texture_index = baseColorTexture.at("index");
       auto texture = textures.at(texture_index);
-      int image_index = texture["source"];
+      int image_index = texture.at("source");
       ptr->texture = m_images[image_index];
     }
   }
@@ -273,7 +281,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
 {
   auto ptr = std::make_shared<gltf::Mesh>();
   const nlohmann::json* lastAtributes = nullptr;
-  for (auto& prim : mesh["primitives"]) {
+  for (auto& prim : mesh.at("primitives")) {
     std::shared_ptr<gltf::Material> material;
     if (has(prim, "material")) {
       material = m_materials[prim.at("material")];
@@ -357,7 +365,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
       if (has(prim, "targets")) {
         auto& targets = prim.at("targets");
         for (int i = 0; i < targets.size(); ++i) {
-          auto& target = targets[i];
+          auto& target = targets.at(i);
           auto morph = ptr->getOrCreateMorphTarget(i);
           // std::cout << target << std::endl;
           std::span<const DirectX::XMFLOAT3> positions;
@@ -381,7 +389,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
 
       // extend indices and add vertex offset
       if (auto expected =
-            AddIndices(offset, ptr.get(), prim["indices"], material)) {
+            AddIndices(offset, ptr.get(), prim.at("indices"), material)) {
         // OK
       } else {
         return std::unexpected{ expected.error() };
@@ -415,13 +423,13 @@ Scene::ParseSkin(int i, const nlohmann::json& skin)
   ss << "skin" << i;
   ptr->name = skin.value("name", ss.str());
 
-  for (auto& joint : skin["joints"]) {
+  for (auto& joint : skin.at("joints")) {
     ptr->joints.push_back(joint);
   }
 
   std::span<const DirectX::XMFLOAT4X4> matrices;
   if (auto accessor =
-        m_gltf.accessor<DirectX::XMFLOAT4X4>(skin["inverseBindMatrices"])) {
+        m_gltf.accessor<DirectX::XMFLOAT4X4>(skin.at("inverseBindMatrices"))) {
     matrices = *accessor;
   } else {
     return std::unexpected{ accessor.error() };
@@ -456,7 +464,7 @@ Scene::ParseNode(int i, const nlohmann::json& node)
 
   if (has(node, "matrix")) {
     // matrix
-    auto m = node["matrix"];
+    auto m = node.at("matrix");
     auto local = DirectX::XMFLOAT4X4{
       m[0],  m[1],  m[2],  m[3],  //
       m[4],  m[5],  m[6],  m[7],  //
@@ -503,10 +511,10 @@ Scene::ParseAnimation(int i, const nlohmann::json& animation)
     std::make_shared<gltf::Animation>(animation.value("name", ss.str()));
 
   // samplers
-  auto& samplers = animation["samplers"];
+  auto& samplers = animation.at("samplers");
 
   // channels
-  auto& channels = animation["channels"];
+  auto& channels = animation.at("channels");
   for (auto& channel : channels) {
     int sampler_index = channel.at("sampler");
     auto sampler = samplers[sampler_index];
@@ -697,8 +705,8 @@ Scene::AddIndices(int vertex_offset,
                   int accessor_index,
                   const std::shared_ptr<gltf::Material>& material)
 {
-  auto accessor = m_gltf.Json["accessors"][accessor_index];
-  switch ((gltf::ComponentType)accessor["componentType"]) {
+  auto accessor = m_gltf.Json.at("accessors").at(accessor_index);
+  switch ((gltf::ComponentType)accessor.at("componentType")) {
     case gltf::ComponentType::UNSIGNED_BYTE: {
       if (auto span = m_gltf.accessor<uint8_t>(accessor_index)) {
         mesh->addSubmesh(vertex_offset, *span, material);
@@ -876,7 +884,8 @@ Scene::SetHumanPose(const vrm::HumanPose& pose)
 
       // # retarget
       // normalized local rotation to unormalized hierarchy.
-      DirectX::XMStoreFloat4(&node->Transform.Rotation,
+      DirectX::XMStoreFloat4(
+        &node->Transform.Rotation,
         DirectX::XMQuaternionMultiply(
           DirectX::XMQuaternionMultiply(
             DirectX::XMQuaternionMultiply(worldInitial, q), worldInitialInv),
