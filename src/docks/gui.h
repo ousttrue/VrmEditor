@@ -46,6 +46,8 @@ struct Dock
   void Show();
 };
 
+using AddDockFunc = std::function<void(const Dock&dock)>;
+
 using Task = std::function<void()>;
 
 class Gui
@@ -80,3 +82,4 @@ public:
   bool AddJapaneseFont(const std::filesystem::path& path);
   bool AddIconFont(const std::filesystem::path& path);
 };
+

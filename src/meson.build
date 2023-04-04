@@ -2,11 +2,11 @@ executable(
     'vrmeditor',
     [
         'main.cpp',
-        'gl3renderer.cpp',
         'platform.cpp',
         'app.cpp',
         'luahost.cpp',
         'assetdir.cpp',
+        'docks/gl3renderer.cpp',
         'docks/gui.cpp',
         'docks/json_dock.cpp',
     ],

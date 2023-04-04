@@ -86,7 +86,6 @@ public:
   }
 
 private:
-  void sceneDock();
   void timelineDock();
   void motionDock();
   void loggerDock();

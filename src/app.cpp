@@ -3,15 +3,14 @@
 
 #include "app.h"
 #include "assetdir.h"
-#include "gl3renderer.h"
 #include "docks/gui.h"
 #include "docks/json_dock.h"
-#include "imhumanoid.h"
+#include "docks/scene_dock.h"
+// #include "imhumanoid.h"
 #include "imlogger.h"
 #include "imtimeline.h"
 #include "luahost.h"
 #include "platform.h"
-#include "rendertarget.h"
 #include <Bvh.h>
 #include <BvhSolver.h>
 #include <cuber/gl3/GlCubeRenderer.h>
@@ -239,8 +238,13 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 int
 App::Run()
 {
-  m_gui->m_docks.push_back(JsonDock::Create(m_scene));
-  sceneDock();
+  auto addDock = [gui=m_gui](const Dock &dock)
+  {
+    gui->m_docks.push_back(dock);
+  };
+  JsonDock::Create(addDock, m_scene);
+  SceneDock::Create(addDock, m_scene, m_view, m_timeline);
+  
   timelineDock();
   motionDock();
   loggerDock();
@@ -274,184 +278,7 @@ App::Run()
   return 0;
 }
 
-struct TreeContext
-{
-  gltf::Node* selected = nullptr;
-  gltf::Node* new_selected = nullptr;
-};
 
-void
-App::sceneDock()
-{
-  //
-  // scene tree
-  //
-  auto context = std::make_shared<TreeContext>();
-
-  auto enter = [context](gltf::Node& node) {
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    static ImGuiTreeNodeFlags base_flags =
-      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
-      ImGuiTreeNodeFlags_SpanAvailWidth;
-    ImGuiTreeNodeFlags node_flags = base_flags;
-
-    if (node.Children.empty()) {
-      node_flags |=
-        ImGuiTreeNodeFlags_Leaf |
-        ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-    }
-    if (context->selected == &node) {
-      node_flags |= ImGuiTreeNodeFlags_Selected;
-    }
-
-    bool hasRotation = node.Transform.HasRotation();
-    if (hasRotation) {
-      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
-    }
-
-    bool node_open = ImGui::TreeNodeEx(
-      (void*)(intptr_t)node.Index, node_flags, "%s", node.Name.c_str());
-
-    if (hasRotation) {
-      ImGui::PopStyleColor();
-    }
-
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-      context->new_selected = &node;
-    }
-
-    return node.Children.size() && node_open;
-  };
-  auto leave = []() { ImGui::TreePop(); };
-
-  m_gui->m_docks.push_back(
-    Dock("scene",
-         [scene = m_scene, enter, leave, context, gui = m_gui](bool* p_open) {
-           if (ImGui::Begin("scene", p_open, ImGuiWindowFlags_NoScrollbar)) {
-             auto size = ImGui::GetContentRegionAvail();
-
-             context->selected = context->new_selected;
-             // ImGui::BeginGroup();
-             if (ImGui::BeginChild("##scene-tree",
-                                   { size.x, size.y / 2 },
-                                   true,
-                                   ImGuiWindowFlags_None)) {
-               // ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing,
-               // gui->m_fontSize / 4);
-               scene->Traverse(enter, leave);
-               // ImGui::PopStyleVar();
-             }
-             ImGui::EndChild();
-             // ImGui::EndGroup();
-
-             // ImGui::BeginGroup();
-             if (ImGui::BeginChild("##scene-selected",
-                                   { size.x, size.y / 2 },
-                                   true,
-                                   ImGuiWindowFlags_None)) {
-               if (context->selected) {
-                 ImGui::Text("%s", context->selected->Name.c_str());
-                 if (auto mesh_index = context->selected->Mesh) {
-                   auto mesh = scene->m_meshes[*mesh_index];
-                   auto instance = context->selected->Instance;
-                   for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
-                     auto& morph = mesh->m_morphTargets[i];
-                     ImGui::SliderFloat(
-                       morph->name.c_str(), &instance->weights[i], 0, 1);
-                   }
-                 }
-               }
-             }
-             ImGui::EndChild();
-             // ImGui::EndGroup();
-           }
-           ImGui::End();
-         }));
-
-  m_gui->m_docks.push_back(Dock("vrm", [scene = m_scene]() {
-    ImHumanoid::Show(scene->m_humanoid);
-    if (auto vrm = scene->m_vrm0) {
-      ImGui::Text("%s", "vrm-0.x");
-      for (auto expression : vrm->m_expressions) {
-        ImGui::SliderFloat(
-          expression->label.c_str(), &expression->weight, 0, 1);
-      }
-    }
-    if (auto vrm = scene->m_vrm1) {
-      ImGui::Text("%s", "vrm-1.0");
-      // for (auto expression : vrm->m_expressions) {
-      //   ImGui::SliderFloat(
-      //     expression->label.c_str(), &expression->weight, 0, 1);
-      // }
-    }
-  }));
-
-  //
-  // 3d view
-  //
-  auto rt = std::make_shared<RenderTarget>(m_view);
-  rt->color[0] = 0.2f;
-  rt->color[1] = 0.2f;
-  rt->color[2] = 0.2f;
-  rt->color[3] = 1.0f;
-
-  auto gl3r = std::make_shared<Gl3Renderer>();
-
-  rt->render = [timeline = m_timeline,
-                scene = m_scene,
-                gl3r,
-                selection = context](const ViewProjection& camera) {
-    gl3r->clear(camera);
-
-    auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
-
-    RenderFunc render = [gl3r, liner](const ViewProjection& camera,
-                                      const gltf::Mesh& mesh,
-                                      const gltf::MeshInstance& instance,
-                                      const float m[16]) {
-      gl3r->render(camera, mesh, instance, m);
-    };
-    scene->Render(timeline->CurrentTime, camera, render);
-    liner->Render(camera.projection, camera.view, gizmo::lines());
-
-    // gizmo
-    if (auto node = selection->selected) {
-      // TODO: conflict mouse event(left) with ImageButton
-      DirectX::XMFLOAT4X4 m;
-      DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
-      ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-      if (ImGuizmo::Manipulate(camera.view,
-                               camera.projection,
-                               ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
-                               ImGuizmo::LOCAL,
-                               (float*)&m,
-                               nullptr,
-                               nullptr,
-                               nullptr,
-                               nullptr)) {
-        // decompose feedback
-        node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
-      }
-      ImGuizmo::GetContext().mAllowActiveHoverItem = false;
-    }
-  };
-
-  m_gui->m_docks.push_back(Dock("view", [rt, scene = m_scene](bool* p_open) {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-    if (ImGui::Begin("render target",
-                     p_open,
-                     ImGuiWindowFlags_NoScrollbar |
-                       ImGuiWindowFlags_NoScrollWithMouse)) {
-      auto pos = ImGui::GetWindowPos();
-      pos.y += ImGui::GetFrameHeight();
-      auto size = ImGui::GetContentRegionAvail();
-      rt->show_fbo(pos.x, pos.y, size.x, size.y);
-    }
-
-    ImGui::End();
-    ImGui::PopStyleVar();
-  }));
-}
 
 
 
