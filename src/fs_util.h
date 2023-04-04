@@ -47,7 +47,7 @@ inline void
 shell_open(const std::filesystem::path& path)
 {
   std::stringstream ss;
-  ss << path;
+  ss << "xdg-open " << path;
   system(ss.str().c_str());
 }
 
