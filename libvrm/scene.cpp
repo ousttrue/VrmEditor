@@ -463,17 +463,19 @@ Scene::ParseNode(int i, const nlohmann::json& node)
       m[8],  m[9],  m[10], m[11], //
       m[12], m[13], m[14], m[15], //
     };
-    ptr->SetLocalMatrix(local);
+    ptr->SetLocalMatrix(DirectX::XMLoadFloat4x4(&local));
   } else {
     // T
-    ptr->Transform.Translation = node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
+    ptr->Transform.Translation =
+      node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
     if (m_vrm0) {
       // rotate: Y180
       auto t = ptr->Transform.Translation;
       ptr->Transform.Translation = { -t.x, t.y, -t.z };
     }
     // R
-    ptr->Transform.Rotation = node.value("rotation", DirectX::XMFLOAT4{ 0, 0, 0, 1 });
+    ptr->Transform.Rotation =
+      node.value("rotation", DirectX::XMFLOAT4{ 0, 0, 0, 1 });
     // S
     ptr->Scale = node.value("scale", DirectX::XMFLOAT3{ 1, 1, 1 });
   }
@@ -768,16 +770,16 @@ Scene::Render(Time time, const ViewProjection& camera, const RenderFunc& render)
         auto rootInverse = DirectX::XMMatrixIdentity();
         if (auto root_index = skin->root) {
           rootInverse = DirectX::XMMatrixInverse(
-            nullptr, DirectX::XMLoadFloat4x4(&node->WorldMatrix));
+            nullptr, node->WorldMatrix());
         }
 
         for (int i = 0; i < skin->joints.size(); ++i) {
           auto node = m_nodes[skin->joints[i]];
           auto m = skin->bindMatrices[i];
-          DirectX::XMStoreFloat4x4(&skin->currentMatrices[i],
-                                   DirectX::XMLoadFloat4x4(&m) *
-                                     DirectX::XMLoadFloat4x4(&node->WorldMatrix) *
-                                     rootInverse);
+          DirectX::XMStoreFloat4x4(
+            &skin->currentMatrices[i],
+            DirectX::XMLoadFloat4x4(&m) *
+              node->WorldMatrix() * rootInverse);
         }
 
         skinningMatrices = skin->currentMatrices;
@@ -788,10 +790,12 @@ Scene::Render(Time time, const ViewProjection& camera, const RenderFunc& render)
     }
   }
 
+  DirectX::XMFLOAT4X4 m;
   for (auto& node : m_nodes) {
     if (auto mesh_index = node->Mesh) {
       auto mesh = m_meshes[*mesh_index];
-      render(camera, *mesh, *node->Instance, &node->WorldMatrix._11);
+      DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
+      render(camera, *mesh, *node->Instance, &m._11);
     }
   }
 
@@ -903,8 +907,8 @@ Scene::GetBoundingBox() const
   for (auto& node : m_nodes) {
     if (auto mesh_index = node->Mesh) {
       auto mesh_bb = m_meshes[*mesh_index]->GetBoundingBox();
-      bb.Extend(dmath::transform(mesh_bb.Min, node->WorldMatrix));
-      bb.Extend(dmath::transform(mesh_bb.Max, node->WorldMatrix));
+      bb.Extend(dmath::transform(mesh_bb.Min, node->WorldMatrix()));
+      bb.Extend(dmath::transform(mesh_bb.Max, node->WorldMatrix()));
     }
   }
   return bb;

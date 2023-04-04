@@ -23,6 +23,15 @@ multiply(const DirectX::XMFLOAT3& lhs, float scalar)
 }
 
 inline DirectX::XMFLOAT3
+transform(const DirectX::XMFLOAT3& lhs, const DirectX::XMMATRIX& m)
+{
+  DirectX::XMFLOAT3 tmp;
+  DirectX::XMStoreFloat3(
+    &tmp, DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&lhs), m));
+  return tmp;
+}
+
+inline DirectX::XMFLOAT3
 transform(const DirectX::XMFLOAT3& lhs, const DirectX::XMFLOAT4X4& m)
 {
   DirectX::XMFLOAT3 tmp;

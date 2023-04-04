@@ -416,7 +416,8 @@ App::sceneDock()
     // gizmo
     if (auto node = selection->selected) {
       // TODO: conflict mouse event(left) with ImageButton
-      auto m = node->WorldMatrix;
+      DirectX::XMFLOAT4X4 m;
+      DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
       ImGuizmo::GetContext().mAllowActiveHoverItem = true;
       if (ImGuizmo::Manipulate(camera.view,
                                camera.projection,
@@ -428,7 +429,7 @@ App::sceneDock()
                                nullptr,
                                nullptr)) {
         // decompose feedback
-        node->SetWorldMatrix(m);
+        node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       }
       ImGuizmo::GetContext().mAllowActiveHoverItem = false;
     }

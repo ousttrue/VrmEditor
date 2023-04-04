@@ -1,5 +1,4 @@
 #include "vrm/node.h"
-#include "vrm/dmath.h"
 #include <iostream>
 
 namespace gltf {
@@ -12,7 +11,8 @@ Node::Node(uint32_t i, std::string_view name)
 void
 Node::CalcInitialMatrix()
 {
-  WorldInitialMatrix = WorldMatrix;
+  WorldInitialTransform = WorldTransform;
+  WorldInitialScale = WorldScale;
   InitialTransform= Transform;
   InitialScale = Scale;
 }
@@ -31,25 +31,15 @@ Node::AddChild(const std::shared_ptr<Node>& parent,
 void
 Node::CalcWorldMatrix(bool recursive)
 {
-  DirectX::XMFLOAT4X4 parentWorld{
-    1, 0, 0, 0, //
-    0, 1, 0, 0, //
-    0, 0, 1, 0, //
-    0, 0, 0, 1, //
-  };
-  if (auto p = Parent.lock()) {
-    parentWorld = p->WorldMatrix;
-  }
+  auto world = Matrix() * ParentWorldMatrix();
 
-  auto t = DirectX::XMMatrixTranslation(
-    Transform.Translation.x, Transform.Translation.y, Transform.Translation.z);
-  auto r =
-    DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&Transform.Rotation));
-  auto s = DirectX::XMMatrixScaling(Scale.x, Scale.y, Scale.z);
-  DirectX::XMStoreFloat4x4(&WorldMatrix,
-                           s * r * t * DirectX::XMLoadFloat4x4(&parentWorld));
-
-  assert(!std::isnan(WorldMatrix._41));
+  DirectX::XMVECTOR s;
+  DirectX::XMVECTOR r;
+  DirectX::XMVECTOR t;
+  assert(DirectX::XMMatrixDecompose(&s, &r, &t, world));
+  DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&WorldScale, s);
+  DirectX::XMStoreFloat4((DirectX::XMFLOAT4*)&WorldTransform.Rotation, r);
+  DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&WorldTransform.Translation, t);
 
   if (recursive) {
     for (auto& child : Children) {
@@ -59,13 +49,13 @@ Node::CalcWorldMatrix(bool recursive)
 }
 
 bool
-Node::SetLocalMatrix(const DirectX::XMFLOAT4X4& local)
+Node::SetLocalMatrix(const DirectX::XMMATRIX& local)
 {
   DirectX::XMVECTOR s;
   DirectX::XMVECTOR r;
   DirectX::XMVECTOR t;
   if (!DirectX::XMMatrixDecompose(
-        &s, &r, &t, DirectX::XMLoadFloat4x4(&local))) {
+        &s, &r, &t, local)) {
     return false;
   }
   DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&Scale, s);
@@ -75,22 +65,12 @@ Node::SetLocalMatrix(const DirectX::XMFLOAT4X4& local)
 }
 
 bool
-Node::SetWorldMatrix(const DirectX::XMFLOAT4X4& world)
+Node::SetWorldMatrix(const DirectX::XMMATRIX& world)
 {
-
-  DirectX::XMMATRIX parentMatrix;
-  if (auto parentNode = Parent.lock()) {
-    parentMatrix = DirectX::XMLoadFloat4x4(&parentNode->WorldMatrix);
-  } else {
-    parentMatrix = DirectX::XMMatrixIdentity();
-  }
-
+  auto parentMatrix = ParentWorldMatrix();
   auto inv = DirectX::XMMatrixInverse(nullptr, parentMatrix);
-  auto local = DirectX::XMLoadFloat4x4(&world) * inv;
-
-  DirectX::XMFLOAT4X4 m;
-  DirectX::XMStoreFloat4x4(&m, local);
-  return SetLocalMatrix(m);
+  auto local = world * inv;
+  return SetLocalMatrix(local);
 }
 
 void
@@ -108,14 +88,7 @@ Node::SetWorldRotation(const DirectX::XMFLOAT4& world, bool recursive)
 void
 Node::SetWorldRotation(const DirectX::XMFLOAT4X4& world, bool recursive)
 {
-
-  DirectX::XMMATRIX parentMatrix;
-  if (auto parentNode = Parent.lock()) {
-    parentMatrix = DirectX::XMLoadFloat4x4(&parentNode->WorldMatrix);
-  } else {
-    parentMatrix = DirectX::XMMatrixIdentity();
-  }
-
+  auto parentMatrix = ParentWorldMatrix();
   auto inv = DirectX::XMMatrixInverse(nullptr, parentMatrix);
   auto local = DirectX::XMLoadFloat4x4(&world) * inv;
 

@@ -17,24 +17,47 @@ struct Node
 {
   uint32_t Index;
   std::string Name;
+
+  // local
   EuclideanTransform Transform;
   DirectX::XMFLOAT3 Scale = { 1, 1, 1 };
-  DirectX::XMFLOAT4X4 WorldMatrix;
+  DirectX::XMMATRIX Matrix()const
+  {
+    return DirectX::XMMatrixMultiply(
+      DirectX::XMMatrixScaling(Scale.x, Scale.y, Scale.z),
+      Transform.Matrix());
+  }
 
+  // world
+  EuclideanTransform WorldTransform;
+  DirectX::XMFLOAT3 WorldScale = { 1, 1, 1 };
+  DirectX::XMMATRIX WorldMatrix()const
+  {
+    return DirectX::XMMatrixMultiply(
+      DirectX::XMMatrixScaling(WorldScale.x, WorldScale.y, WorldScale.z),
+      WorldTransform.Matrix());
+  }
+
+  // initial local
   EuclideanTransform InitialTransform;
   DirectX::XMFLOAT3 InitialScale = { 1, 1, 1 };
-  DirectX::XMFLOAT4X4 InitialMatrix() const
+  DirectX::XMMATRIX InitialMatrix() const
   {
-    DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(
-      &m,
-      DirectX::XMMatrixMultiply(DirectX::XMMatrixScaling(InitialScale.x,
-                                                         InitialScale.y,
-                                                         InitialScale.z),
-                                InitialTransform.Matrix()));
-    return m;
+    return DirectX::XMMatrixMultiply(
+      DirectX::XMMatrixScaling(InitialScale.x, InitialScale.y, InitialScale.z),
+      InitialTransform.Matrix());
   }
-  DirectX::XMFLOAT4X4 WorldInitialMatrix;
+
+  // initial world
+  EuclideanTransform WorldInitialTransform;
+  DirectX::XMFLOAT3 WorldInitialScale = { 1, 1, 1 };
+  DirectX::XMMATRIX WorldInitialMatrix() const
+  {
+    return DirectX::XMMatrixMultiply(
+      DirectX::XMMatrixScaling(
+        WorldInitialScale.x, WorldInitialScale.y, WorldInitialScale.z),
+      WorldInitialTransform.Matrix());
+  }
 
   std::list<std::shared_ptr<Node>> Children;
   std::weak_ptr<Node> Parent;
@@ -53,43 +76,26 @@ struct Node
 
   void CalcInitialMatrix();
 
-  bool SetLocalMatrix(const DirectX::XMFLOAT4X4& local);
+  bool SetLocalMatrix(const DirectX::XMMATRIX& local);
 
   void CalcWorldMatrix(bool recursive = false);
-  bool SetWorldMatrix(const DirectX::XMFLOAT4X4& world);
-  DirectX::XMFLOAT3 WorldPosition() const
-  {
-    return { WorldMatrix._41, WorldMatrix._42, WorldMatrix._43 };
-  }
+  bool SetWorldMatrix(const DirectX::XMMATRIX& world);
   void SetWorldRotation(const DirectX::XMFLOAT4& world, bool recursive = false);
   void SetWorldRotation(const DirectX::XMFLOAT4X4& world,
                         bool recursive = false);
-  DirectX::XMFLOAT4 worldRotation() const
-  {
-    auto q = DirectX::XMQuaternionRotationMatrix(
-      DirectX::XMLoadFloat4x4(&WorldMatrix));
-    DirectX::XMFLOAT4 tmp;
-    DirectX::XMStoreFloat4(&tmp, q);
-    return tmp;
-  }
 
-  DirectX::XMFLOAT4X4 ParentWorld() const
+  DirectX::XMMATRIX ParentWorldMatrix() const
   {
     if (auto p = Parent.lock()) {
-      return p->WorldMatrix;
+      return p->WorldMatrix();
     } else {
-      return {
-        1, 0, 0, 0, //
-        0, 1, 0, 0, //
-        0, 0, 1, 0, //
-        0, 0, 0, 1, //
-      };
+      return DirectX::XMMatrixIdentity();
     }
   }
   DirectX::XMFLOAT4 ParentWorldRotation() const
   {
     if (auto p = Parent.lock()) {
-      return p->worldRotation();
+      return p->WorldTransform.Rotation;
     } else {
       return { 0, 0, 0, 1 };
     }
@@ -97,7 +103,7 @@ struct Node
   DirectX::XMFLOAT3 ParentWorldPosition() const
   {
     if (auto p = Parent.lock()) {
-      return p->WorldPosition();
+      return p->WorldTransform.Translation;
     } else {
       return { 0, 0, 0 };
     }
