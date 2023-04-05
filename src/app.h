@@ -23,6 +23,7 @@ class Platform;
 class OrbitView;
 class ImLogger;
 struct MotionSource;
+class Gl3Renderer;
 
 class App
 {
@@ -35,6 +36,7 @@ class App
   std::shared_ptr<Timeline> m_timeline;
   std::shared_ptr<gltf::Scene> m_scene;
   std::shared_ptr<OrbitView> m_view;
+  std::shared_ptr<Gl3Renderer> m_renderer;
 
   std::shared_ptr<MotionSource> m_motion;
 

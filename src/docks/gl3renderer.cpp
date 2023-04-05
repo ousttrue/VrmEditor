@@ -90,6 +90,11 @@ public:
 
   ~Gl3RendererImpl() {}
 
+  void Release()
+  {
+    m_drawableMap.clear();
+  }
+
   void clear(const ViewProjection& camera)
   {
     glViewport(0, 0, camera.width(), camera.height());
@@ -207,13 +212,19 @@ Gl3Renderer::~Gl3Renderer()
 }
 
 void
-Gl3Renderer::clear(const ViewProjection& camera)
+Gl3Renderer::Release()
+{
+  m_impl->Release();
+}
+
+void
+Gl3Renderer::ClearRendertarget(const ViewProjection& camera)
 {
   m_impl->clear(camera);
 }
 
 void
-Gl3Renderer::render(const ViewProjection& camera,
+Gl3Renderer::Render(const ViewProjection& camera,
                     const gltf::Mesh& mesh,
                     const gltf::MeshInstance& instance,
                     const float m[16])

@@ -25,6 +25,7 @@ public:
                      const std::shared_ptr<gltf::Scene>& scene,
                      const std::shared_ptr<OrbitView>& view,
                      const std::shared_ptr<Timeline>& timeline,
+                     const std::shared_ptr<Gl3Renderer> &gl3r,
                      float indent)
   {
     //
@@ -139,11 +140,9 @@ public:
     rt->color[2] = 0.2f;
     rt->color[3] = 1.0f;
 
-    auto gl3r = std::make_shared<Gl3Renderer>();
-
     rt->render = [timeline, scene, gl3r, selection = context](
                    const ViewProjection& camera) {
-      gl3r->clear(camera);
+      gl3r->ClearRendertarget(camera);
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
@@ -151,7 +150,7 @@ public:
         [gl3r, liner, &camera](const gltf::Mesh& mesh,
                                const gltf::MeshInstance& instance,
                                const float m[16]) {
-          gl3r->render(camera, mesh, instance, m);
+          gl3r->Render(camera, mesh, instance, m);
         };
       scene->Render(timeline->CurrentTime, render);
       liner->Render(camera.projection, camera.view, gizmo::lines());

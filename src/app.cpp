@@ -46,6 +46,7 @@ App::App()
   }
 
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
+  m_renderer = std::make_shared<Gl3Renderer>();
 
   cuber::PushGrid(gizmo::lines());
   gizmo::fix();
@@ -88,6 +89,7 @@ App::WriteScene(const std::filesystem::path& path)
 bool
 App::LoadModel(const std::filesystem::path& path)
 {
+  m_renderer->Release();
   if (auto result = m_scene->LoadPath(path)) {
     // bind time line
     for (auto& animation : m_scene->m_animations) {
@@ -106,6 +108,7 @@ App::LoadModel(const std::filesystem::path& path)
     m_view->Fit(bb.Min, bb.Max);
 
     Log(LogLevel::Info) << path;
+
     return true;
   } else {
     Log(LogLevel::Error) << result.error();
@@ -164,7 +167,7 @@ App::Run()
   };
   auto indent = m_gui->m_fontSize * 0.5f;
   JsonDock::Create(addDock, m_scene, indent);
-  SceneDock::Create(addDock, m_scene, m_view, m_timeline, indent);
+  SceneDock::Create(addDock, m_scene, m_view, m_timeline, m_renderer, indent);
   MotionDock::Create(addDock, m_motion);
   ImTimeline::Create(addDock, m_timeline);
   ImLogger::Create(addDock, m_logger);
