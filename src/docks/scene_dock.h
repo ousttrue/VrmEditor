@@ -25,7 +25,7 @@ public:
                      const std::shared_ptr<gltf::Scene>& scene,
                      const std::shared_ptr<OrbitView>& view,
                      const std::shared_ptr<Timeline>& timeline,
-                     const std::shared_ptr<Gl3Renderer> &gl3r,
+                     const std::shared_ptr<Gl3Renderer>& gl3r,
                      float indent)
   {
     //
@@ -70,6 +70,7 @@ public:
     auto leave = []() { ImGui::TreePop(); };
 
     addDock(Dock("scene", [scene, enter, leave, context, indent](bool* p_open) {
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
       if (ImGui::Begin("scene", p_open, ImGuiWindowFlags_NoScrollbar)) {
         auto size = ImGui::GetContentRegionAvail();
 
@@ -109,10 +110,27 @@ public:
         // ImGui::EndGroup();
       }
       ImGui::End();
+      ImGui::PopStyleVar();
     }));
 
-    addDock(
-      Dock("humanoid", [scene]() { ImHumanoid::Show(scene->m_humanoid); }));
+    auto imHumanoid = std::make_shared<ImHumanoid>();
+
+    addDock(Dock("human-body", [scene, imHumanoid](bool* p_open) {
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+      if (ImGui::Begin("human-body", p_open)) {
+        imHumanoid->ShowBody(*scene);
+      }
+      ImGui::End();
+      ImGui::PopStyleVar();
+    }));
+    addDock(Dock("human-fingers", [scene, imHumanoid](bool* p_open) {
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+      if (ImGui::Begin("human-fingers", p_open)) {
+        imHumanoid->ShowFingers(*scene);
+      }
+      ImGui::End();
+      ImGui::PopStyleVar();
+    }));
 
     addDock(Dock("vrm", [scene]() {
       if (auto vrm = scene->m_vrm0) {
