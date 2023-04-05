@@ -400,7 +400,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
     }
 
     // find morph target name
-    // 1. primitive.extras.targetNames
+    // primitive.extras.targetNames
     if (has(prim, "extras")) {
       auto& extras = prim.at("extras");
       if (has(extras, "targetNames")) {
@@ -414,6 +414,20 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
 
     lastAtributes = &attributes;
   }
+
+  // find morph target name
+  // mesh.extras.targetNames
+  if (has(mesh, "extras")) {
+    auto& extras = mesh.at("extras");
+    if (has(extras, "targetNames")) {
+      auto& names = extras.at("targetNames");
+      // std::cout << names << std::endl;
+      for (int i = 0; i < names.size(); ++i) {
+        ptr->getOrCreateMorphTarget(i)->name = names[i];
+      }
+    }
+  }
+
   return ptr;
 }
 
@@ -631,10 +645,8 @@ Scene::ParseVrm0()
           for (vrm::v0::ExpressionMorphTargetBind bind : g.at("binds")) {
             // [0-100] to [0-1]
             bind.weight *= 0.01f;
-            for(auto &node: m_nodes)
-            {
-              if(node->Mesh == bind.mesh)
-              {
+            for (auto& node : m_nodes) {
+              if (node->Mesh == bind.mesh) {
                 bind.Node = node;
                 break;
               }
