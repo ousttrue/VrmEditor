@@ -14,18 +14,19 @@ using WriteFunc = std::function<void(std::string_view)>;
 enum StackFlags
 {
   None = 0,
-  Array = 0x1,
-  Object = 0x2,
-  Comma = 0x4,
-  Root = 0x8,
+  Root = 0x01,
+  Array = 0x02,
+  Object = 0x04,
+  Comma = 0x08,
+  Collon = 0x10,
 };
 
 class Writer
 {
   WriteFunc m_writer;
   char m_buf[1024];
-  StackFlags m_stack[124];
-  int m_depth = 0;
+  StackFlags m_stack[124] = { StackFlags::Root };
+  int m_depth = 1;
 
 public:
   Writer(const WriteFunc& writer)
@@ -33,21 +34,25 @@ public:
   {
   }
 
+  ~Writer() { assert(m_depth == 1); }
+
+  Writer(const Writer&) = delete;
+  Writer& operator=(const Writer&) = delete;
+
   void push(std::string_view str)
   {
-    // root
-    if (m_depth == 0) {
-      m_stack[m_depth] = StackFlags::Root;
-      ++m_depth;
-    } else {
-      assert((m_stack[0] & StackFlags::Root) == 0);
-
-      if (m_stack[m_depth - 1] & StackFlags::Comma) {
-        m_writer(",");
-      } else {
+    if (m_stack[m_depth - 1] & StackFlags::Comma) {
+      assert((m_stack[m_depth - 1] & StackFlags::Root) == 0);
+      if (m_stack[m_depth - 1] & StackFlags::Collon) {
+        m_writer(":");
         m_stack[m_depth - 1] =
-          static_cast<StackFlags>(m_stack[m_depth - 1] | StackFlags::Comma);
+          static_cast<StackFlags>(m_stack[m_depth - 1] & ~StackFlags::Collon);
+      } else {
+        m_writer(",");
       }
+    } else {
+      m_stack[m_depth - 1] =
+        static_cast<StackFlags>(m_stack[m_depth - 1] | StackFlags::Comma);
     }
     m_writer(str);
   }
@@ -112,6 +117,13 @@ public:
   }
 
   void write(const char* str) { write(std::string_view(str)); }
+
+  void key(std::string_view str)
+  {
+    write(str);
+    m_stack[m_depth - 1] =
+      static_cast<StackFlags>(m_stack[m_depth - 1] | StackFlags::Collon);
+  }
 };
 
 }

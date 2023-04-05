@@ -57,3 +57,77 @@ TEST(JsonStream, write_string)
   // escape
   // utf-8
 }
+
+TEST(JsonStream, write_array_0)
+{
+  std::stringstream ss;
+  jsons::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
+  jsons::Writer writer(callback);
+
+  writer.array_open();
+  writer.array_close();
+  auto str = ss.str();
+  EXPECT_EQ(str, "[]");
+}
+
+TEST(JsonStream, write_array_1)
+{
+  std::stringstream ss;
+  jsons::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
+  jsons::Writer writer(callback);
+
+  writer.array_open();
+  writer.write(1);
+  writer.array_close();
+  auto str = ss.str();
+  EXPECT_EQ(str, "[1]");
+}
+
+TEST(JsonStream, write_array_2)
+{
+  std::stringstream ss;
+  jsons::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
+  jsons::Writer writer(callback);
+
+  writer.array_open();
+  writer.write(1);
+  writer.write(2);
+  writer.array_close();
+  auto str = ss.str();
+  EXPECT_EQ(str, "[1,2]");
+}
+
+TEST(JsonStream, write_object_2)
+{
+  std::stringstream ss;
+  jsons::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
+  jsons::Writer writer(callback);
+
+  writer.object_open();
+  writer.key("some");
+  writer.write(1);
+  writer.key("hoge");
+  writer.write(2);
+  writer.object_close();
+  auto str = ss.str();
+  EXPECT_EQ(str, "{\"some\":1,\"hoge\":2}");
+}
+
+TEST(JsonStream, write_object_nested)
+{
+  std::stringstream ss;
+  jsons::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
+  jsons::Writer writer(callback);
+
+  writer.object_open();
+  writer.key("some");
+  {
+    writer.object_open();
+    writer.key("hoge");
+    writer.write(12);
+    writer.object_close();
+  }
+  writer.object_close();
+  auto str = ss.str();
+  EXPECT_EQ(str, "{\"some\":{\"hoge\":12}}");
+}
