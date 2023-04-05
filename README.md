@@ -104,6 +104,7 @@ read, write, animation test.
 - [ ] 󰂹 : humanoid icon
 - [ ] 󰚟 : spring icon
 - [ ] 󱥔 : spring collider icon
+- [ ]  : morph
 - [ ] selected
 
 ### humanoid

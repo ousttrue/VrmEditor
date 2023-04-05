@@ -32,7 +32,7 @@ public:
     //
     auto context = std::make_shared<TreeContext>();
 
-    auto enter = [context](gltf::Node& node) {
+    auto enter = [scene, context](gltf::Node& node) {
       ImGui::SetNextItemOpen(true, ImGuiCond_Once);
       static ImGuiTreeNodeFlags base_flags =
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -48,13 +48,13 @@ public:
         node_flags |= ImGuiTreeNodeFlags_Selected;
       }
 
-      bool hasRotation = node.Transform.HasRotation();
+      bool hasRotation = node.InitialTransform.HasRotation();
       if (hasRotation) {
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
       }
 
       bool node_open =
-        ImGui::TreeNodeEx(&node, node_flags, "%s", node.Name.c_str());
+        ImGui::TreeNodeEx(&node, node_flags, "%s", node.Label(*scene).c_str());
 
       if (hasRotation) {
         ImGui::PopStyleColor();

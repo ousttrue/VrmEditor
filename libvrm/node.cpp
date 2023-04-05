@@ -1,10 +1,112 @@
 #include "vrm/node.h"
+#include "vrm/humanoid.h"
+#include "vrm/scene.h"
+#include "vrm/vrm0.h"
+#include "vrm/vrm1.h"
 #include <iostream>
 
 namespace gltf {
 Node::Node(std::string_view name)
   : Name(name)
 {
+}
+
+const std::string&
+Node::Label(const Scene& scene) const
+{
+  if (m_label.empty()) {
+    std::stringstream ss;
+    if (auto mesh_index = Mesh) {
+      ss << "󰕣 ";
+      auto mesh = scene.m_meshes[*mesh_index];
+      if (mesh->m_morphTargets.size()) {
+        ss << " ";
+      }
+    }
+    // humanoid
+    for (int i = 0; i < (int)vrm::HumanBones::VRM_BONE_COUNT; ++i) {
+      if (auto node_index = scene.m_humanoid[i]) {
+        auto bone_node = scene.m_nodes[*node_index];
+        if (bone_node.get() == this) {
+          // HumanBone = static_cast<vrm::HumanBones>(i);
+          switch ((vrm::HumanBones)i) {
+            case vrm::HumanBones::hips:
+              ss << " ";
+              break;
+            case vrm::HumanBones::head:
+              ss << "󱍞 ";
+              break;
+            case vrm::HumanBones::leftEye:
+            case vrm::HumanBones::rightEye:
+              ss << " ";
+              break;
+            case vrm::HumanBones::leftHand:
+            case vrm::HumanBones::leftThumbMetacarpal:
+            case vrm::HumanBones::leftThumbProximal:
+            case vrm::HumanBones::leftThumbDistal:
+            case vrm::HumanBones::leftIndexProximal:
+            case vrm::HumanBones::leftIndexIntermediate:
+            case vrm::HumanBones::leftIndexDistal:
+            case vrm::HumanBones::leftMiddleProximal:
+            case vrm::HumanBones::leftMiddleIntermediate:
+            case vrm::HumanBones::leftMiddleDistal:
+            case vrm::HumanBones::leftRingProximal:
+            case vrm::HumanBones::leftRingIntermediate:
+            case vrm::HumanBones::leftRingDistal:
+            case vrm::HumanBones::leftLittleProximal:
+            case vrm::HumanBones::leftLittleIntermediate:
+            case vrm::HumanBones::leftLittleDistal:
+              ss << "󰹆 ";
+              break;
+            case vrm::HumanBones::rightHand:
+            case vrm::HumanBones::rightThumbMetacarpal:
+            case vrm::HumanBones::rightThumbProximal:
+            case vrm::HumanBones::rightThumbDistal:
+            case vrm::HumanBones::rightIndexProximal:
+            case vrm::HumanBones::rightIndexIntermediate:
+            case vrm::HumanBones::rightIndexDistal:
+            case vrm::HumanBones::rightMiddleProximal:
+            case vrm::HumanBones::rightMiddleIntermediate:
+            case vrm::HumanBones::rightMiddleDistal:
+            case vrm::HumanBones::rightRingProximal:
+            case vrm::HumanBones::rightRingIntermediate:
+            case vrm::HumanBones::rightRingDistal:
+            case vrm::HumanBones::rightLittleProximal:
+            case vrm::HumanBones::rightLittleIntermediate:
+            case vrm::HumanBones::rightLittleDistal:
+              ss << "󰹇 ";
+              break;
+            default:
+              ss << "󰂹 ";
+              break;
+          }
+          break;
+        }
+      }
+    }
+    // vrm0
+    if (auto vrm = scene.m_vrm0) {
+      // spring
+      if (vrm->m_springs.size()) {
+        for (auto& spring : vrm->m_springs) {
+          for (auto joint : spring->bones) {
+            auto joint_node = scene.m_nodes[joint];
+            if (joint_node.get() == this) {
+              ss << "󰚟 ";
+              break;
+            }
+          }
+        }
+      }
+      // collider
+      if (vrm->m_colliderGroups.size()) {
+      }
+    }
+
+    ss << Name;
+    m_label = ss.str();
+  }
+  return m_label;
 }
 
 void
