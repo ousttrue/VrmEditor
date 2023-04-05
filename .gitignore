@@ -5,6 +5,7 @@
 !/subprojects/ImGuiFileDialog
 !/subprojects/ImFileDialog
 !/subprojects/imnodes
+!/subprojects/minijson_writer
 /builddir/
 /prefix/
 

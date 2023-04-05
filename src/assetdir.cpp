@@ -58,18 +58,14 @@ AssetDir::CreateDock(const LoadFunc& callback)
       ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
       ImGuiTreeNodeFlags_SpanAvailWidth;
 
-#if _WIN32
-    auto name = WideToMb(CP_OEMCP, path.filename().c_str());
-#else
-    auto name = path.filename();
-#endif
+    auto name = path.filename().u8string();
 
     if (std::filesystem::is_directory(path)) {
       ImGuiTreeNodeFlags node_flags = base_flags;
       return ImGui::TreeNodeEx(
         (void*)(intptr_t)id, node_flags, "%s", name.c_str());
     } else {
-      if (ImGui::Button(name.c_str())) {
+      if (ImGui::Button((const char*)name.c_str())) {
         callback(path);
       }
       return false;
