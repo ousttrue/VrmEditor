@@ -52,8 +52,8 @@ public:
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
       }
 
-      bool node_open = ImGui::TreeNodeEx(
-        (void*)(intptr_t)node.Index, node_flags, "%s", node.Name.c_str());
+      bool node_open =
+        ImGui::TreeNodeEx(&node, node_flags, "%s", node.Name.c_str());
 
       if (hasRotation) {
         ImGui::PopStyleColor();
@@ -146,13 +146,12 @@ public:
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
-      gltf::RenderFunc render = [gl3r,
-                                 liner, &camera](
-                                        const gltf::Mesh& mesh,
-                                        const gltf::MeshInstance& instance,
-                                        const float m[16]) {
-        gl3r->render(camera, mesh, instance, m);
-      };
+      gltf::RenderFunc render =
+        [gl3r, liner, &camera](const gltf::Mesh& mesh,
+                               const gltf::MeshInstance& instance,
+                               const float m[16]) {
+          gl3r->render(camera, mesh, instance, m);
+        };
       scene->Render(timeline->CurrentTime, render);
       liner->Render(camera.projection, camera.view, gizmo::lines());
 

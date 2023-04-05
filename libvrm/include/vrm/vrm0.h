@@ -8,6 +8,10 @@
 #include <string_view>
 #include <vector>
 
+namespace gltf {
+struct Node;
+}
+
 namespace vrm::v0 {
 enum class ExpressionPreset
 {
@@ -39,6 +43,7 @@ struct ExpressionMorphTargetBind
 {
   // mesh index
   int mesh;
+  std::shared_ptr<gltf::Node> Node;
   // blendshape index
   int index;
   // max weight value(100)
@@ -174,7 +179,8 @@ struct Vrm
   }
 
   const std::unordered_map<MorphTargetKey, float>& EvalMorphTargetMap(
-    const std::function<uint32_t(uint32_t)>& MeshToNode)
+    const std::function<uint32_t(const std::shared_ptr<gltf::Node>& node)>&
+      NodeToIndex)
   {
     // clear
     m_morphTargetMap.clear();
@@ -182,7 +188,7 @@ struct Vrm
     for (auto& expression : m_expressions) {
       for (auto& bind : expression->morphBinds) {
         MorphTargetKey key{
-          .NodeIndex = static_cast<uint16_t>(MeshToNode(bind.mesh)),
+          .NodeIndex = static_cast<uint16_t>(NodeToIndex(bind.Node)),
           .MorphIndex = static_cast<uint16_t>(bind.index),
         };
         auto found = m_morphTargetMap.find(key);

@@ -463,7 +463,7 @@ Scene::ParseNode(int i, const nlohmann::json& node)
   std::stringstream ss;
   ss << "node" << i;
   auto name = node.value("name", ss.str());
-  auto ptr = std::make_shared<gltf::Node>(i, name);
+  auto ptr = std::make_shared<gltf::Node>(name);
 
   if (has(node, "matrix")) {
     // matrix
@@ -631,6 +631,14 @@ Scene::ParseVrm0()
           for (vrm::v0::ExpressionMorphTargetBind bind : g.at("binds")) {
             // [0-100] to [0-1]
             bind.weight *= 0.01f;
+            for(auto &node: m_nodes)
+            {
+              if(node->Mesh == bind.mesh)
+              {
+                bind.Node = node;
+                break;
+              }
+            }
             expression->morphBinds.push_back(bind);
           }
         }
@@ -763,15 +771,15 @@ Scene::Render(Time time, const RenderFunc& render)
 
   if (m_vrm0) {
     // VRM0 expression to morphTarget
-    auto meshToNode = [nodes = m_nodes](uint32_t mi) {
-      for (auto& node : nodes) {
-        if (node->Mesh == mi) {
-          return (uint32_t)node->Index;
+    auto nodeToIndex = [nodes = m_nodes](const std::shared_ptr<Node>& node) {
+      for (uint32_t i = 0; i < nodes.size(); ++i) {
+        if (node == nodes[i]) {
+          return i;
         }
       }
       return (uint32_t)-1;
     };
-    for (auto& [k, v] : m_vrm0->EvalMorphTargetMap(meshToNode)) {
+    for (auto& [k, v] : m_vrm0->EvalMorphTargetMap(nodeToIndex)) {
       auto& morph_node = m_nodes[k.NodeIndex];
       morph_node->Instance->weights[k.MorphIndex] = v;
     }

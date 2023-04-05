@@ -2,9 +2,8 @@
 #include <iostream>
 
 namespace gltf {
-Node::Node(uint32_t i, std::string_view name)
-  : Index(i)
-  , Name(name)
+Node::Node(std::string_view name)
+  : Name(name)
 {
 }
 
@@ -13,7 +12,7 @@ Node::CalcInitialMatrix()
 {
   WorldInitialTransform = WorldTransform;
   WorldInitialScale = WorldScale;
-  InitialTransform= Transform;
+  InitialTransform = Transform;
   InitialScale = Scale;
 }
 
@@ -54,8 +53,7 @@ Node::SetLocalMatrix(const DirectX::XMMATRIX& local)
   DirectX::XMVECTOR s;
   DirectX::XMVECTOR r;
   DirectX::XMVECTOR t;
-  if (!DirectX::XMMatrixDecompose(
-        &s, &r, &t, local)) {
+  if (!DirectX::XMMatrixDecompose(&s, &r, &t, local)) {
     return false;
   }
   DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&Scale, s);

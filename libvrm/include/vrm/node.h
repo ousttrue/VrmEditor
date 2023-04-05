@@ -15,7 +15,7 @@ struct Skin;
 struct MeshInstance;
 struct Node
 {
-  uint32_t Index;
+  // uint32_t Index;
   std::string Name;
 
   // local
@@ -66,7 +66,7 @@ struct Node
 
   std::shared_ptr<Skin> Skin;
 
-  Node(uint32_t i, std::string_view name);
+  Node(std::string_view name);
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
 
@@ -113,7 +113,7 @@ struct Node
 inline std::ostream&
 operator<<(std::ostream& os, const Node& node)
 {
-  os << "Node[" << node.Index << "]" << node.Name
+  os << "Node: " << node.Name
     // << ": " << node.translation
     // << node.rotation
     // << node.scale
