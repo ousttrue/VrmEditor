@@ -1,4 +1,9 @@
+#include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
 #include <string>
+#include <vrm/exporter.h>
+#include <vrm/glb.h>
+#include <vrm/scene.h>
 
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
 const std::string SRC = R"({
@@ -72,20 +77,33 @@ const std::string SRC = R"({
   }
 })";
 
-#include <gtest/gtest.h>
-#include <vrm/exporter.h>
-#include <vrm/glb.h>
-#include <vrm/scene.h>
-
 TEST(GlbExport, minimal)
 {
+  auto src = nlohmann::json::parse(SRC);
+  src["buffers"].clear();
+  for (auto& b : src.at("bufferViews")) {
+    b.erase("target");
+  }
+  for (auto& a : src.at("accessors")) {
+    a.erase("max");
+    a.erase("min");
+  }
+
   gltf::Scene scene;
   std::span<const uint8_t> span{ (const uint8_t*)SRC.data(),
                                  (const uint8_t*)SRC.data() + SRC.size() };
   EXPECT_TRUE(scene.Load(span));
   gltf::Exporter exporter;
   auto data = exporter.Export(scene);
-  EXPECT_TRUE(data.size());
-  auto parsed = gltf::Glb::parse(data);
-  EXPECT_TRUE(parsed);
+  auto dst = nlohmann::json::parse(data.JsonChunk);
+  dst["buffers"].clear();
+  for (auto& b : dst.at("bufferViews")) {
+    b.erase("target");
+  }
+  for (auto& a : dst.at("accessors")) {
+    a.erase("max");
+    a.erase("min");
+  }
+
+  EXPECT_EQ(src, dst);
 }

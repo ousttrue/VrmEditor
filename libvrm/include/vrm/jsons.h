@@ -85,9 +85,9 @@ public:
     m_writer("}");
   }
 
-  void write_null() { push("null"); }
+  void null() { push("null"); }
 
-  void write(bool is_true)
+  void value(bool is_true)
   {
     if (is_true) {
       push("true");
@@ -96,19 +96,25 @@ public:
     }
   }
 
-  void write(int value)
+  void value(int value)
   {
     auto len = snprintf(m_buf, sizeof(m_buf), "%d", value);
     push({ m_buf, m_buf + len });
   }
 
-  void write(float value)
+  void value(uint32_t value)
+  {
+    auto len = snprintf(m_buf, sizeof(m_buf), "%u", value);
+    push({ m_buf, m_buf + len });
+  }
+
+  void value(float value)
   {
     auto len = snprintf(m_buf, sizeof(m_buf), "%f", value);
     push({ m_buf, m_buf + len });
   }
 
-  void write(std::string_view str)
+  void value(std::string_view str)
   {
     // TODO: quote
     push("\"");
@@ -116,11 +122,11 @@ public:
     m_writer("\"");
   }
 
-  void write(const char* str) { write(std::string_view(str)); }
+  void value(const char* str) { value(std::string_view(str)); }
 
   void key(std::string_view str)
   {
-    write(str);
+    value(str);
     m_stack[m_depth - 1] =
       static_cast<StackFlags>(m_stack[m_depth - 1] | StackFlags::Collon);
   }

@@ -10,7 +10,7 @@ EQ(T value)
   std::stringstream ss;
   jsons::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
   jsons::Writer writer(callback);
-  writer.write(value);
+  writer.value(value);
   auto str = ss.str();
   auto parsed = nlohmann::json::parse(str);
   EXPECT_EQ(parsed, value);
@@ -21,7 +21,7 @@ TEST(JsonStream, write_null)
   std::stringstream ss;
   jsons::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
   jsons::Writer writer(callback);
-  writer.write_null();
+  writer.null();
 
   auto parsed = nlohmann::json::parse(ss.str());
   EXPECT_TRUE(parsed.is_null());
@@ -77,7 +77,7 @@ TEST(JsonStream, write_array_1)
   jsons::Writer writer(callback);
 
   writer.array_open();
-  writer.write(1);
+  writer.value(1);
   writer.array_close();
   auto str = ss.str();
   EXPECT_EQ(str, "[1]");
@@ -90,8 +90,8 @@ TEST(JsonStream, write_array_2)
   jsons::Writer writer(callback);
 
   writer.array_open();
-  writer.write(1);
-  writer.write(2);
+  writer.value(1);
+  writer.value(2);
   writer.array_close();
   auto str = ss.str();
   EXPECT_EQ(str, "[1,2]");
@@ -105,9 +105,9 @@ TEST(JsonStream, write_object_2)
 
   writer.object_open();
   writer.key("some");
-  writer.write(1);
+  writer.value(1);
   writer.key("hoge");
-  writer.write(2);
+  writer.value(2);
   writer.object_close();
   auto str = ss.str();
   EXPECT_EQ(str, "{\"some\":1,\"hoge\":2}");
@@ -124,7 +124,7 @@ TEST(JsonStream, write_object_nested)
   {
     writer.object_open();
     writer.key("hoge");
-    writer.write(12);
+    writer.value(12);
     writer.object_close();
   }
   writer.object_close();

@@ -1,5 +1,6 @@
 #pragma once
 #include <expected>
+#include <functional>
 #include <optional>
 #include <span>
 #include <stdint.h>
@@ -13,4 +14,5 @@ struct Glb
   std::span<const uint8_t> bin;
   static std::optional<Glb> parse(std::span<const uint8_t> bytes);
 };
+
 }
