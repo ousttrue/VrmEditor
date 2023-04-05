@@ -64,9 +64,9 @@ Scene::LoadPath(const std::filesystem::path& path)
   if (auto bytes = ReadAllBytes(path)) {
     auto dir = std::make_shared<Directory>(path.parent_path());
 
-    if (auto glb = Glb::parse(*bytes)) {
+    if (auto glb = Glb::Parse(*bytes)) {
       // as glb
-      return Load(glb->json, glb->bin, dir);
+      return Load(glb->Json, glb->Bin, dir);
     }
 
     // try gltf

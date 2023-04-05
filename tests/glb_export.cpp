@@ -94,8 +94,8 @@ TEST(GlbExport, minimal)
                                  (const uint8_t*)SRC.data() + SRC.size() };
   EXPECT_TRUE(scene.Load(span));
   gltf::Exporter exporter;
-  auto data = exporter.Export(scene);
-  auto dst = nlohmann::json::parse(data.JsonChunk);
+  exporter.Export(scene);
+  auto dst = nlohmann::json::parse(exporter.JsonChunk);
   dst["buffers"].clear();
   for (auto& b : dst.at("bufferViews")) {
     b.erase("target");
@@ -104,6 +104,13 @@ TEST(GlbExport, minimal)
     a.erase("max");
     a.erase("min");
   }
+
+  // // DEBUG
+  // gltf::Glb{
+  //   .Json = exporter.JsonChunk,
+  //   .Bin = exporter.BinChunk,
+  // }
+  //   .WriteTo("minimal.glb");
 
   EXPECT_EQ(src, dst);
 }

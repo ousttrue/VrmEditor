@@ -3,25 +3,23 @@
 #include "vrm/jsons.h"
 #include "vrm/scene.h"
 
-gltf::Exported
+void
 gltf::Exporter::Export(const Scene& scene)
 {
-  Exported exported;
-  jsons::Writer writer([&exported](std::string_view str) {
-    auto size = exported.JsonChunk.size();
-    exported.JsonChunk.resize(size + str.size());
+  jsons::Writer writer([this](std::string_view str) {
+    auto size = JsonChunk.size();
+    JsonChunk.resize(size + str.size());
     std::copy((const uint8_t*)str.data(),
               (const uint8_t*)str.data() + str.size(),
-              exported.JsonChunk.data() + size);
+              JsonChunk.data() + size);
     ;
   });
 
-  gltf::BinWriter binWriter([&exported](std::span<const uint8_t> values) {
-    auto size = exported.BinChunk.size();
-    exported.BinChunk.resize(size + values.size());
-    std::copy(values.data(),
-              values.data() + values.size(),
-              exported.BinChunk.data() + size);
+  gltf::BinWriter binWriter([this](std::span<const uint8_t> values) {
+    auto size = BinChunk.size();
+    BinChunk.resize(size + values.size());
+    std::copy(
+      values.data(), values.data() + values.size(), BinChunk.data() + size);
   });
 
   writer.object_open();
@@ -86,7 +84,7 @@ gltf::Exporter::Export(const Scene& scene)
         //   writer.key("indices");
         //   writer.value(indices_index);
         //
-        // } else 
+        // } else
         if (mesh->m_vertices.size() <= 65535) {
           std::vector<uint16_t> indices;
           for (int i = 0; i < prim.drawCount; ++i, ++index) {
@@ -176,6 +174,4 @@ gltf::Exporter::Export(const Scene& scene)
     writer.array_close();
   }
   writer.object_close();
-
-  return exported;
 }

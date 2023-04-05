@@ -7,15 +7,10 @@
 namespace gltf {
 struct Scene;
 
-struct Exported
+struct Exporter
 {
   std::vector<uint8_t> JsonChunk;
   std::vector<uint8_t> BinChunk;
-};
-
-struct Exporter
-{
-  std::vector<uint8_t> Buffer;
-  Exported Export(const Scene& scene);
+  void Export(const Scene& scene);
 };
 }

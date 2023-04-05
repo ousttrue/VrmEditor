@@ -6,6 +6,7 @@ executable(
         'base64.cpp',
         'glb_export.cpp',
         'json.cpp',
+        'vrma.cpp',
     ],
     install: true,
     dependencies: [gtest_main_dep, vrm_dep],
