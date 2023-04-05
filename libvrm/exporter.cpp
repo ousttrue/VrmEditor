@@ -2,72 +2,101 @@
 #include "vrm/glb.h"
 #include "vrm/jsons.h"
 #include "vrm/scene.h"
+#include "vrm/animation.h"
 
-void
-gltf::Exporter::Export(const Scene& scene)
-{
-  jsons::Writer writer([this](std::string_view str) {
+namespace gltf {
+
+Exporter::Exporter()
+  : m_writer([this](std::string_view str) {
     auto size = JsonChunk.size();
     JsonChunk.resize(size + str.size());
     std::copy((const uint8_t*)str.data(),
               (const uint8_t*)str.data() + str.size(),
               JsonChunk.data() + size);
     ;
-  });
-
-  gltf::BinWriter binWriter([this](std::span<const uint8_t> values) {
+  })
+  , m_binWriter([this](std::span<const uint8_t> values) {
     auto size = BinChunk.size();
     BinChunk.resize(size + values.size());
     std::copy(
       values.data(), values.data() + values.size(), BinChunk.data() + size);
-  });
+  })
+{
+}
 
-  writer.object_open();
-  writer.key("asset");
+void
+Exporter::Export(const Scene& scene)
+{
+  m_writer.object_open();
+
+  m_writer.key("asset");
   {
-    writer.object_open();
-    writer.key("version");
-    writer.value("2.0");
-    writer.object_close();
+    m_writer.object_open();
+    m_writer.key("version");
+    m_writer.value("2.0");
+    m_writer.object_close();
   }
-  writer.key("scene");
-  {
-    writer.value(0);
+
+  ExportNodesScenes(scene);
+  ExportMeshes(scene);
+  ExportBuffersViewsAccessors(scene);
+  ExportAnimations(scene);
+
+  m_writer.object_close();
+}
+
+void
+Exporter::ExportNodesScenes(const Scene& scene)
+{
+  if (scene.m_nodes.empty()) {
+    return;
   }
-  writer.key("scenes");
+  m_writer.key("nodes");
   {
-    writer.array_open();
-    writer.object_open();
-    writer.key("nodes");
-    writer.array_open();
-    writer.value(0);
-    writer.array_close();
-    writer.object_close();
-    writer.array_close();
-  }
-  writer.key("nodes");
-  {
-    writer.array_open();
+    m_writer.array_open();
     for (auto& node : scene.m_nodes) {
-      writer.object_open();
+      m_writer.object_open();
       if (auto mesh_index = node->Mesh) {
-        writer.key("mesh");
-        writer.value(*mesh_index);
+        m_writer.key("mesh");
+        m_writer.value(*mesh_index);
       }
-      writer.object_close();
+      m_writer.object_close();
     }
-    writer.array_close();
+    m_writer.array_close();
   }
-  writer.key("meshes");
+  m_writer.key("scenes");
   {
-    writer.array_open();
+    m_writer.array_open();
+    m_writer.object_open();
+    m_writer.key("nodes");
+    m_writer.array_open();
+    m_writer.value(0);
+    m_writer.array_close();
+    m_writer.object_close();
+    m_writer.array_close();
+  }
+  m_writer.key("scene");
+  {
+    m_writer.value(0);
+  }
+}
+
+void
+Exporter::ExportMeshes(const Scene& scene)
+{
+  if (scene.m_meshes.empty()) {
+    return;
+  }
+  m_writer.key("meshes");
+  {
+    m_writer.array_open();
     for (auto& mesh : scene.m_meshes) {
-      writer.object_open();
-      writer.key("primitives");
-      writer.array_open();
+      m_writer.object_open();
+      m_writer.key("primitives");
+      m_writer.array_open();
       int index = 0;
       for (auto& prim : mesh->m_primitives) {
-        writer.object_open();
+        m_writer.object_open();
         std::vector<DirectX::XMFLOAT3> positions;
 
         // if (mesh->m_vertices.size() <= 255) {
@@ -79,10 +108,10 @@ gltf::Exporter::Export(const Scene& scene)
         //     auto v = mesh->m_vertices[vertex_index];
         //     positions.push_back(v.Position);
         //   }
-        //   auto indices_index = binWriter.PushAccessor<const uint8_t>(
+        //   auto indices_index = m_binWriter.PushAccessor<const uint8_t>(
         //     { indices.data(), indices.size() });
-        //   writer.key("indices");
-        //   writer.value(indices_index);
+        //   m_writer.key("indices");
+        //   m_writer.value(indices_index);
         //
         // } else
         if (mesh->m_vertices.size() <= 65535) {
@@ -94,10 +123,10 @@ gltf::Exporter::Export(const Scene& scene)
             auto v = mesh->m_vertices[vertex_index];
             positions.push_back(v.Position);
           }
-          auto indices_index = binWriter.PushAccessor<const uint16_t>(
+          auto indices_index = m_binWriter.PushAccessor<const uint16_t>(
             { indices.data(), indices.size() });
-          writer.key("indices");
-          writer.value(indices_index);
+          m_writer.key("indices");
+          m_writer.value(indices_index);
 
         } else {
           std::vector<uint32_t> indices;
@@ -108,70 +137,101 @@ gltf::Exporter::Export(const Scene& scene)
             auto v = mesh->m_vertices[vertex_index];
             positions.push_back(v.Position);
           }
-          auto indices_index = binWriter.PushAccessor<const uint32_t>(
+          auto indices_index = m_binWriter.PushAccessor<const uint32_t>(
             { indices.data(), indices.size() });
-          writer.key("indices");
-          writer.value(indices_index);
+          m_writer.key("indices");
+          m_writer.value(indices_index);
         }
 
         auto position_accessor_index =
-          binWriter.PushAccessor<const DirectX::XMFLOAT3>(
+          m_binWriter.PushAccessor<const DirectX::XMFLOAT3>(
             { positions.data(), positions.size() });
-        writer.key("attributes");
-        writer.object_open();
-        writer.key("POSITION");
-        writer.value(position_accessor_index);
-        writer.object_close();
+        m_writer.key("attributes");
+        m_writer.object_open();
+        m_writer.key("POSITION");
+        m_writer.value(position_accessor_index);
+        m_writer.object_close();
 
-        writer.object_close();
+        m_writer.object_close();
       }
-      writer.array_close();
-      writer.object_close();
+      m_writer.array_close();
+      m_writer.object_close();
     }
-    writer.array_close();
+    m_writer.array_close();
   }
-  writer.key("accessors");
-  {
-    writer.array_open();
-    for (auto& accessor : binWriter.Accessors) {
-      writer.object_open();
-      writer.key("bufferView");
-      writer.value(accessor.BufferView);
-      writer.key("count");
-      writer.value(accessor.Count);
-      writer.key("byteOffset");
-      writer.value(0);
-      writer.key("type");
-      writer.value(gltf::type_str(accessor.Type));
-      writer.key("componentType");
-      writer.value((int)accessor.ComponentType);
-      writer.object_close();
-    }
-    writer.array_close();
-  }
-  writer.key("bufferViews");
-  {
-    writer.array_open();
-    for (auto& bufferView : binWriter.BufferViews) {
-      writer.object_open();
-      writer.key("buffer");
-      writer.value(0);
-      writer.key("byteOffset");
-      writer.value(bufferView.ByteOffset);
-      writer.key("byteLength");
-      writer.value(bufferView.ByteLength);
-      writer.object_close();
-    }
-    writer.array_close();
-  }
-  writer.key("buffers");
-  {
-    writer.array_open();
+}
+
+void
+Exporter::ExportBuffersViewsAccessors(const Scene& scene)
+{
+  if (m_binWriter.Accessors.size()) {
+    m_writer.key("accessors");
     {
-      writer.object_open();
-      writer.object_close();
+      m_writer.array_open();
+      for (auto& accessor : m_binWriter.Accessors) {
+        m_writer.object_open();
+        m_writer.key("bufferView");
+        m_writer.value(accessor.BufferView);
+        m_writer.key("count");
+        m_writer.value(accessor.Count);
+        m_writer.key("byteOffset");
+        m_writer.value(0);
+        m_writer.key("type");
+        m_writer.value(gltf::type_str(accessor.Type));
+        m_writer.key("componentType");
+        m_writer.value((int)accessor.ComponentType);
+        m_writer.object_close();
+      }
+      m_writer.array_close();
     }
-    writer.array_close();
   }
-  writer.object_close();
+  if (m_binWriter.BufferViews.size()) {
+    m_writer.key("bufferViews");
+    {
+      m_writer.array_open();
+      for (auto& bufferView : m_binWriter.BufferViews) {
+        m_writer.object_open();
+        m_writer.key("buffer");
+        m_writer.value(0); // for glb
+        m_writer.key("byteOffset");
+        m_writer.value(bufferView.ByteOffset);
+        m_writer.key("byteLength");
+        m_writer.value(bufferView.ByteLength);
+        m_writer.object_close();
+      }
+      m_writer.array_close();
+    }
+
+    m_writer.key("buffers");
+    {
+      m_writer.array_open();
+      {
+        m_writer.object_open();
+        m_writer.object_close();
+      }
+      m_writer.array_close();
+    }
+  }
+}
+
+void
+Exporter::ExportAnimations(const Scene& scene)
+{
+  if (scene.m_animations.empty()) {
+    return;
+  }
+
+  m_writer.key("animations");
+  {
+    m_writer.array_open();
+    for (auto& animation : scene.m_animations) {
+      m_writer.object_open();
+      // samplers
+      // channels
+      m_writer.object_close();
+    }
+    m_writer.array_close();
+  }
+}
+
 }

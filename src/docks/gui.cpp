@@ -353,11 +353,12 @@ Gui::DockSpace()
 
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh";
+      static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh,.vrma";
       if (ImGui::MenuItem("Open", "")) {
         ImGuiFileDialog::Instance()->OpenDialog(
           OPEN_FILE_DIALOG, "Open", filters, m_current.string().c_str());
       }
+
       if (ImGui::MenuItem("Save", "")) {
         ImGuiFileDialog::Instance()->OpenDialog(
           SAVE_FILE_DIALOG,
@@ -449,9 +450,7 @@ Gui::DockSpace()
       // std::cout << filePathName << "::" << filePath << std::endl;
       if (std::filesystem::exists(path)) {
         m_current = path.parent_path();
-        if (!App::Instance().LoadModel(path)) {
-          std::cout << "fail to load: " << path << std::endl;
-        }
+        App::Instance().LoadModel(path);
       }
     }
 
@@ -467,9 +466,7 @@ Gui::DockSpace()
       // action
       // std::cout << filePathName << "::" << filePath << std::endl;
       m_current = path.parent_path();
-      if (!App::Instance().WriteScene(path)) {
-        std::cout << "fail to write: " << path << std::endl;
-      }
+      App::Instance().WriteScene(path);
     }
 
     // close
