@@ -2,89 +2,105 @@
 #include "app.h"
 #include "fs_util.h"
 #include <imgui.h>
+#include <algorithm>
 
-AssetDir::AssetDir(std::string_view name, const std::filesystem::path& path)
-  : name_(name)
+std::optional<Asset>
+Asset::FromPath(const std::filesystem::path& path)
 {
-  root_ = path;
+  auto extension = path.extension().string();
+  if (extension == ".gltf") {
+    return Asset{
+      .Path = path,
+      .Label = std::string(" ") + path.filename().string(),
+      .Color = (ImVec4)ImColor::HSV(2 / 7.0f, 0.8f, 0.6f),
+    };
+  }
+  if (extension == ".glb") {
+    return Asset{
+      .Path = path,
+      .Label = std::string("󰕣 ") + path.filename().string(),
+      .Color = (ImVec4)ImColor::HSV(2 / 7.0f, 0.8f, 0.6f),
+    };
+  }
+  if (extension == ".vrm") {
+    return Asset{
+      .Path = path,
+      .Label = std::string("󰋦 ") + path.filename().string(),
+      .Color = (ImVec4)ImColor::HSV(4 / 7.0f, 0.8f, 0.6f),
+    };
+  }
+  if (extension == ".fbx") {
+    return Asset{
+      .Path = path,
+      .Label = std::string("󰕠 ") + path.filename().string(),
+      .Color = (ImVec4)ImColor::HSV(5 / 7.0f, 0.8f, 0.6f),
+    };
+  }
+  if (extension == ".bvh") {
+    return Asset{
+      .Path = path,
+      .Label = std::string("󰑮 ") + path.filename().string(),
+      .Color = (ImVec4)ImColor::HSV(0 / 7.0f, 0.8f, 0.6f),
+    };
+  }
+
+  return {};
+}
+
+bool
+Asset::Show(float width) const
+{
+  ImGui::PushStyleColor(ImGuiCol_Button, Color);
+  auto result = ImGui::Button((const char*)Label.c_str(), { width, 0 });
+  ImGui::PopStyleColor();
+
+  return result;
 }
 
 void
-AssetDir::Traverse(const AssetEnter& enter,
-                   const AssetLeave& leave,
-                   const std::filesystem::path& path)
+AssetDir::Update()
 {
-
-  if (path.empty()) {
-    // root
-    // traverse(enter, leave, root_);
-    for (auto e : std::filesystem::directory_iterator(root_)) {
-      Traverse(enter, leave, e);
-    }
+  Assets.clear();
+  if (!std::filesystem::is_directory(Dir)) {
     return;
   }
 
-  uint64_t id;
-  auto key = path.u8string();
-  for (auto& c : key) {
-    if (c == '\\') {
-      c = '/';
+  for (auto e : std::filesystem::recursive_directory_iterator(Dir)) {
+    if (auto asset = Asset::FromPath(e.path())) {
+      Assets.push_back(*asset);
     }
-  }
-  auto found = idMap_.find(key);
-  if (found != idMap_.end()) {
-    id = found->second;
-  } else {
-    id = nextId_++;
-    idMap_.insert(std::make_pair(key, id));
   }
 
-  if (enter(path, id)) {
-    if (std::filesystem::is_directory(path)) {
-      for (auto e : std::filesystem::directory_iterator(path)) {
-        Traverse(enter, leave, e);
-      }
-    }
-    leave();
-  }
+  std::sort(Assets.begin(), Assets.end());
 }
 
 Dock
 AssetDir::CreateDock(const LoadFunc& callback)
 {
-
-  auto enter = [callback](const std::filesystem::path& path, uint64_t id) {
-    static ImGuiTreeNodeFlags base_flags =
-      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
-      ImGuiTreeNodeFlags_SpanAvailWidth;
-
-    auto name = path.filename().u8string();
-
-    if (std::filesystem::is_directory(path)) {
-      ImGuiTreeNodeFlags node_flags = base_flags;
-      return ImGui::TreeNodeEx(
-        (void*)(intptr_t)id, node_flags, "%s", name.c_str());
-    } else {
-      if (ImGui::Button((const char*)name.c_str())) {
-        callback(path);
-      }
-      return false;
-    }
-  };
-  auto leave = []() { ImGui::TreePop(); };
   return Dock{
-    std::string("[") + Name() + "]",
-    [this, enter, leave]() {
+    std::string("[") + Name + "]",
+    [this, callback]() {
       if (ImGui::Button(" Open")) {
         App::Instance().Log(LogLevel::Info)
-          << "open: " << (const char*)root_.u8string().c_str();
-        shell_open(root_);
+          << "open: " << (const char*)Dir.u8string().c_str();
+        shell_open(Dir);
       }
       ImGui::SameLine();
       if (ImGui::Button("󰑓 Reload")) {
+        Update();
       }
       ImGui::Separator();
-      Traverse(enter, leave);
+
+      // ImGui::PushItemWidth(ImGui::GetWindowWidth());
+      ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, { 0, .5f });
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
+      for (auto& asset : Assets) {
+        if (asset.Show(ImGui::GetContentRegionAvail().x)) {
+          callback(asset.Path);
+        }
+      }
+      ImGui::PopStyleColor();
+      ImGui::PopStyleVar();
     },
   };
 }

@@ -61,12 +61,12 @@ class Gui
   std::string m_glsl_version;
   std::queue<Task> m_tasks;
 
-  int m_fontSize = 20;
   std::filesystem::path m_baseFont;
   std::filesystem::path m_japanseseFont;
   std::filesystem::path m_iconFont;
 
 public:
+  int m_fontSize = 20;
   std::list<Dock> m_docks;
   Gui(const void* window, const char* glsl_version);
   ~Gui();

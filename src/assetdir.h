@@ -2,6 +2,8 @@
 #include "docks/gui.h"
 #include <filesystem>
 #include <functional>
+#include <imgui.h>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -11,20 +13,34 @@ using AssetEnter =
 using AssetLeave = std::function<void()>;
 
 using LoadFunc = std::function<void(const std::filesystem::path& path)>;
-class AssetDir
+
+struct Asset
 {
-  std::string name_;
-  std::filesystem::path root_;
+  std::filesystem::path Path;
+  std::string Label;
+  ImVec4 Color;
 
-  std::unordered_map<std::u8string, uint64_t> idMap_;
-  uint64_t nextId_ = 1;
+  static std::optional<Asset> FromPath(const std::filesystem::path& path);
+  bool Show(float width) const;
 
-public:
-  AssetDir(std::string_view name, const std::filesystem::path& path);
-  const std::string& Name() const { return name_; }
-  void Traverse(const AssetEnter& enter,
-                const AssetLeave& leave,
-                const std::filesystem::path& path = {});
+  bool operator<(const Asset& b) const noexcept
+  {
+    return Path < b.Path;
+  }
+};
 
+struct AssetDir
+{
+  std::string Name;
+  std::filesystem::path Dir;
+  std::vector<Asset> Assets;
+
+  AssetDir(std::string_view name, const std::filesystem::path& path)
+    : Name(name)
+    , Dir(path)
+  {
+  }
+
+  void Update();
   Dock CreateDock(const LoadFunc& callback);
 };

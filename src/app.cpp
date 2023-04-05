@@ -4,11 +4,11 @@
 #include "app.h"
 #include "assetdir.h"
 #include "docks/gui.h"
+#include "docks/imlogger.h"
+#include "docks/imtimeline.h"
 #include "docks/json_dock.h"
 #include "docks/motion_dock.h"
 #include "docks/scene_dock.h"
-#include "docks/imtimeline.h"
-#include "docks/imlogger.h"
 #include "luahost.h"
 #include "platform.h"
 #include <vrm/animation.h>
@@ -27,9 +27,10 @@ App::App()
   m_motion = std::make_shared<MotionSource>();
 
   // pose to scene
-  m_motion->PoseCallbacks.push_back([scene = m_scene](const vrm::HumanPose& pose) {
-    scene->SetHumanPose(pose);
-  });
+  m_motion->PoseCallbacks.push_back(
+    [scene = m_scene](const vrm::HumanPose& pose) {
+      scene->SetHumanPose(pose);
+    });
 
   m_platform = std::make_shared<Platform>();
   auto window =
@@ -133,7 +134,9 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
     return false;
   }
 
-  m_assets.push_back(std::make_shared<AssetDir>(name, path));
+  auto asset = std::make_shared<AssetDir>(name, path);
+  asset->Update();
+  m_assets.push_back(asset);
 
   auto callback = [this](const std::filesystem::path& path) {
     if (path.extension().u8string().ends_with(u8".bvh")) {
@@ -149,7 +152,7 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
   auto dock = m_assets.back()->CreateDock(callback);
   m_gui->m_docks.push_back(dock);
 
-  Log(LogLevel::Info) << name << " => "<< path;
+  Log(LogLevel::Info) << name << " => " << path;
   return true;
 }
 
@@ -159,8 +162,9 @@ App::Run()
   auto addDock = [gui = m_gui](const Dock& dock) {
     gui->m_docks.push_back(dock);
   };
-  JsonDock::Create(addDock, m_scene);
-  SceneDock::Create(addDock, m_scene, m_view, m_timeline);
+  auto indent = m_gui->m_fontSize * 0.5f;
+  JsonDock::Create(addDock, m_scene, indent);
+  SceneDock::Create(addDock, m_scene, m_view, m_timeline, indent);
   MotionDock::Create(addDock, m_motion);
   ImTimeline::Create(addDock, m_timeline);
   ImLogger::Create(addDock, m_logger);
@@ -193,4 +197,3 @@ App::Run()
 
   return 0;
 }
-

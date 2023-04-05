@@ -24,7 +24,8 @@ public:
   static void Create(const AddDockFunc& addDock,
                      const std::shared_ptr<gltf::Scene>& scene,
                      const std::shared_ptr<OrbitView>& view,
-                     const std::shared_ptr<Timeline>& timeline)
+                     const std::shared_ptr<Timeline>& timeline,
+                     float indent)
   {
     //
     // scene tree
@@ -67,7 +68,7 @@ public:
     };
     auto leave = []() { ImGui::TreePop(); };
 
-    addDock(Dock("scene", [scene, enter, leave, context](bool* p_open) {
+    addDock(Dock("scene", [scene, enter, leave, context, indent](bool* p_open) {
       if (ImGui::Begin("scene", p_open, ImGuiWindowFlags_NoScrollbar)) {
         auto size = ImGui::GetContentRegionAvail();
 
@@ -77,10 +78,10 @@ public:
                               { size.x, size.y / 2 },
                               true,
                               ImGuiWindowFlags_None)) {
-          // ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing,
-          // gui->m_fontSize / 4);
+
+          ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
           scene->Traverse(enter, leave);
-          // ImGui::PopStyleVar();
+          ImGui::PopStyleVar();
         }
         ImGui::EndChild();
         // ImGui::EndGroup();
