@@ -17,7 +17,7 @@ using LoadFunc = std::function<void(const std::filesystem::path& path)>;
 struct Asset
 {
   std::filesystem::path Path;
-  std::string Label;
+  std::u8string Label;
   ImVec4 Color;
 
   static std::optional<Asset> FromPath(const std::filesystem::path& path);

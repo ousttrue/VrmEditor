@@ -11,35 +11,35 @@ Asset::FromPath(const std::filesystem::path& path)
   if (extension == ".gltf") {
     return Asset{
       .Path = path,
-      .Label = std::string(" ") + path.filename().string(),
+      .Label = std::u8string(u8" ") + path.filename().u8string(),
       .Color = (ImVec4)ImColor::HSV(2 / 7.0f, 0.8f, 0.6f),
     };
   }
   if (extension == ".glb") {
     return Asset{
       .Path = path,
-      .Label = std::string("󰕣 ") + path.filename().string(),
+      .Label = std::u8string(u8"󰕣 ") + path.filename().u8string(),
       .Color = (ImVec4)ImColor::HSV(2 / 7.0f, 0.8f, 0.6f),
     };
   }
   if (extension == ".vrm") {
     return Asset{
       .Path = path,
-      .Label = std::string("󰋦 ") + path.filename().string(),
+      .Label = std::u8string(u8"󰋦 ") + path.filename().u8string(),
       .Color = (ImVec4)ImColor::HSV(4 / 7.0f, 0.8f, 0.6f),
     };
   }
   if (extension == ".fbx") {
     return Asset{
       .Path = path,
-      .Label = std::string("󰕠 ") + path.filename().string(),
+      .Label = std::u8string(u8"󰕠 ") + path.filename().u8string(),
       .Color = (ImVec4)ImColor::HSV(5 / 7.0f, 0.8f, 0.6f),
     };
   }
   if (extension == ".bvh") {
     return Asset{
       .Path = path,
-      .Label = std::string("󰑮 ") + path.filename().string(),
+      .Label = std::u8string(u8"󰑮 ") + path.filename().u8string(),
       .Color = (ImVec4)ImColor::HSV(0 / 7.0f, 0.8f, 0.6f),
     };
   }
