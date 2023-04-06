@@ -7,6 +7,7 @@
 #include <imgui.h>
 #include <memory>
 #include <vrm/gizmo.h>
+#include <vrm/mesh.h>
 #include <vrm/node.h>
 #include <vrm/scene.h>
 #include <vrm/vrm0.h>

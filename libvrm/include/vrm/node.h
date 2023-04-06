@@ -1,6 +1,6 @@
 #pragma once
 #include "humanbones.h"
-#include "mesh.h"
+// #include "mesh.h"
 #include "scenetypes.h"
 #include <DirectXMath.h>
 #include <list>
@@ -13,13 +13,12 @@
 #include <string_view>
 
 namespace gltf {
+
 struct Skin;
 struct MeshInstance;
 struct Scene;
 struct Node
 {
-  DirectX::XMFLOAT4X4 shape_;
-
   // uint32_t Index;
   std::string Name;
 
@@ -73,6 +72,8 @@ struct Node
   std::shared_ptr<MeshInstance> Instance;
 
   std::shared_ptr<Skin> Skin;
+
+  DirectX::XMFLOAT4X4 ShapeMatrix;
 
   Node(std::string_view name);
   Node(const Node&) = delete;

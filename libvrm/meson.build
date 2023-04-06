@@ -9,6 +9,7 @@ vrm_lib = static_library(
         'springbone.cpp',
         'gizmo.cpp',
         'exporter.cpp',
+        'animation.cpp',
         'bvh.cpp',
         'bvhframe.cpp',
         'bvhsolver.cpp',

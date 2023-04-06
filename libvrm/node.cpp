@@ -1,5 +1,6 @@
 #include "vrm/node.h"
 #include "vrm/humanoid.h"
+#include "vrm/mesh.h"
 #include "vrm/scene.h"
 #include "vrm/vrm0.h"
 #include "vrm/vrm1.h"

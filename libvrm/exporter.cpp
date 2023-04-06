@@ -2,6 +2,7 @@
 #include "vrm/animation.h"
 #include "vrm/glb.h"
 #include "vrm/jsons.h"
+#include "vrm/mesh.h"
 #include "vrm/scene.h"
 
 namespace gltf {

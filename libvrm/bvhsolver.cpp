@@ -14,7 +14,7 @@ CalcShape(const GetJoint& getJoint,
           float scaling)
 {
   DirectX::XMStoreFloat4x4(
-    &node->shape_,
+    &node->ShapeMatrix,
     DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
 
   auto joint_ = getJoint(node);
@@ -61,7 +61,7 @@ CalcShape(const GetJoint& getJoint,
     auto r = DirectX::XMMATRIX(X, Y, Z, DirectX::XMLoadFloat4(&_));
 
     auto shape = center * scale * r;
-    DirectX::XMStoreFloat4x4(&node->shape_, shape);
+    DirectX::XMStoreFloat4x4(&node->ShapeMatrix, shape);
   }
 
   for (auto& child : node->Children) {
@@ -97,7 +97,7 @@ ResolveFrame(const GetJoint& getJoint,
   auto local = r * t;
 
   m = local * m;
-  auto shape = DirectX::XMLoadFloat4x4(&node->shape_);
+  auto shape = DirectX::XMLoadFloat4x4(&node->ShapeMatrix);
   DirectX::XMStoreFloat4x4(&*out, shape * m);
   ++out;
   ++outLocal;
