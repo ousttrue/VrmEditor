@@ -407,7 +407,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
         auto& names = extras.at("targetNames");
         // std::cout << names << std::endl;
         for (int i = 0; i < names.size(); ++i) {
-          ptr->getOrCreateMorphTarget(i)->name = names[i];
+          ptr->getOrCreateMorphTarget(i)->Name = names[i];
         }
       }
     }
@@ -423,7 +423,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
       auto& names = extras.at("targetNames");
       // std::cout << names << std::endl;
       for (int i = 0; i < names.size(); ++i) {
-        ptr->getOrCreateMorphTarget(i)->name = names[i];
+        ptr->getOrCreateMorphTarget(i)->Name = names[i];
       }
     }
   }

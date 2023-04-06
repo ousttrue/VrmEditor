@@ -22,15 +22,15 @@ struct MorphVertex
 
 struct MorphTarget
 {
-  std::string name;
-  std::vector<MorphVertex> m_vertices;
+  std::string Name;
+  std::vector<MorphVertex> Vertices;
 
   size_t addPosition(std::span<const DirectX::XMFLOAT3> values)
   {
-    auto offset = m_vertices.size();
-    m_vertices.resize(offset + values.size());
+    auto offset = Vertices.size();
+    Vertices.resize(offset + values.size());
     for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[offset + i].position = values[i];
+      Vertices[offset + i].position = values[i];
     }
     return offset;
   }
@@ -178,7 +178,7 @@ struct MeshInstance
       for (int j = 0; j < weights.size(); ++j) {
         auto& morphtarget = mesh.m_morphTargets[j];
         if (weights[j]) {
-          v.Position += morphtarget->m_vertices[i].position * weights[j];
+          v.Position += morphtarget->Vertices[i].position * weights[j];
         }
       }
       m_updated.push_back(v);

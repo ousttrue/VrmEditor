@@ -17,7 +17,7 @@ struct Bvh;
 class BvhSolver;
 class Gui;
 struct Timeline;
-class AssetDir;
+struct AssetDir;
 class LuaEngine;
 class Platform;
 class OrbitView;

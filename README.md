@@ -9,6 +9,8 @@ read, write, animation test.
 - [x] gltf import
 - [x] glb
   - [x] import
+    - [ ] draco
+    - [ ] quantity
   - [ ] export
   - [ ] vrm-0.x
     - [x] expression. morphtarget
@@ -33,6 +35,7 @@ read, write, animation test.
     - [ ] expression
     - [ ] lookat
 - [x] bvh import
+  - [ ] humanoid mapping
 - [ ] fbx import
 
 ### material

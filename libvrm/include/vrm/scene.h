@@ -66,6 +66,7 @@ struct Scene
 
   void Clear()
   {
+    m_humanoid = {};
     m_vrm0 = nullptr;
     m_images.clear();
     m_materials.clear();

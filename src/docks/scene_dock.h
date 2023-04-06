@@ -98,10 +98,16 @@ public:
             if (auto mesh_index = context->selected->Mesh) {
               auto mesh = scene->m_meshes[*mesh_index];
               auto instance = context->selected->Instance;
+              char morph_id[256];
               for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
                 auto& morph = mesh->m_morphTargets[i];
-                ImGui::SliderFloat(
-                  morph->name.c_str(), &instance->weights[i], 0, 1);
+                snprintf(morph_id,
+                         sizeof(morph_id),
+                         "[%d]%s##morph%d",
+                         i,
+                         morph->Name.c_str(),
+                         i);
+                ImGui::SliderFloat(morph_id, &instance->weights[i], 0, 1);
               }
             }
           }
