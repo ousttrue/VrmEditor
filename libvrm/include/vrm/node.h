@@ -17,10 +17,20 @@ namespace gltf {
 struct Skin;
 struct MeshInstance;
 struct Scene;
+struct Node;
+
+struct NodeHumanoidInfo
+{
+  vrm::HumanBones HumanBone;
+  std::weak_ptr<Node> Parent;
+  std::list<std::shared_ptr<Node>> Children;
+};
+
 struct Node
 {
   // uint32_t Index;
   std::string Name;
+  std::optional<NodeHumanoidInfo> Humanoid;
 
   mutable std::string m_label;
   const std::string& Label(const Scene& scene) const;

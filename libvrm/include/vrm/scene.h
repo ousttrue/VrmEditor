@@ -1,9 +1,8 @@
 #pragma once
 #include "gltf.h"
-#include "humanoid.h"
-#include "humanpose.h"
 #include "scenetypes.h"
 #include "springbone.h"
+#include "humanpose.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <expected>
@@ -60,7 +59,6 @@ struct Scene
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
 
-  vrm::Humanoid m_humanoid;
   std::shared_ptr<vrm::v0::Vrm> m_vrm0;
   std::shared_ptr<vrm::v1::Vrm> m_vrm1;
   std::shared_ptr<vrm::animation::Animation> m_vrma;
@@ -70,7 +68,6 @@ struct Scene
 
   void Clear()
   {
-    m_humanoid = {};
     m_vrm0 = nullptr;
     m_images.clear();
     m_materials.clear();

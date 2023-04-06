@@ -620,7 +620,11 @@ Scene::ParseVrm0()
         int index = humanBone.at("node");
         std::string_view name = humanBone.at("bone");
         // std::cout << name << ": " << index << std::endl;
-        m_humanoid.setNode(name, vrm::VrmVersion::_0_x, index);
+        if (auto bone = vrm::HumanBoneFromName(name, vrm::VrmVersion::_0_x)) {
+          m_nodes[index]->Humanoid = NodeHumanoidInfo{
+            .HumanBone = *bone,
+          };
+        }
       }
     }
   }
@@ -711,7 +715,9 @@ Scene::ParseVrm1()
       for (auto& kv : humanBones.items()) {
         if (auto bone =
               vrm::HumanBoneFromName(kv.key(), vrm::VrmVersion::_1_0)) {
-          m_humanoid[(int)*bone] = (int)kv.value().at("node");
+          m_nodes[kv.value().at("node")]->Humanoid = NodeHumanoidInfo{
+            .HumanBone = *bone,
+          };
         } else {
           std::cout << kv.key() << std::endl;
         }
@@ -943,8 +949,12 @@ Scene::SyncHierarchy()
 std::shared_ptr<gltf::Node>
 Scene::GetBoneNode(vrm::HumanBones bone)
 {
-  if (auto node_index = m_humanoid[(int)bone]) {
-    return m_nodes[*node_index];
+  for (auto& node : m_nodes) {
+    if (auto humanoid = node->Humanoid) {
+      if (humanoid->HumanBone == bone) {
+        return node;
+      }
+    }
   }
   return {};
 }

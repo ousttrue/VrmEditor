@@ -1,5 +1,4 @@
 #pragma once
-#include "humanoid.h"
 #include "springbone.h"
 #include <algorithm>
 #include <memory>
