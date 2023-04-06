@@ -69,6 +69,9 @@ public:
     pitch_ = {};
     // shift_[3] = { 0, -0.8f, -5 };
     auto height = max.y - min.y;
+    if (fabs(height) < 1e-4) {
+      return;
+    }
     auto distance = height * 0.5f / std::atan(fovY_ * 0.5f);
     shift_[0] = 0;
     shift_[1] = -height * 0.5f;

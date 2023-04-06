@@ -83,6 +83,7 @@ read, write, animation test.
 ### 3D view
 
 - [x] Fit camera frustum to bounding box when load
+- [ ] camera reset
 - [x] TR gizmo
 - [ ] gizmo undo / history
 

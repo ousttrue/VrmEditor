@@ -38,9 +38,14 @@ Exporter::Export(const Scene& scene)
   }
 
   ExportNodesScenes(scene);
+
+  // update bin
   ExportMeshes(scene);
-  ExportBuffersViewsAccessors(scene);
+  // update bin
   ExportAnimations(scene);
+
+  // last
+  ExportBuffersViewsAccessors(scene);
 
   m_writer.object_close();
 }

@@ -961,6 +961,8 @@ Scene::GetBoundingBox() const
 {
   BoundingBox bb{};
   for (auto& node : m_nodes) {
+    bb.Extend(node->WorldTransform.Translation);
+    bb.Extend(node->WorldTransform.Translation);
     if (auto mesh_index = node->Mesh) {
       auto mesh_bb = m_meshes[*mesh_index]->GetBoundingBox();
       bb.Extend(dmath::transform(mesh_bb.Min, node->WorldMatrix()));

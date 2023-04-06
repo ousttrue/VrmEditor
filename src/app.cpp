@@ -90,6 +90,7 @@ bool
 App::LoadModel(const std::filesystem::path& path)
 {
   m_renderer->Release();
+  m_scene->Clear();
   if (auto result = m_scene->LoadPath(path)) {
     // bind time line
     for (auto& animation : m_scene->m_animations) {

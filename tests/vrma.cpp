@@ -13,6 +13,19 @@ TEST(VRMA, simple)
   scene.m_nodes.push_back(std::make_shared<gltf::Node>("node0"));
   // animation
   scene.m_animations.push_back(std::make_shared<gltf::Animation>("animation"));
+  auto& animation = scene.m_animations.back();
+
+  static float times[] = {
+    0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f,
+  };
+  static DirectX::XMFLOAT3 positions[] = {
+    { 0.0f, 0.0f, 0.0f }, { 0.1f, 0.0f, 0.0f }, { 0.2f, 0.0f, 0.0f },
+    { 0.3f, 0.0f, 0.0f }, { 0.4f, 0.0f, 0.0f }, { 0.5f, 0.0f, 0.0f },
+    { 0.6f, 0.0f, 0.0f }, { 0.7f, 0.0f, 0.0f }, { 0.8f, 0.0f, 0.0f },
+    { 0.9f, 0.0f, 0.0f },
+  };
+
+  animation->AddTranslation(0, times, positions, "track0-translation");
 
   gltf::Exporter exporter;
   exporter.Export(scene);
