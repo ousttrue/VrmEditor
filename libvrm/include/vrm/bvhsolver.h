@@ -1,5 +1,5 @@
 #pragma once
-#include "_bvh.h"
+#include "bvh.h"
 #include <DirectXMath.h>
 #include <list>
 #include <memory>
