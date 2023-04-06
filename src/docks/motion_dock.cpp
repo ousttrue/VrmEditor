@@ -5,13 +5,13 @@
 #include "motion_dock.h"
 #include "orbitview.h"
 #include "rendertarget.h"
-#include <Bvh.h>
-#include <BvhSolver.h>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <imgui.h>
 #include <imnodes.h>
 #include <iostream>
+#include <vrm/bvh.h>
+#include <vrm/bvhsolver.h>
 #include <vrm/humanbones.h>
 #include <vrm/humanpose.h>
 

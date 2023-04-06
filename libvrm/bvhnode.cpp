@@ -1,4 +1,4 @@
-#include "BvhNode.h"
+#include "vrm/bvhnode.h"
 
 const float DEFAULT_SIZE = 0.04f;
 

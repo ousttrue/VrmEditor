@@ -21,7 +21,6 @@ executable(
         imguizmo_dep,
         vrm_dep,
         luajit_dep,
-        bvhutil_dep,
         cuber_dep,
         imgui_filedialog_dep,
         iconfont_cpp_headers_dep,
