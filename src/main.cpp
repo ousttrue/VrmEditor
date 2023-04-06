@@ -21,8 +21,8 @@ main(int __argc, char** __argv)
 
   auto& app = App::Instance();
 
-  // load user ~/.vimeditor.lua
-  auto user_conf = get_home() / ".vimeditor.lua";
+  // load user ~/.vrmeditor.lua
+  auto user_conf = get_home() / ".vrmeditor.lua";
   if (std::filesystem::exists(user_conf)) {
     app.LoadLua(user_conf);
   }

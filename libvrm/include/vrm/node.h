@@ -1,4 +1,5 @@
 #pragma once
+#include "humanbones.h"
 #include "mesh.h"
 #include "scenetypes.h"
 #include <DirectXMath.h>
@@ -6,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <sstream>
 #include <stdint.h>
 #include <string>
 #include <string_view>
@@ -13,10 +15,14 @@
 namespace gltf {
 struct Skin;
 struct MeshInstance;
+struct Scene;
 struct Node
 {
   // uint32_t Index;
   std::string Name;
+
+  mutable std::string m_label;
+  const std::string& Label(const Scene& scene) const;
 
   // local
   EuclideanTransform Transform;

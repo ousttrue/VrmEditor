@@ -24,14 +24,16 @@ public:
   static void Create(const AddDockFunc& addDock,
                      const std::shared_ptr<gltf::Scene>& scene,
                      const std::shared_ptr<OrbitView>& view,
-                     const std::shared_ptr<Timeline>& timeline)
+                     const std::shared_ptr<Timeline>& timeline,
+                     const std::shared_ptr<Gl3Renderer>& gl3r,
+                     float indent)
   {
     //
     // scene tree
     //
     auto context = std::make_shared<TreeContext>();
 
-    auto enter = [context](gltf::Node& node) {
+    auto enter = [scene, context](gltf::Node& node) {
       ImGui::SetNextItemOpen(true, ImGuiCond_Once);
       static ImGuiTreeNodeFlags base_flags =
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -47,13 +49,13 @@ public:
         node_flags |= ImGuiTreeNodeFlags_Selected;
       }
 
-      bool hasRotation = node.Transform.HasRotation();
+      bool hasRotation = node.InitialTransform.HasRotation();
       if (hasRotation) {
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
       }
 
       bool node_open =
-        ImGui::TreeNodeEx(&node, node_flags, "%s", node.Name.c_str());
+        ImGui::TreeNodeEx(&node, node_flags, "%s", node.Label(*scene).c_str());
 
       if (hasRotation) {
         ImGui::PopStyleColor();
@@ -67,7 +69,8 @@ public:
     };
     auto leave = []() { ImGui::TreePop(); };
 
-    addDock(Dock("scene", [scene, enter, leave, context](bool* p_open) {
+    addDock(Dock("scene", [scene, enter, leave, context, indent](bool* p_open) {
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
       if (ImGui::Begin("scene", p_open, ImGuiWindowFlags_NoScrollbar)) {
         auto size = ImGui::GetContentRegionAvail();
 
@@ -77,10 +80,10 @@ public:
                               { size.x, size.y / 2 },
                               true,
                               ImGuiWindowFlags_None)) {
-          // ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing,
-          // gui->m_fontSize / 4);
+
+          ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
           scene->Traverse(enter, leave);
-          // ImGui::PopStyleVar();
+          ImGui::PopStyleVar();
         }
         ImGui::EndChild();
         // ImGui::EndGroup();
@@ -107,10 +110,27 @@ public:
         // ImGui::EndGroup();
       }
       ImGui::End();
+      ImGui::PopStyleVar();
     }));
 
-    addDock(
-      Dock("humanoid", [scene]() { ImHumanoid::Show(scene->m_humanoid); }));
+    auto imHumanoid = std::make_shared<ImHumanoid>();
+
+    addDock(Dock("human-body", [scene, imHumanoid](bool* p_open) {
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+      if (ImGui::Begin("human-body", p_open)) {
+        imHumanoid->ShowBody(*scene);
+      }
+      ImGui::End();
+      ImGui::PopStyleVar();
+    }));
+    addDock(Dock("human-fingers", [scene, imHumanoid](bool* p_open) {
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+      if (ImGui::Begin("human-fingers", p_open)) {
+        imHumanoid->ShowFingers(*scene);
+      }
+      ImGui::End();
+      ImGui::PopStyleVar();
+    }));
 
     addDock(Dock("vrm", [scene]() {
       if (auto vrm = scene->m_vrm0) {
@@ -138,11 +158,9 @@ public:
     rt->color[2] = 0.2f;
     rt->color[3] = 1.0f;
 
-    auto gl3r = std::make_shared<Gl3Renderer>();
-
     rt->render = [timeline, scene, gl3r, selection = context](
                    const ViewProjection& camera) {
-      gl3r->clear(camera);
+      gl3r->ClearRendertarget(camera);
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
@@ -150,7 +168,7 @@ public:
         [gl3r, liner, &camera](const gltf::Mesh& mesh,
                                const gltf::MeshInstance& instance,
                                const float m[16]) {
-          gl3r->render(camera, mesh, instance, m);
+          gl3r->Render(camera, mesh, instance, m);
         };
       scene->Render(timeline->CurrentTime, render);
       liner->Render(camera.projection, camera.view, gizmo::lines());

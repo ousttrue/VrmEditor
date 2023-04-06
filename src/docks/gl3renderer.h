@@ -13,8 +13,9 @@ class Gl3Renderer
 public:
   Gl3Renderer();
   ~Gl3Renderer();
-  void clear(const ViewProjection& camera);
-  void render(const ViewProjection& camera,
+  void Release();
+  void ClearRendertarget(const ViewProjection& camera);
+  void Render(const ViewProjection& camera,
               const gltf::Mesh& mesh,
               const gltf::MeshInstance& instance,
               const float m[16]);

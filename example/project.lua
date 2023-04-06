@@ -21,7 +21,8 @@ vrmeditor.set_font_size(is_windows and 22 or 16)
 -- local base_font = "C:/Windows/Fonts/verdana.ttf"
 -- vrmeditor.set_font(base_font)
 
-local icon_font = home .. "/.fonts/HackGenNerdConsole-Regular.ttf"
+-- local icon_font = home .. "/.fonts/HackGenNerdConsole-Regular.ttf"
+local icon_font = home .. "/.fonts/Symbols-1000-em Nerd Font Complete Mono.ttf"
 local japanese_font = is_windows and "C:/Windows/Fonts/msgothic.ttc" or icon_font
 
 local ok = vrmeditor.add_japanese_font(japanese_font)

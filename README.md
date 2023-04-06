@@ -62,8 +62,8 @@ read, write, animation test.
 ### imgui / configuration
 
 - [x] imgui.ini => ~/.vrmeditor.ini
-- [ ] ~/.config/vrmeditor/init.lua
-- [ ] tree / indent
+- [x] ~/.vrmeditor.lua
+- [x] tree / indent
 
 ### assets
 
@@ -104,6 +104,7 @@ read, write, animation test.
 - [ ] 󰂹 : humanoid icon
 - [ ] 󰚟 : spring icon
 - [ ] 󱥔 : spring collider icon
+- [ ]  : morph
 - [ ] selected
 
 ### humanoid

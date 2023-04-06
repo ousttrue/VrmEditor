@@ -7,10 +7,12 @@
 #include <imgui_internal.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <IconsFontAwesome5.h>
 #include <ImGuiFileDialog.h>
 #include <imnodes.h>
 #include <iostream>
+
+#include <IconsFontAwesome5.h>
+#include <IconsMaterialDesign.h>
 
 const auto OPEN_FILE_DIALOG = "OPEN_FILE_DIALOG";
 const auto SAVE_FILE_DIALOG = "SAVE_FILE_DIALOG";
@@ -225,7 +227,16 @@ Gui::LoadFont()
 
   if (m_iconFont.string().size()) {
     // static const ImWchar icons_ranges[] = {0xf000, 0xf3ff, 0};
-    static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
+    static const ImWchar icons_ranges[] = {
+      //
+      ICON_MIN_FA,
+      ICON_MAX_FA,
+      //
+      ICON_MIN_MD,
+      ICON_MAX_MD,
+      //
+      0,
+    };
     auto iconFontSize = static_cast<float>(m_fontSize * 2.0f / 3.0f);
     config.PixelSnapH = true;
     config.GlyphMinAdvanceX = iconFontSize;
