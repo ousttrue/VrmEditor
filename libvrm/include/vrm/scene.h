@@ -28,6 +28,9 @@ struct Vrm;
 namespace v1 {
 struct Vrm;
 }
+namespace animation {
+struct Animation;
+}
 }
 
 namespace gltf {
@@ -60,6 +63,7 @@ struct Scene
   vrm::Humanoid m_humanoid;
   std::shared_ptr<vrm::v0::Vrm> m_vrm0;
   std::shared_ptr<vrm::v1::Vrm> m_vrm1;
+  std::shared_ptr<vrm::animation::Animation> m_vrma;
 
   // runtime
   std::shared_ptr<vrm::SpringSolver> m_spring;

@@ -1,8 +1,8 @@
 #include "assetdir.h"
 #include "app.h"
 #include "fs_util.h"
-#include <imgui.h>
 #include <algorithm>
+#include <imgui.h>
 
 std::optional<Asset>
 Asset::FromPath(const std::filesystem::path& path)
@@ -29,11 +29,18 @@ Asset::FromPath(const std::filesystem::path& path)
       .Color = (ImVec4)ImColor::HSV(4 / 7.0f, 0.8f, 0.6f),
     };
   }
+  if (extension == ".vrma") {
+    return Asset{
+      .Path = path,
+      .Label = std::u8string(u8"󰋦 󰑮 ") + path.filename().u8string(),
+      .Color = (ImVec4)ImColor::HSV(5 / 7.0f, 0.8f, 0.6f),
+    };
+  }
   if (extension == ".fbx") {
     return Asset{
       .Path = path,
       .Label = std::u8string(u8"󰕠 ") + path.filename().u8string(),
-      .Color = (ImVec4)ImColor::HSV(5 / 7.0f, 0.8f, 0.6f),
+      .Color = (ImVec4)ImColor::HSV(6 / 7.0f, 0.8f, 0.6f),
     };
   }
   if (extension == ".bvh") {

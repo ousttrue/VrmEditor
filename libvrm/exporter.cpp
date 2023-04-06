@@ -47,6 +47,31 @@ Exporter::Export(const Scene& scene)
   // last
   ExportBuffersViewsAccessors(scene);
 
+  if (scene.m_vrma) {
+    m_writer.key("extensions");
+    m_writer.object_open();
+    {
+      m_writer.key("VRMC_vrm_animation");
+      m_writer.object_open();
+      {
+        m_writer.key("expressions");
+        m_writer.object_open();
+        {
+          m_writer.key("aa");
+          m_writer.object_open();
+          {
+            m_writer.key("node");
+            m_writer.value(0);
+          }
+          m_writer.object_close();
+        }
+        m_writer.object_close();
+      }
+      m_writer.object_close();
+    }
+    m_writer.object_close();
+  }
+
   m_writer.object_close();
 }
 
