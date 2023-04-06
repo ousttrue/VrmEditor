@@ -6,12 +6,15 @@
 #include <stack>
 #include <vector>
 
+namespace gltf {
+struct Node;
+}
 namespace bvh {
-class Node;
 class Solver
 {
-  std::vector<std::shared_ptr<Node>> nodes_;
-  std::shared_ptr<Node> root_;
+  std::shared_ptr<Bvh> m_bvh;
+  std::vector<std::shared_ptr<gltf::Node>> nodes_;
+  std::shared_ptr<gltf::Node> root_;
   float scaling_ = 1.0f;
 
 public:

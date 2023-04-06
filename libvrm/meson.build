@@ -11,7 +11,6 @@ vrm_lib = static_library(
         'exporter.cpp',
         'bvh.cpp',
         'bvhframe.cpp',
-        'bvhnode.cpp',
         'bvhsolver.cpp',
         'bvhsource.cpp',
     ],

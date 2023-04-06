@@ -18,6 +18,8 @@ struct MeshInstance;
 struct Scene;
 struct Node
 {
+  DirectX::XMFLOAT4X4 shape_;
+
   // uint32_t Index;
   std::string Name;
 
