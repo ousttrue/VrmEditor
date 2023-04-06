@@ -59,6 +59,33 @@ if fbx_samples then
 end
 
 --
+-- bvh
+--
+vrmeditor.add_human_map {
+  Hips = "hips",
+  Spine = "spine",
+  Spine1 = "chest",
+  Neck = "neck",
+  Head = "head",
+  LeftShoulder = "leftShoulder",
+  LeftArm = "leftUpperArm",
+  LeftForeArm = "leftLowerArm",
+  LeftHand = "leftHand",
+  RightShoulder = "rightShoulder",
+  RightArm = "rightUpperArm",
+  RightForeArm = "rightLowerArm",
+  RightHand = "rightHand",
+  LeftUpLeg = "leftUpperLeg",
+  LeftLeg = "leftLowerLeg",
+  LeftFoot = "leftFoot",
+  LeftToeBase = "leftToe",
+  RightUpLeg = "rightUpperLeg",
+  RightLeg = "rightLowerLeg",
+  RightFoot = "rightFoot",
+  RightToeBase = "rightToe",
+}
+
+--
 -- load model
 --
 local alicia = "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm"

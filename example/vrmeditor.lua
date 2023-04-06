@@ -22,3 +22,6 @@ function vrmeditor.load_motion(path, scale) end
 ---@param name string
 ---@param dir string to asset dir. ex. GLTF_SAMPLE_MODELS
 function vrmeditor.add_asset_dir(name, dir) end
+
+---@param map table
+function vrmeditor.add_human_map(map) end

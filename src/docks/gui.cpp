@@ -194,7 +194,6 @@ Gui::AddIconFont(const std::filesystem::path& path)
 void
 Gui::LoadFont()
 {
-
   ImGuiIO& io = ImGui::GetIO();
 
   if (m_initialized) {

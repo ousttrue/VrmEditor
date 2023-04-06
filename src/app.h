@@ -2,6 +2,7 @@
 #include "docks/imlogger.h"
 #include <list>
 #include <memory>
+#include <vrm/humanbones.h>
 
 namespace gltf {
 struct Scene;
@@ -33,6 +34,13 @@ class App
 
   std::shared_ptr<bvh::MotionSource> m_motion;
 
+  struct HumanBoneMap
+  {
+    std::unordered_map<std::string, vrm::HumanBones> NameBoneMap;
+    void Add(std::string_view joint_name, std::string_view bone);
+  };
+  std::list<std::shared_ptr<HumanBoneMap>> m_humanBoneMapList;
+
   App();
 
 public:
@@ -58,4 +66,5 @@ public:
   bool LoadMotion(const std::filesystem::path& path, float scaling = 1.0f);
   void LoadLua(const std::filesystem::path& path);
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
+  std::shared_ptr<HumanBoneMap> AddHumanBoneMap();
 };

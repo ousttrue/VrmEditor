@@ -25,11 +25,19 @@ MotionSource::LoadMotion(const std::filesystem::path& path,
   MotionSolver = std::make_shared<Solver>();
   MotionSolver->Initialize(Motion);
 
+  HumanBoneMap.clear();
+
   auto track = timeline->AddTrack("bvh", Motion->Duration());
   track->Callbacks.push_back([this](auto time, bool repeat) {
     auto index = Motion->TimeToIndex(time);
     auto frame = Motion->GetFrame(index);
     MotionSolver->ResolveFrame(frame);
+
+    if (HumanBoneMap.empty()) {
+      for (auto& node : MotionSolver->nodes_) {
+        HumanBoneMap.push_back(node->Humanoid->HumanBone);
+      }
+    }
 
     // human pose to scene
     auto& hips = MotionSolver->instances_[0];

@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <string_view>
 
 namespace gltf {
 struct Scene;
@@ -20,19 +21,7 @@ struct MotionSource
 {
   std::shared_ptr<Bvh> Motion;
   std::shared_ptr<Solver> MotionSolver;
-  std::vector<vrm::HumanBones> HumanBoneMap = {
-    vrm::HumanBones::hips,          vrm::HumanBones::spine,
-    vrm::HumanBones::chest,         vrm::HumanBones::neck,
-    vrm::HumanBones::head,          vrm::HumanBones::leftShoulder,
-    vrm::HumanBones::leftUpperArm,  vrm::HumanBones::leftLowerArm,
-    vrm::HumanBones::leftHand,      vrm::HumanBones::rightShoulder,
-    vrm::HumanBones::rightUpperArm, vrm::HumanBones::rightLowerArm,
-    vrm::HumanBones::rightHand,     vrm::HumanBones::leftUpperLeg,
-    vrm::HumanBones::leftLowerLeg,  vrm::HumanBones::leftFoot,
-    vrm::HumanBones::leftToe,       vrm::HumanBones::rightUpperLeg,
-    vrm::HumanBones::rightLowerLeg, vrm::HumanBones::rightFoot,
-    vrm::HumanBones::rightToe,
-  };
+  std::vector<vrm::HumanBones> HumanBoneMap;
   std::list<OnPose> PoseCallbacks;
 
   MotionSource(const std::shared_ptr<gltf::Scene>& scene);

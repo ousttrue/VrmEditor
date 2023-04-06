@@ -1,6 +1,5 @@
 #pragma once
 #include <imgui.h>
-#include <vrm/humanoid.h>
 #include <vrm/scene.h>
 
 class ImHumanoid
@@ -28,10 +27,10 @@ public:
 
         uint32_t index = -1;
         const char* combo_preview_value = "--";
-        if (auto node_index = scene.m_humanoid[i]) {
-          index = *node_index;
-          combo_preview_value = m_items[index];
-        }
+        // if (auto node_index = scene.m_humanoid[i]) {
+        //   index = *node_index;
+        //   combo_preview_value = m_items[index];
+        // }
 
         char key[64];
         snprintf(key, sizeof(key), "##%d", i);
@@ -88,10 +87,10 @@ public:
 
         uint32_t left_index = -1;
         const char* left_combo_preview_value = "--";
-        if (auto node_index = scene.m_humanoid[i]) {
-          left_index = *node_index;
-          left_combo_preview_value = m_items[left_index];
-        }
+        // if (auto node_index = scene.m_humanoid[i]) {
+        //   left_index = *node_index;
+        //   left_combo_preview_value = m_items[left_index];
+        // }
 
         char left_key[64];
         snprintf(left_key, sizeof(left_key), "##left%d", i);
@@ -114,10 +113,10 @@ public:
 
         uint32_t right_index = -1;
         const char* right_combo_preview_value = "--";
-        if (auto node_index = scene.m_humanoid[i + 15]) {
-          right_index = *node_index;
-          right_combo_preview_value = m_items[right_index];
-        }
+        // if (auto node_index = scene.m_humanoid[i + 15]) {
+        //   right_index = *node_index;
+        //   right_combo_preview_value = m_items[right_index];
+        // }
         char right_key[64];
         snprintf(right_key, sizeof(right_key), "##right%d", i + 15);
         ImGui::TableSetColumnIndex(2);

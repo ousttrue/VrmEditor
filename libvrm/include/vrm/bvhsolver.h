@@ -13,11 +13,11 @@ namespace bvh {
 class Solver
 {
   std::shared_ptr<Bvh> m_bvh;
-  std::vector<std::shared_ptr<gltf::Node>> nodes_;
   std::shared_ptr<gltf::Node> root_;
   float scaling_ = 1.0f;
 
 public:
+  std::vector<std::shared_ptr<gltf::Node>> nodes_;
   std::vector<DirectX::XMFLOAT4X4> instances_;
   std::vector<DirectX::XMFLOAT4> localRotations;
   void Initialize(const std::shared_ptr<Bvh>& bvh);

@@ -12,11 +12,23 @@
 #include "luahost.h"
 #include "platform.h"
 #include <vrm/animation.h>
+#include <vrm/bvhsolver.h>
 #include <vrm/bvhsource.h>
+#include <vrm/node.h>
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
+
+void
+App::HumanBoneMap::Add(std::string_view joint_name, std::string_view bone_name)
+{
+  if (auto bone = vrm::HumanBoneFromName(bone_name, vrm::VrmVersion::_1_0)) {
+    NameBoneMap[{ joint_name.begin(), joint_name.end() }] = *bone;
+  } else {
+    std::cout << bone_name << " not found" << std::endl;
+  }
+}
 
 App::App()
 {
@@ -135,7 +147,23 @@ bool
 App::LoadMotion(const std::filesystem::path& path, float scaling)
 {
   Log(LogLevel::Info) << path;
-  return m_motion->LoadMotion(path, scaling, m_timeline);
+  if (!m_motion->LoadMotion(path, scaling, m_timeline)) {
+    return false;
+  }
+
+  // search human bone map
+  for (auto& map : m_humanBoneMapList) {
+    for (auto& node : m_motion->MotionSolver->nodes_) {
+      auto found = map->NameBoneMap.find(node->Name);
+      if (found != map->NameBoneMap.end()) {
+        node->Humanoid = gltf::NodeHumanoidInfo{
+          .HumanBone = found->second,
+        };
+      }
+    }
+  }
+
+  return true;
 }
 
 void
@@ -168,6 +196,14 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 
   Log(LogLevel::Info) << name << " => " << path;
   return true;
+}
+
+std::shared_ptr<App::HumanBoneMap>
+App::AddHumanBoneMap()
+{
+  auto ptr = std::make_shared<App::HumanBoneMap>();
+  m_humanBoneMapList.push_back(ptr);
+  return ptr;
 }
 
 int
