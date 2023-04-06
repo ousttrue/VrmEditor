@@ -4,10 +4,13 @@
 #include <algorithm>
 #include <imgui.h>
 
+
 std::optional<Asset>
 Asset::FromPath(const std::filesystem::path& path)
 {
   auto extension = path.extension().string();
+  std::transform(extension.begin(), extension.end(), extension.begin(), tolower);
+
   if (extension == ".gltf") {
     return Asset{
       .Path = path,

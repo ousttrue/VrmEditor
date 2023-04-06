@@ -87,6 +87,25 @@ App::WriteScene(const std::filesystem::path& path)
 }
 
 bool
+App::LoadPath(const std::filesystem::path& path)
+{
+  auto extension = path.extension().string();
+  std::transform(
+    extension.begin(), extension.end(), extension.begin(), tolower);
+
+  if (extension == ".gltf" || extension == ".glb" || extension == ".vrm" ||
+      extension == ".vrma") {
+    return LoadModel(path);
+  }
+  if (extension == ".bvh") {
+    return LoadMotion(path);
+  }
+  // if (extension == ".fbx") {
+  // }
+  return false;
+}
+
+bool
 App::LoadModel(const std::filesystem::path& path)
 {
   m_renderer->Release();
@@ -143,13 +162,9 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
   m_assets.push_back(asset);
 
   auto callback = [this](const std::filesystem::path& path) {
-    if (path.extension().u8string().ends_with(u8".bvh")) {
-      LoadMotion(path);
-    } else {
-      ClearScene();
-      LoadModel(path);
-
+    if (LoadPath(path)) {
       m_platform->SetTitle(path.string());
+    } else {
     }
   };
 

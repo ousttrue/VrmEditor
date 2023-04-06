@@ -60,6 +60,7 @@ public:
 
   // expose to lua
   const std::shared_ptr<Gui>& GetGui() const { return m_gui; }
+  bool LoadPath(const std::filesystem::path& path);
   bool LoadModel(const std::filesystem::path& path);
   bool LoadMotion(const std::filesystem::path& path, float scaling = 1.0f);
   void LoadLua(const std::filesystem::path& path);
