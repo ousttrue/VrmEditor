@@ -154,10 +154,28 @@ Accessor::Create<uint32_t>()
 }
 template<>
 inline Accessor
+Accessor::Create<float>()
+{
+  return Accessor{
+    .Type = Type::SCALAR,
+    .ComponentType = ComponentType::FLOAT,
+  };
+}
+template<>
+inline Accessor
 Accessor::Create<DirectX::XMFLOAT3>()
 {
   return Accessor{
     .Type = Type::VEC3,
+    .ComponentType = ComponentType::FLOAT,
+  };
+}
+template<>
+inline Accessor
+Accessor::Create<DirectX::XMFLOAT4>()
+{
+  return Accessor{
+    .Type = Type::VEC4,
     .ComponentType = ComponentType::FLOAT,
   };
 }

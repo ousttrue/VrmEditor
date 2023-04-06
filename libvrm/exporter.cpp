@@ -214,6 +214,95 @@ Exporter::ExportBuffersViewsAccessors(const Scene& scene)
   }
 }
 
+struct AnimationSampler
+{
+  uint32_t Input;
+  uint32_t Output;
+  AnimationInterpolationModes Interpolation;
+};
+
+struct AnimationChannel
+{
+  uint32_t Sampler;
+  uint32_t Node;
+  AnimationTargets Target;
+};
+
+struct AnimationExporter
+{
+  BinWriter& m_binWriter;
+  std::vector<AnimationSampler> AnimationSamplers;
+  std::vector<AnimationChannel> AnimationChannels;
+
+  AnimationExporter(BinWriter& binWriter)
+    : m_binWriter(binWriter)
+  {
+  }
+
+  template<typename T>
+  uint32_t ExportAnimationSampler(
+    std::span<const float> times,
+    std::span<const T> values,
+    AnimationInterpolationModes mode = AnimationInterpolationModes::LINEAR)
+  {
+    auto index = AnimationSamplers.size();
+    auto input_index =
+      m_binWriter.PushAccessor<const float>({ times.data(), times.size() });
+    auto output_index =
+      m_binWriter.PushAccessor<const T>({ values.data(), values.size() });
+
+    AnimationSamplers.push_back({
+      .Input = input_index,
+      .Output = output_index,
+      .Interpolation = mode,
+    });
+
+    return index;
+  }
+
+  void ExportAnimationTranslation(uint32_t node,
+                                  const Curve<DirectX::XMFLOAT3>& curve)
+  {
+    auto sampler =
+      ExportAnimationSampler<DirectX::XMFLOAT3>(curve.Times, curve.Values);
+    ExportAnimationChannel(sampler, node, AnimationTargets::TRANSLATION);
+  }
+
+  void ExportAnimationRotation(uint32_t node,
+                               const Curve<DirectX::XMFLOAT4>& curve)
+  {
+    auto sampler =
+      ExportAnimationSampler<DirectX::XMFLOAT4>(curve.Times, curve.Values);
+    ExportAnimationChannel(sampler, node, AnimationTargets::ROTATION);
+  }
+
+  void ExportAnimationScale(uint32_t node,
+                            const Curve<DirectX::XMFLOAT3>& curve)
+  {
+    auto sampler =
+      ExportAnimationSampler<DirectX::XMFLOAT3>(curve.Times, curve.Values);
+    ExportAnimationChannel(sampler, node, AnimationTargets::SCALE);
+  }
+
+  void ExportAnimationWeights(uint32_t node, const WeightsCurve& curve)
+  {
+    // auto sampler =
+    //   ExportAnimationSampler<DirectX::XMFLOAT3>(curve.Times, curve.Values);
+    // ExportAnimationChannel(sampler, node, AnimationTargets::SCALE);
+  }
+
+  void ExportAnimationChannel(uint32_t sampler,
+                              uint32_t node,
+                              AnimationTargets target)
+  {
+    AnimationChannels.push_back({
+      .Sampler = sampler,
+      .Node = node,
+      .Target = target,
+    });
+  }
+};
+
 void
 Exporter::ExportAnimations(const Scene& scene)
 {
@@ -222,56 +311,66 @@ Exporter::ExportAnimations(const Scene& scene)
   }
 
   m_writer.key("animations");
-  {
-    m_writer.array_open();
-    for (auto& animation : scene.m_animations) {
-      m_writer.object_open();
+  m_writer.array_open();
 
-      for (auto& [k, v] : animation->m_translationMap) {
-        ExportAnimationTranslation(scene, k, v);
-      }
-      for (auto& [k, v] : animation->m_rotationMap) {
-        ExportAnimationRotation(scene, k, v);
-      }
-      for (auto& [k, v] : animation->m_scaleMap) {
-        ExportAnimationScale(scene, k, v);
-      }
-      for (auto& [k, v] : animation->m_weightsMap) {
-        ExportAnimationWeights(scene, k, v);
-      }
+  // perpare
+  for (auto& animation : scene.m_animations) {
+    AnimationExporter animationExporter(m_binWriter);
 
-      m_writer.object_close();
+    for (auto& [k, v] : animation->m_translationMap) {
+      animationExporter.ExportAnimationTranslation(k, v);
     }
-    m_writer.array_close();
+    for (auto& [k, v] : animation->m_rotationMap) {
+      animationExporter.ExportAnimationRotation(k, v);
+    }
+    for (auto& [k, v] : animation->m_scaleMap) {
+      animationExporter.ExportAnimationScale(k, v);
+    }
+    for (auto& [k, v] : animation->m_weightsMap) {
+      animationExporter.ExportAnimationWeights(k, v);
+    }
+
+    m_writer.object_open();
+    {
+      m_writer.key("name");
+      m_writer.value(animation->m_name);
+
+      m_writer.key("samplers");
+      m_writer.array_open();
+      for (auto& sampler : animationExporter.AnimationSamplers) {
+        m_writer.object_open();
+        m_writer.key("input");
+        m_writer.value(sampler.Input);
+        m_writer.key("output");
+        m_writer.value(sampler.Output);
+        m_writer.key("interpolation");
+        m_writer.value(
+          AnimationInterpolationModeNames[(int)sampler.Interpolation]);
+        m_writer.object_close();
+      }
+      m_writer.array_close();
+
+      m_writer.key("channels");
+      m_writer.array_open();
+      for (auto& channel : animationExporter.AnimationChannels) {
+        m_writer.object_open();
+        m_writer.key("sampler");
+        m_writer.value(channel.Sampler);
+        m_writer.key("target");
+        m_writer.object_open();
+        m_writer.key("node");
+        m_writer.value(channel.Node);
+        m_writer.key("path");
+        m_writer.value(AnimationTargetNames[(int)channel.Target]);
+        m_writer.object_close();
+        m_writer.object_close();
+      }
+      m_writer.array_close();
+    }
+    m_writer.object_close();
   }
-}
 
-void
-Exporter::ExportAnimationTranslation(const Scene& scene,
-                                     uint32_t node,
-                                     const Curve<DirectX::XMFLOAT3>& curve)
-{
-}
-
-void
-Exporter::ExportAnimationRotation(const Scene& scene,
-                                  uint32_t node,
-                                  const Curve<DirectX::XMFLOAT4>& curve)
-{
-}
-
-void
-Exporter::ExportAnimationScale(const Scene& scene,
-                               uint32_t node,
-                               const Curve<DirectX::XMFLOAT3>& curve)
-{
-}
-
-void
-Exporter::ExportAnimationWeights(const Scene& scene,
-                                 uint32_t node,
-                                 const WeightsCurve& curve)
-{
+  m_writer.array_close();
 }
 
 }

@@ -7,13 +7,43 @@
 #include <vector>
 
 namespace gltf {
-template <typename T> struct Curve {
+
+enum class AnimationTargets
+{
+  TRANSLATION,
+  ROTATION,
+  SCALE,
+  WEIGHTS,
+};
+static const char* AnimationTargetNames[]{
+  "translation",
+  "rotation",
+  "scale",
+  "weights",
+};
+
+enum class AnimationInterpolationModes
+{
+  LINEAR,
+  STEP,
+  CUBICSPLINE,
+};
+static const char* AnimationInterpolationModeNames[]{
+  "LINEAR",
+  "STEP",
+  "CUBICSPLINE",
+};
+
+template<typename T>
+struct Curve
+{
   std::string Name;
   std::vector<float> Times;
   std::vector<T> Values;
   float MaxSeconds() const { return Times.empty() ? 0 : Times.back(); }
 
-  T GetValue(float time, bool repeat) const {
+  T GetValue(float time, bool repeat) const
+  {
     if (!repeat && time > Times.back()) {
       return Values.back();
     }
@@ -33,19 +63,22 @@ template <typename T> struct Curve {
   }
 };
 
-struct WeightsCurve {
+struct WeightsCurve
+{
   std::string Name;
   std::vector<float> Times;
   std::vector<float> Values;
   const uint32_t WeightsCount;
   float MaxSeconds() const { return Times.empty() ? 0 : Times.back(); }
 
-  std::span<const float> Span(size_t index) const {
+  std::span<const float> Span(size_t index) const
+  {
     auto begin = index * WeightsCount;
-    return {Values.data() + begin, Values.data() + begin + WeightsCount};
+    return { Values.data() + begin, Values.data() + begin + WeightsCount };
   }
 
-  std::span<const float> GetValue(float time, bool repeat) const {
+  std::span<const float> GetValue(float time, bool repeat) const
+  {
     if (!repeat && time > Times.back()) {
       return Span(Times.size() - 1);
     }
@@ -66,98 +99,116 @@ struct WeightsCurve {
   }
 };
 
-struct Animation {
+struct Animation
+{
   std::string m_name;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_translationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT4>> m_rotationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_scaleMap;
   std::unordered_map<uint32_t, WeightsCurve> m_weightsMap;
 
-  Time Duration() const {
+  Time Duration() const
+  {
     float sec = 0;
-    for (auto &[k, v] : m_translationMap) {
+    for (auto& [k, v] : m_translationMap) {
       sec = std::max(sec, v.MaxSeconds());
     }
-    for (auto &[k, v] : m_rotationMap) {
+    for (auto& [k, v] : m_rotationMap) {
       sec = std::max(sec, v.MaxSeconds());
     }
-    for (auto &[k, v] : m_scaleMap) {
+    for (auto& [k, v] : m_scaleMap) {
       sec = std::max(sec, v.MaxSeconds());
     }
-    for (auto &[k, v] : m_weightsMap) {
+    for (auto& [k, v] : m_weightsMap) {
       sec = std::max(sec, v.MaxSeconds());
     }
     return Time(sec);
   }
 
-  Animation(std::string_view name) : m_name(name) {}
-  Animation(const Animation &) = delete;
-  Animation &operator=(const Animation &) = delete;
+  Animation(std::string_view name)
+    : m_name(name)
+  {
+  }
+  Animation(const Animation&) = delete;
+  Animation& operator=(const Animation&) = delete;
 
-  void AddTranslation(uint32_t node_index, std::span<const float> times,
+  void AddTranslation(uint32_t node_index,
+                      std::span<const float> times,
                       std::span<const DirectX::XMFLOAT3> values,
-                      std::string_view name) {
+                      std::string_view name)
+  {
     m_translationMap.emplace(node_index,
                              Curve<DirectX::XMFLOAT3>{
-                                 .Name = {name.begin(), name.end()},
-                                 .Times = {times.begin(), times.end()},
-                                 .Values = {values.begin(), values.end()},
+                               .Name = { name.begin(), name.end() },
+                               .Times = { times.begin(), times.end() },
+                               .Values = { values.begin(), values.end() },
                              });
   }
 
-  void AddRotation(uint32_t node_index, std::span<const float> times,
+  void AddRotation(uint32_t node_index,
+                   std::span<const float> times,
                    std::span<const DirectX::XMFLOAT4> values,
-                   std::string_view name) {
+                   std::string_view name)
+  {
     m_rotationMap.emplace(node_index,
                           Curve<DirectX::XMFLOAT4>{
-                              .Name = {name.begin(), name.end()},
-                              .Times = {times.begin(), times.end()},
-                              .Values = {values.begin(), values.end()},
+                            .Name = { name.begin(), name.end() },
+                            .Times = { times.begin(), times.end() },
+                            .Values = { values.begin(), values.end() },
                           });
   }
 
-  void AddScale(uint32_t node_index, std::span<const float> times,
+  void AddScale(uint32_t node_index,
+                std::span<const float> times,
                 std::span<const DirectX::XMFLOAT3> values,
-                std::string_view name) {
-    m_scaleMap.emplace(node_index, Curve<DirectX::XMFLOAT3>{
-                                       .Name = {name.begin(), name.end()},
-                                       .Times = {times.begin(), times.end()},
-                                       .Values = {values.begin(), values.end()},
-                                   });
+                std::string_view name)
+  {
+    m_scaleMap.emplace(node_index,
+                       Curve<DirectX::XMFLOAT3>{
+                         .Name = { name.begin(), name.end() },
+                         .Times = { times.begin(), times.end() },
+                         .Values = { values.begin(), values.end() },
+                       });
   }
 
-  void AddWeights(uint32_t node_index, std::span<const float> times,
-                  std::span<const float> values, std::string_view name) {
+  void AddWeights(uint32_t node_index,
+                  std::span<const float> times,
+                  std::span<const float> values,
+                  std::string_view name)
+  {
     m_weightsMap.emplace(
-        node_index,
-        WeightsCurve{
-            .Name = {name.begin(), name.end()},
-            .Times = {times.begin(), times.end()},
-            .Values = {values.begin(), values.end()},
-            .WeightsCount = static_cast<uint32_t>(values.size() / times.size()),
-        });
+      node_index,
+      WeightsCurve{
+        .Name = { name.begin(), name.end() },
+        .Times = { times.begin(), times.end() },
+        .Values = { values.begin(), values.end() },
+        .WeightsCount = static_cast<uint32_t>(values.size() / times.size()),
+      });
   }
 
-  void Update(Time time, std::span<std::shared_ptr<Node>> nodes,
-              bool repeat = false) {
+  void Update(Time time,
+              std::span<std::shared_ptr<Node>> nodes,
+              bool repeat = false)
+  {
     float seconds = time.count();
-    for (auto &[k, v] : m_translationMap) {
+    for (auto& [k, v] : m_translationMap) {
       auto node = nodes[k];
       node->Transform.Translation = v.GetValue(seconds, repeat);
     }
-    for (auto &[k, v] : m_rotationMap) {
+    for (auto& [k, v] : m_rotationMap) {
       auto node = nodes[k];
       node->Transform.Rotation = v.GetValue(seconds, repeat);
     }
-    for (auto &[k, v] : m_scaleMap) {
+    for (auto& [k, v] : m_scaleMap) {
       auto node = nodes[k];
       node->Scale = v.GetValue(seconds, repeat);
     }
-    for (auto &[k, v] : m_weightsMap) {
+    for (auto& [k, v] : m_weightsMap) {
       auto node = nodes[k];
       auto values = v.GetValue(seconds, repeat);
       node->Instance->weights.assign(values.begin(), values.end());
     }
   }
 };
+
 } // namespace gltf
