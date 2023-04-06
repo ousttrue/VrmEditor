@@ -1,20 +1,11 @@
 #pragma once
 #include "docks/imlogger.h"
-#include <filesystem>
-#include <functional>
 #include <list>
 #include <memory>
-#include <string>
-#include <string_view>
-#include <vector>
-#include <vrm/humanoid.h>
-#include <vrm/humanpose.h>
 
 namespace gltf{
 struct Scene;
 }
-struct Bvh;
-class BvhSolver;
 class Gui;
 struct Timeline;
 struct AssetDir;

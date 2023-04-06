@@ -3,8 +3,9 @@
 #include <assert.h>
 #include <iostream>
 
+namespace bvh {
 void
-BvhSolver::Initialize(const std::shared_ptr<Bvh>& bvh)
+Solver::Initialize(const std::shared_ptr<Bvh>& bvh)
 {
   nodes_.clear();
   root_.reset();
@@ -18,9 +19,9 @@ BvhSolver::Initialize(const std::shared_ptr<Bvh>& bvh)
 }
 
 void
-BvhSolver::PushJoint(const BvhJoint& joint)
+Solver::PushJoint(const Joint& joint)
 {
-  auto node = std::make_shared<BvhNode>(joint);
+  auto node = std::make_shared<Node>(joint);
   nodes_.push_back(node);
   instances_.push_back({});
   localRotations.push_back({});
@@ -34,13 +35,13 @@ BvhSolver::PushJoint(const BvhJoint& joint)
 }
 
 void
-BvhSolver::CalcShape()
+Solver::CalcShape()
 {
   root_->CalcShape(scaling_);
 }
 
 std::span<DirectX::XMFLOAT4X4>
-BvhSolver::ResolveFrame(const BvhFrame& frame)
+Solver::ResolveFrame(const Frame& frame)
 {
   auto span = std::span(instances_);
   auto it = span.begin();
@@ -49,4 +50,5 @@ BvhSolver::ResolveFrame(const BvhFrame& frame)
   root_->ResolveFrame(frame, DirectX::XMMatrixIdentity(), scaling_, it, t);
   assert(it == span.end());
   return instances_;
+}
 }

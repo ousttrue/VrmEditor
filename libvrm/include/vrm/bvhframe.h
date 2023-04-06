@@ -4,19 +4,24 @@
 #include <ostream>
 #include <span>
 #include <string_view>
+#include "timeline.h"
 
-inline std::ostream &operator<<(std::ostream &os,
-                                const DirectX::XMFLOAT3 &offset) {
+namespace bvh {
+inline std::ostream&
+operator<<(std::ostream& os, const DirectX::XMFLOAT3& offset)
+{
   os << "[" << offset.x << ", " << offset.y << ", " << offset.z << "]";
   return os;
 }
 
-struct BvhTransform {
+struct Transform
+{
   DirectX::XMFLOAT4 Rotation;
   DirectX::XMFLOAT3 Translation;
 };
 
-enum class BvhChannelTypes {
+enum class ChannelTypes
+{
   None,
   Xposition,
   Yposition,
@@ -26,37 +31,41 @@ enum class BvhChannelTypes {
   Zrotation,
 };
 
-inline std::string_view to_str(BvhChannelTypes channelType) {
+inline std::string_view
+to_str(ChannelTypes channelType)
+{
   switch (channelType) {
-  case BvhChannelTypes::None:
-    return "None";
-  case BvhChannelTypes::Xposition:
-    return "Xp";
-  case BvhChannelTypes::Yposition:
-    return "Yp";
-  case BvhChannelTypes::Zposition:
-    return "Zp";
-  case BvhChannelTypes::Xrotation:
-    return "Xr";
-  case BvhChannelTypes::Yrotation:
-    return "Yr";
-  case BvhChannelTypes::Zrotation:
-    return "Zr";
-  default:
-    throw std::runtime_error("unknown");
+    case ChannelTypes::None:
+      return "None";
+    case ChannelTypes::Xposition:
+      return "Xp";
+    case ChannelTypes::Yposition:
+      return "Yp";
+    case ChannelTypes::Zposition:
+      return "Zp";
+    case ChannelTypes::Xrotation:
+      return "Xr";
+    case ChannelTypes::Yrotation:
+      return "Yr";
+    case ChannelTypes::Zrotation:
+      return "Zr";
+    default:
+      throw std::runtime_error("unknown");
   }
 }
 
-struct BvhChannels {
+struct Channels
+{
   DirectX::XMFLOAT3 init;
   size_t startIndex;
-  BvhChannelTypes types[6] = {};
-  BvhChannelTypes operator[](size_t index) const { return types[index]; }
-  BvhChannelTypes &operator[](size_t index) { return types[index]; }
-  size_t size() const {
+  ChannelTypes types[6] = {};
+  ChannelTypes operator[](size_t index) const { return types[index]; }
+  ChannelTypes& operator[](size_t index) { return types[index]; }
+  size_t size() const
+  {
     size_t i = 0;
     for (; i < 6; ++i) {
-      if (types[i] == BvhChannelTypes::None) {
+      if (types[i] == ChannelTypes::None) {
         break;
       }
     }
@@ -64,9 +73,11 @@ struct BvhChannels {
   }
 };
 
-inline std::ostream &operator<<(std::ostream &os, const BvhChannels channels) {
+inline std::ostream&
+operator<<(std::ostream& os, const Channels channels)
+{
   for (int i = 0; i < 6; ++i) {
-    if (channels[i] == BvhChannelTypes::None) {
+    if (channels[i] == ChannelTypes::None) {
       break;
     }
     if (i) {
@@ -77,12 +88,12 @@ inline std::ostream &operator<<(std::ostream &os, const BvhChannels channels) {
   return os;
 }
 
-using BvhTime = std::chrono::duration<float, std::ratio<1, 1>>;
-
-struct BvhFrame {
+struct Frame
+{
   int index;
-  BvhTime time;
+  Time time;
   std::span<const float> values;
 
-  BvhTransform Resolve(const BvhChannels &channels) const;
+  Transform Resolve(const Channels& channels) const;
 };
+}

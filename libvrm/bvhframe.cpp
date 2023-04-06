@@ -1,26 +1,27 @@
 #include "vrm/bvhframe.h"
 #include <numbers>
 
-BvhTransform
-BvhFrame::Resolve(const BvhChannels& channels) const
+namespace bvh {
+Transform
+Frame::Resolve(const Channels& channels) const
 {
-  BvhTransform t{
+  Transform t{
     .Rotation = { 0, 0, 0, 1 },
     .Translation = channels.init,
   };
   auto index = channels.startIndex;
   for (int ch = 0; ch < channels.size(); ++ch, ++index) {
     switch (channels.types[ch]) {
-      case BvhChannelTypes::Xposition:
+      case ChannelTypes::Xposition:
         t.Translation.x = values[index];
         break;
-      case BvhChannelTypes::Yposition:
+      case ChannelTypes::Yposition:
         t.Translation.y = values[index];
         break;
-      case BvhChannelTypes::Zposition:
+      case ChannelTypes::Zposition:
         t.Translation.z = values[index];
         break;
-      case BvhChannelTypes::Xrotation:
+      case ChannelTypes::Xrotation:
         DirectX::XMStoreFloat4(
           &t.Rotation,
           DirectX::XMQuaternionMultiply(
@@ -28,7 +29,7 @@ BvhFrame::Resolve(const BvhChannels& channels) const
               { 1, 0, 0 }, DirectX::XMConvertToRadians(values[index])),
             DirectX::XMLoadFloat4(&t.Rotation)));
         break;
-      case BvhChannelTypes::Yrotation:
+      case ChannelTypes::Yrotation:
         DirectX::XMStoreFloat4(
           &t.Rotation,
           DirectX::XMQuaternionMultiply(
@@ -36,7 +37,7 @@ BvhFrame::Resolve(const BvhChannels& channels) const
               { 0, 1, 0 }, DirectX::XMConvertToRadians(values[index])),
             DirectX::XMLoadFloat4(&t.Rotation)));
         break;
-      case BvhChannelTypes::Zrotation:
+      case ChannelTypes::Zrotation:
         DirectX::XMStoreFloat4(
           &t.Rotation,
           DirectX::XMQuaternionMultiply(
@@ -44,9 +45,10 @@ BvhFrame::Resolve(const BvhChannels& channels) const
               { 0, 0, 1 }, DirectX::XMConvertToRadians(values[index])),
             DirectX::XMLoadFloat4(&t.Rotation)));
         break;
-      case BvhChannelTypes::None:
+      case ChannelTypes::None:
         break;
     }
   }
   return t;
+}
 }

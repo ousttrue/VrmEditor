@@ -14,8 +14,8 @@ using OnPose = std::function<void(const vrm::HumanPose&)>;
 
 struct MotionSource
 {
-  std::shared_ptr<Bvh> Motion;
-  std::shared_ptr<BvhSolver> MotionSolver;
+  std::shared_ptr<bvh::Bvh> Motion;
+  std::shared_ptr<bvh::Solver> MotionSolver;
   std::vector<vrm::HumanBones> HumanBoneMap = {
     vrm::HumanBones::hips,          vrm::HumanBones::spine,
     vrm::HumanBones::chest,         vrm::HumanBones::neck,
@@ -42,12 +42,12 @@ struct MotionSource
                   float scaling,
                   const std::shared_ptr<Timeline>& timeline)
   {
-    Motion = Bvh::ParseFile(path);
+    Motion = bvh::Bvh::ParseFile(path);
     if (!Motion) {
       return false;
     }
 
-    MotionSolver = std::make_shared<BvhSolver>();
+    MotionSolver = std::make_shared<bvh::Solver>();
     MotionSolver->Initialize(Motion);
 
     auto track = timeline->AddTrack("bvh", Motion->Duration());
