@@ -4,7 +4,7 @@
 #include <functional>
 #include <list>
 #include <memory>
-#include <vrm/bvh.h>
+#include <vrm/_bvh.h>
 #include <vrm/bvhsolver.h>
 #include <vrm/humanbones.h>
 #include <vrm/humanpose.h>

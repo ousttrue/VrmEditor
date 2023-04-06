@@ -8,7 +8,7 @@
 #include <optional>
 #include <stack>
 #include <stdlib.h>
-#include <vrm/Bvh.h>
+#include <vrm/_bvh.h>
 
 template<typename T>
 std::optional<T>
