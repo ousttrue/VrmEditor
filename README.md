@@ -4,14 +4,13 @@ read, write, animation test.
 
 ## features
 
-### import/export
+### import
 
 - [x] gltf import
 - [x] glb
   - [x] import
     - [ ] draco
     - [ ] quantity
-  - [ ] export
   - [ ] vrm-0.x
     - [x] expression. morphtarget
     - [ ] expression. material
@@ -30,13 +29,19 @@ read, write, animation test.
     - [ ] constraint
   - [ ] vrm-animation
     - [ ] import
-    - [ ] export
+    - [x] export
     - [ ] humanoid
-    - [ ] expression
+    - [x] expression
     - [ ] lookat
 - [x] bvh import
   - [ ] humanoid mapping
 - [ ] fbx import
+
+### export
+
+- [x] glb
+- [ ] vrm-0.x
+- [ ] vrm-1.0
 
 ### material
 
@@ -54,12 +59,6 @@ read, write, animation test.
 - [ ] linear interpolation
 - [ ] cubic interpolation
 
-### write
-
-- [ ] glb
-- [ ] vrm-0.x
-- [ ] vrm-1.0
-
 ## UI
 
 ### imgui / configuration
@@ -70,15 +69,12 @@ read, write, animation test.
 
 ### assets
 
-- [ ]  : folder
-- [ ]  : gltf
-- [ ] 󰕣 : glb
-- [ ] 󰋦 : vrm
+- [x]  : gltf
+- [x] 󰕣 : glb
+- [x] 󰋦 : vrm
 - [ ] 󰕠 : fbx
-- [ ] 󰑮 : bvh
-- [ ]  : image
-- [ ]  : text
-- [ ] sort
+- [x] 󰑮 : bvh
+- [x] sort
 
 ### 3D view
 
@@ -104,11 +100,11 @@ read, write, animation test.
 
 ### scene
 
-- [ ] 󰕣 : mesh icon
-- [ ] 󰂹 : humanoid icon
-- [ ] 󰚟 : spring icon
+- [x] 󰕣 : mesh icon
+- [x] 󰂹 : humanoid icon
+- [x] 󰚟 : spring icon
 - [ ] 󱥔 : spring collider icon
-- [ ]  : morph
+- [x]  : morph
 - [ ] selected
 
 ### humanoid
@@ -118,8 +114,8 @@ read, write, animation test.
   - [ ] 󱍞 : head
   - [ ] 󰹆 : hand-left
   - [ ] 󰹇 : hand-right
-- [ ] node assign
-- [ ] pose input stream
+- [ ] bone assign
+- [ ] pose retarget
 
 ### vrm
 
