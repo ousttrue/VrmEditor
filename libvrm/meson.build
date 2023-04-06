@@ -13,6 +13,7 @@ vrm_lib = static_library(
         'bvhframe.cpp',
         'bvhnode.cpp',
         'bvhsolver.cpp',
+        'bvhsource.cpp',
     ],
     include_directories: vrm_inc,
     dependencies: dependencies,

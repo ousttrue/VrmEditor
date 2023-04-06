@@ -131,7 +131,7 @@ draw(const GraphNode& node, int id)
 
 void
 MotionDock::Create(const AddDockFunc& addDock,
-                   const std::shared_ptr<MotionSource>& motion_source)
+                   const std::shared_ptr<bvh::MotionSource>& motion_source)
 {
   auto rt = std::make_shared<RenderTarget>(std::make_shared<OrbitView>());
   rt->color[0] = 0.4f;

@@ -1,4 +1,4 @@
-#include "vrm/bvh_frame.h"
+#include "vrm/bvhframe.h"
 #include <numbers>
 
 namespace bvh {

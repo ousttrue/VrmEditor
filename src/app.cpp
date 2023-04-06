@@ -12,6 +12,7 @@
 #include "luahost.h"
 #include "platform.h"
 #include <vrm/animation.h>
+#include <vrm/bvhsource.h>
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
@@ -24,13 +25,7 @@ App::App()
   m_scene = std::make_shared<gltf::Scene>();
   m_view = std::make_shared<OrbitView>();
   m_timeline = std::make_shared<Timeline>();
-  m_motion = std::make_shared<MotionSource>();
-
-  // pose to scene
-  m_motion->PoseCallbacks.push_back(
-    [scene = m_scene](const vrm::HumanPose& pose) {
-      scene->SetHumanPose(pose);
-    });
+  m_motion = std::make_shared<bvh::MotionSource>(m_scene);
 
   m_platform = std::make_shared<Platform>();
   auto window =

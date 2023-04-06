@@ -1,5 +1,5 @@
 #pragma once
-#include "bvh_frame.h"
+#include "bvhframe.h"
 #include <chrono>
 #include <filesystem>
 #include <iostream>

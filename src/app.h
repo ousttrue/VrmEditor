@@ -3,8 +3,11 @@
 #include <list>
 #include <memory>
 
-namespace gltf{
+namespace gltf {
 struct Scene;
+}
+namespace bvh {
+struct MotionSource;
 }
 class Gui;
 struct Timeline;
@@ -13,7 +16,6 @@ class LuaEngine;
 class Platform;
 class OrbitView;
 class ImLogger;
-struct MotionSource;
 class Gl3Renderer;
 
 class App
@@ -29,7 +31,7 @@ class App
   std::shared_ptr<OrbitView> m_view;
   std::shared_ptr<Gl3Renderer> m_renderer;
 
-  std::shared_ptr<MotionSource> m_motion;
+  std::shared_ptr<bvh::MotionSource> m_motion;
 
   App();
 
