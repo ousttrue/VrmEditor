@@ -267,12 +267,12 @@ Scene::ParseMaterial(int i, const nlohmann::json& material)
   ss << "material" << i;
   auto ptr = std::make_shared<gltf::Material>(material.value("name", ss.str()));
 
-  auto& textures = m_gltf.Json["textures"];
   if (has(material, "pbrMetallicRoughness")) {
     auto pbrMetallicRoughness = material.at("pbrMetallicRoughness");
     if (has(pbrMetallicRoughness, "baseColorTexture")) {
       auto& baseColorTexture = pbrMetallicRoughness.at("baseColorTexture");
       int texture_index = baseColorTexture.at("index");
+      auto& textures = m_gltf.Json.at("textures");
       auto texture = textures.at(texture_index);
       int image_index = texture.at("source");
       ptr->texture = m_images[image_index];
