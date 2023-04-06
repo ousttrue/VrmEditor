@@ -1,4 +1,5 @@
 #pragma once
+#include "animation.h"
 #include "jsons.h"
 #include "scene.h"
 #include <span>
@@ -22,7 +23,20 @@ struct Exporter
   void ExportMeshes(const Scene& scene);
   void ExportNodesScenes(const Scene& scene);
   void ExportBuffersViewsAccessors(const Scene& scene);
+
   void ExportAnimations(const Scene& scene);
+  void ExportAnimationTranslation(const Scene& scene,
+                                  uint32_t node,
+                                  const Curve<DirectX::XMFLOAT3>& curve);
+  void ExportAnimationRotation(const Scene& scene,
+                               uint32_t node,
+                               const Curve<DirectX::XMFLOAT4>& curve);
+  void ExportAnimationScale(const Scene& scene,
+                            uint32_t node,
+                            const Curve<DirectX::XMFLOAT3>& curve);
+  void ExportAnimationWeights(const Scene& scene,
+                              uint32_t node,
+                              const WeightsCurve& curve);
 };
 
 }

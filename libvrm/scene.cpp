@@ -546,7 +546,7 @@ Scene::ParseAnimation(int i, const nlohmann::json& animation)
       int output_index = sampler.at("output");
       if (path == "translation") {
         if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
-          ptr->addTranslation(node_index,
+          ptr->AddTranslation(node_index,
                               *times,
                               *values,
                               m_nodes[node_index]->Name + "-translation");
@@ -555,7 +555,7 @@ Scene::ParseAnimation(int i, const nlohmann::json& animation)
         }
       } else if (path == "rotation") {
         if (auto values = m_gltf.accessor<DirectX::XMFLOAT4>(output_index)) {
-          ptr->addRotation(node_index,
+          ptr->AddRotation(node_index,
                            *times,
                            *values,
                            m_nodes[node_index]->Name + "-rotation");
@@ -564,7 +564,7 @@ Scene::ParseAnimation(int i, const nlohmann::json& animation)
         }
       } else if (path == "scale") {
         if (auto values = m_gltf.accessor<DirectX::XMFLOAT3>(output_index)) {
-          ptr->addScale(
+          ptr->AddScale(
             node_index, *times, *values, m_nodes[node_index]->Name + "-scale");
         } else {
           return std::unexpected{ values.error() };
@@ -577,7 +577,7 @@ Scene::ParseAnimation(int i, const nlohmann::json& animation)
             if (values->size() != mesh->m_morphTargets.size() * times->size()) {
               return std::unexpected{ "animation-weights: size not match" };
             }
-            ptr->addWeights(
+            ptr->AddWeights(
               node_index, *times, *values, node->Name + "-weights");
           } else {
             return std::unexpected{ "animation-weights: no node.mesh" };

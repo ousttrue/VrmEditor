@@ -93,10 +93,10 @@ App::LoadModel(const std::filesystem::path& path)
   if (auto result = m_scene->LoadPath(path)) {
     // bind time line
     for (auto& animation : m_scene->m_animations) {
-      auto track = m_timeline->AddTrack("gltf", animation->duration());
+      auto track = m_timeline->AddTrack("gltf", animation->Duration());
       track->Callbacks.push_back(
         [animation, scene = m_scene](auto time, bool repeat) {
-          animation->update(time, scene->m_nodes, repeat);
+          animation->Update(time, scene->m_nodes, repeat);
         });
 
       // first animation only

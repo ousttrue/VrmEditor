@@ -1,8 +1,8 @@
 #include "vrm/exporter.h"
+#include "vrm/animation.h"
 #include "vrm/glb.h"
 #include "vrm/jsons.h"
 #include "vrm/scene.h"
-#include "vrm/animation.h"
 
 namespace gltf {
 
@@ -226,12 +226,52 @@ Exporter::ExportAnimations(const Scene& scene)
     m_writer.array_open();
     for (auto& animation : scene.m_animations) {
       m_writer.object_open();
-      // samplers
-      // channels
+
+      for (auto& [k, v] : animation->m_translationMap) {
+        ExportAnimationTranslation(scene, k, v);
+      }
+      for (auto& [k, v] : animation->m_rotationMap) {
+        ExportAnimationRotation(scene, k, v);
+      }
+      for (auto& [k, v] : animation->m_scaleMap) {
+        ExportAnimationScale(scene, k, v);
+      }
+      for (auto& [k, v] : animation->m_weightsMap) {
+        ExportAnimationWeights(scene, k, v);
+      }
+
       m_writer.object_close();
     }
     m_writer.array_close();
   }
+}
+
+void
+Exporter::ExportAnimationTranslation(const Scene& scene,
+                                     uint32_t node,
+                                     const Curve<DirectX::XMFLOAT3>& curve)
+{
+}
+
+void
+Exporter::ExportAnimationRotation(const Scene& scene,
+                                  uint32_t node,
+                                  const Curve<DirectX::XMFLOAT4>& curve)
+{
+}
+
+void
+Exporter::ExportAnimationScale(const Scene& scene,
+                               uint32_t node,
+                               const Curve<DirectX::XMFLOAT3>& curve)
+{
+}
+
+void
+Exporter::ExportAnimationWeights(const Scene& scene,
+                                 uint32_t node,
+                                 const WeightsCurve& curve)
+{
 }
 
 }
