@@ -63,15 +63,13 @@ struct Scene
   std::vector<std::shared_ptr<Node>> m_roots;
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
-
   std::shared_ptr<vrm::v0::Vrm> m_vrm0;
   std::shared_ptr<vrm::v1::Vrm> m_vrm1;
   std::shared_ptr<vrm::animation::Animation> m_vrma;
 
-  // runtime
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
-  std::list<std::function<void()>> m_sceneUpdated;
+  std::list<std::function<void(const Scene &scene)>> m_sceneUpdated;
 
   Scene();
   Scene(const Scene&) = delete;
@@ -89,6 +87,14 @@ struct Scene
     m_animations.clear();
     m_sceneUpdated.clear();
     m_gltf = {};
+  }
+
+  void RaiseSceneUpdated()
+  {
+    for(auto &callback: m_sceneUpdated)
+    {
+      callback(*this);
+    }
   }
 
   int GetNodeIndex(const std::shared_ptr<gltf::Node>& node) const
@@ -152,12 +158,5 @@ private:
     const nlohmann::json& animation);
   std::expected<std::shared_ptr<vrm::v0::Vrm>, std::string> ParseVrm0();
   std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string> ParseVrm1();
-
-public:
-  void SetBvh(const std::shared_ptr<bvh::Bvh>& bvh);
-  void PushJoint(const bvh::Joint& joint);
-  void CalcShape(const std::shared_ptr<bvh::Bvh>& bvh,
-                 const std::shared_ptr<gltf::Node>& node,
-                 float scaling);
 };
 }

@@ -128,9 +128,20 @@ struct EuclideanTransform
     return true;
   }
 
+  DirectX::XMMATRIX ScalingTranslationMatrix(float scaling) const
+  {
+    auto r =
+      DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&Rotation));
+    auto t = DirectX::XMMatrixTranslation(Translation.x * scaling,
+                                          Translation.y * scaling,
+                                          Translation.z * scaling);
+    return r * t;
+  }
+
   DirectX::XMMATRIX Matrix() const
   {
-    auto r = DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&Rotation));
+    auto r =
+      DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&Rotation));
     auto t =
       DirectX::XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
     return DirectX::XMMatrixMultiply(r, t);

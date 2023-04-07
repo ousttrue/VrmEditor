@@ -157,17 +157,18 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
   if (!bvh) {
     return false;
   }
-  m_motion->SetBvh(bvh);
+  bvh::SetBvh(m_motion, bvh);
+  m_cuber->CalcShape(m_motion->m_roots[0], bvh->GuessScaling());
 
   // update motion scene
   auto track = m_timeline->AddTrack("bvh", bvh->Duration());
-  track->Callbacks.push_back(
-    [bvh, scene = m_motion, cuber = m_cuber](auto time, bool repeat) {
-      bvh::ResolveFrame(scene, bvh, time);
-      for (auto& callback : scene->m_sceneUpdated) {
-        callback();
-      }
-    });
+  track->Callbacks.push_back([bvh, scene = m_motion](auto time, bool repeat) {
+    bvh::ResolveFrame(scene, bvh, time);
+    scene->RaiseSceneUpdated();
+  });
+
+  m_motion->m_sceneUpdated.push_back(
+    [cuber = m_cuber](const gltf::Scene& scene) { cuber->Update(scene); });
 
   if (auto map = FindHumanBoneMap(*bvh)) {
     // assign human bone
@@ -182,20 +183,19 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
 
     // retarget human pose
     m_motion->m_sceneUpdated.push_back(
-      [src = m_motion,
-       dst = m_scene,
+      [dst = m_scene,
        humanBoneMap = std::vector<vrm::HumanBones>(),
        rotations = std::vector<DirectX::XMFLOAT4>(),
-       scaling = bvh->GuessScaling()]() mutable {
+       scaling = bvh->GuessScaling()](const gltf::Scene& src) mutable {
         humanBoneMap.clear();
         rotations.clear();
-        for (auto& node : src->m_nodes) {
+        for (auto& node : src.m_nodes) {
           if (auto humanoid = node->Humanoid) {
             humanBoneMap.push_back(humanoid->HumanBone);
             rotations.push_back(node->Transform.Rotation);
           }
         }
-        auto& hips = src->m_roots[0]->Transform.Translation;
+        auto& hips = src.m_roots[0]->Transform.Translation;
         dst->SetHumanPose({ .RootPosition = { hips.x * scaling,
                                               hips.y * scaling,
                                               hips.z * scaling },
