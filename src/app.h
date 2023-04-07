@@ -32,7 +32,7 @@ class App
   std::shared_ptr<OrbitView> m_view;
   std::shared_ptr<Gl3Renderer> m_renderer;
 
-  std::shared_ptr<bvh::MotionSource> m_motion;
+  std::shared_ptr<gltf::Scene> m_motion;
 
   struct HumanBoneMap
   {

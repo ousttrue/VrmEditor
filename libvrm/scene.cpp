@@ -1,5 +1,6 @@
 #include "vrm/scene.h"
 #include "vrm/animation.h"
+#include "vrm/bvh.h"
 #include "vrm/dmath.h"
 #include "vrm/glb.h"
 #include "vrm/material.h"
@@ -980,5 +981,137 @@ Scene::GetBoundingBox() const
     }
   }
   return bb;
+}
+
+void
+Scene::SetBvh(const std::shared_ptr<bvh::Bvh>& bvh)
+{
+  // m_bvh = bvh;
+  // Scene = std::make_shared<gltf::Scene>();
+  Instances.clear();
+
+  // m_scaling = bvh->GuessScaling();
+  for (auto& joint : bvh->joints) {
+    PushJoint(joint);
+  };
+  CalcShape(bvh, m_roots[0], bvh->GuessScaling());
+}
+
+void
+Scene::PushJoint(const bvh::Joint& joint)
+{
+  auto node = std::make_shared<gltf::Node>(joint.name);
+
+  Instances.push_back({});
+  LocalRotations.push_back({});
+
+  m_nodes.push_back(node);
+  if (m_nodes.size() == 1) {
+    m_roots.push_back(node);
+  } else {
+    auto parent = m_nodes[joint.parent];
+    gltf::Node::AddChild(parent, node);
+  }
+}
+
+const float DEFAULT_SIZE = 0.04f;
+
+void
+Scene::CalcShape(const std::shared_ptr<bvh::Bvh>& bvh,
+                 const std::shared_ptr<gltf::Node>& node,
+                 float scaling)
+{
+  DirectX::XMStoreFloat4x4(
+    &node->ShapeMatrix,
+    DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
+
+  auto index = GetNodeIndex(node);
+  auto isRoot_ = index == 0;
+  if (!isRoot_) {
+    std::shared_ptr<gltf::Node> tail;
+    switch (node->Children.size()) {
+      case 0:
+        return;
+
+      case 1:
+        tail = node->Children.front();
+        break;
+
+      default:
+        for (auto& child : node->Children) {
+          if (!tail) {
+            tail = child;
+          } else if (std::abs(bvh->joints[GetNodeIndex(child)].localOffset.x) <
+                     std::abs(bvh->joints[GetNodeIndex(tail)].localOffset.x)) {
+            // coose center node
+            tail = child;
+          }
+        }
+    }
+
+    auto _Y = DirectX::XMFLOAT3(
+      bvh->joints[GetNodeIndex(tail)].localOffset.x * scaling,
+      bvh->joints[GetNodeIndex(tail)].localOffset.y * scaling,
+      bvh->joints[GetNodeIndex(tail)].localOffset.z * scaling);
+    auto Y = DirectX::XMLoadFloat3(&_Y);
+
+    auto length = DirectX::XMVectorGetX(DirectX::XMVector3Length(Y));
+    // std::cout << name_ << "=>" << tail->name_ << "=" << length <<
+    // std::endl;
+    Y = DirectX::XMVector3Normalize(Y);
+    auto _Z = DirectX::XMFLOAT3(0, 0, 1);
+    auto Z = DirectX::XMLoadFloat3(&_Z);
+    auto X = DirectX::XMVector3Cross(Y, Z);
+    Z = DirectX::XMVector3Cross(X, Y);
+
+    auto center = DirectX::XMMatrixTranslation(0, 0.5f, 0);
+    auto scale = DirectX::XMMatrixScaling(DEFAULT_SIZE, length, DEFAULT_SIZE);
+    DirectX::XMFLOAT4 _(0, 0, 0, 1);
+    auto r = DirectX::XMMATRIX(X, Y, Z, DirectX::XMLoadFloat4(&_));
+
+    auto shape = center * scale * r;
+    DirectX::XMStoreFloat4x4(&node->ShapeMatrix, shape);
+  }
+
+  for (auto& child : node->Children) {
+    CalcShape(bvh, child, scaling);
+  }
+}
+
+// [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
+void
+Scene::ResolveFrame(const std::shared_ptr<bvh::Bvh>& bvh,
+                    std::shared_ptr<gltf::Node>& node,
+                    const bvh::Frame& frame,
+                    DirectX::XMMATRIX m,
+                    float scaling,
+                    std::span<DirectX::XMFLOAT4X4>::iterator& out,
+                    std::span<DirectX::XMFLOAT4>::iterator& outLocal)
+{
+  auto joint = &bvh->joints[GetNodeIndex(node)];
+  auto transform = frame.Resolve(joint->channels);
+
+  auto t = DirectX::XMMatrixTranslation(transform.Translation.x * scaling,
+                                        transform.Translation.y * scaling,
+                                        transform.Translation.z * scaling);
+  // auto r =
+  //     DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3
+  //     *)&transform.Rotation);
+  auto r = DirectX::XMMatrixRotationQuaternion(
+    DirectX::XMLoadFloat4(&transform.Rotation));
+
+  // DirectX::XMStoreFloat4(&*outLocal, DirectX::XMQuaternionRotationMatrix(r));
+  *outLocal = transform.Rotation;
+
+  auto local = r * t;
+
+  m = local * m;
+  auto shape = DirectX::XMLoadFloat4x4(&node->ShapeMatrix);
+  DirectX::XMStoreFloat4x4(&*out, shape * m);
+  ++out;
+  ++outLocal;
+  for (auto& child : node->Children) {
+    ResolveFrame(bvh, child, frame, m, scaling, out, outLocal);
+  }
 }
 }

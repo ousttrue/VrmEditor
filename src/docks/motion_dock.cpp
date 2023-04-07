@@ -11,7 +11,6 @@
 #include <imnodes.h>
 #include <iostream>
 #include <vrm/bvh.h>
-#include <vrm/bvhsolver.h>
 #include <vrm/humanbones.h>
 #include <vrm/humanpose.h>
 
@@ -131,7 +130,7 @@ draw(const GraphNode& node, int id)
 
 void
 MotionDock::Create(const AddDockFunc& addDock,
-                   const std::shared_ptr<bvh::MotionSource>& motion_source)
+                   const std::shared_ptr<gltf::Scene>& scene)
 {
   auto rt = std::make_shared<RenderTarget>(std::make_shared<OrbitView>());
   rt->color[0] = 0.4f;
@@ -144,16 +143,12 @@ MotionDock::Create(const AddDockFunc& addDock,
   std::vector<grapho::LineVertex> lines;
   cuber::PushGrid(lines);
 
-  rt->render =
-    [cuber, liner, lines, motion_source](const ViewProjection& camera) {
-      if (motion_source->MotionSolver) {
-        cuber->Render(camera.projection,
-                      camera.view,
-                      motion_source->MotionSolver->Instances.data(),
-                      motion_source->MotionSolver->Instances.size());
-      }
-      liner->Render(camera.projection, camera.view, lines);
-    };
+  rt->render = [cuber, liner, lines, scene](const ViewProjection& camera) {
+    cuber->Render(camera.projection,
+                  camera.view,
+                  scene->Instances.data(),
+                  scene->Instances.size());
+  };
 
   auto gl3r = std::make_shared<Gl3Renderer>();
 

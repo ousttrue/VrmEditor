@@ -12,9 +12,9 @@
 #include "luahost.h"
 #include "platform.h"
 #include <vrm/animation.h>
-#include <vrm/bvhsolver.h>
-#include <vrm/bvhsource.h>
+#include <vrm/bvh.h>
 #include <vrm/node.h>
+#include <vrm/timeline.h>
 
 const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
@@ -37,7 +37,7 @@ App::App()
   m_scene = std::make_shared<gltf::Scene>();
   m_view = std::make_shared<OrbitView>();
   m_timeline = std::make_shared<Timeline>();
-  m_motion = std::make_shared<bvh::MotionSource>(m_scene);
+  m_motion = std::make_shared<gltf::Scene>();
 
   m_platform = std::make_shared<Platform>();
   auto window =
@@ -146,14 +146,19 @@ App::LoadModel(const std::filesystem::path& path)
 bool
 App::LoadMotion(const std::filesystem::path& path, float scaling)
 {
-  Log(LogLevel::Info) << path;
-  if (!m_motion->LoadMotion(path, scaling, m_timeline)) {
+  Log(LogLevel::Info) << "LoadMotion: " << path;
+  m_motion->Clear();
+
+  auto bvh = bvh::Bvh::ParseFile(path);
+  if (!bvh) {
     return false;
   }
 
+  // auto solver = std::make_shared<bvh::Solver>();
+  m_motion->SetBvh(bvh);
   // search human bone map
   for (auto& map : m_humanBoneMapList) {
-    for (auto& node : m_motion->MotionSolver->Scene->m_nodes) {
+    for (auto& node : m_motion->m_nodes) {
       auto found = map->NameBoneMap.find(node->Name);
       if (found != map->NameBoneMap.end()) {
         node->Humanoid = gltf::NodeHumanoidInfo{
@@ -162,6 +167,37 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
       }
     }
   }
+
+  std::vector<vrm::HumanBones> humanBoneMap;
+  for (auto& node : m_motion->m_nodes) {
+    humanBoneMap.push_back(node->Humanoid->HumanBone);
+  }
+
+  auto track = m_timeline->AddTrack("bvh", bvh->Duration());
+  track->Callbacks.push_back(
+    [bvh, humanBoneMap, src = m_motion, dst = m_scene](auto time, bool repeat) {
+      auto index = bvh->TimeToIndex(time);
+      auto frame = bvh->GetFrame(index);
+      auto span = std::span(src->Instances);
+      auto it = span.begin();
+      auto t_span = std::span(src->LocalRotations);
+      auto t = t_span.begin();
+
+      src->ResolveFrame(bvh,
+                        src->m_roots[0],
+                        frame,
+                        DirectX::XMMatrixIdentity(),
+                        bvh->GuessScaling(),
+                        it,
+                        t);
+      assert(it == span.end());
+
+      // human pose to scene
+      auto& hips = src->Instances[0];
+      dst->SetHumanPose({ .RootPosition = { hips._41, hips._42, hips._43 },
+                          .Bones = humanBoneMap,
+                          .Rotations = src->LocalRotations });
+    });
 
   return true;
 }

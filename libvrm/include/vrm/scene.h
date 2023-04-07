@@ -1,8 +1,8 @@
 #pragma once
 #include "gltf.h"
+#include "humanpose.h"
 #include "scenetypes.h"
 #include "springbone.h"
-#include "humanpose.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <expected>
@@ -20,6 +20,11 @@
 #include <unordered_map>
 #include <vector>
 
+namespace bvh {
+struct Bvh;
+struct Joint;
+struct Frame;
+}
 namespace vrm {
 namespace v0 {
 struct Vrm;
@@ -66,6 +71,10 @@ struct Scene
   // runtime
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
+  Scene();
+  Scene(const Scene&) = delete;
+  Scene& operator=(const Scene&) = delete;
+
   void Clear()
   {
     m_vrm0 = nullptr;
@@ -79,9 +88,15 @@ struct Scene
     m_gltf = {};
   }
 
-  Scene();
-  Scene(const Scene&) = delete;
-  Scene& operator=(const Scene&) = delete;
+  int GetNodeIndex(const std::shared_ptr<gltf::Node>& node) const
+  {
+    for (int i = 0; i < m_nodes.size(); ++i) {
+      if (m_nodes[i] == node) {
+        return i;
+      }
+    }
+    return -1;
+  }
 
   std::expected<bool, std::string> LoadPath(const std::filesystem::path& path);
   std::expected<bool, std::string> Load(
@@ -134,5 +149,31 @@ private:
     const nlohmann::json& animation);
   std::expected<std::shared_ptr<vrm::v0::Vrm>, std::string> ParseVrm0();
   std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string> ParseVrm1();
+
+public:
+  std::vector<DirectX::XMFLOAT4X4> Instances;
+  std::vector<DirectX::XMFLOAT4> LocalRotations;
+  void SetBvh(const std::shared_ptr<bvh::Bvh>& bvh);
+  void PushJoint(const bvh::Joint& joint);
+  void CalcShape(const std::shared_ptr<bvh::Bvh>& bvh,
+                 const std::shared_ptr<gltf::Node>& node,
+                 float scaling);
+  void ResolveFrame(const std::shared_ptr<bvh::Bvh>& bvh,
+                    std::shared_ptr<gltf::Node>& node,
+                    const bvh::Frame& frame,
+                    DirectX::XMMATRIX m,
+                    float scaling,
+                    std::span<DirectX::XMFLOAT4X4>::iterator& out,
+                    std::span<DirectX::XMFLOAT4>::iterator& outLocal);
+
+  // std::span<DirectX::XMFLOAT4X4> ResolveFrame(
+  //   const std::shared_ptr<gltf::Scene>& scene,
+  //   const Frame& frame);
+
+  // private:
+  //   void PushJoint(const std::shared_ptr<gltf::Scene>& scene, const Joint&
+  //   joint); void CalcShape(const std::shared_ptr<gltf::Scene>& scene);
+  //   const Joint* GetJoint(const std::shared_ptr<gltf::Scene>& scene,
+  //                         const std::shared_ptr<gltf::Node>& node) const;
 };
 }
