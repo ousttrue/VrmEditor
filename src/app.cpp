@@ -3,6 +3,7 @@
 
 #include "app.h"
 #include "assetdir.h"
+#include "docks/cuber.h"
 #include "docks/gui.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
@@ -54,6 +55,7 @@ App::App()
 
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
   m_renderer = std::make_shared<Gl3Renderer>();
+  m_cuber = std::make_shared<Cuber>();
 
   cuber::PushGrid(gizmo::lines());
   gizmo::fix();
@@ -153,6 +155,7 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
   if (!bvh) {
     return false;
   }
+  m_cuber->Instances.resize(bvh->joints.size());
 
   // auto solver = std::make_shared<bvh::Solver>();
   m_motion->SetBvh(bvh);
@@ -174,26 +177,31 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
   }
 
   auto track = m_timeline->AddTrack("bvh", bvh->Duration());
-  track->Callbacks.push_back(
-    [bvh, humanBoneMap, src = m_motion, dst = m_scene](auto time, bool repeat) {
-      auto index = bvh->TimeToIndex(time);
-      auto frame = bvh->GetFrame(index);
-      auto span = std::span(src->Instances);
-      auto it = span.begin();
-      auto t_span = std::span(src->LocalRotations);
-      auto t = t_span.begin();
-
-      src->ResolveFrame(bvh,
-                        src->m_roots[0],
+  track->Callbacks.push_back([bvh, scene = m_motion, cuber=m_cuber](auto time, bool repeat) {
+    auto index = bvh->TimeToIndex(time);
+    auto frame = bvh->GetFrame(index);
+    auto span = std::span(cuber->Instances);
+    auto it = span.begin();
+    auto t_span = std::span(scene->LocalRotations);
+    auto t = t_span.begin();
+    scene->ResolveFrame(bvh,
+                        scene->m_roots[0],
                         frame,
                         DirectX::XMMatrixIdentity(),
                         bvh->GuessScaling(),
                         it,
                         t);
-      assert(it == span.end());
+    assert(it == span.end());
 
+    for (auto& callback : scene->m_sceneUpdated) {
+      callback();
+    }
+  });
+
+  m_motion->m_sceneUpdated.push_back(
+    [humanBoneMap, src = m_motion, dst = m_scene, cuber=m_cuber]() {
       // human pose to scene
-      auto& hips = src->Instances[0];
+      auto& hips = cuber->Instances[0];
       dst->SetHumanPose({ .RootPosition = { hips._41, hips._42, hips._43 },
                           .Bones = humanBoneMap,
                           .Rotations = src->LocalRotations });
@@ -251,7 +259,7 @@ App::Run()
   auto indent = m_gui->m_fontSize * 0.5f;
   JsonDock::Create(addDock, m_scene, indent);
   SceneDock::Create(addDock, m_scene, m_view, m_timeline, m_renderer, indent);
-  MotionDock::Create(addDock, m_motion);
+  MotionDock::Create(addDock, m_cuber);
   ImTimeline::Create(addDock, m_timeline);
   ImLogger::Create(addDock, m_logger);
 

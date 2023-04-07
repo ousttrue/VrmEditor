@@ -71,6 +71,8 @@ struct Scene
   // runtime
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
+  std::list<std::function<void()>> m_sceneUpdated;
+
   Scene();
   Scene(const Scene&) = delete;
   Scene& operator=(const Scene&) = delete;
@@ -151,7 +153,6 @@ private:
   std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string> ParseVrm1();
 
 public:
-  std::vector<DirectX::XMFLOAT4X4> Instances;
   std::vector<DirectX::XMFLOAT4> LocalRotations;
   void SetBvh(const std::shared_ptr<bvh::Bvh>& bvh);
   void PushJoint(const bvh::Joint& joint);
@@ -165,15 +166,5 @@ public:
                     float scaling,
                     std::span<DirectX::XMFLOAT4X4>::iterator& out,
                     std::span<DirectX::XMFLOAT4>::iterator& outLocal);
-
-  // std::span<DirectX::XMFLOAT4X4> ResolveFrame(
-  //   const std::shared_ptr<gltf::Scene>& scene,
-  //   const Frame& frame);
-
-  // private:
-  //   void PushJoint(const std::shared_ptr<gltf::Scene>& scene, const Joint&
-  //   joint); void CalcShape(const std::shared_ptr<gltf::Scene>& scene);
-  //   const Joint* GetJoint(const std::shared_ptr<gltf::Scene>& scene,
-  //                         const std::shared_ptr<gltf::Node>& node) const;
 };
 }

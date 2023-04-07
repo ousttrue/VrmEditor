@@ -986,11 +986,6 @@ Scene::GetBoundingBox() const
 void
 Scene::SetBvh(const std::shared_ptr<bvh::Bvh>& bvh)
 {
-  // m_bvh = bvh;
-  // Scene = std::make_shared<gltf::Scene>();
-  Instances.clear();
-
-  // m_scaling = bvh->GuessScaling();
   for (auto& joint : bvh->joints) {
     PushJoint(joint);
   };
@@ -1002,7 +997,6 @@ Scene::PushJoint(const bvh::Joint& joint)
 {
   auto node = std::make_shared<gltf::Node>(joint.name);
 
-  Instances.push_back({});
   LocalRotations.push_back({});
 
   m_nodes.push_back(node);

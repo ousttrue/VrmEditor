@@ -18,6 +18,7 @@ class Platform;
 class OrbitView;
 class ImLogger;
 class Gl3Renderer;
+class Cuber;
 
 class App
 {
@@ -33,6 +34,7 @@ class App
   std::shared_ptr<Gl3Renderer> m_renderer;
 
   std::shared_ptr<gltf::Scene> m_motion;
+  std::shared_ptr<Cuber> m_cuber;
 
   struct HumanBoneMap
   {

@@ -10,6 +10,7 @@ executable(
         'docks/gui.cpp',
         'docks/json_dock.cpp',
         'docks/motion_dock.cpp',
+        'docks/cuber.cpp',
     ],
     install: true,
     gui_app: true,
