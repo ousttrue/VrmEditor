@@ -152,25 +152,12 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
   Log(LogLevel::Info) << "LoadMotion: " << path;
   m_motion->Clear();
 
+  // load bvh
   auto bvh = bvh::Bvh::ParseFile(path);
   if (!bvh) {
     return false;
   }
-  m_cuber->Instances.resize(bvh->joints.size());
-
   m_motion->SetBvh(bvh);
-
-  // search human bone map
-  for (auto& map : m_humanBoneMapList) {
-    for (auto& node : m_motion->m_nodes) {
-      auto found = map->NameBoneMap.find(node->Name);
-      if (found != map->NameBoneMap.end()) {
-        node->Humanoid = gltf::NodeHumanoidInfo{
-          .HumanBone = found->second,
-        };
-      }
-    }
-  }
 
   // update motion scene
   auto track = m_timeline->AddTrack("bvh", bvh->Duration());
@@ -182,30 +169,56 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
       }
     });
 
-  // human pose to scene
-  m_motion->m_sceneUpdated.push_back(
-    [src = m_motion,
-     dst = m_scene,
-     humanBoneMap = std::vector<vrm::HumanBones>(),
-     rotations = std::vector<DirectX::XMFLOAT4>(),
-     scaling = bvh->GuessScaling()]() mutable {
-      humanBoneMap.clear();
-      rotations.clear();
-      for (auto& node : src->m_nodes) {
-        if (auto humanoid = node->Humanoid) {
-          humanBoneMap.push_back(humanoid->HumanBone);
-          rotations.push_back(node->Transform.Rotation);
-        }
+  if (auto map = FindHumanBoneMap(*bvh)) {
+    // assign human bone
+    for (auto& node : m_motion->m_nodes) {
+      auto found = map->NameBoneMap.find(node->Name);
+      if (found != map->NameBoneMap.end()) {
+        node->Humanoid = gltf::NodeHumanoidInfo{
+          .HumanBone = found->second,
+        };
       }
-      auto& hips = src->m_roots[0]->Transform.Translation;
-      dst->SetHumanPose({ .RootPosition = { hips.x * scaling,
-                                            hips.y * scaling,
-                                            hips.z * scaling },
-                          .Bones = humanBoneMap,
-                          .Rotations = rotations });
-    });
+    }
 
+    // retarget human pose
+    m_motion->m_sceneUpdated.push_back(
+      [src = m_motion,
+       dst = m_scene,
+       humanBoneMap = std::vector<vrm::HumanBones>(),
+       rotations = std::vector<DirectX::XMFLOAT4>(),
+       scaling = bvh->GuessScaling()]() mutable {
+        humanBoneMap.clear();
+        rotations.clear();
+        for (auto& node : src->m_nodes) {
+          if (auto humanoid = node->Humanoid) {
+            humanBoneMap.push_back(humanoid->HumanBone);
+            rotations.push_back(node->Transform.Rotation);
+          }
+        }
+        auto& hips = src->m_roots[0]->Transform.Translation;
+        dst->SetHumanPose({ .RootPosition = { hips.x * scaling,
+                                              hips.y * scaling,
+                                              hips.z * scaling },
+                            .Bones = humanBoneMap,
+                            .Rotations = rotations });
+      });
+  }
   return true;
+}
+
+std::shared_ptr<App::HumanBoneMap>
+App::FindHumanBoneMap(const bvh::Bvh& bvh) const
+{
+  for (auto& map : m_humanBoneMapList) {
+    for (auto& joint : bvh.joints) {
+      auto found = map->NameBoneMap.find(joint.name);
+      if (found == map->NameBoneMap.end()) {
+        return {};
+      }
+    }
+    return map;
+  }
+  return {};
 }
 
 void

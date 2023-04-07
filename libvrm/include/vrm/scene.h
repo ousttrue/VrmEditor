@@ -87,6 +87,7 @@ struct Scene
     m_roots.clear();
     m_skins.clear();
     m_animations.clear();
+    m_sceneUpdated.clear();
     m_gltf = {};
   }
 

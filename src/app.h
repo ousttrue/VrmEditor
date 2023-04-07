@@ -8,7 +8,7 @@ namespace gltf {
 struct Scene;
 }
 namespace bvh {
-struct MotionSource;
+struct Bvh;
 }
 class Gui;
 struct Timeline;
@@ -60,6 +60,8 @@ public:
   int Run();
   bool WriteScene(const std::filesystem::path& path);
   void ClearScene();
+
+  std::shared_ptr<HumanBoneMap> FindHumanBoneMap(const bvh::Bvh& bvh) const;
 
   // expose to lua
   const std::shared_ptr<Gui>& GetGui() const { return m_gui; }
