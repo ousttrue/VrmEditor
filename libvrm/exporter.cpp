@@ -58,11 +58,16 @@ Exporter::Export(const Scene& scene)
         m_writer.key("expressions");
         m_writer.object_open();
         {
-          m_writer.key("aa");
+          m_writer.key("preset");
           m_writer.object_open();
           {
-            m_writer.key("node");
-            m_writer.value(0);
+            m_writer.key("aa");
+            m_writer.object_open();
+            {
+              m_writer.key("node");
+              m_writer.value(0);
+            }
+            m_writer.object_close();
           }
           m_writer.object_close();
         }
