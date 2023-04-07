@@ -172,55 +172,55 @@ MotionDock::Create(const AddDockFunc& addDock,
     ImGui::PopStyleVar();
   }));
 
-  addDock(Dock("input-stream", []() {
-    ImNodes::BeginNodeEditor();
-
-    // ImNodes::BeginNode(hardcoded_node_id);
-    // ImGui::Dummy(ImVec2(80.0f, 45.0f));
-    // ImNodes::EndNode();
-
-    for (int i = 0; i < s_inputs.size(); ++i) {
-      auto& node = s_inputs[i];
-      int id = i * 100;
-      draw(node, id);
-    }
-
-    for (int i = 0; i < s_conv.size(); ++i) {
-      auto& node = s_conv[i];
-      int id = i * 100 + 10000;
-      draw(node, id);
-    }
-
-    {
-      auto& node = s_output;
-      int id = -1000;
-      draw(node, id);
-    }
-
-    for (int i = 0; i < s_edges.size(); ++i) {
-      auto& edge = s_edges[i];
-      ImNodes::Link(i, edge.Start, edge.End);
-    }
-
-    ImNodes::EndNodeEditor();
-
-    {
-      int start_attr, end_attr;
-      if (ImNodes::IsLinkCreated(&start_attr, &end_attr)) {
-        // const NodeType start_type = graph_.node(start_attr).type;
-        // const NodeType end_type = graph_.node(end_attr).type;
-        //
-        // const bool valid_link = start_type != end_type;
-        // if (valid_link)
-        {
-          // Ensure the edge is always directed from the value to
-          // whatever produces the value
-          // if (start_type != NodeType::value) {
-          //   std::swap(start_attr, end_attr);
-          // }
-          s_edges.push_back({ start_attr, end_attr });
-        }
-      }
-    }
-  }));
+  // addDock(Dock("input-stream", []() {
+  //   ImNodes::BeginNodeEditor();
+  //
+  //   // ImNodes::BeginNode(hardcoded_node_id);
+  //   // ImGui::Dummy(ImVec2(80.0f, 45.0f));
+  //   // ImNodes::EndNode();
+  //
+  //   for (int i = 0; i < s_inputs.size(); ++i) {
+  //     auto& node = s_inputs[i];
+  //     int id = i * 100;
+  //     draw(node, id);
+  //   }
+  //
+  //   for (int i = 0; i < s_conv.size(); ++i) {
+  //     auto& node = s_conv[i];
+  //     int id = i * 100 + 10000;
+  //     draw(node, id);
+  //   }
+  //
+  //   {
+  //     auto& node = s_output;
+  //     int id = -1000;
+  //     draw(node, id);
+  //   }
+  //
+  //   for (int i = 0; i < s_edges.size(); ++i) {
+  //     auto& edge = s_edges[i];
+  //     ImNodes::Link(i, edge.Start, edge.End);
+  //   }
+  //
+  //   ImNodes::EndNodeEditor();
+  //
+  //   {
+  //     int start_attr, end_attr;
+  //     if (ImNodes::IsLinkCreated(&start_attr, &end_attr)) {
+  //       // const NodeType start_type = graph_.node(start_attr).type;
+  //       // const NodeType end_type = graph_.node(end_attr).type;
+  //       //
+  //       // const bool valid_link = start_type != end_type;
+  //       // if (valid_link)
+  //       {
+  //         // Ensure the edge is always directed from the value to
+  //         // whatever produces the value
+  //         // if (start_type != NodeType::value) {
+  //         //   std::swap(start_attr, end_attr);
+  //         // }
+  //         s_edges.push_back({ start_attr, end_attr });
+  //       }
+  //     }
+  //   }
+  // }));
 }
