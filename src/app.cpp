@@ -153,7 +153,7 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
 
   // search human bone map
   for (auto& map : m_humanBoneMapList) {
-    for (auto& node : m_motion->MotionSolver->nodes_) {
+    for (auto& node : m_motion->MotionSolver->Scene->m_nodes) {
       auto found = map->NameBoneMap.find(node->Name);
       if (found != map->NameBoneMap.end()) {
         node->Humanoid = gltf::NodeHumanoidInfo{

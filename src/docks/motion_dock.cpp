@@ -149,8 +149,8 @@ MotionDock::Create(const AddDockFunc& addDock,
       if (motion_source->MotionSolver) {
         cuber->Render(camera.projection,
                       camera.view,
-                      motion_source->MotionSolver->instances_.data(),
-                      motion_source->MotionSolver->instances_.size());
+                      motion_source->MotionSolver->Instances.data(),
+                      motion_source->MotionSolver->Instances.size());
       }
       liner->Render(camera.projection, camera.view, lines);
     };

@@ -34,16 +34,16 @@ MotionSource::LoadMotion(const std::filesystem::path& path,
     MotionSolver->ResolveFrame(frame);
 
     if (HumanBoneMap.empty()) {
-      for (auto& node : MotionSolver->nodes_) {
+      for (auto& node : MotionSolver->Scene->m_nodes) {
         HumanBoneMap.push_back(node->Humanoid->HumanBone);
       }
     }
 
     // human pose to scene
-    auto& hips = MotionSolver->instances_[0];
+    auto& hips = MotionSolver->Instances[0];
     SetHumanPose({ .RootPosition = { hips._41, hips._42, hips._43 },
                    .Bones = HumanBoneMap,
-                   .Rotations = MotionSolver->localRotations });
+                   .Rotations = MotionSolver->LocalRotations });
   });
   return true;
 }

@@ -1,5 +1,6 @@
 #include "vrm/bvhsolver.h"
 #include "vrm/node.h"
+#include "vrm/scene.h"
 #include <assert.h>
 #include <iostream>
 
@@ -112,11 +113,10 @@ void
 Solver::Initialize(const std::shared_ptr<Bvh>& bvh)
 {
   m_bvh = bvh;
-  nodes_.clear();
-  root_.reset();
-  instances_.clear();
+  Scene = std::make_shared<gltf::Scene>();
+  Instances.clear();
 
-  scaling_ = bvh->GuessScaling();
+  m_scaling = bvh->GuessScaling();
   for (auto& joint : bvh->joints) {
     PushJoint(joint);
   };
@@ -127,14 +127,15 @@ void
 Solver::PushJoint(const Joint& joint)
 {
   auto node = std::make_shared<gltf::Node>(joint.name);
-  nodes_.push_back(node);
-  instances_.push_back({});
-  localRotations.push_back({});
 
-  if (nodes_.size() == 1) {
-    root_ = node;
+  Instances.push_back({});
+  LocalRotations.push_back({});
+
+  Scene->m_nodes.push_back(node);
+  if (Scene->m_nodes.size() == 1) {
+    Scene->m_roots.push_back(node);
   } else {
-    auto parent = nodes_[joint.parent];
+    auto parent = Scene->m_nodes[joint.parent];
     gltf::Node::AddChild(parent, node);
   }
 }
@@ -142,41 +143,39 @@ Solver::PushJoint(const Joint& joint)
 void
 Solver::CalcShape()
 {
-  GetJoint getJoint =
-    [this](const std::shared_ptr<gltf::Node>& node) -> const Joint* {
-    for (int i = 0; i < nodes_.size(); ++i) {
-      if (nodes_[i] == node) {
-        return &m_bvh->joints[i];
-      }
-    }
-    assert(false);
-    return nullptr;
-  };
-
-  ::CalcShape(getJoint, root_, scaling_);
+  ::CalcShape(std::bind(&Solver::GetJoint, this, std::placeholders::_1),
+              Scene->m_roots[0],
+              m_scaling);
 }
 
 std::span<DirectX::XMFLOAT4X4>
 Solver::ResolveFrame(const Frame& frame)
 {
-  auto span = std::span(instances_);
+  auto span = std::span(Instances);
   auto it = span.begin();
-  auto t_span = std::span(localRotations);
+  auto t_span = std::span(LocalRotations);
   auto t = t_span.begin();
 
-  GetJoint getJoint =
-    [this](const std::shared_ptr<gltf::Node>& node) -> const Joint* {
-    for (int i = 0; i < nodes_.size(); ++i) {
-      if (nodes_[i] == node) {
-        return &m_bvh->joints[i];
-      }
-    }
-    return nullptr;
-  };
-
-  ::ResolveFrame(
-    getJoint, root_, frame, DirectX::XMMatrixIdentity(), scaling_, it, t);
+  ::ResolveFrame(std::bind(&Solver::GetJoint, this, std::placeholders::_1),
+                 Scene->m_roots[0],
+                 frame,
+                 DirectX::XMMatrixIdentity(),
+                 m_scaling,
+                 it,
+                 t);
   assert(it == span.end());
-  return instances_;
+  return Instances;
 }
+
+const Joint*
+Solver::GetJoint(const std::shared_ptr<gltf::Node>& node) const
+{
+  for (int i = 0; i < Scene->m_nodes.size(); ++i) {
+    if (Scene->m_nodes[i] == node) {
+      return &m_bvh->joints[i];
+    }
+  }
+  return nullptr;
+}
+
 }
