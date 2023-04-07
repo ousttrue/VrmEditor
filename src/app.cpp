@@ -14,6 +14,7 @@
 #include "platform.h"
 #include <vrm/animation.h>
 #include <vrm/bvh.h>
+#include <vrm/bvhresolver.h>
 #include <vrm/node.h>
 #include <vrm/timeline.h>
 
@@ -157,8 +158,8 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
   }
   m_cuber->Instances.resize(bvh->joints.size());
 
-  // auto solver = std::make_shared<bvh::Solver>();
   m_motion->SetBvh(bvh);
+
   // search human bone map
   for (auto& map : m_humanBoneMapList) {
     for (auto& node : m_motion->m_nodes) {
@@ -171,40 +172,37 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
     }
   }
 
-  std::vector<vrm::HumanBones> humanBoneMap;
-  for (auto& node : m_motion->m_nodes) {
-    humanBoneMap.push_back(node->Humanoid->HumanBone);
-  }
-
+  // update motion scene
   auto track = m_timeline->AddTrack("bvh", bvh->Duration());
-  track->Callbacks.push_back([bvh, scene = m_motion, cuber=m_cuber](auto time, bool repeat) {
-    auto index = bvh->TimeToIndex(time);
-    auto frame = bvh->GetFrame(index);
-    auto span = std::span(cuber->Instances);
-    auto it = span.begin();
-    auto t_span = std::span(scene->LocalRotations);
-    auto t = t_span.begin();
-    scene->ResolveFrame(bvh,
-                        scene->m_roots[0],
-                        frame,
-                        DirectX::XMMatrixIdentity(),
-                        bvh->GuessScaling(),
-                        it,
-                        t);
-    assert(it == span.end());
+  track->Callbacks.push_back(
+    [bvh, scene = m_motion, cuber = m_cuber](auto time, bool repeat) {
+      bvh::ResolveFrame(scene, bvh, time);
+      for (auto& callback : scene->m_sceneUpdated) {
+        callback();
+      }
+    });
 
-    for (auto& callback : scene->m_sceneUpdated) {
-      callback();
-    }
-  });
-
+  // human pose to scene
   m_motion->m_sceneUpdated.push_back(
-    [humanBoneMap, src = m_motion, dst = m_scene, cuber=m_cuber]() {
-      // human pose to scene
-      auto& hips = cuber->Instances[0];
-      dst->SetHumanPose({ .RootPosition = { hips._41, hips._42, hips._43 },
+    [src = m_motion,
+     dst = m_scene,
+     humanBoneMap = std::vector<vrm::HumanBones>(),
+     rotations = std::vector<DirectX::XMFLOAT4>(),
+     scaling = bvh->GuessScaling()]() mutable {
+      humanBoneMap.clear();
+      rotations.clear();
+      for (auto& node : src->m_nodes) {
+        if (auto humanoid = node->Humanoid) {
+          humanBoneMap.push_back(humanoid->HumanBone);
+          rotations.push_back(node->Transform.Rotation);
+        }
+      }
+      auto& hips = src->m_roots[0]->Transform.Translation;
+      dst->SetHumanPose({ .RootPosition = { hips.x * scaling,
+                                            hips.y * scaling,
+                                            hips.z * scaling },
                           .Bones = humanBoneMap,
-                          .Rotations = src->LocalRotations });
+                          .Rotations = rotations });
     });
 
   return true;

@@ -153,18 +153,10 @@ private:
   std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string> ParseVrm1();
 
 public:
-  std::vector<DirectX::XMFLOAT4> LocalRotations;
   void SetBvh(const std::shared_ptr<bvh::Bvh>& bvh);
   void PushJoint(const bvh::Joint& joint);
   void CalcShape(const std::shared_ptr<bvh::Bvh>& bvh,
                  const std::shared_ptr<gltf::Node>& node,
                  float scaling);
-  void ResolveFrame(const std::shared_ptr<bvh::Bvh>& bvh,
-                    std::shared_ptr<gltf::Node>& node,
-                    const bvh::Frame& frame,
-                    DirectX::XMMATRIX m,
-                    float scaling,
-                    std::span<DirectX::XMFLOAT4X4>::iterator& out,
-                    std::span<DirectX::XMFLOAT4>::iterator& outLocal);
 };
 }

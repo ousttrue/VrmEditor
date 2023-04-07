@@ -997,8 +997,6 @@ Scene::PushJoint(const bvh::Joint& joint)
 {
   auto node = std::make_shared<gltf::Node>(joint.name);
 
-  LocalRotations.push_back({});
-
   m_nodes.push_back(node);
   if (m_nodes.size() == 1) {
     m_roots.push_back(node);
@@ -1072,40 +1070,5 @@ Scene::CalcShape(const std::shared_ptr<bvh::Bvh>& bvh,
   }
 }
 
-// [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
-void
-Scene::ResolveFrame(const std::shared_ptr<bvh::Bvh>& bvh,
-                    std::shared_ptr<gltf::Node>& node,
-                    const bvh::Frame& frame,
-                    DirectX::XMMATRIX m,
-                    float scaling,
-                    std::span<DirectX::XMFLOAT4X4>::iterator& out,
-                    std::span<DirectX::XMFLOAT4>::iterator& outLocal)
-{
-  auto joint = &bvh->joints[GetNodeIndex(node)];
-  auto transform = frame.Resolve(joint->channels);
 
-  auto t = DirectX::XMMatrixTranslation(transform.Translation.x * scaling,
-                                        transform.Translation.y * scaling,
-                                        transform.Translation.z * scaling);
-  // auto r =
-  //     DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3
-  //     *)&transform.Rotation);
-  auto r = DirectX::XMMatrixRotationQuaternion(
-    DirectX::XMLoadFloat4(&transform.Rotation));
-
-  // DirectX::XMStoreFloat4(&*outLocal, DirectX::XMQuaternionRotationMatrix(r));
-  *outLocal = transform.Rotation;
-
-  auto local = r * t;
-
-  m = local * m;
-  auto shape = DirectX::XMLoadFloat4x4(&node->ShapeMatrix);
-  DirectX::XMStoreFloat4x4(&*out, shape * m);
-  ++out;
-  ++outLocal;
-  for (auto& child : node->Children) {
-    ResolveFrame(bvh, child, frame, m, scaling, out, outLocal);
-  }
-}
 }

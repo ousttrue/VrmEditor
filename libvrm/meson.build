@@ -12,7 +12,7 @@ vrm_lib = static_library(
         'animation.cpp',
         'bvh.cpp',
         'bvhframe.cpp',
-        # 'bvhsolver.cpp',
+        'bvhresolver.cpp',
     ],
     include_directories: vrm_inc,
     dependencies: dependencies,
