@@ -31,8 +31,24 @@ App::HumanBoneMap::Add(std::string_view joint_name, std::string_view bone_name)
   if (auto bone = vrm::HumanBoneFromName(bone_name, vrm::VrmVersion::_1_0)) {
     NameBoneMap[{ joint_name.begin(), joint_name.end() }] = *bone;
   } else {
-    std::cout << bone_name << " not found" << std::endl;
+    NoBoneList.insert({ joint_name.begin(), joint_name.end() });
   }
+}
+
+bool
+App::HumanBoneMap::Match(const bvh::Bvh& bvh) const
+{
+  for (auto& joint : bvh.joints) {
+    auto found = NameBoneMap.find(joint.name);
+    if (found == NameBoneMap.end()) {
+      if (NoBoneList.find(joint.name) != NoBoneList.end()) {
+        // no bone joint
+        continue;
+      }
+      return false;
+    }
+  }
+  return true;
 }
 
 App::App()
@@ -188,12 +204,12 @@ App::LoadMotion(const std::filesystem::path& path)
   });
 
   // bind motion to scene
-  m_motion->m_sceneUpdated.push_back(
-    [cuber = m_cuber, scaling](const gltf::Scene& scene) {
-      cuber->Instances.clear();
-      scene.m_roots[0]->UpdateShapeInstanceRecursive(
-        DirectX::XMMatrixIdentity(), cuber->Instances);
-    });
+  m_motion->m_sceneUpdated.push_back([cuber = m_cuber,
+                                      scaling](const gltf::Scene& scene) {
+    cuber->Instances.clear();
+    scene.m_roots[0]->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
+                                                   cuber->Instances);
+  });
 
   if (auto map = FindHumanBoneMap(*bvh)) {
     // assign human bone
@@ -210,8 +226,8 @@ App::LoadMotion(const std::filesystem::path& path)
     m_motion->m_sceneUpdated.push_back(
       [dst = m_scene,
        humanBoneMap = std::vector<vrm::HumanBones>(),
-       rotations = std::vector<DirectX::XMFLOAT4>(),
-       scaling](const gltf::Scene& src) mutable {
+       rotations =
+         std::vector<DirectX::XMFLOAT4>()](const gltf::Scene& src) mutable {
         humanBoneMap.clear();
         rotations.clear();
         for (auto& node : src.m_nodes) {
@@ -221,9 +237,7 @@ App::LoadMotion(const std::filesystem::path& path)
           }
         }
         auto& hips = src.m_roots[0]->Transform.Translation;
-        dst->SetHumanPose({ .RootPosition = { hips.x * scaling,
-                                              hips.y * scaling,
-                                              hips.z * scaling },
+        dst->SetHumanPose({ .RootPosition = { hips.x, hips.y, hips.z },
                             .Bones = humanBoneMap,
                             .Rotations = rotations });
       });
@@ -237,15 +251,7 @@ std::shared_ptr<App::HumanBoneMap>
 App::FindHumanBoneMap(const bvh::Bvh& bvh) const
 {
   for (auto& map : m_humanBoneMapList) {
-    bool match = true;
-    for (auto& joint : bvh.joints) {
-      auto found = map->NameBoneMap.find(joint.name);
-      if (found == map->NameBoneMap.end()) {
-        match = false;
-        break;
-      }
-    }
-    if (match) {
+    if (map->Match(bvh)) {
       return map;
     }
   }

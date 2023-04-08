@@ -2,6 +2,7 @@
 #include "docks/imlogger.h"
 #include <list>
 #include <memory>
+#include <unordered_set>
 #include <vrm/humanbones.h>
 
 namespace gltf {
@@ -39,7 +40,10 @@ class App
   struct HumanBoneMap
   {
     std::unordered_map<std::string, vrm::HumanBones> NameBoneMap;
+    std::unordered_set<std::string> NoBoneList;
+
     void Add(std::string_view joint_name, std::string_view bone);
+    bool Match(const bvh::Bvh& bvh) const;
   };
   std::list<std::shared_ptr<HumanBoneMap>> m_humanBoneMapList;
 
