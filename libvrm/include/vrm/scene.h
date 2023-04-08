@@ -51,7 +51,7 @@ using RenderFunc =
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;
 using EnterJson =
-  std::function<bool(nlohmann::json&, std::span<std::string_view> jsonpath)>;
+  std::function<bool(nlohmann::json&, std::string_view jsonpath)>;
 using LeaveJson = std::function<void()>;
 
 struct Scene
@@ -72,7 +72,7 @@ struct Scene
 
   std::list<std::function<void(const Scene& scene)>> m_sceneUpdated;
 
-  std::vector<std::string_view> m_jsonpath;
+  std::string m_jsonpath;
 
   Scene();
   Scene(const Scene&) = delete;

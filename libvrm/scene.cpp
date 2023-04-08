@@ -882,29 +882,35 @@ Scene::TraverseJson(const EnterJson& enter,
   if (!item) {
     // root
     m_jsonpath.clear();
+    auto size = m_jsonpath.size();
     for (auto& kv : m_gltf.Json.items()) {
-      m_jsonpath.push_back(kv.key());
+      // m_jsonpath.push_back('.');
+      m_jsonpath += kv.key();
       TraverseJson(enter, leave, &kv.value());
-      m_jsonpath.pop_back();
+      m_jsonpath.resize(size);
     }
     return;
   }
 
   if (enter(*item, m_jsonpath)) {
     if (item->is_object()) {
+      auto size = m_jsonpath.size();
       for (auto& kv : item->items()) {
-        m_jsonpath.push_back(kv.key());
+        m_jsonpath.push_back('.');
+        m_jsonpath += kv.key();
         TraverseJson(enter, leave, &kv.value());
-        m_jsonpath.pop_back();
+        m_jsonpath.resize(size);
       }
     } else if (item->is_array()) {
+      auto size = m_jsonpath.size();
       for (int i = 0; i < item->size(); ++i) {
         std::stringstream ss;
         ss << i;
         auto str = ss.str();
-        m_jsonpath.push_back(str);
+        m_jsonpath.push_back('.');
+        m_jsonpath += str;
         TraverseJson(enter, leave, &(*item)[i]);
-        m_jsonpath.pop_back();
+        m_jsonpath.resize(size);
       }
     }
     if (leave) {

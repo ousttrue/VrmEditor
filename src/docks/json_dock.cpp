@@ -1,12 +1,13 @@
 #include "json_dock.h"
 #include <imgui.h>
+#include <ranges>
 #include <sstream>
 
 struct JsonDockImpl
 {
   std::stringstream m_ss;
 
-  bool Enter(nlohmann::json& item, std::span<std::string_view> jsonpath)
+  bool Enter(nlohmann::json& item, std::string_view jsonpath)
   {
     static ImGuiTreeNodeFlags base_flags =
       ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -21,10 +22,17 @@ struct JsonDockImpl
 
     m_ss.str("");
 
-    auto kind = jsonpath.front();
     bool extension = false;
-    for (auto jp : jsonpath) {
-      if (jp == "extensions" || jp == "extrans") {
+    std::string_view kind;
+    std::string_view key;
+    int i = 0;
+    for (auto jp : jsonpath | std::views::split('.')) {
+      key = std::string_view(jp);
+      if (i == 0) {
+        kind = key;
+      }
+      ++i;
+      if (key == "extensions" || key == "extrans") {
         extension = true;
         break;
       }
@@ -52,7 +60,6 @@ struct JsonDockImpl
       m_ss << " ";
     }
 
-    auto key = jsonpath.back();
     if (item.is_object()) {
       if (item.find("name") != item.end()) {
         m_ss << key << ": " << (std::string_view)item.at("name");
@@ -67,6 +74,11 @@ struct JsonDockImpl
     auto label = m_ss.str();
     bool node_open = ImGui::TreeNodeEx(
       (void*)(intptr_t)&item, node_flags, "%s", label.c_str());
+
+    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+      // context->new_selected = node;
+    }
+
     return node_open && !is_leaf;
   }
 };
@@ -79,8 +91,7 @@ JsonDock::Create(const AddDockFunc& addDock,
 {
   auto impl = std::make_shared<JsonDockImpl>();
 
-  auto enter = [impl](nlohmann::json& item,
-                      std::span<std::string_view> jsonpath) {
+  auto enter = [impl](nlohmann::json& item, std::string_view jsonpath) {
     return impl->Enter(item, jsonpath);
   };
   auto leave = []() { ImGui::TreePop(); };
