@@ -179,6 +179,36 @@ vrmeditor.add_human_map {
   lFoot = "leftFoot",
 }
 
+vrmeditor.add_human_map {
+  root = "hips",
+  torso_1 = "--nothing--",
+  torso_2 = "--nothing--",
+  torso_3 = "spine",
+  torso_4 = "--nothing--",
+  torso_5 = "chest",
+  torso_6 = "upperChest",
+  torso_7 = "--nothing--",
+  neck_1 = "neck",
+  neck_2 = "--nothing--",
+  head = "head",
+  l_shoulder = "leftShoulder",
+  l_up_arm = "leftUpperArm",
+  l_low_arm = "leftLowerArm",
+  l_hand = "leftHand",
+  r_shoulder = "rightShoulder",
+  r_up_arm = "rightUpperArm",
+  r_low_arm = "rightLowerArm",
+  r_hand = "rightHand",
+  l_up_leg = "leftUpperLeg",
+  l_low_leg = "leftLowerLeg",
+  l_foot = "leftFoot",
+  l_toes = "leftToes",
+  r_up_leg = "rightUpperLeg",
+  r_low_leg = "rightLowerLeg",
+  r_foot = "rightFoot",
+  r_toes = "rightToes",
+}
+
 --
 -- load model
 --

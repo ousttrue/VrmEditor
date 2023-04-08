@@ -73,6 +73,12 @@ Node::Label(const Scene& scene) const
         case vrm::HumanBones::rightLittleDistal:
           ss << "󰹇 ";
           break;
+        case vrm::HumanBones::leftFoot:
+        case vrm::HumanBones::leftToes:
+        case vrm::HumanBones::rightFoot:
+        case vrm::HumanBones::rightToes:
+          ss << "󱗈 ";
+          break;
         default:
           ss << "󰂹 ";
           break;

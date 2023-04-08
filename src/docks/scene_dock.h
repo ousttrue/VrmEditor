@@ -59,33 +59,40 @@ public:
       title,
       [scene, enter, leave, context, indent](const char* title, bool* p_open) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-        if (ImGui::Begin(title, p_open, ImGuiWindowFlags_NoScrollbar)) {
-          auto size = ImGui::GetContentRegionAvail();
-
-          context->selected = context->new_selected;
-          // ImGui::BeginGroup();
-          if (ImGui::BeginChild("##scene-tree",
-                                { size.x, size.y / 2 },
-                                true,
-                                ImGuiWindowFlags_None)) {
-
-            ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-            scene->Traverse(enter, leave);
-            ImGui::PopStyleVar();
+        int window_flags = 0;
+        std::shared_ptr<gltf::Node> showSelected;
+        if (auto selected = context->selected.lock()) {
+          {
+            if (auto mesh_index = selected->Mesh) {
+              showSelected = selected;
+              window_flags |= ImGuiWindowFlags_NoScrollbar;
+            }
           }
-          ImGui::EndChild();
-          // ImGui::EndGroup();
+        }
 
-          // ImGui::BeginGroup();
-          if (ImGui::BeginChild("##scene-selected",
-                                { size.x, size.y / 2 },
-                                true,
-                                ImGuiWindowFlags_None)) {
-            if (auto selected = context->selected.lock()) {
-              ImGui::Text("%s", selected->Name.c_str());
-              if (auto mesh_index = selected->Mesh) {
+        if (ImGui::Begin(title, p_open, window_flags)) {
+          auto size = ImGui::GetContentRegionAvail();
+          context->selected = context->new_selected;
+
+          ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
+          if (showSelected) {
+            if (ImGui::BeginChild("##scene-tree",
+                                  { size.x, size.y / 2 },
+                                  true,
+                                  ImGuiWindowFlags_None)) {
+
+              scene->Traverse(enter, leave);
+            }
+            ImGui::EndChild();
+
+            if (ImGui::BeginChild("##scene-selected",
+                                  { size.x, size.y / 2 },
+                                  true,
+                                  ImGuiWindowFlags_None)) {
+              ImGui::Text("%s", showSelected->Name.c_str());
+              if (auto mesh_index = showSelected->Mesh) {
                 auto mesh = scene->m_meshes[*mesh_index];
-                auto instance = selected->Instance;
+                auto instance = showSelected->Instance;
                 char morph_id[256];
                 for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
                   auto& morph = mesh->m_morphTargets[i];
@@ -99,9 +106,11 @@ public:
                 }
               }
             }
+            ImGui::EndChild();
+          } else {
+            scene->Traverse(enter, leave);
           }
-          ImGui::EndChild();
-          // ImGui::EndGroup();
+          ImGui::PopStyleVar();
         }
         ImGui::End();
         ImGui::PopStyleVar();
