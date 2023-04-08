@@ -5,11 +5,13 @@
 #include "assetdir.h"
 #include "docks/cuber.h"
 #include "docks/gui.h"
+#include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
 #include "docks/json_dock.h"
 #include "docks/motion_dock.h"
 #include "docks/scene_dock.h"
+#include "docks/view_dock.h"
 #include "luahost.h"
 #include "platform.h"
 #include <vrm/animation.h>
@@ -269,7 +271,11 @@ App::Run()
   };
   auto indent = m_gui->m_fontSize * 0.5f;
   JsonDock::Create(addDock, m_scene, indent);
-  SceneDock::Create(addDock, m_scene, m_view, m_timeline, m_renderer, indent);
+
+  HumanoidDock::Create(addDock, m_scene);
+  auto selection = SceneDock::CreateTree(addDock, m_scene, indent);
+  ViewDock::Create(addDock, m_scene, selection, m_view, m_timeline, m_renderer);
+
   MotionDock::Create(addDock, m_cuber);
   ImTimeline::Create(addDock, m_timeline);
   ImLogger::Create(addDock, m_logger);
