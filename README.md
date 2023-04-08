@@ -42,6 +42,7 @@ read, write, animation test.
 - [x] glb
 - [ ] vrm-0.x
 - [ ] vrm-1.0
+- [x] vrma. expression minimum.
 
 ### material
 
@@ -110,17 +111,18 @@ read, write, animation test.
 ### humanoid
 
 - [ ] 󰂹 : bone selector
-  - [ ]  : hips
-  - [ ] 󱍞 : head
-  - [ ] 󰹆 : hand-left
-  - [ ] 󰹇 : hand-right
+  - [x]  : hips
+  - [x] 󱍞 : head
+  - [x] 󰹆 : hand-left
+  - [x] 󰹇 : hand-right
+  - [x] 󱗈 : foot, toes
 - [ ] bone assign
 - [ ] pose retarget
 
 ### vrm
 
 - [ ] meta
-- [ ] expression
+- [x] expression
 - [ ] lookat
 - [ ] firstperson
 
@@ -142,6 +144,18 @@ read, write, animation test.
 ### bvh
 
 ### fbx
+
+# milestone
+## 1
+- read / write vrm-0 & 1
+
+## x
+- fbx import
+- vrma export
+- motion merge
+- pbr material
+- mtoon material
+- keyframe edit
 
 ## dependencies
 
@@ -206,5 +220,6 @@ Naming conventions for variables with a wider scope than local variables.
 - `vrm`
 - `vrm::v0`
 - `vrm::v1`
+- `vrma`
 - `bvh`
 - `gltf`
