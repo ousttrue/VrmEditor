@@ -12,6 +12,7 @@
 #include "docks/motion_dock.h"
 #include "docks/scene_dock.h"
 #include "docks/view_dock.h"
+#include "docks/vrm_dock.h"
 #include "luahost.h"
 #include "platform.h"
 #include <vrm/animation.h>
