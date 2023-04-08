@@ -172,7 +172,8 @@ App::LoadMotion(const std::filesystem::path& path)
   m_cuber->Instances.clear();
   m_timeline->Tracks.clear();
 
-  auto bytes = ReadAllBytes(path);
+  std::vector<uint8_t> buffer;
+  auto bytes = ReadAllBytes(path, buffer);
   if (!bytes) {
     Log(LogLevel::Error) << "LoadMotion: " << bytes.error();
     return false;

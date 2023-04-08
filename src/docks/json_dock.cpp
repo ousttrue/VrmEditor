@@ -1,6 +1,7 @@
 #include "json_dock.h"
 #include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
+// #define IMGUI_DEFINE_MATH_OPERATORS
+#include <charconv>
 #include <imgui_internal.h>
 #include <ranges>
 #include <sstream>
@@ -10,6 +11,24 @@ struct JsonDockImpl
   std::stringstream m_ss;
 
   std::string m_selected;
+  std::vector<std::string_view> m_jsonpath;
+  std::shared_ptr<gltf::Scene> m_scene;
+
+  JsonDockImpl(const std::shared_ptr<gltf::Scene>& scene)
+    : m_scene(scene)
+  {
+  }
+
+  void SetSelected(std::string_view selected)
+  {
+    m_selected = selected;
+    m_jsonpath.clear();
+    for (auto jp : m_selected | std::views::split('.')) {
+      {
+        m_jsonpath.push_back(std::string_view(jp));
+      }
+    }
+  }
 
   bool Enter(nlohmann::json& item, std::string_view jsonpath)
   {
@@ -83,10 +102,52 @@ struct JsonDockImpl
       (void*)(intptr_t)&item, node_flags, "%s", label.c_str());
 
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-      m_selected = jsonpath;
+      SetSelected(jsonpath);
     }
 
     return node_open && !is_leaf;
+  }
+
+  void ShowSelected()
+  {
+    //
+    ImGui::TextUnformatted(m_selected.c_str());
+    if (m_jsonpath.size() == 2 && m_jsonpath[0] == "accessors") {
+      // table
+      auto i_view = m_jsonpath[1];
+      int i;
+      if (std::from_chars(i_view.data(), i_view.data() + i_view.size(), i).ec ==
+          std::errc{}) {
+        auto accessor = m_scene->m_gltf.Json.at("accessors").at(i);
+        std::string debug = accessor.dump();
+        if (accessor.at("type") == "VEC3" &&
+            accessor.at("componentType") == 5126) {
+          // float3 table
+          if (auto values = m_scene->m_gltf.accessor<DirectX::XMFLOAT3>(i)) {
+            if (ImGui::BeginTable("##accessor_values", 3)) {
+              ImGui::TableSetupColumn("x");
+              ImGui::TableSetupColumn("y");
+              ImGui::TableSetupColumn("z");
+              ImGui::TableHeadersRow();
+              auto span = *values;
+              for (auto& value : span) {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::Text("%f", value.x);
+                ImGui::TableSetColumnIndex(1);
+                ImGui::Text("%f", value.y);
+                ImGui::TableSetColumnIndex(2);
+                ImGui::Text("%f", value.z);
+              }
+              ImGui::EndTable();
+            }
+          }
+        } else {
+          int count = accessor.at("count");
+          ImGui::Text("%d", count);
+        }
+      }
+    }
   }
 };
 
@@ -128,7 +189,7 @@ JsonDock::Create(const AddDockFunc& addDock,
                  const std::shared_ptr<gltf::Scene>& scene,
                  float indent)
 {
-  auto impl = std::make_shared<JsonDockImpl>();
+  auto impl = std::make_shared<JsonDockImpl>(scene);
 
   auto enter = [impl](nlohmann::json& item, std::string_view jsonpath) {
     return impl->Enter(item, jsonpath);
@@ -155,7 +216,7 @@ JsonDock::Create(const AddDockFunc& addDock,
                    ImGui::EndChild();
 
                    if (ImGui::BeginChild("##split-second", { size.x, s })) {
-                     ImGui::TextUnformatted(impl->m_selected.c_str());
+                     impl->ShowSelected();
                    }
                    ImGui::EndChild();
                  }

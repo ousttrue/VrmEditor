@@ -56,6 +56,7 @@ using LeaveJson = std::function<void()>;
 
 struct Scene
 {
+  std::vector<uint8_t> m_bytes;
   Gltf m_gltf;
   std::vector<std::shared_ptr<Image>> m_images;
   std::vector<std::shared_ptr<Material>> m_materials;

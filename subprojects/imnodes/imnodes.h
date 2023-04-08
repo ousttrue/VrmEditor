@@ -114,7 +114,7 @@ struct ImNodesIO
         EmulateThreeButtonMouse();
 
         // The keyboard modifier to use in combination with mouse left click to pan the editor view.
-        // Set to NULL by default. To enable this feature, set the modifier to point to a boolean
+        // Set to nullptr by default. To enable this feature, set the modifier to point to a boolean
         // indicating the state of a modifier. For example,
         //
         // ImNodes::GetIO().EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().KeyAlt;
@@ -125,7 +125,7 @@ struct ImNodesIO
     {
         LinkDetachWithModifierClick();
 
-        // Pointer to a boolean value indicating when the desired modifier is pressed. Set to NULL
+        // Pointer to a boolean value indicating when the desired modifier is pressed. Set to nullptr
         // by default. To enable the feature, set the modifier to point to a boolean indicating the
         // state of a modifier. For example,
         //
@@ -141,14 +141,14 @@ struct ImNodesIO
     {
         MultipleSelectModifier();
 
-        // Pointer to a boolean value indicating when the desired modifier is pressed. Set to NULL
+        // Pointer to a boolean value indicating when the desired modifier is pressed. Set to nullptr
         // by default. To enable the feature, set the modifier to point to a boolean indicating the
         // state of a modifier. For example,
         //
         // ImNodes::GetIO().MultipleSelectModifier.Modifier = &ImGui::GetIO().KeyCtrl;
         //
         // Left-clicking a node with this modifier pressed will add the node to the list of
-        // currently selected nodes. If this value is NULL, the Ctrl key will be used.
+        // currently selected nodes. If this value is nullptr, the Ctrl key will be used.
         const bool* Modifier;
     } MultipleSelectModifier;
 
@@ -244,7 +244,7 @@ namespace IMNODES_NAMESPACE
 void SetImGuiContext(ImGuiContext* ctx);
 
 ImNodesContext* CreateContext();
-void            DestroyContext(ImNodesContext* ctx = NULL); // NULL = destroy current context
+void            DestroyContext(ImNodesContext* ctx = nullptr); // nullptr = destroy current context
 ImNodesContext* GetCurrentContext();
 void            SetCurrentContext(ImNodesContext* ctx);
 
@@ -259,11 +259,11 @@ ImNodesIO& GetIO();
 
 // Returns the global style struct. See the struct declaration for default values.
 ImNodesStyle& GetStyle();
-// Style presets matching the dear imgui styles of the same name. If dest is NULL, the active
+// Style presets matching the dear imgui styles of the same name. If dest is nullptr, the active
 // context's ImNodesStyle instance will be used as the destination.
-void StyleColorsDark(ImNodesStyle* dest = NULL); // on by default
-void StyleColorsClassic(ImNodesStyle* dest = NULL);
-void StyleColorsLight(ImNodesStyle* dest = NULL);
+void StyleColorsDark(ImNodesStyle* dest = nullptr); // on by default
+void StyleColorsClassic(ImNodesStyle* dest = nullptr);
+void StyleColorsLight(ImNodesStyle* dest = nullptr);
 
 // The top-level function call. Call this before calling BeginNode/EndNode. Calling this function
 // will result the node editor grid workspace being rendered.
@@ -275,8 +275,8 @@ void EndNodeEditor();
 void MiniMap(
     const float                                      minimap_size_fraction = 0.2f,
     const ImNodesMiniMapLocation                     location = ImNodesMiniMapLocation_TopLeft,
-    const ImNodesMiniMapNodeHoveringCallback         node_hovering_callback = NULL,
-    const ImNodesMiniMapNodeHoveringCallbackUserData node_hovering_callback_data = NULL);
+    const ImNodesMiniMapNodeHoveringCallback         node_hovering_callback = nullptr,
+    const ImNodesMiniMapNodeHoveringCallbackUserData node_hovering_callback_data = nullptr);
 
 // Use PushColorStyle and PopColorStyle to modify ImNodesStyle::Colors mid-frame.
 void PushColorStyle(ImNodesCol item, unsigned int color);
@@ -389,7 +389,7 @@ bool IsLinkSelected(int link_id);
 // is being pressed over the UI content of the attribute.
 bool IsAttributeActive();
 // Was any attribute active? If so, sets the active attribute id to the output function argument.
-bool IsAnyAttributeActive(int* attribute_id = NULL);
+bool IsAnyAttributeActive(int* attribute_id = nullptr);
 
 // Use the following functions to query a change of state for an existing link, or new link. Call
 // these after EndNodeEditor().
@@ -402,18 +402,18 @@ bool IsLinkStarted(int* started_at_attribute_id);
 // 2) an existing link which is detached from a pin and then dropped
 // Use the including_detached_links flag to control whether this function triggers when the user
 // detaches a link and drops it.
-bool IsLinkDropped(int* started_at_attribute_id = NULL, bool including_detached_links = true);
+bool IsLinkDropped(int* started_at_attribute_id = nullptr, bool including_detached_links = true);
 // Did the user finish creating a new link?
 bool IsLinkCreated(
     int*  started_at_attribute_id,
     int*  ended_at_attribute_id,
-    bool* created_from_snap = NULL);
+    bool* created_from_snap = nullptr);
 bool IsLinkCreated(
     int*  started_at_node_id,
     int*  started_at_attribute_id,
     int*  ended_at_node_id,
     int*  ended_at_attribute_id,
-    bool* created_from_snap = NULL);
+    bool* created_from_snap = nullptr);
 
 // Was an existing link detached from a pin by the user? The detached link's id is assigned to the
 // output argument link_id.
@@ -422,10 +422,10 @@ bool IsLinkDestroyed(int* link_id);
 // Use the following functions to write the editor context's state to a string, or directly to a
 // file. The editor context is serialized in the INI file format.
 
-const char* SaveCurrentEditorStateToIniString(size_t* data_size = NULL);
+const char* SaveCurrentEditorStateToIniString(size_t* data_size = nullptr);
 const char* SaveEditorStateToIniString(
     const ImNodesEditorContext* editor,
-    size_t*                     data_size = NULL);
+    size_t*                     data_size = nullptr);
 
 void LoadCurrentEditorStateFromIniString(const char* data, size_t data_size);
 void LoadEditorStateFromIniString(ImNodesEditorContext* editor, const char* data, size_t data_size);

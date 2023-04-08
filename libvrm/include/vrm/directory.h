@@ -9,7 +9,7 @@
 #include <vector>
 
 inline std::expected<std::vector<uint8_t>, std::string>
-ReadAllBytes(const std::filesystem::path& path)
+ReadAllBytes(const std::filesystem::path& path, std::vector<uint8_t> &buffer)
 {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
@@ -17,7 +17,7 @@ ReadAllBytes(const std::filesystem::path& path)
   }
 
   auto pos = ifs.tellg();
-  std::vector<uint8_t> buffer(pos);
+  buffer.resize(pos);
   ifs.seekg(0, std::ios::beg);
   ifs.read((char*)buffer.data(), pos);
   return buffer;
@@ -56,9 +56,10 @@ struct Directory
     }
 
     auto path = Base / uri;
-    if (auto bytes = ReadAllBytes(path)) {
+    std::vector<uint8_t> buffer;
+    if (auto bytes = ReadAllBytes(path, buffer)) {
       std::string key{ uri.begin(), uri.end() };
-      FileCaches.insert({ key, *bytes });
+      FileCaches.insert({ key, buffer });
       return FileCaches[key];
     } else {
       return bytes;
