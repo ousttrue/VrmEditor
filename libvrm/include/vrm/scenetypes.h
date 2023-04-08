@@ -116,8 +116,8 @@ struct BoundingBox
 
 struct EuclideanTransform
 {
-  DirectX::XMFLOAT4 Rotation;
-  DirectX::XMFLOAT3 Translation;
+  DirectX::XMFLOAT4 Rotation = { 0, 0, 0, 1 };
+  DirectX::XMFLOAT3 Translation = { 0, 0, 0 };
 
   bool HasRotation() const
   {

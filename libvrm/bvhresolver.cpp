@@ -7,14 +7,18 @@ static void
 ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
              std::shared_ptr<gltf::Node>& node,
              const std::shared_ptr<bvh::Bvh>& bvh,
-             const bvh::Frame& frame)
+             const bvh::Frame& frame,
+             float scaling)
 {
   auto joint = &bvh->joints[scene->GetNodeIndex(node)];
   auto transform = frame.Resolve(joint->channels);
   node->Transform.Translation = transform.Translation;
+  node->Transform.Translation.x *= scaling;
+  node->Transform.Translation.y *= scaling;
+  node->Transform.Translation.z *= scaling;
   node->Transform.Rotation = transform.Rotation;
   for (auto& child : node->Children) {
-    ResolveFrame(scene, child, bvh, frame);
+    ResolveFrame(scene, child, bvh, frame, scaling);
   }
 }
 
@@ -28,7 +32,7 @@ ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
   }
   auto index = bvh->TimeToIndex(time);
   auto frame = bvh->GetFrame(index);
-  ResolveFrame(scene, scene->m_roots[0], bvh, frame);
+  ResolveFrame(scene, scene->m_roots[0], bvh, frame, bvh->GuessScaling());
 }
 
 static void
@@ -37,6 +41,7 @@ PushJoint(const std::shared_ptr<gltf::Scene>& scene,
           float scaling)
 {
   auto node = std::make_shared<gltf::Node>(joint.name);
+  node->Transform.Rotation = { 0, 0, 0, 1 };
   node->Transform.Translation = joint.localOffset;
   node->Transform.Translation.x *= scaling;
   node->Transform.Translation.y *= scaling;
@@ -53,20 +58,14 @@ PushJoint(const std::shared_ptr<gltf::Scene>& scene,
 
 void
 SetBvh(const std::shared_ptr<gltf::Scene>& scene,
-       const std::shared_ptr<bvh::Bvh>& bvh,
-       std::vector<DirectX::XMFLOAT4X4>& instances)
+       const std::shared_ptr<bvh::Bvh>& bvh)
 {
-  instances.resize(bvh->joints.size());
   for (auto& joint : bvh->joints) {
     PushJoint(scene, joint, bvh->GuessScaling());
   };
   scene->m_roots[0]->InitialMatrix();
   scene->m_roots[0]->CalcWorldMatrix(true);
-
   scene->m_roots[0]->CalcShape();
-
-  scene->m_roots[0]->UpdateShapeInstanceRecursive(
-    DirectX::XMMatrixIdentity(), bvh->GuessScaling(), instances);
 }
 
 }

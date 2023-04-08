@@ -153,6 +153,8 @@ bool
 App::LoadMotion(const std::filesystem::path& path)
 {
   m_motion->Clear();
+  m_cuber->Instances.clear();
+  m_timeline->Tracks.clear();
 
   auto bytes = ReadAllBytes(path);
   if (!bytes) {
@@ -171,13 +173,15 @@ App::LoadMotion(const std::filesystem::path& path)
   auto scaling = bvh->GuessScaling();
   Log(LogLevel::Info) << "LoadMotion: " << scaling << ", " << path;
 
-  bvh::SetBvh(m_motion, bvh, m_cuber->Instances);
+  bvh::SetBvh(m_motion, bvh);
+  m_motion->m_roots[0]->UpdateShapeInstanceRecursive(
+    DirectX::XMMatrixIdentity(), m_cuber->Instances);
 
   // bind time to motion
   auto track = m_timeline->AddTrack("bvh", bvh->Duration());
   track->Callbacks.push_back([bvh, scene = m_motion](auto time, bool repeat) {
-    bvh::ResolveFrame(scene, bvh, time);
     if (scene->m_roots.size()) {
+      bvh::ResolveFrame(scene, bvh, time);
       scene->m_roots[0]->CalcWorldMatrix(true);
       scene->RaiseSceneUpdated();
     }
@@ -188,7 +192,7 @@ App::LoadMotion(const std::filesystem::path& path)
     [cuber = m_cuber, scaling](const gltf::Scene& scene) {
       cuber->Instances.clear();
       scene.m_roots[0]->UpdateShapeInstanceRecursive(
-        DirectX::XMMatrixIdentity(), scaling, cuber->Instances);
+        DirectX::XMMatrixIdentity(), cuber->Instances);
     });
 
   if (auto map = FindHumanBoneMap(*bvh)) {

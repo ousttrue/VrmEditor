@@ -270,15 +270,14 @@ Node::CalcShape(int level)
 
 void
 Node::UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
-                                   float scaling,
                                    std::vector<DirectX::XMFLOAT4X4>& out)
 {
-  auto m = Transform.ScalingTranslationMatrix(scaling) * parent;
+  auto m = Transform.Matrix() * parent;
   auto shape = DirectX::XMLoadFloat4x4(&ShapeMatrix);
   out.push_back({});
   DirectX::XMStoreFloat4x4(&out.back(), shape * m);
   for (auto& child : Children) {
-    child->UpdateShapeInstanceRecursive(m, scaling, out);
+    child->UpdateShapeInstanceRecursive(m, out);
   }
 }
 
