@@ -154,27 +154,39 @@ App::LoadMotion(const std::filesystem::path& path)
 {
   m_motion->Clear();
 
-  // load bvh
-  auto bvh = bvh::Bvh::ParseFile(path);
-  if (!bvh) {
-    Log(LogLevel::Error) << "LoadMotion: [error]" << path;
+  auto bytes = ReadAllBytes(path);
+  if (!bytes) {
+    Log(LogLevel::Error) << "LoadMotion: " << bytes.error();
     return false;
   }
-  bvh::SetBvh(m_motion, bvh);
+
+  // load bvh
+  auto bvh = std::make_shared<bvh::Bvh>();
+  if (auto parsed = bvh->Parse({ (const char*)bytes->data(), bytes->size() })) {
+  } else {
+    Log(LogLevel::Error) << "LoadMotion: " << path;
+    Log(LogLevel::Error) << "LoadMotion: " << parsed.error();
+    return false;
+  }
   auto scaling = bvh->GuessScaling();
   Log(LogLevel::Info) << "LoadMotion: " << scaling << ", " << path;
 
-  m_cuber->CalcShape(m_motion->m_roots[0], scaling);
+  bvh::SetBvh(m_motion, bvh, m_cuber->Instances);
 
-  // update motion scene
+  // bind time to motion
   auto track = m_timeline->AddTrack("bvh", bvh->Duration());
   track->Callbacks.push_back([bvh, scene = m_motion](auto time, bool repeat) {
     bvh::ResolveFrame(scene, bvh, time);
     scene->RaiseSceneUpdated();
   });
 
+  // bind motion to scene
   m_motion->m_sceneUpdated.push_back(
-    [cuber = m_cuber](const gltf::Scene& scene) { cuber->Update(scene); });
+    [cuber = m_cuber, scaling](const gltf::Scene& scene) {
+      cuber->Instances.clear();
+      scene.m_roots[0]->UpdateShapeInstanceRecursive(
+        DirectX::XMMatrixIdentity(), scaling, cuber->Instances);
+    });
 
   if (auto map = FindHumanBoneMap(*bvh)) {
     // assign human bone

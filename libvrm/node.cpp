@@ -207,4 +207,79 @@ Node::Print(int level)
     child->Print(level + 1);
   }
 }
+
+const float DEFAULT_SIZE = 0.04f;
+
+void
+Node::CalcShape(float scaling, int level)
+{
+  DirectX::XMStoreFloat4x4(
+    &ShapeMatrix,
+    DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
+
+  auto isRoot_ = level == 0;
+  if (!isRoot_) {
+    std::shared_ptr<gltf::Node> tail;
+    switch (Children.size()) {
+      case 0:
+        return;
+
+      case 1:
+        tail = Children.front();
+        break;
+
+      default:
+        for (auto& child : Children) {
+          if (!tail) {
+            tail = child;
+          } else if (std::abs(child->Transform.Translation.x) <
+                     std::abs(tail->Transform.Translation.x)) {
+            // coose center node
+            tail = child;
+          }
+        }
+    }
+
+    auto _Y = DirectX::XMFLOAT3(tail->Transform.Translation.x * scaling,
+                                tail->Transform.Translation.y * scaling,
+                                tail->Transform.Translation.z * scaling);
+    auto Y = DirectX::XMLoadFloat3(&_Y);
+
+    auto length = DirectX::XMVectorGetX(DirectX::XMVector3Length(Y));
+    // std::cout << name_ << "=>" << tail->name_ << "=" << length <<
+    // std::endl;
+    Y = DirectX::XMVector3Normalize(Y);
+    auto _Z = DirectX::XMFLOAT3(0, 0, 1);
+    auto Z = DirectX::XMLoadFloat3(&_Z);
+    auto X = DirectX::XMVector3Cross(Y, Z);
+    Z = DirectX::XMVector3Cross(X, Y);
+
+    auto center = DirectX::XMMatrixTranslation(0, 0.5f, 0);
+    auto scale = DirectX::XMMatrixScaling(DEFAULT_SIZE, length, DEFAULT_SIZE);
+    DirectX::XMFLOAT4 _(0, 0, 0, 1);
+    auto r = DirectX::XMMATRIX(X, Y, Z, DirectX::XMLoadFloat4(&_));
+
+    auto shape = center * scale * r;
+    DirectX::XMStoreFloat4x4(&ShapeMatrix, shape);
+  }
+
+  for (auto& child : Children) {
+    child->CalcShape(scaling, level + 1);
+  }
+}
+
+void
+Node::UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
+                                   float scaling,
+                                   std::vector<DirectX::XMFLOAT4X4> &out)
+{
+  auto m = Transform.ScalingTranslationMatrix(scaling) * parent;
+  auto shape = DirectX::XMLoadFloat4x4(&ShapeMatrix);
+  out.push_back({});
+  DirectX::XMStoreFloat4x4(&out.back(), shape * m);
+  for (auto& child : Children) {
+    child->UpdateShapeInstanceRecursive(m, scaling, out);
+  }
+}
+
 } // namespace gltf

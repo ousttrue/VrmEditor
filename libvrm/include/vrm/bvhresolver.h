@@ -14,6 +14,7 @@ ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
 
 void
 SetBvh(const std::shared_ptr<gltf::Scene>& scene,
-       const std::shared_ptr<bvh::Bvh>& bvh);
+       const std::shared_ptr<bvh::Bvh>& bvh,
+       std::vector<DirectX::XMFLOAT4X4>& instances);
 
 }

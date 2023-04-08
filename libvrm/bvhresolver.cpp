@@ -7,8 +7,7 @@ static void
 ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
              std::shared_ptr<gltf::Node>& node,
              const std::shared_ptr<bvh::Bvh>& bvh,
-             const bvh::Frame& frame
-)
+             const bvh::Frame& frame)
 {
   auto joint = &bvh->joints[scene->GetNodeIndex(node)];
   auto transform = frame.Resolve(joint->channels);
@@ -24,6 +23,9 @@ ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
              const std::shared_ptr<bvh::Bvh>& bvh,
              Time time)
 {
+  if (scene->m_roots.empty()) {
+    return;
+  }
   auto index = bvh->TimeToIndex(time);
   auto frame = bvh->GetFrame(index);
   ResolveFrame(scene, scene->m_roots[0], bvh, frame);
@@ -46,11 +48,20 @@ PushJoint(const std::shared_ptr<gltf::Scene>& scene, const bvh::Joint& joint)
 
 void
 SetBvh(const std::shared_ptr<gltf::Scene>& scene,
-       const std::shared_ptr<bvh::Bvh>& bvh)
+       const std::shared_ptr<bvh::Bvh>& bvh,
+       std::vector<DirectX::XMFLOAT4X4>& instances)
 {
+  instances.resize(bvh->joints.size());
   for (auto& joint : bvh->joints) {
     PushJoint(scene, joint);
   };
+  scene->m_roots[0]->InitialMatrix();
+
+  auto scaling = bvh->GuessScaling();
+  scene->m_roots[0]->CalcShape(scaling);
+
+  scene->m_roots[0]->UpdateShapeInstanceRecursive(
+    DirectX::XMMatrixIdentity(), scaling, instances);
 }
 
 }

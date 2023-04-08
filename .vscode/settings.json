@@ -16,5 +16,5 @@
     "clangd.fallbackFlags": [
         "-std=c++2a"
     ],
-    "testMate.cpp.test.executables": "prefix/bin/tests.exe"
+    "testMate.cpp.test.executables": "prefix/bin/tests*"
 }

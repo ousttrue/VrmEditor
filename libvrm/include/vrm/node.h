@@ -127,6 +127,11 @@ struct Node
     }
   }
   void Print(int level = 0);
+  void CalcShape(float scaling, int level = 0);
+  void UpdateShapeInstanceRecursive(
+    DirectX::XMMATRIX parent,
+    float scaling,
+    std::vector<DirectX::XMFLOAT4X4> &out);
 };
 
 inline std::ostream&
