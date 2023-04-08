@@ -195,9 +195,9 @@ Scene::Parse()
   }
 
   // calc world
-  auto enter = [](gltf::Node& node) {
-    node.CalcWorldMatrix();
-    node.CalcInitialMatrix();
+  auto enter = [](const std::shared_ptr<gltf::Node>& node) {
+    node->CalcWorldMatrix();
+    node->CalcInitialMatrix();
     return true;
   };
   Traverse(enter, {});
@@ -855,12 +855,12 @@ Scene::Render(Time time, const RenderFunc& render)
 void
 Scene::Traverse(const EnterFunc& enter,
                 const LeaveFunc& leave,
-                gltf::Node* node)
+                const std::shared_ptr<gltf::Node>& node)
 {
   if (node) {
-    if (enter(*node)) {
+    if (enter(node)) {
       for (auto& child : node->Children) {
-        Traverse(enter, leave, child.get());
+        Traverse(enter, leave, child);
       }
       if (leave) {
         leave();
@@ -869,7 +869,7 @@ Scene::Traverse(const EnterFunc& enter,
   } else {
     // root
     for (auto& child : m_roots) {
-      Traverse(enter, leave, child.get());
+      Traverse(enter, leave, child);
     }
   }
 }
@@ -940,8 +940,8 @@ void
 Scene::SyncHierarchy()
 {
   // calc world
-  auto enter = [](gltf::Node& node) {
-    node.CalcWorldMatrix();
+  auto enter = [](const std::shared_ptr<gltf::Node>& node) {
+    node->CalcWorldMatrix();
     return true;
   };
   Traverse(enter, {});

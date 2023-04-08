@@ -19,39 +19,39 @@ public:
   {
     auto context = std::make_shared<TreeContext>();
 
-    auto enter = [scene, context](gltf::Node& node) {
+    auto enter = [scene, context](const std::shared_ptr<gltf::Node>& node) {
       ImGui::SetNextItemOpen(true, ImGuiCond_Once);
       static ImGuiTreeNodeFlags base_flags =
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
         ImGuiTreeNodeFlags_SpanAvailWidth;
       ImGuiTreeNodeFlags node_flags = base_flags;
 
-      if (node.Children.empty()) {
+      if (node->Children.empty()) {
         node_flags |=
           ImGuiTreeNodeFlags_Leaf |
           ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
       }
-      if (context->selected == &node) {
+      if (context->selected.lock() == node) {
         node_flags |= ImGuiTreeNodeFlags_Selected;
       }
 
-      bool hasRotation = node.InitialTransform.HasRotation();
+      bool hasRotation = node->InitialTransform.HasRotation();
       if (hasRotation) {
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
       }
 
-      bool node_open =
-        ImGui::TreeNodeEx(&node, node_flags, "%s", node.Label(*scene).c_str());
+      bool node_open = ImGui::TreeNodeEx(
+        &*node, node_flags, "%s", node->Label(*scene).c_str());
 
       if (hasRotation) {
         ImGui::PopStyleColor();
       }
 
       if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-        context->new_selected = &node;
+        context->new_selected = node;
       }
 
-      return node.Children.size() && node_open;
+      return node->Children.size() && node_open;
     };
     auto leave = []() { ImGui::TreePop(); };
 
@@ -81,11 +81,11 @@ public:
                                 { size.x, size.y / 2 },
                                 true,
                                 ImGuiWindowFlags_None)) {
-            if (context->selected) {
-              ImGui::Text("%s", context->selected->Name.c_str());
-              if (auto mesh_index = context->selected->Mesh) {
+            if (auto selected = context->selected.lock()) {
+              ImGui::Text("%s", selected->Name.c_str());
+              if (auto mesh_index = selected->Mesh) {
                 auto mesh = scene->m_meshes[*mesh_index];
-                auto instance = context->selected->Instance;
+                auto instance = selected->Instance;
                 char morph_id[256];
                 for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
                   auto& morph = mesh->m_morphTargets[i];

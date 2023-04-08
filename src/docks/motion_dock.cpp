@@ -130,7 +130,8 @@ draw(const GraphNode& node, int id)
 void
 MotionDock::Create(const AddDockFunc& addDock,
                    std::string_view title,
-                   const std::shared_ptr<Cuber>& cuber)
+                   const std::shared_ptr<Cuber>& cuber,
+                   const std::shared_ptr<TreeContext>& context)
 {
   auto rt = std::make_shared<RenderTarget>(std::make_shared<OrbitView>());
   rt->color[0] = 0.4f;
@@ -138,7 +139,32 @@ MotionDock::Create(const AddDockFunc& addDock,
   rt->color[2] = 0.2f;
   rt->color[3] = 1.0f;
 
-  rt->render = [cuber](const ViewProjection& camera) { cuber->Render(camera); };
+  rt->render = [cuber, selection = context](const ViewProjection& camera) {
+    Gl3Renderer::ClearRendertarget(camera);
+
+    cuber->Render(camera);
+
+    // gizmo
+    if (auto node = selection->selected.lock()) {
+      // TODO: conflict mouse event(left) with ImageButton
+      DirectX::XMFLOAT4X4 m;
+      DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
+      ImGuizmo::GetContext().mAllowActiveHoverItem = true;
+      if (ImGuizmo::Manipulate(camera.view,
+                               camera.projection,
+                               ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
+                               ImGuizmo::LOCAL,
+                               (float*)&m,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr)) {
+        // decompose feedback
+        node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+      }
+      ImGuizmo::GetContext().mAllowActiveHoverItem = false;
+    }
+  };
 
   auto gl3r = std::make_shared<Gl3Renderer>();
 

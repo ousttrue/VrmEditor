@@ -25,7 +25,7 @@ public:
 
     rt->render = [timeline, scene, gl3r, selection = context](
                    const ViewProjection& camera) {
-      gl3r->ClearRendertarget(camera);
+      Gl3Renderer::ClearRendertarget(camera);
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
@@ -39,7 +39,7 @@ public:
       liner->Render(camera.projection, camera.view, gizmo::lines());
 
       // gizmo
-      if (auto node = selection->selected) {
+      if (auto node = selection->selected.lock()) {
         // TODO: conflict mouse event(left) with ImageButton
         DirectX::XMFLOAT4X4 m;
         DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());

@@ -90,18 +90,7 @@ public:
 
   ~Gl3RendererImpl() {}
 
-  void Release()
-  {
-    m_drawableMap.clear();
-  }
-
-  void clear(const ViewProjection& camera)
-  {
-    glViewport(0, 0, camera.width(), camera.height());
-    glClearColor(
-      camera.premul_r(), camera.premul_g(), camera.premul_b(), camera.alpha());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  }
+  void Release() { m_drawableMap.clear(); }
 
   void render(const ViewProjection& camera,
               const gltf::Mesh& mesh,
@@ -220,7 +209,11 @@ Gl3Renderer::Release()
 void
 Gl3Renderer::ClearRendertarget(const ViewProjection& camera)
 {
-  m_impl->clear(camera);
+  // m_impl->clear(camera);
+  glViewport(0, 0, camera.width(), camera.height());
+  glClearColor(
+    camera.premul_r(), camera.premul_g(), camera.premul_b(), camera.alpha());
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void

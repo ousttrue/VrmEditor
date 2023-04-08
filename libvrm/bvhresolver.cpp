@@ -32,10 +32,15 @@ ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
 }
 
 static void
-PushJoint(const std::shared_ptr<gltf::Scene>& scene, const bvh::Joint& joint)
+PushJoint(const std::shared_ptr<gltf::Scene>& scene,
+          const bvh::Joint& joint,
+          float scaling)
 {
   auto node = std::make_shared<gltf::Node>(joint.name);
   node->Transform.Translation = joint.localOffset;
+  node->Transform.Translation.x *= scaling;
+  node->Transform.Translation.y *= scaling;
+  node->Transform.Translation.z *= scaling;
 
   scene->m_nodes.push_back(node);
   if (scene->m_nodes.size() == 1) {
@@ -53,15 +58,15 @@ SetBvh(const std::shared_ptr<gltf::Scene>& scene,
 {
   instances.resize(bvh->joints.size());
   for (auto& joint : bvh->joints) {
-    PushJoint(scene, joint);
+    PushJoint(scene, joint, bvh->GuessScaling());
   };
   scene->m_roots[0]->InitialMatrix();
+  scene->m_roots[0]->CalcWorldMatrix(true);
 
-  auto scaling = bvh->GuessScaling();
-  scene->m_roots[0]->CalcShape(scaling);
+  scene->m_roots[0]->CalcShape();
 
   scene->m_roots[0]->UpdateShapeInstanceRecursive(
-    DirectX::XMMatrixIdentity(), scaling, instances);
+    DirectX::XMMatrixIdentity(), bvh->GuessScaling(), instances);
 }
 
 }

@@ -211,7 +211,7 @@ Node::Print(int level)
 const float DEFAULT_SIZE = 0.04f;
 
 void
-Node::CalcShape(float scaling, int level)
+Node::CalcShape(int level)
 {
   DirectX::XMStoreFloat4x4(
     &ShapeMatrix,
@@ -240,9 +240,9 @@ Node::CalcShape(float scaling, int level)
         }
     }
 
-    auto _Y = DirectX::XMFLOAT3(tail->Transform.Translation.x * scaling,
-                                tail->Transform.Translation.y * scaling,
-                                tail->Transform.Translation.z * scaling);
+    auto _Y = DirectX::XMFLOAT3(tail->Transform.Translation.x,
+                                tail->Transform.Translation.y,
+                                tail->Transform.Translation.z);
     auto Y = DirectX::XMLoadFloat3(&_Y);
 
     auto length = DirectX::XMVectorGetX(DirectX::XMVector3Length(Y));
@@ -264,14 +264,14 @@ Node::CalcShape(float scaling, int level)
   }
 
   for (auto& child : Children) {
-    child->CalcShape(scaling, level + 1);
+    child->CalcShape(level + 1);
   }
 }
 
 void
 Node::UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
                                    float scaling,
-                                   std::vector<DirectX::XMFLOAT4X4> &out)
+                                   std::vector<DirectX::XMFLOAT4X4>& out)
 {
   auto m = Transform.ScalingTranslationMatrix(scaling) * parent;
   auto shape = DirectX::XMLoadFloat4x4(&ShapeMatrix);

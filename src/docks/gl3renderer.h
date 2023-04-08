@@ -14,7 +14,7 @@ public:
   Gl3Renderer();
   ~Gl3Renderer();
   void Release();
-  void ClearRendertarget(const ViewProjection& camera);
+  static void ClearRendertarget(const ViewProjection& camera);
   void Render(const ViewProjection& camera,
               const gltf::Mesh& mesh,
               const gltf::MeshInstance& instance,

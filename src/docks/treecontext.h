@@ -1,8 +1,9 @@
 #pragma once
 #include <vrm/node.h>
+#include <memory>
 
 struct TreeContext
 {
-  gltf::Node* selected = nullptr;
-  gltf::Node* new_selected = nullptr;
+  std::weak_ptr<gltf::Node> selected;
+  std::weak_ptr<gltf::Node> new_selected;
 };

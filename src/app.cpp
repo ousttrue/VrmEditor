@@ -177,7 +177,10 @@ App::LoadMotion(const std::filesystem::path& path)
   auto track = m_timeline->AddTrack("bvh", bvh->Duration());
   track->Callbacks.push_back([bvh, scene = m_motion](auto time, bool repeat) {
     bvh::ResolveFrame(scene, bvh, time);
-    scene->RaiseSceneUpdated();
+    if (scene->m_roots.size()) {
+      scene->m_roots[0]->CalcWorldMatrix(true);
+      scene->RaiseSceneUpdated();
+    }
   });
 
   // bind motion to scene
@@ -312,7 +315,7 @@ App::Run()
     HumanoidDock::Create(addDock, "motion-body", "motion-finger", m_motion);
     auto selection =
       SceneDock::CreateTree(addDock, "motion-hierarchy", m_motion, indent);
-    MotionDock::Create(addDock, "motion", m_cuber);
+    MotionDock::Create(addDock, "motion", m_cuber, selection);
   }
 
   ImTimeline::Create(addDock, "timeline", m_timeline);

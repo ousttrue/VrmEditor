@@ -48,7 +48,7 @@ class Material;
 using RenderFunc =
   std::function<void(const Mesh&, const MeshInstance&, const float[16])>;
 
-using EnterFunc = std::function<bool(Node&)>;
+using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;
 using EnterJson = std::function<bool(nlohmann::json&, const std::string& key)>;
 using LeaveJson = std::function<void()>;
@@ -69,7 +69,7 @@ struct Scene
 
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
-  std::list<std::function<void(const Scene &scene)>> m_sceneUpdated;
+  std::list<std::function<void(const Scene& scene)>> m_sceneUpdated;
 
   Scene();
   Scene(const Scene&) = delete;
@@ -91,8 +91,7 @@ struct Scene
 
   void RaiseSceneUpdated()
   {
-    for(auto &callback: m_sceneUpdated)
-    {
+    for (auto& callback : m_sceneUpdated) {
       callback(*this);
     }
   }
@@ -124,7 +123,7 @@ struct Scene
   void Render(Time time, const RenderFunc& render);
   void Traverse(const EnterFunc& enter,
                 const LeaveFunc& leave,
-                Node* node = nullptr);
+                const std::shared_ptr<Node>& node = nullptr);
   void TraverseJson(const EnterJson& enter,
                     const LeaveJson& leave,
                     nlohmann::json* j = nullptr,
