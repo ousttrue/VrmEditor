@@ -111,7 +111,6 @@ struct JsonDockImpl
   void ShowSelected()
   {
     //
-    ImGui::TextUnformatted(m_selected.c_str());
     if (m_jsonpath.size() == 2 && m_jsonpath[0] == "accessors") {
       // table
       auto i_view = m_jsonpath[1];
@@ -120,24 +119,45 @@ struct JsonDockImpl
           std::errc{}) {
         auto accessor = m_scene->m_gltf.Json.at("accessors").at(i);
         std::string debug = accessor.dump();
+
+        static ImGuiTableFlags flags =
+          ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable |
+          ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable |
+          ImGuiTableFlags_SortMulti | ImGuiTableFlags_RowBg |
+          ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBody |
+          ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY |
+          ImGuiTableFlags_SizingFixedFit;
+
         if (accessor.at("type") == "VEC3" &&
             accessor.at("componentType") == 5126) {
           // float3 table
           if (auto values = m_scene->m_gltf.accessor<DirectX::XMFLOAT3>(i)) {
-            if (ImGui::BeginTable("##accessor_values", 3)) {
+            auto items = *values;
+            ImGui::Text("float3[%zu]", items.size());
+            if (ImGui::BeginTable("##accessor_values", 4)) {
+              ImGui::TableSetupColumn("index");
               ImGui::TableSetupColumn("x");
               ImGui::TableSetupColumn("y");
               ImGui::TableSetupColumn("z");
+              ImGui::TableSetupScrollFreeze(0, 1);
               ImGui::TableHeadersRow();
-              auto span = *values;
-              for (auto& value : span) {
-                ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-                ImGui::Text("%f", value.x);
-                ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%f", value.y);
-                ImGui::TableSetColumnIndex(2);
-                ImGui::Text("%f", value.z);
+              ImGuiListClipper clipper;
+              clipper.Begin(items.size());
+              while (clipper.Step()) {
+                for (int row_n = clipper.DisplayStart;
+                     row_n < clipper.DisplayEnd;
+                     row_n++) {
+                  auto& value = items[row_n];
+                  ImGui::TableNextRow();
+                  ImGui::TableSetColumnIndex(0);
+                  ImGui::Text("%d", row_n);
+                  ImGui::TableSetColumnIndex(1);
+                  ImGui::Text("%f", value.x);
+                  ImGui::TableSetColumnIndex(2);
+                  ImGui::Text("%f", value.y);
+                  ImGui::TableSetColumnIndex(3);
+                  ImGui::Text("%f", value.z);
+                }
               }
               ImGui::EndTable();
             }
@@ -147,6 +167,8 @@ struct JsonDockImpl
           ImGui::Text("%d", count);
         }
       }
+    } else {
+      ImGui::TextUnformatted(m_selected.c_str());
     }
   }
 };
@@ -200,12 +222,15 @@ JsonDock::Create(const AddDockFunc& addDock,
                [scene, enter, leave, indent, impl](const char* title,
                                                    bool* p_open) mutable {
                  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-                 if (ImGui::Begin(title, p_open)) {
+                 auto is_open = ImGui::Begin(title, p_open);
+                 ImGui::PopStyleVar();
+                 if (is_open) {
 
-                   auto size = ImGui::GetCurrentWindow()->Size;
-                   // auto size = ImGui::GetContentRegionAvail();
-                   static float f = 300;
-                   static float s = 300;
+                   // auto size = ImGui::GetCurrentWindow()->Size;
+                   auto size = ImGui::GetContentRegionAvail();
+                   static float f = 500;
+                   float s = size.y - f - 5;
+                   // ImGui::Text("%f, %f: %f; %f", size.x, size.y, f, s);
 
                    ::Splitter(false, 5, &f, &s, 8, 8);
                    if (ImGui::BeginChild("##split-first", { size.x, f })) {
@@ -221,6 +246,5 @@ JsonDock::Create(const AddDockFunc& addDock,
                    ImGui::EndChild();
                  }
                  ImGui::End();
-                 ImGui::PopStyleVar();
                }));
 }
