@@ -21,7 +21,7 @@ struct MouseEvent
   std::optional<int> Wheel;
 };
 
-using DockShow = std::function<void(bool* popen)>;
+using DockShow = std::function<void(const char* title, bool* popen)>;
 
 struct Dock
 {
@@ -40,13 +40,13 @@ struct Dock
     : Name(name)
     , UseWindow(true)
   {
-    OnShow = [show](bool*) { show(); };
+    OnShow = [show](const char* title, bool*) { show(); };
   }
 
   void Show();
 };
 
-using AddDockFunc = std::function<void(const Dock&dock)>;
+using AddDockFunc = std::function<void(const Dock& dock)>;
 
 using Task = std::function<void()>;
 
@@ -82,4 +82,3 @@ public:
   bool AddJapaneseFont(const std::filesystem::path& path);
   bool AddIconFont(const std::filesystem::path& path);
 };
-

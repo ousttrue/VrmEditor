@@ -45,9 +45,10 @@ public:
   ImLogger() { Clear(); }
 
   static void Create(const AddDockFunc& addDock,
+                     std::string_view title,
                      const std::shared_ptr<ImLogger>& logger)
   {
-    addDock(Dock("logger", [logger]() { logger->Draw(); }));
+    addDock(Dock(title, [logger]() { logger->Draw(); }));
   }
 
   void Clear()

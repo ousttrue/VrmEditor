@@ -8,9 +8,10 @@ class VrmDock
 {
 public:
   static void Create(const AddDockFunc& addDock,
+                     std::string_view title,
                      const std::shared_ptr<gltf::Scene>& scene)
   {
-    addDock(Dock("vrm", [scene]() {
+    addDock(Dock(title, [scene]() {
       if (auto vrm = scene->m_vrm0) {
         ImGui::Text("%s", "vrm-0.x");
         for (auto expression : vrm->m_expressions) {

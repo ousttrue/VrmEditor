@@ -28,10 +28,10 @@ Dock::Show()
       ImGui::SetNextWindowPos({ 100, 100 }, ImGuiCond_FirstUseEver);
       ImGui::SetNextWindowSize({ 100, 100 }, ImGuiCond_FirstUseEver);
       if (ImGui::Begin(Name.c_str(), &IsOpen)) {
-        OnShow(&IsOpen);
+        OnShow(Name.c_str(), &IsOpen);
       }
     } else {
-      OnShow(&IsOpen);
+      OnShow(Name.c_str(), &IsOpen);
     }
     if (UseWindow) {
       ImGui::End();
@@ -84,12 +84,13 @@ Gui::Gui(const void* window, const char* glsl_version)
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
 
-  m_docks.push_back(
-    Dock("demo", [](bool* p_open) { ImGui::ShowDemoWindow(p_open); }));
+  m_docks.push_back(Dock(
+    "demo", [](const char*, bool* p_open) { ImGui::ShowDemoWindow(p_open); }));
   m_docks.back().IsOpen = false;
 
-  m_docks.push_back(
-    Dock("metrics", [](bool* p_open) { ImGui::ShowMetricsWindow(p_open); }));
+  m_docks.push_back(Dock("metrics", [](const char*, bool* p_open) {
+    ImGui::ShowMetricsWindow(p_open);
+  }));
   m_docks.back().IsOpen = false;
 
   PostTask([this]() { LoadFont(); });

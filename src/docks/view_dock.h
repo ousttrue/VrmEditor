@@ -10,6 +10,7 @@ class ViewDock
 {
 public:
   static void Create(const AddDockFunc& addDock,
+                     std::string_view title,
                      const std::shared_ptr<gltf::Scene>& scene,
                      const std::shared_ptr<TreeContext>& context,
                      const std::shared_ptr<OrbitView>& view,
@@ -59,9 +60,9 @@ public:
       }
     };
 
-    addDock(Dock("view", [rt, scene](bool* p_open) {
+    addDock(Dock(title, [rt, scene](const char* title, bool* p_open) {
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-      if (ImGui::Begin("render target",
+      if (ImGui::Begin(title,
                        p_open,
                        ImGuiWindowFlags_NoScrollbar |
                          ImGuiWindowFlags_NoScrollWithMouse)) {

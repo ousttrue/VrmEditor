@@ -271,15 +271,18 @@ App::Run()
     gui->m_docks.push_back(dock);
   };
   auto indent = m_gui->m_fontSize * 0.5f;
-  JsonDock::Create(addDock, m_scene, indent);
 
-  HumanoidDock::Create(addDock, m_scene);
-  auto selection = SceneDock::CreateTree(addDock, m_scene, indent);
-  ViewDock::Create(addDock, m_scene, selection, m_view, m_timeline, m_renderer);
+  JsonDock::Create(addDock, "gltf-json", m_scene, indent);
+  HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
+  auto selection =
+    SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
+  ViewDock::Create(
+    addDock, "title", m_scene, selection, m_view, m_timeline, m_renderer);
+  VrmDock::Create(addDock, "vrm", m_scene);
 
-  MotionDock::Create(addDock, m_cuber);
-  ImTimeline::Create(addDock, m_timeline);
-  ImLogger::Create(addDock, m_logger);
+  MotionDock::Create(addDock, "motion", m_cuber);
+  ImTimeline::Create(addDock, "timeline", m_timeline);
+  ImLogger::Create(addDock, "logger", m_logger);
 
   std::optional<Time> lastTime;
   while (auto info = m_platform->NewFrame()) {

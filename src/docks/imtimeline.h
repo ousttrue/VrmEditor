@@ -93,11 +93,12 @@ class ImTimeline
 {
 public:
   static void Create(const AddDockFunc& addDock,
+                     std::string_view title,
                      const std::shared_ptr<Timeline>& timeline)
   {
     auto timelineGui = std::make_shared<ImTimeline>();
-    addDock(Dock("timeline",
-                 [timeline, timelineGui]() { timelineGui->show(timeline); }));
+    addDock(
+      Dock(title, [timeline, timelineGui]() { timelineGui->show(timeline); }));
   }
 
   void show(const std::shared_ptr<Timeline>& timeline,

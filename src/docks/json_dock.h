@@ -11,6 +11,7 @@ class JsonDock
 public:
   static std::stringstream s_ss;
   static void Create(const AddDockFunc& addDock,
+                     std::string_view title,
                      const std::shared_ptr<gltf::Scene>& scene,
                      float indent)
   {
@@ -46,7 +47,7 @@ public:
     };
     auto leave = []() { ImGui::TreePop(); };
 
-    addDock(Dock("gltf", [scene, enter, leave, indent]() {
+    addDock(Dock(title, [scene, enter, leave, indent]() {
       ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
       scene->TraverseJson(enter, leave);
       ImGui::PopStyleVar();

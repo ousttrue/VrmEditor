@@ -13,6 +13,7 @@ class SceneDock
 public:
   static std::shared_ptr<TreeContext> CreateTree(
     const AddDockFunc& addDock,
+    std::string_view title,
     const std::shared_ptr<gltf::Scene>& scene,
     float indent)
   {
@@ -54,55 +55,57 @@ public:
     };
     auto leave = []() { ImGui::TreePop(); };
 
-    addDock(Dock("scene", [scene, enter, leave, context, indent](bool* p_open) {
-      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-      if (ImGui::Begin("scene", p_open, ImGuiWindowFlags_NoScrollbar)) {
-        auto size = ImGui::GetContentRegionAvail();
+    addDock(Dock(
+      title,
+      [scene, enter, leave, context, indent](const char* title, bool* p_open) {
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+        if (ImGui::Begin(title, p_open, ImGuiWindowFlags_NoScrollbar)) {
+          auto size = ImGui::GetContentRegionAvail();
 
-        context->selected = context->new_selected;
-        // ImGui::BeginGroup();
-        if (ImGui::BeginChild("##scene-tree",
-                              { size.x, size.y / 2 },
-                              true,
-                              ImGuiWindowFlags_None)) {
+          context->selected = context->new_selected;
+          // ImGui::BeginGroup();
+          if (ImGui::BeginChild("##scene-tree",
+                                { size.x, size.y / 2 },
+                                true,
+                                ImGuiWindowFlags_None)) {
 
-          ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-          scene->Traverse(enter, leave);
-          ImGui::PopStyleVar();
-        }
-        ImGui::EndChild();
-        // ImGui::EndGroup();
+            ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
+            scene->Traverse(enter, leave);
+            ImGui::PopStyleVar();
+          }
+          ImGui::EndChild();
+          // ImGui::EndGroup();
 
-        // ImGui::BeginGroup();
-        if (ImGui::BeginChild("##scene-selected",
-                              { size.x, size.y / 2 },
-                              true,
-                              ImGuiWindowFlags_None)) {
-          if (context->selected) {
-            ImGui::Text("%s", context->selected->Name.c_str());
-            if (auto mesh_index = context->selected->Mesh) {
-              auto mesh = scene->m_meshes[*mesh_index];
-              auto instance = context->selected->Instance;
-              char morph_id[256];
-              for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
-                auto& morph = mesh->m_morphTargets[i];
-                snprintf(morph_id,
-                         sizeof(morph_id),
-                         "[%d]%s##morph%d",
-                         i,
-                         morph->Name.c_str(),
-                         i);
-                ImGui::SliderFloat(morph_id, &instance->weights[i], 0, 1);
+          // ImGui::BeginGroup();
+          if (ImGui::BeginChild("##scene-selected",
+                                { size.x, size.y / 2 },
+                                true,
+                                ImGuiWindowFlags_None)) {
+            if (context->selected) {
+              ImGui::Text("%s", context->selected->Name.c_str());
+              if (auto mesh_index = context->selected->Mesh) {
+                auto mesh = scene->m_meshes[*mesh_index];
+                auto instance = context->selected->Instance;
+                char morph_id[256];
+                for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
+                  auto& morph = mesh->m_morphTargets[i];
+                  snprintf(morph_id,
+                           sizeof(morph_id),
+                           "[%d]%s##morph%d",
+                           i,
+                           morph->Name.c_str(),
+                           i);
+                  ImGui::SliderFloat(morph_id, &instance->weights[i], 0, 1);
+                }
               }
             }
           }
+          ImGui::EndChild();
+          // ImGui::EndGroup();
         }
-        ImGui::EndChild();
-        // ImGui::EndGroup();
-      }
-      ImGui::End();
-      ImGui::PopStyleVar();
-    }));
+        ImGui::End();
+        ImGui::PopStyleVar();
+      }));
 
     return context;
   }

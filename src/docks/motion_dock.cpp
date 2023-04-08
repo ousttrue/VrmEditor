@@ -1,8 +1,8 @@
 #include <GL/glew.h>
 
+#include "cuber.h"
 #include "gl3renderer.h"
 #include "gui.h"
-#include "cuber.h"
 #include "motion_dock.h"
 #include "orbitview.h"
 #include "rendertarget.h"
@@ -129,6 +129,7 @@ draw(const GraphNode& node, int id)
 
 void
 MotionDock::Create(const AddDockFunc& addDock,
+                   std::string_view title,
                    const std::shared_ptr<Cuber>& cuber)
 {
   auto rt = std::make_shared<RenderTarget>(std::make_shared<OrbitView>());
@@ -137,15 +138,13 @@ MotionDock::Create(const AddDockFunc& addDock,
   rt->color[2] = 0.2f;
   rt->color[3] = 1.0f;
 
-  rt->render = [cuber](const ViewProjection& camera) {
-    cuber->Render(camera);
-  };
+  rt->render = [cuber](const ViewProjection& camera) { cuber->Render(camera); };
 
   auto gl3r = std::make_shared<Gl3Renderer>();
 
-  addDock(Dock("motion", [rt](bool* p_open) {
+  addDock(Dock(title, [rt](const char* title, bool* p_open) {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-    if (ImGui::Begin("motion",
+    if (ImGui::Begin(title,
                      p_open,
                      ImGuiWindowFlags_NoScrollbar |
                        ImGuiWindowFlags_NoScrollWithMouse)) {
