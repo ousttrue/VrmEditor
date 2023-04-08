@@ -14,11 +14,11 @@ SceneDock::CreateTree(const AddDockFunc& addDock,
   auto context = std::make_shared<TreeContext>();
 
   auto enter = [scene, context](const std::shared_ptr<gltf::Node>& node) {
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     static ImGuiTreeNodeFlags base_flags =
       ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
       ImGuiTreeNodeFlags_SpanAvailWidth;
     ImGuiTreeNodeFlags node_flags = base_flags;
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
     if (node->Children.empty()) {
       node_flags |=

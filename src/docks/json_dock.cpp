@@ -7,6 +7,8 @@ struct JsonDockImpl
 {
   std::stringstream m_ss;
 
+  std::string m_selected;
+
   bool Enter(nlohmann::json& item, std::string_view jsonpath)
   {
     static ImGuiTreeNodeFlags base_flags =
@@ -18,6 +20,9 @@ struct JsonDockImpl
       node_flags |=
         ImGuiTreeNodeFlags_Leaf |
         ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+    }
+    if (jsonpath == m_selected) {
+      node_flags |= ImGuiTreeNodeFlags_Selected;
     }
 
     m_ss.str("");
@@ -76,7 +81,7 @@ struct JsonDockImpl
       (void*)(intptr_t)&item, node_flags, "%s", label.c_str());
 
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-      // context->new_selected = node;
+      m_selected = jsonpath;
     }
 
     return node_open && !is_leaf;
