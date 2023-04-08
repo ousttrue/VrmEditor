@@ -19,8 +19,40 @@ struct JsonDockImpl
         ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
     }
 
-    auto key = jsonpath.back();
     m_ss.str("");
+
+    auto kind = jsonpath.front();
+    bool extension = false;
+    for (auto jp : jsonpath) {
+      if (jp == "extensions" || jp == "extrans") {
+        extension = true;
+        break;
+      }
+    }
+
+    if (extension) {
+      m_ss << " ";
+    } else if (kind == "images" || kind == "textures" || kind == "samplers") {
+      m_ss << " ";
+    } else if (kind == "bufferViews" || kind == "buffers") {
+      m_ss << " ";
+    } else if (kind == "accessors") {
+      m_ss << " ";
+    } else if (kind == "meshes" || kind == "skins") {
+      m_ss << "󰕣 ";
+    } else if (kind == "materials") {
+      m_ss << " ";
+    } else if (kind == "nodes" || kind == "scenes" || kind == "scene") {
+      m_ss << "󰵉 ";
+    } else if (kind == "animations") {
+      m_ss << " ";
+    } else if (kind == "asset") {
+      m_ss << " ";
+    } else if (kind == "extensionsUsed") {
+      m_ss << " ";
+    }
+
+    auto key = jsonpath.back();
     if (item.is_object()) {
       if (item.find("name") != item.end()) {
         m_ss << key << ": " << (std::string_view)item.at("name");
