@@ -150,18 +150,21 @@ App::LoadModel(const std::filesystem::path& path)
 }
 
 bool
-App::LoadMotion(const std::filesystem::path& path, float scaling)
+App::LoadMotion(const std::filesystem::path& path)
 {
-  Log(LogLevel::Info) << "LoadMotion: " << path;
   m_motion->Clear();
 
   // load bvh
   auto bvh = bvh::Bvh::ParseFile(path);
   if (!bvh) {
+    Log(LogLevel::Error) << "LoadMotion: [error]" << path;
     return false;
   }
   bvh::SetBvh(m_motion, bvh);
-  m_cuber->CalcShape(m_motion->m_roots[0], bvh->GuessScaling());
+  auto scaling = bvh->GuessScaling();
+  Log(LogLevel::Info) << "LoadMotion: " << scaling << ", " << path;
+
+  m_cuber->CalcShape(m_motion->m_roots[0], scaling);
 
   // update motion scene
   auto track = m_timeline->AddTrack("bvh", bvh->Duration());
@@ -189,7 +192,7 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
       [dst = m_scene,
        humanBoneMap = std::vector<vrm::HumanBones>(),
        rotations = std::vector<DirectX::XMFLOAT4>(),
-       scaling = bvh->GuessScaling()](const gltf::Scene& src) mutable {
+       scaling](const gltf::Scene& src) mutable {
         humanBoneMap.clear();
         rotations.clear();
         for (auto& node : src.m_nodes) {
@@ -205,6 +208,8 @@ App::LoadMotion(const std::filesystem::path& path, float scaling)
                             .Bones = humanBoneMap,
                             .Rotations = rotations });
       });
+  } else {
+    Log(LogLevel::Wran) << "humanoid map not found";
   }
   return true;
 }
@@ -213,13 +218,17 @@ std::shared_ptr<App::HumanBoneMap>
 App::FindHumanBoneMap(const bvh::Bvh& bvh) const
 {
   for (auto& map : m_humanBoneMapList) {
+    bool match = true;
     for (auto& joint : bvh.joints) {
       auto found = map->NameBoneMap.find(joint.name);
       if (found == map->NameBoneMap.end()) {
-        return {};
+        match = false;
+        break;
       }
     }
-    return map;
+    if (match) {
+      return map;
+    }
   }
   return {};
 }
@@ -272,15 +281,28 @@ App::Run()
   };
   auto indent = m_gui->m_fontSize * 0.5f;
 
-  JsonDock::Create(addDock, "gltf-json", m_scene, indent);
-  HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
-  auto selection =
-    SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
-  ViewDock::Create(
-    addDock, "title", m_scene, selection, m_view, m_timeline, m_renderer);
-  VrmDock::Create(addDock, "vrm", m_scene);
+  {
+    JsonDock::Create(addDock, "gltf-json", m_scene, indent);
+    HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
+    auto selection =
+      SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
+    ViewDock::Create(addDock,
+                     "scene-view",
+                     m_scene,
+                     selection,
+                     m_view,
+                     m_timeline,
+                     m_renderer);
+    VrmDock::Create(addDock, "vrm", m_scene);
+  }
 
-  MotionDock::Create(addDock, "motion", m_cuber);
+  {
+    HumanoidDock::Create(addDock, "motion-body", "motion-finger", m_motion);
+    auto selection =
+      SceneDock::CreateTree(addDock, "motion-hierarchy", m_motion, indent);
+    MotionDock::Create(addDock, "motion", m_cuber);
+  }
+
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
 

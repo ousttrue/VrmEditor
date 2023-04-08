@@ -122,8 +122,23 @@ public:
 
       ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
       for (auto& log : Logs) {
+        switch (log.Level) {
+          case LogLevel::Debug:
+            ImGui::PushStyleColor(ImGuiCol_Text, { 0.4f, 0.4f, 0.4f, 1 });
+            break;
+          case LogLevel::Info:
+            ImGui::PushStyleColor(ImGuiCol_Text, { 0, 0, 0, 1 });
+            break;
+          case LogLevel::Wran:
+            ImGui::PushStyleColor(ImGuiCol_Text, { 0.8f, 0.4f, 0.2f, 1 });
+            break;
+          case LogLevel::Error:
+            ImGui::PushStyleColor(ImGuiCol_Text, { 0.4f, 0, 0, 1 });
+            break;
+        }
         ImGui::TextUnformatted(log.Message.data(),
                                log.Message.data() + log.Message.size());
+        ImGui::PopStyleColor();
       }
 
       // const char* buf = Buf.begin();

@@ -64,6 +64,7 @@ class Gui
   std::filesystem::path m_baseFont;
   std::filesystem::path m_japanseseFont;
   std::filesystem::path m_iconFont;
+  bool m_resetLayout = false;
 
 public:
   int m_fontSize = 20;

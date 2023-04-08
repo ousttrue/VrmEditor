@@ -85,6 +85,28 @@ vrmeditor.add_human_map {
   RightToeBase = "rightToe",
 }
 
+vrmeditor.add_human_map {
+  Hips = "hips",
+  Ab = "spine",
+  Chest = "chest",
+  LeftCollar = "leftShoulder",
+  LeftShoulder = "leftUpperArm",
+  LeftElbow = "leftLowerArm",
+  LeftWrist = "leftHand",
+  Neck = "neck",
+  Head = "head",
+  RightCollar = "rightShoulder",
+  RightShoulder = "rightUpperArm",
+  RightElbow = "rightLowerArm",
+  RightWrist = "rightHand",
+  LeftHip = "leftUpperLeg",
+  LeftKnee = "leftLowerLeg",
+  LeftAnkle = "leftFoot",
+  RightHip = "rightUpperLeg",
+  RightKnee = "rightLowerLeg",
+  RightAnkle = "rightFoot",
+}
+
 --
 -- load model
 --

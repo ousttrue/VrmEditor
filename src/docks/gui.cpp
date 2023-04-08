@@ -357,6 +357,18 @@ Gui::DockSpace()
   ImGuiIO& io = ImGui::GetIO();
   if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
     ImGuiID dockspace_id = ImGui::GetID(DOCK_SPACE);
+
+    if (!ImGui::DockBuilderGetNode(dockspace_id) || m_resetLayout) {
+      m_resetLayout = false;
+
+      ImGui::DockBuilderRemoveNode(dockspace_id);
+      ImGui::DockBuilderAddNode(dockspace_id);
+
+      // Build dockspace...
+
+      ImGui::DockBuilderFinish(dockspace_id);
+    }
+
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
   } else {
     assert(false);
@@ -432,6 +444,10 @@ Gui::DockSpace()
     }
 
     if (ImGui::BeginMenu("Docks")) {
+      if (ImGui::MenuItem("Reset", "")) {
+        m_resetLayout = true;
+      }
+      ImGui::Separator();
       // Disabling fullscreen would allow the window to be moved to the front of
       // other windows, which we can't undo at the moment without finer window
       // depth/z control.

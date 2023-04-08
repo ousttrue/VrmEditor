@@ -81,9 +81,8 @@ vrmeditor_load_motion(lua_State* l)
     return 0;
   }
   auto path = luaL_checklstring(l, 1, nullptr);
-  auto scale = luaL_checknumber(l, 2);
 
-  auto succeeded = App::Instance().LoadMotion(path, scale);
+  auto succeeded = App::Instance().LoadMotion(path);
   lua_pushboolean(App::Instance().Lua()->state(), succeeded);
   return 1;
 }
