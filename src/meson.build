@@ -11,6 +11,7 @@ executable(
         'docks/json_dock.cpp',
         'docks/motion_dock.cpp',
         'docks/cuber.cpp',
+        'docks/scene_dock.cpp',
     ],
     install: true,
     gui_app: true,
