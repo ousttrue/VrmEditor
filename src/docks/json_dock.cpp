@@ -90,6 +90,7 @@ struct JsonDockImpl
   }
 };
 
+// https://github.com/ocornut/imgui/issues/319
 bool
 Splitter(bool split_vertically,
          float thickness,
@@ -134,29 +135,31 @@ JsonDock::Create(const AddDockFunc& addDock,
   };
   auto leave = []() { ImGui::TreePop(); };
 
-  addDock(Dock(
-    title,
-    [scene, enter, leave, indent](const char* title, bool* p_open) mutable {
-      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-      if (ImGui::Begin(title, p_open)) {
+  addDock(Dock(title,
+               [scene, enter, leave, indent, impl](const char* title,
+                                                   bool* p_open) mutable {
+                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+                 if (ImGui::Begin(title, p_open)) {
 
-        auto size = ImGui::GetContentRegionAvail();
-        static float f = 300;
-        static float s = 300;
+                   auto size = ImGui::GetCurrentWindow()->Size;
+                   // auto size = ImGui::GetContentRegionAvail();
+                   static float f = 300;
+                   static float s = 300;
 
-        ::Splitter(false, 5, &f, &s, 8, 8);
-        if (ImGui::BeginChild("##split-first", { size.x, f })) {
-          ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-          scene->TraverseJson(enter, leave);
-          ImGui::PopStyleVar();
-        }
-        ImGui::EndChild();
+                   ::Splitter(false, 5, &f, &s, 8, 8);
+                   if (ImGui::BeginChild("##split-first", { size.x, f })) {
+                     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
+                     scene->TraverseJson(enter, leave);
+                     ImGui::PopStyleVar();
+                   }
+                   ImGui::EndChild();
 
-        if (ImGui::BeginChild("##split-second", { size.x, s })) {
-        }
-        ImGui::EndChild();
-      }
-      ImGui::End();
-      ImGui::PopStyleVar();
-    }));
+                   if (ImGui::BeginChild("##split-second", { size.x, s })) {
+                     ImGui::TextUnformatted(impl->m_selected.c_str());
+                   }
+                   ImGui::EndChild();
+                 }
+                 ImGui::End();
+                 ImGui::PopStyleVar();
+               }));
 }
