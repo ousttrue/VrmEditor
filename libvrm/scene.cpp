@@ -877,27 +877,34 @@ Scene::Traverse(const EnterFunc& enter,
 void
 Scene::TraverseJson(const EnterJson& enter,
                     const LeaveJson& leave,
-                    nlohmann::json* item,
-                    std::string_view key)
+                    nlohmann::json* item)
 {
   if (!item) {
     // root
+    m_jsonpath.clear();
     for (auto& kv : m_gltf.Json.items()) {
-      TraverseJson(enter, leave, &kv.value(), kv.key());
+      m_jsonpath.push_back(kv.key());
+      TraverseJson(enter, leave, &kv.value());
+      m_jsonpath.pop_back();
     }
     return;
   }
 
-  if (enter(*item, key.size() ? std::string{ key.begin(), key.end() } : "")) {
+  if (enter(*item, m_jsonpath)) {
     if (item->is_object()) {
       for (auto& kv : item->items()) {
-        TraverseJson(enter, leave, &kv.value(), kv.key());
+        m_jsonpath.push_back(kv.key());
+        TraverseJson(enter, leave, &kv.value());
+        m_jsonpath.pop_back();
       }
     } else if (item->is_array()) {
       for (int i = 0; i < item->size(); ++i) {
         std::stringstream ss;
         ss << i;
-        TraverseJson(enter, leave, &(*item)[i], ss.str());
+        auto str = ss.str();
+        m_jsonpath.push_back(str);
+        TraverseJson(enter, leave, &(*item)[i]);
+        m_jsonpath.pop_back();
       }
     }
     if (leave) {

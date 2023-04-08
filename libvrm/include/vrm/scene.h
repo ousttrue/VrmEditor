@@ -50,7 +50,8 @@ using RenderFunc =
 
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;
-using EnterJson = std::function<bool(nlohmann::json&, const std::string& key)>;
+using EnterJson =
+  std::function<bool(nlohmann::json&, std::span<std::string_view> jsonpath)>;
 using LeaveJson = std::function<void()>;
 
 struct Scene
@@ -70,6 +71,8 @@ struct Scene
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
   std::list<std::function<void(const Scene& scene)>> m_sceneUpdated;
+
+  std::vector<std::string_view> m_jsonpath;
 
   Scene();
   Scene(const Scene&) = delete;
@@ -126,8 +129,7 @@ struct Scene
                 const std::shared_ptr<Node>& node = nullptr);
   void TraverseJson(const EnterJson& enter,
                     const LeaveJson& leave,
-                    nlohmann::json* j = nullptr,
-                    std::string_view key = {});
+                    nlohmann::json* j = nullptr);
   void SetHumanPose(const vrm::HumanPose& pose);
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
 
