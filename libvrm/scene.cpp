@@ -644,7 +644,7 @@ Scene::ParseVrm0()
       for (auto& g : blendShapeGroups) {
         // {"binds":[],"isBinary":false,"materialValues":[],"name":"Neutral","presetName":"neutral"}
         // std::cout << g << std::endl;
-        auto expression = ptr->addBlendShape(
+        auto expression = ptr->m_expressions.addBlendShape(
           g.at("presetName"), g.at("name"), g.value("isBinary", false));
         if (has(g, "binds")) {
           for (vrm::v0::ExpressionMorphTargetBind bind : g.at("binds")) {

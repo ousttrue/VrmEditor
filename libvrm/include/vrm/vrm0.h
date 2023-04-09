@@ -136,6 +136,28 @@ struct Expression
   }
 };
 
+struct Expressions
+{
+  std::shared_ptr<Expression> Get(ExpressionPreset preset) const
+  {
+    for (auto& ex : Expressions)
+      if (ex->preset ==preset)
+        return ex;
+    return nullptr;
+  }
+
+  std::vector<std::shared_ptr<Expression>> Expressions;
+
+  std::shared_ptr<Expression> addBlendShape(const std::string& presetName,
+                                            std::string_view name,
+                                            bool is_binary)
+  {
+    auto ex = std::make_shared<Expression>(presetName, name, is_binary);
+    Expressions.push_back(ex);
+    return Expressions.back();
+  }
+};
+
 // using MorphTargetKey = std::tuple<uint16_t, uint16_t>;
 union MorphTargetKey
 {
@@ -162,42 +184,40 @@ struct std::hash<vrm::v0::MorphTargetKey>
 namespace vrm::v0 {
 struct Vrm
 {
-
-  std::vector<std::shared_ptr<Expression>> m_expressions;
+  Expressions m_expressions;
   std::vector<std::shared_ptr<ColliderGroup>> m_colliderGroups;
   std::vector<std::shared_ptr<Spring>> m_springs;
   std::unordered_map<MorphTargetKey, float> m_morphTargetMap;
 
-  std::shared_ptr<Expression> addBlendShape(const std::string& presetName,
-                                            std::string_view name,
-                                            bool is_binary)
+  using NodeToIndexFunc =
+    std::function<uint32_t(const std::shared_ptr<gltf::Node>& node)>;
+
+  void ApplyExpression(const std::shared_ptr<Expression>& expression,
+                       const NodeToIndexFunc& nodeToIndex)
   {
-    auto ptr = std::make_shared<Expression>(presetName, name, is_binary);
-    m_expressions.push_back(ptr);
-    return ptr;
+    for (auto& bind : expression->morphBinds) {
+      MorphTargetKey key{
+        .NodeIndex = static_cast<uint16_t>(nodeToIndex(bind.Node)),
+        .MorphIndex = static_cast<uint16_t>(bind.index),
+      };
+      auto found = m_morphTargetMap.find(key);
+      auto weight = bind.weight * expression->weight;
+      if (found != m_morphTargetMap.end()) {
+        found->second += weight;
+      } else {
+        m_morphTargetMap.insert(std::make_pair(key, weight));
+      }
+    }
   }
 
   const std::unordered_map<MorphTargetKey, float>& EvalMorphTargetMap(
-    const std::function<uint32_t(const std::shared_ptr<gltf::Node>& node)>&
-      NodeToIndex)
+    const NodeToIndexFunc& nodeToIndex)
   {
     // clear
     m_morphTargetMap.clear();
     // apply
-    for (auto& expression : m_expressions) {
-      for (auto& bind : expression->morphBinds) {
-        MorphTargetKey key{
-          .NodeIndex = static_cast<uint16_t>(NodeToIndex(bind.Node)),
-          .MorphIndex = static_cast<uint16_t>(bind.index),
-        };
-        auto found = m_morphTargetMap.find(key);
-        auto weight = bind.weight * expression->weight;
-        if (found != m_morphTargetMap.end()) {
-          found->second += weight;
-        } else {
-          m_morphTargetMap.insert(std::make_pair(key, weight));
-        }
-      }
+    for (auto& expression : m_expressions.Expressions) {
+      ApplyExpression(expression, nodeToIndex);
     }
     return m_morphTargetMap;
   }

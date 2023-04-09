@@ -119,6 +119,26 @@ read, write, animation test.
 - [ ] bone assign
 - [ ] pose retarget
 
+### expression
+
+- [ ] 󰱰 喜
+- [ ] 󰱩 怒
+- [ ] 󰱶 哀
+- [ ] 󰱱 楽
+- [ ] 󰱮 驚
+- [ ] aa
+- [ ] ih
+- [ ] ou
+- [ ] ee
+- [ ] oh
+- [ ] ‿ ‿ blink
+- [ ] 󰈈 ‿ blink-L
+- [ ] ‿ 󰈈 blink-R
+- [ ] 󰈈  lookAt-up
+- [ ] 󰈈  lookAt-down
+- [ ] 󰈈  lookAt-left
+- [ ] 󰈈  lookAt-right
+
 ### vrm
 
 - [ ] meta
