@@ -12,6 +12,7 @@ executable(
         'docks/motion_dock.cpp',
         'docks/cuber.cpp',
         'docks/scene_dock.cpp',
+        'docks/vrm_dock.cpp',
     ],
     install: true,
     gui_app: true,

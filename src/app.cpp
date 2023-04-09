@@ -205,8 +205,8 @@ App::LoadMotion(const std::filesystem::path& path)
   });
 
   // bind motion to scene
-  m_motion->m_sceneUpdated.push_back([cuber = m_cuber,
-                                      scaling](const gltf::Scene& scene) {
+  m_motion->m_sceneUpdated.push_back([cuber =
+                                        m_cuber](const gltf::Scene& scene) {
     cuber->Instances.clear();
     scene.m_roots[0]->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
                                                    cuber->Instances);
