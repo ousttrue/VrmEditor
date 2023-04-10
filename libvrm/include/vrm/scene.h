@@ -3,6 +3,7 @@
 #include "humanpose.h"
 #include "scenetypes.h"
 #include "springbone.h"
+#include "expression.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <expected>
@@ -65,10 +66,13 @@ struct Scene
   std::vector<std::shared_ptr<Node>> m_roots;
   std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
+
+  // extensions
   std::shared_ptr<vrm::v0::Vrm> m_vrm0;
   std::shared_ptr<vrm::v1::Vrm> m_vrm1;
   std::shared_ptr<vrm::animation::Animation> m_vrma;
 
+  std::shared_ptr<vrm::Expressions> m_expressions;
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
   std::list<std::function<void(const Scene& scene)>> m_sceneUpdated;

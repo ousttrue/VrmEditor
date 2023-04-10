@@ -34,20 +34,16 @@ VrmDock::Create(const AddDockFunc& addDock,
                 const std::shared_ptr<gltf::Scene>& scene)
 {
   addDock(Dock(title, [scene]() {
-    if (auto vrm = scene->m_vrm0) {
+    if (auto expressions = scene->m_expressions) {
       ImGui::Text("%s", "vrm-0.x");
 
       const float spacing = 4;
       ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
       ImGui::PushID("set1");
-      // for (auto expression : vrm->m_expressions) {
-      //   ImGui::SliderFloat(
-      //     expression->label.c_str(), &expression->weight, 0, 1);
-      // }
       {
         float dummy = 0;
         // 喜
-        auto happy = vrm->m_expressions.Get(vrm::v0::ExpressionPreset::joy);
+        auto happy = expressions->Get(vrm::ExpressionPreset::happy);
         auto x0 = VerticalSlider(0,
                                  "joy",
                                  happy ? &happy->weight : &dummy,
@@ -56,7 +52,7 @@ VrmDock::Create(const AddDockFunc& addDock,
                                  (ImVec4)ImColor::HSV(0 / 7.0f, 0.7f, 0.5f),
                                  (ImVec4)ImColor::HSV(0 / 7.0f, 0.9f, 0.9f));
         // 怒
-        auto angry = vrm->m_expressions.Get(vrm::v0::ExpressionPreset::angry);
+        auto angry = expressions->Get(vrm::ExpressionPreset::angry);
         auto x1 = VerticalSlider(1,
                                  "angry",
                                  angry ? &angry->weight : &dummy,
@@ -65,7 +61,7 @@ VrmDock::Create(const AddDockFunc& addDock,
                                  (ImVec4)ImColor::HSV(0 / 7.0f, 0.7f, 0.5f),
                                  (ImVec4)ImColor::HSV(0 / 7.0f, 0.9f, 0.9f));
         // 哀
-        auto sad = vrm->m_expressions.Get(vrm::v0::ExpressionPreset::sorrow);
+        auto sad = expressions->Get(vrm::ExpressionPreset::sad);
         auto x2 = VerticalSlider(2,
                                  "sorrow",
                                  sad ? &sad->weight : &dummy,
@@ -74,7 +70,7 @@ VrmDock::Create(const AddDockFunc& addDock,
                                  (ImVec4)ImColor::HSV(0 / 7.0f, 0.7f, 0.5f),
                                  (ImVec4)ImColor::HSV(0 / 7.0f, 0.9f, 0.9f));
         // 楽
-        auto relaxed = vrm->m_expressions.Get(vrm::v0::ExpressionPreset::fun);
+        auto relaxed = expressions->Get(vrm::ExpressionPreset::relaxed);
         auto x3 = VerticalSlider(3,
                                  "fun",
                                  relaxed ? &relaxed->weight : &dummy,
@@ -142,7 +138,7 @@ VrmDock::Create(const AddDockFunc& addDock,
     }
     if (auto vrm = scene->m_vrm1) {
       ImGui::Text("%s", "vrm-1.0");
-      // for (auto expression : vrm->m_expressions) {
+      // for (auto expression : expressions) {
       //   ImGui::SliderFloat(
       //     expression->label.c_str(), &expression->weight, 0, 1);
       // }

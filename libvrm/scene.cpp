@@ -638,16 +638,19 @@ Scene::ParseVrm0()
   // materialProperties
 
   if (has(VRM, "blendShapeMaster")) {
+
+    m_expressions = std::make_shared<vrm::Expressions>();
+
     auto& blendShapeMaster = VRM.at("blendShapeMaster");
     if (has(blendShapeMaster, "blendShapeGroups")) {
       auto& blendShapeGroups = blendShapeMaster.at("blendShapeGroups");
       for (auto& g : blendShapeGroups) {
         // {"binds":[],"isBinary":false,"materialValues":[],"name":"Neutral","presetName":"neutral"}
         // std::cout << g << std::endl;
-        auto expression = ptr->m_expressions.addBlendShape(
+        auto expression = m_expressions->addBlendShape(
           g.at("presetName"), g.at("name"), g.value("isBinary", false));
         if (has(g, "binds")) {
-          for (vrm::v0::ExpressionMorphTargetBind bind : g.at("binds")) {
+          for (vrm::ExpressionMorphTargetBind bind : g.at("binds")) {
             // [0-100] to [0-1]
             bind.weight *= 0.01f;
             for (auto& node : m_nodes) {
@@ -788,9 +791,10 @@ Scene::Render(Time time, const RenderFunc& render)
     m_spring->Update(time);
   }
 
-  if (m_vrm0) {
+  if (m_expressions) {
     // VRM0 expression to morphTarget
-    auto nodeToIndex = [nodes = m_nodes](const std::shared_ptr<Node>& node) {
+    auto nodeToIndex = [nodes = m_nodes, expressions = m_expressions](
+                         const std::shared_ptr<Node>& node) {
       for (uint32_t i = 0; i < nodes.size(); ++i) {
         if (node == nodes[i]) {
           return i;
@@ -798,7 +802,7 @@ Scene::Render(Time time, const RenderFunc& render)
       }
       return (uint32_t)-1;
     };
-    for (auto& [k, v] : m_vrm0->EvalMorphTargetMap(nodeToIndex)) {
+    for (auto& [k, v] : m_expressions->EvalMorphTargetMap(nodeToIndex)) {
       auto& morph_node = m_nodes[k.NodeIndex];
       morph_node->Instance->weights[k.MorphIndex] = v;
     }
