@@ -319,7 +319,8 @@ App::Run()
                      m_view,
                      m_timeline,
                      m_renderer);
-    VrmDock::Create(addDock, "vrm", m_scene);
+    VrmDock::CreateVrm(addDock, "vrm", m_scene);
+    VrmDock::CreateExpression(addDock, "expression", m_scene);
   }
 
   {

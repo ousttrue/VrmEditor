@@ -87,6 +87,15 @@ struct Expression
   float weight = 0;
   std::vector<ExpressionMorphTargetBind> morphBinds;
   std::vector<ExpressionMaterialBind> materialBinds;
+
+  bool Empty() const
+  {
+    if (morphBinds.size())
+      return false;
+    if (materialBinds.size())
+      return false;
+    return true;
+  }
 };
 
 struct Expressions
