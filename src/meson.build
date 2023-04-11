@@ -6,6 +6,7 @@ executable(
         'app.cpp',
         'luahost.cpp',
         'assetdir.cpp',
+        'udp_receiver.cpp',
         'docks/gl3renderer.cpp',
         'docks/gui.cpp',
         'docks/json_dock.cpp',
@@ -28,5 +29,6 @@ executable(
         imgui_filedialog_dep,
         iconfont_cpp_headers_dep,
         imnodes_dep,
+        asio_dep,
     ],
 )

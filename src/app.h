@@ -20,6 +20,7 @@ class OrbitView;
 class ImLogger;
 class Gl3Renderer;
 class Cuber;
+class UdpReceiver;
 
 class App
 {
@@ -36,6 +37,7 @@ class App
 
   std::shared_ptr<gltf::Scene> m_motion;
   std::shared_ptr<Cuber> m_cuber;
+  std::shared_ptr<UdpReceiver> m_udp;
 
   struct HumanBoneMap
   {

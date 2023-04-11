@@ -6,6 +6,7 @@
 #include "motion_dock.h"
 #include "orbitview.h"
 #include "rendertarget.h"
+#include "udp_receiver.h"
 #include <imgui.h>
 #include <imnodes.h>
 #include <iostream>
@@ -131,7 +132,8 @@ void
 MotionDock::Create(const AddDockFunc& addDock,
                    std::string_view title,
                    const std::shared_ptr<Cuber>& cuber,
-                   const std::shared_ptr<TreeContext>& context)
+                   const std::shared_ptr<TreeContext>& context,
+                   const std::shared_ptr<UdpReceiver>& udp)
 {
   auto rt = std::make_shared<RenderTarget>(std::make_shared<OrbitView>());
   rt->color[0] = 0.4f;
@@ -181,6 +183,24 @@ MotionDock::Create(const AddDockFunc& addDock,
     }
     ImGui::End();
     ImGui::PopStyleVar();
+  }));
+
+  addDock(Dock("udp-recv", [udp, enable = false, count = 0]() mutable {
+    if (enable) {
+
+    } else {
+      if (ImGui::Button("start:54345")) {
+        auto callback = [p = &count](std::span<const uint8_t> values) {
+          (*p)++;
+        };
+        udp->Start(54345, callback);
+        enable = true;
+      }
+    }
+
+    if (enable) {
+      ImGui::Text("%d", count);
+    }
   }));
 
   // addDock(Dock("input-stream", []() {

@@ -15,6 +15,7 @@
 #include "docks/vrm_dock.h"
 #include "luahost.h"
 #include "platform.h"
+#include "udp_receiver.h"
 #include <vrm/animation.h>
 #include <vrm/bvh.h>
 #include <vrm/bvhresolver.h>
@@ -59,6 +60,7 @@ App::App()
   m_view = std::make_shared<OrbitView>();
   m_timeline = std::make_shared<Timeline>();
   m_motion = std::make_shared<gltf::Scene>();
+  m_udp = std::make_shared<UdpReceiver>();
 
   m_platform = std::make_shared<Platform>();
   auto window =
@@ -327,7 +329,7 @@ App::Run()
     HumanoidDock::Create(addDock, "motion-body", "motion-finger", m_motion);
     auto selection =
       SceneDock::CreateTree(addDock, "motion-hierarchy", m_motion, indent);
-    MotionDock::Create(addDock, "motion", m_cuber, selection);
+    MotionDock::Create(addDock, "motion", m_cuber, selection, m_udp);
   }
 
   ImTimeline::Create(addDock, "timeline", m_timeline);
@@ -336,6 +338,8 @@ App::Run()
   std::optional<Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
     auto time = info->Time;
+
+    m_udp->Update();
 
     gizmo::clear();
     if (lastTime) {
