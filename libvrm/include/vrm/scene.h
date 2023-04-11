@@ -1,9 +1,9 @@
 #pragma once
+#include "expression.h"
 #include "gltf.h"
 #include "humanpose.h"
 #include "scenetypes.h"
 #include "springbone.h"
-#include "expression.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <expected>
@@ -93,7 +93,7 @@ struct Scene
     m_roots.clear();
     m_skins.clear();
     m_animations.clear();
-    m_sceneUpdated.clear();
+    // m_sceneUpdated.clear();
     m_gltf = {};
   }
 
@@ -141,6 +141,13 @@ struct Scene
   std::vector<uint8_t> ToGlb() const;
 
   BoundingBox GetBoundingBox() const;
+
+  void InitNodes()
+  {
+    m_roots[0]->InitialMatrix();
+    m_roots[0]->CalcWorldMatrix(true);
+    m_roots[0]->CalcShape();
+  }
 
 private:
   std::expected<bool, std::string> Parse();

@@ -20,6 +20,7 @@
 #include <vrm/bvh.h>
 #include <vrm/bvhresolver.h>
 #include <vrm/node.h>
+#include <vrm/srht_update.h>
 #include <vrm/timeline.h>
 
 const auto WINDOW_WIDTH = 2000;
@@ -81,6 +82,40 @@ App::App()
 
   cuber::PushGrid(gizmo::lines());
   gizmo::fix();
+
+  // retarget human pose
+  m_motion->m_sceneUpdated.push_back(
+    [dst = m_scene,
+     humanBoneMap = std::vector<vrm::HumanBones>(),
+     rotations =
+       std::vector<DirectX::XMFLOAT4>()](const gltf::Scene& src) mutable {
+      humanBoneMap.clear();
+      rotations.clear();
+      for (auto& node : src.m_nodes) {
+        if (auto humanoid = node->Humanoid) {
+          humanBoneMap.push_back(humanoid->HumanBone);
+          rotations.push_back(node->Transform.Rotation);
+        }
+      }
+
+      if (src.m_roots.size()) {
+        auto& hips = src.m_roots[0]->Transform.Translation;
+        dst->SetHumanPose({ .RootPosition = { hips.x, hips.y, hips.z },
+                            .Bones = humanBoneMap,
+                            .Rotations = rotations });
+      }
+    });
+
+  // bind motion to scene
+  m_motion->m_sceneUpdated.push_back(
+    [cuber = m_cuber](const gltf::Scene& scene) {
+      cuber->Instances.clear();
+      if (scene.m_roots.size()) {
+        scene.m_roots[0]->UpdateShapeInstanceRecursive(
+          DirectX::XMMatrixIdentity(), cuber->Instances);
+      }
+    });
+
 }
 
 App::~App() {}
@@ -167,12 +202,18 @@ App::LoadModel(const std::filesystem::path& path)
   }
 }
 
-bool
-App::LoadMotion(const std::filesystem::path& path)
+void
+App::ClearMotion()
 {
   m_motion->Clear();
   m_cuber->Instances.clear();
   m_timeline->Tracks.clear();
+}
+
+bool
+App::LoadMotion(const std::filesystem::path& path)
+{
+  ClearMotion();
 
   std::vector<uint8_t> buffer;
   auto bytes = ReadAllBytes(path, buffer);
@@ -206,14 +247,6 @@ App::LoadMotion(const std::filesystem::path& path)
     }
   });
 
-  // bind motion to scene
-  m_motion->m_sceneUpdated.push_back([cuber =
-                                        m_cuber](const gltf::Scene& scene) {
-    cuber->Instances.clear();
-    scene.m_roots[0]->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
-                                                   cuber->Instances);
-  });
-
   if (auto map = FindHumanBoneMap(*bvh)) {
     // assign human bone
     for (auto& node : m_motion->m_nodes) {
@@ -225,25 +258,6 @@ App::LoadMotion(const std::filesystem::path& path)
       }
     }
 
-    // retarget human pose
-    m_motion->m_sceneUpdated.push_back(
-      [dst = m_scene,
-       humanBoneMap = std::vector<vrm::HumanBones>(),
-       rotations =
-         std::vector<DirectX::XMFLOAT4>()](const gltf::Scene& src) mutable {
-        humanBoneMap.clear();
-        rotations.clear();
-        for (auto& node : src.m_nodes) {
-          if (auto humanoid = node->Humanoid) {
-            humanBoneMap.push_back(humanoid->HumanBone);
-            rotations.push_back(node->Transform.Rotation);
-          }
-        }
-        auto& hips = src.m_roots[0]->Transform.Translation;
-        dst->SetHumanPose({ .RootPosition = { hips.x, hips.y, hips.z },
-                            .Bones = humanBoneMap,
-                            .Rotations = rotations });
-      });
   } else {
     Log(LogLevel::Wran) << "humanoid map not found";
   }
@@ -329,7 +343,28 @@ App::Run()
     HumanoidDock::Create(addDock, "motion-body", "motion-finger", m_motion);
     auto selection =
       SceneDock::CreateTree(addDock, "motion-hierarchy", m_motion, indent);
-    MotionDock::Create(addDock, "motion", m_cuber, selection, m_udp);
+
+    auto callback = [scene = m_motion,
+                     cuber = m_cuber](std::span<const uint8_t> data) {
+      // udp update m_motion scene
+      srht::UpdateScene(scene, cuber->Instances, data);
+
+      if (scene->m_roots.size()) {
+        scene->m_roots[0]->CalcWorldMatrix(true);
+        scene->RaiseSceneUpdated();
+      }
+    };
+
+    MotionDock::Create(
+      addDock,
+      "motion",
+      m_cuber,
+      selection,
+      [this, callback]() {
+        ClearMotion();
+        m_udp->Start(54345, callback);
+      },
+      [udp = m_udp]() { udp->Stop(54345); });
   }
 
   ImTimeline::Create(addDock, "timeline", m_timeline);

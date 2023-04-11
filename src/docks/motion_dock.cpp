@@ -13,6 +13,9 @@
 #include <vrm/bvh.h>
 #include <vrm/humanbones.h>
 #include <vrm/humanpose.h>
+#include <vrm/scene.h>
+
+const uint16_t DEFAULT_UDP_PORT = 54345;
 
 struct Edge
 {
@@ -133,7 +136,8 @@ MotionDock::Create(const AddDockFunc& addDock,
                    std::string_view title,
                    const std::shared_ptr<Cuber>& cuber,
                    const std::shared_ptr<TreeContext>& context,
-                   const std::shared_ptr<UdpReceiver>& udp)
+                   const std::function<void()>& startUdp,
+                   const std::function<void()>& stopUdp)
 {
   auto rt = std::make_shared<RenderTarget>(std::make_shared<OrbitView>());
   rt->color[0] = 0.4f;
@@ -185,21 +189,17 @@ MotionDock::Create(const AddDockFunc& addDock,
     ImGui::PopStyleVar();
   }));
 
-  addDock(Dock("udp-recv", [udp, enable = false, count = 0]() mutable {
+  addDock(Dock("udp-recv", [startUdp, stopUdp, enable = false]() mutable {
     if (enable) {
-
+      if (ImGui::Button("stop")) {
+        stopUdp();
+        enable = false;
+      }
     } else {
       if (ImGui::Button("start:54345")) {
-        auto callback = [p = &count](std::span<const uint8_t> values) {
-          (*p)++;
-        };
-        udp->Start(54345, callback);
+        startUdp();
         enable = true;
       }
-    }
-
-    if (enable) {
-      ImGui::Text("%d", count);
     }
   }));
 

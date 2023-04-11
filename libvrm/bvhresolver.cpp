@@ -63,9 +63,7 @@ SetBvh(const std::shared_ptr<gltf::Scene>& scene,
   for (auto& joint : bvh->joints) {
     PushJoint(scene, joint, bvh->GuessScaling());
   };
-  scene->m_roots[0]->InitialMatrix();
-  scene->m_roots[0]->CalcWorldMatrix(true);
-  scene->m_roots[0]->CalcShape();
+  scene->InitNodes();
 }
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "gui.h"
 #include "treecontext.h"
+#include <functional>
 
 struct GraphPin
 {
@@ -22,5 +23,6 @@ public:
                      std::string_view title,
                      const std::shared_ptr<class Cuber>& cuber,
                      const std::shared_ptr<TreeContext>& context,
-                     const std::shared_ptr<class UdpReceiver>& udp);
+                     const std::function<void()>& startUdp,
+                     const std::function<void()>& stopUdp);
 };
