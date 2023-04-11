@@ -7,8 +7,9 @@ namespace srht {
 
 enum class HumanoidBones : uint16_t
 {
+  UNKNOWN = 0,
   // body: 6
-  HIPS,
+  HIPS = 1,
   SPINE,
   CHEST,
   UPPERCHEST,
