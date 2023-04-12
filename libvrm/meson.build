@@ -1,6 +1,6 @@
-vrm_inc = include_directories('include')
+libvrm_inc = include_directories('include')
 dependencies = [stb_dep, json_dep, directxmath_dep, grapho_dep]
-vrm_lib = static_library(
+libvrm_lib = static_library(
     'vrm',
     [
         'scene.cpp',
@@ -15,11 +15,11 @@ vrm_lib = static_library(
         'bvhresolver.cpp',
         'srht_update.cpp',
     ],
-    include_directories: vrm_inc,
+    include_directories: libvrm_inc,
     dependencies: dependencies,
 )
-vrm_dep = declare_dependency(
-    link_with: vrm_lib,
-    include_directories: vrm_inc,
+libvrm_dep = declare_dependency(
+    link_with: libvrm_lib,
+    include_directories: libvrm_inc,
     dependencies: dependencies,
 )

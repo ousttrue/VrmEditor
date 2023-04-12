@@ -23,7 +23,7 @@ executable(
         imgui_dep,
         grapho_dep,
         imguizmo_dep,
-        vrm_dep,
+        libvrm_dep,
         luajit_dep,
         cuber_dep,
         imgui_filedialog_dep,
