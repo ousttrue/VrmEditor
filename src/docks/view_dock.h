@@ -13,7 +13,7 @@ public:
                      std::string_view title,
                      const std::shared_ptr<gltf::Scene>& scene,
                      const std::shared_ptr<TreeContext>& context,
-                     const std::shared_ptr<OrbitView>& view,
+                     const std::shared_ptr<grapho::OrbitView>& view,
                      const std::shared_ptr<Timeline>& timeline,
                      const std::shared_ptr<Gl3Renderer>& gl3r)
   {

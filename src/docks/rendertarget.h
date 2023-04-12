@@ -1,5 +1,5 @@
 #pragma once
-#include "orbitview.h"
+#include <grapho/orbitview.h>
 #include "viewporjection.h"
 #include <functional>
 #include <grapho/gl3/fbo.h>
@@ -11,12 +11,12 @@
 struct RenderTarget
 {
   ViewProjection camera;
-  std::shared_ptr<OrbitView> view;
+  std::shared_ptr<grapho::OrbitView> view;
   std::shared_ptr<grapho::gl3::Fbo> fbo;
   float color[4];
   std::function<void(const ViewProjection& camera)> render;
 
-  RenderTarget(const std::shared_ptr<OrbitView>& view)
+  RenderTarget(const std::shared_ptr<grapho::OrbitView>& view)
     : view(view)
   {
   }

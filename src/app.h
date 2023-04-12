@@ -11,12 +11,14 @@ struct Scene;
 namespace bvh {
 struct Bvh;
 }
+namespace grapho {
+class OrbitView;
+}
 class Gui;
 struct Timeline;
 struct AssetDir;
 class LuaEngine;
 class Platform;
-class OrbitView;
 class ImLogger;
 class Gl3Renderer;
 class Cuber;
@@ -32,7 +34,7 @@ class App
 
   std::shared_ptr<Timeline> m_timeline;
   std::shared_ptr<gltf::Scene> m_scene;
-  std::shared_ptr<OrbitView> m_view;
+  std::shared_ptr<grapho::OrbitView> m_view;
   std::shared_ptr<Gl3Renderer> m_renderer;
 
   std::shared_ptr<gltf::Scene> m_motion;

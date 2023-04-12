@@ -58,7 +58,7 @@ App::App()
   m_logger = std::make_shared<ImLogger>();
   m_lua = std::make_shared<LuaEngine>();
   m_scene = std::make_shared<gltf::Scene>();
-  m_view = std::make_shared<OrbitView>();
+  m_view = std::make_shared<grapho::OrbitView>();
   m_timeline = std::make_shared<Timeline>();
   m_motion = std::make_shared<gltf::Scene>();
   m_udp = std::make_shared<UdpReceiver>();

@@ -4,9 +4,9 @@
 #include "gl3renderer.h"
 #include "gui.h"
 #include "motion_dock.h"
-#include "orbitview.h"
 #include "rendertarget.h"
 #include "udp_receiver.h"
+#include <grapho/orbitview.h>
 #include <imgui.h>
 #include <imnodes.h>
 #include <iostream>
@@ -139,7 +139,7 @@ MotionDock::Create(const AddDockFunc& addDock,
                    const std::function<void()>& startUdp,
                    const std::function<void()>& stopUdp)
 {
-  auto rt = std::make_shared<RenderTarget>(std::make_shared<OrbitView>());
+  auto rt = std::make_shared<RenderTarget>(std::make_shared<grapho::OrbitView>());
   rt->color[0] = 0.4f;
   rt->color[1] = 0.2f;
   rt->color[2] = 0.2f;

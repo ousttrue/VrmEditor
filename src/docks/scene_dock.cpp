@@ -4,6 +4,103 @@
 #include <vrm/gizmo.h>
 #include <vrm/mesh.h>
 #include <vrm/node.h>
+#include <vrm/vrm0.h>
+
+const std::string
+Label(const gltf::Scene& scene, const std::shared_ptr<gltf::Node>& node)
+{
+  std::stringstream ss;
+  if (auto mesh_index = node->Mesh) {
+    ss << "󰕣 ";
+    auto mesh = scene.m_meshes[*mesh_index];
+    if (mesh->m_morphTargets.size()) {
+      ss << " ";
+    }
+  }
+
+  if (auto humanoid = node->Humanoid) {
+    // HumanBone = static_cast<vrm::HumanBones>(i);
+    switch (humanoid->HumanBone) {
+      case vrm::HumanBones::hips:
+        ss << " ";
+        break;
+      case vrm::HumanBones::head:
+        ss << "󱍞 ";
+        break;
+      case vrm::HumanBones::leftEye:
+      case vrm::HumanBones::rightEye:
+        ss << " ";
+        break;
+      case vrm::HumanBones::leftHand:
+      case vrm::HumanBones::leftThumbMetacarpal:
+      case vrm::HumanBones::leftThumbProximal:
+      case vrm::HumanBones::leftThumbDistal:
+      case vrm::HumanBones::leftIndexProximal:
+      case vrm::HumanBones::leftIndexIntermediate:
+      case vrm::HumanBones::leftIndexDistal:
+      case vrm::HumanBones::leftMiddleProximal:
+      case vrm::HumanBones::leftMiddleIntermediate:
+      case vrm::HumanBones::leftMiddleDistal:
+      case vrm::HumanBones::leftRingProximal:
+      case vrm::HumanBones::leftRingIntermediate:
+      case vrm::HumanBones::leftRingDistal:
+      case vrm::HumanBones::leftLittleProximal:
+      case vrm::HumanBones::leftLittleIntermediate:
+      case vrm::HumanBones::leftLittleDistal:
+        ss << "󰹆 ";
+        break;
+      case vrm::HumanBones::rightHand:
+      case vrm::HumanBones::rightThumbMetacarpal:
+      case vrm::HumanBones::rightThumbProximal:
+      case vrm::HumanBones::rightThumbDistal:
+      case vrm::HumanBones::rightIndexProximal:
+      case vrm::HumanBones::rightIndexIntermediate:
+      case vrm::HumanBones::rightIndexDistal:
+      case vrm::HumanBones::rightMiddleProximal:
+      case vrm::HumanBones::rightMiddleIntermediate:
+      case vrm::HumanBones::rightMiddleDistal:
+      case vrm::HumanBones::rightRingProximal:
+      case vrm::HumanBones::rightRingIntermediate:
+      case vrm::HumanBones::rightRingDistal:
+      case vrm::HumanBones::rightLittleProximal:
+      case vrm::HumanBones::rightLittleIntermediate:
+      case vrm::HumanBones::rightLittleDistal:
+        ss << "󰹇 ";
+        break;
+      case vrm::HumanBones::leftFoot:
+      case vrm::HumanBones::leftToes:
+      case vrm::HumanBones::rightFoot:
+      case vrm::HumanBones::rightToes:
+        ss << "󱗈 ";
+        break;
+      default:
+        ss << "󰂹 ";
+        break;
+    }
+  }
+
+  // vrm0
+  if (auto vrm = scene.m_vrm0) {
+    // spring
+    if (vrm->m_springs.size()) {
+      for (auto& spring : vrm->m_springs) {
+        for (auto joint : spring->bones) {
+          auto joint_node = scene.m_nodes[joint];
+          if (joint_node == node) {
+            ss << "󰚟 ";
+            break;
+          }
+        }
+      }
+    }
+    // collider
+    if (vrm->m_colliderGroups.size()) {
+    }
+  }
+
+  ss << node->Name;
+  return ss.str();
+}
 
 std::shared_ptr<TreeContext>
 SceneDock::CreateTree(const AddDockFunc& addDock,
@@ -35,7 +132,7 @@ SceneDock::CreateTree(const AddDockFunc& addDock,
     }
 
     bool node_open =
-      ImGui::TreeNodeEx(&*node, node_flags, "%s", node->Label(*scene).c_str());
+      ImGui::TreeNodeEx(&*node, node_flags, "%s", Label(*scene, node).c_str());
 
     if (hasRotation) {
       ImGui::PopStyleColor();
