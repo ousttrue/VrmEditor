@@ -29,5 +29,11 @@ directxmath_dep = dependency('directxmath', include_type: 'system')
 imnodes_dep = dependency('imnodes')
 asio_dep = dependency('asio')
 subdir('libvrm')
-subdir('src')
-subdir('tests')
+
+if get_option('vrmeditor')
+  subdir('src')
+endif
+if get_option('tests')
+  subdir('tests')
+endif
+
