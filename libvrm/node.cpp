@@ -173,8 +173,9 @@ Node::SetWorldMatrix(const DirectX::XMMATRIX& world)
   if (!DirectX::XMMatrixDecompose(&s, &r, &t, world)) {
     return false;
   }
-  DirectX::XMStoreFloat4((DirectX::XMFLOAT4 *)&WorldTransform.Rotation, r);
-  DirectX::XMStoreFloat3((DirectX::XMFLOAT3 *)&WorldTransform.Translation, t);
+  DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&WorldScale, s);
+  DirectX::XMStoreFloat4((DirectX::XMFLOAT4*)&WorldTransform.Rotation, r);
+  DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&WorldTransform.Translation, t);
 
   auto parentMatrix = ParentWorldMatrix();
   auto inv = DirectX::XMMatrixInverse(nullptr, parentMatrix);
