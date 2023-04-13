@@ -1,13 +1,13 @@
 #pragma once
 #include "bvhframe.h"
 #include <chrono>
+#include <expected>
 #include <filesystem>
 #include <iostream>
 #include <memory>
 #include <ostream>
 #include <span>
 #include <vector>
-#include <expected>
 
 namespace bvh {
 struct Joint
@@ -38,6 +38,8 @@ struct Bvh
   Bvh();
   ~Bvh();
   std::expected<bool, std::string> Parse(std::string_view src);
+  static std::expected<std::shared_ptr<Bvh>, std::string> FromFile(
+    const std::filesystem::path& path);
   uint32_t FrameCount() const { return frames.size() / frame_channel_count; }
   const Joint* GetParent(int parent) const
   {

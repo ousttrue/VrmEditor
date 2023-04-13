@@ -39,5 +39,21 @@
             ],
             "cwd": "${workspaceFolder}"
         },
+        {
+            "name": "(Windows) bvhsender",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/prefix/bin/bvhsender.exe",
+            "args": [
+                // "${env:GLTF_SAMPLE_MODELS}/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"
+                // "${env:GLTF_SAMPLE_MODELS}/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"
+                // "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm",
+                "${env:USERPROFILE}/Desktop/bvhsender-for-windows_v1.0.0beta/Sample.BVH",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "externalTerminal"
+        },
     ]
 }

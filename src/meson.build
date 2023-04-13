@@ -1,1 +1,3 @@
 subdir('vrmeditor')
+subdir('bvhsender')
+

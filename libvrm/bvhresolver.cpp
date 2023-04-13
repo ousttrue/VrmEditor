@@ -3,7 +3,7 @@
 
 namespace bvh {
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
-static void
+void
 ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
              std::shared_ptr<gltf::Node>& node,
              const std::shared_ptr<bvh::Bvh>& bvh,

@@ -1,4 +1,3 @@
-#include "ReadAllBytes.h"
 #include <assert.h>
 #include <cctype>
 #include <charconv>
@@ -10,6 +9,7 @@
 #include <stack>
 #include <stdlib.h>
 #include <vrm/bvh.h>
+#include <vrm/fileutil.h>
 
 template<typename T>
 std::optional<T>
@@ -218,8 +218,7 @@ struct BvhImpl
     }
 
     size_t frame_channel_count = frame_count_ * channel_count_;
-    if (frames_.size() != frame_channel_count)
-    {
+    if (frames_.size() != frame_channel_count) {
       std::stringstream ss;
       ss << "format: invalid count:" << frames_.size() << "!=" << frame_count_
          << "x" << channel_count_ << "=" << frame_count_ * channel_count_;
@@ -395,6 +394,26 @@ private:
 
 Bvh::Bvh() {}
 Bvh::~Bvh() {}
+
+std::expected<std::shared_ptr<Bvh>, std::string>
+Bvh::FromFile(const std::filesystem::path& path)
+{
+  auto bytes = fileutil::ReadAllBytes<char>(path);
+  if (bytes.empty()) {
+    return std::unexpected{ std::string("fail to read: " + path.string()) };
+  }
+
+  auto ptr = std::make_shared<Bvh>();
+  if (auto result = ptr->Parse({
+        bytes.data(),
+        bytes.data() + bytes.size(),
+      })) {
+    return ptr;
+  } else {
+    return std::unexpected{ result.error() };
+  }
+}
+
 std::expected<bool, std::string>
 Bvh::Parse(std::string_view src)
 {

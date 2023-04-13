@@ -4,8 +4,11 @@
 #include <string>
 #include <vector>
 
-template <typename T>
-static std::vector<T> ReadAllBytes(const std::filesystem::path &filename) {
+namespace fileutil {
+template<typename T>
+static std::vector<T>
+ReadAllBytes(const std::filesystem::path& filename)
+{
   std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
   if (!ifs) {
     return {};
@@ -19,4 +22,5 @@ static std::vector<T> ReadAllBytes(const std::filesystem::path &filename) {
   ifs.seekg(0, std::ios::beg);
   ifs.read(buffer.data(), pos);
   return buffer;
+}
 }
