@@ -12,7 +12,7 @@ class BvhPanelImpl
   asio::io_context m_io;
   asio::executor_work_guard<asio::io_context::executor_type> m_work;
 
-  UdpSender m_sender;
+  libvrm::UdpSender m_sender;
   std::shared_ptr<libvrm::bvh::Bvh> m_bvh;
   asio::ip::udp::endpoint m_ep;
   bool m_enablePackQuat = false;

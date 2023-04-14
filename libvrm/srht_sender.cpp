@@ -1,62 +1,67 @@
-#include "vrm/bvh.h"
 #include "vrm/srht_sender.h"
+#include "vrm/bvh.h"
 #include <DirectXMath.h>
 #include <iostream>
 
-Payload::Payload()
+namespace libvrm {
+struct Payload
 {
-  std::cout << "Payload::Payload" << std::endl;
-}
-Payload::~Payload()
-{
-  std::cout << "Payload::~Payload" << std::endl;
-}
+  std::vector<uint8_t> buffer;
 
-void
-Payload::Push(const void* begin, const void* end)
-{
-  auto dst = buffer.size();
-  auto size = std::distance((const char*)begin, (const char*)end);
-  buffer.resize(dst + size);
-  std::copy((const char*)begin, (const char*)end, buffer.data() + dst);
-}
+  Payload(const Payload&) = delete;
+  Payload& operator=(const Payload&) = delete;
 
-void
-Payload::SetSkeleton(std::span<libvrm::srht::JointDefinition> joints)
-{
-  buffer.clear();
+  Payload() { std::cout << "Payload::Payload" << std::endl; }
+  ~Payload() { std::cout << "Payload::~Payload" << std::endl; }
+  void Push(const void* begin, const void* end)
+  {
+    auto dst = buffer.size();
+    auto size = std::distance((const char*)begin, (const char*)end);
+    buffer.resize(dst + size);
+    std::copy((const char*)begin, (const char*)end, buffer.data() + dst);
+  }
 
-  libvrm::srht::SkeletonHeader header{
-    // .magic = {},
-    .skeletonId = 0,
-    .jointCount = 27,
-    .flags = {},
-  };
-  Push((const char*)&header, (const char*)&header + sizeof(header));
-  Push(joints.data(), joints.data() + joints.size());
-}
+  template<typename T>
+  void Push(const T& t)
+  {
+    Push((const char*)&t, (const char*)&t + sizeof(T));
+  }
 
-void
-Payload::SetFrame(std::chrono::nanoseconds time,
-                  float x,
-                  float y,
-                  float z,
-                  bool usePack)
-{
-  buffer.clear();
+  void SetSkeleton(std::span<libvrm::srht::JointDefinition> joints)
+  {
+    buffer.clear();
 
-  libvrm::srht::FrameHeader header{
-    // .magic = {},
-    .time = time.count(),
-    .flags = usePack ? libvrm::srht::FrameFlags::USE_QUAT32
-                     : libvrm::srht::FrameFlags::NONE,
-    .skeletonId = 0,
-    .x = x,
-    .y = y,
-    .z = z,
-  };
-  Push((const char*)&header, (const char*)&header + sizeof(header));
-}
+    libvrm::srht::SkeletonHeader header{
+      // .magic = {},
+      .skeletonId = 0,
+      .jointCount = 27,
+      .flags = {},
+    };
+    Push((const char*)&header, (const char*)&header + sizeof(header));
+    Push(joints.data(), joints.data() + joints.size());
+  }
+
+  void SetFrame(std::chrono::nanoseconds time,
+                float x,
+                float y,
+                float z,
+                bool usePack)
+  {
+    buffer.clear();
+
+    libvrm::srht::FrameHeader header{
+      // .magic = {},
+      .time = time.count(),
+      .flags = usePack ? libvrm::srht::FrameFlags::USE_QUAT32
+                       : libvrm::srht::FrameFlags::NONE,
+      .skeletonId = 0,
+      .x = x,
+      .y = y,
+      .z = z,
+    };
+    Push((const char*)&header, (const char*)&header + sizeof(header));
+  }
+};
 
 UdpSender::UdpSender(asio::io_context& io)
   : socket_(io, asio::ip::udp::endpoint(asio::ip::udp::v4(), 0))
@@ -174,4 +179,5 @@ UdpSender::SendFrame(asio::ip::udp::endpoint ep,
     [self = this, payload](asio::error_code ec, std::size_t bytes_transferred) {
       self->ReleasePayload(payload);
     });
+}
 }
