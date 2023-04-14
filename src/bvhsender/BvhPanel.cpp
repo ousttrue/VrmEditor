@@ -97,7 +97,7 @@ public:
   void SyncFrame(const libvrm::bvh::Frame& frame)
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    libvrm::bvh::ResolveFrame(
+    libvrm::bvh::UpdateSceneFromBvhFrame(
       m_scene, m_scene->m_roots[0], bvh_, frame, bvh_->GuessScaling());
     m_scene->m_roots[0]->CalcWorldMatrix(true);
     instancies_.clear();

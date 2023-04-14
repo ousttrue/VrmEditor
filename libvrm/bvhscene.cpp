@@ -4,7 +4,7 @@
 namespace libvrm::bvh {
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void
-ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
+UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
              std::shared_ptr<gltf::Node>& node,
              const std::shared_ptr<bvh::Bvh>& bvh,
              const bvh::Frame& frame,
@@ -18,12 +18,12 @@ ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
   node->Transform.Translation.z *= scaling;
   node->Transform.Rotation = transform.Rotation;
   for (auto& child : node->Children) {
-    ResolveFrame(scene, child, bvh, frame, scaling);
+    UpdateSceneFromBvhFrame(scene, child, bvh, frame, scaling);
   }
 }
 
 void
-ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
+UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
              const std::shared_ptr<bvh::Bvh>& bvh,
              Time time)
 {
@@ -32,7 +32,7 @@ ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
   }
   auto index = bvh->TimeToIndex(time);
   auto frame = bvh->GetFrame(index);
-  ResolveFrame(scene, scene->m_roots[0], bvh, frame, bvh->GuessScaling());
+  UpdateSceneFromBvhFrame(scene, scene->m_roots[0], bvh, frame, bvh->GuessScaling());
 }
 
 static void

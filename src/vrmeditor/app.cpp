@@ -241,7 +241,7 @@ App::LoadMotion(const std::filesystem::path& path)
   auto track = m_timeline->AddTrack("bvh", bvh->Duration());
   track->Callbacks.push_back([bvh, scene = m_motion](auto time, bool repeat) {
     if (scene->m_roots.size()) {
-      libvrm::bvh::ResolveFrame(scene, bvh, time);
+      libvrm::bvh::UpdateSceneFromBvhFrame(scene, bvh, time);
       scene->m_roots[0]->CalcWorldMatrix(true);
       scene->RaiseSceneUpdated();
     }
