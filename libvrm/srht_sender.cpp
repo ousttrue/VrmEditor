@@ -1,8 +1,62 @@
-#include "UdpSender.h"
-#include "Payload.h"
+#include "vrm/bvh.h"
+#include "vrm/srht_sender.h"
 #include <DirectXMath.h>
 #include <iostream>
-#include <vrm/bvh.h>
+
+Payload::Payload()
+{
+  std::cout << "Payload::Payload" << std::endl;
+}
+Payload::~Payload()
+{
+  std::cout << "Payload::~Payload" << std::endl;
+}
+
+void
+Payload::Push(const void* begin, const void* end)
+{
+  auto dst = buffer.size();
+  auto size = std::distance((const char*)begin, (const char*)end);
+  buffer.resize(dst + size);
+  std::copy((const char*)begin, (const char*)end, buffer.data() + dst);
+}
+
+void
+Payload::SetSkeleton(std::span<libvrm::srht::JointDefinition> joints)
+{
+  buffer.clear();
+
+  libvrm::srht::SkeletonHeader header{
+    // .magic = {},
+    .skeletonId = 0,
+    .jointCount = 27,
+    .flags = {},
+  };
+  Push((const char*)&header, (const char*)&header + sizeof(header));
+  Push(joints.data(), joints.data() + joints.size());
+}
+
+void
+Payload::SetFrame(std::chrono::nanoseconds time,
+                  float x,
+                  float y,
+                  float z,
+                  bool usePack)
+{
+  buffer.clear();
+
+  libvrm::srht::FrameHeader header{
+    // .magic = {},
+    .time = time.count(),
+    .flags = usePack ? libvrm::srht::FrameFlags::USE_QUAT32
+                     : libvrm::srht::FrameFlags::NONE,
+    .skeletonId = 0,
+    .x = x,
+    .y = y,
+    .z = z,
+  };
+  Push((const char*)&header, (const char*)&header + sizeof(header));
+}
 
 UdpSender::UdpSender(asio::io_context& io)
   : socket_(io, asio::ip::udp::endpoint(asio::ip::udp::v4(), 0))

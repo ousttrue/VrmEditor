@@ -5,8 +5,6 @@ executable(
         'GlfwPlatform.cpp',
         'GuiApp.cpp',
         'BvhPanel.cpp',
-        'UdpSender.cpp',
-        'Payload.cpp',
     ],
     install: true,
     dependencies: [

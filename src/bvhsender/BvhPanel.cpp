@@ -1,10 +1,10 @@
 #include "BvhPanel.h"
-#include "UdpSender.h"
 #include <asio.hpp>
 #include <imgui.h>
 #include <thread>
 #include <vrm/bvhscene.h>
 #include <vrm/scene.h>
+#include <vrm/srht_sender.h>
 #include <vrm/timeline.h>
 
 class BvhPanelImpl
