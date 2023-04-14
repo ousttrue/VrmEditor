@@ -43,7 +43,7 @@ public:
     m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
       DirectX::XMMatrixIdentity(), m_instances);
 
-    m_sender.SendSkeleton(m_ep, m_bvh);
+    m_sender.SendBvhSkeleton(m_ep, m_bvh);
 
     m_clock = std::make_shared<libvrm::IntervalTimer>(
       m_io,
@@ -52,7 +52,7 @@ public:
         auto index = m_bvh->TimeToIndex(time);
         auto frame = m_bvh->GetFrame(index);
 
-        m_sender.SendFrame(m_ep, m_bvh, frame, m_enablePackQuat);
+        m_sender.SendBvhFrame(m_ep, m_bvh, frame, m_enablePackQuat);
 
         UpdateScene(frame);
       });
@@ -73,7 +73,7 @@ public:
     ImGui::Checkbox("use quaternion pack32", &m_enablePackQuat);
 
     if (ImGui::Button("send skeleton")) {
-      m_sender.SendSkeleton(m_ep, m_bvh);
+      m_sender.SendBvhSkeleton(m_ep, m_bvh);
     }
 
     ImGui::End();

@@ -145,9 +145,11 @@ struct Scene
 
   void InitNodes()
   {
-    m_roots[0]->InitialMatrix();
-    m_roots[0]->CalcWorldMatrix(true);
-    m_roots[0]->CalcShape();
+    if (m_roots.size()) {
+      m_roots[0]->InitialMatrix();
+      m_roots[0]->CalcWorldMatrix(true);
+      m_roots[0]->CalcShape();
+    }
   }
 
 private:
