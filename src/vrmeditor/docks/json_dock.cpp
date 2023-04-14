@@ -12,9 +12,9 @@ struct JsonDockImpl
 
   std::string m_selected;
   std::vector<std::string_view> m_jsonpath;
-  std::shared_ptr<gltf::Scene> m_scene;
+  std::shared_ptr<libvrm::gltf::Scene> m_scene;
 
-  JsonDockImpl(const std::shared_ptr<gltf::Scene>& scene)
+  JsonDockImpl(const std::shared_ptr<libvrm::gltf::Scene>& scene)
     : m_scene(scene)
   {
   }
@@ -208,7 +208,7 @@ Splitter(bool split_vertically,
 void
 JsonDock::Create(const AddDockFunc& addDock,
                  std::string_view title,
-                 const std::shared_ptr<gltf::Scene>& scene,
+                 const std::shared_ptr<libvrm::gltf::Scene>& scene,
                  float indent)
 {
   auto impl = std::make_shared<JsonDockImpl>(scene);

@@ -1,7 +1,7 @@
 #include "vrm/bvhframe.h"
 #include <numbers>
 
-namespace bvh {
+namespace libvrm::bvh {
 Transform
 Frame::Resolve(const Channels& channels) const
 {

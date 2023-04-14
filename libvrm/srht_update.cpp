@@ -42,6 +42,7 @@ struct BinaryReader
   }
 };
 
+namespace libvrm {
 static std::optional<vrm::HumanBones>
 ToVrmBone(srht::HumanoidBones src)
 {
@@ -236,12 +237,15 @@ void
 MakeSkeleton(uint32_t skeletonId,
              const std::shared_ptr<gltf::Node>& root,
              std::vector<uint8_t>& out)
-{}
+{
+}
 
 void
 MakeFrame(uint32_t skeletonId,
           const std::shared_ptr<gltf::Node>& root,
           std::vector<uint8_t>& out)
-{}
+{
+}
 
+}
 }

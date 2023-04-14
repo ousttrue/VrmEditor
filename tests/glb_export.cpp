@@ -89,11 +89,11 @@ TEST(GlbExport, minimal)
     a.erase("min");
   }
 
-  gltf::Scene scene;
+  libvrm::gltf::Scene scene;
   std::span<const uint8_t> span{ (const uint8_t*)SRC.data(),
                                  (const uint8_t*)SRC.data() + SRC.size() };
   EXPECT_TRUE(scene.Load(span));
-  gltf::Exporter exporter;
+  libvrm::gltf::Exporter exporter;
   exporter.Export(scene);
   auto dst = nlohmann::json::parse(exporter.JsonChunk);
   dst["buffers"].clear();

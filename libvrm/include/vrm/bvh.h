@@ -9,7 +9,7 @@
 #include <span>
 #include <vector>
 
-namespace bvh {
+namespace libvrm::bvh {
 struct Joint
 {
   std::string name;

@@ -78,7 +78,7 @@ std::optional<FrameInfo> Platform::NewFrame() {
   return FrameInfo{
       .Width = width,
       .Height = height,
-      .Time = Time(seconds),
+      .Time = libvrm::Time(seconds),
   };
 }
 

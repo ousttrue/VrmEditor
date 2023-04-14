@@ -4,7 +4,7 @@
 #include "vrm/scenetypes.h"
 #include <iostream>
 
-namespace vrm {
+namespace libvrm::vrm {
 
 SpringJoint::SpringJoint(const std::shared_ptr<gltf::Node>& head,
                          const DirectX::XMFLOAT3& localTailPosition,

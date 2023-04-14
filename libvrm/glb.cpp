@@ -64,7 +64,7 @@ public:
   }
 };
 
-namespace gltf {
+namespace libvrm::gltf {
 
 const uint32_t GLB_MAGIC = 0x46546C67;
 const uint32_t GLB_VERSION = 2;

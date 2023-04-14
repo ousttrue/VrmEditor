@@ -14,14 +14,14 @@ class BvhPanelImpl
   Animation animation_;
   UdpSender sender_;
   std::thread thread_;
-  std::shared_ptr<bvh::Bvh> bvh_;
+  std::shared_ptr<libvrm::bvh::Bvh> bvh_;
   asio::ip::udp::endpoint ep_;
   bool enablePackQuat_ = false;
   std::vector<int> parentMap_;
 
   std::vector<DirectX::XMFLOAT4X4> instancies_;
   std::mutex mutex_;
-  std::shared_ptr<gltf::Scene> m_scene;
+  std::shared_ptr<libvrm::gltf::Scene> m_scene;
 
 public:
   BvhPanelImpl()
@@ -30,7 +30,7 @@ public:
     , sender_(io_)
     , ep_(asio::ip::address::from_string("127.0.0.1"), 54345)
   {
-    animation_.OnFrame([self = this](const bvh::Frame& frame) {
+    animation_.OnFrame([self = this](const libvrm::bvh::Frame& frame) {
       self->sender_.SendFrame(
         self->ep_, self->bvh_, frame, self->enablePackQuat_);
     });
@@ -44,10 +44,11 @@ public:
     });
 
     // bind bvh animation to renderer
-    animation_.OnFrame(
-      [self = this](const bvh::Frame& frame) { self->SyncFrame(frame); });
+    animation_.OnFrame([self = this](const libvrm::bvh::Frame& frame) {
+      self->SyncFrame(frame);
+    });
 
-    m_scene = std::make_shared<gltf::Scene>();
+    m_scene = std::make_shared<libvrm::gltf::Scene>();
   }
 
   ~BvhPanelImpl()
@@ -57,7 +58,7 @@ public:
     thread_.join();
   }
 
-  void SetBvh(const std::shared_ptr<bvh::Bvh>& bvh)
+  void SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh)
   {
     bvh_ = bvh;
     if (!bvh_) {
@@ -69,7 +70,7 @@ public:
     }
     sender_.SendSkeleton(ep_, bvh_);
 
-    bvh::SetBvh(m_scene, bvh_);
+    libvrm::bvh::SetBvh(m_scene, bvh_);
     m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
       DirectX::XMMatrixIdentity(), instancies_);
   }
@@ -93,10 +94,10 @@ public:
     ImGui::End();
   }
 
-  void SyncFrame(const bvh::Frame& frame)
+  void SyncFrame(const libvrm::bvh::Frame& frame)
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    bvh::ResolveFrame(
+    libvrm::bvh::ResolveFrame(
       m_scene, m_scene->m_roots[0], bvh_, frame, bvh_->GuessScaling());
     m_scene->m_roots[0]->CalcWorldMatrix(true);
     instancies_.clear();
@@ -120,7 +121,7 @@ BvhPanel::~BvhPanel()
   delete impl_;
 }
 void
-BvhPanel::SetBvh(const std::shared_ptr<bvh::Bvh>& bvh)
+BvhPanel::SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh)
 {
   impl_->SetBvh(bvh);
 }

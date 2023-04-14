@@ -16,11 +16,11 @@ class Animation
   struct AnimationImpl* impl_ = nullptr;
 
 public:
-  using OnFrameFunc = std::function<void(const bvh::Frame& frame)>;
+  using OnFrameFunc = std::function<void(const libvrm::bvh::Frame& frame)>;
 
   Animation(asio::io_context& io);
   ~Animation();
-  void SetBvh(const std::shared_ptr<bvh::Bvh>& bvh);
+  void SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh);
   void OnFrame(const OnFrameFunc& onFrame);
   void Stop();
 };

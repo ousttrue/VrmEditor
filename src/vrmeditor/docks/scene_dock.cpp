@@ -7,7 +7,8 @@
 #include <vrm/vrm0.h>
 
 const std::string
-Label(const gltf::Scene& scene, const std::shared_ptr<gltf::Node>& node)
+Label(const libvrm::gltf::Scene& scene,
+      const std::shared_ptr<libvrm::gltf::Node>& node)
 {
   std::stringstream ss;
   if (auto mesh_index = node->Mesh) {
@@ -19,58 +20,58 @@ Label(const gltf::Scene& scene, const std::shared_ptr<gltf::Node>& node)
   }
 
   if (auto humanoid = node->Humanoid) {
-    // HumanBone = static_cast<vrm::HumanBones>(i);
+    // HumanBone = static_cast<libvrm::vrm::HumanBones>(i);
     switch (humanoid->HumanBone) {
-      case vrm::HumanBones::hips:
+      case libvrm::vrm::HumanBones::hips:
         ss << " ";
         break;
-      case vrm::HumanBones::head:
+      case libvrm::vrm::HumanBones::head:
         ss << "󱍞 ";
         break;
-      case vrm::HumanBones::leftEye:
-      case vrm::HumanBones::rightEye:
+      case libvrm::vrm::HumanBones::leftEye:
+      case libvrm::vrm::HumanBones::rightEye:
         ss << " ";
         break;
-      case vrm::HumanBones::leftHand:
-      case vrm::HumanBones::leftThumbMetacarpal:
-      case vrm::HumanBones::leftThumbProximal:
-      case vrm::HumanBones::leftThumbDistal:
-      case vrm::HumanBones::leftIndexProximal:
-      case vrm::HumanBones::leftIndexIntermediate:
-      case vrm::HumanBones::leftIndexDistal:
-      case vrm::HumanBones::leftMiddleProximal:
-      case vrm::HumanBones::leftMiddleIntermediate:
-      case vrm::HumanBones::leftMiddleDistal:
-      case vrm::HumanBones::leftRingProximal:
-      case vrm::HumanBones::leftRingIntermediate:
-      case vrm::HumanBones::leftRingDistal:
-      case vrm::HumanBones::leftLittleProximal:
-      case vrm::HumanBones::leftLittleIntermediate:
-      case vrm::HumanBones::leftLittleDistal:
+      case libvrm::vrm::HumanBones::leftHand:
+      case libvrm::vrm::HumanBones::leftThumbMetacarpal:
+      case libvrm::vrm::HumanBones::leftThumbProximal:
+      case libvrm::vrm::HumanBones::leftThumbDistal:
+      case libvrm::vrm::HumanBones::leftIndexProximal:
+      case libvrm::vrm::HumanBones::leftIndexIntermediate:
+      case libvrm::vrm::HumanBones::leftIndexDistal:
+      case libvrm::vrm::HumanBones::leftMiddleProximal:
+      case libvrm::vrm::HumanBones::leftMiddleIntermediate:
+      case libvrm::vrm::HumanBones::leftMiddleDistal:
+      case libvrm::vrm::HumanBones::leftRingProximal:
+      case libvrm::vrm::HumanBones::leftRingIntermediate:
+      case libvrm::vrm::HumanBones::leftRingDistal:
+      case libvrm::vrm::HumanBones::leftLittleProximal:
+      case libvrm::vrm::HumanBones::leftLittleIntermediate:
+      case libvrm::vrm::HumanBones::leftLittleDistal:
         ss << "󰹆 ";
         break;
-      case vrm::HumanBones::rightHand:
-      case vrm::HumanBones::rightThumbMetacarpal:
-      case vrm::HumanBones::rightThumbProximal:
-      case vrm::HumanBones::rightThumbDistal:
-      case vrm::HumanBones::rightIndexProximal:
-      case vrm::HumanBones::rightIndexIntermediate:
-      case vrm::HumanBones::rightIndexDistal:
-      case vrm::HumanBones::rightMiddleProximal:
-      case vrm::HumanBones::rightMiddleIntermediate:
-      case vrm::HumanBones::rightMiddleDistal:
-      case vrm::HumanBones::rightRingProximal:
-      case vrm::HumanBones::rightRingIntermediate:
-      case vrm::HumanBones::rightRingDistal:
-      case vrm::HumanBones::rightLittleProximal:
-      case vrm::HumanBones::rightLittleIntermediate:
-      case vrm::HumanBones::rightLittleDistal:
+      case libvrm::vrm::HumanBones::rightHand:
+      case libvrm::vrm::HumanBones::rightThumbMetacarpal:
+      case libvrm::vrm::HumanBones::rightThumbProximal:
+      case libvrm::vrm::HumanBones::rightThumbDistal:
+      case libvrm::vrm::HumanBones::rightIndexProximal:
+      case libvrm::vrm::HumanBones::rightIndexIntermediate:
+      case libvrm::vrm::HumanBones::rightIndexDistal:
+      case libvrm::vrm::HumanBones::rightMiddleProximal:
+      case libvrm::vrm::HumanBones::rightMiddleIntermediate:
+      case libvrm::vrm::HumanBones::rightMiddleDistal:
+      case libvrm::vrm::HumanBones::rightRingProximal:
+      case libvrm::vrm::HumanBones::rightRingIntermediate:
+      case libvrm::vrm::HumanBones::rightRingDistal:
+      case libvrm::vrm::HumanBones::rightLittleProximal:
+      case libvrm::vrm::HumanBones::rightLittleIntermediate:
+      case libvrm::vrm::HumanBones::rightLittleDistal:
         ss << "󰹇 ";
         break;
-      case vrm::HumanBones::leftFoot:
-      case vrm::HumanBones::leftToes:
-      case vrm::HumanBones::rightFoot:
-      case vrm::HumanBones::rightToes:
+      case libvrm::vrm::HumanBones::leftFoot:
+      case libvrm::vrm::HumanBones::leftToes:
+      case libvrm::vrm::HumanBones::rightFoot:
+      case libvrm::vrm::HumanBones::rightToes:
         ss << "󱗈 ";
         break;
       default:
@@ -105,12 +106,13 @@ Label(const gltf::Scene& scene, const std::shared_ptr<gltf::Node>& node)
 std::shared_ptr<TreeContext>
 SceneDock::CreateTree(const AddDockFunc& addDock,
                       std::string_view title,
-                      const std::shared_ptr<gltf::Scene>& scene,
+                      const std::shared_ptr<libvrm::gltf::Scene>& scene,
                       float indent)
 {
   auto context = std::make_shared<TreeContext>();
 
-  auto enter = [scene, context](const std::shared_ptr<gltf::Node>& node) {
+  auto enter = [scene,
+                context](const std::shared_ptr<libvrm::gltf::Node>& node) {
     static ImGuiTreeNodeFlags base_flags =
       ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
       ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -151,7 +153,7 @@ SceneDock::CreateTree(const AddDockFunc& addDock,
     [scene, enter, leave, context, indent](const char* title, bool* p_open) {
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
       int window_flags = 0;
-      std::shared_ptr<gltf::Node> showSelected;
+      std::shared_ptr<libvrm::gltf::Node> showSelected;
       if (auto selected = context->selected.lock()) {
         {
           if (auto mesh_index = selected->Mesh) {

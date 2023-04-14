@@ -6,7 +6,7 @@
 #include "vrm/timeline.h"
 #include <memory>
 
-namespace bvh {
+namespace libvrm::bvh {
 void
 ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
              std::shared_ptr<gltf::Node>& node,

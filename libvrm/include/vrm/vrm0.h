@@ -8,6 +8,8 @@
 #include <string_view>
 #include <vector>
 
+namespace libvrm {
+
 namespace gltf {
 struct Node;
 }
@@ -21,3 +23,4 @@ struct Vrm
 };
 
 } // namespace vrm0
+}

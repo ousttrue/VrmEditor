@@ -5,7 +5,7 @@
 // #include "vrm/vrm1.h"
 #include <iostream>
 
-namespace gltf {
+namespace libvrm::gltf {
 Node::Node(std::string_view name) : Name(name) {}
 
 void Node::CalcInitialMatrix() {

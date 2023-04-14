@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
+namespace libvrm {
 namespace bvh {
 struct Bvh;
 struct Joint;
@@ -172,4 +173,5 @@ private:
   std::expected<std::shared_ptr<vrm::v0::Vrm>, std::string> ParseVrm0();
   std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string> ParseVrm1();
 };
+}
 }

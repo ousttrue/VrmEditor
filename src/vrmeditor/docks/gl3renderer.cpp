@@ -93,8 +93,8 @@ public:
   void Release() { m_drawableMap.clear(); }
 
   void render(const ViewProjection& camera,
-              const gltf::Mesh& mesh,
-              const gltf::MeshInstance& instance,
+              const libvrm::gltf::Mesh& mesh,
+              const libvrm::gltf::MeshInstance& instance,
               const float m[16])
   {
     auto drawable = getOrCreate(mesh);
@@ -108,7 +108,7 @@ public:
     drawable->draw(camera, m);
   }
 
-  std::shared_ptr<Drawable> getOrCreate(const gltf::Mesh& mesh)
+  std::shared_ptr<Drawable> getOrCreate(const libvrm::gltf::Mesh& mesh)
   {
     auto found = m_drawableMap.find(mesh.id);
     if (found != m_drawableMap.end()) {
@@ -218,8 +218,8 @@ Gl3Renderer::ClearRendertarget(const ViewProjection& camera)
 
 void
 Gl3Renderer::Render(const ViewProjection& camera,
-                    const gltf::Mesh& mesh,
-                    const gltf::MeshInstance& instance,
+                    const libvrm::gltf::Mesh& mesh,
+                    const libvrm::gltf::MeshInstance& instance,
                     const float m[16])
 {
   m_impl->render(camera, mesh, instance, m);

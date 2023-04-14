@@ -135,7 +135,7 @@ get_name(It it, It end)
   return Result{ tail, it };
 }
 
-namespace bvh {
+namespace libvrm::bvh {
 struct BvhImpl
 {
   Tokenizer token_;

@@ -5,17 +5,20 @@
 #include <unordered_set>
 #include <vrm/humanbones.h>
 
+namespace libvrm {
 namespace gltf {
 struct Scene;
 }
 namespace bvh {
 struct Bvh;
 }
+struct Timeline;
+}
+
 namespace grapho {
 class OrbitView;
 }
 class Gui;
-struct Timeline;
 struct AssetDir;
 class LuaEngine;
 class Platform;
@@ -32,22 +35,22 @@ class App
   std::list<std::shared_ptr<AssetDir>> m_assets;
   std::shared_ptr<ImLogger> m_logger;
 
-  std::shared_ptr<Timeline> m_timeline;
-  std::shared_ptr<gltf::Scene> m_scene;
+  std::shared_ptr<libvrm::Timeline> m_timeline;
+  std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<grapho::OrbitView> m_view;
   std::shared_ptr<Gl3Renderer> m_renderer;
 
-  std::shared_ptr<gltf::Scene> m_motion;
+  std::shared_ptr<libvrm::gltf::Scene> m_motion;
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<UdpReceiver> m_udp;
 
   struct HumanBoneMap
   {
-    std::unordered_map<std::string, vrm::HumanBones> NameBoneMap;
+    std::unordered_map<std::string, libvrm::vrm::HumanBones> NameBoneMap;
     std::unordered_set<std::string> NoBoneList;
 
     void Add(std::string_view joint_name, std::string_view bone);
-    bool Match(const bvh::Bvh& bvh) const;
+    bool Match(const libvrm::bvh::Bvh& bvh) const;
   };
   std::list<std::shared_ptr<HumanBoneMap>> m_humanBoneMapList;
 
@@ -69,7 +72,8 @@ public:
   bool WriteScene(const std::filesystem::path& path);
   void ClearScene();
 
-  std::shared_ptr<HumanBoneMap> FindHumanBoneMap(const bvh::Bvh& bvh) const;
+  std::shared_ptr<HumanBoneMap> FindHumanBoneMap(
+    const libvrm::bvh::Bvh& bvh) const;
 
   // expose to lua
   const std::shared_ptr<Gui>& GetGui() const { return m_gui; }

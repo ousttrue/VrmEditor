@@ -1,6 +1,6 @@
 #pragma once
 
-namespace vrm
+namespace libvrm::vrm
 {
   namespace animation
   {

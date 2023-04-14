@@ -9,11 +9,12 @@
 
 TEST(VRMA, simple)
 {
-  gltf::Scene scene;
+  libvrm::gltf::Scene scene;
   // node
-  scene.m_nodes.push_back(std::make_shared<gltf::Node>("node0"));
+  scene.m_nodes.push_back(std::make_shared<libvrm::gltf::Node>("node0"));
   // animation
-  scene.m_animations.push_back(std::make_shared<gltf::Animation>("animation"));
+  scene.m_animations.push_back(
+    std::make_shared<libvrm::gltf::Animation>("animation"));
   auto& animation = scene.m_animations.back();
   static float times[] = {
     0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f,
@@ -27,12 +28,12 @@ TEST(VRMA, simple)
   animation->AddTranslation(0, times, positions, "track0-translation");
 
   // vrma
-  scene.m_vrma = std::make_shared<vrm::animation::Animation>();
+  scene.m_vrma = std::make_shared<libvrm::vrm::animation::Animation>();
 
-  gltf::Exporter exporter;
+  libvrm::gltf::Exporter exporter;
   exporter.Export(scene);
 
-  gltf::Glb{
+  libvrm::gltf::Glb{
     .Json = exporter.JsonChunk,
     .Bin = exporter.BinChunk,
   }

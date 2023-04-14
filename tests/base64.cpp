@@ -8,11 +8,11 @@ auto DECODED = "ABCDEFG";
 auto ENCODED = "QUJDREVGRw==";
 
 TEST(Base64, Encode) {
-  auto encoded = gltf::Encode(DECODED);
+  auto encoded = libvrm::gltf::Encode(DECODED);
   EXPECT_EQ(encoded, ENCODED);
 }
 
 TEST(Base64, Decode) {
-  auto decoded = gltf::Decode(ENCODED);
+  auto decoded = libvrm::gltf::Decode(ENCODED);
   EXPECT_EQ(std::string((char *)decoded.data(), decoded.size()), DECODED);
 }

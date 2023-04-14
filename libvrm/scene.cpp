@@ -53,7 +53,7 @@ from_json(const nlohmann::json& j, DirectX::XMFLOAT4X4& m)
   m._44 = j[15];
 }
 
-namespace gltf {
+namespace libvrm::gltf {
 Scene::Scene()
 {
   m_spring = std::make_shared<vrm::SpringSolver>();

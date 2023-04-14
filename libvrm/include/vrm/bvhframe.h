@@ -6,7 +6,7 @@
 #include <string_view>
 #include "timeline.h"
 
-namespace bvh {
+namespace libvrm::bvh {
 inline std::ostream&
 operator<<(std::ostream& os, const DirectX::XMFLOAT3& offset)
 {

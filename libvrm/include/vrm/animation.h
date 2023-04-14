@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace gltf {
+namespace libvrm::gltf {
 
 enum class AnimationTargets
 {

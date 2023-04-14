@@ -20,10 +20,13 @@ struct TimeGeometry
 {
   ImVec2 Cursor;
   ImVec2 Size;
-  Time Start;
-  Time End;
+  libvrm::Time Start;
+  libvrm::Time End;
   ImU32 Color = IM_COL32_BLACK;
-  TimeGeometry(const ImVec2& cursor, const ImVec2& size, Time start, Time end)
+  TimeGeometry(const ImVec2& cursor,
+               const ImVec2& size,
+               libvrm::Time start,
+               libvrm::Time end)
     : Cursor(cursor)
     , Size(size)
     , Start(start)
@@ -31,7 +34,7 @@ struct TimeGeometry
   {
   }
 
-  float GetX(Time time)
+  float GetX(libvrm::Time time)
   {
     auto delta = time - Start;
     auto x = Cursor.x + (float)delta.count() * 100;
@@ -41,15 +44,15 @@ struct TimeGeometry
   // 1seconds / 100 pixel
   // pixels to seconds is 0.01
   // half 0.005
-  TimeGeometry(const ImVec2& cursor, const ImVec2& size, Time center)
+  TimeGeometry(const ImVec2& cursor, const ImVec2& size, libvrm::Time center)
     : TimeGeometry(cursor,
                    size,
-                   center - Time((double)size.x * 0.005),
-                   center + Time((double)size.x * 0.005))
+                   center - libvrm::Time((double)size.x * 0.005),
+                   center + libvrm::Time((double)size.x * 0.005))
   {
   }
 
-  bool DrawLine(ImDrawList* drawList, Time time)
+  bool DrawLine(ImDrawList* drawList, libvrm::Time time)
   {
 
     if (time < Start) {
@@ -72,12 +75,13 @@ struct TimeGeometry
   void DrawLines(ImDrawList* drawList)
   {
     auto count = (int)Start.count();
-    for (auto current = Time(count); current < End; current += Time(1.0)) {
+    for (auto current = libvrm::Time(count); current < End;
+         current += libvrm::Time(1.0)) {
       DrawLine(drawList, current);
     }
   }
 
-  float DrawNow(ImDrawList* drawList, Time time)
+  float DrawNow(ImDrawList* drawList, libvrm::Time time)
   {
     auto x = GetX(time);
 
@@ -94,20 +98,20 @@ class ImTimeline
 public:
   static void Create(const AddDockFunc& addDock,
                      std::string_view title,
-                     const std::shared_ptr<Timeline>& timeline)
+                     const std::shared_ptr<libvrm::Timeline>& timeline)
   {
     auto timelineGui = std::make_shared<ImTimeline>();
     addDock(
       Dock(title, [timeline, timelineGui]() { timelineGui->show(timeline); }));
   }
 
-  void show(const std::shared_ptr<Timeline>& timeline,
+  void show(const std::shared_ptr<libvrm::Timeline>& timeline,
             const ImVec2& size = { 0, 0 })
   {
     ImGui::Checkbox("IsPlaying", &timeline->IsPlaying);
     ImGui::BeginDisabled(timeline->IsPlaying);
     if (ImGui::Button("next frame")) {
-      timeline->SetDeltaTime(Time(1.0 / 60), true);
+      timeline->SetDeltaTime(libvrm::Time(1.0 / 60), true);
     }
     ImGui::EndDisabled();
 

@@ -6,7 +6,7 @@
 #include <string_view>
 #include <type_traits>
 
-namespace gltf {
+namespace libvrm::gltf {
 enum class ComponentType
 {
   BYTE = 5120,

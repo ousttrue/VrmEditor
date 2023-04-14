@@ -21,7 +21,7 @@ main(int argc, char** argv)
 
   // load bvh
   if (argc > 1) {
-    if (auto bvh = bvh::Bvh::FromFile(argv[1])) {
+    if (auto bvh = libvrm::bvh::Bvh::FromFile(argv[1])) {
       bvhPanel.SetBvh(*bvh);
     }
   }

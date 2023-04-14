@@ -7,7 +7,7 @@
 struct FrameInfo {
   int Width;
   int Height;
-  Time Time;
+  libvrm::Time Time;
 };
 
 class Platform {

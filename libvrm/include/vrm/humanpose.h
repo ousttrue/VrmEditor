@@ -3,7 +3,7 @@
 #include <span>
 #include "humanbones.h"
 
-namespace vrm {
+namespace libvrm::vrm {
 
 struct HumanPose
 {

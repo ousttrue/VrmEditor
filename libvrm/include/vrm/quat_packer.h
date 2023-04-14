@@ -6,7 +6,7 @@
 // from
 // https://github.com/i-saint/Glimmer/blob/master/Source/MeshUtils/muQuat32.h
 //
-namespace quat_packer {
+namespace libvrm::quat_packer {
 
 static constexpr float SR2 = 1.41421356237f;
 static constexpr float RSR2 = 1.0f / 1.41421356237f;

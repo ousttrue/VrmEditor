@@ -8,8 +8,9 @@
 #include <unordered_map>
 #include <vector>
 
+namespace libvrm {
 inline std::expected<std::vector<uint8_t>, std::string>
-ReadAllBytes(const std::filesystem::path& path, std::vector<uint8_t> &buffer)
+ReadAllBytes(const std::filesystem::path& path, std::vector<uint8_t>& buffer)
 {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
@@ -66,3 +67,4 @@ struct Directory
     }
   }
 };
+}

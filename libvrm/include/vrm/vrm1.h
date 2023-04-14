@@ -2,7 +2,7 @@
 #include "expression.h"
 #include "vrm0.h"
 
-namespace vrm::v1 {
+namespace libvrm::vrm::v1 {
 
 struct Vrm
 {

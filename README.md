@@ -237,9 +237,10 @@ Naming conventions for variables with a wider scope than local variables.
 
 ### namespace
 
-- `vrm`
-- `vrm::v0`
-- `vrm::v1`
-- `vrma`
-- `bvh`
-- `gltf`
+- `libvrm::vrm`
+- `libvrm::vrm::v0`
+- `libvrm::vrm::v1`
+- `libvrm::vrma`
+- `libvrm::bvh`
+- `libvrm::gltf`
+

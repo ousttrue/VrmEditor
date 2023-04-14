@@ -31,7 +31,7 @@ UdpSender::ReleasePayload(const std::shared_ptr<Payload>& payload)
 
 void
 UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
-                        const std::shared_ptr<bvh::Bvh>& bvh)
+                        const std::shared_ptr<libvrm::bvh::Bvh>& bvh)
 {
   auto payload = GetOrCreatePayload();
   joints_.clear();
@@ -83,8 +83,8 @@ ToQuat(const DirectX::XMFLOAT3X3& rot)
 
 void
 UdpSender::SendFrame(asio::ip::udp::endpoint ep,
-                     const std::shared_ptr<bvh::Bvh>& bvh,
-                     const bvh::Frame& frame,
+                     const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
+                     const libvrm::bvh::Frame& frame,
                      bool pack)
 {
 
@@ -104,7 +104,7 @@ UdpSender::SendFrame(asio::ip::udp::endpoint ep,
         pack);
     }
     if (pack) {
-      auto packed = quat_packer::Pack(transform.Rotation.x,
+      auto packed = libvrm::quat_packer::Pack(transform.Rotation.x,
                                       transform.Rotation.y,
                                       transform.Rotation.z,
                                       transform.Rotation.w);

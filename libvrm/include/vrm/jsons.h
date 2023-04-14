@@ -8,7 +8,7 @@
 // TODO:
 // use std::to_chars if clang implements
 //
-namespace jsons {
+namespace libvrm::jsons {
 using WriteFunc = std::function<void(std::string_view)>;
 
 enum StackFlags

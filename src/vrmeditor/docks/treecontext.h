@@ -4,6 +4,6 @@
 
 struct TreeContext
 {
-  std::weak_ptr<gltf::Node> selected;
-  std::weak_ptr<gltf::Node> new_selected;
+  std::weak_ptr<libvrm::gltf::Node> selected;
+  std::weak_ptr<libvrm::gltf::Node> new_selected;
 };

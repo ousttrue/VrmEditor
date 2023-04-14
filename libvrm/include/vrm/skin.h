@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace gltf {
+namespace libvrm::gltf {
 struct Skin {
   std::string name;
   std::vector<uint32_t> joints;

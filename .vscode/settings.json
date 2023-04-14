@@ -16,5 +16,6 @@
     "clangd.fallbackFlags": [
         "-std=c++2a"
     ],
-    "testMate.cpp.test.executables": "prefix/bin/tests*"
+    "testMate.cpp.test.executables": "prefix/bin/tests*",
+    "C_Cpp.default.compileCommands": "builddir\\vscode_compile_commands.json"
 }

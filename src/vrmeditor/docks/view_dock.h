@@ -11,10 +11,10 @@ class ViewDock
 public:
   static void Create(const AddDockFunc& addDock,
                      std::string_view title,
-                     const std::shared_ptr<gltf::Scene>& scene,
+                     const std::shared_ptr<libvrm::gltf::Scene>& scene,
                      const std::shared_ptr<TreeContext>& context,
                      const std::shared_ptr<grapho::OrbitView>& view,
-                     const std::shared_ptr<Timeline>& timeline,
+                     const std::shared_ptr<libvrm::Timeline>& timeline,
                      const std::shared_ptr<Gl3Renderer>& gl3r)
   {
     auto rt = std::make_shared<RenderTarget>(view);
@@ -29,14 +29,14 @@ public:
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
-      gltf::RenderFunc render =
-        [gl3r, liner, &camera](const gltf::Mesh& mesh,
-                               const gltf::MeshInstance& instance,
+      libvrm::gltf::RenderFunc render =
+        [gl3r, liner, &camera](const libvrm::gltf::Mesh& mesh,
+                               const libvrm::gltf::MeshInstance& instance,
                                const float m[16]) {
           gl3r->Render(camera, mesh, instance, m);
         };
       scene->Render(timeline->CurrentTime, render);
-      liner->Render(camera.projection, camera.view, gizmo::lines());
+      liner->Render(camera.projection, camera.view, libvrm::gizmo::lines());
 
       // gizmo
       if (auto node = selection->selected.lock()) {

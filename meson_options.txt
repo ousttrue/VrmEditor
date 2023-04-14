@@ -1,2 +1,2 @@
-option('vrmeditor', type: 'boolean', value: false)
+option('executables', type: 'boolean', value: false)
 option('tests', type: 'boolean', value: false)

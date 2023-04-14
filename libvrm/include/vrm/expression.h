@@ -1,7 +1,7 @@
 #pragma once
 #include "node.h"
 
-namespace vrm {
+namespace libvrm::vrm {
 
 enum class ExpressionPreset
 {
@@ -45,15 +45,15 @@ union MorphTargetKey
 }
 
 template<>
-struct std::hash<vrm::MorphTargetKey>
+struct std::hash<libvrm::vrm::MorphTargetKey>
 {
-  std::size_t operator()(const vrm::MorphTargetKey& key) const
+  std::size_t operator()(const libvrm::vrm::MorphTargetKey& key) const
   {
     return key.Hash;
   }
 };
 
-namespace vrm {
+namespace libvrm::vrm {
 struct ExpressionMorphTargetBind
 {
   // mesh index

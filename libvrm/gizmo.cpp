@@ -4,7 +4,7 @@
 std::vector<grapho::LineVertex> g_lines;
 size_t g_keep = 0;
 
-namespace gizmo {
+namespace libvrm::gizmo {
 
 std::vector<grapho::LineVertex> &lines() { return g_lines; }
 void fix() { g_keep = g_lines.size(); }

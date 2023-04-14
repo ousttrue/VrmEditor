@@ -6,7 +6,7 @@
 #include <string_view>
 #include <vector>
 
-namespace gltf {
+namespace libvrm::gltf {
 //
 static char EncodeMap[64]{
     'A', // 0b000000

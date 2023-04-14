@@ -6,7 +6,7 @@
 #include <span>
 #include <vector>
 
-namespace gltf {
+namespace libvrm::gltf {
 
 class Material;
 struct Primitive

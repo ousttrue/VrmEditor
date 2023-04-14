@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace gltf {
+namespace libvrm::gltf {
 
 struct Scene;
 

@@ -6,7 +6,7 @@
 #include <string_view>
 #include <vector>
 
-namespace gltf {
+namespace libvrm::gltf {
 class Image {
 
   std::string m_name;

@@ -18,7 +18,7 @@ struct Payload
   {
     Push((const char*)&t, (const char*)&t + sizeof(T));
   }
-  void SetSkeleton(std::span<srht::JointDefinition> joints);
+  void SetSkeleton(std::span<libvrm::srht::JointDefinition> joints);
   void SetFrame(std::chrono::nanoseconds time,
                 float x,
                 float y,

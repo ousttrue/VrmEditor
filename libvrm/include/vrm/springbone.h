@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace vrm {
+namespace libvrm::vrm {
 
 class SpringJoint
 {

@@ -4,7 +4,7 @@
 //
 // SingleRootHierarchicalTransformation
 //
-namespace srht {
+namespace libvrm::srht {
 
 enum class HumanoidBones : uint16_t
 {

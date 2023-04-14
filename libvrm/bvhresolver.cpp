@@ -1,7 +1,7 @@
 #include "vrm/bvhresolver.h"
 #include "vrm/node.h"
 
-namespace bvh {
+namespace libvrm::bvh {
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void
 ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,

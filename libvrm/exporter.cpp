@@ -5,7 +5,7 @@
 #include "vrm/mesh.h"
 #include "vrm/scene.h"
 
-namespace gltf {
+namespace libvrm::gltf {
 
 Exporter::Exporter()
   : m_writer([this](std::string_view str) {

@@ -8,6 +8,6 @@ class JsonDock
 public:
   static void Create(const AddDockFunc& addDock,
                      std::string_view title,
-                     const std::shared_ptr<gltf::Scene>& scene,
+                     const std::shared_ptr<libvrm::gltf::Scene>& scene,
                      float indent);
 };

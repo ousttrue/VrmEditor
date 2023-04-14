@@ -8,11 +8,13 @@
 #include <string_view>
 #include <unordered_map>
 
+namespace libvrm {
 using Time = std::chrono::duration<double, std::ratio<1, 1>>;
 
 using OnTime = std::function<void(Time, bool loop)>;
 
-struct Track {
+struct Track
+{
   std::string Name;
   Time Duration;
   std::list<OnTime> Callbacks;
@@ -20,7 +22,8 @@ struct Track {
   bool IsPlaying = true;
   std::optional<Time> StartTime;
 
-  void SetTime(Time time) {
+  void SetTime(Time time)
+  {
     if (!IsPlaying) {
       return;
     }
@@ -33,26 +36,28 @@ struct Track {
       // delta is zero
       StartTime = time;
     }
-    for (auto &callback : Callbacks) {
+    for (auto& callback : Callbacks) {
       callback(delta, Loop);
     }
   }
 };
 
-struct Timeline {
+struct Timeline
+{
   bool IsPlaying = false;
   Time CurrentTime;
   std::vector<std::shared_ptr<Track>> Tracks;
   std::function<void(Time)> OnTimeChanged;
 
-  void SetTime(Time time, bool force = false) {
+  void SetTime(Time time, bool force = false)
+  {
     if (force) {
 
     } else if (!IsPlaying) {
       return;
     }
     CurrentTime = time;
-    for (auto &track : Tracks) {
+    for (auto& track : Tracks) {
       track->SetTime(time);
     }
     if (OnTimeChanged) {
@@ -60,11 +65,13 @@ struct Timeline {
     }
   }
 
-  void SetDeltaTime(Time time, bool force = false) {
+  void SetDeltaTime(Time time, bool force = false)
+  {
     SetTime(CurrentTime + time, force);
   }
 
-  std::shared_ptr<Track> AddTrack(const std::string &name, Time duration) {
+  std::shared_ptr<Track> AddTrack(const std::string& name, Time duration)
+  {
     auto track = std::make_shared<Track>();
     track->Name = name;
     track->Duration = duration;
@@ -72,3 +79,4 @@ struct Timeline {
     return track;
   }
 };
+}

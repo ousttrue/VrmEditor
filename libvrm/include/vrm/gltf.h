@@ -24,7 +24,7 @@ has(const nlohmann::json& obj, std::string_view key)
   return true;
 }
 
-namespace gltf {
+namespace libvrm::gltf {
 const auto VERTEX_JOINT = "JOINTS_0";
 const auto VERTEX_WEIGHT = "WEIGHTS_0";
 const auto VERTEX_POSITION = "POSITION";

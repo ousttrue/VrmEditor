@@ -8,7 +8,7 @@
 #include <string>
 #include <tuple>
 
-namespace gltf {
+namespace libvrm::gltf {
 struct Glb
 {
   std::span<const uint8_t> Json;

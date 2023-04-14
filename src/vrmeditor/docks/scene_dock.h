@@ -11,6 +11,6 @@ public:
   static std::shared_ptr<TreeContext> CreateTree(
     const AddDockFunc& addDock,
     std::string_view title,
-    const std::shared_ptr<gltf::Scene>& scene,
+    const std::shared_ptr<libvrm::gltf::Scene>& scene,
     float indent);
 };

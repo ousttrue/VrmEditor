@@ -1,7 +1,7 @@
 #include "vrm/animation.h"
 #include "vrm/mesh.h"
 
-namespace gltf {
+namespace libvrm::gltf {
 
 void
 Animation::Update(Time time,

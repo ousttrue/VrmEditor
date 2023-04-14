@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string_view>
 
-namespace vrm {
+namespace libvrm::vrm {
 
 enum class VrmVersion
 {
