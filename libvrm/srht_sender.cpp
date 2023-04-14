@@ -1,6 +1,9 @@
 #include "vrm/srht_sender.h"
 #include "vrm/bvh.h"
+#include "vrm/node.h"
+#include "vrm/scene.h"
 #include <DirectXMath.h>
+#include <chrono>
 #include <iostream>
 
 namespace libvrm {
@@ -12,6 +15,7 @@ struct Payload
   Payload& operator=(const Payload&) = delete;
 
   Payload() { std::cout << "Payload::Payload" << std::endl; }
+
   ~Payload() { std::cout << "Payload::~Payload" << std::endl; }
   void Push(const void* begin, const void* end)
   {
@@ -66,6 +70,7 @@ struct Payload
 UdpSender::UdpSender(asio::io_context& io)
   : socket_(io, asio::ip::udp::endpoint(asio::ip::udp::v4(), 0))
 {
+  m_start = std::chrono::steady_clock::now();
 }
 
 std::shared_ptr<Payload>
@@ -89,8 +94,8 @@ UdpSender::ReleasePayload(const std::shared_ptr<Payload>& payload)
 }
 
 void
-UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
-                        const std::shared_ptr<libvrm::bvh::Bvh>& bvh)
+UdpSender::SendBvhSkeleton(asio::ip::udp::endpoint ep,
+                           const std::shared_ptr<libvrm::bvh::Bvh>& bvh)
 {
   auto payload = GetOrCreatePayload();
   joints_.clear();
@@ -141,12 +146,11 @@ ToQuat(const DirectX::XMFLOAT3X3& rot)
 }
 
 void
-UdpSender::SendFrame(asio::ip::udp::endpoint ep,
-                     const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
-                     const libvrm::bvh::Frame& frame,
-                     bool pack)
+UdpSender::SendBvhFrame(asio::ip::udp::endpoint ep,
+                        const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
+                        const libvrm::bvh::Frame& frame,
+                        bool pack)
 {
-
   auto payload = GetOrCreatePayload();
 
   auto scaling = bvh->GuessScaling();
@@ -172,6 +176,96 @@ UdpSender::SendFrame(asio::ip::udp::endpoint ep,
       payload->Push(transform.Rotation);
     }
   }
+
+  socket_.async_send_to(
+    asio::buffer(payload->buffer),
+    ep,
+    [self = this, payload](asio::error_code ec, std::size_t bytes_transferred) {
+      self->ReleasePayload(payload);
+    });
+}
+
+static void
+PushJoints(std::vector<libvrm::srht::JointDefinition>& joints,
+           const std::shared_ptr<gltf::Node>& node,
+           const std::function<uint16_t(const std::shared_ptr<gltf::Node>&)>&
+             getParentIndex)
+{
+  joints.push_back({
+    .parentBoneIndex = getParentIndex(node),
+    .boneType = 0,
+    .xFromParent = node->Transform.Translation.x,
+    .yFromParent = node->Transform.Translation.y,
+    .zFromParent = node->Transform.Translation.z,
+  });
+
+  for (auto& child : node->Children) {
+    PushJoints(joints, child, getParentIndex);
+  }
+}
+
+void
+UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
+                        uint32_t id,
+                        const std::shared_ptr<gltf::Scene>& scene)
+{
+  auto payload = GetOrCreatePayload();
+  joints_.clear();
+  PushJoints(joints_, scene->m_roots[0], [scene](auto& node) -> uint16_t {
+    for (int i = 0; i < scene->m_nodes.size(); ++i) {
+      if (scene->m_nodes[i] == node) {
+        return i;
+      }
+    }
+    return -1;
+  });
+  payload->SetSkeleton(joints_);
+
+  socket_.async_send_to(
+    asio::buffer(payload->buffer),
+    ep,
+    [self = this, payload](asio::error_code ec, std::size_t bytes_transferred) {
+      self->ReleasePayload(payload);
+    });
+}
+
+static void
+PushJoints(std::shared_ptr<Payload>& payload,
+           const std::shared_ptr<gltf::Node>& node,
+           bool pack)
+{
+  if (pack) {
+    auto packed = libvrm::quat_packer::Pack(node->Transform.Rotation.x,
+                                            node->Transform.Rotation.y,
+                                            node->Transform.Rotation.z,
+                                            node->Transform.Rotation.w);
+    payload->Push(packed);
+  } else {
+    payload->Push(node->Transform.Rotation);
+  }
+
+  for (auto& child : node->Children) {
+    PushJoints(payload, child, pack);
+  }
+}
+
+void
+UdpSender::SendFrame(asio::ip::udp::endpoint ep,
+                     uint32_t id,
+                     const std::shared_ptr<gltf::Scene>& scene,
+                     bool pack)
+{
+  auto payload = GetOrCreatePayload();
+
+  // root
+  auto root = scene->m_roots[0];
+  payload->SetFrame(std::chrono::steady_clock::now() - m_start,
+                    root->WorldTransform.Translation.x,
+                    root->WorldTransform.Translation.y,
+                    root->WorldTransform.Translation.z,
+                    pack);
+
+  PushJoints(payload, root, pack);
 
   socket_.async_send_to(
     asio::buffer(payload->buffer),
