@@ -9,12 +9,13 @@
 #include <span>
 #include <vector>
 
-namespace libvrm::bvh {
+namespace libvrm {
+namespace bvh {
 struct Joint
 {
   std::string name;
   uint16_t index;
-  uint16_t parent;
+  std::optional<uint16_t> parent;
   DirectX::XMFLOAT3 localOffset;
   DirectX::XMFLOAT3 worldOffset;
   Channels channels;
@@ -111,5 +112,6 @@ operator<<(std::ostream& os, const Bvh& bvh)
   os << ">" << std::endl;
 
   return os;
+}
 }
 }

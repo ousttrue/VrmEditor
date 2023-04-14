@@ -20,7 +20,7 @@ ResolveFrame(const std::shared_ptr<gltf::Scene>& scene,
              Time time);
 
 void
-SetBvh(const std::shared_ptr<gltf::Scene>& scene,
+InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
        const std::shared_ptr<bvh::Bvh>& bvh);
 
 }

@@ -38,7 +38,7 @@ UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
   auto scaling = bvh->GuessScaling();
   for (auto joint : bvh->joints) {
     joints_.push_back({
-      .parentBoneIndex = joint.parent,
+      .parentBoneIndex = joint.parent.value_or(-1),
       .boneType = 0,
       .xFromParent = joint.localOffset.x * scaling,
       .yFromParent = joint.localOffset.y * scaling,
@@ -105,9 +105,9 @@ UdpSender::SendFrame(asio::ip::udp::endpoint ep,
     }
     if (pack) {
       auto packed = libvrm::quat_packer::Pack(transform.Rotation.x,
-                                      transform.Rotation.y,
-                                      transform.Rotation.z,
-                                      transform.Rotation.w);
+                                              transform.Rotation.y,
+                                              transform.Rotation.z,
+                                              transform.Rotation.w);
       payload->Push(packed);
     } else {
       payload->Push(transform.Rotation);

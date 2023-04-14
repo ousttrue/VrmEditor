@@ -233,7 +233,7 @@ App::LoadMotion(const std::filesystem::path& path)
   auto scaling = bvh->GuessScaling();
   Log(LogLevel::Info) << "LoadMotion: " << scaling << ", " << path;
 
-  libvrm::bvh::SetBvh(m_motion, bvh);
+  libvrm::bvh::InitializeSceneFromBvh(m_motion, bvh);
   m_motion->m_roots[0]->UpdateShapeInstanceRecursive(
     DirectX::XMMatrixIdentity(), m_cuber->Instances);
 

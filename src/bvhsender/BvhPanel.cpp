@@ -66,11 +66,11 @@ public:
     }
     animation_.SetBvh(bvh);
     for (auto& joint : bvh_->joints) {
-      parentMap_.push_back(joint.parent);
+      parentMap_.push_back(joint.parent.value_or(-1));
     }
     sender_.SendSkeleton(ep_, bvh_);
 
-    libvrm::bvh::SetBvh(m_scene, bvh_);
+    libvrm::bvh::InitializeSceneFromBvh(m_scene, bvh_);
     m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
       DirectX::XMMatrixIdentity(), instancies_);
   }

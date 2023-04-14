@@ -48,17 +48,17 @@ PushJoint(const std::shared_ptr<gltf::Scene>& scene,
   node->Transform.Translation.z *= scaling;
 
   scene->m_nodes.push_back(node);
-  if (scene->m_nodes.size() == 1) {
-    scene->m_roots.push_back(node);
-  } else {
-    auto parent = scene->m_nodes[joint.parent];
+  if (auto parent_index = joint.parent) {
+    auto parent = scene->m_nodes[*parent_index];
     gltf::Node::AddChild(parent, node);
+  } else {
+    scene->m_roots.push_back(node);
   }
 }
 
 void
-SetBvh(const std::shared_ptr<gltf::Scene>& scene,
-       const std::shared_ptr<bvh::Bvh>& bvh)
+InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
+                       const std::shared_ptr<bvh::Bvh>& bvh)
 {
   for (auto& joint : bvh->joints) {
     PushJoint(scene, joint, bvh->GuessScaling());
