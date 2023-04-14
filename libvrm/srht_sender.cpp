@@ -202,6 +202,10 @@ PushJoints(std::vector<libvrm::srht::JointDefinition>& joints,
     .yFromParent = node->Transform.Translation.y,
     .zFromParent = node->Transform.Translation.z,
   });
+  if (auto humanoid = node->Humanoid) {
+    joints.back().boneType =
+      static_cast<uint16_t>(libvrm::srht::FromVrmBone(humanoid->HumanBone));
+  }
 
   for (auto& child : node->Children) {
     PushJoints(joints, child, getParentIndex);

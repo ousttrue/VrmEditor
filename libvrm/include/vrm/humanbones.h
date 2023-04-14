@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include <string_view>
 
-namespace libvrm::vrm {
+namespace libvrm {
+namespace vrm {
 
 enum class VrmVersion
 {
@@ -168,4 +169,5 @@ HumanBoneToName(HumanBones bone)
   return HumanBonesNames[(int)bone];
 }
 
+}
 } // namespace vrm
