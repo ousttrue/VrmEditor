@@ -4,7 +4,7 @@
 #include <asio.hpp>
 #include <imgui.h>
 #include <thread>
-#include <vrm/bvhresolver.h>
+#include <vrm/bvhscene.h>
 #include <vrm/scene.h>
 
 class BvhPanelImpl

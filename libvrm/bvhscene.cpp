@@ -1,4 +1,4 @@
-#include "vrm/bvhresolver.h"
+#include "vrm/bvhscene.h"
 #include "vrm/node.h"
 
 namespace libvrm::bvh {

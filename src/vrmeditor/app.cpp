@@ -18,7 +18,7 @@
 #include "udp_receiver.h"
 #include <vrm/animation.h>
 #include <vrm/bvh.h>
-#include <vrm/bvhresolver.h>
+#include <vrm/bvhscene.h>
 #include <vrm/fileutil.h>
 #include <vrm/node.h>
 #include <vrm/srht_update.h>
