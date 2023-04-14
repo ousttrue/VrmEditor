@@ -6,7 +6,6 @@
 #include <string_view>
 #include <vrm/bvh.h>
 
-using RenderTime = std::chrono::duration<float, std::ratio<1, 1>>;
 
 class BvhPanel
 {

@@ -275,16 +275,16 @@ private:
                                  : joints_.back().channels.startIndex +
                                      joints_.back().channels.size();
 
-        auto parentIndex = stack_.empty() ? -1 : stack_.back();
-        // auto parent = stack_.empty() ? nullptr : &joints_[parentIndex];
         joints_.push_back(Joint{
           .name = { name->begin(), name->end() },
           .index = static_cast<uint16_t>(index),
-          .parent = static_cast<uint16_t>(parentIndex),
           .localOffset = *offset,
           .worldOffset = *offset,
           .channels = *channels,
         });
+        if (stack_.size()) {
+          joints_.back().parent = stack_.back();
+        }
         if (stack_.size()) {
           auto& parent = joints_[stack_.back()];
           joints_.back().worldOffset.x += parent.worldOffset.x;

@@ -1,115 +1,136 @@
 #include "BvhPanel.h"
-#include "Animation.h"
 #include "UdpSender.h"
 #include <asio.hpp>
 #include <imgui.h>
 #include <thread>
 #include <vrm/bvhscene.h>
 #include <vrm/scene.h>
+#include <vrm/timeline.h>
+
+using OnTimer = std::function<void(libvrm::Time)>;
+class IntervalTimer
+{
+  std::shared_ptr<asio::steady_timer> m_timer;
+  std::chrono::steady_clock::time_point m_startTime;
+
+public:
+  IntervalTimer(asio::io_context& io,
+                std::chrono::nanoseconds interval,
+                const OnTimer& onTimer)
+  {
+    m_startTime = std::chrono::steady_clock::now();
+    m_timer = std::shared_ptr<asio::steady_timer>(new asio::steady_timer(io));
+    AsyncWait(interval, onTimer);
+  }
+  ~IntervalTimer()
+  {
+    if (m_timer) {
+      m_timer->cancel();
+      m_timer.reset();
+    }
+  }
+  void AsyncWait(std::chrono::nanoseconds interval, const OnTimer& onTimer)
+  {
+    if (auto timer = m_timer) {
+      try {
+        timer->expires_after(interval);
+        timer->async_wait(
+          [self = this, interval, onTimer, startTime = m_startTime](
+            const std::error_code&) {
+            auto elapsed = std::chrono::steady_clock::now() - startTime;
+            onTimer(elapsed);
+            self->AsyncWait(interval, onTimer);
+          });
+      } catch (std::exception const& e) {
+        std::cout << "AsyncWait catch: " << e.what() << std::endl;
+      }
+    }
+  }
+};
 
 class BvhPanelImpl
 {
-  asio::io_context io_;
-  asio::executor_work_guard<asio::io_context::executor_type> work_;
-  Animation animation_;
-  UdpSender sender_;
-  std::thread thread_;
-  std::shared_ptr<libvrm::bvh::Bvh> bvh_;
-  asio::ip::udp::endpoint ep_;
-  bool enablePackQuat_ = false;
-  std::vector<int> parentMap_;
+  asio::io_context m_io;
+  asio::executor_work_guard<asio::io_context::executor_type> m_work;
 
-  std::vector<DirectX::XMFLOAT4X4> instancies_;
-  std::mutex mutex_;
+  UdpSender m_sender;
+  std::shared_ptr<libvrm::bvh::Bvh> m_bvh;
+  asio::ip::udp::endpoint m_ep;
+  bool m_enablePackQuat = false;
+
+  std::vector<DirectX::XMFLOAT4X4> m_instances;
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
+  std::shared_ptr<IntervalTimer> m_clock;
 
 public:
   BvhPanelImpl()
-    : work_(asio::make_work_guard(io_))
-    , animation_(io_)
-    , sender_(io_)
-    , ep_(asio::ip::address::from_string("127.0.0.1"), 54345)
+    : m_work(asio::make_work_guard(m_io))
+    , m_sender(m_io)
+    , m_ep(asio::ip::address::from_string("127.0.0.1"), 54345)
   {
-    animation_.OnFrame([self = this](const libvrm::bvh::Frame& frame) {
-      self->sender_.SendFrame(
-        self->ep_, self->bvh_, frame, self->enablePackQuat_);
-    });
-    thread_ = std::thread([self = this]() {
-      try {
-        self->io_.run();
-        std::cout << "[asio] end" << std::endl;
-      } catch (std::exception const& e) {
-        std::cout << "[asio] catch" << e.what() << std::endl;
-      }
-    });
-
-    // bind bvh animation to renderer
-    animation_.OnFrame([self = this](const libvrm::bvh::Frame& frame) {
-      self->SyncFrame(frame);
-    });
-
     m_scene = std::make_shared<libvrm::gltf::Scene>();
   }
 
-  ~BvhPanelImpl()
-  {
-    animation_.Stop();
-    work_.reset();
-    thread_.join();
-  }
+  ~BvhPanelImpl() { m_work.reset(); }
 
   void SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh)
   {
-    bvh_ = bvh;
-    if (!bvh_) {
+    m_bvh = bvh;
+    if (!m_bvh) {
       return;
     }
-    animation_.SetBvh(bvh);
-    for (auto& joint : bvh_->joints) {
-      parentMap_.push_back(joint.parent.value_or(-1));
-    }
-    sender_.SendSkeleton(ep_, bvh_);
 
-    libvrm::bvh::InitializeSceneFromBvh(m_scene, bvh_);
+    libvrm::bvh::InitializeSceneFromBvh(m_scene, m_bvh);
     m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
-      DirectX::XMMatrixIdentity(), instancies_);
+      DirectX::XMMatrixIdentity(), m_instances);
+
+    m_sender.SendSkeleton(m_ep, m_bvh);
+
+    m_clock = std::make_shared<IntervalTimer>(
+      m_io,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(m_bvh->frame_time),
+      [this](auto time) {
+        auto index = m_bvh->TimeToIndex(time);
+        auto frame = m_bvh->GetFrame(index);
+
+        m_sender.SendFrame(m_ep, m_bvh, frame, m_enablePackQuat);
+
+        UpdateScene(frame);
+      });
   }
 
   void UpdateGui()
   {
-    if (!bvh_) {
+    m_io.poll();
+
+    if (!m_bvh) {
       return;
     }
     // bvh panel
     ImGui::Begin("BVH");
 
-    ImGui::LabelText("bvh", "%zu joints", bvh_->joints.size());
+    ImGui::LabelText("bvh", "%zu joints", m_bvh->joints.size());
 
-    ImGui::Checkbox("use quaternion pack32", &enablePackQuat_);
+    ImGui::Checkbox("use quaternion pack32", &m_enablePackQuat);
 
     if (ImGui::Button("send skeleton")) {
-      sender_.SendSkeleton(ep_, bvh_);
+      m_sender.SendSkeleton(m_ep, m_bvh);
     }
 
     ImGui::End();
   }
 
-  void SyncFrame(const libvrm::bvh::Frame& frame)
+  void UpdateScene(const libvrm::bvh::Frame& frame)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
     libvrm::bvh::UpdateSceneFromBvhFrame(
-      m_scene, m_scene->m_roots[0], bvh_, frame, bvh_->GuessScaling());
+      m_scene, m_scene->m_roots[0], m_bvh, frame, m_bvh->GuessScaling());
     m_scene->m_roots[0]->CalcWorldMatrix(true);
-    instancies_.clear();
+    m_instances.clear();
     m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
-      DirectX::XMMatrixIdentity(), instancies_);
+      DirectX::XMMatrixIdentity(), m_instances);
   }
 
-  std::span<const DirectX::XMFLOAT4X4> GetCubes()
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return instancies_;
-  }
+  std::span<const DirectX::XMFLOAT4X4> GetCubes() { return m_instances; }
 };
 
 BvhPanel::BvhPanel()

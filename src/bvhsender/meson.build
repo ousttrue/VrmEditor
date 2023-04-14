@@ -5,7 +5,6 @@ executable(
         'GlfwPlatform.cpp',
         'GuiApp.cpp',
         'BvhPanel.cpp',
-        'Animation.cpp',
         'UdpSender.cpp',
         'Payload.cpp',
     ],
