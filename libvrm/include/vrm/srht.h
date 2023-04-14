@@ -91,7 +91,7 @@ enum class SkeletonFlags : uint32_t
   HAS_INITIAL_ROTATION = 0x1,
 };
 
-// char magic[8] = { 'S', 'R', 'H', 'T', 'S', 'K', 'L', '1' };
+constexpr const char* SRHT_SKELETON_MAGIC1 = "SRHTSKL1";
 struct SkeletonHeader
 {
   uint16_t skeletonId = 0;
@@ -108,7 +108,7 @@ enum class FrameFlags : uint32_t
   USE_QUAT32 = 0x1,
 };
 
-// char magic[8] = { 'S', 'R', 'H', 'T', 'F', 'R', 'M', '1' };
+constexpr const char* SRHT_FRAME_MAGIC1 = "SRHTFRM1";
 struct FrameHeader
 {
   // std::chrono::nanoseconds

@@ -31,14 +31,19 @@ struct Payload
     Push((const char*)&t, (const char*)&t + sizeof(T));
   }
 
+  void SetMagic(std::vector<uint8_t>& buffer, std::string_view magic)
+  {
+    assert(magic.size() == 8);
+    buffer.assign(magic.data(), magic.data() + magic.size());
+  }
+
   void SetSkeleton(std::span<libvrm::srht::JointDefinition> joints)
   {
-    buffer.clear();
+    SetMagic(buffer, libvrm::srht::SRHT_SKELETON_MAGIC1);
 
     libvrm::srht::SkeletonHeader header{
-      // .magic = {},
       .skeletonId = 0,
-      .jointCount = 27,
+      .jointCount = static_cast<uint16_t>(joints.size()),
       .flags = {},
     };
     Push((const char*)&header, (const char*)&header + sizeof(header));
@@ -51,10 +56,9 @@ struct Payload
                 float z,
                 bool usePack)
   {
-    buffer.clear();
+    SetMagic(buffer, libvrm::srht::SRHT_FRAME_MAGIC1);
 
     libvrm::srht::FrameHeader header{
-      // .magic = {},
       .time = time.count(),
       .flags = usePack ? libvrm::srht::FrameFlags::USE_QUAT32
                        : libvrm::srht::FrameFlags::NONE,
@@ -211,14 +215,18 @@ UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
 {
   auto payload = GetOrCreatePayload();
   joints_.clear();
-  PushJoints(joints_, scene->m_roots[0], [scene](auto& node) -> uint16_t {
-    for (int i = 0; i < scene->m_nodes.size(); ++i) {
-      if (scene->m_nodes[i] == node) {
-        return i;
+
+  auto getParentIndex = [scene](auto& node) -> uint16_t {
+    if (auto parent = node->Parent.lock()) {
+      for (int i = 0; i < scene->m_nodes.size(); ++i) {
+        if (scene->m_nodes[i] == parent) {
+          return i;
+        }
       }
     }
     return -1;
-  });
+  };
+  PushJoints(joints_, scene->m_roots[0], getParentIndex);
   payload->SetSkeleton(joints_);
 
   socket_.async_send_to(
@@ -260,9 +268,9 @@ UdpSender::SendFrame(asio::ip::udp::endpoint ep,
   // root
   auto root = scene->m_roots[0];
   payload->SetFrame(std::chrono::steady_clock::now() - m_start,
-                    root->WorldTransform.Translation.x,
-                    root->WorldTransform.Translation.y,
-                    root->WorldTransform.Translation.z,
+                    root->Transform.Translation.x,
+                    root->Transform.Translation.y,
+                    root->Transform.Translation.z,
                     pack);
 
   PushJoints(payload, root, pack);
