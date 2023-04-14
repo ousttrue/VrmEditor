@@ -8,6 +8,10 @@
 #include <string_view>
 #include <unordered_map>
 
+namespace asio {
+class io_context;
+}
+
 namespace libvrm {
 using Time = std::chrono::duration<double, std::ratio<1, 1>>;
 
@@ -79,4 +83,17 @@ struct Timeline
     return track;
   }
 };
+
+using OnTimer = std::function<void(libvrm::Time)>;
+class IntervalTimer
+{
+  class IntervalTimerImpl* m_impl = nullptr;
+
+public:
+  IntervalTimer(asio::io_context& io,
+                std::chrono::nanoseconds interval,
+                const OnTimer& onTimer);
+  ~IntervalTimer();
+};
+
 }

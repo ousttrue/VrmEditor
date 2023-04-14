@@ -7,47 +7,6 @@
 #include <vrm/scene.h>
 #include <vrm/timeline.h>
 
-using OnTimer = std::function<void(libvrm::Time)>;
-class IntervalTimer
-{
-  std::shared_ptr<asio::steady_timer> m_timer;
-  std::chrono::steady_clock::time_point m_startTime;
-
-public:
-  IntervalTimer(asio::io_context& io,
-                std::chrono::nanoseconds interval,
-                const OnTimer& onTimer)
-  {
-    m_startTime = std::chrono::steady_clock::now();
-    m_timer = std::shared_ptr<asio::steady_timer>(new asio::steady_timer(io));
-    AsyncWait(interval, onTimer);
-  }
-  ~IntervalTimer()
-  {
-    if (m_timer) {
-      m_timer->cancel();
-      m_timer.reset();
-    }
-  }
-  void AsyncWait(std::chrono::nanoseconds interval, const OnTimer& onTimer)
-  {
-    if (auto timer = m_timer) {
-      try {
-        timer->expires_after(interval);
-        timer->async_wait(
-          [self = this, interval, onTimer, startTime = m_startTime](
-            const std::error_code&) {
-            auto elapsed = std::chrono::steady_clock::now() - startTime;
-            onTimer(elapsed);
-            self->AsyncWait(interval, onTimer);
-          });
-      } catch (std::exception const& e) {
-        std::cout << "AsyncWait catch: " << e.what() << std::endl;
-      }
-    }
-  }
-};
-
 class BvhPanelImpl
 {
   asio::io_context m_io;
@@ -60,7 +19,7 @@ class BvhPanelImpl
 
   std::vector<DirectX::XMFLOAT4X4> m_instances;
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
-  std::shared_ptr<IntervalTimer> m_clock;
+  std::shared_ptr<libvrm::IntervalTimer> m_clock;
 
 public:
   BvhPanelImpl()
@@ -86,7 +45,7 @@ public:
 
     m_sender.SendSkeleton(m_ep, m_bvh);
 
-    m_clock = std::make_shared<IntervalTimer>(
+    m_clock = std::make_shared<libvrm::IntervalTimer>(
       m_io,
       std::chrono::duration_cast<std::chrono::nanoseconds>(m_bvh->frame_time),
       [this](auto time) {

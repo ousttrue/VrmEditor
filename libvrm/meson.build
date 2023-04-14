@@ -1,5 +1,11 @@
 libvrm_inc = include_directories('include')
-dependencies = [stb_dep, json_dep, directxmath_dep, grapho_dep]
+libvrm_deps = [
+    stb_dep,
+    json_dep,
+    directxmath_dep,
+    grapho_dep,
+    asio_dep,
+]
 libvrm_lib = static_library(
     'vrm',
     [
@@ -14,12 +20,13 @@ libvrm_lib = static_library(
         'bvhframe.cpp',
         'bvhscene.cpp',
         'srht_update.cpp',
+        'timeline.cpp',
     ],
     include_directories: libvrm_inc,
-    dependencies: dependencies,
+    dependencies: libvrm_deps,
 )
 libvrm_dep = declare_dependency(
     link_with: libvrm_lib,
     include_directories: libvrm_inc,
-    dependencies: dependencies,
+    dependencies: libvrm_deps,
 )
