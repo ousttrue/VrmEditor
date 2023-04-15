@@ -49,9 +49,6 @@ Gui::Gui(const void* window, const char* glsl_version)
   ImNodes::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
 
-  auto file = get_home() / ".vrmeditor.ini";
-  m_imgui_ini = file.u8string();
-
   // stop ImGui auto save
   io.IniFilename = nullptr;
 
@@ -155,15 +152,17 @@ Gui::~Gui()
 }
 
 void
-Gui::LoadState()
+Gui::LoadState(const std::string &ini)
 {
-  ImGui::LoadIniSettingsFromDisk((const char*)m_imgui_ini.c_str());
+  ImGui::LoadIniSettingsFromMemory(ini.data(), ini.size());
 }
 
-void
+std::string
 Gui::SaveState()
 {
-  ImGui::SaveIniSettingsToDisk((const char*)m_imgui_ini.c_str());
+  size_t size;
+  auto p = ImGui::SaveIniSettingsToMemory(&size);
+  return { p, p + size };
 }
 
 bool
@@ -278,7 +277,7 @@ Gui::BackgroundMouseEvent() const
   return event;
 }
 
-void
+bool
 Gui::NewFrame()
 {
 
@@ -294,9 +293,7 @@ Gui::NewFrame()
   ImGui::NewFrame();
 
   auto& io = ImGui::GetIO();
-  if (io.WantSaveIniSettings) {
-    SaveState();
-  }
+  return io.WantSaveIniSettings;
 }
 
 void

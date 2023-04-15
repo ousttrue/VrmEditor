@@ -13,6 +13,13 @@ struct LuaGet
   static T Get(lua_State* L);
 
   template<>
+  static bool Get<bool>(lua_State* L)
+  {
+    luaL_checktype(L, I+1, LUA_TBOOLEAN);
+    return lua_toboolean(L, I+1);
+  }
+
+  template<>
   static int Get<int>(lua_State* L)
   {
     return (int)luaL_checkinteger(L, I + 1);

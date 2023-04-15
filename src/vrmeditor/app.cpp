@@ -14,9 +14,11 @@
 #include "docks/scene_dock.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
+#include "fs_util.h"
 #include "luahost.h"
 #include "platform.h"
 #include "udp_receiver.h"
+#include <fstream>
 #include <vrm/animation.h>
 #include <vrm/bvh.h>
 #include <vrm/bvhscene.h>
@@ -25,14 +27,15 @@
 #include <vrm/srht_update.h>
 #include <vrm/timeline.h>
 
-const auto WINDOW_WIDTH = 2000;
-const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
 
 App::App()
 {
   m_logger = std::make_shared<ImLogger>();
   m_lua = std::make_shared<LuaEngine>();
+  auto file = get_home() / ".vrmeditor.ini.lua";
+  m_ini = file.u8string();
+
   m_scene = std::make_shared<libvrm::gltf::Scene>();
   m_view = std::make_shared<grapho::OrbitView>();
   m_timeline = std::make_shared<libvrm::Timeline>();
@@ -41,8 +44,7 @@ App::App()
   m_pose_stream = std::make_shared<HumanPoseStream>();
 
   m_platform = std::make_shared<Platform>();
-  auto window =
-    m_platform->CreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
+  auto window = m_platform->CreateWindow(2000, 1200, false, WINDOW_TITLE);
   if (!window) {
     throw std::runtime_error("createWindow");
   }
@@ -109,6 +111,37 @@ App::Log(LogLevel level)
       logger->End();
     },
   };
+}
+
+void
+App::LoadImGuiIni(std::string_view ini)
+{
+  m_gui->LoadState({ ini.begin(), ini.end() });
+}
+
+void
+App::LoadImNodesIni(std::string_view ini)
+{
+}
+
+void
+App::SetWindowSize(int width, int height, bool maximize)
+{
+  m_platform->SetWindowSize(width, height, maximize);
+}
+
+void
+App::SaveState(std::string_view imgui_ini)
+{
+  std::ofstream os((const char*)m_ini.u8string().c_str());
+
+  os << "vrmeditor.load_imgui_ini [===[\n" << imgui_ini << "\n]===]\n\n";
+
+  auto [width, height] = m_platform->WindowSize();
+  auto maximize = m_platform->IsWindowMaximized();
+
+  os << "vrmeditor.set_window_size(" << width << ", " << height << ", "
+     << (maximize ? "true" : "false") << ")\n\n";
 }
 
 void
@@ -281,6 +314,9 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 int
 App::Run()
 {
+  // must after App::App
+  m_lua->DoFile(m_ini);
+
   auto addDock = [gui = m_gui](const Dock& dock) {
     gui->m_docks.push_back(dock);
   };
@@ -335,8 +371,6 @@ App::Run()
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
 
-  m_gui->LoadState();
-
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
     auto time = info->Time;
@@ -352,7 +386,9 @@ App::Run()
     lastTime = time;
 
     // newFrame
-    m_gui->NewFrame();
+    if (m_gui->NewFrame()) {
+      SaveState(m_gui->SaveState());
+    }
     ImGuizmo::BeginFrame();
 
     m_gui->DockSpace();
@@ -364,6 +400,8 @@ App::Run()
     m_gui->Render();
     m_platform->Present();
   }
+
+  SaveState(m_gui->SaveState());
 
   return 0;
 }

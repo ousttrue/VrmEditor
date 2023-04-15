@@ -4,23 +4,32 @@
 #include <GLFW/glfw3.h>
 #include <stdexcept>
 
-static void error_callback(int error, const char *description) {
+static void
+error_callback(int error, const char* description)
+{
   fprintf(stderr, "Error: %s\n", description);
 }
 
-Platform::Platform() {
+Platform::Platform()
+{
   glfwSetErrorCallback(error_callback);
   if (!glfwInit()) {
     throw std::runtime_error("glfwInit");
   }
 }
 
-Platform::~Platform() {
+Platform::~Platform()
+{
   glfwDestroyWindow(m_window);
   glfwTerminate();
 }
 
-GLFWwindow *Platform::CreateWindow(int width, int height, const char *title) {
+GLFWwindow*
+Platform::CreateWindow(int width,
+                       int height,
+                       bool is_maximized,
+                       const char* title)
+{
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
   // Decide GL+GLSL versions
@@ -50,12 +59,17 @@ GLFWwindow *Platform::CreateWindow(int width, int height, const char *title) {
   if (!m_window) {
     return nullptr;
   }
+  if (is_maximized) {
+    glfwMaximizeWindow(m_window);
+  }
   glfwMakeContextCurrent(m_window);
   glfwSwapInterval(1);
   return m_window;
 }
 
-std::optional<FrameInfo> Platform::NewFrame() {
+std::optional<FrameInfo>
+Platform::NewFrame()
+{
   if (glfwWindowShouldClose(m_window)) {
     return {};
   }
@@ -76,16 +90,43 @@ std::optional<FrameInfo> Platform::NewFrame() {
   auto seconds = glfwGetTime();
 
   return FrameInfo{
-      .Width = width,
-      .Height = height,
-      .Time = libvrm::Time(seconds),
+    .Width = width,
+    .Height = height,
+    .Time = libvrm::Time(seconds),
   };
 }
 
-void Platform::Present() { glfwSwapBuffers(m_window); }
+void
+Platform::Present()
+{
+  glfwSwapBuffers(m_window);
+}
 
-
-void Platform::SetTitle(const std::string &title)
+void
+Platform::SetTitle(const std::string& title)
 {
   glfwSetWindowTitle(m_window, title.c_str());
+}
+
+std::tuple<int, int>
+Platform::WindowSize() const
+{
+  int width, height;
+  glfwGetWindowSize(m_window, &width, &height);
+  return { width, height };
+}
+
+bool
+Platform::IsWindowMaximized() const
+{
+  return glfwGetWindowAttrib(m_window, GLFW_MAXIMIZED);
+}
+
+void
+Platform::SetWindowSize(int width, int height, bool maximize)
+{
+  glfwSetWindowSize(m_window, width, height);
+  if (maximize) {
+    glfwMaximizeWindow(m_window);
+  }
 }

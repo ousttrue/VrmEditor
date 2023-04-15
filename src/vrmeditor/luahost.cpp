@@ -7,26 +7,32 @@
 #include <type_traits>
 
 static int
-vrmeditor_add_human_map(lua_State* l)
+vrmeditor_add_human_map(lua_State* L)
 {
-  int stackSize = lua_gettop(l);
+  int stackSize = lua_gettop(L);
   if (stackSize < 1) {
     return 0;
   }
-  if (lua_type(l, 1) != LUA_TTABLE) {
+  if (lua_type(L, 1) != LUA_TTABLE) {
     return 0;
   }
 
   auto map = App::Instance().AddHumanBoneMap();
-  lua_pushnil(l);
-  while (lua_next(l, -2)) {
-    if (auto value = lua_tostring(l, -1)) {
-      map->Add(lua_tostring(l, -2), value);
+  lua_pushnil(L);
+  while (lua_next(L, -2)) {
+    if (auto value = lua_tostring(L, -1)) {
+      map->Add(lua_tostring(L, -2), value);
     }
-    lua_pop(l, 1);
+    lua_pop(L, 1);
   }
-  lua_pop(l, 1);
+  lua_pop(L, 1);
 
+  return 0;
+}
+
+static int
+vrmeditor_load_imnodes_links(lua_State* L)
+{
   return 0;
 }
 
@@ -40,6 +46,17 @@ struct LuaEngineImpl
     luaL_openlibs(m_lua);
 
     constexpr struct luaL_Reg VrmEditorLuaModule[] = {
+      { "load_imgui_ini", MakeLuaFunc([](const std::string& ini) {
+          App::Instance().LoadImGuiIni(ini);
+        }) },
+      { "load_imnodes_ini", MakeLuaFunc([](const std::string& ini) {
+          App::Instance().LoadImNodesIni(ini);
+        }) },
+      { "load_imnodes_links", vrmeditor_load_imnodes_links },
+      { "set_window_size",
+        MakeLuaFunc([](int width, int height, bool is_maximized) {
+          App::Instance().SetWindowSize(width, height, is_maximized);
+        }) },
       // font settings
       { "set_font_size", MakeLuaFunc([](int font_size) {
           App::Instance().GetGui()->SetFontSize(font_size);

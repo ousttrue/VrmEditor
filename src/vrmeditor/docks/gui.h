@@ -52,7 +52,6 @@ using Task = std::function<void()>;
 
 class Gui
 {
-  std::u8string m_imgui_ini;
   std::filesystem::path m_current;
 
   bool m_initialized = false;
@@ -71,11 +70,12 @@ public:
   std::list<Dock> m_docks;
   Gui(const void* window, const char* glsl_version);
   ~Gui();
-  void LoadState();
-  void SaveState();
+  void LoadState(const std::string &ini);
+  std::string SaveState();
 
   std::optional<MouseEvent> BackgroundMouseEvent() const;
-  void NewFrame();
+  // return WantSaveIniSettings
+  bool NewFrame();
   void DockSpace();
   void Render();
   void PostTask(const Task& task) { m_tasks.push(task); }
@@ -86,4 +86,3 @@ public:
   bool AddJapaneseFont(const std::filesystem::path& path);
   bool AddIconFont(const std::filesystem::path& path);
 };
-

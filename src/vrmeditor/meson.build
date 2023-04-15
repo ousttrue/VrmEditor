@@ -1,21 +1,29 @@
+srcs = [
+    'main.cpp',
+    'platform.cpp',
+    'app.cpp',
+    'luahost.cpp',
+    'assetdir.cpp',
+    'udp_receiver.cpp',
+    'docks/gl3renderer.cpp',
+    'docks/gui.cpp',
+    'docks/json_dock.cpp',
+    'docks/motion_dock.cpp',
+    'docks/cuber.cpp',
+    'docks/scene_dock.cpp',
+    'docks/vrm_dock.cpp',
+    'docks/humanpose_stream.cpp',
+]
+
+if host_machine.system() == 'windows'
+    srcs += ['fs_util_win32.cpp']
+else
+    srcs += ['fs_util_posix.cpp']
+endif
+
 executable(
     'vrmeditor',
-    [
-        'main.cpp',
-        'platform.cpp',
-        'app.cpp',
-        'luahost.cpp',
-        'assetdir.cpp',
-        'udp_receiver.cpp',
-        'docks/gl3renderer.cpp',
-        'docks/gui.cpp',
-        'docks/json_dock.cpp',
-        'docks/motion_dock.cpp',
-        'docks/cuber.cpp',
-        'docks/scene_dock.cpp',
-        'docks/vrm_dock.cpp',
-        'docks/humanpose_stream.cpp',
-    ],
+    srcs,
     install: true,
     gui_app: true,
     dependencies: [

@@ -32,6 +32,7 @@ struct HumanPoseStream;
 
 class App
 {
+  std::filesystem::path m_ini;
   std::shared_ptr<Platform> m_platform;
   std::shared_ptr<Gui> m_gui;
   std::shared_ptr<LuaEngine> m_lua;
@@ -63,6 +64,10 @@ public:
     return s_instance;
   }
   LogStream Log(LogLevel level);
+  void LoadImGuiIni(std::string_view ini);
+  void LoadImNodesIni(std::string_view ini);
+  void SetWindowSize(int width, int height, bool maximize);
+  void SaveState(std::string_view imgui_ini);
 
   const std::shared_ptr<LuaEngine>& Lua() const { return m_lua; }
   int Run();

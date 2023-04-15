@@ -14,8 +14,8 @@ function vrmeditor.load_imnodes_links(links) end
 
 ---@param width integer
 ---@param height integer
----@param is_maximize boolean
-function vrmeditor.set_window_size(width, height, is_maximize) end
+---@param is_maximized boolean
+function vrmeditor.set_window_size(width, height, is_maximized) end
 
 ---@param size integer
 function vrmeditor.set_font_size(size) end
