@@ -3,6 +3,20 @@
 ---@class vrmeditor
 vrmeditor = {}
 
+---@param ini string imgui ini
+function vrmeditor.load_imgui_ini(ini) end
+
+---@param ini string imnodes ini
+function vrmeditor.load_imnodes_ini(ini) end
+
+---@param links table imnodes link{id, start, end}
+function vrmeditor.load_imnodes_links(links) end
+
+---@param width integer
+---@param height integer
+---@param is_maximize boolean
+function vrmeditor.set_window_size(width, height, is_maximize) end
+
 ---@param size integer
 function vrmeditor.set_font_size(size) end
 

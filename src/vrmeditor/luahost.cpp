@@ -1,108 +1,11 @@
 #include "luahost.h"
 #include "app.h"
 #include "docks/gui.h"
+#include "makeluafunc.h"
+#include <filesystem>
 #include <iostream>
+#include <type_traits>
 
-// vrmeditor.set_font_size(value) -> void
-static int
-vrmeditor_set_font_size(lua_State* l)
-{
-  int stackSize = lua_gettop(l);
-  if (stackSize < 1) {
-    return 0;
-  }
-  auto size = luaL_checknumber(l, 1);
-  App::Instance().GetGui()->SetFontSize(static_cast<int>(size));
-  return 0;
-}
-
-// vrmeditor.set_font("font.ttf") -> bool
-static int
-vrmeditor_set_font(lua_State* l)
-{
-  int stackSize = lua_gettop(l);
-  if (stackSize < 1) {
-    return 0;
-  }
-  auto path = luaL_checklstring(l, 1, nullptr);
-  auto succeeded = App::Instance().GetGui()->SetFont(path);
-  lua_pushboolean(App::Instance().Lua()->state(), succeeded);
-  return 1;
-}
-
-// vrmeditor.add_japanese_font("font.ttf") -> bool
-static int
-vrmeditor_add_japanese_font(lua_State* l)
-{
-  int stackSize = lua_gettop(l);
-  if (stackSize < 1) {
-    return 0;
-  }
-  auto path = luaL_checklstring(l, 1, nullptr);
-  auto succeeded = App::Instance().GetGui()->AddJapaneseFont(path);
-  lua_pushboolean(App::Instance().Lua()->state(), succeeded);
-  return 1;
-}
-
-// vrmeditor.add_icon_font("font.ttf") -> bool
-static int
-vrmeditor_add_icon_font(lua_State* l)
-{
-  int stackSize = lua_gettop(l);
-  if (stackSize < 1) {
-    return 0;
-  }
-  auto path = luaL_checklstring(l, 1, nullptr);
-  auto succeeded = App::Instance().GetGui()->AddIconFont(path);
-  lua_pushboolean(App::Instance().Lua()->state(), succeeded);
-  return 1;
-}
-
-// vrmeditor.load_model("model.glb") -> bool
-static int
-vrmeditor_load_model(lua_State* l)
-{
-  int stackSize = lua_gettop(l);
-  if (stackSize < 1) {
-    return 0;
-  }
-  auto path = luaL_checklstring(l, 1, nullptr);
-  auto succeeded = App::Instance().LoadModel(path);
-  lua_pushboolean(App::Instance().Lua()->state(), succeeded);
-  return 1;
-}
-
-// vrmeditor.load_motion("model.glb", scaling) -> bool
-static int
-vrmeditor_load_motion(lua_State* l)
-{
-  int stackSize = lua_gettop(l);
-  if (stackSize < 2) {
-    return 0;
-  }
-  auto path = luaL_checklstring(l, 1, nullptr);
-
-  auto succeeded = App::Instance().LoadMotion(path);
-  lua_pushboolean(App::Instance().Lua()->state(), succeeded);
-  return 1;
-}
-
-// vrmeditor.add_asset_dir("name", path_to_dir") -> bool
-static int
-vrmeditor_add_asset_dir(lua_State* l)
-{
-  int stackSize = lua_gettop(l);
-  if (stackSize < 2) {
-    return 0;
-  }
-  auto name = luaL_checklstring(l, 1, nullptr);
-  auto dir = luaL_checklstring(l, 2, nullptr);
-  auto succeeded = App::Instance().AddAssetDir(name, dir);
-  lua_pushboolean(App::Instance().Lua()->state(), succeeded);
-  return 1;
-}
-
-// vrmeditor.add_asset_dir({joint0 = bone0, joint1=bone1,}) -> void
 static int
 vrmeditor_add_human_map(lua_State* l)
 {
@@ -127,45 +30,92 @@ vrmeditor_add_human_map(lua_State* l)
   return 0;
 }
 
-static const struct luaL_Reg VrmEditorLuaModule[] = {
-  // font settings
-  { "set_font_size", vrmeditor_set_font_size },
-  { "set_font", vrmeditor_set_font },
-  { "add_japanese_font", vrmeditor_add_japanese_font },
-  { "add_icon_font", vrmeditor_add_icon_font },
-  // asset
-  { "load_model", vrmeditor_load_model },
-  { "load_motion", vrmeditor_load_motion },
-  { "add_asset_dir", vrmeditor_add_asset_dir },
-  { "add_human_map", vrmeditor_add_human_map },
-  { nullptr, nullptr },
+struct LuaEngineImpl
+{
+  lua_State* m_lua = nullptr;
+
+  LuaEngineImpl()
+    : m_lua(luaL_newstate())
+  {
+    luaL_openlibs(m_lua);
+
+    constexpr struct luaL_Reg VrmEditorLuaModule[] = {
+      // font settings
+      { "set_font_size", MakeLuaFunc([](int font_size) {
+          App::Instance().GetGui()->SetFontSize(font_size);
+        }) },
+      { "set_font", MakeLuaFunc([](const std::filesystem::path& path) {
+          return App::Instance().GetGui()->SetFont(path);
+        }) },
+      { "add_japanese_font", MakeLuaFunc([](const std::filesystem::path& path) {
+          return App::Instance().GetGui()->AddJapaneseFont(path);
+        }) },
+      { "add_icon_font", MakeLuaFunc([](const std::filesystem::path& path) {
+          return App::Instance().GetGui()->AddIconFont(path);
+        }) },
+      // asset
+      { "load_model", MakeLuaFunc([](const std::filesystem::path& path) {
+          return App::Instance().LoadModel(path);
+        }) },
+      { "load_motion", MakeLuaFunc([](const std::filesystem::path& path) {
+          return App::Instance().LoadMotion(path);
+        }) },
+      { "add_asset_dir",
+        MakeLuaFunc(
+          [](const std::string& name, const std::filesystem::path& dir) {
+            App::Instance().AddAssetDir(name, dir);
+          }) },
+      { "add_human_map", vrmeditor_add_human_map },
+      { nullptr, nullptr },
+    };
+    luaL_register(m_lua, "vrmeditor", VrmEditorLuaModule);
+  }
+  ~LuaEngineImpl() { lua_close(m_lua); }
+
+  std::expected<bool, std::string> Eval(const std::string& script)
+  {
+    auto ret = luaL_dostring(m_lua, script.c_str());
+    if (ret != 0) {
+      std::string msg = lua_tostring(m_lua, -1);
+      lua_pop(m_lua, 1); // pop error message
+      return std::unexpected{ msg };
+    }
+    return true;
+  }
+
+  std::expected<bool, std::string> DoFile(const std::filesystem::path& path)
+  {
+    auto mb = path.u8string();
+    auto ret = luaL_dofile(m_lua, (const char*)mb.c_str());
+    if (ret != 0) {
+      std::string msg = lua_tostring(m_lua, -1);
+      lua_pop(m_lua, 1); // pop error message
+      // std::cout << "luaL_dofile(): " << ret << std::endl;
+      // std::cout << lua_tostring(m_lua, -1) << std::endl;
+      return std::unexpected{ msg };
+    }
+    return true;
+  }
 };
 
 LuaEngine::LuaEngine()
+  : m_impl(new LuaEngineImpl)
 {
-  L_ = luaL_newstate();
-  luaL_openlibs(L_);
-  luaL_register(L_, "vrmeditor", VrmEditorLuaModule);
 }
 
 LuaEngine::~LuaEngine()
 {
-  lua_close(L_);
+  delete m_impl;
 }
 
-void
-LuaEngine::eval(const std::string& script)
+std::expected<bool, std::string>
+LuaEngine::Eval(std::string_view script)
 {
-  luaL_dostring(L_, script.c_str());
+  return m_impl->Eval({ script.begin(), script.end() });
 }
 
-void
-LuaEngine::dofile(const std::filesystem::path& path)
+std::expected<bool, std::string>
+LuaEngine::DoFile(const std::filesystem::path& path)
 {
-  auto mb = path.u8string();
-  auto ret = luaL_dofile(L_, (const char*)mb.c_str());
-  if (ret != 0) {
-    std::cout << "luaL_dofile(): " << ret << std::endl;
-    std::cout << lua_tostring(L_, -1) << std::endl;
-  }
+  return m_impl->DoFile(path);
 }
