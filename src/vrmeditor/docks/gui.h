@@ -71,6 +71,9 @@ public:
   std::list<Dock> m_docks;
   Gui(const void* window, const char* glsl_version);
   ~Gui();
+  void LoadState();
+  void SaveState();
+
   std::optional<MouseEvent> BackgroundMouseEvent() const;
   void NewFrame();
   void DockSpace();
@@ -83,3 +86,4 @@ public:
   bool AddJapaneseFont(const std::filesystem::path& path);
   bool AddIconFont(const std::filesystem::path& path);
 };
+

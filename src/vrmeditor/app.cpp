@@ -331,6 +331,8 @@ App::Run()
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
 
+  m_gui->LoadState();
+
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
     auto time = info->Time;

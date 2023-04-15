@@ -225,6 +225,71 @@ public:
       TryCreateLink(start, end);
     }
   }
+
+  void Save()
+  {
+    // Save the internal imnodes state
+    ImNodes::SaveCurrentEditorStateToIniFile("save_load.ini");
+
+    // // Dump our editor state as bytes into a file
+    //
+    // std::fstream fout("save_load.bytes",
+    //                   std::ios_base::out | std::ios_base::binary |
+    //                     std::ios_base::trunc);
+    //
+    // // copy the node vector to file
+    // const size_t num_nodes = nodes_.size();
+    // fout.write(reinterpret_cast<const char*>(&num_nodes),
+    //            static_cast<std::streamsize>(sizeof(size_t)));
+    // fout.write(reinterpret_cast<const char*>(nodes_.data()),
+    //            static_cast<std::streamsize>(sizeof(Node) * num_nodes));
+    //
+    // // copy the link vector to file
+    // const size_t num_links = links_.size();
+    // fout.write(reinterpret_cast<const char*>(&num_links),
+    //            static_cast<std::streamsize>(sizeof(size_t)));
+    // fout.write(reinterpret_cast<const char*>(links_.data()),
+    //            static_cast<std::streamsize>(sizeof(Link) * num_links));
+    //
+    // // copy the current_id to file
+    // fout.write(reinterpret_cast<const char*>(&current_id_),
+    //            static_cast<std::streamsize>(sizeof(int)));
+  }
+
+  void Load()
+  {
+    // Load the internal imnodes state
+    ImNodes::LoadCurrentEditorStateFromIniFile("save_load.ini");
+
+    // // Load our editor state into memory
+    //
+    // std::fstream fin("save_load.bytes",
+    //                  std::ios_base::in | std::ios_base::binary);
+    //
+    // if (!fin.is_open()) {
+    //   return;
+    // }
+    //
+    // // copy nodes into memory
+    // size_t num_nodes;
+    // fin.read(reinterpret_cast<char*>(&num_nodes),
+    //          static_cast<std::streamsize>(sizeof(size_t)));
+    // nodes_.resize(num_nodes);
+    // fin.read(reinterpret_cast<char*>(nodes_.data()),
+    //          static_cast<std::streamsize>(sizeof(Node) * num_nodes));
+    //
+    // // copy links into memory
+    // size_t num_links;
+    // fin.read(reinterpret_cast<char*>(&num_links),
+    //          static_cast<std::streamsize>(sizeof(size_t)));
+    // links_.resize(num_links);
+    // fin.read(reinterpret_cast<char*>(links_.data()),
+    //          static_cast<std::streamsize>(sizeof(Link) * num_links));
+    //
+    // // copy current_id into memory
+    // fin.read(reinterpret_cast<char*>(&current_id_),
+    //          static_cast<std::streamsize>(sizeof(int)));
+  }
 };
 
 struct HumanPoseStreamImpl

@@ -49,16 +49,11 @@ Gui::Gui(const void* window, const char* glsl_version)
   ImNodes::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
 
-  // auto dir = get_home() / ".cache/vrmeditor";
-  // if (!std::filesystem::exists(dir)) {
-  //   // mkdir
-  //   std::cout << "create: " << dir << std::endl;
-  //   std::filesystem::create_directories(dir);
-  // }
   auto file = get_home() / ".vrmeditor.ini";
   m_imgui_ini = file.u8string();
 
-  io.IniFilename = (const char*)m_imgui_ini.c_str();
+  // stop ImGui auto save
+  io.IniFilename = nullptr;
 
   io.ConfigFlags |=
     ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
@@ -157,6 +152,18 @@ Gui::~Gui()
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_Shutdown();
   ImGui_ImplOpenGL3_Shutdown();
+}
+
+void
+Gui::LoadState()
+{
+  ImGui::LoadIniSettingsFromDisk((const char*)m_imgui_ini.c_str());
+}
+
+void
+Gui::SaveState()
+{
+  ImGui::SaveIniSettingsToDisk((const char*)m_imgui_ini.c_str());
 }
 
 bool
@@ -285,6 +292,11 @@ Gui::NewFrame()
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+
+  auto& io = ImGui::GetIO();
+  if (io.WantSaveIniSettings) {
+    SaveState();
+  }
 }
 
 void
