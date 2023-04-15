@@ -44,7 +44,6 @@ struct BinaryReader
 
 namespace libvrm {
 
-
 namespace srht {
 void
 UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
@@ -62,14 +61,17 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
     r.CopyTo(std::span(joints));
 
     // create nodes
-    int i = 0;
-    for (auto& joint : joints) {
+    for (int i = 0; i < joints.size(); ++i) {
       char buf[256];
-      snprintf(buf, sizeof(buf), "%d", i++);
+      snprintf(buf, sizeof(buf), "%d", i);
       auto ptr = std::make_shared<gltf::Node>(buf);
-      ptr->Transform.Translation.x = joint.xFromParent;
-      ptr->Transform.Translation.y = joint.yFromParent;
-      ptr->Transform.Translation.z = joint.zFromParent;
+      auto& joint = joints[i];
+      if (i == 0) {
+      } else {
+        ptr->Transform.Translation.x = joint.xFromParent;
+        ptr->Transform.Translation.y = joint.yFromParent;
+        ptr->Transform.Translation.z = joint.zFromParent;
+      }
       if (auto vrm_bone = ToVrmBone((HumanoidBones)joint.boneType)) {
         ptr->Humanoid = gltf::NodeHumanoidInfo{
           .HumanBone = *vrm_bone,
@@ -94,9 +96,14 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
   } else if (magic == "SRHTFRM1") {
     if (scene->m_roots.size()) {
       auto header = r.Get<FrameHeader>();
-      scene->m_roots[0]->Transform.Translation.x = header.x;
-      scene->m_roots[0]->Transform.Translation.y = header.y;
-      scene->m_roots[0]->Transform.Translation.z = header.z;
+      auto root = scene->m_roots[0];
+      auto humanoid = root->Humanoid;
+      if (!humanoid || humanoid->HumanBone == vrm::HumanBones::hips) {
+        // only move non humanoid or hips
+        // root->Transform.Translation.x = header.x;
+        // root->Transform.Translation.y = header.y;
+        // root->Transform.Translation.z = header.z;
+      }
       std::vector<DirectX::XMFLOAT4> rotations(scene->m_nodes.size());
       if ((int)header.flags & (int)FrameFlags::USE_QUAT32) {
         std::vector<uint32_t> packs(scene->m_nodes.size());

@@ -13,6 +13,7 @@
 #include "docks/scene_dock.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
+#include "docks/humanpose_stream.h"
 #include "luahost.h"
 #include "platform.h"
 #include "udp_receiver.h"
@@ -28,33 +29,6 @@ const auto WINDOW_WIDTH = 2000;
 const auto WINDOW_HEIGHT = 1200;
 const auto WINDOW_TITLE = "VrmEditor";
 
-void
-App::HumanBoneMap::Add(std::string_view joint_name, std::string_view bone_name)
-{
-  if (auto bone = libvrm::vrm::HumanBoneFromName(
-        bone_name, libvrm::vrm::VrmVersion::_1_0)) {
-    NameBoneMap[{ joint_name.begin(), joint_name.end() }] = *bone;
-  } else {
-    NoBoneList.insert({ joint_name.begin(), joint_name.end() });
-  }
-}
-
-bool
-App::HumanBoneMap::Match(const libvrm::bvh::Bvh& bvh) const
-{
-  for (auto& joint : bvh.joints) {
-    auto found = NameBoneMap.find(joint.name);
-    if (found == NameBoneMap.end()) {
-      if (NoBoneList.find(joint.name) != NoBoneList.end()) {
-        // no bone joint
-        continue;
-      }
-      return false;
-    }
-  }
-  return true;
-}
-
 App::App()
 {
   m_logger = std::make_shared<ImLogger>();
@@ -64,6 +38,7 @@ App::App()
   m_timeline = std::make_shared<libvrm::Timeline>();
   m_motion = std::make_shared<libvrm::gltf::Scene>();
   m_udp = std::make_shared<UdpReceiver>();
+  m_pose_stream = std::make_shared<HumanPoseStream>();
 
   m_platform = std::make_shared<Platform>();
   auto window =
@@ -85,9 +60,12 @@ App::App()
   cuber::PushGrid(libvrm::gizmo::lines());
   libvrm::gizmo::fix();
 
+  m_pose_stream->HumanPoseChanged.push_back(
+    [dst = m_scene](const auto& pose) { dst->SetHumanPose(pose); });
+
   // retarget human pose
   m_motion->m_sceneUpdated.push_back(
-    [dst = m_scene,
+    [stream = m_pose_stream,
      humanBoneMap = std::vector<libvrm::vrm::HumanBones>(),
      rotations = std::vector<DirectX::XMFLOAT4>()](
       const libvrm::gltf::Scene& src) mutable {
@@ -102,9 +80,9 @@ App::App()
 
       if (src.m_roots.size()) {
         auto& hips = src.m_roots[0]->Transform.Translation;
-        dst->SetHumanPose({ .RootPosition = { hips.x, hips.y, hips.z },
-                            .Bones = humanBoneMap,
-                            .Rotations = rotations });
+        stream->SetHumanPose({ .RootPosition = { hips.x, hips.y, hips.z },
+                               .Bones = humanBoneMap,
+                               .Rotations = rotations });
       }
     });
 
@@ -264,17 +242,6 @@ App::LoadMotion(const std::filesystem::path& path)
   return true;
 }
 
-std::shared_ptr<App::HumanBoneMap>
-App::FindHumanBoneMap(const libvrm::bvh::Bvh& bvh) const
-{
-  for (auto& map : m_humanBoneMapList) {
-    if (map->Match(bvh)) {
-      return map;
-    }
-  }
-  return {};
-}
-
 void
 App::LoadLua(const std::filesystem::path& path)
 {
@@ -305,14 +272,6 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 
   Log(LogLevel::Info) << name << " => " << path;
   return true;
-}
-
-std::shared_ptr<App::HumanBoneMap>
-App::AddHumanBoneMap()
-{
-  auto ptr = std::make_shared<App::HumanBoneMap>();
-  m_humanBoneMapList.push_back(ptr);
-  return ptr;
 }
 
 int

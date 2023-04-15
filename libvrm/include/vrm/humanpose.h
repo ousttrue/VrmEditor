@@ -1,9 +1,10 @@
 #pragma once
+#include "humanbones.h"
 #include <DirectXMath.h>
 #include <span>
-#include "humanbones.h"
 
-namespace libvrm::vrm {
+namespace libvrm {
+namespace vrm {
 
 struct HumanPose
 {
@@ -12,4 +13,5 @@ struct HumanPose
   std::span<const DirectX::XMFLOAT4> Rotations;
 };
 
+}
 }

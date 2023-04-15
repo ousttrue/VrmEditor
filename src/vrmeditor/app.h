@@ -3,6 +3,7 @@
 #include <list>
 #include <memory>
 #include <unordered_set>
+#include <vrm/humanbone_map.h>
 #include <vrm/humanbones.h>
 
 namespace libvrm {
@@ -13,6 +14,7 @@ namespace bvh {
 struct Bvh;
 }
 struct Timeline;
+
 }
 
 namespace grapho {
@@ -26,6 +28,7 @@ class ImLogger;
 class Gl3Renderer;
 class Cuber;
 class UdpReceiver;
+struct HumanPoseStream;
 
 class App
 {
@@ -44,15 +47,9 @@ class App
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<UdpReceiver> m_udp;
 
-  struct HumanBoneMap
-  {
-    std::unordered_map<std::string, libvrm::vrm::HumanBones> NameBoneMap;
-    std::unordered_set<std::string> NoBoneList;
+  std::shared_ptr<HumanPoseStream> m_pose_stream;
 
-    void Add(std::string_view joint_name, std::string_view bone);
-    bool Match(const libvrm::bvh::Bvh& bvh) const;
-  };
-  std::list<std::shared_ptr<HumanBoneMap>> m_humanBoneMapList;
+  std::list<std::shared_ptr<libvrm::vrm::HumanBoneMap>> m_humanBoneMapList;
 
   App();
 
@@ -72,8 +69,23 @@ public:
   bool WriteScene(const std::filesystem::path& path);
   void ClearScene();
 
-  std::shared_ptr<HumanBoneMap> FindHumanBoneMap(
-    const libvrm::bvh::Bvh& bvh) const;
+  std::shared_ptr<libvrm::vrm::HumanBoneMap> AddHumanBoneMap()
+  {
+    auto ptr = std::make_shared<libvrm::vrm::HumanBoneMap>();
+    m_humanBoneMapList.push_back(ptr);
+    return ptr;
+  }
+
+  std::shared_ptr<libvrm::vrm::HumanBoneMap> FindHumanBoneMap(
+    const libvrm::bvh::Bvh& bvh) const
+  {
+    for (auto& map : m_humanBoneMapList) {
+      if (map->Match(bvh)) {
+        return map;
+      }
+    }
+    return {};
+  }
 
   // expose to lua
   const std::shared_ptr<Gui>& GetGui() const { return m_gui; }
@@ -83,5 +95,4 @@ public:
   bool LoadMotion(const std::filesystem::path& path);
   void LoadLua(const std::filesystem::path& path);
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
-  std::shared_ptr<HumanBoneMap> AddHumanBoneMap();
 };
