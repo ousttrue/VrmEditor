@@ -1,21 +1,19 @@
+#include "gui.h"
 #include <functional>
 #include <list>
 #include <vrm/humanpose.h>
 #include <vrm/timeline.h>
-#include "gui.h"
 
 using HumanPoseFunc = std::function<void(const libvrm::vrm::HumanPose& pose)>;
 
-// Timeline
-//
-// clip----------+
-//               |
-// udp_receiver--switch -> pose
-//               |
-// tpose --------+
-//
 struct HumanPoseStream
 {
+  struct HumanPoseStreamImpl* m_impl = nullptr;
+
+public:
+  HumanPoseStream();
+  ~HumanPoseStream();
+
   std::list<HumanPoseFunc> HumanPoseChanged;
   void SetHumanPose(const libvrm::vrm::HumanPose& pose)
   {

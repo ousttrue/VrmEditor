@@ -1,187 +1,252 @@
 #include "humanpose_stream.h"
+#include <array>
 #include <imnodes.h>
 #include <vector>
 
+enum PinDataTypes
+{
+  None,
+  HumanPose,
+};
+
 struct GraphPin
 {
+  int Id;
+  PinDataTypes DataType;
+
+  GraphPin(int id, PinDataTypes dataType)
+    : Id(id)
+    , DataType(dataType)
+  {
+  }
+};
+
+struct Input
+{
   std::string Name;
+  GraphPin Pin;
+
+  Input(std::string_view name, GraphPin pin)
+    : Name(name)
+    , Pin(pin)
+  {
+  }
+};
+
+struct Output
+{
+  std::string Name;
+  GraphPin Pin;
+
+  Output(std::string_view name, GraphPin pin)
+    : Name(name)
+    , Pin(pin)
+  {
+  }
 };
 
 struct GraphNode
 {
+  int Id;
   std::string Prefix;
   std::string Name;
-  std::vector<GraphPin> Outputs;
-  std::vector<GraphPin> Inputs;
+  std::vector<Input> Inputs;
+  std::vector<Output> Outputs;
+
+  GraphNode(int id, std::string_view name)
+    : Id(id)
+    , Name(name)
+  {
+  }
+
+  void Draw()
+  {
+    // std::cout << "node: " << id << std::endl;
+    const float node_width = 200.f;
+    ImNodes::BeginNode(Id);
+    ImNodes::BeginNodeTitleBar();
+    if (Prefix.size()) {
+      ImGui::TextUnformatted(Prefix.c_str());
+    }
+    ImGui::TextUnformatted(Name.c_str());
+    ImNodes::EndNodeTitleBar();
+
+    for (auto& input : Inputs) {
+      // std::cout << "  input: " << pin_id << std::endl;
+      ImNodes::BeginInputAttribute(input.Pin.Id);
+      {
+        auto label = input.Name.c_str();
+        // const float label_width = ImGui::CalcTextSize(label).x;
+        ImGui::TextUnformatted(label);
+        // ImGui::Indent(node_width - label_width);
+        // ImGui::TextUnformatted(label);
+      }
+      ImNodes::EndInputAttribute();
+    }
+
+    for (auto& output : Outputs) {
+      // std::cout << "  output: " << pin_id << std::endl;
+      ImNodes::BeginOutputAttribute(output.Pin.Id);
+      {
+        auto label = output.Name.c_str();
+        const float label_width = ImGui::CalcTextSize(label).x;
+        ImGui::Indent(node_width - label_width);
+        ImGui::TextUnformatted(label);
+      }
+      ImNodes::EndOutputAttribute();
+    }
+
+    ImNodes::EndNode();
+  }
 };
 
 struct Edge
 {
+  int Id;
   int Start;
   int End;
-};
-std::vector<Edge> s_edges;
 
-static std::vector<GraphNode> s_inputs = {
-  { .Prefix = "Gui", .Name = "emotion", .Outputs = { { "emotion" } } },
-  { .Prefix = "Gui", .Name = "lipsync", .Outputs = { { "lipsync" } } },
-  { .Prefix = "Gui", .Name = "lookat", .Outputs = { { "lookat" } } },
-  { .Prefix = "Clip", .Name = "bvh", .Outputs = { { "upper" }, { "lower" } } },
-  { .Prefix = "Clip",
-    .Name = "vrma",
-    .Outputs = { { "upper" },
-                 { "lower" },
-                 { "hand" },
-                 { "emotion" },
-                 { "lipsync" },
-                 { "lookat" } } },
-  { .Prefix = "Capture",
-    .Name = "mocopi",
-    .Outputs = { { "upper" }, { "lower" } } },
-  { .Prefix = "Capture",
-    .Name = "azure_kinect",
-    .Outputs = { { "upper" }, { "lower" } } },
-  { .Prefix = "OpenXR",
-    .Name = "EXT_hand_tracking",
-    .Outputs = { { "hand" } } },
-  { .Prefix = "OpenXR",
-    .Name = "FB_body_tracking",
-    .Outputs = { { "upper" }, { "hand" } } },
-  { .Prefix = "OpenXR",
-    .Name = "FB_face_tracking",
-    .Outputs = { { "facial" } } },
-  { .Prefix = "OpenXR",
-    .Name = "FB_eye_tracking_sotial",
-    .Outputs = { { "lookat" } } },
-  { .Prefix = "OpenXR",
-    .Name = "VR_3points",
-    .Outputs = { { "three_points" } } }
+  void Draw() { ImNodes::Link(Id, Start, End); }
 };
 
-static std::vector<GraphNode> s_conv = {
-  {
-    .Name = "faicial_conv",
-    .Outputs = { { "emotion" }, { "lipsync" }, { "lookat" } },
-    .Inputs = { { "facial" } },
-  },
-  {
-    .Name = "threepoints_conv",
-    .Outputs = { { "upper" }, { "lower" } },
-    .Inputs = { { "three_points" } },
-  },
-};
-
-static GraphNode s_output = {
-    .Name="humanoid",
-    .Inputs = {
-      {"upper"},
-      {"lower"},
-      {"hand"},
-      {"emotion"},
-      {"lipsync"},
-      {"lookat"},
-      {"faicial"},
-    },
-  };
-
-static void
-draw(const GraphNode& node, int id)
+struct PinNameWithType
 {
-  // std::cout << "node: " << id << std::endl;
-  const float node_width = 200.f;
-  ImNodes::BeginNode(id);
-  ImNodes::BeginNodeTitleBar();
-  if (node.Prefix.size()) {
-    ImGui::TextUnformatted(node.Prefix.c_str());
-  }
-  ImGui::TextUnformatted(node.Name.c_str());
-  ImNodes::EndNodeTitleBar();
+  std::string Name;
+  PinDataTypes Type;
+};
 
-  int k = 0;
-  for (; k < node.Inputs.size(); ++k) {
-    int pin_id = id + k + 1;
-    // std::cout << "  input: " << pin_id << std::endl;
-    ImNodes::BeginInputAttribute(pin_id);
-    {
-      auto label = node.Inputs[k].Name.c_str();
-      // const float label_width = ImGui::CalcTextSize(label).x;
-      ImGui::TextUnformatted(label);
-      // ImGui::Indent(node_width - label_width);
-      // ImGui::TextUnformatted(label);
+class GraphManager
+{
+  int m_nextId = 1;
+  std::list<std::shared_ptr<GraphNode>> m_nodes;
+  std::list<Edge> m_edges;
+
+public:
+  GraphManager()
+  {
+    CreateNode(
+      "HumanPose",
+      "SinkNode",
+      std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } },
+      {});
+
+    CreateNode(
+      "Bvh",
+      "SrcNode",
+      {},
+      std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
+
+    CreateNode(
+      "TPose",
+      "SrcNode",
+      {},
+      std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
+  }
+
+  std::shared_ptr<GraphNode> CreateNode(
+    std::string_view name,
+    std::string_view prefix,
+    std::span<const PinNameWithType> inputs,
+    std::span<const PinNameWithType> outputs)
+  {
+    auto ptr = std::make_shared<GraphNode>(m_nextId++, name);
+    ptr->Prefix = prefix;
+    for (auto [pinName, pinDataType] : inputs) {
+      ptr->Inputs.push_back({ pinName, { m_nextId++, pinDataType } });
     }
-    ImNodes::EndInputAttribute();
-  }
-
-  int j = 0;
-  for (; j < node.Outputs.size(); ++j) {
-    int pin_id = id + j + k + 1;
-    // std::cout << "  output: " << pin_id << std::endl;
-    ImNodes::BeginOutputAttribute(pin_id);
-    {
-      auto label = node.Outputs[j].Name.c_str();
-      const float label_width = ImGui::CalcTextSize(label).x;
-      ImGui::Indent(node_width - label_width);
-      ImGui::TextUnformatted(label);
+    for (auto [pinName, pinDataType] : outputs) {
+      ptr->Outputs.push_back({ pinName, { m_nextId++, pinDataType } });
     }
-    ImNodes::EndOutputAttribute();
+    m_nodes.push_back(ptr);
+    return ptr;
   }
 
-  ImNodes::EndNode();
+  std::tuple<std::shared_ptr<GraphNode>, PinDataTypes> FindNodeFromOutput(
+    int start) const
+  {
+    for (auto& node : m_nodes) {
+      for (auto& output : node->Outputs) {
+        if (output.Pin.Id == start) {
+          return { node, output.Pin.DataType };
+        }
+      }
+    }
+    return {};
+  }
+
+  std::tuple<std::shared_ptr<GraphNode>, PinDataTypes> FindNodeFromInput(
+    int start) const
+  {
+    for (auto& node : m_nodes) {
+      for (auto& input : node->Inputs) {
+        if (input.Pin.Id == start) {
+          return { node, input.Pin.DataType };
+        }
+      }
+    }
+    return {};
+  }
+
+  void TryCreateLink(int start, int end)
+  {
+    auto [src, srcType] = FindNodeFromOutput(start);
+    auto [sink, sinkType] = FindNodeFromInput(end);
+    if (src && sink && srcType == sinkType) {
+
+      for (auto it = m_edges.begin(); it != m_edges.end();) {
+        if (it->Start == start || it->End == end) {
+          // remove exists
+          it = m_edges.erase(it);
+        } else {
+          // skip
+          ++it;
+        }
+      }
+
+      m_edges.push_back({ m_nextId++, start, end });
+    }
+  }
+
+  void Draw()
+  {
+    // draw nodes
+    ImNodes::BeginNodeEditor();
+    for (auto& node : m_nodes) {
+      node->Draw();
+    }
+    for (auto& edge : m_edges) {
+      edge.Draw();
+    }
+    ImNodes::EndNodeEditor();
+
+    // update link
+    int start, end;
+    if (ImNodes::IsLinkCreated(&start, &end)) {
+      TryCreateLink(start, end);
+    }
+  }
+};
+
+struct HumanPoseStreamImpl
+{
+  GraphManager m_graph;
+};
+
+HumanPoseStream::HumanPoseStream()
+  : m_impl(new HumanPoseStreamImpl)
+{
+}
+
+HumanPoseStream::~HumanPoseStream()
+{
+  delete m_impl;
 }
 
 void
 HumanPoseStream::CreateDock(const AddDockFunc& addDock)
 {
-  addDock(Dock("input-stream", []() {
-    ImNodes::BeginNodeEditor();
-
-    static int hardcoded_node_id = 1234;
-    ImNodes::BeginNode(hardcoded_node_id);
-    ImGui::Dummy(ImVec2(80.0f, 45.0f));
-    ImNodes::EndNode();
-
-    // for (int i = 0; i < s_inputs.size(); ++i) {
-    //   auto& node = s_inputs[i];
-    //   int id = i * 100;
-    //   draw(node, id);
-    // }
+  addDock(Dock("input-stream", [&graph = m_impl->m_graph]() {
     //
-    // for (int i = 0; i < s_conv.size(); ++i) {
-    //   auto& node = s_conv[i];
-    //   int id = i * 100 + 10000;
-    //   draw(node, id);
-    // }
-    //
-    // {
-    //   auto& node = s_output;
-    //   int id = -1000;
-    //   draw(node, id);
-    // }
-    //
-    // for (int i = 0; i < s_edges.size(); ++i) {
-    //   auto& edge = s_edges[i];
-    //   ImNodes::Link(i, edge.Start, edge.End);
-    // }
-
-    ImNodes::EndNodeEditor();
-
-    // {
-    //   int start_attr, end_attr;
-    //   if (ImNodes::IsLinkCreated(&start_attr, &end_attr)) {
-    //     // const NodeType start_type = graph_.node(start_attr).type;
-    //     // const NodeType end_type = graph_.node(end_attr).type;
-    //     //
-    //     // const bool valid_link = start_type != end_type;
-    //     // if (valid_link)
-    //     {
-    //       // Ensure the edge is always directed from the value to
-    //       // whatever produces the value
-    //       // if (start_type != NodeType::value) {
-    //       //   std::swap(start_attr, end_attr);
-    //       // }
-    //       s_edges.push_back({ start_attr, end_attr });
-    //     }
-    //   }
-    // }
+    graph.Draw();
   }));
 }
