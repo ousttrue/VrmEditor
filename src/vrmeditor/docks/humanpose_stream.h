@@ -2,6 +2,7 @@
 #include <list>
 #include <vrm/humanpose.h>
 #include <vrm/timeline.h>
+#include "gui.h"
 
 using HumanPoseFunc = std::function<void(const libvrm::vrm::HumanPose& pose)>;
 
@@ -22,6 +23,8 @@ struct HumanPoseStream
       callback(pose);
     }
   }
+
+  void CreateDock(const AddDockFunc& addDock);
 
   void Update(libvrm::Time time);
 };

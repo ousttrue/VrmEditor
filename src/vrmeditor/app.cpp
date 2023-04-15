@@ -324,6 +324,8 @@ App::Run()
         m_udp->Start(54345, callback);
       },
       [udp = m_udp]() { udp->Stop(54345); });
+
+    m_pose_stream->CreateDock(addDock);
   }
 
   ImTimeline::Create(addDock, "timeline", m_timeline);

@@ -14,6 +14,7 @@ executable(
         'docks/cuber.cpp',
         'docks/scene_dock.cpp',
         'docks/vrm_dock.cpp',
+        'docks/humanpose_stream.cpp',
     ],
     install: true,
     gui_app: true,
