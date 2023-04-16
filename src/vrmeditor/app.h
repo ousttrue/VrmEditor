@@ -67,7 +67,7 @@ public:
   void LoadImGuiIni(std::string_view ini);
   void LoadImNodesIni(std::string_view ini);
   void SetWindowSize(int width, int height, bool maximize);
-  void SaveState(std::string_view imgui_ini);
+  void SaveState();
 
   const std::shared_ptr<LuaEngine>& Lua() const { return m_lua; }
   int Run();

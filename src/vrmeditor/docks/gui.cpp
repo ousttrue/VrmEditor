@@ -152,7 +152,7 @@ Gui::~Gui()
 }
 
 void
-Gui::LoadState(const std::string &ini)
+Gui::LoadState(std::string_view ini)
 {
   ImGui::LoadIniSettingsFromMemory(ini.data(), ini.size());
 }

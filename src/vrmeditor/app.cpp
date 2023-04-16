@@ -116,12 +116,13 @@ App::Log(LogLevel level)
 void
 App::LoadImGuiIni(std::string_view ini)
 {
-  m_gui->LoadState({ ini.begin(), ini.end() });
+  m_gui->LoadState(ini);
 }
 
 void
 App::LoadImNodesIni(std::string_view ini)
 {
+  m_pose_stream->Load(ini);
 }
 
 void
@@ -131,15 +132,18 @@ App::SetWindowSize(int width, int height, bool maximize)
 }
 
 void
-App::SaveState(std::string_view imgui_ini)
+App::SaveState()
 {
   std::ofstream os((const char*)m_ini.u8string().c_str());
 
-  os << "vrmeditor.load_imgui_ini [===[\n" << imgui_ini << "\n]===]\n\n";
+  os << "vrmeditor.load_imgui_ini [===[\n"
+     << m_gui->SaveState() << "\n]===]\n\n";
+
+  os << "vrmeditor.load_imnodes_ini [===[\n"
+     << m_pose_stream->Save() << "\n]===]\n\n";
 
   auto [width, height] = m_platform->WindowSize();
   auto maximize = m_platform->IsWindowMaximized();
-
   os << "vrmeditor.set_window_size(" << width << ", " << height << ", "
      << (maximize ? "true" : "false") << ")\n\n";
 }
@@ -387,7 +391,7 @@ App::Run()
 
     // newFrame
     if (m_gui->NewFrame()) {
-      SaveState(m_gui->SaveState());
+      SaveState();
     }
     ImGuizmo::BeginFrame();
 
@@ -401,7 +405,7 @@ App::Run()
     m_platform->Present();
   }
 
-  SaveState(m_gui->SaveState());
+  SaveState();
 
   return 0;
 }

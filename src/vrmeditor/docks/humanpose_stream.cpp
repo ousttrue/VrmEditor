@@ -115,15 +115,17 @@ struct PinNameWithType
   PinDataTypes Type;
 };
 
-class GraphManager
+class HumanPoseStreamImpl
 {
   int m_nextId = 1;
   std::list<std::shared_ptr<GraphNode>> m_nodes;
   std::list<Edge> m_edges;
 
 public:
-  GraphManager()
+  HumanPoseStreamImpl()
   {
+    ImNodes::CreateContext();
+
     CreateNode(
       "HumanPose",
       "SinkNode",
@@ -226,10 +228,12 @@ public:
     }
   }
 
-  void Save()
+  std::string Save()
   {
     // Save the internal imnodes state
-    ImNodes::SaveCurrentEditorStateToIniFile("save_load.ini");
+    size_t size;
+    auto p = ImNodes::SaveCurrentEditorStateToIniString(&size);
+    return { p, p + size };
 
     // // Dump our editor state as bytes into a file
     //
@@ -256,10 +260,10 @@ public:
     //            static_cast<std::streamsize>(sizeof(int)));
   }
 
-  void Load()
+  void Load(std::string_view ini)
   {
     // Load the internal imnodes state
-    ImNodes::LoadCurrentEditorStateFromIniFile("save_load.ini");
+    ImNodes::LoadCurrentEditorStateFromIniString(ini.data(), ini.size());
 
     // // Load our editor state into memory
     //
@@ -292,10 +296,17 @@ public:
   }
 };
 
-struct HumanPoseStreamImpl
+void
+HumanPoseStream::Load(std::string_view ini)
 {
-  GraphManager m_graph;
-};
+  m_impl->Load(ini);
+}
+
+std::string
+HumanPoseStream::Save()
+{
+  return m_impl->Save();
+}
 
 HumanPoseStream::HumanPoseStream()
   : m_impl(new HumanPoseStreamImpl)
@@ -310,8 +321,8 @@ HumanPoseStream::~HumanPoseStream()
 void
 HumanPoseStream::CreateDock(const AddDockFunc& addDock)
 {
-  addDock(Dock("input-stream", [&graph = m_impl->m_graph]() {
+  addDock(Dock("input-stream", [graph = m_impl]() {
     //
-    graph.Draw();
+    graph->Draw();
   }));
 }

@@ -70,7 +70,7 @@ public:
   std::list<Dock> m_docks;
   Gui(const void* window, const char* glsl_version);
   ~Gui();
-  void LoadState(const std::string &ini);
+  void LoadState(std::string_view ini);
   std::string SaveState();
 
   std::optional<MouseEvent> BackgroundMouseEvent() const;
