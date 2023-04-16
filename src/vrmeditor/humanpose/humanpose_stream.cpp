@@ -18,7 +18,7 @@ struct HumanPoseSink : public GraphNodeBase
   // constructor
   using GraphNodeBase::GraphNodeBase;
 
-  void Update(libvrm::Time time, InputNodes inputs) override
+  void PullData(InputNodes inputs) override
   {
     // pull upstream data
     assert(inputs.size() == 1);
@@ -39,6 +39,31 @@ struct UdpNode : public GraphNodeBase
     m_scene = std::make_shared<libvrm::gltf::Scene>();
     m_udp = std::make_shared<UdpReceiver>();
   }
+  //   auto callback = [scene = m_motion,
+  //                    cuber = m_cuber](std::span<const uint8_t> data) {
+  //     // udp update m_motion scene
+  //     libvrm::srht::UpdateScene(scene, cuber->Instances, data);
+  //
+  //     if (scene->m_roots.size()) {
+  //       scene->m_roots[0]->CalcWorldMatrix(true);
+  //       scene->RaiseSceneUpdated();
+  //     }
+  //   };
+  //
+  //   MotionDock::Create(
+  //     addDock,
+  //     "motion",
+  //     m_cuber,
+  //     selection,
+  //     [this, callback]() {
+  //       ClearMotion();
+  //       m_udp->Start(54345, callback);
+  //     },
+  //     [udp = m_udp]() { udp->Stop(54345); });
+  //
+  // }
+
+  void TimeUpdate(libvrm::Time time) override { m_udp->Update(); }
 };
 
 void
@@ -264,40 +289,15 @@ HumanPoseStream::LoadMotion(const std::filesystem::path& path)
   return true;
 }
 
-// {
-//   HumanoidDock::Create(addDock, "motion-body", "motion-finger", m_motion);
-//   auto selection =
-//     SceneDock::CreateTree(addDock, "motion-hierarchy", m_motion, indent);
-//
-//   auto callback = [scene = m_motion,
-//                    cuber = m_cuber](std::span<const uint8_t> data) {
-//     // udp update m_motion scene
-//     libvrm::srht::UpdateScene(scene, cuber->Instances, data);
-//
-//     if (scene->m_roots.size()) {
-//       scene->m_roots[0]->CalcWorldMatrix(true);
-//       scene->RaiseSceneUpdated();
-//     }
-//   };
-//
-//   MotionDock::Create(
-//     addDock,
-//     "motion",
-//     m_cuber,
-//     selection,
-//     [this, callback]() {
-//       ClearMotion();
-//       m_udp->Start(54345, callback);
-//     },
-//     [udp = m_udp]() { udp->Stop(54345); });
-//
-// }
-
-// m_udp->Update();
-
 void
 HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
 {
+  // 全部 Update
+  for(auto &n: m_nodes)
+  {
+    n->TimeUpdate(time);
+  }
+
   // sink から遡って再帰的に update する
   if (!node) {
     node = m_nodes.front();
@@ -317,5 +317,5 @@ HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
   }
 
   // process
-  node->Update(time, inputs);
+  node->PullData(inputs);
 }

@@ -82,7 +82,8 @@ struct GraphNodeBase
   }
   virtual ~GraphNodeBase() {}
   void Draw();
-  virtual void Update(libvrm::Time time, InputNodes inputs) {}
+  virtual void TimeUpdate(libvrm::Time time) {}
+  virtual void PullData(InputNodes inputs) {}
   virtual void DrawContent() {}
 };
 

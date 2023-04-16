@@ -8,6 +8,7 @@
 #include <vrm/bvhscene.h>
 #include <vrm/humanpose.h>
 #include <vrm/scene.h>
+#include <vrm/timeline.h>
 
 struct BvhNode
   : public GraphNodeBase
@@ -18,6 +19,7 @@ struct BvhNode
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<RenderTarget> m_rt;
 
+  libvrm::Time m_lastTime = {};
   std::vector<libvrm::vrm::HumanBones> m_humanBoneMap;
   std::vector<DirectX::XMFLOAT4> m_rotations;
   libvrm::vrm::HumanPose m_pose;
@@ -78,7 +80,7 @@ struct BvhNode
     }
   }
 
-  void Update(libvrm::Time time, InputNodes inputs) override
+  void TimeUpdate(libvrm::Time time) override
   {
     if (m_scene->m_roots.empty()) {
       return;

@@ -3,7 +3,6 @@
 
 #include "app.h"
 #include "assetdir.h"
-// #include "docks/cuber.h"
 #include "docks/gui.h"
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
