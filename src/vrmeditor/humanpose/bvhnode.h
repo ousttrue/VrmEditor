@@ -1,9 +1,9 @@
 #pragma once
 #include "app.h"
 #include "cuber.h"
-#include "gl3renderer.h"
+#include "docks/gl3renderer.h"
+#include "docks/rendertarget.h"
 #include "humanpose_stream.h"
-#include "rendertarget.h"
 #include <vrm/bvh.h>
 #include <vrm/bvhscene.h>
 #include <vrm/humanpose.h>

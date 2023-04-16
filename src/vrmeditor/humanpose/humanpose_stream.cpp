@@ -2,8 +2,8 @@
 #include "app.h"
 #include "bvhnode.h"
 #include "cuber.h"
-#include "gl3renderer.h"
-#include "rendertarget.h"
+#include "docks/gl3renderer.h"
+#include "docks/rendertarget.h"
 #include "udp_receiver.h"
 #include <algorithm>
 #include <array>

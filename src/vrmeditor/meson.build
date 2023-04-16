@@ -8,11 +8,11 @@ srcs = [
     'docks/gl3renderer.cpp',
     'docks/gui.cpp',
     'docks/json_dock.cpp',
-    'docks/motion_dock.cpp',
-    'docks/cuber.cpp',
     'docks/scene_dock.cpp',
     'docks/vrm_dock.cpp',
-    'docks/humanpose_stream.cpp',
+    'humanpose/motion_dock.cpp',
+    'humanpose/humanpose_stream.cpp',
+    'humanpose/cuber.cpp',
 ]
 
 if host_machine.system() == 'windows'

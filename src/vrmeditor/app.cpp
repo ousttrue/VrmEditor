@@ -3,10 +3,9 @@
 
 #include "app.h"
 #include "assetdir.h"
-#include "docks/cuber.h"
+// #include "docks/cuber.h"
 #include "docks/gui.h"
 #include "docks/humanoid_dock.h"
-#include "docks/humanpose_stream.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
 #include "docks/json_dock.h"
@@ -14,6 +13,7 @@
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
 #include "fs_util.h"
+#include "humanpose/humanpose_stream.h"
 #include "luahost.h"
 #include "platform.h"
 #include <fstream>

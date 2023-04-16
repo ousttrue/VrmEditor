@@ -1,7 +1,7 @@
 #include "luahost.h"
 #include "app.h"
 #include "docks/gui.h"
-#include "docks/humanpose_stream.h"
+#include "humanpose/humanpose_stream.h"
 #include "makeluafunc.h"
 #include <filesystem>
 #include <iostream>

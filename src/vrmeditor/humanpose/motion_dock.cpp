@@ -1,9 +1,9 @@
 #include <GL/glew.h>
 
 #include "cuber.h"
-#include "gl3renderer.h"
+#include "docks/gl3renderer.h"
+#include "docks/rendertarget.h"
 #include "motion_dock.h"
-#include "rendertarget.h"
 #include <imgui.h>
 
 void

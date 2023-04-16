@@ -1,5 +1,5 @@
 #pragma once
-#include "gui.h"
+#include "docks/gui.h"
 #include <functional>
 #include <list>
 #include <span>

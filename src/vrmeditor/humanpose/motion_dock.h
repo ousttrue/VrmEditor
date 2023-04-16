@@ -1,6 +1,6 @@
 #pragma once
-#include "gui.h"
-#include "treecontext.h"
+#include "docks/gui.h"
+#include "docks/treecontext.h"
 #include <functional>
 
 class MotionDock

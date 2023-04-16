@@ -1,5 +1,5 @@
 #include "cuber.h"
-#include "viewporjection.h"
+#include "docks/viewporjection.h"
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <vrm/scene.h>
