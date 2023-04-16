@@ -4,7 +4,6 @@ srcs = [
     'app.cpp',
     'luahost.cpp',
     'assetdir.cpp',
-    'udp_receiver.cpp',
     'docks/gl3renderer.cpp',
     'docks/gui.cpp',
     'docks/json_dock.cpp',
@@ -13,6 +12,7 @@ srcs = [
     'humanpose/motion_dock.cpp',
     'humanpose/humanpose_stream.cpp',
     'humanpose/cuber.cpp',
+    'humanpose/udp_receiver.cpp',
 ]
 
 if host_machine.system() == 'windows'

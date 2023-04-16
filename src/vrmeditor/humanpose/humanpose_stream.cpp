@@ -1,17 +1,8 @@
 #include "humanpose_stream.h"
-#include "app.h"
 #include "bvhnode.h"
-#include "cuber.h"
-#include "docks/gl3renderer.h"
-#include "docks/rendertarget.h"
-#include "udp_receiver.h"
-#include <algorithm>
-#include <array>
+#include "udpnode.h"
 #include <imnodes.h>
-#include <vector>
-#include <vrm/bvhscene.h>
 #include <vrm/fileutil.h>
-#include <vrm/scene.h>
 
 struct HumanPoseSink : public GraphNodeBase
 {
@@ -24,46 +15,6 @@ struct HumanPoseSink : public GraphNodeBase
     assert(inputs.size() == 1);
     Pull(inputs);
   }
-};
-
-struct UdpNode : public GraphNodeBase
-{
-  std::shared_ptr<libvrm::gltf::Scene> m_scene;
-  std::shared_ptr<UdpReceiver> m_udp;
-  std::shared_ptr<Cuber> m_cuber;
-
-  // constructor
-  UdpNode(int id, std::string_view name)
-    : GraphNodeBase(id, name)
-  {
-    m_scene = std::make_shared<libvrm::gltf::Scene>();
-    m_udp = std::make_shared<UdpReceiver>();
-  }
-  //   auto callback = [scene = m_motion,
-  //                    cuber = m_cuber](std::span<const uint8_t> data) {
-  //     // udp update m_motion scene
-  //     libvrm::srht::UpdateScene(scene, cuber->Instances, data);
-  //
-  //     if (scene->m_roots.size()) {
-  //       scene->m_roots[0]->CalcWorldMatrix(true);
-  //       scene->RaiseSceneUpdated();
-  //     }
-  //   };
-  //
-  //   MotionDock::Create(
-  //     addDock,
-  //     "motion",
-  //     m_cuber,
-  //     selection,
-  //     [this, callback]() {
-  //       ClearMotion();
-  //       m_udp->Start(54345, callback);
-  //     },
-  //     [udp = m_udp]() { udp->Stop(54345); });
-  //
-  // }
-
-  void TimeUpdate(libvrm::Time time) override { m_udp->Update(); }
 };
 
 void
@@ -293,8 +244,7 @@ void
 HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
 {
   // 全部 Update
-  for(auto &n: m_nodes)
-  {
+  for (auto& n : m_nodes) {
     n->TimeUpdate(time);
   }
 
