@@ -1,3 +1,4 @@
+#pragma once
 #include "bvh.h"
 #include "humanbones.h"
 #include <string>

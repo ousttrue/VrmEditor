@@ -10,21 +10,15 @@
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
 #include "docks/json_dock.h"
-#include "docks/motion_dock.h"
 #include "docks/scene_dock.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
 #include "fs_util.h"
 #include "luahost.h"
 #include "platform.h"
-#include "udp_receiver.h"
 #include <fstream>
 #include <vrm/animation.h>
-#include <vrm/bvh.h>
-#include <vrm/bvhscene.h>
 #include <vrm/fileutil.h>
-#include <vrm/node.h>
-#include <vrm/srht_update.h>
 #include <vrm/timeline.h>
 
 const auto WINDOW_TITLE = "VrmEditor";
@@ -39,9 +33,6 @@ App::App()
   m_scene = std::make_shared<libvrm::gltf::Scene>();
   m_view = std::make_shared<grapho::OrbitView>();
   m_timeline = std::make_shared<libvrm::Timeline>();
-  // m_motion = std::make_shared<libvrm::gltf::Scene>();
-  // m_udp = std::make_shared<UdpReceiver>();
-  PoseStream = std::make_shared<HumanPoseStream>();
 
   m_platform = std::make_shared<Platform>();
   auto window = m_platform->CreateWindow(2000, 1200, false, WINDOW_TITLE);
@@ -55,9 +46,9 @@ App::App()
     throw std::runtime_error("glewInit");
   }
 
+  PoseStream = std::make_shared<HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
   m_renderer = std::make_shared<Gl3Renderer>();
-  // m_cuber = std::make_shared<Cuber>();
 
   cuber::PushGrid(libvrm::gizmo::lines());
   libvrm::gizmo::fix();
@@ -68,39 +59,6 @@ App::App()
 
   PoseStream->HumanPoseChanged.push_back(
     [dst = m_scene](const auto& pose) { dst->SetHumanPose(pose); });
-
-  // retarget human pose
-  // m_motion->m_sceneUpdated.push_back(
-  //   [stream = PoseStream,
-  //    humanBoneMap = std::vector<libvrm::vrm::HumanBones>(),
-  //    rotations = std::vector<DirectX::XMFLOAT4>()](
-  //     const libvrm::gltf::Scene& src) mutable {
-  //     humanBoneMap.clear();
-  //     rotations.clear();
-  //     for (auto& node : src.m_nodes) {
-  //       if (auto humanoid = node->Humanoid) {
-  //         humanBoneMap.push_back(humanoid->HumanBone);
-  //         rotations.push_back(node->Transform.Rotation);
-  //       }
-  //     }
-  //
-  //     if (src.m_roots.size()) {
-  //       auto& hips = src.m_roots[0]->Transform.Translation;
-  //       stream->SetHumanPose({ .RootPosition = { hips.x, hips.y, hips.z },
-  //                              .Bones = humanBoneMap,
-  //                              .Rotations = rotations });
-  //     }
-  //   });
-
-  // bind motion to scene
-  // m_motion->m_sceneUpdated.push_back(
-  //   [cuber = m_cuber](const libvrm::gltf::Scene& scene) {
-  //     cuber->Instances.clear();
-  //     if (scene.m_roots.size()) {
-  //       scene.m_roots[0]->UpdateShapeInstanceRecursive(
-  //         DirectX::XMMatrixIdentity(), cuber->Instances);
-  //     }
-  //   });
 }
 
 App::~App() {}
@@ -141,7 +99,7 @@ App::SaveState()
      << PoseStream->Save() << "\n]===]\n\n";
 
   for (auto& link : PoseStream->Links) {
-    os << "vrmeditor.imnodes_add_link(" << link.Start << ", " << link.End
+    os << "vrmeditor.imnodes_add_link(" << link->Start << ", " << link->End
        << ")\n";
   }
 

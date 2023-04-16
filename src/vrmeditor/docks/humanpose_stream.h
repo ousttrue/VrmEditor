@@ -1,3 +1,4 @@
+#pragma once
 #include "gui.h"
 #include <functional>
 #include <list>
@@ -61,6 +62,7 @@ struct GraphNodeBase
   std::string Name;
   std::vector<Input> Inputs;
   std::vector<Output> Outputs;
+  float NodeWidth = 200.f;
 
   GraphNodeBase(int id, std::string_view name)
     : Id(id)
@@ -68,7 +70,9 @@ struct GraphNodeBase
   {
   }
   virtual ~GraphNodeBase() {}
-  virtual void Draw();
+  void Draw();
+  virtual void Update(libvrm::Time time) {}
+  virtual void DrawContent() {}
 };
 
 struct Link
@@ -92,7 +96,7 @@ struct HumanPoseStream
   int m_nextPinId = 1;
   std::list<std::shared_ptr<GraphNodeBase>> m_nodes;
   int m_nextLinkId = 1;
-  std::list<Link> Links;
+  std::list<std::shared_ptr<Link>> Links;
   std::list<HumanPoseFunc> HumanPoseChanged;
 
   std::list<std::shared_ptr<libvrm::vrm::HumanBoneMap>> m_humanBoneMapList;
@@ -139,9 +143,18 @@ struct HumanPoseStream
   std::tuple<std::shared_ptr<GraphNodeBase>, PinDataTypes> FindNodeFromOutput(
     int start) const;
   std::tuple<std::shared_ptr<GraphNodeBase>, PinDataTypes> FindNodeFromInput(
-    int start) const;
+    int end) const;
   void TryCreateLink(int start, int end);
   void TryRemoveLink(int link_id);
+  std::shared_ptr<Link> FindLinkFromEnd(int end)
+  {
+    for (auto& link : Links) {
+      if (link->End == end) {
+        return link;
+      }
+    }
+    return {};
+  }
 
   void SetHumanPose(const libvrm::vrm::HumanPose& pose)
   {
@@ -153,5 +166,5 @@ struct HumanPoseStream
   bool LoadMotion(const std::filesystem::path& path);
 
   void CreateDock(const AddDockFunc& addDock);
-  void Update(libvrm::Time time);
+  void Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node = {});
 };
