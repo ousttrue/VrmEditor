@@ -6,14 +6,23 @@
 #include "rendertarget.h"
 #include <vrm/bvh.h>
 #include <vrm/bvhscene.h>
+#include <vrm/humanpose.h>
 #include <vrm/scene.h>
 
-struct BvhNode : public GraphNodeBase
+struct BvhNode
+  : public GraphNodeBase
+  , IValue<libvrm::vrm::HumanPose>
 {
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<libvrm::bvh::Bvh> m_bvh;
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<RenderTarget> m_rt;
+
+  std::vector<libvrm::vrm::HumanBones> m_humanBoneMap;
+  std::vector<DirectX::XMFLOAT4> m_rotations;
+  libvrm::vrm::HumanPose m_pose;
+
+  libvrm::vrm::HumanPose operator()() const override { return m_pose; }
 
   // constructor
   BvhNode(int id, std::string_view name)
@@ -69,13 +78,31 @@ struct BvhNode : public GraphNodeBase
     }
   }
 
-  void Update(libvrm::Time time) override
+  void Update(libvrm::Time time, InputNodes inputs) override
   {
-    if (m_scene->m_roots.size()) {
-      libvrm::bvh::UpdateSceneFromBvhFrame(m_scene, m_bvh, time);
-      m_scene->m_roots[0]->CalcWorldMatrix(true);
-      m_scene->RaiseSceneUpdated();
+    if (m_scene->m_roots.empty()) {
+      return;
     }
+
+    // update scene from bvh
+    libvrm::bvh::UpdateSceneFromBvhFrame(m_scene, m_bvh, time);
+    m_scene->m_roots[0]->CalcWorldMatrix(true);
+    m_scene->RaiseSceneUpdated();
+
+    // retarget human pose
+    m_humanBoneMap.clear();
+    m_rotations.clear();
+    for (auto& node : m_scene->m_nodes) {
+      if (auto humanoid = node->Humanoid) {
+        m_humanBoneMap.push_back(humanoid->HumanBone);
+        m_rotations.push_back(node->Transform.Rotation);
+      }
+    }
+
+    auto& root = m_scene->m_roots[0]->Transform.Translation;
+    m_pose = { .RootPosition = { root.x, root.y, root.z },
+               .Bones = m_humanBoneMap,
+               .Rotations = m_rotations };
   }
 
   void DrawContent() override

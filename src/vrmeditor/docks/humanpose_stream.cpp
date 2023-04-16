@@ -13,6 +13,19 @@
 #include <vrm/fileutil.h>
 #include <vrm/scene.h>
 
+struct HumanPoseSink : public GraphNodeBase
+{
+  // constructor
+  using GraphNodeBase::GraphNodeBase;
+
+  void Update(libvrm::Time time, InputNodes inputs) override
+  {
+    // pull upstream data
+    assert(inputs.size() == 1);
+    Pull(inputs);
+  }
+};
+
 struct UdpNode : public GraphNodeBase
 {
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
@@ -87,11 +100,20 @@ HumanPoseStream::HumanPoseStream()
   ImNodes::CreateContext();
 
   // sink node
-  CreateNode<GraphNodeBase>(
+  auto sink = CreateNode<HumanPoseSink>(
     "HumanPose",
     "SinkNode",
     std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } },
     {});
+
+  sink->Pull = [this](GraphNodeBase::InputNodes inputs) {
+    if (auto src = std::dynamic_pointer_cast<IValue<libvrm::vrm::HumanPose>>(
+          inputs[0])) {
+      for (auto& callback : HumanPoseChanged) {
+        callback((*src)());
+      }
+    }
+  };
 
   // source nodes
   CreateNode<UdpNode>(
@@ -273,29 +295,6 @@ HumanPoseStream::LoadMotion(const std::filesystem::path& path)
 
 // m_udp->Update();
 
-// retarget human pose
-// m_motion->m_sceneUpdated.push_back(
-//   [stream = PoseStream,
-//    humanBoneMap = std::vector<libvrm::vrm::HumanBones>(),
-//    rotations = std::vector<DirectX::XMFLOAT4>()](
-//     const libvrm::gltf::Scene& src) mutable {
-//     humanBoneMap.clear();
-//     rotations.clear();
-//     for (auto& node : src.m_nodes) {
-//       if (auto humanoid = node->Humanoid) {
-//         humanBoneMap.push_back(humanoid->HumanBone);
-//         rotations.push_back(node->Transform.Rotation);
-//       }
-//     }
-//
-//     if (src.m_roots.size()) {
-//       auto& hips = src.m_roots[0]->Transform.Translation;
-//       stream->SetHumanPose({ .RootPosition = { hips.x, hips.y, hips.z },
-//                              .Bones = humanBoneMap,
-//                              .Rotations = rotations });
-//     }
-//   });
-
 void
 HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
 {
@@ -304,15 +303,19 @@ HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
     node = m_nodes.front();
   }
 
+  std::vector<std::shared_ptr<GraphNodeBase>> inputs;
   for (auto& input : node->Inputs) {
     if (auto link = FindLinkFromEnd(input.Pin.Id)) {
       auto [upstream, _] = FindNodeFromOutput(link->Start);
+      inputs.push_back(upstream);
       if (upstream) {
         Update(time, upstream);
       }
+    } else {
+      inputs.push_back({});
     }
   }
 
   // process
-  node->Update(time);
+  node->Update(time, inputs);
 }

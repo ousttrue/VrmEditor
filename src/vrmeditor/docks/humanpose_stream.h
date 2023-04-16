@@ -2,6 +2,7 @@
 #include "gui.h"
 #include <functional>
 #include <list>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vrm/humanbone_map.h>
@@ -13,9 +14,16 @@ class UdpReceiver;
 
 using HumanPoseFunc = std::function<void(const libvrm::vrm::HumanPose& pose)>;
 
+template<typename T>
+struct IValue
+{
+  virtual T operator()() const = 0;
+};
+
 enum PinDataTypes
 {
   None,
+  // vrmlib::HumanPose
   HumanPose,
 };
 
@@ -64,6 +72,9 @@ struct GraphNodeBase
   std::vector<Output> Outputs;
   float NodeWidth = 200.f;
 
+  using InputNodes = std::span<std::shared_ptr<GraphNodeBase>>;
+  std::function<void(InputNodes)> Pull;
+
   GraphNodeBase(int id, std::string_view name)
     : Id(id)
     , Name(name)
@@ -71,7 +82,7 @@ struct GraphNodeBase
   }
   virtual ~GraphNodeBase() {}
   void Draw();
-  virtual void Update(libvrm::Time time) {}
+  virtual void Update(libvrm::Time time, InputNodes inputs) {}
   virtual void DrawContent() {}
 };
 
@@ -154,13 +165,6 @@ struct HumanPoseStream
       }
     }
     return {};
-  }
-
-  void SetHumanPose(const libvrm::vrm::HumanPose& pose)
-  {
-    for (auto& callback : HumanPoseChanged) {
-      callback(pose);
-    }
   }
 
   bool LoadMotion(const std::filesystem::path& path);
