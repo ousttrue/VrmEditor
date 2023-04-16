@@ -1,222 +1,167 @@
 #include "humanpose_stream.h"
+#include <algorithm>
 #include <array>
 #include <imnodes.h>
 #include <vector>
 
-enum PinDataTypes
+void
+GraphNode::Draw()
 {
-  None,
-  HumanPose,
+  // std::cout << "node: " << id << std::endl;
+  const float node_width = 200.f;
+  ImNodes::BeginNode(Id);
+  ImNodes::BeginNodeTitleBar();
+  if (Prefix.size()) {
+    ImGui::TextUnformatted(Prefix.c_str());
+  }
+  ImGui::TextUnformatted(Name.c_str());
+  ImNodes::EndNodeTitleBar();
+
+  for (auto& input : Inputs) {
+    // std::cout << "  input: " << pin_id << std::endl;
+    ImNodes::BeginInputAttribute(input.Pin.Id);
+    {
+      auto label = input.Name.c_str();
+      // const float label_width = ImGui::CalcTextSize(label).x;
+      ImGui::TextUnformatted(label);
+      // ImGui::Indent(node_width - label_width);
+      // ImGui::TextUnformatted(label);
+    }
+    ImNodes::EndInputAttribute();
+  }
+
+  for (auto& output : Outputs) {
+    // std::cout << "  output: " << pin_id << std::endl;
+    ImNodes::BeginOutputAttribute(output.Pin.Id);
+    {
+      auto label = output.Name.c_str();
+      const float label_width = ImGui::CalcTextSize(label).x;
+      ImGui::Indent(node_width - label_width);
+      ImGui::TextUnformatted(label);
+    }
+    ImNodes::EndOutputAttribute();
+  }
+
+  ImNodes::EndNode();
+}
+
+void
+Link::Draw()
+{
+  ImNodes::Link(Id, Start, End);
+}
+
+struct HumanPoseStreamImpl
+{
+
+  void Draw() {}
 };
 
-struct GraphPin
+HumanPoseStream::HumanPoseStream()
 {
-  int Id;
-  PinDataTypes DataType;
+  ImNodes::CreateContext();
 
-  GraphPin(int id, PinDataTypes dataType)
-    : Id(id)
-    , DataType(dataType)
-  {
-  }
-};
+  CreateNode(
+    "HumanPose",
+    "SinkNode",
+    std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } },
+    {});
 
-struct Input
+  CreateNode(
+    "Bvh",
+    "SrcNode",
+    {},
+    std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
+
+  CreateNode(
+    "TPose",
+    "SrcNode",
+    {},
+    std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
+}
+
+HumanPoseStream::~HumanPoseStream() {}
+
+void
+HumanPoseStream::LoadIni(std::string_view ini)
 {
-  std::string Name;
-  GraphPin Pin;
+  // Load the internal imnodes state
+  ImNodes::LoadCurrentEditorStateFromIniString(ini.data(), ini.size());
 
-  Input(std::string_view name, GraphPin pin)
-    : Name(name)
-    , Pin(pin)
-  {
-  }
-};
+  // // Load our editor state into memory
+  //
+  // std::fstream fin("save_load.bytes",
+  //                  std::ios_base::in | std::ios_base::binary);
+  //
+  // if (!fin.is_open()) {
+  //   return;
+  // }
+  //
+  // // copy nodes into memory
+  // size_t num_nodes;
+  // fin.read(reinterpret_cast<char*>(&num_nodes),
+  //          static_cast<std::streamsize>(sizeof(size_t)));
+  // nodes_.resize(num_nodes);
+  // fin.read(reinterpret_cast<char*>(nodes_.data()),
+  //          static_cast<std::streamsize>(sizeof(Node) * num_nodes));
+  //
+  // // copy links into memory
+  // size_t num_links;
+  // fin.read(reinterpret_cast<char*>(&num_links),
+  //          static_cast<std::streamsize>(sizeof(size_t)));
+  // links_.resize(num_links);
+  // fin.read(reinterpret_cast<char*>(links_.data()),
+  //          static_cast<std::streamsize>(sizeof(Link) * num_links));
+  //
+  // // copy current_id into memory
+  // fin.read(reinterpret_cast<char*>(&current_id_),
+  //          static_cast<std::streamsize>(sizeof(int)));
+}
 
-struct Output
+std::string
+HumanPoseStream::Save()
 {
-  std::string Name;
-  GraphPin Pin;
+  // Save the internal imnodes state
+  size_t size;
+  auto p = ImNodes::SaveCurrentEditorStateToIniString(&size);
+  return { p, p + size };
 
-  Output(std::string_view name, GraphPin pin)
-    : Name(name)
-    , Pin(pin)
-  {
-  }
-};
+  // // Dump our editor state as bytes into a file
+  //
+  // std::fstream fout("save_load.bytes",
+  //                   std::ios_base::out | std::ios_base::binary |
+  //                     std::ios_base::trunc);
+  //
+  // // copy the node vector to file
+  // const size_t num_nodes = nodes_.size();
+  // fout.write(reinterpret_cast<const char*>(&num_nodes),
+  //            static_cast<std::streamsize>(sizeof(size_t)));
+  // fout.write(reinterpret_cast<const char*>(nodes_.data()),
+  //            static_cast<std::streamsize>(sizeof(Node) * num_nodes));
+  //
+  // // copy the link vector to file
+  // const size_t num_links = links_.size();
+  // fout.write(reinterpret_cast<const char*>(&num_links),
+  //            static_cast<std::streamsize>(sizeof(size_t)));
+  // fout.write(reinterpret_cast<const char*>(links_.data()),
+  //            static_cast<std::streamsize>(sizeof(Link) * num_links));
+  //
+  // // copy the current_id to file
+  // fout.write(reinterpret_cast<const char*>(&current_id_),
+  //            static_cast<std::streamsize>(sizeof(int)));
+}
 
-struct GraphNode
+void
+HumanPoseStream::CreateDock(const AddDockFunc& addDock)
 {
-  int Id;
-  std::string Prefix;
-  std::string Name;
-  std::vector<Input> Inputs;
-  std::vector<Output> Outputs;
-
-  GraphNode(int id, std::string_view name)
-    : Id(id)
-    , Name(name)
-  {
-  }
-
-  void Draw()
-  {
-    // std::cout << "node: " << id << std::endl;
-    const float node_width = 200.f;
-    ImNodes::BeginNode(Id);
-    ImNodes::BeginNodeTitleBar();
-    if (Prefix.size()) {
-      ImGui::TextUnformatted(Prefix.c_str());
-    }
-    ImGui::TextUnformatted(Name.c_str());
-    ImNodes::EndNodeTitleBar();
-
-    for (auto& input : Inputs) {
-      // std::cout << "  input: " << pin_id << std::endl;
-      ImNodes::BeginInputAttribute(input.Pin.Id);
-      {
-        auto label = input.Name.c_str();
-        // const float label_width = ImGui::CalcTextSize(label).x;
-        ImGui::TextUnformatted(label);
-        // ImGui::Indent(node_width - label_width);
-        // ImGui::TextUnformatted(label);
-      }
-      ImNodes::EndInputAttribute();
-    }
-
-    for (auto& output : Outputs) {
-      // std::cout << "  output: " << pin_id << std::endl;
-      ImNodes::BeginOutputAttribute(output.Pin.Id);
-      {
-        auto label = output.Name.c_str();
-        const float label_width = ImGui::CalcTextSize(label).x;
-        ImGui::Indent(node_width - label_width);
-        ImGui::TextUnformatted(label);
-      }
-      ImNodes::EndOutputAttribute();
-    }
-
-    ImNodes::EndNode();
-  }
-};
-
-struct Edge
-{
-  int Id;
-  int Start;
-  int End;
-
-  void Draw() { ImNodes::Link(Id, Start, End); }
-};
-
-struct PinNameWithType
-{
-  std::string Name;
-  PinDataTypes Type;
-};
-
-class HumanPoseStreamImpl
-{
-  int m_nextId = 1;
-  std::list<std::shared_ptr<GraphNode>> m_nodes;
-  std::list<Edge> m_edges;
-
-public:
-  HumanPoseStreamImpl()
-  {
-    ImNodes::CreateContext();
-
-    CreateNode(
-      "HumanPose",
-      "SinkNode",
-      std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } },
-      {});
-
-    CreateNode(
-      "Bvh",
-      "SrcNode",
-      {},
-      std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
-
-    CreateNode(
-      "TPose",
-      "SrcNode",
-      {},
-      std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
-  }
-
-  std::shared_ptr<GraphNode> CreateNode(
-    std::string_view name,
-    std::string_view prefix,
-    std::span<const PinNameWithType> inputs,
-    std::span<const PinNameWithType> outputs)
-  {
-    auto ptr = std::make_shared<GraphNode>(m_nextId++, name);
-    ptr->Prefix = prefix;
-    for (auto [pinName, pinDataType] : inputs) {
-      ptr->Inputs.push_back({ pinName, { m_nextId++, pinDataType } });
-    }
-    for (auto [pinName, pinDataType] : outputs) {
-      ptr->Outputs.push_back({ pinName, { m_nextId++, pinDataType } });
-    }
-    m_nodes.push_back(ptr);
-    return ptr;
-  }
-
-  std::tuple<std::shared_ptr<GraphNode>, PinDataTypes> FindNodeFromOutput(
-    int start) const
-  {
-    for (auto& node : m_nodes) {
-      for (auto& output : node->Outputs) {
-        if (output.Pin.Id == start) {
-          return { node, output.Pin.DataType };
-        }
-      }
-    }
-    return {};
-  }
-
-  std::tuple<std::shared_ptr<GraphNode>, PinDataTypes> FindNodeFromInput(
-    int start) const
-  {
-    for (auto& node : m_nodes) {
-      for (auto& input : node->Inputs) {
-        if (input.Pin.Id == start) {
-          return { node, input.Pin.DataType };
-        }
-      }
-    }
-    return {};
-  }
-
-  void TryCreateLink(int start, int end)
-  {
-    auto [src, srcType] = FindNodeFromOutput(start);
-    auto [sink, sinkType] = FindNodeFromInput(end);
-    if (src && sink && srcType == sinkType) {
-
-      for (auto it = m_edges.begin(); it != m_edges.end();) {
-        if (it->Start == start || it->End == end) {
-          // remove exists
-          it = m_edges.erase(it);
-        } else {
-          // skip
-          ++it;
-        }
-      }
-
-      m_edges.push_back({ m_nextId++, start, end });
-    }
-  }
-
-  void Draw()
-  {
+  addDock(Dock("input-stream", [this]() {
+    //
     // draw nodes
     ImNodes::BeginNodeEditor();
     for (auto& node : m_nodes) {
       node->Draw();
     }
-    for (auto& edge : m_edges) {
+    for (auto& edge : Links) {
       edge.Draw();
     }
     ImNodes::EndNodeEditor();
@@ -226,103 +171,85 @@ public:
     if (ImNodes::IsLinkCreated(&start, &end)) {
       TryCreateLink(start, end);
     }
-  }
-
-  std::string Save()
-  {
-    // Save the internal imnodes state
-    size_t size;
-    auto p = ImNodes::SaveCurrentEditorStateToIniString(&size);
-    return { p, p + size };
-
-    // // Dump our editor state as bytes into a file
-    //
-    // std::fstream fout("save_load.bytes",
-    //                   std::ios_base::out | std::ios_base::binary |
-    //                     std::ios_base::trunc);
-    //
-    // // copy the node vector to file
-    // const size_t num_nodes = nodes_.size();
-    // fout.write(reinterpret_cast<const char*>(&num_nodes),
-    //            static_cast<std::streamsize>(sizeof(size_t)));
-    // fout.write(reinterpret_cast<const char*>(nodes_.data()),
-    //            static_cast<std::streamsize>(sizeof(Node) * num_nodes));
-    //
-    // // copy the link vector to file
-    // const size_t num_links = links_.size();
-    // fout.write(reinterpret_cast<const char*>(&num_links),
-    //            static_cast<std::streamsize>(sizeof(size_t)));
-    // fout.write(reinterpret_cast<const char*>(links_.data()),
-    //            static_cast<std::streamsize>(sizeof(Link) * num_links));
-    //
-    // // copy the current_id to file
-    // fout.write(reinterpret_cast<const char*>(&current_id_),
-    //            static_cast<std::streamsize>(sizeof(int)));
-  }
-
-  void Load(std::string_view ini)
-  {
-    // Load the internal imnodes state
-    ImNodes::LoadCurrentEditorStateFromIniString(ini.data(), ini.size());
-
-    // // Load our editor state into memory
-    //
-    // std::fstream fin("save_load.bytes",
-    //                  std::ios_base::in | std::ios_base::binary);
-    //
-    // if (!fin.is_open()) {
-    //   return;
-    // }
-    //
-    // // copy nodes into memory
-    // size_t num_nodes;
-    // fin.read(reinterpret_cast<char*>(&num_nodes),
-    //          static_cast<std::streamsize>(sizeof(size_t)));
-    // nodes_.resize(num_nodes);
-    // fin.read(reinterpret_cast<char*>(nodes_.data()),
-    //          static_cast<std::streamsize>(sizeof(Node) * num_nodes));
-    //
-    // // copy links into memory
-    // size_t num_links;
-    // fin.read(reinterpret_cast<char*>(&num_links),
-    //          static_cast<std::streamsize>(sizeof(size_t)));
-    // links_.resize(num_links);
-    // fin.read(reinterpret_cast<char*>(links_.data()),
-    //          static_cast<std::streamsize>(sizeof(Link) * num_links));
-    //
-    // // copy current_id into memory
-    // fin.read(reinterpret_cast<char*>(&current_id_),
-    //          static_cast<std::streamsize>(sizeof(int)));
-  }
-};
-
-void
-HumanPoseStream::Load(std::string_view ini)
-{
-  m_impl->Load(ini);
-}
-
-std::string
-HumanPoseStream::Save()
-{
-  return m_impl->Save();
-}
-
-HumanPoseStream::HumanPoseStream()
-  : m_impl(new HumanPoseStreamImpl)
-{
-}
-
-HumanPoseStream::~HumanPoseStream()
-{
-  delete m_impl;
-}
-
-void
-HumanPoseStream::CreateDock(const AddDockFunc& addDock)
-{
-  addDock(Dock("input-stream", [graph = m_impl]() {
-    //
-    graph->Draw();
+    int link_id;
+    if (ImNodes::IsLinkDestroyed(&link_id)) {
+      TryRemoveLink(link_id);
+    }
   }));
+}
+
+std::shared_ptr<GraphNode>
+HumanPoseStream::CreateNode(std::string_view name,
+                            std::string_view prefix,
+                            std::span<const PinNameWithType> inputs,
+                            std::span<const PinNameWithType> outputs)
+{
+  auto ptr = std::make_shared<GraphNode>(m_nextNodeId++, name);
+  ptr->Prefix = prefix;
+  for (auto [pinName, pinDataType] : inputs) {
+    ptr->Inputs.push_back({ pinName, { m_nextPinId++, pinDataType } });
+  }
+  for (auto [pinName, pinDataType] : outputs) {
+    ptr->Outputs.push_back({ pinName, { m_nextPinId++, pinDataType } });
+  }
+  m_nodes.push_back(ptr);
+  return ptr;
+}
+
+std::tuple<std::shared_ptr<GraphNode>, PinDataTypes>
+HumanPoseStream::FindNodeFromOutput(int start) const
+{
+  for (auto& node : m_nodes) {
+    for (auto& output : node->Outputs) {
+      if (output.Pin.Id == start) {
+        return { node, output.Pin.DataType };
+      }
+    }
+  }
+  return {};
+}
+
+std::tuple<std::shared_ptr<GraphNode>, PinDataTypes>
+HumanPoseStream::FindNodeFromInput(int start) const
+{
+  for (auto& node : m_nodes) {
+    for (auto& input : node->Inputs) {
+      if (input.Pin.Id == start) {
+        return { node, input.Pin.DataType };
+      }
+    }
+  }
+  return {};
+}
+
+void
+HumanPoseStream::TryCreateLink(int start, int end)
+{
+  auto [src, srcType] = FindNodeFromOutput(start);
+  auto [sink, sinkType] = FindNodeFromInput(end);
+  if (src && sink && srcType == sinkType) {
+
+    for (auto it = Links.begin(); it != Links.end();) {
+      if (it->Start == start || it->End == end) {
+        // remove exists
+        it = Links.erase(it);
+      } else {
+        // skip
+        ++it;
+      }
+    }
+
+    Links.push_back({ m_nextLinkId++, start, end });
+  }
+}
+
+void
+HumanPoseStream::TryRemoveLink(int link_id)
+{
+  auto iter = std::find_if(
+    Links.begin(), Links.end(), [link_id](const auto& link) -> bool {
+      return link.Id == link_id;
+    });
+  assert(iter != Links.end());
+  Links.erase(iter);
 }

@@ -48,13 +48,13 @@ class App
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<UdpReceiver> m_udp;
 
-  std::shared_ptr<HumanPoseStream> m_pose_stream;
 
   std::list<std::shared_ptr<libvrm::vrm::HumanBoneMap>> m_humanBoneMapList;
 
   App();
 
 public:
+  std::shared_ptr<HumanPoseStream> PoseStream;
   ~App();
   App(const App&) = delete;
   App& operator=(const App&) = delete;

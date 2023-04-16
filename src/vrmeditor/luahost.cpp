@@ -1,6 +1,7 @@
 #include "luahost.h"
 #include "app.h"
 #include "docks/gui.h"
+#include "docks/humanpose_stream.h"
 #include "makeluafunc.h"
 #include <filesystem>
 #include <iostream>
@@ -46,13 +47,15 @@ struct LuaEngineImpl
     luaL_openlibs(m_lua);
 
     constexpr struct luaL_Reg VrmEditorLuaModule[] = {
-      { "load_imgui_ini", MakeLuaFunc([](const std::string& ini) {
+      { "imgui_load_ini", MakeLuaFunc([](const std::string& ini) {
           App::Instance().LoadImGuiIni(ini);
         }) },
-      { "load_imnodes_ini", MakeLuaFunc([](const std::string& ini) {
-          App::Instance().LoadImNodesIni(ini);
+      { "imnodes_load_ini", MakeLuaFunc([](const std::string& ini) {
+          App::Instance().PoseStream->LoadIni(ini);
         }) },
-      { "load_imnodes_links", vrmeditor_load_imnodes_links },
+      { "imnodes_add_link", MakeLuaFunc([](int start, int end) {
+          App::Instance().PoseStream->TryCreateLink(start, end);
+        }) },
       { "set_window_size",
         MakeLuaFunc([](int width, int height, bool is_maximized) {
           App::Instance().SetWindowSize(width, height, is_maximized);

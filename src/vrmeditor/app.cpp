@@ -41,7 +41,7 @@ App::App()
   m_timeline = std::make_shared<libvrm::Timeline>();
   m_motion = std::make_shared<libvrm::gltf::Scene>();
   m_udp = std::make_shared<UdpReceiver>();
-  m_pose_stream = std::make_shared<HumanPoseStream>();
+  PoseStream = std::make_shared<HumanPoseStream>();
 
   m_platform = std::make_shared<Platform>();
   auto window = m_platform->CreateWindow(2000, 1200, false, WINDOW_TITLE);
@@ -62,12 +62,12 @@ App::App()
   cuber::PushGrid(libvrm::gizmo::lines());
   libvrm::gizmo::fix();
 
-  m_pose_stream->HumanPoseChanged.push_back(
+  PoseStream->HumanPoseChanged.push_back(
     [dst = m_scene](const auto& pose) { dst->SetHumanPose(pose); });
 
   // retarget human pose
   m_motion->m_sceneUpdated.push_back(
-    [stream = m_pose_stream,
+    [stream = PoseStream,
      humanBoneMap = std::vector<libvrm::vrm::HumanBones>(),
      rotations = std::vector<DirectX::XMFLOAT4>()](
       const libvrm::gltf::Scene& src) mutable {
@@ -120,12 +120,6 @@ App::LoadImGuiIni(std::string_view ini)
 }
 
 void
-App::LoadImNodesIni(std::string_view ini)
-{
-  m_pose_stream->Load(ini);
-}
-
-void
 App::SetWindowSize(int width, int height, bool maximize)
 {
   m_platform->SetWindowSize(width, height, maximize);
@@ -136,11 +130,20 @@ App::SaveState()
 {
   std::ofstream os((const char*)m_ini.u8string().c_str());
 
-  os << "vrmeditor.load_imgui_ini [===[\n"
-     << m_gui->SaveState() << "\n]===]\n\n";
+  os << "-- This file is auto generated ini file.\n\n";
 
-  os << "vrmeditor.load_imnodes_ini [===[\n"
-     << m_pose_stream->Save() << "\n]===]\n\n";
+  // imnodes
+  os << "vrmeditor.imnodes_load_ini [===[\n"
+     << PoseStream->Save() << "\n]===]\n\n";
+
+  for (auto& link : PoseStream->Links) {
+    os << "vrmeditor.imnodes_add_link(" << link.Start << ", " << link.End
+       << ")\n";
+  }
+
+  // imgui
+  os << "vrmeditor.imgui_load_ini [===[\n"
+     << m_gui->SaveState() << "\n]===]\n\n";
 
   auto [width, height] = m_platform->WindowSize();
   auto maximize = m_platform->IsWindowMaximized();
@@ -369,7 +372,7 @@ App::Run()
       },
       [udp = m_udp]() { udp->Stop(54345); });
 
-    m_pose_stream->CreateDock(addDock);
+    PoseStream->CreateDock(addDock);
   }
 
   ImTimeline::Create(addDock, "timeline", m_timeline);
