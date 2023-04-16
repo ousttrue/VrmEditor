@@ -18,7 +18,7 @@ vrmeditor_add_human_map(lua_State* L)
     return 0;
   }
 
-  auto map = App::Instance().AddHumanBoneMap();
+  auto map = App::Instance().PoseStream->AddHumanBoneMap();
   lua_pushnil(L);
   while (lua_next(L, -2)) {
     if (auto value = lua_tostring(L, -1)) {
@@ -78,7 +78,7 @@ struct LuaEngineImpl
           return App::Instance().LoadModel(path);
         }) },
       { "load_motion", MakeLuaFunc([](const std::filesystem::path& path) {
-          return App::Instance().LoadMotion(path);
+          return App::Instance().PoseStream->LoadMotion(path);
         }) },
       { "add_asset_dir",
         MakeLuaFunc(

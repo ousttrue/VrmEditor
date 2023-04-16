@@ -39,8 +39,8 @@ App::App()
   m_scene = std::make_shared<libvrm::gltf::Scene>();
   m_view = std::make_shared<grapho::OrbitView>();
   m_timeline = std::make_shared<libvrm::Timeline>();
-  m_motion = std::make_shared<libvrm::gltf::Scene>();
-  m_udp = std::make_shared<UdpReceiver>();
+  // m_motion = std::make_shared<libvrm::gltf::Scene>();
+  // m_udp = std::make_shared<UdpReceiver>();
   PoseStream = std::make_shared<HumanPoseStream>();
 
   m_platform = std::make_shared<Platform>();
@@ -57,46 +57,50 @@ App::App()
 
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
   m_renderer = std::make_shared<Gl3Renderer>();
-  m_cuber = std::make_shared<Cuber>();
+  // m_cuber = std::make_shared<Cuber>();
 
   cuber::PushGrid(libvrm::gizmo::lines());
   libvrm::gizmo::fix();
+
+  auto track = m_timeline->AddTrack("PoseStream", {});
+  track->Callbacks.push_back(
+    [pose = PoseStream](auto time, auto repeat) { pose->Update(time); });
 
   PoseStream->HumanPoseChanged.push_back(
     [dst = m_scene](const auto& pose) { dst->SetHumanPose(pose); });
 
   // retarget human pose
-  m_motion->m_sceneUpdated.push_back(
-    [stream = PoseStream,
-     humanBoneMap = std::vector<libvrm::vrm::HumanBones>(),
-     rotations = std::vector<DirectX::XMFLOAT4>()](
-      const libvrm::gltf::Scene& src) mutable {
-      humanBoneMap.clear();
-      rotations.clear();
-      for (auto& node : src.m_nodes) {
-        if (auto humanoid = node->Humanoid) {
-          humanBoneMap.push_back(humanoid->HumanBone);
-          rotations.push_back(node->Transform.Rotation);
-        }
-      }
-
-      if (src.m_roots.size()) {
-        auto& hips = src.m_roots[0]->Transform.Translation;
-        stream->SetHumanPose({ .RootPosition = { hips.x, hips.y, hips.z },
-                               .Bones = humanBoneMap,
-                               .Rotations = rotations });
-      }
-    });
+  // m_motion->m_sceneUpdated.push_back(
+  //   [stream = PoseStream,
+  //    humanBoneMap = std::vector<libvrm::vrm::HumanBones>(),
+  //    rotations = std::vector<DirectX::XMFLOAT4>()](
+  //     const libvrm::gltf::Scene& src) mutable {
+  //     humanBoneMap.clear();
+  //     rotations.clear();
+  //     for (auto& node : src.m_nodes) {
+  //       if (auto humanoid = node->Humanoid) {
+  //         humanBoneMap.push_back(humanoid->HumanBone);
+  //         rotations.push_back(node->Transform.Rotation);
+  //       }
+  //     }
+  //
+  //     if (src.m_roots.size()) {
+  //       auto& hips = src.m_roots[0]->Transform.Translation;
+  //       stream->SetHumanPose({ .RootPosition = { hips.x, hips.y, hips.z },
+  //                              .Bones = humanBoneMap,
+  //                              .Rotations = rotations });
+  //     }
+  //   });
 
   // bind motion to scene
-  m_motion->m_sceneUpdated.push_back(
-    [cuber = m_cuber](const libvrm::gltf::Scene& scene) {
-      cuber->Instances.clear();
-      if (scene.m_roots.size()) {
-        scene.m_roots[0]->UpdateShapeInstanceRecursive(
-          DirectX::XMMatrixIdentity(), cuber->Instances);
-      }
-    });
+  // m_motion->m_sceneUpdated.push_back(
+  //   [cuber = m_cuber](const libvrm::gltf::Scene& scene) {
+  //     cuber->Instances.clear();
+  //     if (scene.m_roots.size()) {
+  //       scene.m_roots[0]->UpdateShapeInstanceRecursive(
+  //         DirectX::XMMatrixIdentity(), cuber->Instances);
+  //     }
+  //   });
 }
 
 App::~App() {}
@@ -183,7 +187,7 @@ App::LoadPath(const std::filesystem::path& path)
     return LoadModel(path);
   }
   if (extension == ".bvh") {
-    return LoadMotion(path);
+    return PoseStream->LoadMotion(path);
   }
   // if (extension == ".fbx") {
   // }
@@ -219,67 +223,6 @@ App::LoadModel(const std::filesystem::path& path)
     Log(LogLevel::Error) << result.error();
     return false;
   }
-}
-
-void
-App::ClearMotion()
-{
-  m_motion->Clear();
-  m_cuber->Instances.clear();
-  m_timeline->Tracks.clear();
-}
-
-bool
-App::LoadMotion(const std::filesystem::path& path)
-{
-  ClearMotion();
-
-  auto bytes = libvrm::fileutil::ReadAllBytes<uint8_t>(path);
-  if (bytes.empty()) {
-    Log(LogLevel::Error) << "fail to read: " + path.string();
-    return false;
-  }
-
-  // load bvh
-  auto bvh = std::make_shared<libvrm::bvh::Bvh>();
-  if (auto parsed = bvh->Parse({ (const char*)bytes.data(), bytes.size() })) {
-  } else {
-    Log(LogLevel::Error) << "LoadMotion: " << path;
-    Log(LogLevel::Error) << "LoadMotion: " << parsed.error();
-    return false;
-  }
-  auto scaling = bvh->GuessScaling();
-  Log(LogLevel::Info) << "LoadMotion: " << scaling << ", " << path;
-
-  libvrm::bvh::InitializeSceneFromBvh(m_motion, bvh);
-  m_motion->m_roots[0]->UpdateShapeInstanceRecursive(
-    DirectX::XMMatrixIdentity(), m_cuber->Instances);
-
-  // bind time to motion
-  auto track = m_timeline->AddTrack("bvh", bvh->Duration());
-  track->Callbacks.push_back([bvh, scene = m_motion](auto time, bool repeat) {
-    if (scene->m_roots.size()) {
-      libvrm::bvh::UpdateSceneFromBvhFrame(scene, bvh, time);
-      scene->m_roots[0]->CalcWorldMatrix(true);
-      scene->RaiseSceneUpdated();
-    }
-  });
-
-  if (auto map = FindHumanBoneMap(*bvh)) {
-    // assign human bone
-    for (auto& node : m_motion->m_nodes) {
-      auto found = map->NameBoneMap.find(node->Name);
-      if (found != map->NameBoneMap.end()) {
-        node->Humanoid = libvrm::gltf::NodeHumanoidInfo{
-          .HumanBone = found->second,
-        };
-      }
-    }
-
-  } else {
-    Log(LogLevel::Wran) << "humanoid map not found";
-  }
-  return true;
 }
 
 void
@@ -345,44 +288,14 @@ App::Run()
     VrmDock::CreateExpression(addDock, "expression", m_scene);
   }
 
-  {
-    HumanoidDock::Create(addDock, "motion-body", "motion-finger", m_motion);
-    auto selection =
-      SceneDock::CreateTree(addDock, "motion-hierarchy", m_motion, indent);
-
-    auto callback = [scene = m_motion,
-                     cuber = m_cuber](std::span<const uint8_t> data) {
-      // udp update m_motion scene
-      libvrm::srht::UpdateScene(scene, cuber->Instances, data);
-
-      if (scene->m_roots.size()) {
-        scene->m_roots[0]->CalcWorldMatrix(true);
-        scene->RaiseSceneUpdated();
-      }
-    };
-
-    MotionDock::Create(
-      addDock,
-      "motion",
-      m_cuber,
-      selection,
-      [this, callback]() {
-        ClearMotion();
-        m_udp->Start(54345, callback);
-      },
-      [udp = m_udp]() { udp->Stop(54345); });
-
-    PoseStream->CreateDock(addDock);
-  }
-
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
+
+  PoseStream->CreateDock(addDock);
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
     auto time = info->Time;
-
-    m_udp->Update();
 
     libvrm::gizmo::clear();
     if (lastTime) {

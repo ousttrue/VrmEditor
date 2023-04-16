@@ -1,11 +1,33 @@
 #include "humanpose_stream.h"
+#include "cuber.h"
+#include "udp_receiver.h"
 #include <algorithm>
 #include <array>
 #include <imnodes.h>
 #include <vector>
+#include <vrm/scene.h>
+
+struct BvhNode : public GraphNodeBase
+{
+  std::shared_ptr<libvrm::gltf::Scene> m_motion;
+  std::shared_ptr<Cuber> m_cuber;
+
+  // constructor
+  using GraphNodeBase::GraphNodeBase;
+};
+
+struct UdpNode : public GraphNodeBase
+{
+  std::shared_ptr<libvrm::gltf::Scene> m_motion;
+  std::shared_ptr<Cuber> m_cuber;
+  std::shared_ptr<UdpReceiver> m_udp;
+
+  // constructor
+  using GraphNodeBase::GraphNodeBase;
+};
 
 void
-GraphNode::Draw()
+GraphNodeBase::Draw()
 {
   // std::cout << "node: " << id << std::endl;
   const float node_width = 200.f;
@@ -61,19 +83,21 @@ HumanPoseStream::HumanPoseStream()
 {
   ImNodes::CreateContext();
 
-  CreateNode(
+  // sink node
+  CreateNode<GraphNodeBase>(
     "HumanPose",
     "SinkNode",
     std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } },
     {});
 
-  CreateNode(
-    "Bvh",
+  // source nodes
+  CreateNode<UdpNode>(
+    "Udp",
     "SrcNode",
     {},
     std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
 
-  CreateNode(
+  CreateNode<GraphNodeBase>(
     "TPose",
     "SrcNode",
     {},
@@ -178,25 +202,7 @@ HumanPoseStream::CreateDock(const AddDockFunc& addDock)
   }));
 }
 
-std::shared_ptr<GraphNode>
-HumanPoseStream::CreateNode(std::string_view name,
-                            std::string_view prefix,
-                            std::span<const PinNameWithType> inputs,
-                            std::span<const PinNameWithType> outputs)
-{
-  auto ptr = std::make_shared<GraphNode>(m_nextNodeId++, name);
-  ptr->Prefix = prefix;
-  for (auto [pinName, pinDataType] : inputs) {
-    ptr->Inputs.push_back({ pinName, { m_nextPinId++, pinDataType } });
-  }
-  for (auto [pinName, pinDataType] : outputs) {
-    ptr->Outputs.push_back({ pinName, { m_nextPinId++, pinDataType } });
-  }
-  m_nodes.push_back(ptr);
-  return ptr;
-}
-
-std::tuple<std::shared_ptr<GraphNode>, PinDataTypes>
+std::tuple<std::shared_ptr<GraphNodeBase>, PinDataTypes>
 HumanPoseStream::FindNodeFromOutput(int start) const
 {
   for (auto& node : m_nodes) {
@@ -209,7 +215,7 @@ HumanPoseStream::FindNodeFromOutput(int start) const
   return {};
 }
 
-std::tuple<std::shared_ptr<GraphNode>, PinDataTypes>
+std::tuple<std::shared_ptr<GraphNodeBase>, PinDataTypes>
 HumanPoseStream::FindNodeFromInput(int start) const
 {
   for (auto& node : m_nodes) {
@@ -252,4 +258,99 @@ HumanPoseStream::TryRemoveLink(int link_id)
     });
   assert(iter != Links.end());
   Links.erase(iter);
+}
+
+bool
+HumanPoseStream::LoadMotion(const std::filesystem::path& path)
+{
+  auto node = CreateNode<BvhNode>(
+    "Bvh",
+    "SrcNode",
+    {},
+    std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
+
+  // auto bytes = libvrm::fileutil::ReadAllBytes<uint8_t>(path);
+  // if (bytes.empty()) {
+  //   Log(LogLevel::Error) << "fail to read: " + path.string();
+  //   return false;
+  // }
+  //
+  // // load bvh
+  // auto bvh = std::make_shared<libvrm::bvh::Bvh>();
+  // if (auto parsed = bvh->Parse({ (const char*)bytes.data(), bytes.size() }))
+  // { } else {
+  //   Log(LogLevel::Error) << "LoadMotion: " << path;
+  //   Log(LogLevel::Error) << "LoadMotion: " << parsed.error();
+  //   return false;
+  // }
+  // auto scaling = bvh->GuessScaling();
+  // Log(LogLevel::Info) << "LoadMotion: " << scaling << ", " << path;
+  //
+  // libvrm::bvh::InitializeSceneFromBvh(m_motion, bvh);
+  // m_motion->m_roots[0]->UpdateShapeInstanceRecursive(
+  //   DirectX::XMMatrixIdentity(), m_cuber->Instances);
+  //
+  // // bind time to motion
+  // auto track = m_timeline->AddTrack("bvh", bvh->Duration());
+  // track->Callbacks.push_back([bvh, scene = m_motion](auto time, bool repeat)
+  // {
+  //   if (scene->m_roots.size()) {
+  //     libvrm::bvh::UpdateSceneFromBvhFrame(scene, bvh, time);
+  //     scene->m_roots[0]->CalcWorldMatrix(true);
+  //     scene->RaiseSceneUpdated();
+  //   }
+  // });
+  //
+  // if (auto map = FindHumanBoneMap(*bvh)) {
+  //   // assign human bone
+  //   for (auto& node : m_motion->m_nodes) {
+  //     auto found = map->NameBoneMap.find(node->Name);
+  //     if (found != map->NameBoneMap.end()) {
+  //       node->Humanoid = libvrm::gltf::NodeHumanoidInfo{
+  //         .HumanBone = found->second,
+  //       };
+  //     }
+  //   }
+  //
+  // } else {
+  //   Log(LogLevel::Wran) << "humanoid map not found";
+  // }
+  return true;
+}
+
+// {
+//   HumanoidDock::Create(addDock, "motion-body", "motion-finger", m_motion);
+//   auto selection =
+//     SceneDock::CreateTree(addDock, "motion-hierarchy", m_motion, indent);
+//
+//   auto callback = [scene = m_motion,
+//                    cuber = m_cuber](std::span<const uint8_t> data) {
+//     // udp update m_motion scene
+//     libvrm::srht::UpdateScene(scene, cuber->Instances, data);
+//
+//     if (scene->m_roots.size()) {
+//       scene->m_roots[0]->CalcWorldMatrix(true);
+//       scene->RaiseSceneUpdated();
+//     }
+//   };
+//
+//   MotionDock::Create(
+//     addDock,
+//     "motion",
+//     m_cuber,
+//     selection,
+//     [this, callback]() {
+//       ClearMotion();
+//       m_udp->Start(54345, callback);
+//     },
+//     [udp = m_udp]() { udp->Stop(54345); });
+//
+// }
+
+// m_udp->Update();
+
+void
+HumanPoseStream::Update(libvrm::Time time)
+{
+  auto a = 0;
 }

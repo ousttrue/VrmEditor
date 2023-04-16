@@ -143,6 +143,9 @@ public:
     cursor.y += lineheight;
 
     for (auto& track : timeline->Tracks) {
+      if (track->Duration.count() == 0) {
+        continue;
+      }
       TimeGeometry draw(cursor, realSize, now);
       if (auto startTime = track->StartTime) {
         auto left = draw.GetX(*startTime);

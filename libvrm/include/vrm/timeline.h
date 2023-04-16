@@ -51,7 +51,6 @@ struct Timeline
   bool IsPlaying = false;
   Time CurrentTime;
   std::vector<std::shared_ptr<Track>> Tracks;
-  std::function<void(Time)> OnTimeChanged;
 
   void SetTime(Time time, bool force = false)
   {
@@ -63,9 +62,6 @@ struct Timeline
     CurrentTime = time;
     for (auto& track : Tracks) {
       track->SetTime(time);
-    }
-    if (OnTimeChanged) {
-      OnTimeChanged(CurrentTime);
     }
   }
 
