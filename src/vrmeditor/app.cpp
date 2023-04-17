@@ -249,7 +249,7 @@ App::Run()
 
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
-  ExportDock::Create(addDock, "export", m_scene);
+  ExportDock::Create(addDock, "export", m_scene, indent);
 
   PoseStream->CreateDock(addDock);
 

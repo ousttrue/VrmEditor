@@ -21,7 +21,10 @@ struct Exporter
 
   void Export(const Scene& scene);
   void ExportMeshes(const Scene& scene);
+
   void ExportNodesScenes(const Scene& scene);
+  void ExportNode(const std::shared_ptr<Node>& node);
+
   void ExportBuffersViewsAccessors(const Scene& scene);
   void ExportAnimations(const Scene& scene);
 };

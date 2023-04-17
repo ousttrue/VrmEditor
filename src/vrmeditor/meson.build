@@ -10,6 +10,7 @@ srcs = [
     'docks/scene_dock.cpp',
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',
+    'docks/json_dock_impl.cpp',
     'humanpose/motion_dock.cpp',
     'humanpose/humanpose_stream.cpp',
     'humanpose/cuber.cpp',

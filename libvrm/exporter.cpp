@@ -91,12 +91,7 @@ Exporter::ExportNodesScenes(const Scene& scene)
   {
     m_writer.array_open();
     for (auto& node : scene.m_nodes) {
-      m_writer.object_open();
-      if (auto mesh_index = node->Mesh) {
-        m_writer.key("mesh");
-        m_writer.value(*mesh_index);
-      }
-      m_writer.object_close();
+      ExportNode(node);
     }
     m_writer.array_close();
   }
@@ -115,6 +110,17 @@ Exporter::ExportNodesScenes(const Scene& scene)
   {
     m_writer.value(0);
   }
+}
+
+void
+Exporter::ExportNode(const std::shared_ptr<Node>& node)
+{
+  m_writer.object_open();
+  if (auto mesh_index = node->Mesh) {
+    m_writer.key("mesh");
+    m_writer.value(*mesh_index);
+  }
+  m_writer.object_close();
 }
 
 void
