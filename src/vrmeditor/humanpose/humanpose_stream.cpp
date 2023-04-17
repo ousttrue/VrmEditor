@@ -17,6 +17,17 @@ struct HumanPoseSink : public GraphNodeBase
   }
 };
 
+struct InitialPose : public GraphNodeBase
+{
+  // constructor
+  using GraphNodeBase::GraphNodeBase;
+
+  void TimeUpdate(libvrm::Time time) override
+  {
+    Outputs[0].Value = libvrm::vrm::HumanPose::Initial();
+  }
+};
+
 void
 GraphNodeBase::Draw()
 {
@@ -98,8 +109,8 @@ HumanPoseStream::HumanPoseStream()
     {},
     std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
 
-  CreateNode<GraphNodeBase>(
-    "TPose",
+  CreateNode<InitialPose>(
+    "InitialPose",
     "SrcNode",
     {},
     std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
