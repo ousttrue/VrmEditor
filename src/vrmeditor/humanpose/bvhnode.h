@@ -1,8 +1,12 @@
 #pragma once
-#include "scenepreview.h"
-#include <vrm/bvh.h>
 #include "graphnode_base.h"
+#include <vrm/bvh.h>
 #include <vrm/humanbone_map.h>
+#include <vrm/scene.h>
+
+namespace glr {
+struct CuberPreview;
+}
 
 namespace humanpose {
 struct BvhNode : public GraphNodeBase
@@ -10,7 +14,7 @@ struct BvhNode : public GraphNodeBase
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<libvrm::bvh::Bvh> m_bvh;
 
-  ScenePreview m_preview;
+  std::shared_ptr<glr::CuberPreview> m_preview;
 
   bool m_initialPose = false;
 

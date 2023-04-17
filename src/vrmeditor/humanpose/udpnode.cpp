@@ -1,5 +1,7 @@
 #include "udpnode.h"
 #include "udp_receiver.h"
+#include <glr/cuber_preview.h>
+#include <grapho/orbitview.h>
 #include <vrm/scene.h>
 #include <vrm/srht_update.h>
 
@@ -11,8 +13,11 @@ UdpNode::UdpNode(int id, std::string_view name)
   m_scene = std::make_shared<libvrm::gltf::Scene>();
 
   // update preview
-  m_scene->m_sceneUpdated.push_back(std::bind(
-    &ScenePreview::OnSceneUpdated, &m_preview, std::placeholders::_1));
+  m_preview = std::make_shared<glr::CuberPreview>();
+  m_scene->m_sceneUpdated.push_back(
+    std::bind(&glr::CuberPreview::OnSceneUpdated,
+              m_preview.get(),
+              std::placeholders::_1));
 
   m_udp = std::make_shared<UdpReceiver>();
 
@@ -39,7 +44,7 @@ void
 UdpNode::DrawContent()
 {
   ImGui::Checkbox("init pose", &m_initialPose);
-  m_preview.Draw();
+  m_preview->Draw();
 }
 
 }

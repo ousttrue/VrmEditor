@@ -233,5 +233,12 @@ private:
   std::expected<std::shared_ptr<vrm::v0::Vrm>, std::string> ParseVrm0();
   std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string> ParseVrm1();
 };
-}
+
+struct SceneContext
+{
+  std::weak_ptr<Node> selected;
+  std::weak_ptr<Node> new_selected;
+};
+
+} // gltf
 }

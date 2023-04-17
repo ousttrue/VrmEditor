@@ -1,16 +1,17 @@
 #pragma once
 #include "cuber.h"
-#include "docks/gl3renderer.h"
-#include "docks/rendertarget.h"
+#include "gl3renderer.h"
+#include "rendertarget.h"
+#include <imgui.h>
 #include <vrm/scene.h>
 
-namespace humanpose {
-struct ScenePreview
+namespace glr {
+struct CuberPreview
 {
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<RenderTarget> m_rt;
 
-  ScenePreview()
+  CuberPreview()
   {
     // render target
     m_cuber = std::make_shared<Cuber>();

@@ -1,9 +1,8 @@
-#include <GL/glew.h>
-
 #include "export_dock.h"
+#include "glr/scene_preview.h"
 #include "json_dock_impl.h"
 #include "node_label.h"
-#include "scene_preview.h"
+#include <grapho/orbitview.h>
 #include <imgui.h>
 #include <vrm/exporter.h>
 #include <vrm/glb.h>
@@ -19,9 +18,10 @@ ExportDock::Create(const AddDockFunc& addDock,
   auto debug_scene = std::make_shared<libvrm::gltf::Scene>();
   auto impl = std::make_shared<JsonDockImpl>(scene);
   auto view = std::make_shared<grapho::OrbitView>();
-  auto context = std::make_shared<TreeContext>();
+  auto context = std::make_shared<libvrm::gltf::SceneContext>();
+
   auto preview =
-    std::make_shared<ScenePreview>(view, timeline, debug_scene, context);
+    std::make_shared<glr::ScenePreview>(view, timeline, debug_scene, context);
 
   addDock(Dock(title, [scene, debug_scene, impl, indent, preview]() {
     auto pos = ImGui::GetCursorScreenPos();

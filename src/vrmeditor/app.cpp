@@ -1,6 +1,3 @@
-#define IMGUI_DEFINE_MATH_OPERATORS 1
-#include <GL/glew.h>
-
 #include "app.h"
 #include "assetdir.h"
 #include "docks/export_dock.h"
@@ -16,10 +13,15 @@
 #include "humanpose/humanpose_stream.h"
 #include "luahost.h"
 #include "platform.h"
+#include <ImGuizmo.h>
+#include <cuber/mesh.h>
 #include <fstream>
+#include <grapho/orbitview.h>
+#include <imgui.h>
 #include <vrm/animation.h>
 #include <vrm/exporter.h>
 #include <vrm/fileutil.h>
+#include <vrm/gizmo.h>
 #include <vrm/glb.h>
 #include <vrm/timeline.h>
 

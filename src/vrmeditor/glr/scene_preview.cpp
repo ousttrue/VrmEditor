@@ -1,28 +1,23 @@
-#pragma once
-#include "gl3renderer.h"
-#include "rendertarget.h"
-#include "treecontext.h"
+#include "scene_preview.h"
+#include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <vrm/gizmo.h>
-#include <vrm/scene.h>
 
-struct ScenePreview
+namespace glr {
+ScenePreview::ScenePreview(
+  const std::shared_ptr<grapho::OrbitView>& view,
+  const std::shared_ptr<libvrm::Timeline>& timeline,
+  const std::shared_ptr<libvrm::gltf::Scene>& scene,
+  const std::shared_ptr<libvrm::gltf::SceneContext>& context)
+  : m_rt(view)
 {
-  RenderTarget m_rt;
-  Gl3Renderer m_gl3r;
-  ScenePreview(const std::shared_ptr<grapho::OrbitView>& view,
-               const std::shared_ptr<libvrm::Timeline>& timeline,
-               const std::shared_ptr<libvrm::gltf::Scene>& scene,
-               const std::shared_ptr<TreeContext>& context)
-    : m_rt(view)
-  {
-    m_rt.color[0] = 0.2f;
-    m_rt.color[1] = 0.2f;
-    m_rt.color[2] = 0.2f;
-    m_rt.color[3] = 1.0f;
+  m_rt.color[0] = 0.2f;
+  m_rt.color[1] = 0.2f;
+  m_rt.color[2] = 0.2f;
+  m_rt.color[3] = 1.0f;
 
-    m_rt.render = [timeline, scene, this, selection = context](
-                    const ViewProjection& camera) {
+  m_rt.render =
+    [timeline, scene, this, selection = context](const ViewProjection& camera) {
       Gl3Renderer::ClearRendertarget(camera);
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
@@ -57,15 +52,15 @@ struct ScenePreview
         ImGuizmo::GetContext().mAllowActiveHoverItem = false;
       }
     };
-  }
+}
 
-  void Show()
-  {
-    auto pos = ImGui::GetWindowPos();
-    pos.y += ImGui::GetFrameHeight();
-    auto size = ImGui::GetContentRegionAvail();
-    Show(pos.x, pos.y, size.x, size.y);
-  }
+void
+ScenePreview::Show()
+{
+  auto pos = ImGui::GetWindowPos();
+  pos.y += ImGui::GetFrameHeight();
+  auto size = ImGui::GetContentRegionAvail();
+  Show(pos.x, pos.y, size.x, size.y);
+}
 
-  void Show(float x, float y, float z, float w) { m_rt.show_fbo(x, y, z, w); }
-};
+}

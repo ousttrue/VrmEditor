@@ -1,6 +1,5 @@
 #pragma once
 #include "graphnode_base.h"
-#include "scenepreview.h"
 
 class UdpReceiver;
 namespace libvrm {
@@ -8,12 +7,17 @@ namespace gltf {
 struct Scene;
 }
 }
+
+namespace glr {
+struct CuberPreview;
+}
+
 namespace humanpose {
 struct UdpNode : public GraphNodeBase
 {
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<UdpReceiver> m_udp;
-  ScenePreview m_preview;
+  std::shared_ptr<glr::CuberPreview> m_preview;
 
   bool m_initialPose = false;
 

@@ -7,13 +7,13 @@
 #include <vrm/node.h>
 #include <vrm/vrm0.h>
 
-std::shared_ptr<TreeContext>
+std::shared_ptr<libvrm::gltf::SceneContext>
 SceneDock::CreateTree(const AddDockFunc& addDock,
                       std::string_view title,
                       const std::shared_ptr<libvrm::gltf::Scene>& scene,
                       float indent)
 {
-  auto context = std::make_shared<TreeContext>();
+  auto context = std::make_shared<libvrm::gltf::SceneContext>();
 
   auto enter = [scene,
                 context](const std::shared_ptr<libvrm::gltf::Node>& node) {
