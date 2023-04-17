@@ -50,7 +50,6 @@ App::App()
 
   PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
-  m_renderer = std::make_shared<Gl3Renderer>();
 
   cuber::PushGrid(libvrm::gizmo::lines());
   libvrm::gizmo::fix();
@@ -156,7 +155,6 @@ App::LoadPath(const std::filesystem::path& path)
 bool
 App::LoadModel(const std::filesystem::path& path)
 {
-  m_renderer->Release();
   m_scene->Clear();
   if (auto result = m_scene->LoadPath(path)) {
     // bind time line
@@ -236,20 +234,15 @@ App::Run()
     HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
     auto selection =
       SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
-    ViewDock::Create(addDock,
-                     "scene-view",
-                     m_scene,
-                     selection,
-                     m_view,
-                     m_timeline,
-                     m_renderer);
+    ViewDock::Create(
+      addDock, "scene-view", m_scene, selection, m_view, m_timeline);
     VrmDock::CreateVrm(addDock, "vrm", m_scene);
     VrmDock::CreateExpression(addDock, "expression", m_scene);
   }
 
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
-  ExportDock::Create(addDock, "export", m_scene, indent);
+  ExportDock::Create(addDock, "export", m_timeline, m_scene, indent);
 
   PoseStream->CreateDock(addDock);
 

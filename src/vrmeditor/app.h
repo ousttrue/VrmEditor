@@ -43,7 +43,6 @@ class App
   std::shared_ptr<libvrm::Timeline> m_timeline;
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<grapho::OrbitView> m_view;
-  std::shared_ptr<Gl3Renderer> m_renderer;
 
   App();
 
