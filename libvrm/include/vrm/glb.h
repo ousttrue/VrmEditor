@@ -11,22 +11,22 @@
 namespace libvrm::gltf {
 struct Glb
 {
-  std::span<const uint8_t> Json;
+  std::span<const uint8_t> JsonChunk;
   uint32_t JsonPadding() const
   {
     auto json_padding = 0;
-    if (Json.size() % 4) {
-      json_padding = 4 - (Json.size() % 4);
+    if (JsonChunk.size() % 4) {
+      json_padding = 4 - (JsonChunk.size() % 4);
     }
     return json_padding;
   }
 
-  std::span<const uint8_t> Bin;
+  std::span<const uint8_t> BinChunk;
   uint32_t BinPadding() const
   {
     auto bin_padding = 0;
-    if (Bin.size() % 4) {
-      bin_padding = 4 - (Bin.size() % 4);
+    if (BinChunk.size() % 4) {
+      bin_padding = 4 - (BinChunk.size() % 4);
     }
     return bin_padding;
   }
@@ -38,10 +38,10 @@ struct Glb
       // glb header
       12
       // json chunk
-      + 8 + Json.size() +
+      + 8 + JsonChunk.size() +
       JsonPadding()
       // bin chunk
-      + 8 + Bin.size() + BinPadding();
+      + 8 + BinChunk.size() + BinPadding();
   }
 
   bool WriteTo(const std::filesystem::path& path);

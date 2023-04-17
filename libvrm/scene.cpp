@@ -67,7 +67,7 @@ Scene::LoadPath(const std::filesystem::path& path)
 
     if (auto glb = Glb::Parse(m_bytes)) {
       // as glb
-      return Load(glb->Json, glb->Bin, dir);
+      return Load(glb->JsonChunk, glb->BinChunk, dir);
     }
 
     // try gltf
@@ -975,13 +975,6 @@ Scene::GetBoneNode(vrm::HumanBones bone)
     }
   }
   return {};
-}
-
-std::vector<uint8_t>
-Scene::ToGlb() const
-{
-  std::vector<uint8_t> bytes;
-  return bytes;
 }
 
 BoundingBox

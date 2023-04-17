@@ -93,7 +93,7 @@ Glb::Parse(std::span<const uint8_t> bytes)
       // first chunk must "JSON"
       return {};
     }
-    glb.Json = r.Span(chunk_length);
+    glb.JsonChunk = r.Span(chunk_length);
   }
   if (!r.is_end()) {
     auto chunk_length = r.Get<uint32_t>();
@@ -101,7 +101,7 @@ Glb::Parse(std::span<const uint8_t> bytes)
       // second chunk is "BIN"
       return {};
     }
-    glb.Bin = r.Span(chunk_length);
+    glb.BinChunk = r.Span(chunk_length);
   }
 
   return glb;
@@ -123,15 +123,15 @@ Glb::WriteTo(const std::filesystem::path& path)
   w.Uint32(CalcSize());
 
   // json
-  w.Uint32(Json.size() + JsonPadding());
+  w.Uint32(JsonChunk.size() + JsonPadding());
   w.Uint32(GLB_JSON_CHUNK);
-  w.Bytes(Json);
+  w.Bytes(JsonChunk);
   w.Padding(JsonPadding());
 
   // bin
-  w.Uint32(Bin.size() + BinPadding());
+  w.Uint32(BinChunk.size() + BinPadding());
   w.Uint32(GLB_BIN_CHUNK);
-  w.Bytes(Bin);
+  w.Bytes(BinChunk);
   w.Padding(BinPadding());
 
   return true;

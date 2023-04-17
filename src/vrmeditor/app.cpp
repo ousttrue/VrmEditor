@@ -3,6 +3,7 @@
 
 #include "app.h"
 #include "assetdir.h"
+#include "docks/export_dock.h"
 #include "docks/gui.h"
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
@@ -17,7 +18,9 @@
 #include "platform.h"
 #include <fstream>
 #include <vrm/animation.h>
+#include <vrm/exporter.h>
 #include <vrm/fileutil.h>
+#include <vrm/glb.h>
 #include <vrm/timeline.h>
 
 const auto WINDOW_TITLE = "VrmEditor";
@@ -121,15 +124,14 @@ App::ClearScene()
 bool
 App::WriteScene(const std::filesystem::path& path)
 {
-  auto bytes = m_scene->ToGlb();
-  if (bytes.size()) {
-    std::ofstream ofs(path);
-    if (ofs) {
-      ofs.write((const char*)bytes.data(), bytes.size());
-      return true;
-    }
+  libvrm::gltf::Exporter exporter;
+  exporter.Export(*m_scene);
+
+  return libvrm::gltf::Glb{
+    .JsonChunk = exporter.JsonChunk,
+    .BinChunk = exporter.BinChunk,
   }
-  return false;
+    .WriteTo(path);
 }
 
 bool
@@ -247,6 +249,7 @@ App::Run()
 
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
+  ExportDock::Create(addDock, "export", m_scene);
 
   PoseStream->CreateDock(addDock);
 

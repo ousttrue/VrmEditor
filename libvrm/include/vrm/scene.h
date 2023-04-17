@@ -185,8 +185,6 @@ struct Scene
   void SetHumanPose(const vrm::HumanPose& pose);
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
 
-  std::vector<uint8_t> ToGlb() const;
-
   BoundingBox GetBoundingBox() const;
 
   void InitializeNodes()

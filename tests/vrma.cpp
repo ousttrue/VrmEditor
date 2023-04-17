@@ -34,8 +34,8 @@ TEST(VRMA, simple)
   exporter.Export(scene);
 
   libvrm::gltf::Glb{
-    .Json = exporter.JsonChunk,
-    .Bin = exporter.BinChunk,
+    .JsonChunk = exporter.JsonChunk,
+    .BinChunk = exporter.BinChunk,
   }
     .WriteTo("out.vrma");
 
