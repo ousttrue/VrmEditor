@@ -7,6 +7,7 @@
 class Cuber;
 class UdpReceiver;
 
+namespace humanpose {
 using HumanPoseFunc = std::function<void(const libvrm::vrm::HumanPose& pose)>;
 
 struct Link
@@ -95,3 +96,4 @@ struct HumanPoseStream
   void CreateDock(const AddDockFunc& addDock);
   void Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node = {});
 };
+}

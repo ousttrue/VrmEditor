@@ -45,7 +45,7 @@ App::App()
     throw std::runtime_error("glewInit");
   }
 
-  PoseStream = std::make_shared<HumanPoseStream>();
+  PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
   m_renderer = std::make_shared<Gl3Renderer>();
 

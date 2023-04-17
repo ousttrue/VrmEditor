@@ -8,6 +8,7 @@
 #include <vrm/humanpose.h>
 #include <vrm/timeline.h>
 
+namespace humanpose {
 enum PinDataTypes
 {
   HumanPose,
@@ -74,3 +75,4 @@ struct GraphNodeBase
   virtual void PullData(InputNodes inputs) {}
   virtual void DrawContent() {}
 };
+}

@@ -7,6 +7,7 @@
 #include <vrm/scene.h>
 #include <vrm/srht_update.h>
 
+namespace humanpose {
 struct UdpNode : public GraphNodeBase
 {
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
@@ -88,3 +89,4 @@ struct UdpNode : public GraphNodeBase
     m_rt->show_fbo(pos.x, pos.y, size.x, size.y);
   }
 };
+}

@@ -4,6 +4,7 @@
 #include <imnodes.h>
 #include <vrm/fileutil.h>
 
+namespace humanpose {
 struct HumanPoseSink : public GraphNodeBase
 {
   // constructor
@@ -279,4 +280,5 @@ HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
 
   // process
   node->PullData(inputs);
+}
 }

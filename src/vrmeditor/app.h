@@ -18,13 +18,17 @@ struct Timeline;
 namespace grapho {
 class OrbitView;
 }
+
+namespace humanpose{
+struct HumanPoseStream;
+}
+
 class Gui;
 struct AssetDir;
 class LuaEngine;
 class Platform;
 class ImLogger;
 class Gl3Renderer;
-struct HumanPoseStream;
 
 class App
 {
@@ -44,7 +48,7 @@ class App
   App();
 
 public:
-  std::shared_ptr<HumanPoseStream> PoseStream;
+  std::shared_ptr<humanpose::HumanPoseStream> PoseStream;
   ~App();
   App(const App&) = delete;
   App& operator=(const App&) = delete;

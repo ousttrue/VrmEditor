@@ -10,6 +10,7 @@
 #include <vrm/scene.h>
 #include <vrm/timeline.h>
 
+namespace humanpose {
 struct BvhNode : public GraphNodeBase
 {
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
@@ -111,3 +112,4 @@ struct BvhNode : public GraphNodeBase
     m_rt->show_fbo(pos.x, pos.y, size.x, size.y);
   }
 };
+}
