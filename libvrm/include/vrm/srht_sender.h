@@ -21,7 +21,8 @@ class UdpSender
   asio::ip::udp::socket socket_;
   std::list<std::shared_ptr<Payload>> payloads_;
   std::mutex mutex_;
-  std::vector<srht::JointDefinition> joints_;
+  std::vector<srht::JointDefinition> m_joints;
+  std::vector<DirectX::XMFLOAT4> m_rotations;
   std::chrono::steady_clock::time_point m_start;
 
 public:

@@ -37,17 +37,27 @@ struct Payload
     buffer.assign(magic.data(), magic.data() + magic.size());
   }
 
-  void SetSkeleton(std::span<libvrm::srht::JointDefinition> joints)
+  void SetSkeleton(std::span<const libvrm::srht::JointDefinition> joints,
+                   std::span<const DirectX::XMFLOAT4> rotations)
   {
     SetMagic(buffer, libvrm::srht::SRHT_SKELETON_MAGIC1);
+
+    auto flags = libvrm::srht::SkeletonFlags::NONE;
+    if (rotations.size()) {
+      flags = flags | libvrm::srht::SkeletonFlags::HAS_INITIAL_ROTATION;
+    }
 
     libvrm::srht::SkeletonHeader header{
       .skeletonId = 0,
       .jointCount = static_cast<uint16_t>(joints.size()),
-      .flags = {},
+      .flags = flags,
     };
     Push((const char*)&header, (const char*)&header + sizeof(header));
     Push(joints.data(), joints.data() + joints.size());
+    if ((flags & libvrm::srht::SkeletonFlags::HAS_INITIAL_ROTATION) !=
+        libvrm::srht::SkeletonFlags::NONE) {
+      Push(rotations.data(), rotations.data() + rotations.size());
+    }
   }
 
   void SetFrame(std::chrono::nanoseconds time,
@@ -102,10 +112,11 @@ UdpSender::SendBvhSkeleton(asio::ip::udp::endpoint ep,
                            const std::shared_ptr<libvrm::bvh::Bvh>& bvh)
 {
   auto payload = GetOrCreatePayload();
-  joints_.clear();
+  m_joints.clear();
+  m_rotations.clear();
   auto scaling = bvh->GuessScaling();
   for (auto joint : bvh->joints) {
-    joints_.push_back({
+    m_joints.push_back({
       .parentBoneIndex = joint.parent.value_or(-1),
       .boneType = 0,
       .xFromParent = joint.localOffset.x * scaling,
@@ -113,7 +124,7 @@ UdpSender::SendBvhSkeleton(asio::ip::udp::endpoint ep,
       .zFromParent = joint.localOffset.z * scaling,
     });
   }
-  payload->SetSkeleton(joints_);
+  payload->SetSkeleton(m_joints, {});
 
   socket_.async_send_to(
     asio::buffer(payload->buffer),
@@ -189,8 +200,21 @@ UdpSender::SendBvhFrame(asio::ip::udp::endpoint ep,
     });
 }
 
-static void
+static bool
+IsIdentity(const DirectX::XMFLOAT4& q)
+{
+  if (q.x != 0)
+    return false;
+  if (q.y != 0)
+    return false;
+  if (q.z != 0)
+    return false;
+  return q.w == 1 || q.w == -1;
+}
+
+int
 PushJoints(std::vector<libvrm::srht::JointDefinition>& joints,
+           std::vector<DirectX::XMFLOAT4>& rotations,
            const std::shared_ptr<gltf::Node>& node,
            const std::function<uint16_t(const std::shared_ptr<gltf::Node>&)>&
              getParentIndex)
@@ -198,18 +222,27 @@ PushJoints(std::vector<libvrm::srht::JointDefinition>& joints,
   joints.push_back({
     .parentBoneIndex = getParentIndex(node),
     .boneType = 0,
-    .xFromParent = node->Transform.Translation.x,
-    .yFromParent = node->Transform.Translation.y,
-    .zFromParent = node->Transform.Translation.z,
+    .xFromParent = node->InitialTransform.Translation.x,
+    .yFromParent = node->InitialTransform.Translation.y,
+    .zFromParent = node->InitialTransform.Translation.z,
   });
+  rotations.push_back(node->InitialTransform.Rotation);
+
+  int hasRotation = 0;
+  if (!IsIdentity(rotations.back())) {
+    ++hasRotation;
+  }
+
   if (auto humanoid = node->Humanoid) {
     joints.back().boneType =
       static_cast<uint16_t>(libvrm::srht::FromVrmBone(humanoid->HumanBone));
   }
 
   for (auto& child : node->Children) {
-    PushJoints(joints, child, getParentIndex);
+    hasRotation += PushJoints(joints, rotations, child, getParentIndex);
   }
+
+  return hasRotation;
 }
 
 void
@@ -218,7 +251,8 @@ UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
                         const std::shared_ptr<gltf::Scene>& scene)
 {
   auto payload = GetOrCreatePayload();
-  joints_.clear();
+  m_joints.clear();
+  m_rotations.clear();
 
   auto getParentIndex = [scene](auto& node) -> uint16_t {
     if (auto parent = node->Parent.lock()) {
@@ -230,8 +264,13 @@ UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
     }
     return -1;
   };
-  PushJoints(joints_, scene->m_roots[0], getParentIndex);
-  payload->SetSkeleton(joints_);
+  auto hasRotation =
+    PushJoints(m_joints, m_rotations, scene->m_roots[0], getParentIndex);
+  std::span<const DirectX::XMFLOAT4> rotations{};
+  if (hasRotation) {
+    rotations = m_rotations;
+  }
+  payload->SetSkeleton(m_joints, rotations);
 
   socket_.async_send_to(
     asio::buffer(payload->buffer),

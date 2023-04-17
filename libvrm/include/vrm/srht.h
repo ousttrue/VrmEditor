@@ -330,6 +330,16 @@ enum class SkeletonFlags : uint32_t
   // if hasInitialRotation PackQuat X jointCount for InitialRotation
   HAS_INITIAL_ROTATION = 0x1,
 };
+inline SkeletonFlags
+operator|(SkeletonFlags lhs, SkeletonFlags rhs)
+{
+  return static_cast<SkeletonFlags>((uint16_t)lhs | (uint16_t)rhs);
+}
+inline SkeletonFlags
+operator&(SkeletonFlags lhs, SkeletonFlags rhs)
+{
+  return static_cast<SkeletonFlags>((uint16_t)lhs & (uint16_t)rhs);
+}
 
 constexpr const char* SRHT_SKELETON_MAGIC1 = "SRHTSKL1";
 struct SkeletonHeader
