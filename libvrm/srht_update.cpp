@@ -47,7 +47,6 @@ namespace libvrm {
 namespace srht {
 void
 UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
-            std::vector<DirectX::XMFLOAT4X4>& instances,
             std::span<const uint8_t> data)
 {
   BinaryReader r(data);
@@ -90,9 +89,7 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
       }
     }
     scene->InitNodes();
-    scene->m_roots[0]->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
-                                                    instances);
-
+    scene->RaiseSceneUpdated();
   } else if (magic == "SRHTFRM1") {
     if (scene->m_roots.size()) {
       auto header = r.Get<FrameHeader>();

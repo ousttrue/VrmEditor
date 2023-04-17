@@ -5,10 +5,10 @@ namespace libvrm::bvh {
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void
 UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
-             std::shared_ptr<gltf::Node>& node,
-             const std::shared_ptr<bvh::Bvh>& bvh,
-             const bvh::Frame& frame,
-             float scaling)
+                        std::shared_ptr<gltf::Node>& node,
+                        const std::shared_ptr<bvh::Bvh>& bvh,
+                        const bvh::Frame& frame,
+                        float scaling)
 {
   auto joint = &bvh->joints[scene->GetNodeIndex(node)];
   auto transform = frame.Resolve(joint->channels);
@@ -24,15 +24,16 @@ UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
 
 void
 UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
-             const std::shared_ptr<bvh::Bvh>& bvh,
-             Time time)
+                        const std::shared_ptr<bvh::Bvh>& bvh,
+                        Time time)
 {
   if (scene->m_roots.empty()) {
     return;
   }
   auto index = bvh->TimeToIndex(time);
   auto frame = bvh->GetFrame(index);
-  UpdateSceneFromBvhFrame(scene, scene->m_roots[0], bvh, frame, bvh->GuessScaling());
+  UpdateSceneFromBvhFrame(
+    scene, scene->m_roots[0], bvh, frame, bvh->GuessScaling());
 }
 
 static void
@@ -64,6 +65,7 @@ InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
     PushJoint(scene, joint, bvh->GuessScaling());
   };
   scene->InitNodes();
+  scene->RaiseSceneUpdated();
 }
 
 }
