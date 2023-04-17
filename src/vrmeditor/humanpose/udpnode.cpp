@@ -19,7 +19,6 @@ UdpNode::UdpNode(int id, std::string_view name)
   // update scene
   auto callback = [this](std::span<const uint8_t> data) {
     libvrm::srht::UpdateScene(m_scene, data);
-    Outputs[0].Value = m_scene->UpdateHumanPose();
   };
 
   m_udp->Start(54345, callback);
@@ -29,6 +28,18 @@ void
 UdpNode::TimeUpdate(libvrm::Time time)
 {
   m_udp->Update();
+
+  if (m_initialPose) {
+    m_scene->SetInitialPose();
+  }
+  Outputs[0].Value = m_scene->UpdateHumanPose();
+}
+
+void
+UdpNode::DrawContent()
+{
+  ImGui::Checkbox("init pose", &m_initialPose);
+  m_preview.Draw();
 }
 
 }

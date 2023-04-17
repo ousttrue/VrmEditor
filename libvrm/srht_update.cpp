@@ -59,6 +59,16 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
     auto header = r.Get<SkeletonHeader>();
     std::vector<JointDefinition> joints(header.jointCount);
     r.CopyTo(std::span(joints));
+    std::vector<DirectX::XMFLOAT4> rotations(header.jointCount);
+    // initial rotations
+    if ((header.flags & SkeletonFlags::HAS_INITIAL_ROTATION) !=
+        SkeletonFlags::NONE) {
+      rotations.resize(header.jointCount);
+      r.CopyTo(std::span(rotations));
+    } else {
+      std::fill(
+        rotations.begin(), rotations.end(), DirectX::XMFLOAT4{ 0, 0, 0, 1 });
+    }
 
     // create nodes
     for (int i = 0; i < joints.size(); ++i) {
@@ -66,12 +76,12 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
       snprintf(buf, sizeof(buf), "%d", i);
       auto ptr = std::make_shared<gltf::Node>(buf);
       auto& joint = joints[i];
-      if (i == 0) {
-      } else {
-        ptr->Transform.Translation.x = joint.xFromParent;
-        ptr->Transform.Translation.y = joint.yFromParent;
-        ptr->Transform.Translation.z = joint.zFromParent;
-      }
+      ptr->Transform.Translation.x = joint.xFromParent;
+      ptr->Transform.Translation.y = joint.yFromParent;
+      ptr->Transform.Translation.z = joint.zFromParent;
+      auto& rotation = rotations[i];
+      ptr->Transform.Rotation = rotation;
+
       if (auto vrm_bone = ToVrmBone((HumanoidBones)joint.boneType)) {
         ptr->Humanoid = gltf::NodeHumanoidInfo{
           .HumanBone = *vrm_bone,

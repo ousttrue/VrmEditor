@@ -58,6 +58,7 @@ using LeaveJson = std::function<void()>;
 
 struct Scene
 {
+
   std::vector<uint8_t> m_bytes;
   Gltf m_gltf;
   std::vector<std::shared_ptr<Image>> m_images;
@@ -105,6 +106,16 @@ struct Scene
 
   vrm::HumanPose UpdateHumanPose()
   {
+    auto mult4 = [](const DirectX::XMVECTOR& q0,
+                    const DirectX::XMVECTOR& q1,
+                    const DirectX::XMVECTOR& q2,
+                    const DirectX::XMVECTOR& q3) -> DirectX::XMVECTOR {
+      return DirectX::XMQuaternionMultiply(
+        DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(q0, q1),
+                                      q2),
+        q3);
+    };
+
     // retarget human pose
     m_humanBoneMap.clear();
     m_rotations.clear();
@@ -114,7 +125,18 @@ struct Scene
         if (m_humanBoneMap.back() == vrm::HumanBones::hips) {
           m_pose.RootPosition = node->WorldTransform.Translation;
         }
-        m_rotations.push_back(node->Transform.Rotation);
+
+        // retarget
+        auto normalized =
+          mult4(DirectX::XMQuaternionInverse(
+                  DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation)),
+                DirectX::XMLoadFloat4(&node->Transform.Rotation),
+                DirectX::XMQuaternionInverse(
+                  DirectX::XMLoadFloat4(&node->InitialTransform.Rotation)),
+                DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation));
+
+        m_rotations.push_back({});
+        DirectX::XMStoreFloat4(&m_rotations.back(), normalized);
       }
     }
     m_pose.Bones = m_humanBoneMap;
@@ -171,8 +193,7 @@ struct Scene
   {
     if (m_roots.size()) {
       m_roots[0]->CalcWorldMatrix(true);
-      for(auto &node: m_nodes)
-      {
+      for (auto& node : m_nodes) {
         node->InitialTransform = node->Transform;
         node->WorldInitialTransform = node->WorldTransform;
       }
@@ -182,12 +203,10 @@ struct Scene
 
   void SetInitialPose()
   {
-    for(auto &node: m_nodes)
-    {
+    for (auto& node : m_nodes) {
       node->Transform = node->InitialTransform;
     }
-    for(auto &root: m_roots)
-    {
+    for (auto& root : m_roots) {
       root->CalcWorldMatrix(true);
     }
     RaiseSceneUpdated();
