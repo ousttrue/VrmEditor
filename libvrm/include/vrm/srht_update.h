@@ -1,12 +1,15 @@
 #pragma once
-#include <DirectXMath.h>
+// #include <DirectXMath.h>
 #include <memory>
 #include <span>
 #include <stdint.h>
-#include <vector>
-#include <vrm/scene.h>
+// #include <vector>
 
-namespace libvrm::srht {
+namespace libvrm {
+namespace gltf {
+struct Scene;
+}
+namespace srht {
 void
 UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
             std::span<const uint8_t> data);
@@ -20,4 +23,5 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
 // MakeFrame(uint32_t skeletonId,
 //           const std::shared_ptr<gltf::Node>& root,
 //           std::vector<uint8_t>& out);
+}
 }

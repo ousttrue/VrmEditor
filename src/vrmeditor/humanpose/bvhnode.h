@@ -15,7 +15,7 @@ struct BvhNode : public GraphNodeBase
 
   ScenePreview m_preview;
 
-  libvrm::Time m_lastTime = {};
+  bool m_initialPose = false;
 
   // constructor
   BvhNode(int id, std::string_view name)
@@ -52,7 +52,8 @@ struct BvhNode : public GraphNodeBase
 
   void TimeUpdate(libvrm::Time time) override
   {
-    if (m_scene->m_roots.empty()) {
+    if (m_initialPose) {
+      Outputs[0].Value = libvrm::vrm::HumanPose::Initial();
       return;
     }
 
@@ -61,6 +62,10 @@ struct BvhNode : public GraphNodeBase
     Outputs[0].Value = m_scene->UpdateHumanPose();
   }
 
-  void DrawContent() override { m_preview.Draw(); }
+  void DrawContent() override
+  {
+    ImGui::Checkbox("init pose", &m_initialPose);
+    m_preview.Draw();
+  }
 };
 }

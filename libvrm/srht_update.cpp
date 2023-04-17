@@ -1,4 +1,5 @@
 #include "vrm/srht_update.h"
+#include "vrm/scene.h"
 #include "vrm/srht.h"
 #include <algorithm>
 

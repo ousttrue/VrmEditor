@@ -13,6 +13,7 @@ srcs = [
     'humanpose/humanpose_stream.cpp',
     'humanpose/cuber.cpp',
     'humanpose/udp_receiver.cpp',
+    'humanpose/udpnode.cpp',
 ]
 
 if host_machine.system() == 'windows'
