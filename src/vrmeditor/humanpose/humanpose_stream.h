@@ -5,6 +5,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vrm/humanbone_map.h>
 #include <vrm/humanpose.h>
 #include <vrm/timeline.h>
@@ -14,18 +15,17 @@ class UdpReceiver;
 
 using HumanPoseFunc = std::function<void(const libvrm::vrm::HumanPose& pose)>;
 
-template<typename T>
-struct IValue
-{
-  virtual T operator()() const = 0;
-};
+// template<typename T>
+// struct IValue
+// {
+//   virtual T operator()() const = 0;
+// };
 
 enum PinDataTypes
 {
-  None,
-  // vrmlib::HumanPose
   HumanPose,
 };
+using InputData = std::variant<libvrm::vrm::HumanPose>;
 
 struct GraphPin
 {
@@ -61,6 +61,7 @@ struct Output
     , Pin(pin)
   {
   }
+  InputData Value;
 };
 
 struct GraphNodeBase
@@ -72,7 +73,7 @@ struct GraphNodeBase
   std::vector<Output> Outputs;
   float NodeWidth = 200.f;
 
-  using InputNodes = std::span<std::shared_ptr<GraphNodeBase>>;
+  using InputNodes = std::span<InputData>;
   std::function<void(InputNodes)> Pull;
 
   GraphNodeBase(int id, std::string_view name)
@@ -152,9 +153,9 @@ struct HumanPoseStream
     return ptr;
   }
 
-  std::tuple<std::shared_ptr<GraphNodeBase>, PinDataTypes> FindNodeFromOutput(
+  std::tuple<std::shared_ptr<GraphNodeBase>, size_t> FindNodeFromOutput(
     int start) const;
-  std::tuple<std::shared_ptr<GraphNodeBase>, PinDataTypes> FindNodeFromInput(
+  std::tuple<std::shared_ptr<GraphNodeBase>, size_t> FindNodeFromInput(
     int end) const;
   void TryCreateLink(int start, int end);
   void TryRemoveLink(int link_id);

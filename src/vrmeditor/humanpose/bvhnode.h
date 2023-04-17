@@ -10,9 +10,7 @@
 #include <vrm/scene.h>
 #include <vrm/timeline.h>
 
-struct BvhNode
-  : public GraphNodeBase
-  , IValue<libvrm::vrm::HumanPose>
+struct BvhNode : public GraphNodeBase
 {
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<libvrm::bvh::Bvh> m_bvh;
@@ -22,9 +20,7 @@ struct BvhNode
   libvrm::Time m_lastTime = {};
   std::vector<libvrm::vrm::HumanBones> m_humanBoneMap;
   std::vector<DirectX::XMFLOAT4> m_rotations;
-  libvrm::vrm::HumanPose m_pose;
-
-  libvrm::vrm::HumanPose operator()() const override { return m_pose; }
+  // libvrm::vrm::HumanPose m_pose;
 
   // constructor
   BvhNode(int id, std::string_view name)
@@ -102,9 +98,10 @@ struct BvhNode
     }
 
     auto& root = m_scene->m_roots[0]->Transform.Translation;
-    m_pose = { .RootPosition = { root.x, root.y, root.z },
-               .Bones = m_humanBoneMap,
-               .Rotations = m_rotations };
+    Outputs[0].Value =
+      libvrm::vrm::HumanPose{ .RootPosition = { root.x, root.y, root.z },
+                              .Bones = m_humanBoneMap,
+                              .Rotations = m_rotations };
   }
 
   void DrawContent() override

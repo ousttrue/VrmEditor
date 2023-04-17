@@ -83,10 +83,10 @@ HumanPoseStream::HumanPoseStream()
     {});
 
   sink->Pull = [this](GraphNodeBase::InputNodes inputs) {
-    if (auto src = std::dynamic_pointer_cast<IValue<libvrm::vrm::HumanPose>>(
-          inputs[0])) {
+    if (std::holds_alternative<libvrm::vrm::HumanPose>(inputs[0])) {
+      auto value = std::get<libvrm::vrm::HumanPose>(inputs[0]);
       for (auto& callback : HumanPoseChanged) {
-        callback((*src)());
+        callback(value);
       }
     }
   };
@@ -150,26 +150,26 @@ HumanPoseStream::CreateDock(const AddDockFunc& addDock)
   }));
 }
 
-std::tuple<std::shared_ptr<GraphNodeBase>, PinDataTypes>
+std::tuple<std::shared_ptr<GraphNodeBase>, size_t>
 HumanPoseStream::FindNodeFromOutput(int start) const
 {
   for (auto& node : m_nodes) {
-    for (auto& output : node->Outputs) {
-      if (output.Pin.Id == start) {
-        return { node, output.Pin.DataType };
+    for (size_t i = 0; i < node->Outputs.size(); ++i) {
+      if (node->Outputs[i].Pin.Id == start) {
+        return { node, i };
       }
     }
   }
   return {};
 }
 
-std::tuple<std::shared_ptr<GraphNodeBase>, PinDataTypes>
+std::tuple<std::shared_ptr<GraphNodeBase>, size_t>
 HumanPoseStream::FindNodeFromInput(int end) const
 {
   for (auto& node : m_nodes) {
-    for (auto& input : node->Inputs) {
-      if (input.Pin.Id == end) {
-        return { node, input.Pin.DataType };
+    for (size_t i = 0; i < node->Inputs.size(); ++i) {
+      if (node->Inputs[i].Pin.Id == end) {
+        return { node, i };
       }
     }
   }
@@ -253,11 +253,11 @@ HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
     node = m_nodes.front();
   }
 
-  std::vector<std::shared_ptr<GraphNodeBase>> inputs;
+  std::vector<InputData> inputs;
   for (auto& input : node->Inputs) {
     if (auto link = FindLinkFromEnd(input.Pin.Id)) {
-      auto [upstream, _] = FindNodeFromOutput(link->Start);
-      inputs.push_back(upstream);
+      auto [upstream, index] = FindNodeFromOutput(link->Start);
+      inputs.push_back(upstream->Outputs[index].Value);
       if (upstream) {
         Update(time, upstream);
       }
