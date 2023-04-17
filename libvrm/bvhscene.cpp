@@ -66,7 +66,7 @@ InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
   for (auto& joint : bvh->joints) {
     PushJoint(scene, joint, bvh->GuessScaling());
   };
-  scene->InitNodes();
+  scene->InitializeNodes();
   scene->RaiseSceneUpdated();
 }
 

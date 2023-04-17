@@ -13,6 +13,7 @@ srcs = [
     'humanpose/humanpose_stream.cpp',
     'humanpose/cuber.cpp',
     'humanpose/udp_receiver.cpp',
+    'humanpose/bvhnode.cpp',
     'humanpose/udpnode.cpp',
 ]
 

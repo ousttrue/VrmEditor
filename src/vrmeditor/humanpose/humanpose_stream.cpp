@@ -1,4 +1,5 @@
 #include "humanpose_stream.h"
+#include "app.h"
 #include "bvhnode.h"
 #include "udpnode.h"
 #include <imnodes.h>

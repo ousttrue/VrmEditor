@@ -167,13 +167,30 @@ struct Scene
 
   BoundingBox GetBoundingBox() const;
 
-  void InitNodes()
+  void InitializeNodes()
   {
     if (m_roots.size()) {
-      m_roots[0]->InitialMatrix();
       m_roots[0]->CalcWorldMatrix(true);
+      for(auto &node: m_nodes)
+      {
+        node->InitialTransform = node->Transform;
+        node->WorldInitialTransform = node->WorldTransform;
+      }
       m_roots[0]->CalcShape();
     }
+  }
+
+  void SetInitialPose()
+  {
+    for(auto &node: m_nodes)
+    {
+      node->Transform = node->InitialTransform;
+    }
+    for(auto &root: m_roots)
+    {
+      root->CalcWorldMatrix(true);
+    }
+    RaiseSceneUpdated();
   }
 
 private:

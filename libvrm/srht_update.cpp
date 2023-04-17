@@ -89,7 +89,7 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
         gltf::Node::AddChild(parent, ptr);
       }
     }
-    scene->InitNodes();
+    scene->InitializeNodes();
     scene->RaiseSceneUpdated();
   } else if (magic == "SRHTFRM1") {
     if (scene->m_roots.size()) {
