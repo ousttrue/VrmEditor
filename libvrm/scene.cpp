@@ -286,6 +286,9 @@ std::expected<std::shared_ptr<gltf::Mesh>, std::string>
 Scene::ParseMesh(int i, const nlohmann::json& mesh)
 {
   auto ptr = std::make_shared<gltf::Mesh>();
+  if (has(mesh, "name")) {
+    ptr->Name = mesh.at("name");
+  }
   const nlohmann::json* lastAtributes = nullptr;
   for (auto& prim : mesh.at("primitives")) {
     std::shared_ptr<gltf::Material> material;

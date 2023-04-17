@@ -134,6 +134,10 @@ Exporter::ExportMeshes(const Scene& scene)
     m_writer.array_open();
     for (auto& mesh : scene.m_meshes) {
       m_writer.object_open();
+      if (mesh->Name.size()) {
+        m_writer.key("name");
+        m_writer.value(mesh->Name);
+      }
       m_writer.key("primitives");
       m_writer.array_open();
       int index = 0;

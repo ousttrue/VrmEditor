@@ -39,6 +39,7 @@ struct MorphTarget
 struct Mesh
 {
   uint32_t id;
+  std::string Name;
   Mesh()
   {
     static uint32_t s_id = 0;
