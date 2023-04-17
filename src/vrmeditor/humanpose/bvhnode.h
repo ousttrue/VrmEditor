@@ -16,8 +16,6 @@ struct BvhNode : public GraphNodeBase
   ScenePreview m_preview;
 
   libvrm::Time m_lastTime = {};
-  std::vector<libvrm::vrm::HumanBones> m_humanBoneMap;
-  std::vector<DirectX::XMFLOAT4> m_rotations;
 
   // constructor
   BvhNode(int id, std::string_view name)
@@ -60,24 +58,7 @@ struct BvhNode : public GraphNodeBase
 
     // update scene from bvh
     libvrm::bvh::UpdateSceneFromBvhFrame(m_scene, m_bvh, time);
-    m_scene->m_roots[0]->CalcWorldMatrix(true);
-    m_scene->RaiseSceneUpdated();
-
-    // retarget human pose
-    m_humanBoneMap.clear();
-    m_rotations.clear();
-    for (auto& node : m_scene->m_nodes) {
-      if (auto humanoid = node->Humanoid) {
-        m_humanBoneMap.push_back(humanoid->HumanBone);
-        m_rotations.push_back(node->Transform.Rotation);
-      }
-    }
-
-    auto& root = m_scene->m_roots[0]->Transform.Translation;
-    Outputs[0].Value =
-      libvrm::vrm::HumanPose{ .RootPosition = { root.x, root.y, root.z },
-                              .Bones = m_humanBoneMap,
-                              .Rotations = m_rotations };
+    Outputs[0].Value = m_scene->UpdateHumanPose();
   }
 
   void DrawContent() override { m_preview.Draw(); }

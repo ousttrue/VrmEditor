@@ -80,6 +80,11 @@ struct Scene
 
   std::string m_jsonpath;
 
+  // humanpose
+  std::vector<vrm::HumanBones> m_humanBoneMap;
+  std::vector<DirectX::XMFLOAT4> m_rotations;
+  vrm::HumanPose m_pose;
+
   Scene();
   Scene(const Scene&) = delete;
   Scene& operator=(const Scene&) = delete;
@@ -96,6 +101,25 @@ struct Scene
     m_animations.clear();
     // m_sceneUpdated.clear();
     m_gltf = {};
+  }
+
+  vrm::HumanPose UpdateHumanPose()
+  {
+    // retarget human pose
+    m_humanBoneMap.clear();
+    m_rotations.clear();
+    for (auto& node : m_nodes) {
+      if (auto humanoid = node->Humanoid) {
+        m_humanBoneMap.push_back(humanoid->HumanBone);
+        if (m_humanBoneMap.back() == vrm::HumanBones::hips) {
+          m_pose.RootPosition = node->WorldTransform.Translation;
+        }
+        m_rotations.push_back(node->Transform.Rotation);
+      }
+    }
+    m_pose.Bones = m_humanBoneMap;
+    m_pose.Rotations = m_rotations;
+    return m_pose;
   }
 
   void RaiseSceneUpdated()

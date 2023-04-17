@@ -34,6 +34,8 @@ UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
   auto frame = bvh->GetFrame(index);
   UpdateSceneFromBvhFrame(
     scene, scene->m_roots[0], bvh, frame, bvh->GuessScaling());
+  scene->m_roots[0]->CalcWorldMatrix(true);
+  scene->RaiseSceneUpdated();
 }
 
 static void
