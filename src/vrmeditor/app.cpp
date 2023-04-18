@@ -245,6 +245,7 @@ App::Run()
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
   ExportDock::Create(addDock, "export", m_timeline, m_scene, indent);
+  glr::CreateDock(addDock, "OpenGL resource");
 
   PoseStream->CreateDock(addDock);
 

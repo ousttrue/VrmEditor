@@ -1,4 +1,5 @@
 #pragma once
+#include "docks/gui.h"
 #include <memory>
 
 struct ViewProjection;
@@ -27,6 +28,6 @@ Shutdown();
 
 // resource viewer
 void
-ShowGui();
+CreateDock(const AddDockFunc& addDock, std::string_view title);
 
 }

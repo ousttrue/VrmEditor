@@ -4,6 +4,7 @@
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/texture.h>
 #include <grapho/gl3/vao.h>
+#include <imgui.h>
 #include <iostream>
 #include <map>
 #include <unordered_map>
@@ -200,6 +201,22 @@ public:
 
     return drawable;
   }
+
+  void CreateDock(const AddDockFunc& addDock, std::string_view title)
+  {
+    addDock(Dock(title, [this]() {
+      for (auto it = m_drawableMap.begin(); it != m_drawableMap.end();) {
+        if (it->first.lock()) {
+          ++it;
+        } else {
+          // cleanup released
+          it = m_drawableMap.erase(it);
+        }
+      }
+
+      ImGui::Text("%zd", m_drawableMap.size());
+    }));
+  }
 };
 
 void
@@ -227,8 +244,9 @@ Shutdown()
 }
 
 void
-ShowGui()
+CreateDock(const AddDockFunc& addDock, std::string_view title)
 {
+  Gl3Renderer::Instance().CreateDock(addDock, title);
 }
 
 }
