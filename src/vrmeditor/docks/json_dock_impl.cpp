@@ -5,7 +5,6 @@
 #include <ranges>
 #include <string_view>
 
-
 JsonDockImpl::JsonDockImpl(const std::shared_ptr<libvrm::gltf::Scene>& scene)
   : m_scene(scene)
 {
@@ -84,7 +83,7 @@ JsonDockImpl::Enter(nlohmann::json& item, std::string_view jsonpath)
     ImGui::TreeNodeEx((void*)(intptr_t)&item, node_flags, "%s", label.c_str());
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-    m_selected = libvrm::JsonPath(jsonpath);
+    m_selected.Str = jsonpath;
     m_cache = {};
   }
 
@@ -145,6 +144,8 @@ JsonDockImpl::Show(const std::shared_ptr<libvrm::gltf::Scene>& scene,
   ImGui::EndChild();
 
   if (ImGui::BeginChild("##split-second", { size.x, s })) {
+    ImGui::TextUnformatted(m_selected.Str.c_str());
+
     if (!m_cache) {
       m_cache = CreateGui();
     }
@@ -170,15 +171,13 @@ JsonDockImpl::CreateGui()
   }
 
   // default
-  return [this]() { ImGui::TextUnformatted(m_selected.Str.c_str()); };
+  return []() {};
 }
 
-// static ImGuiTableFlags flags =
-//   ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable |
-//   ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable |
-//   ImGuiTableFlags_SortMulti | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders
-//   | ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_ScrollX |
-//   ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit;
+static ImGuiTableFlags flags =
+  ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders |
+  ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_ScrollX |
+  ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit;
 
 ShowGui
 JsonDockImpl::ShowSelected_accessors()
@@ -198,7 +197,7 @@ JsonDockImpl::ShowSelected_accessors()
 
           return [items = *values]() {
             ImGui::Text("float3[%zu]", items.size());
-            if (ImGui::BeginTable("##accessor_values", 4)) {
+            if (ImGui::BeginTable("##accessor_values", 4, flags)) {
               ImGui::TableSetupColumn("index");
               ImGui::TableSetupColumn("x");
               ImGui::TableSetupColumn("y");
@@ -259,7 +258,7 @@ JsonDockImpl::ShowSelected_meshes()
   if (m_selected.Size() == 1) {
     return [this]() {
       auto meshes = m_scene->m_gltf.Json.at("meshes");
-      if (ImGui::BeginTable("##meshes", 2)) {
+      if (ImGui::BeginTable("##meshes", 2, flags)) {
         ImGui::TableSetupColumn("index");
         ImGui::TableSetupColumn("name");
         ImGui::TableSetupScrollFreeze(0, 1);
@@ -281,7 +280,7 @@ JsonDockImpl::ShowSelected_meshes()
       return
         [this,
          prims = m_scene->m_gltf.Json.at("meshes").at(i).at("primitives")]() {
-          if (ImGui::BeginTable("##prims", 4)) {
+          if (ImGui::BeginTable("##prims", 4, flags)) {
             ImGui::TableSetupColumn("index");
             ImGui::TableSetupColumn("vertices");
             ImGui::TableSetupColumn("attrs");
