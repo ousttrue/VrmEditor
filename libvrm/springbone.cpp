@@ -24,31 +24,31 @@ SpringJoint::SpringJoint(const std::shared_ptr<gltf::Node>& head,
 }
 
 void
-SpringJoint::DrawGizmo()
+SpringJoint::DrawGizmo(IGizmoDrawer* gizmo)
 {
-  // gizmo::drawSphere(Head->worldPosition(), {1, 1, 1, 1});
-  // gizmo::drawSphere(m_currentTailPosotion, {0, 1, 0, 1});
-  // gizmo::drawLine(Head->worldPosition(), m_currentTailPosotion, {0, 1, 0,
+  // gizmo->drawSphere(Head->worldPosition(), {1, 1, 1, 1});
+  // gizmo->drawSphere(m_currentTailPosotion, {0, 1, 0, 1});
+  // gizmo->drawLine(Head->worldPosition(), m_currentTailPosotion, {0, 1, 0,
   // 1});
   //
-  // gizmo::drawSphere(m_lastTailPosotion, {1, 0, 0, 1});
-  // gizmo::drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
+  // gizmo->drawSphere(m_lastTailPosotion, {1, 0, 0, 1});
+  // gizmo->drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
 
-  // gizmo::drawSphere(lastHead, {1, 1, 1, 1});
-  gizmo::drawSphere(Head->WorldTransform.Translation, { 0, 1, 0, 1 });
-  // gizmo::drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
+  // gizmo->drawSphere(lastHead, {1, 1, 1, 1});
+  gizmo->DrawSphere(Head->WorldTransform.Translation, { 0, 1, 0, 1 });
+  // gizmo->drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
 
-  // gizmo::drawSphere(currentTail, {1, 1, 1, 1});
-  gizmo::drawSphere(m_currentTailPosotion, { 1, 0, 1, 1 });
-  // gizmo::drawLine(currentTail, nextTail, {0, 1, 0, 1});
+  // gizmo->drawSphere(currentTail, {1, 1, 1, 1});
+  gizmo->DrawSphere(m_currentTailPosotion, { 1, 0, 1, 1 });
+  // gizmo->drawLine(currentTail, nextTail, {0, 1, 0, 1});
 
-  gizmo::drawLine(
+  gizmo->DrawLine(
     Head->WorldTransform.Translation, m_currentTailPosotion, { 1, 1, 0, 1 });
 
   if (Head->Children.size()) {
-    gizmo::drawSphere(Head->Children.front()->WorldTransform.Translation,
+    gizmo->DrawSphere(Head->Children.front()->WorldTransform.Translation,
                       { 1, 0, 0, 1 });
-    gizmo::drawLine(Head->WorldTransform.Translation,
+    gizmo->DrawLine(Head->WorldTransform.Translation,
                     Head->Children.front()->WorldTransform.Translation,
                     { 1, 0, 0, 1 });
   }
@@ -161,10 +161,10 @@ SpringSolver::Update(Time time)
 }
 
 void
-SpringSolver::DrawGizmo()
+SpringSolver::DrawGizmo(IGizmoDrawer* gizmo)
 {
   for (auto& joint : m_joints) {
-    joint.DrawGizmo();
+    joint.DrawGizmo(gizmo);
   }
 }
 

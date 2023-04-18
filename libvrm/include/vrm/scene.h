@@ -1,5 +1,6 @@
 #pragma once
 #include "expression.h"
+#include "gizmo.h"
 #include "gltf.h"
 #include "humanpose.h"
 #include "scenetypes.h"
@@ -175,7 +176,7 @@ struct Scene
 
   void SyncHierarchy();
 
-  void Render(Time time, const RenderFunc& render);
+  void Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo);
   void Traverse(const EnterFunc& enter,
                 const LeaveFunc& leave,
                 const std::shared_ptr<Node>& node = nullptr);

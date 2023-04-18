@@ -6,7 +6,8 @@
 #include <stdint.h>
 #include <vector>
 
-namespace libvrm::gltf {
+namespace libvrm {
+namespace gltf {
 
 struct Scene;
 
@@ -29,4 +30,5 @@ struct Exporter
   void ExportAnimations(const Scene& scene);
 };
 
+}
 }

@@ -13,7 +13,6 @@ libvrm_lib = static_library(
         'glb.cpp',
         'node.cpp',
         'springbone.cpp',
-        'gizmo.cpp',
         'exporter.cpp',
         'animation.cpp',
         'bvh.cpp',

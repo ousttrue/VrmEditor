@@ -53,9 +53,6 @@ App::App()
   PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
 
-  cuber::PushGrid(libvrm::gizmo::lines());
-  libvrm::gizmo::fix();
-
   auto track = m_timeline->AddTrack("PoseStream", {});
   track->Callbacks.push_back(
     [pose = PoseStream](auto time, auto repeat) { pose->Update(time); });
@@ -253,7 +250,6 @@ App::Run()
   while (auto info = m_platform->NewFrame()) {
     auto time = info->Time;
 
-    libvrm::gizmo::clear();
     if (lastTime) {
       m_timeline->SetDeltaTime(time - *lastTime);
     } else {

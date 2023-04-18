@@ -1,5 +1,6 @@
 #pragma once
 #include "gl3renderer.h"
+#include "line_gizmo.h"
 #include "rendertarget.h"
 #include <vrm/scene.h>
 
@@ -7,6 +8,7 @@ namespace glr {
 struct ScenePreview
 {
   RenderTarget m_rt;
+  LineGizmo m_gizmo;
   ScenePreview(const std::shared_ptr<grapho::OrbitView>& view,
                const std::shared_ptr<libvrm::Timeline>& timeline,
                const std::shared_ptr<libvrm::gltf::Scene>& scene,

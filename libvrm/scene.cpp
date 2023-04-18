@@ -785,7 +785,7 @@ Scene::AddIndices(int vertex_offset,
 }
 
 void
-Scene::Render(Time time, const RenderFunc& render)
+Scene::Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo)
 {
   SyncHierarchy();
 
@@ -855,7 +855,7 @@ Scene::Render(Time time, const RenderFunc& render)
   }
 
   if (m_vrm0) {
-    m_spring->DrawGizmo();
+    m_spring->DrawGizmo(gizmo);
   }
 }
 

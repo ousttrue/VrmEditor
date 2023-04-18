@@ -1,4 +1,5 @@
 #pragma once
+#include "gizmo.h"
 #include "node.h"
 #include "timeline.h"
 #include <DirectXMath.h>
@@ -38,7 +39,7 @@ public:
 
   DirectX::XMFLOAT4 WorldPosToLocalRotation(
     const DirectX::XMFLOAT3& nextTail) const;
-  void DrawGizmo();
+  void DrawGizmo(IGizmoDrawer *gizmo);
 };
 
 class SpringSolver
@@ -53,7 +54,7 @@ public:
            float dragForce,
            float stiffiness);
   void Update(Time time);
-  void DrawGizmo();
+  void DrawGizmo(IGizmoDrawer *gizmo);
 };
 
 namespace v0 {

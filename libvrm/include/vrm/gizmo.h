@@ -1,23 +1,19 @@
 #pragma once
-#include <DirectXMath.h>
+#include "dmath.h"
 #include <grapho/mesh.h>
-#include <vector>
 
 namespace libvrm {
-namespace gizmo {
 
-std::vector<grapho::LineVertex>&
-lines();
-void
-fix();
-void
-clear();
-void
-drawLine(const DirectX::XMFLOAT3& p0,
-         const DirectX::XMFLOAT3& p1,
-         const grapho::RGBA& color);
-void
-drawSphere(const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT4& color);
+struct IGizmoDrawer
+{
+  virtual ~IGizmoDrawer(){};
+  virtual void Fix() = 0;
+  virtual void Clear() = 0;
+  virtual void DrawLine(const DirectX::XMFLOAT3& p0,
+                        const DirectX::XMFLOAT3& p1,
+                        const grapho::RGBA& color) = 0;
+  virtual void DrawSphere(const DirectX::XMFLOAT3& pos,
+                          const grapho::RGBA& color) = 0;
+};
 
 }
-}; // namespace gizmo

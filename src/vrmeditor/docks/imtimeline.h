@@ -7,7 +7,6 @@
 #include <math.h>
 #include <memory>
 #include <sstream>
-#include <vrm/gizmo.h>
 #include <vrm/scene.h>
 #include <vrm/timeline.h>
 

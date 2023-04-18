@@ -2,7 +2,6 @@
 #include "node_label.h"
 #include <imgui.h>
 #include <memory>
-#include <vrm/gizmo.h>
 #include <vrm/mesh.h>
 #include <vrm/node.h>
 #include <vrm/vrm0.h>

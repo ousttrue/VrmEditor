@@ -8,6 +8,7 @@ srcs = [
     'glr/cuber.cpp',
     'glr/scene_preview.cpp',
     'glr/rendertarget.cpp',
+    'glr/line_gizmo.cpp',
     'docks/gui.cpp',
     'docks/json_dock.cpp',
     'docks/scene_dock.cpp',
