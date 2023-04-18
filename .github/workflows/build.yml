@@ -26,4 +26,4 @@ jobs:
       - run: scripts/build.ps1
       - uses: actions/upload-artifact@v3
         with:
-          path: prefix # or path/to/artifact
+          path: prefix/bin
