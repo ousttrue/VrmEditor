@@ -17,16 +17,16 @@ ScenePreview::ScenePreview(
   m_rt.color[3] = 1.0f;
 
   m_rt.render =
-    [timeline, scene, this, selection = context](const ViewProjection& camera) {
-      Gl3Renderer::ClearRendertarget(camera);
+    [timeline, scene, selection = context](const ViewProjection& camera) {
+      glr::ClearRendertarget(camera);
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
       libvrm::gltf::RenderFunc render =
-        [this, liner, &camera](const libvrm::gltf::Mesh& mesh,
-                               const libvrm::gltf::MeshInstance& instance,
-                               const float m[16]) {
-          m_gl3r.Render(camera, mesh, instance, m);
+        [liner, &camera](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+                         const libvrm::gltf::MeshInstance& instance,
+                         const float m[16]) {
+          glr::Render(camera, mesh, instance, m);
         };
       scene->Render(timeline->CurrentTime, render);
       liner->Render(camera.projection, camera.view, libvrm::gizmo::lines());

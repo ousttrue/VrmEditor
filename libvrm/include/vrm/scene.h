@@ -47,8 +47,8 @@ struct Node;
 struct Animation;
 class Image;
 class Material;
-using RenderFunc =
-  std::function<void(const Mesh&, const MeshInstance&, const float[16])>;
+using RenderFunc = std::function<
+  void(const std::shared_ptr<Mesh>&, const MeshInstance&, const float[16])>;
 
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;

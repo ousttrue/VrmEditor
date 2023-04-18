@@ -23,7 +23,7 @@ struct CuberPreview
     m_rt->color[3] = 1.0f;
 
     m_rt->render = [this](const ViewProjection& camera) {
-      Gl3Renderer::ClearRendertarget(camera);
+      glr::ClearRendertarget(camera);
       m_cuber->Render(camera);
     };
   }

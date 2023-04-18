@@ -5,6 +5,7 @@
 #include <grapho/gl3/texture.h>
 #include <grapho/gl3/vao.h>
 #include <iostream>
+#include <map>
 #include <unordered_map>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
@@ -38,6 +39,7 @@ void main()
 };
 )";
 
+namespace glr {
 struct SubMesh
 {
   uint32_t offset;
@@ -76,28 +78,37 @@ struct Drawable
   }
 };
 
-class Gl3RendererImpl
+class Gl3Renderer
 {
-  std::unordered_map<uint32_t, std::shared_ptr<Drawable>> m_drawableMap;
+  using MeshWeakPtr = std::weak_ptr<libvrm::gltf::Mesh>;
+  // https://stackoverflow.com/questions/12875652/how-can-i-use-a-stdmap-with-stdweak-ptr-as-key
+  std::map<MeshWeakPtr, std::shared_ptr<Drawable>, std::owner_less<MeshWeakPtr>>
+    m_drawableMap;
   std::shared_ptr<grapho::gl3::Texture> m_white;
 
-public:
-  Gl3RendererImpl()
+  Gl3Renderer()
   {
     static uint8_t white[] = { 255, 255, 255, 255 };
     m_white = grapho::gl3::Texture::Create(1, 1, white);
   }
 
-  ~Gl3RendererImpl() {}
+  ~Gl3Renderer() {}
+
+public:
+  static Gl3Renderer& Instance()
+  {
+    static Gl3Renderer s_instance;
+    return s_instance;
+  }
 
   void Release() { m_drawableMap.clear(); }
 
-  void render(const ViewProjection& camera,
-              const libvrm::gltf::Mesh& mesh,
+  void Render(const ViewProjection& camera,
+              const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
               const libvrm::gltf::MeshInstance& instance,
               const float m[16])
   {
-    auto drawable = getOrCreate(mesh);
+    auto drawable = GetOrCreate(mesh);
 
     if (instance.m_updated.size()) {
       drawable->vao->slots_[0].vbo->Upload(
@@ -108,18 +119,19 @@ public:
     drawable->draw(camera, m);
   }
 
-  std::shared_ptr<Drawable> getOrCreate(const libvrm::gltf::Mesh& mesh)
+  std::shared_ptr<Drawable> GetOrCreate(
+    const std::shared_ptr<libvrm::gltf::Mesh> mesh)
   {
-    auto found = m_drawableMap.find(mesh.id);
+    auto found = m_drawableMap.find(mesh);
     if (found != m_drawableMap.end()) {
       return found->second;
     }
 
     // load gpu resource
     auto vbo =
-      grapho::gl3::Vbo::Create(mesh.verticesBytes(), mesh.m_vertices.data());
+      grapho::gl3::Vbo::Create(mesh->verticesBytes(), mesh->m_vertices.data());
     auto ibo = grapho::gl3::Ibo::Create(
-      mesh.indicesBytes(), mesh.m_indices.data(), GL_UNSIGNED_INT);
+      mesh->indicesBytes(), mesh->m_indices.data(), GL_UNSIGNED_INT);
 
     grapho::VertexLayout layouts[] = {
       {
@@ -167,7 +179,7 @@ public:
     drawable->vao = vao;
 
     uint32_t byteOffset = 0;
-    for (auto& primitive : mesh.m_primitives) {
+    for (auto& primitive : mesh->m_primitives) {
 
       auto texture = m_white;
       if (auto image = primitive.material->texture) {
@@ -184,32 +196,24 @@ public:
       byteOffset += primitive.drawCount * 4;
     }
 
-    m_drawableMap.insert(std::make_pair(mesh.id, drawable));
+    m_drawableMap.insert(std::make_pair(mesh, drawable));
 
     return drawable;
   }
 };
 
-Gl3Renderer::Gl3Renderer()
-  : m_impl(new Gl3RendererImpl)
+void
+Render(const ViewProjection& camera,
+       const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+       const libvrm::gltf::MeshInstance& instance,
+       const float m[16])
 {
-}
-
-Gl3Renderer::~Gl3Renderer()
-{
-  delete m_impl;
+  Gl3Renderer::Instance().Render(camera, mesh, instance, m);
 }
 
 void
-Gl3Renderer::Release()
+ClearRendertarget(const ViewProjection& camera)
 {
-  m_impl->Release();
-}
-
-void
-Gl3Renderer::ClearRendertarget(const ViewProjection& camera)
-{
-  // m_impl->clear(camera);
   glViewport(0, 0, camera.width(), camera.height());
   glClearColor(
     camera.premul_r(), camera.premul_g(), camera.premul_b(), camera.alpha());
@@ -217,10 +221,14 @@ Gl3Renderer::ClearRendertarget(const ViewProjection& camera)
 }
 
 void
-Gl3Renderer::Render(const ViewProjection& camera,
-                    const libvrm::gltf::Mesh& mesh,
-                    const libvrm::gltf::MeshInstance& instance,
-                    const float m[16])
+Shutdown()
 {
-  m_impl->render(camera, mesh, instance, m);
+  Gl3Renderer::Instance().Release();
+}
+
+void
+ShowGui()
+{
+}
+
 }

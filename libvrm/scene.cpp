@@ -850,7 +850,7 @@ Scene::Render(Time time, const RenderFunc& render)
     if (auto mesh_index = node->Mesh) {
       auto mesh = m_meshes[*mesh_index];
       DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
-      render(*mesh, *node->Instance, &m._11);
+      render(mesh, *node->Instance, &m._11);
     }
   }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 struct ViewProjection;
 namespace libvrm {
@@ -8,18 +9,24 @@ struct MeshInstance;
 } // namespace gltf
 }
 
-class Gl3Renderer
-{
+namespace glr {
 
-  class Gl3RendererImpl* m_impl;
+void
+Render(const ViewProjection& camera,
+       const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+       const libvrm::gltf::MeshInstance& instance,
+       const float m[16]);
 
-public:
-  Gl3Renderer();
-  ~Gl3Renderer();
-  void Release();
-  static void ClearRendertarget(const ViewProjection& camera);
-  void Render(const ViewProjection& camera,
-              const libvrm::gltf::Mesh& mesh,
-              const libvrm::gltf::MeshInstance& instance,
-              const float m[16]);
-};
+// clear current render target
+void
+ClearRendertarget(const ViewProjection& camera);
+
+// release all resource
+void
+Shutdown();
+
+// resource viewer
+void
+ShowGui();
+
+}

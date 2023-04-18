@@ -7,7 +7,6 @@ namespace glr {
 struct ScenePreview
 {
   RenderTarget m_rt;
-  Gl3Renderer m_gl3r;
   ScenePreview(const std::shared_ptr<grapho::OrbitView>& view,
                const std::shared_ptr<libvrm::Timeline>& timeline,
                const std::shared_ptr<libvrm::gltf::Scene>& scene,
