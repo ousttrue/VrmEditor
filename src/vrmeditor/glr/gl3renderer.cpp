@@ -184,12 +184,12 @@ public:
 
     uint32_t byteOffset = 0;
     for (auto& primitive : mesh->m_primitives) {
-
       auto texture = m_white;
-      if (auto image = primitive.material->Texture->Source) {
-        texture = GetOrCreate(image);
+      if (auto t = primitive.material->Texture) {
+        if (auto image = t->Source) {
+          texture = GetOrCreate(image);
+        }
       }
-
       drawable->submeshes.push_back({
         .offset = byteOffset,
         .drawCount = primitive.drawCount,

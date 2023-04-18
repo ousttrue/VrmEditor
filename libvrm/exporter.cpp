@@ -273,12 +273,37 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
   return index;
 }
 
+// {
+//     "bufferView": 14,
+//     "mimeType": "image/jpeg"
+// }
 void
 Exporter::ExportImage(const Scene& scene, const std::shared_ptr<Image>& image)
 {
   m_writer.object_open();
   m_writer.key("name");
   m_writer.value(image->Name);
+  if (auto encoded = image->Encoded) {
+    switch (encoded->Type) {
+      case ImageType::Jpeg:
+        m_writer.key("mimeType");
+        m_writer.value("image/jpeg");
+        break;
+      case ImageType::Png:
+        m_writer.key("mimeType");
+        m_writer.value("image/png");
+        break;
+      default:
+        assert(false);
+        break;
+    }
+    auto index = m_binWriter.PushBufferView(encoded->Bytes);
+    m_writer.key("bufferView");
+    m_writer.value(index);
+  } else {
+    // encode to png ?
+    assert(false);
+  }
   m_writer.object_close();
 }
 
