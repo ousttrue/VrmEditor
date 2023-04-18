@@ -22,8 +22,4 @@ struct JsonGui
 
 private:
   ShowGui CreateGui();
-  ShowGui ShowSelected_accessors();
-  ShowGui ShowSelected_images();
-  ShowGui ShowSelected_materials();
-  ShowGui ShowSelected_meshes();
 };

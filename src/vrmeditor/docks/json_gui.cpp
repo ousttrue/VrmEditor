@@ -1,4 +1,8 @@
 #include "json_gui.h"
+#include "json_gui_accessor.h"
+#include "json_gui_images.h"
+#include "json_gui_material.h"
+#include "json_gui_mesh.h"
 #include <charconv>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -159,9 +163,9 @@ JsonGui::CreateGui()
   if (m_selected.Size()) {
     auto top = m_selected[0];
     if (top == "accessors") {
-      return ShowSelected_accessors();
+      return ShowSelected_accessors(m_scene, m_selected);
     } else if (top == "meshes") {
-      return ShowSelected_meshes();
+      return ShowSelected_meshes(m_scene, m_selected);
     } else if (top == "materials") {
       return ShowSelected_materials();
     } else if (top == "images") {
@@ -170,151 +174,5 @@ JsonGui::CreateGui()
   }
 
   // default
-  return []() {};
-}
-
-static ImGuiTableFlags flags =
-  ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders |
-  ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_ScrollX |
-  ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit;
-
-ShowGui
-JsonGui::ShowSelected_accessors()
-{
-  if (m_selected.Size() == 2) {
-    if (auto _i = m_selected.GetInt(1)) {
-      auto i = *_i;
-      auto accessor = m_scene->m_gltf.Json.at("accessors").at(i);
-      // std::string debug = accessor.dump();
-
-      // table
-
-      if (accessor.at("type") == "VEC3" &&
-          accessor.at("componentType") == 5126) {
-        // float3 table
-        if (auto values = m_scene->m_gltf.accessor<DirectX::XMFLOAT3>(i)) {
-
-          return [items = *values]() {
-            ImGui::Text("float3[%zu]", items.size());
-            if (ImGui::BeginTable("##accessor_values", 4, flags)) {
-              ImGui::TableSetupColumn("index");
-              ImGui::TableSetupColumn("x");
-              ImGui::TableSetupColumn("y");
-              ImGui::TableSetupColumn("z");
-              ImGui::TableSetupScrollFreeze(0, 1);
-              ImGui::TableHeadersRow();
-              ImGuiListClipper clipper;
-              clipper.Begin(items.size());
-              while (clipper.Step()) {
-                for (int row_n = clipper.DisplayStart;
-                     row_n < clipper.DisplayEnd;
-                     row_n++) {
-                  auto& value = items[row_n];
-                  ImGui::TableNextRow();
-                  ImGui::TableSetColumnIndex(0);
-                  ImGui::Text("%d", row_n);
-                  ImGui::TableSetColumnIndex(1);
-                  ImGui::Text("%f", value.x);
-                  ImGui::TableSetColumnIndex(2);
-                  ImGui::Text("%f", value.y);
-                  ImGui::TableSetColumnIndex(3);
-                  ImGui::Text("%f", value.z);
-                }
-              }
-              ImGui::EndTable();
-            }
-          };
-        }
-      }
-      int count = accessor.at("count");
-      return [count]() { ImGui::Text("%d", count); };
-    }
-  }
-  return []() { ImGui::TextUnformatted("accessors[x] fail"); };
-}
-
-ShowGui
-JsonGui::ShowSelected_images()
-{
-  return []() {
-    //
-    ImGui::TextUnformatted("images");
-  };
-}
-
-ShowGui
-JsonGui::ShowSelected_materials()
-{
-  return []() {
-    //
-    ImGui::TextUnformatted("materials");
-  };
-}
-
-ShowGui
-JsonGui::ShowSelected_meshes()
-{
-  if (m_selected.Size() == 1) {
-    return [this]() {
-      auto meshes = m_scene->m_gltf.Json.at("meshes");
-      if (ImGui::BeginTable("##meshes", 2, flags)) {
-        ImGui::TableSetupColumn("index");
-        ImGui::TableSetupColumn("name");
-        ImGui::TableSetupScrollFreeze(0, 1);
-        ImGui::TableHeadersRow();
-        for (int i = 0; i < meshes.size(); ++i) {
-          auto& mesh = meshes[i];
-          ImGui::TableNextRow();
-          ImGui::TableSetColumnIndex(0);
-          ImGui::Text("%d", i);
-          ImGui::TableSetColumnIndex(1);
-          ImGui::Text("%s", ((std::string)mesh["name"]).c_str());
-        }
-        ImGui::EndTable();
-      }
-    };
-  } else if (m_selected.Size() == 2) {
-    if (auto _i = m_selected.GetInt(1)) {
-      auto i = *_i;
-      return
-        [this,
-         prims = m_scene->m_gltf.Json.at("meshes").at(i).at("primitives")]() {
-          if (ImGui::BeginTable("##prims", 4, flags)) {
-            ImGui::TableSetupColumn("index");
-            ImGui::TableSetupColumn("vertices");
-            ImGui::TableSetupColumn("attrs");
-            ImGui::TableSetupColumn("indices");
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableHeadersRow();
-            for (int i = 0; i < prims.size(); ++i) {
-              auto& prim = prims[i];
-              ImGui::TableNextRow();
-              ImGui::TableSetColumnIndex(0);
-              ImGui::Text("%d", i);
-              ImGui::TableSetColumnIndex(1);
-              auto attributes = prim.at("attributes");
-              int POSITION = attributes.at("POSITION");
-              ImGui::Text("%d",
-                          (int)m_scene->m_gltf.Json.at("accessors")
-                            .at(POSITION)
-                            .at("count"));
-              ImGui::TableSetColumnIndex(2);
-              std::stringstream ss;
-              for (auto kv : attributes.items()) {
-                ss << "," << kv.key();
-              }
-              ImGui::Text("%s", ss.str().c_str());
-              ImGui::TableSetColumnIndex(3);
-              int indices = prim.at("indices");
-              ImGui::Text("%d",
-                          (int)m_scene->m_gltf.Json.at("accessors")
-                            .at(indices)
-                            .at("count"));
-            }
-            ImGui::EndTable();
-          }
-        };
-    }
-  }
   return []() {};
 }
