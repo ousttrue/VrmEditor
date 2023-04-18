@@ -17,7 +17,7 @@ struct JsonGui
 
   JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene);
   bool Enter(nlohmann::json& item, std::string_view jsonpath);
-  void Show(const std::shared_ptr<libvrm::gltf::Scene>& scene, float indent);
+  void Show(float indent);
   void ShowSelected();
 
 private:

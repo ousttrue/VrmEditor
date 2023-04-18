@@ -127,7 +127,7 @@ Splitter(bool split_vertically,
 }
 
 void
-JsonGui::Show(const std::shared_ptr<libvrm::gltf::Scene>& scene, float indent)
+JsonGui::Show(float indent)
 {
   auto enter = [this](nlohmann::json& item, std::string_view jsonpath) {
     return Enter(item, jsonpath);
@@ -141,7 +141,7 @@ JsonGui::Show(const std::shared_ptr<libvrm::gltf::Scene>& scene, float indent)
   ::Splitter(false, 5, &m_f, &s, 8, 8);
   if (ImGui::BeginChild("##split-first", { size.x, m_f })) {
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-    scene->TraverseJson(enter, leave);
+    m_scene->TraverseJson(enter, leave);
     ImGui::PopStyleVar();
   }
   ImGui::EndChild();

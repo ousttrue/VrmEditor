@@ -15,7 +15,7 @@ JsonDock::Create(const AddDockFunc& addDock,
       auto is_open = ImGui::Begin(title, p_open);
       ImGui::PopStyleVar();
       if (is_open) {
-        impl->Show(scene, indent);
+        impl->Show(indent);
       }
       ImGui::End();
     }));

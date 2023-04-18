@@ -13,7 +13,11 @@ struct Scene;
 struct Primitive;
 
 using ImageIndexMap = std::unordered_map<std::shared_ptr<Image>, size_t>;
+using TextureSamplerIndexMap =
+  std::unordered_map<std::shared_ptr<TextureSampler>, size_t>;
+using TextureIndexMap = std::unordered_map<std::shared_ptr<Texture>, size_t>;
 using MaterialIndexMap = std::unordered_map<std::shared_ptr<Material>, size_t>;
+using MeshIndexMap = std::unordered_map<std::shared_ptr<Mesh>, size_t>;
 
 struct Exporter
 {
@@ -23,20 +27,26 @@ struct Exporter
   std::vector<uint8_t> BinChunk;
 
   ImageIndexMap m_imageIndexMap;
+  TextureSamplerIndexMap m_samplerIndexMap;
+  TextureIndexMap m_textureIndexMap;
   MaterialIndexMap m_materialIndexMap;
+  MeshIndexMap m_meshIndexMap;
 
   Exporter();
 
   void Export(const Scene& scene);
+  void ExportImage(const Scene& scene, const std::shared_ptr<Image>& image);
+  void ExportTextureSampler(const Scene& scene,
+                            const std::shared_ptr<TextureSampler>& sampler);
+  void ExportTexture(const Scene& scene,
+                     const std::shared_ptr<Texture>& texture);
+  void ExportMaterial(const Scene& scene,
+                      const std::shared_ptr<Material>& material);
   void ExportMesh(const Scene& scene, const std::shared_ptr<Mesh>& mesh);
   uint32_t ExportMeshPrimitive(const Scene& scene,
                                const std::shared_ptr<Mesh>& mesh,
                                const Primitive& primitive,
                                uint32_t index);
-  void ExportMaterial(const Scene& scene,
-                      const std::shared_ptr<Material>& material);
-
-  void ExportNodesScenes(const Scene& scene);
   void ExportNode(const std::shared_ptr<Node>& node);
 
   void ExportBuffersViewsAccessors(const Scene& scene);

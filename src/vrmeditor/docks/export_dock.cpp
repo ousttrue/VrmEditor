@@ -16,7 +16,7 @@ ExportDock::Create(const AddDockFunc& addDock,
                    float indent)
 {
   auto debug_scene = std::make_shared<libvrm::gltf::Scene>();
-  auto impl = std::make_shared<JsonGui>(scene);
+  auto impl = std::make_shared<JsonGui>(debug_scene);
   auto view = std::make_shared<grapho::OrbitView>();
   auto context = std::make_shared<libvrm::gltf::SceneContext>();
 
@@ -34,6 +34,6 @@ ExportDock::Create(const AddDockFunc& addDock,
     }
 
     // json tree
-    impl->Show(debug_scene, indent);
+    impl->Show(indent);
   }));
 }

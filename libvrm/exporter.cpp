@@ -39,32 +39,56 @@ Exporter::Export(const Scene& scene)
     m_writer.object_close();
   }
 
-  ExportNodesScenes(scene);
-
-  // update bin
-  if (scene.m_meshes.size()) {
-    std::unordered_map<std::shared_ptr<Material>, size_t> materialToIndex;
-    // images & textures
-
-    // materials
-    m_writer.key("materials");
+  // images
+  if (scene.m_images.size()) {
+    m_writer.key("images");
     {
-      auto materialIndex = 0;
       m_writer.array_open();
-      for (auto& mesh : scene.m_meshes) {
-        for (auto& prim : mesh->m_primitives) {
-          if (prim.material) {
-            if (m_materialIndexMap.find(prim.material) ==
-                m_materialIndexMap.end()) {
-              ExportMaterial(scene, prim.material);
-              m_materialIndexMap.insert({ prim.material, materialIndex++ });
-            }
-          }
-        }
+      for (auto& image : scene.m_images) {
+        ExportImage(scene, image);
       }
       m_writer.array_close();
     }
+  }
 
+  // samplers
+  if (scene.m_samplers.size()) {
+    m_writer.key("samplers");
+    {
+      m_writer.array_open();
+      for (auto& sampler : scene.m_samplers) {
+        ExportTextureSampler(scene, sampler);
+      }
+      m_writer.array_close();
+    }
+  }
+
+  // textures
+  if (scene.m_textures.size()) {
+    m_writer.key("textures");
+    {
+      m_writer.array_open();
+      for (auto& texture : scene.m_textures) {
+        ExportTexture(scene, texture);
+      }
+      m_writer.array_close();
+    }
+  }
+
+  // materials
+  if (scene.m_materials.size()) {
+    m_writer.key("materials");
+    {
+      m_writer.array_open();
+      for (auto& material : scene.m_materials) {
+        ExportMaterial(scene, material);
+      }
+      m_writer.array_close();
+    }
+  }
+
+  // meshes
+  if (scene.m_meshes.size()) {
     // meshes
     m_writer.key("meshes");
     {
@@ -73,6 +97,35 @@ Exporter::Export(const Scene& scene)
         ExportMesh(scene, mesh);
       }
       m_writer.array_close();
+    }
+  }
+
+  // skins
+
+  // nodes
+  if (scene.m_nodes.size()) {
+    m_writer.key("nodes");
+    {
+      m_writer.array_open();
+      for (auto& node : scene.m_nodes) {
+        ExportNode(node);
+      }
+      m_writer.array_close();
+    }
+    m_writer.key("scenes");
+    {
+      m_writer.array_open();
+      m_writer.object_open();
+      m_writer.key("nodes");
+      m_writer.array_open();
+      m_writer.value(0);
+      m_writer.array_close();
+      m_writer.object_close();
+      m_writer.array_close();
+    }
+    m_writer.key("scene");
+    {
+      m_writer.value(0);
     }
   }
 
@@ -113,37 +166,6 @@ Exporter::Export(const Scene& scene)
   }
 
   m_writer.object_close();
-}
-
-void
-Exporter::ExportNodesScenes(const Scene& scene)
-{
-  if (scene.m_nodes.empty()) {
-    return;
-  }
-  m_writer.key("nodes");
-  {
-    m_writer.array_open();
-    for (auto& node : scene.m_nodes) {
-      ExportNode(node);
-    }
-    m_writer.array_close();
-  }
-  m_writer.key("scenes");
-  {
-    m_writer.array_open();
-    m_writer.object_open();
-    m_writer.key("nodes");
-    m_writer.array_open();
-    m_writer.value(0);
-    m_writer.array_close();
-    m_writer.object_close();
-    m_writer.array_close();
-  }
-  m_writer.key("scene");
-  {
-    m_writer.value(0);
-  }
 }
 
 void
@@ -249,6 +271,35 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
   m_writer.object_close();
 
   return index;
+}
+
+void
+Exporter::ExportImage(const Scene& scene, const std::shared_ptr<Image>& image)
+{
+  m_writer.object_open();
+  m_writer.key("name");
+  m_writer.value(image->Name);
+  m_writer.object_close();
+}
+
+void
+Exporter::ExportTextureSampler(const Scene& scene,
+                               const std::shared_ptr<TextureSampler>& sampler)
+{
+  m_writer.object_open();
+  m_writer.object_close();
+}
+
+void
+Exporter::ExportTexture(const Scene& scene,
+                        const std::shared_ptr<Texture>& texture)
+{
+  m_writer.object_open();
+  m_writer.key("source");
+  m_writer.value(m_imageIndexMap[texture->Source]);
+  m_writer.key("sampler");
+  m_writer.value(m_samplerIndexMap[texture->Sampler]);
+  m_writer.object_close();
 }
 
 void
