@@ -1,17 +1,17 @@
-#include "json_dock_impl.h"
+#include "json_gui.h"
 #include <charconv>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <ranges>
 #include <string_view>
 
-JsonDockImpl::JsonDockImpl(const std::shared_ptr<libvrm::gltf::Scene>& scene)
+JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
   : m_scene(scene)
 {
 }
 
 bool
-JsonDockImpl::Enter(nlohmann::json& item, std::string_view jsonpath)
+JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
 {
   static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow |
                                          ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -123,8 +123,7 @@ Splitter(bool split_vertically,
 }
 
 void
-JsonDockImpl::Show(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-                   float indent)
+JsonGui::Show(const std::shared_ptr<libvrm::gltf::Scene>& scene, float indent)
 {
   auto enter = [this](nlohmann::json& item, std::string_view jsonpath) {
     return Enter(item, jsonpath);
@@ -155,7 +154,7 @@ JsonDockImpl::Show(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 }
 
 std::function<void()>
-JsonDockImpl::CreateGui()
+JsonGui::CreateGui()
 {
   if (m_selected.Size()) {
     auto top = m_selected[0];
@@ -180,7 +179,7 @@ static ImGuiTableFlags flags =
   ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit;
 
 ShowGui
-JsonDockImpl::ShowSelected_accessors()
+JsonGui::ShowSelected_accessors()
 {
   if (m_selected.Size() == 2) {
     if (auto _i = m_selected.GetInt(1)) {
@@ -235,7 +234,7 @@ JsonDockImpl::ShowSelected_accessors()
 }
 
 ShowGui
-JsonDockImpl::ShowSelected_images()
+JsonGui::ShowSelected_images()
 {
   return []() {
     //
@@ -244,7 +243,7 @@ JsonDockImpl::ShowSelected_images()
 }
 
 ShowGui
-JsonDockImpl::ShowSelected_materials()
+JsonGui::ShowSelected_materials()
 {
   return []() {
     //
@@ -253,7 +252,7 @@ JsonDockImpl::ShowSelected_materials()
 }
 
 ShowGui
-JsonDockImpl::ShowSelected_meshes()
+JsonGui::ShowSelected_meshes()
 {
   if (m_selected.Size() == 1) {
     return [this]() {

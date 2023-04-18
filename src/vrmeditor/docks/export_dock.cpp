@@ -1,6 +1,6 @@
 #include "export_dock.h"
 #include "glr/scene_preview.h"
-#include "json_dock_impl.h"
+#include "json_gui.h"
 #include "node_label.h"
 #include <grapho/orbitview.h>
 #include <imgui.h>
@@ -16,7 +16,7 @@ ExportDock::Create(const AddDockFunc& addDock,
                    float indent)
 {
   auto debug_scene = std::make_shared<libvrm::gltf::Scene>();
-  auto impl = std::make_shared<JsonDockImpl>(scene);
+  auto impl = std::make_shared<JsonGui>(scene);
   auto view = std::make_shared<grapho::OrbitView>();
   auto context = std::make_shared<libvrm::gltf::SceneContext>();
 

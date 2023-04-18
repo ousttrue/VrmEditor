@@ -6,7 +6,7 @@
 
 using ShowGui = std::function<void()>;
 
-struct JsonDockImpl
+struct JsonGui
 {
   std::stringstream m_ss;
   float m_f = 500;
@@ -15,7 +15,7 @@ struct JsonDockImpl
   libvrm::JsonPath m_selected;
   ShowGui m_cache;
 
-  JsonDockImpl(const std::shared_ptr<libvrm::gltf::Scene>& scene);
+  JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene);
   bool Enter(nlohmann::json& item, std::string_view jsonpath);
   void Show(const std::shared_ptr<libvrm::gltf::Scene>& scene, float indent);
   void ShowSelected();
