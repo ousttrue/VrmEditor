@@ -47,6 +47,8 @@ struct Skin;
 struct Node;
 struct Animation;
 class Image;
+struct TextureSampler;
+struct Texture;
 struct Material;
 using RenderFunc = std::function<
   void(const std::shared_ptr<Mesh>&, const MeshInstance&, const float[16])>;
@@ -62,7 +64,9 @@ struct Scene
 
   std::vector<uint8_t> m_bytes;
   Gltf m_gltf;
+  std::vector<std::shared_ptr<TextureSampler>> m_samplers;
   std::vector<std::shared_ptr<Image>> m_images;
+  std::vector<std::shared_ptr<Texture>> m_textures;
   std::vector<std::shared_ptr<Material>> m_materials;
   std::vector<std::shared_ptr<Mesh>> m_meshes;
   std::vector<std::shared_ptr<Node>> m_nodes;
@@ -94,14 +98,15 @@ struct Scene
   void Clear()
   {
     m_vrm0 = nullptr;
+    m_samplers.clear();
     m_images.clear();
+    m_textures.clear();
     m_materials.clear();
     m_meshes.clear();
     m_nodes.clear();
     m_roots.clear();
     m_skins.clear();
     m_animations.clear();
-    // m_sceneUpdated.clear();
     m_gltf = {};
   }
 
@@ -213,9 +218,14 @@ struct Scene
 
 private:
   std::expected<bool, std::string> Parse();
+  std::expected<std::shared_ptr<TextureSampler>, std::string>
+  ParseTextureSampler(int i, const nlohmann::json& sampler);
   std::expected<std::shared_ptr<Image>, std::string> ParseImage(
     int i,
     const nlohmann::json& image);
+  std::expected<std::shared_ptr<Texture>, std::string> ParseTexture(
+    int i,
+    const nlohmann::json& texture);
   std::expected<std::shared_ptr<Material>, std::string> ParseMaterial(
     int i,
     const nlohmann::json& material);

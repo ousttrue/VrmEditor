@@ -125,6 +125,17 @@ Scene::Parse()
     }
   }
 
+  if (has(m_gltf.Json, "samplers")) {
+    auto& samplers = m_gltf.Json.at("samplers");
+    for (int i = 0; i < samplers.size(); ++i) {
+      if (auto sampler = ParseTextureSampler(i, samplers.at(i))) {
+        m_samplers.push_back(*sampler);
+      } else {
+        return std::unexpected{ sampler.error() };
+      }
+    }
+  }
+
   if (has(m_gltf.Json, "images")) {
     auto& images = m_gltf.Json.at("images");
     for (int i = 0; i < images.size(); ++i) {
@@ -132,6 +143,17 @@ Scene::Parse()
         m_images.push_back(*image);
       } else {
         return std::unexpected{ image.error() };
+      }
+    }
+  }
+
+  if (has(m_gltf.Json, "textures")) {
+    auto& textures = m_gltf.Json.at("textures");
+    for (int i = 0; i < textures.size(); ++i) {
+      if (auto texture = ParseTexture(i, textures.at(i))) {
+        m_textures.push_back(*texture);
+      } else {
+        return std::unexpected{ texture.error() };
       }
     }
   }
@@ -232,6 +254,13 @@ Scene::Parse()
   return true;
 }
 
+std::expected<std::shared_ptr<TextureSampler>, std::string>
+Scene::ParseTextureSampler(int i, const nlohmann::json& sampler)
+{
+  auto ptr = std::make_shared<gltf::TextureSampler>();
+  return ptr;
+}
+
 std::expected<std::shared_ptr<gltf::Image>, std::string>
 Scene::ParseImage(int i, const nlohmann::json& image)
 {
@@ -261,6 +290,18 @@ Scene::ParseImage(int i, const nlohmann::json& image)
   return ptr;
 }
 
+std::expected<std::shared_ptr<gltf::Texture>, std::string>
+Scene::ParseTexture(int i, const nlohmann::json& texture)
+{
+  std::stringstream ss;
+  ss << "image" << i;
+  auto name = texture.value("name", ss.str());
+  auto ptr = std::make_shared<gltf::Texture>();
+  ptr->Source = m_images[texture.at("source")];
+  ptr->Sampler = m_samplers[texture.at("sampler")];
+  return ptr;
+}
+
 std::expected<std::shared_ptr<gltf::Material>, std::string>
 Scene::ParseMaterial(int i, const nlohmann::json& material)
 {
@@ -273,10 +314,11 @@ Scene::ParseMaterial(int i, const nlohmann::json& material)
     if (has(pbrMetallicRoughness, "baseColorTexture")) {
       auto& baseColorTexture = pbrMetallicRoughness.at("baseColorTexture");
       int texture_index = baseColorTexture.at("index");
-      auto& textures = m_gltf.Json.at("textures");
-      auto texture = textures.at(texture_index);
-      int image_index = texture.at("source");
-      ptr->Texture = m_images[image_index];
+      ptr->Texture = m_textures[texture_index];
+      // auto& textures = m_gltf.Json.at("textures");
+      // auto texture = textures.at(texture_index);
+      // int image_index = texture.at("source");
+      // ptr->Texture.Image = m_images[image_index];
     }
   }
   return ptr;

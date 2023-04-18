@@ -1,47 +1,8 @@
 #pragma once
-#include <memory>
-#include <span>
-#include <stb_image.h>
-#include <string>
-#include <string_view>
-#include <vector>
+#include "texture.h"
 
-namespace libvrm::gltf {
-class Image
-{
-  std::vector<uint8_t> m_pixels;
-  int m_width = 0;
-  int m_height = 0;
-  int m_sourceChannels = 0;
-
-public:
-  std::string Name;
-  Image(std::string_view name)
-    : Name(name)
-  {
-  }
-  int Width() const { return m_width; }
-  int Height() const { return m_height; }
-  const uint8_t* Pixels() const
-  {
-    return m_pixels.empty() ? nullptr : m_pixels.data();
-  }
-  bool Load(std::span<const uint8_t> data)
-  {
-    if (auto pixels = stbi_load_from_memory(data.data(),
-                                            data.size(),
-                                            &m_width,
-                                            &m_height,
-                                            &m_sourceChannels,
-                                            4)) {
-      m_pixels.assign(pixels, pixels + m_width * m_height * 4);
-      stbi_image_free(pixels);
-      return true;
-    } else {
-      return false;
-    }
-  }
-};
+namespace libvrm {
+namespace gltf {
 
 struct Material
 {
@@ -50,7 +11,8 @@ struct Material
   {
   }
   std::string Name;
-  std::shared_ptr<Image> Texture;
+  std::shared_ptr<Texture> Texture;
 };
 
-} // namespace gltf
+}
+}
