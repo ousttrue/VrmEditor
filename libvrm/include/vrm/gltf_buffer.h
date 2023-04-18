@@ -163,6 +163,15 @@ Accessor::Create<float>()
 }
 template<>
 inline Accessor
+Accessor::Create<DirectX::XMFLOAT2>()
+{
+  return Accessor{
+    .Type = Type::VEC2,
+    .ComponentType = ComponentType::FLOAT,
+  };
+}
+template<>
+inline Accessor
 Accessor::Create<DirectX::XMFLOAT3>()
 {
   return Accessor{
@@ -225,6 +234,12 @@ struct BinWriter
     Accessors.back().BufferView = bufferViewIndex,
     Accessors.back().Count = static_cast<uint32_t>(values.size());
     return index;
+  }
+
+  template<typename T>
+  uint32_t PushAccessor(const std::vector<T> values)
+  {
+    return PushAccessor(std::span(values.data(), values.size()));
   }
 };
 
