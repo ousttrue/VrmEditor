@@ -9,6 +9,7 @@ libvrm_deps = [
 libvrm_lib = static_library(
     'vrm',
     [
+        'jsonpath.cpp',
         'scene.cpp',
         'glb.cpp',
         'node.cpp',

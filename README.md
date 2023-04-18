@@ -84,60 +84,13 @@ read, write, animation test.
 - [x] TR gizmo
 - [ ] gizmo undo / history
 
-### json
-
-- [ ]  : image icon
-- [ ]  : text icon
-- [ ]  : buffer_view icon
-- [ ]  : accessor icon
-- [ ] selected
-
-### resource
-
-- [ ]  : texture
-- [ ]  : material
-- [ ] 󰕣 : mesh
-- [ ] selected
-
-### scene
-
-- [x] 󰕣 : mesh icon
-- [x] 󰂹 : humanoid icon
-- [x] 󰚟 : spring icon
-- [ ] 󱥔 : spring collider icon
-- [x]  : morph
-- [ ] selected
-
 ### humanoid
 
 - [ ] 󰂹 : bone selector
-  - [x]  : hips
-  - [x] 󱍞 : head
-  - [x] 󰹆 : hand-left
-  - [x] 󰹇 : hand-right
-  - [x] 󱗈 : foot, toes
 - [ ] bone assign
-- [ ] pose retarget
+- [x] pose retarget
 
 ### expression
-
-- [ ] 󰱰 喜
-- [ ] 󰱩 怒
-- [ ] 󰱶 哀
-- [ ] 󰱱 楽
-- [ ] 󰱮 驚
-- [ ] aa
-- [ ] ih
-- [ ] ou
-- [ ] ee
-- [ ] oh
-- [ ] ‿ ‿ blink
-- [ ] 󰈈 ‿ blink-L
-- [ ] ‿ 󰈈 blink-R
-- [ ] 󰈈  lookAt-up
-- [ ] 󰈈  lookAt-down
-- [ ] 󰈈  lookAt-left
-- [ ] 󰈈  lookAt-right
 
 ### vrm
 
@@ -151,9 +104,6 @@ read, write, animation test.
 - [x] track
   - [ ] seek
 - [ ] keyframe
-- [ ]  : play
-- [ ]  : stop
-- [ ] 󰒭 : next
 
 ## tests
 
@@ -243,4 +193,43 @@ Naming conventions for variables with a wider scope than local variables.
 - `libvrm::vrma`
 - `libvrm::bvh`
 - `libvrm::gltf`
+
+# icon
+- [ ]  : play
+- [ ]  : stop
+- [ ] 󰒭 : next
+- [ ]  : image icon
+- [ ]  : text icon
+- [ ]  : buffer_view icon
+- [ ]  : accessor icon
+- [x] 󰕣 : mesh icon
+- [x] 󰂹 : humanoid icon
+- [x] 󰚟 : spring icon
+- [ ] 󱥔 : spring collider icon
+- [x]  : morph
+- [x]  : hips
+- [x] 󱍞 : head
+- [x] 󰹆 : hand-left
+- [x] 󰹇 : hand-right
+- [x] 󱗈 : foot, toes
+- [x] 󰱰 喜
+- [x] 󰱩 怒
+- [x] 󰱶 哀
+- [x] 󰱱 楽
+- [x] 󰱮 驚
+- [ ] aa
+- [ ] ih
+- [ ] ou
+- [ ] ee
+- [ ] oh
+- [x] ‿ ‿ blink
+- [x] 󰈈 ‿ blink-L
+- [x] ‿ 󰈈 blink-R
+- [x] 󰈈  lookAt-up
+- [x] 󰈈  lookAt-down
+- [x] 󰈈  lookAt-left
+- [x] 󰈈  lookAt-right
+- [ ]  : texture
+- [ ]  : material
+- [ ] 󰕣 : mesh
 
