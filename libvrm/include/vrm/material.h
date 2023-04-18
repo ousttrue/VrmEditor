@@ -9,19 +9,17 @@
 namespace libvrm::gltf {
 class Image
 {
-
-  std::string m_name;
   std::vector<uint8_t> m_pixels;
   int m_width = 0;
   int m_height = 0;
   int m_sourceChannels = 0;
 
 public:
+  std::string Name;
   Image(std::string_view name)
-    : m_name(name)
+    : Name(name)
   {
   }
-  const std::string& Name() const { return m_name; }
   int Width() const { return m_width; }
   int Height() const { return m_height; }
   const uint8_t* Pixels() const
@@ -45,15 +43,14 @@ public:
   }
 };
 
-class Material
+struct Material
 {
-  std::string m_name;
-
-public:
   Material(std::string_view name)
-    : m_name(name)
+    : Name(name)
   {
   }
-  std::shared_ptr<Image> texture;
+  std::string Name;
+  std::shared_ptr<Image> Texture;
 };
+
 } // namespace gltf

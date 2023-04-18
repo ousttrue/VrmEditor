@@ -10,7 +10,10 @@ namespace libvrm {
 namespace gltf {
 
 struct Scene;
+struct Primitive;
 
+using MaterialToIndexMap =
+  std::unordered_map<std::shared_ptr<Material>, size_t>;
 struct Exporter
 {
   jsons::Writer m_writer;
@@ -21,7 +24,16 @@ struct Exporter
   Exporter();
 
   void Export(const Scene& scene);
-  void ExportMeshes(const Scene& scene);
+  void ExportMesh(const Scene& scene,
+                  const std::shared_ptr<Mesh>& mesh,
+                  const MaterialToIndexMap& materialToIndex);
+  uint32_t ExportMeshPrimitive(const Scene& scene,
+                               const std::shared_ptr<Mesh>& mesh,
+                               const Primitive& primitive,
+                               uint32_t index,
+                               const MaterialToIndexMap& materialToIndex);
+  void ExportMaterial(const Scene& scene,
+                      const std::shared_ptr<Material>& material);
 
   void ExportNodesScenes(const Scene& scene);
   void ExportNode(const std::shared_ptr<Node>& node);

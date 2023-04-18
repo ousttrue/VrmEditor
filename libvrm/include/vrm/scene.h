@@ -47,7 +47,7 @@ struct Skin;
 struct Node;
 struct Animation;
 class Image;
-class Material;
+struct Material;
 using RenderFunc = std::function<
   void(const std::shared_ptr<Mesh>&, const MeshInstance&, const float[16])>;
 

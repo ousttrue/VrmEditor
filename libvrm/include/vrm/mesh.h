@@ -8,7 +8,7 @@
 
 namespace libvrm::gltf {
 
-class Material;
+struct Material;
 struct Primitive
 {
   uint32_t drawCount;

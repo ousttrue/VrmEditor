@@ -108,6 +108,12 @@ public:
     push({ m_buf, m_buf + len });
   }
 
+  void value(size_t value)
+  {
+    auto len = snprintf(m_buf, sizeof(m_buf), "%zu", value);
+    push({ m_buf, m_buf + len });
+  }
+
   void value(float value)
   {
     auto len = snprintf(m_buf, sizeof(m_buf), "%f", value);

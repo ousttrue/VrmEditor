@@ -29,7 +29,7 @@ ShowSelected_images(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("%d", i);
         ImGui::TableSetColumnIndex(1);
-        ImGui::Text("%s", images[i]->Name().c_str());
+        ImGui::Text("%s", images[i]->Name.c_str());
         ImGui::TableSetColumnIndex(2);
         if (auto texture = textures[i].lock()) {
           ImGui::Image((ImTextureID)(uint64_t)texture->texture_, { 150, 150 });

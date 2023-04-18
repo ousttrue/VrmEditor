@@ -186,7 +186,7 @@ public:
     for (auto& primitive : mesh->m_primitives) {
 
       auto texture = m_white;
-      if (auto image = primitive.material->texture) {
+      if (auto image = primitive.material->Texture) {
         texture = GetOrCreate(image);
       }
 

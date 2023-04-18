@@ -276,7 +276,7 @@ Scene::ParseMaterial(int i, const nlohmann::json& material)
       auto& textures = m_gltf.Json.at("textures");
       auto texture = textures.at(texture_index);
       int image_index = texture.at("source");
-      ptr->texture = m_images[image_index];
+      ptr->Texture = m_images[image_index];
     }
   }
   return ptr;

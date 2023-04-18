@@ -2,6 +2,7 @@
 #include "vrm/animation.h"
 #include "vrm/glb.h"
 #include "vrm/jsons.h"
+#include "vrm/material.h"
 #include "vrm/mesh.h"
 #include "vrm/scene.h"
 
@@ -41,7 +42,34 @@ Exporter::Export(const Scene& scene)
   ExportNodesScenes(scene);
 
   // update bin
-  ExportMeshes(scene);
+  if (scene.m_meshes.size()) {
+    std::unordered_map<std::shared_ptr<Material>, size_t> materialToIndex;
+    m_writer.key("materials");
+    {
+      auto materialIndex = 0;
+      m_writer.array_open();
+      for (auto& mesh : scene.m_meshes) {
+        for (auto& prim : mesh->m_primitives) {
+          if (prim.material) {
+            if (materialToIndex.find(prim.material) == materialToIndex.end()) {
+              ExportMaterial(scene, prim.material);
+              materialToIndex.insert({ prim.material, materialIndex++ });
+            }
+          }
+        }
+      }
+      m_writer.array_close();
+    }
+    m_writer.key("meshes");
+    {
+      m_writer.array_open();
+      for (auto& mesh : scene.m_meshes) {
+        ExportMesh(scene, mesh, materialToIndex);
+      }
+      m_writer.array_close();
+    }
+  }
+
   // update bin
   ExportAnimations(scene);
 
@@ -124,87 +152,110 @@ Exporter::ExportNode(const std::shared_ptr<Node>& node)
 }
 
 void
-Exporter::ExportMeshes(const Scene& scene)
+Exporter::ExportMesh(const Scene& scene,
+                     const std::shared_ptr<Mesh>& mesh,
+                     const MaterialToIndexMap& materialToIndex)
 {
-  if (scene.m_meshes.empty()) {
-    return;
+  m_writer.object_open();
+  if (mesh->Name.size()) {
+    m_writer.key("name");
+    m_writer.value(mesh->Name);
   }
-  m_writer.key("meshes");
-  {
-    m_writer.array_open();
-    for (auto& mesh : scene.m_meshes) {
-      m_writer.object_open();
-      if (mesh->Name.size()) {
-        m_writer.key("name");
-        m_writer.value(mesh->Name);
-      }
-      m_writer.key("primitives");
-      m_writer.array_open();
-      int index = 0;
-      for (auto& prim : mesh->m_primitives) {
-        m_writer.object_open();
-        std::vector<DirectX::XMFLOAT3> positions;
+  m_writer.key("primitives");
+  m_writer.array_open();
+  uint32_t index = 0;
+  for (auto& prim : mesh->m_primitives) {
+    index = ExportMeshPrimitive(scene, mesh, prim, index, materialToIndex);
+  }
+  m_writer.array_close();
+  m_writer.object_close();
+}
 
-        // if (mesh->m_vertices.size() <= 255) {
-        //   std::vector<uint8_t> indices;
-        //   for (int i = 0; i < prim.drawCount; ++i, ++index) {
-        //     auto vertex_index = mesh->m_indices[index];
-        //     indices.push_back(vertex_index);
-        //
-        //     auto v = mesh->m_vertices[vertex_index];
-        //     positions.push_back(v.Position);
-        //   }
-        //   auto indices_index = m_binWriter.PushAccessor<const uint8_t>(
-        //     { indices.data(), indices.size() });
-        //   m_writer.key("indices");
-        //   m_writer.value(indices_index);
-        //
-        // } else
-        if (mesh->m_vertices.size() <= 65535) {
-          std::vector<uint16_t> indices;
-          for (int i = 0; i < prim.drawCount; ++i, ++index) {
-            auto vertex_index = mesh->m_indices[index];
-            indices.push_back(vertex_index);
+uint32_t
+Exporter::ExportMeshPrimitive(const Scene& scene,
+                              const std::shared_ptr<Mesh>& mesh,
+                              const Primitive& prim,
+                              uint32_t index,
+                              const MaterialToIndexMap& materialToIndex)
+{
+  m_writer.object_open();
 
-            auto v = mesh->m_vertices[vertex_index];
-            positions.push_back(v.Position);
-          }
-          auto indices_index = m_binWriter.PushAccessor<const uint16_t>(
-            { indices.data(), indices.size() });
-          m_writer.key("indices");
-          m_writer.value(indices_index);
-
-        } else {
-          std::vector<uint32_t> indices;
-          for (int i = 0; i < prim.drawCount; ++i, ++index) {
-            auto vertex_index = mesh->m_indices[index];
-            indices.push_back(vertex_index);
-
-            auto v = mesh->m_vertices[vertex_index];
-            positions.push_back(v.Position);
-          }
-          auto indices_index = m_binWriter.PushAccessor<const uint32_t>(
-            { indices.data(), indices.size() });
-          m_writer.key("indices");
-          m_writer.value(indices_index);
-        }
-
-        auto position_accessor_index =
-          m_binWriter.PushAccessor<const DirectX::XMFLOAT3>(
-            { positions.data(), positions.size() });
-        m_writer.key("attributes");
-        m_writer.object_open();
-        m_writer.key("POSITION");
-        m_writer.value(position_accessor_index);
-        m_writer.object_close();
-
-        m_writer.object_close();
-      }
-      m_writer.array_close();
-      m_writer.object_close();
+  if (prim.material) {
+    auto found = materialToIndex.find(prim.material);
+    if (found != materialToIndex.end()) {
+      m_writer.key("material");
+      m_writer.value(found->second);
     }
-    m_writer.array_close();
   }
+
+  std::vector<DirectX::XMFLOAT3> positions;
+
+  // if (mesh->m_vertices.size() <= 255) {
+  //   std::vector<uint8_t> indices;
+  //   for (int i = 0; i < prim.drawCount; ++i, ++index) {
+  //     auto vertex_index = mesh->m_indices[index];
+  //     indices.push_back(vertex_index);
+  //
+  //     auto v = mesh->m_vertices[vertex_index];
+  //     positions.push_back(v.Position);
+  //   }
+  //   auto indices_index = m_binWriter.PushAccessor<const uint8_t>(
+  //     { indices.data(), indices.size() });
+  //   m_writer.key("indices");
+  //   m_writer.value(indices_index);
+  //
+  // } else
+  if (mesh->m_vertices.size() <= 65535) {
+    std::vector<uint16_t> indices;
+    for (int i = 0; i < prim.drawCount; ++i, ++index) {
+      auto vertex_index = mesh->m_indices[index];
+      indices.push_back(vertex_index);
+
+      auto v = mesh->m_vertices[vertex_index];
+      positions.push_back(v.Position);
+    }
+    auto indices_index = m_binWriter.PushAccessor<const uint16_t>(
+      { indices.data(), indices.size() });
+    m_writer.key("indices");
+    m_writer.value(indices_index);
+
+  } else {
+    std::vector<uint32_t> indices;
+    for (int i = 0; i < prim.drawCount; ++i, ++index) {
+      auto vertex_index = mesh->m_indices[index];
+      indices.push_back(vertex_index);
+
+      auto v = mesh->m_vertices[vertex_index];
+      positions.push_back(v.Position);
+    }
+    auto indices_index = m_binWriter.PushAccessor<const uint32_t>(
+      { indices.data(), indices.size() });
+    m_writer.key("indices");
+    m_writer.value(indices_index);
+  }
+
+  auto position_accessor_index =
+    m_binWriter.PushAccessor<const DirectX::XMFLOAT3>(
+      { positions.data(), positions.size() });
+  m_writer.key("attributes");
+  m_writer.object_open();
+  m_writer.key("POSITION");
+  m_writer.value(position_accessor_index);
+  m_writer.object_close();
+
+  m_writer.object_close();
+
+  return index;
+}
+
+void
+Exporter::ExportMaterial(const Scene& scene,
+                         const std::shared_ptr<Material>& material)
+{
+  m_writer.object_open();
+  m_writer.key("name");
+  m_writer.value(material->Name);
+  m_writer.object_close();
 }
 
 void
@@ -418,5 +469,4 @@ Exporter::ExportAnimations(const Scene& scene)
 
   m_writer.array_close();
 }
-
 }
