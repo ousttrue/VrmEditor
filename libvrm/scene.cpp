@@ -255,7 +255,7 @@ Scene::ParseImage(int i, const nlohmann::json& image)
   ss << "image" << i;
   auto name = image.value("name", ss.str());
   auto ptr = std::make_shared<gltf::Image>(name);
-  if (!ptr->load(bytes)) {
+  if (!ptr->Load(bytes)) {
     return std::unexpected{ name };
   }
   return ptr;

@@ -167,9 +167,9 @@ JsonGui::CreateGui()
     } else if (top == "meshes") {
       return ShowSelected_meshes(m_scene, m_selected);
     } else if (top == "materials") {
-      return ShowSelected_materials();
+      return ShowSelected_materials(m_scene, m_selected);
     } else if (top == "images") {
-      return ShowSelected_images();
+      return ShowSelected_images(m_scene, m_selected);
     }
   }
 

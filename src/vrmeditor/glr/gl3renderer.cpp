@@ -81,8 +81,14 @@ struct Drawable
 
 class Gl3Renderer
 {
-  using MeshWeakPtr = std::weak_ptr<libvrm::gltf::Mesh>;
   // https://stackoverflow.com/questions/12875652/how-can-i-use-a-stdmap-with-stdweak-ptr-as-key
+  using ImageWeakPtr = std::weak_ptr<libvrm::gltf::Image>;
+  using MeshWeakPtr = std::weak_ptr<libvrm::gltf::Mesh>;
+
+  std::map<ImageWeakPtr,
+           std::shared_ptr<grapho::gl3::Texture>,
+           std::owner_less<ImageWeakPtr>>
+    m_textureMap;
   std::map<MeshWeakPtr, std::shared_ptr<Drawable>, std::owner_less<MeshWeakPtr>>
     m_drawableMap;
   std::shared_ptr<grapho::gl3::Texture> m_white;
@@ -104,24 +110,21 @@ public:
 
   void Release() { m_drawableMap.clear(); }
 
-  void Render(const ViewProjection& camera,
-              const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-              const libvrm::gltf::MeshInstance& instance,
-              const float m[16])
+  std::shared_ptr<grapho::gl3::Texture> GetOrCreate(
+    const std::shared_ptr<libvrm::gltf::Image>& image)
   {
-    auto drawable = GetOrCreate(mesh);
-
-    if (instance.m_updated.size()) {
-      drawable->vao->slots_[0].vbo->Upload(
-        instance.m_updated.size() * sizeof(Vertex), instance.m_updated.data());
-      // m_updated.clear();
+    auto found = m_textureMap.find(image);
+    if (found != m_textureMap.end()) {
+      return found->second;
     }
-
-    drawable->draw(camera, m);
+    auto texture = grapho::gl3::Texture::Create(
+      image->Width(), image->Height(), image->Pixels());
+    m_textureMap.insert(std::make_pair(image, texture));
+    return texture;
   }
 
   std::shared_ptr<Drawable> GetOrCreate(
-    const std::shared_ptr<libvrm::gltf::Mesh> mesh)
+    const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
   {
     auto found = m_drawableMap.find(mesh);
     if (found != m_drawableMap.end()) {
@@ -184,8 +187,7 @@ public:
 
       auto texture = m_white;
       if (auto image = primitive.material->texture) {
-        texture = grapho::gl3::Texture::Create(
-          image->width(), image->height(), image->pixels());
+        texture = GetOrCreate(image);
       }
 
       drawable->submeshes.push_back({
@@ -200,6 +202,22 @@ public:
     m_drawableMap.insert(std::make_pair(mesh, drawable));
 
     return drawable;
+  }
+
+  void Render(const ViewProjection& camera,
+              const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+              const libvrm::gltf::MeshInstance& instance,
+              const float m[16])
+  {
+    auto drawable = GetOrCreate(mesh);
+
+    if (instance.m_updated.size()) {
+      drawable->vao->slots_[0].vbo->Upload(
+        instance.m_updated.size() * sizeof(Vertex), instance.m_updated.data());
+      // m_updated.clear();
+    }
+
+    drawable->draw(camera, m);
   }
 
   void CreateDock(const AddDockFunc& addDock, std::string_view title)
@@ -247,6 +265,12 @@ void
 CreateDock(const AddDockFunc& addDock, std::string_view title)
 {
   Gl3Renderer::Instance().CreateDock(addDock, title);
+}
+
+std::shared_ptr<grapho::gl3::Texture>
+GetOrCreate(const std::shared_ptr<libvrm::gltf::Image>& image)
+{
+  return Gl3Renderer::Instance().GetOrCreate(image);
 }
 
 }

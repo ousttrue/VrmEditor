@@ -7,7 +7,13 @@ namespace libvrm {
 namespace gltf {
 struct Mesh;
 struct MeshInstance;
-} // namespace gltf
+class Image;
+}
+}
+namespace grapho {
+namespace gl3 {
+struct Texture;
+}
 }
 
 namespace glr {
@@ -29,5 +35,8 @@ Shutdown();
 // resource viewer
 void
 CreateDock(const AddDockFunc& addDock, std::string_view title);
+
+std::shared_ptr<grapho::gl3::Texture>
+GetOrCreate(const std::shared_ptr<libvrm::gltf::Image>& image);
 
 }

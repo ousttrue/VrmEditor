@@ -28,13 +28,12 @@ ShowSelected_accessors(const std::shared_ptr<libvrm::gltf::Scene>& scene,
               ImGuiListClipper clipper;
               clipper.Begin(items.size());
               while (clipper.Step()) {
-                for (int row_n = clipper.DisplayStart;
-                     row_n < clipper.DisplayEnd;
-                     row_n++) {
-                  auto& value = items[row_n];
+                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd;
+                     i++) {
+                  auto& value = items[i];
                   ImGui::TableNextRow();
                   ImGui::TableSetColumnIndex(0);
-                  ImGui::Text("%d", row_n);
+                  ImGui::Text("%d", i);
                   ImGui::TableSetColumnIndex(1);
                   ImGui::Text("%f", value.x);
                   ImGui::TableSetColumnIndex(2);
@@ -52,5 +51,5 @@ ShowSelected_accessors(const std::shared_ptr<libvrm::gltf::Scene>& scene,
       return [count]() { ImGui::Text("%d", count); };
     }
   }
-  return []() { ImGui::TextUnformatted("accessors[x] fail"); };
+  return []() {};
 }
