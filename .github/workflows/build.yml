@@ -19,8 +19,7 @@ jobs:
           python-version: '3.10' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
       - run: pip install meson ninja
-      - run: meson setup builddir --prefix $(Get-Location)/prefix -Dcpp_std=c++latest
-      - run: meson install -C builddir
+      - run: scripts/build.ps1
       - uses: actions/upload-artifact@v3
         with:
           path: prefix # or path/to/artifact
