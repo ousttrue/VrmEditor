@@ -44,6 +44,9 @@ Exporter::Export(const Scene& scene)
   // update bin
   if (scene.m_meshes.size()) {
     std::unordered_map<std::shared_ptr<Material>, size_t> materialToIndex;
+    // images & textures
+
+    // materials
     m_writer.key("materials");
     {
       auto materialIndex = 0;
@@ -51,20 +54,23 @@ Exporter::Export(const Scene& scene)
       for (auto& mesh : scene.m_meshes) {
         for (auto& prim : mesh->m_primitives) {
           if (prim.material) {
-            if (materialToIndex.find(prim.material) == materialToIndex.end()) {
+            if (m_materialIndexMap.find(prim.material) ==
+                m_materialIndexMap.end()) {
               ExportMaterial(scene, prim.material);
-              materialToIndex.insert({ prim.material, materialIndex++ });
+              m_materialIndexMap.insert({ prim.material, materialIndex++ });
             }
           }
         }
       }
       m_writer.array_close();
     }
+
+    // meshes
     m_writer.key("meshes");
     {
       m_writer.array_open();
       for (auto& mesh : scene.m_meshes) {
-        ExportMesh(scene, mesh, materialToIndex);
+        ExportMesh(scene, mesh);
       }
       m_writer.array_close();
     }
@@ -152,9 +158,7 @@ Exporter::ExportNode(const std::shared_ptr<Node>& node)
 }
 
 void
-Exporter::ExportMesh(const Scene& scene,
-                     const std::shared_ptr<Mesh>& mesh,
-                     const MaterialToIndexMap& materialToIndex)
+Exporter::ExportMesh(const Scene& scene, const std::shared_ptr<Mesh>& mesh)
 {
   m_writer.object_open();
   if (mesh->Name.size()) {
@@ -165,7 +169,7 @@ Exporter::ExportMesh(const Scene& scene,
   m_writer.array_open();
   uint32_t index = 0;
   for (auto& prim : mesh->m_primitives) {
-    index = ExportMeshPrimitive(scene, mesh, prim, index, materialToIndex);
+    index = ExportMeshPrimitive(scene, mesh, prim, index);
   }
   m_writer.array_close();
   m_writer.object_close();
@@ -175,14 +179,13 @@ uint32_t
 Exporter::ExportMeshPrimitive(const Scene& scene,
                               const std::shared_ptr<Mesh>& mesh,
                               const Primitive& prim,
-                              uint32_t index,
-                              const MaterialToIndexMap& materialToIndex)
+                              uint32_t index)
 {
   m_writer.object_open();
 
   if (prim.material) {
-    auto found = materialToIndex.find(prim.material);
-    if (found != materialToIndex.end()) {
+    auto found = m_materialIndexMap.find(prim.material);
+    if (found != m_materialIndexMap.end()) {
       m_writer.key("material");
       m_writer.value(found->second);
     }
