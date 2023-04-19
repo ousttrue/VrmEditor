@@ -22,6 +22,7 @@ struct Exporter
   Exporter();
 
   void Export(const Scene& scene);
+  void ExportAsset(const Scene& scene);
   void ExportImage(const Scene& scene, const std::shared_ptr<Image>& image);
   void ExportTextureSampler(const Scene& scene,
                             const std::shared_ptr<TextureSampler>& sampler);

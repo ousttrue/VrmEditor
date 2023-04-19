@@ -34,10 +34,7 @@ Exporter::Export(const Scene& scene)
 
   m_writer.key("asset");
   {
-    m_writer.object_open();
-    m_writer.key("version");
-    m_writer.value("2.0");
-    m_writer.object_close();
+    ExportAsset(scene);
   }
 
   // images
@@ -176,6 +173,25 @@ Exporter::Export(const Scene& scene)
     }
     m_writer.object_close();
   }
+
+  m_writer.object_close();
+}
+
+// "asset": {
+//     "version": "2.0",
+//     "generator": "collada2gltf@f356b99aef8868f74877c7ca545f2cd206b9d3b7",
+//     "copyright": "2017 (c) Khronos Group"
+// }
+void
+Exporter::ExportAsset(const Scene& scene)
+{
+  m_writer.object_open();
+
+  m_writer.key("version");
+  m_writer.value("2.0");
+
+  m_writer.key("generator");
+  m_writer.value("VrmEditor");
 
   m_writer.object_close();
 }
