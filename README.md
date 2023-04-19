@@ -1,125 +1,57 @@
 # vrmeditor
 
-read, write, animation test.
+read, write, edit and animation test.
 
 ## features
 
-### import
-
-- [x] gltf import
-- [x] glb
-  - [x] import
-    - [ ] draco
-    - [ ] quantity
-  - [ ] vrm-0.x
-    - [x] expression. morphtarget
-    - [ ] expression. material
-    - [ ] lookat. bone
-    - [ ] lookat. expression
-    - [x] springbone. basic without collision
-    - [x] humanoid
-      - [ ] retarget Y180 rotation.
-  - [ ] vrm-1.0
-    - [ ] expression. morphtarget
-    - [ ] expression. material
-    - [ ] lookat. bone
-    - [ ] lookat. expression
-    - [ ] springbone. basic without collision
-    - [x] humanoid
-    - [ ] constraint
-  - [ ] vrm-animation
-    - [ ] import
-    - [x] export
-    - [ ] humanoid
-    - [x] expression
-    - [ ] lookat
-- [x] bvh import
-  - [ ] humanoid mapping
-- [ ] fbx import
-
-### export
-
-- [x] glb
-- [ ] vrm-0.x
-- [ ] vrm-1.0
-- [x] vrma. expression minimum.
-
-### material
-
-- [x] unlit
-- [ ] pbr
-- [ ] mtoon(vrm-0.x)
-- [ ] mtoon(vrm-1.0)
-
-### animation
-
-- [x] gltf. tranlsation, rotation, scaling and weights.
-- [x] bvh
-- [x] vrm0 from bvh
-- [x] vrm1. humanoid retarget
-- [ ] linear interpolation
-- [ ] cubic interpolation
-
-## UI
-
-### imgui / configuration
-
-- [x] imgui.ini => ~/.vrmeditor.ini
-- [x] ~/.vrmeditor.lua
-- [x] tree / indent
-
-### assets
-
-- [x]  : gltf
-- [x] 󰕣 : glb
-- [x] 󰋦 : vrm
-- [ ] 󰕠 : fbx
-- [x] 󰑮 : bvh
-- [x] sort
-
-### 3D view
-
-- [x] Fit camera frustum to bounding box when load
-- [ ] camera reset
-- [x] TR gizmo
-- [ ] gizmo undo / history
-
-### humanoid
-
-- [ ] 󰂹 : bone selector
-- [ ] bone assign
-- [x] pose retarget
-
-### expression
-
-### vrm
-
-- [ ] meta
-- [x] expression
-- [ ] lookat
-- [ ] firstperson
-
-### timeline
-
-- [x] track
-  - [ ] seek
-- [ ] keyframe
-
-## tests
-
-### gltf
-
-### vrm
-
-### bvh
-
-### fbx
+| function                              | read | write | edit |
+| ------------------------------------- | ---- | ----- | ---- |
+| glTF-2.0                              |      |       |      |
+| (mesh)                                | [x]  | [x]   | ---  |
+| (draco)                               | [ ]  | ---   | ---  |
+| (quantity)                            | [ ]  | ---   | ---  |
+| (quantity)                            | [ ]  | ---   | ---  |
+| (material)                            | [ ]  | [ ]   | [ ]  |
+| (material.ColorTexture)               | [x]  | [x]   | ---  |
+| (material.mtoon-0.x)                  | [ ]  | [ ]   | [ ]  |
+| (material.mtoon-1.0)                  | [ ]  | [ ]   | [ ]  |
+| (animation.TRS)                       | [x]  | [x]   | [ ]  |
+| (animation.morphTarget)               | [x]  | [x]   | [ ]  |
+| (animation.linear_interpolation)      | [ ]  | [ ]   | [ ]  |
+| (animation.cubic_interpolation)       | [ ]  | [ ]   | [ ]  |
+| vrm-0.x                               |      |       |      |
+| (meta)                                | [ ]  | [ ]   | [ ]  |
+| (expression.morphtarget)              | [x]  | [ ]   | [ ]  |
+| (expression.material)                 | [ ]  | [ ]   | [ ]  |
+| (lookat.bone)                         | [ ]  | [ ]   | [ ]  |
+| (lookat.expression)                   | [ ]  | [ ]   | [ ]  |
+| (springbone. basic without collision) | [x]  | [ ]   | [ ]  |
+| (humanoid)                            | [x]  | [ ]   | [ ]  |
+| (retarget Y180 rotation)              | [ ]  | ---   | ---  |
+| vrm-1.0                               |      |       |      |
+| (expression.morphtarget)              | [x]  | [ ]   | [ ]  |
+| (expression.material)                 | [ ]  | [ ]   | [ ]  |
+| (lookat.bone)                         | [ ]  | [ ]   | [ ]  |
+| (lookat.expression)                   | [ ]  | [ ]   | [ ]  |
+| (springbone. basic without collision) | [x]  | [ ]   | [ ]  |
+| (humanoid)                            | [x]  | [ ]   | [ ]  |
+| (constraint)                          | [ ]  | [ ]   | [ ]  |
+| vrm-animation                         |      |       |      |
+| (humanoid)                            | [x]  | [ ]   | [ ]  |
+| (expression)                          | [x]  | [x]   | [ ]  |
+| (lookat)                              | [ ]  | [ ]   | [ ]  |
+| bvh                                   | [x]  | ---   | ---  |
+| (humanoid mapping)                    | [x]  | ---   | ---  |
+| fbx                                   | [ ]  | ---   | ---  |
 
 # milestone
+
 ## 1
+
 - read / write vrm-0 & 1
 
 ## x
+
 - fbx import
 - vrma export
 - motion merge
@@ -195,13 +127,14 @@ Naming conventions for variables with a wider scope than local variables.
 - `libvrm::gltf`
 
 # icon
+
 - [ ]  : play
 - [ ]  : stop
 - [ ] 󰒭 : next
-- [ ]  : image icon
-- [ ]  : text icon
-- [ ]  : buffer_view icon
-- [ ]  : accessor icon
+- [x]  : image icon
+- [x]  : text icon
+- [x]  : buffer_view icon
+- [x]  : accessor icon
 - [x] 󰕣 : mesh icon
 - [x] 󰂹 : humanoid icon
 - [x] 󰚟 : spring icon
@@ -217,11 +150,6 @@ Naming conventions for variables with a wider scope than local variables.
 - [x] 󰱶 哀
 - [x] 󰱱 楽
 - [x] 󰱮 驚
-- [ ] aa
-- [ ] ih
-- [ ] ou
-- [ ] ee
-- [ ] oh
 - [x] ‿ ‿ blink
 - [x] 󰈈 ‿ blink-L
 - [x] ‿ 󰈈 blink-R
@@ -229,7 +157,6 @@ Naming conventions for variables with a wider scope than local variables.
 - [x] 󰈈  lookAt-down
 - [x] 󰈈  lookAt-left
 - [x] 󰈈  lookAt-right
-- [ ]  : texture
-- [ ]  : material
-- [ ] 󰕣 : mesh
-
+- [x]  : texture
+- [x]  : material
+- [x] 󰕣 : mesh
