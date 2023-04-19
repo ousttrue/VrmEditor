@@ -118,7 +118,7 @@ Exporter::Export(const Scene& scene)
     {
       m_writer.array_open();
       for (auto& node : scene.m_nodes) {
-        ExportNode(node);
+        ExportNode(scene, node);
       }
       m_writer.array_close();
     }
@@ -128,7 +128,9 @@ Exporter::Export(const Scene& scene)
       m_writer.object_open();
       m_writer.key("nodes");
       m_writer.array_open();
-      m_writer.value(0);
+      for (auto& root : scene.m_roots) {
+        m_writer.value(*scene.IndexOf(root));
+      }
       m_writer.array_close();
       m_writer.object_close();
       m_writer.array_close();
@@ -210,7 +212,6 @@ Exporter::ExportImage(const Scene& scene, const std::shared_ptr<Image>& image)
     assert(false);
   }
   m_writer.object_close();
-  m_imageIndexMap.insert({ image, m_imageIndexMap.size() });
 }
 
 // {
@@ -225,7 +226,6 @@ Exporter::ExportTextureSampler(const Scene& scene,
 {
   m_writer.object_open();
   m_writer.object_close();
-  m_samplerIndexMap.insert({ sampler, m_samplerIndexMap.size() });
 }
 
 // {
@@ -238,11 +238,10 @@ Exporter::ExportTexture(const Scene& scene,
 {
   m_writer.object_open();
   m_writer.key("source");
-  m_writer.value(m_imageIndexMap[texture->Source]);
+  m_writer.value(*scene.IndexOf(texture->Source));
   m_writer.key("sampler");
-  m_writer.value(m_samplerIndexMap[texture->Sampler]);
+  m_writer.value(*scene.IndexOf(texture->Sampler));
   m_writer.object_close();
-  m_textureIndexMap.insert({ texture, m_textureIndexMap.size() });
 }
 
 // {
@@ -272,14 +271,13 @@ Exporter::ExportMaterial(const Scene& scene,
       {
         m_writer.object_open();
         m_writer.key("index");
-        m_writer.value(m_textureIndexMap[material->Texture]);
+        m_writer.value(*scene.IndexOf(material->Texture));
         m_writer.object_close();
       }
     }
     m_writer.object_close();
   }
   m_writer.object_close();
-  m_materialIndexMap.insert({ material, m_materialIndexMap.size() });
 }
 
 // {
@@ -313,7 +311,6 @@ Exporter::ExportMesh(const Scene& scene, const std::shared_ptr<Mesh>& mesh)
   }
   m_writer.array_close();
   m_writer.object_close();
-  m_meshIndexMap.insert({ mesh, m_meshIndexMap.size() });
 }
 
 uint32_t
@@ -325,11 +322,8 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
   m_writer.object_open();
 
   if (prim.material) {
-    auto found = m_materialIndexMap.find(prim.material);
-    if (found != m_materialIndexMap.end()) {
-      m_writer.key("material");
-      m_writer.value(found->second);
-    }
+    m_writer.key("material");
+    m_writer.value(*scene.IndexOf(prim.material));
   }
 
   std::vector<DirectX::XMFLOAT3> positions;
@@ -449,20 +443,42 @@ Exporter::ExportSkin(const Scene& scene, const std::shared_ptr<Skin>& skin)
     m_writer.value(accessor_index);
   }
   m_writer.object_close();
-  m_skinIndexMap.insert({ skin, m_skinIndexMap.size() });
 }
 
 void
-Exporter::ExportNode(const std::shared_ptr<Node>& node)
+Exporter::ExportNode(const Scene& scene, const std::shared_ptr<Node>& node)
 {
   m_writer.object_open();
+  m_writer.key("name");
+  m_writer.value(node->Name);
+  // TRS
+  if (node->Transform.Translation.x != 0 ||
+      node->Transform.Translation.y != 0 ||
+      node->Transform.Translation.z != 0) {
+    m_writer.key("translation");
+    m_writer.array_open();
+    m_writer.value(node->Transform.Translation.x);
+    m_writer.value(node->Transform.Translation.y);
+    m_writer.value(node->Transform.Translation.z);
+    m_writer.array_close();
+  }
+  if (node->Children.size()) {
+    m_writer.key("children");
+    m_writer.array_open();
+    for (auto& child : node->Children) {
+      if (auto i = scene.IndexOf(child)) {
+        m_writer.value(*i);
+      }
+    }
+    m_writer.array_close();
+  }
   if (auto mesh_index = node->Mesh) {
     m_writer.key("mesh");
     m_writer.value(*mesh_index);
   }
   if (node->Skin) {
     m_writer.key("skin");
-    m_writer.value(m_skinIndexMap[node->Skin]);
+    m_writer.value(*scene.IndexOf(node->Skin));
   }
   m_writer.object_close();
 }
@@ -513,6 +529,8 @@ Exporter::ExportBuffersViewsAccessors(const Scene& scene)
       m_writer.array_open();
       {
         m_writer.object_open();
+        m_writer.key("byteLength");
+        m_writer.value(m_binWriter.BufferPosition);
         m_writer.object_close();
       }
       m_writer.array_close();

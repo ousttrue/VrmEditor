@@ -12,27 +12,12 @@ namespace gltf {
 struct Scene;
 struct Primitive;
 
-using ImageIndexMap = std::unordered_map<std::shared_ptr<Image>, size_t>;
-using TextureSamplerIndexMap =
-  std::unordered_map<std::shared_ptr<TextureSampler>, size_t>;
-using TextureIndexMap = std::unordered_map<std::shared_ptr<Texture>, size_t>;
-using MaterialIndexMap = std::unordered_map<std::shared_ptr<Material>, size_t>;
-using MeshIndexMap = std::unordered_map<std::shared_ptr<Mesh>, size_t>;
-using SkinIndexMap = std::unordered_map<std::shared_ptr<Skin>, size_t>;
-
 struct Exporter
 {
   jsons::Writer m_writer;
   BinWriter m_binWriter;
   std::vector<uint8_t> JsonChunk;
   std::vector<uint8_t> BinChunk;
-
-  ImageIndexMap m_imageIndexMap;
-  TextureSamplerIndexMap m_samplerIndexMap;
-  TextureIndexMap m_textureIndexMap;
-  MaterialIndexMap m_materialIndexMap;
-  MeshIndexMap m_meshIndexMap;
-  SkinIndexMap m_skinIndexMap;
 
   Exporter();
 
@@ -50,7 +35,7 @@ struct Exporter
                                const Primitive& primitive,
                                uint32_t index);
   void ExportSkin(const Scene& scene, const std::shared_ptr<Skin>& skin);
-  void ExportNode(const std::shared_ptr<Node>& node);
+  void ExportNode(const Scene& scene, const std::shared_ptr<Node>& node);
 
   void ExportBuffersViewsAccessors(const Scene& scene);
   void ExportAnimations(const Scene& scene);

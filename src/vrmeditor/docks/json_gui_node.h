@@ -8,8 +8,8 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 {
   return [scene]() {
     auto nodes = scene->m_gltf.Json.at("nodes");
-    std::array<const char*, 7> cols = {
-      "index", "name", "T", "R", "S", "mesh", "skin",
+    std::array<const char*, 8> cols = {
+      "index", "name", "T", "R", "S", "children", "mesh", "skin",
     };
     std::string no_name;
     if (JsonGuiTable("##nodes", cols)) {
@@ -34,12 +34,24 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         // ImGui::TableSetColumnIndex(4);
         // ImGui::Text(
         //   "%f, %f, %f", node->Scaling.x, node->Scaling.y, node->Scaling.z);
-        if (has(node, "mesh")) {
+        if (has(node, "children")) {
+          std::stringstream ss;
+          int j = 0;
+          for (int child : node.at("children")) {
+            if (j++) {
+              ss << ',';
+            }
+            ss << child;
+          }
           ImGui::TableSetColumnIndex(5);
+          ImGui::Text("%s", ss.str().c_str());
+        }
+        if (has(node, "mesh")) {
+          ImGui::TableSetColumnIndex(6);
           ImGui::Text("%d", (int)node.at("mesh"));
         }
         if (has(node, "skin")) {
-          ImGui::TableSetColumnIndex(6);
+          ImGui::TableSetColumnIndex(7);
           ImGui::Text("%d", (int)node.at("skin"));
         }
       }

@@ -59,6 +59,18 @@ using EnterJson =
   std::function<bool(nlohmann::json&, std::string_view jsonpath)>;
 using LeaveJson = std::function<void()>;
 
+template<typename T>
+inline std::optional<size_t>
+_IndexOf(std::span<const T> values, const T& target)
+{
+  for (size_t i = 0; i < values.size(); ++i) {
+    if (values[i] == target) {
+      return i;
+    }
+  }
+  return {};
+}
+
 struct Scene
 {
 
@@ -108,6 +120,36 @@ struct Scene
     m_skins.clear();
     m_animations.clear();
     m_gltf = {};
+  }
+
+  std::optional<size_t> IndexOf(
+    const std::shared_ptr<TextureSampler>& sampler) const
+  {
+    return _IndexOf<std::shared_ptr<TextureSampler>>(m_samplers, sampler);
+  }
+  std::optional<size_t> IndexOf(const std::shared_ptr<Image>& image) const
+  {
+    return _IndexOf<std::shared_ptr<Image>>(m_images, image);
+  }
+  std::optional<size_t> IndexOf(const std::shared_ptr<Texture>& texture) const
+  {
+    return _IndexOf<std::shared_ptr<Texture>>(m_textures, texture);
+  }
+  std::optional<size_t> IndexOf(const std::shared_ptr<Material>& material) const
+  {
+    return _IndexOf<std::shared_ptr<Material>>(m_materials, material);
+  }
+  std::optional<size_t> IndexOf(const std::shared_ptr<Mesh>& mesh) const
+  {
+    return _IndexOf<std::shared_ptr<Mesh>>(m_meshes, mesh);
+  }
+  std::optional<size_t> IndexOf(const std::shared_ptr<Skin>& skin) const
+  {
+    return _IndexOf<std::shared_ptr<Skin>>(m_skins, skin);
+  }
+  std::optional<size_t> IndexOf(const std::shared_ptr<Node>& node) const
+  {
+    return _IndexOf<std::shared_ptr<Node>>(m_nodes, node);
   }
 
   vrm::HumanPose UpdateHumanPose()

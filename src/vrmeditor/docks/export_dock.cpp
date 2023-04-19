@@ -2,6 +2,7 @@
 #include "glr/scene_preview.h"
 #include "json_gui.h"
 #include "node_label.h"
+#include <fstream>
 #include <grapho/orbitview.h>
 #include <imgui.h>
 #include <vrm/exporter.h>
@@ -38,7 +39,16 @@ ExportDock::Create(const AddDockFunc& addDock,
       }
         .WriteTo(ss);
       auto str = ss.str();
-      
+
+#ifndef NDEBUG
+      std::ofstream j("tmp.json", std::ios::binary);
+      j.write((const char*)exporter.JsonChunk.data(),
+              exporter.JsonChunk.size());
+
+      std::ofstream w("tmp.glb", std::ios::binary);
+      w.write(str.data(), str.size());
+#endif
+
       debug_scene->LoadBytes({ (const uint8_t*)str.data(), str.size() });
     }
 
