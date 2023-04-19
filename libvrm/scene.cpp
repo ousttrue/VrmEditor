@@ -484,10 +484,10 @@ Scene::ParseSkin(int i, const nlohmann::json& skin)
 
   std::stringstream ss;
   ss << "skin" << i;
-  ptr->name = skin.value("name", ss.str());
+  ptr->Name = skin.value("name", ss.str());
 
   for (auto& joint : skin.at("joints")) {
-    ptr->joints.push_back(joint);
+    ptr->Joints.push_back(joint);
   }
 
   std::span<const DirectX::XMFLOAT4X4> matrices;
@@ -507,12 +507,12 @@ Scene::ParseSkin(int i, const nlohmann::json& skin)
     }
     matrices = copy;
   }
-  ptr->bindMatrices.assign(matrices.begin(), matrices.end());
+  ptr->BindMatrices.assign(matrices.begin(), matrices.end());
 
-  assert(ptr->joints.size() == ptr->bindMatrices.size());
+  assert(ptr->Joints.size() == ptr->BindMatrices.size());
 
   if (has(skin, "skeleton")) {
-    ptr->root = skin.at("skeleton");
+    ptr->Root = skin.at("skeleton");
   }
   return ptr;
 }
@@ -864,22 +864,22 @@ Scene::Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo)
 
       // skinning
       if (auto skin = node->Skin) {
-        skin->currentMatrices.resize(skin->bindMatrices.size());
+        skin->CurrentMatrices.resize(skin->BindMatrices.size());
 
         auto rootInverse = DirectX::XMMatrixIdentity();
-        if (auto root_index = skin->root) {
+        if (auto root_index = skin->Root) {
           rootInverse = DirectX::XMMatrixInverse(nullptr, node->WorldMatrix());
         }
 
-        for (int i = 0; i < skin->joints.size(); ++i) {
-          auto node = m_nodes[skin->joints[i]];
-          auto m = skin->bindMatrices[i];
-          DirectX::XMStoreFloat4x4(&skin->currentMatrices[i],
+        for (int i = 0; i < skin->Joints.size(); ++i) {
+          auto node = m_nodes[skin->Joints[i]];
+          auto m = skin->BindMatrices[i];
+          DirectX::XMStoreFloat4x4(&skin->CurrentMatrices[i],
                                    DirectX::XMLoadFloat4x4(&m) *
                                      node->WorldMatrix() * rootInverse);
         }
 
-        skinningMatrices = skin->currentMatrices;
+        skinningMatrices = skin->CurrentMatrices;
       }
 
       // apply morphtarget & skinning

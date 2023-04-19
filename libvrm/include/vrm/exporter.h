@@ -18,6 +18,7 @@ using TextureSamplerIndexMap =
 using TextureIndexMap = std::unordered_map<std::shared_ptr<Texture>, size_t>;
 using MaterialIndexMap = std::unordered_map<std::shared_ptr<Material>, size_t>;
 using MeshIndexMap = std::unordered_map<std::shared_ptr<Mesh>, size_t>;
+using SkinIndexMap = std::unordered_map<std::shared_ptr<Skin>, size_t>;
 
 struct Exporter
 {
@@ -31,6 +32,7 @@ struct Exporter
   TextureIndexMap m_textureIndexMap;
   MaterialIndexMap m_materialIndexMap;
   MeshIndexMap m_meshIndexMap;
+  SkinIndexMap m_skinIndexMap;
 
   Exporter();
 
@@ -47,6 +49,7 @@ struct Exporter
                                const std::shared_ptr<Mesh>& mesh,
                                const Primitive& primitive,
                                uint32_t index);
+  void ExportSkin(const Scene& scene, const std::shared_ptr<Skin>& skin);
   void ExportNode(const std::shared_ptr<Node>& node);
 
   void ExportBuffersViewsAccessors(const Scene& scene);

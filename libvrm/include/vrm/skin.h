@@ -5,13 +5,18 @@
 #include <string>
 #include <vector>
 
-namespace libvrm::gltf {
-struct Skin {
-  std::string name;
-  std::vector<uint32_t> joints;
-  std::vector<DirectX::XMFLOAT4X4> bindMatrices;
+namespace libvrm {
+namespace gltf {
+
+struct Skin
+{
+  std::string Name;
+  std::vector<uint32_t> Joints;
+  std::vector<DirectX::XMFLOAT4X4> BindMatrices;
   // bindMatrix * node worldmatrix
-  std::vector<DirectX::XMFLOAT4X4> currentMatrices;
-  std::optional<uint32_t> root;
+  std::vector<DirectX::XMFLOAT4X4> CurrentMatrices;
+  std::optional<uint32_t> Root;
 };
-} // namespace gltf
+
+}
+}

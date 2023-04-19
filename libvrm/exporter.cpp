@@ -5,6 +5,7 @@
 #include "vrm/material.h"
 #include "vrm/mesh.h"
 #include "vrm/scene.h"
+#include "vrm/skin.h"
 
 namespace libvrm::gltf {
 
@@ -89,7 +90,6 @@ Exporter::Export(const Scene& scene)
 
   // meshes
   if (scene.m_meshes.size()) {
-    // meshes
     m_writer.key("meshes");
     {
       m_writer.array_open();
@@ -101,6 +101,16 @@ Exporter::Export(const Scene& scene)
   }
 
   // skins
+  if (scene.m_skins.size()) {
+    m_writer.key("skins");
+    {
+      m_writer.array_open();
+      for (auto& skin : scene.m_skins) {
+        ExportSkin(scene, skin);
+      }
+      m_writer.array_close();
+    }
+  }
 
   // nodes
   if (scene.m_nodes.size()) {
@@ -325,12 +335,19 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
   std::vector<DirectX::XMFLOAT3> positions;
   std::vector<DirectX::XMFLOAT3> normals;
   std::vector<DirectX::XMFLOAT2> tex0;
-
   auto push_vertex = [&positions, &normals, &tex0](const Vertex& v) {
     positions.push_back(v.Position);
     normals.push_back(v.Normal);
     tex0.push_back(v.Uv);
   };
+
+  std::vector<ushort4> joints;
+  std::vector<DirectX::XMFLOAT4> weights;
+  auto push_skinning = [&joints, &weights](const JointBinding& v) {
+    joints.push_back(v.Joints);
+    weights.push_back(v.Weights);
+  };
+  bool has_skinning = mesh->m_bindings.size() == mesh->m_vertices.size();
 
   if (mesh->m_vertices.size() < 255) {
     std::vector<uint8_t> indices;
@@ -338,6 +355,9 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
       auto vertex_index = mesh->m_indices[index];
       indices.push_back(vertex_index);
       push_vertex(mesh->m_vertices[vertex_index]);
+      if (has_skinning) {
+        push_skinning(mesh->m_bindings[vertex_index]);
+      }
     }
     auto indices_index = m_binWriter.PushAccessor(indices);
     m_writer.key("indices");
@@ -349,6 +369,9 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
       auto vertex_index = mesh->m_indices[index];
       indices.push_back(vertex_index);
       push_vertex(mesh->m_vertices[vertex_index]);
+      if (has_skinning) {
+        push_skinning(mesh->m_bindings[vertex_index]);
+      }
     }
     auto indices_index = m_binWriter.PushAccessor(indices);
     m_writer.key("indices");
@@ -360,6 +383,9 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
       auto vertex_index = mesh->m_indices[index];
       indices.push_back(vertex_index);
       push_vertex(mesh->m_vertices[vertex_index]);
+      if (has_skinning) {
+        push_skinning(mesh->m_bindings[vertex_index]);
+      }
     }
     auto indices_index = m_binWriter.PushAccessor(indices);
     m_writer.key("indices");
@@ -371,24 +397,59 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
     m_writer.object_open();
     {
       auto position_accessor_index = m_binWriter.PushAccessor(positions);
-      m_writer.key("POSITION");
+      m_writer.key(gltf::VERTEX_POSITION);
       m_writer.value(position_accessor_index);
     }
     {
       auto normal_accessor_index = m_binWriter.PushAccessor(normals);
-      m_writer.key("NORMAL");
+      m_writer.key(gltf::VERTEX_NORMAL);
       m_writer.value(normal_accessor_index);
     }
     {
       auto tex0_accessor_index = m_binWriter.PushAccessor(tex0);
-      m_writer.key("TEXCOORD_0");
+      m_writer.key(gltf::VERTEX_UV);
       m_writer.value(tex0_accessor_index);
+    }
+    // skinning
+    if (has_skinning) {
+      auto joint_accessor_index = m_binWriter.PushAccessor(joints);
+      m_writer.key(gltf::VERTEX_JOINT);
+      m_writer.value(joint_accessor_index);
+      auto weight_accessor_index = m_binWriter.PushAccessor(weights);
+      m_writer.key(gltf::VERTEX_WEIGHT);
+      m_writer.value(weight_accessor_index);
     }
     m_writer.object_close();
   }
 
   m_writer.object_close();
   return index;
+}
+
+// {
+//     "inverseBindMatrices": 0,
+//     "joints": [ 1, 2 ],
+//     "skeleton": 1
+// }
+void
+Exporter::ExportSkin(const Scene& scene, const std::shared_ptr<Skin>& skin)
+{
+  m_writer.object_open();
+  m_writer.key("joints");
+  {
+    m_writer.array_open();
+    for (auto joint : skin->Joints) {
+      m_writer.value(joint);
+    }
+    m_writer.array_close();
+  }
+  {
+    auto accessor_index = m_binWriter.PushAccessor(skin->BindMatrices);
+    m_writer.key("inverseBindMatrices");
+    m_writer.value(accessor_index);
+  }
+  m_writer.object_close();
+  m_skinIndexMap.insert({ skin, m_skinIndexMap.size() });
 }
 
 void
@@ -398,6 +459,10 @@ Exporter::ExportNode(const std::shared_ptr<Node>& node)
   if (auto mesh_index = node->Mesh) {
     m_writer.key("mesh");
     m_writer.value(*mesh_index);
+  }
+  if (node->Skin) {
+    m_writer.key("skin");
+    m_writer.value(m_skinIndexMap[node->Skin]);
   }
   m_writer.object_close();
 }

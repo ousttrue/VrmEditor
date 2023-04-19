@@ -1,4 +1,5 @@
 #pragma once
+#include "scenetypes.h"
 #include <DirectXMath.h>
 #include <expected>
 #include <nlohmann/json.hpp>
@@ -6,7 +7,9 @@
 #include <string_view>
 #include <type_traits>
 
-namespace libvrm::gltf {
+namespace libvrm {
+namespace gltf {
+
 enum class ComponentType
 {
   BYTE = 5120,
@@ -145,6 +148,15 @@ Accessor::Create<uint16_t>()
 }
 template<>
 inline Accessor
+Accessor::Create<ushort4>()
+{
+  return Accessor{
+    .Type = Type::VEC4,
+    .ComponentType = ComponentType::UNSIGNED_SHORT,
+  };
+}
+template<>
+inline Accessor
 Accessor::Create<uint32_t>()
 {
   return Accessor{
@@ -185,6 +197,15 @@ Accessor::Create<DirectX::XMFLOAT4>()
 {
   return Accessor{
     .Type = Type::VEC4,
+    .ComponentType = ComponentType::FLOAT,
+  };
+}
+template<>
+inline Accessor
+Accessor::Create<DirectX::XMFLOAT4X4>()
+{
+  return Accessor{
+    .Type = Type::MAT4,
     .ComponentType = ComponentType::FLOAT,
   };
 }
@@ -243,4 +264,5 @@ struct BinWriter
   }
 };
 
+}
 }
