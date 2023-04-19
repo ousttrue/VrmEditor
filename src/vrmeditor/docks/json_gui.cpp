@@ -27,7 +27,7 @@ JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
       ImGuiTreeNodeFlags_Leaf |
       ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
   }
-  if (jsonpath == m_selected.Str) {
+  if (jsonpath == m_selected) {
     node_flags |= ImGuiTreeNodeFlags_Selected;
   }
 
@@ -87,7 +87,7 @@ JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
     ImGui::TreeNodeEx((void*)(intptr_t)&item, node_flags, "%s", label.c_str());
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-    m_selected.Str = jsonpath;
+    m_selected = jsonpath;
     m_cache = {};
   }
 
@@ -147,7 +147,7 @@ JsonGui::Show(float indent)
   ImGui::EndChild();
 
   if (ImGui::BeginChild("##split-second", { size.x, s })) {
-    ImGui::TextUnformatted(m_selected.Str.c_str());
+    ImGui::TextUnformatted(m_selected.c_str());
 
     if (!m_cache) {
       m_cache = CreateGui();
@@ -160,8 +160,8 @@ JsonGui::Show(float indent)
 std::function<void()>
 JsonGui::CreateGui()
 {
-  if (m_selected.Size()) {
-    auto top = m_selected[0];
+  if (m_selected.size()) {
+    auto top = libvrm::JsonPath(m_selected)[0];
     if (top == "accessors") {
       return ShowSelected_accessors(m_scene, m_selected);
     } else if (top == "meshes") {

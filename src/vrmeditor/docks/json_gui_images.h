@@ -10,7 +10,7 @@
 
 inline ShowGui
 ShowSelected_images(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-                    const libvrm::JsonPath& jsonpath)
+                    std::string_view jsonpath)
 {
   std::vector<std::weak_ptr<grapho::gl3::Texture>> textures;
   for (auto& image : scene->m_images) {

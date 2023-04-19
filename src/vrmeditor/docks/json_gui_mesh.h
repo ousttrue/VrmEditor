@@ -5,9 +5,9 @@
 
 inline ShowGui
 ShowSelected_meshes(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-                    const libvrm::JsonPath& jsonpath)
+                    std::string_view jsonpath)
 {
-  if (jsonpath.Size() == 1) {
+  if (libvrm::JsonPath(jsonpath).Size() == 1) {
     return [scene]() {
       auto meshes = scene->m_gltf.Json.at("meshes");
       std::array<const char*, 2> cols = {
@@ -26,8 +26,8 @@ ShowSelected_meshes(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         ImGui::EndTable();
       }
     };
-  } else if (jsonpath.Size() == 2) {
-    if (auto _i = jsonpath.GetInt(1)) {
+  } else if (libvrm::JsonPath(jsonpath).Size() == 2) {
+    if (auto _i = libvrm::JsonPath(jsonpath).GetInt(1)) {
       auto i = *_i;
       return [scene,
               prims =

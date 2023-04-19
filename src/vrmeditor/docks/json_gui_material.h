@@ -4,7 +4,7 @@
 
 inline ShowGui
 ShowSelected_materials(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-                       const libvrm::JsonPath& jsonpath)
+                       std::string_view jsonpath)
 {
   return []() {
     //

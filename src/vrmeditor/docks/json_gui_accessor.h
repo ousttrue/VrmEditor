@@ -5,10 +5,10 @@
 
 inline ShowGui
 ShowSelected_accessors(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-                       const libvrm::JsonPath& jsonpath)
+                       std::string_view jsonpath)
 {
-  if (jsonpath.Size() == 2) {
-    if (auto _i = jsonpath.GetInt(1)) {
+  if (jsonpath.size() == 2) {
+    if (auto _i = libvrm::JsonPath(jsonpath).GetInt(1)) {
       auto i = *_i;
       auto accessor = scene->m_gltf.Json.at("accessors").at(i);
       if (accessor.at("type") == "VEC3" &&

@@ -12,7 +12,7 @@ struct JsonGui
   float m_f = 500;
 
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
-  libvrm::JsonPath m_selected;
+  std::string m_selected;
   ShowGui m_cache;
 
   JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene);

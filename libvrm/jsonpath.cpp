@@ -3,11 +3,16 @@
 
 namespace libvrm {
 
+JsonPath::JsonPath(std::string_view str)
+  : m_str(str)
+{
+}
+
 size_t
 JsonPath::Size() const
 {
   size_t size = 0;
-  for (auto jp : Str | std::views::split('.')) {
+  for (auto jp : m_str | std::views::split('.')) {
     ++size;
   }
   return size;
@@ -17,7 +22,7 @@ std::string_view
 JsonPath::operator[](size_t i) const
 {
   size_t size = 0;
-  for (auto jp : Str | std::views::split('.')) {
+  for (auto jp : m_str | std::views::split('.')) {
     if (i == size) {
       return std::string_view{ jp };
     }
