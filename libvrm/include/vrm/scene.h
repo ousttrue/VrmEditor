@@ -152,46 +152,6 @@ struct Scene
     return _IndexOf<std::shared_ptr<Node>>(m_nodes, node);
   }
 
-  vrm::HumanPose UpdateHumanPose()
-  {
-    auto mult4 = [](const DirectX::XMVECTOR& q0,
-                    const DirectX::XMVECTOR& q1,
-                    const DirectX::XMVECTOR& q2,
-                    const DirectX::XMVECTOR& q3) -> DirectX::XMVECTOR {
-      return DirectX::XMQuaternionMultiply(
-        DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(q0, q1),
-                                      q2),
-        q3);
-    };
-
-    // retarget human pose
-    m_humanBoneMap.clear();
-    m_rotations.clear();
-    for (auto& node : m_nodes) {
-      if (auto humanoid = node->Humanoid) {
-        m_humanBoneMap.push_back(humanoid->HumanBone);
-        if (m_humanBoneMap.back() == vrm::HumanBones::hips) {
-          m_pose.RootPosition = node->WorldTransform.Translation;
-        }
-
-        // retarget
-        auto normalized =
-          mult4(DirectX::XMQuaternionInverse(
-                  DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation)),
-                DirectX::XMLoadFloat4(&node->Transform.Rotation),
-                DirectX::XMQuaternionInverse(
-                  DirectX::XMLoadFloat4(&node->InitialTransform.Rotation)),
-                DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation));
-
-        m_rotations.push_back({});
-        DirectX::XMStoreFloat4(&m_rotations.back(), normalized);
-      }
-    }
-    m_pose.Bones = m_humanBoneMap;
-    m_pose.Rotations = m_rotations;
-    return m_pose;
-  }
-
   void RaiseSceneUpdated()
   {
     for (auto& callback : m_sceneUpdated) {
@@ -236,6 +196,7 @@ public:
   void TraverseJson(const EnterJson& enter,
                     const LeaveJson& leave,
                     nlohmann::json* j = nullptr);
+  vrm::HumanPose UpdateHumanPose();
   void SetHumanPose(const vrm::HumanPose& pose);
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
 

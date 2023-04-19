@@ -973,6 +973,51 @@ Scene::TraverseJson(const EnterJson& enter,
   }
 }
 
+vrm::HumanPose
+Scene::UpdateHumanPose()
+{
+  auto mult4 = [](const DirectX::XMVECTOR& q0,
+                  const DirectX::XMVECTOR& q1,
+                  const DirectX::XMVECTOR& q2,
+                  const DirectX::XMVECTOR& q3) -> DirectX::XMVECTOR {
+    return DirectX::XMQuaternionMultiply(
+      DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(q0, q1), q2),
+      q3);
+  };
+
+  // retarget human pose
+  m_humanBoneMap.clear();
+  m_rotations.clear();
+  for (auto& node : m_nodes) {
+    if (auto humanoid = node->Humanoid) {
+      m_humanBoneMap.push_back(humanoid->HumanBone);
+      if (m_humanBoneMap.back() == vrm::HumanBones::hips) {
+        // delta move
+        DirectX::XMStoreFloat3(
+          &m_pose.RootPosition,
+          DirectX::XMVectorSubtract(
+            DirectX::XMLoadFloat3(&node->WorldTransform.Translation),
+            DirectX::XMLoadFloat3(&node->WorldInitialTransform.Translation)));
+      }
+
+      // retarget
+      auto normalized =
+        mult4(DirectX::XMQuaternionInverse(
+                DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation)),
+              DirectX::XMLoadFloat4(&node->Transform.Rotation),
+              DirectX::XMQuaternionInverse(
+                DirectX::XMLoadFloat4(&node->InitialTransform.Rotation)),
+              DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation));
+
+      m_rotations.push_back({});
+      DirectX::XMStoreFloat4(&m_rotations.back(), normalized);
+    }
+  }
+  m_pose.Bones = m_humanBoneMap;
+  m_pose.Rotations = m_rotations;
+  return m_pose;
+}
+
 void
 Scene::SetHumanPose(const vrm::HumanPose& pose)
 {
@@ -981,7 +1026,11 @@ Scene::SetHumanPose(const vrm::HumanPose& pose)
   for (int i = 0; i < pose.Bones.size(); ++i) {
     if (auto node = GetBoneNode(pose.Bones[i])) {
       if (i == 0) {
-        node->Transform.Translation = pose.RootPosition;
+        DirectX::XMStoreFloat3(
+          &node->Transform.Translation,
+          DirectX::XMVectorAdd(
+            DirectX::XMLoadFloat3(&node->InitialTransform.Translation),
+            DirectX::XMLoadFloat3(&pose.RootPosition)));
       }
 
       auto worldInitial =

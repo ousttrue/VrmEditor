@@ -78,12 +78,6 @@ Link::Draw()
   ImNodes::Link(Id, Start, End);
 }
 
-struct HumanPoseStreamImpl
-{
-
-  void Draw() {}
-};
-
 HumanPoseStream::HumanPoseStream()
 {
   ImNodes::CreateContext();

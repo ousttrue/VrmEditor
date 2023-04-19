@@ -66,6 +66,11 @@ InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
   for (auto& joint : bvh->joints) {
     PushJoint(scene, joint, bvh->GuessScaling());
   };
+  scene->m_roots[0]->CalcWorldMatrix(true);
+  // move ground
+  auto bb = scene->GetBoundingBox();
+  scene->m_roots[0]->Transform.Translation.y -= bb.Min.y;
+
   scene->InitializeNodes();
   scene->RaiseSceneUpdated();
 }
