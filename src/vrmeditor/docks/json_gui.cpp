@@ -12,7 +12,7 @@
 #include <string_view>
 
 JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
-  : m_factories({
+  : m_guiFactories({
       { "/accessors/*", JsonGuiAccessor },
       { "/images", JsonGuiImageList },
       { "/meshes", JsonGuiMeshList },
@@ -104,7 +104,7 @@ JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     m_selected = jsonpath;
-    if (auto mached = Match(m_selected)) {
+    if (auto mached = MatchGui(m_selected)) {
       m_cache = (*mached)(m_scene, m_selected);
     } else {
       m_cache = []() {};
@@ -173,14 +173,3 @@ JsonGui::Show(float indent)
   ImGui::EndChild();
 }
 
-std::optional<ShowGuiFactory>
-JsonGui::Match(std::string_view jsonpath)
-{
-  for (auto& f : m_factories) {
-    if (f.Match(jsonpath)) {
-      return f.Factory;
-    }
-  }
-  // not found
-  return {};
-}
