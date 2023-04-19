@@ -65,11 +65,23 @@ class Gui
   std::filesystem::path m_iconFont;
   bool m_resetLayout = false;
 
+  std::list<Dock> m_docks;
+
 public:
   int m_fontSize = 20;
-  std::list<Dock> m_docks;
   Gui(const void* window, const char* glsl_version);
   ~Gui();
+  void AddDock(const Dock& dock)
+  {
+    auto found = std::find_if(m_docks.begin(), m_docks.end(), [&dock](auto& d) {
+      return d.Name == dock.Name;
+    });
+    if (found != m_docks.end()) {
+      m_docks.erase(found);
+    }
+    m_docks.push_back(dock);
+  }
+
   void LoadState(std::string_view ini);
   std::string SaveState();
 

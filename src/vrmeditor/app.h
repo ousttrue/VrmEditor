@@ -19,7 +19,7 @@ namespace grapho {
 class OrbitView;
 }
 
-namespace humanpose{
+namespace humanpose {
 struct HumanPoseStream;
 }
 
@@ -56,6 +56,8 @@ public:
     static App s_instance;
     return s_instance;
   }
+
+  void SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene);
   LogStream Log(LogLevel level);
   void LoadImGuiIni(std::string_view ini);
   void LoadImNodesIni(std::string_view ini);
@@ -65,7 +67,6 @@ public:
   const std::shared_ptr<LuaEngine>& Lua() const { return m_lua; }
   int Run();
   bool WriteScene(const std::filesystem::path& path);
-  void ClearScene();
 
   // expose to lua
   const std::shared_ptr<Gui>& GetGui() const { return m_gui; }

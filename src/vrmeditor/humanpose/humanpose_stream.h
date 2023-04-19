@@ -8,7 +8,7 @@ class Cuber;
 class UdpReceiver;
 
 namespace humanpose {
-using HumanPoseFunc = std::function<void(const libvrm::vrm::HumanPose& pose)>;
+using HumanPoseFunc = std::function<bool(const libvrm::vrm::HumanPose& pose)>;
 
 struct Link
 {

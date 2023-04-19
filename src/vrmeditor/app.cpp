@@ -34,7 +34,6 @@ App::App()
   auto file = get_home() / ".vrmeditor.ini.lua";
   m_ini = file.u8string();
 
-  m_scene = std::make_shared<libvrm::gltf::Scene>();
   m_view = std::make_shared<grapho::OrbitView>();
   m_timeline = std::make_shared<libvrm::Timeline>();
 
@@ -54,14 +53,43 @@ App::App()
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
 
   auto track = m_timeline->AddTrack("PoseStream", {});
-  track->Callbacks.push_back(
-    [pose = PoseStream](auto time, auto repeat) { pose->Update(time); });
-
-  PoseStream->HumanPoseChanged.push_back(
-    [dst = m_scene](const auto& pose) { dst->SetHumanPose(pose); });
+  track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
+    pose->Update(time);
+    return true;
+  });
 }
 
 App::~App() {}
+
+void
+App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
+{
+  m_scene = scene;
+  std::weak_ptr<libvrm::gltf::Scene> weak = scene;
+  PoseStream->HumanPoseChanged.push_back([weak](const auto& pose) {
+    if (auto scene = weak.lock()) {
+      scene->SetHumanPose(pose);
+      return true;
+    } else {
+      return false;
+    }
+  });
+
+  auto addDock = [gui = m_gui](const Dock& dock) { gui->AddDock(dock); };
+  auto indent = m_gui->m_fontSize * 0.5f;
+
+  {
+    JsonDock::Create(addDock, "gltf-json", m_scene, indent);
+    HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
+    auto selection =
+      SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
+    ViewDock::Create(
+      addDock, "scene-view", m_scene, selection, m_view, m_timeline);
+    VrmDock::CreateVrm(addDock, "vrm", m_scene);
+    VrmDock::CreateExpression(addDock, "expression", m_scene);
+    ExportDock::Create(addDock, "export", m_timeline, m_scene, indent);
+  }
+}
 
 LogStream
 App::Log(LogLevel level)
@@ -113,12 +141,6 @@ App::SaveState()
      << (maximize ? "true" : "false") << ")\n\n";
 }
 
-void
-App::ClearScene()
-{
-  m_scene->Clear();
-}
-
 bool
 App::WriteScene(const std::filesystem::path& path)
 {
@@ -159,29 +181,35 @@ App::LoadPath(const std::filesystem::path& path)
 bool
 App::LoadModel(const std::filesystem::path& path)
 {
-  m_scene->Clear();
-  if (auto result = m_scene->LoadPath(path)) {
+  if (auto scene = libvrm::gltf::Scene::LoadPath(path)) {
+    SetScene(*scene);
     // bind time line
-    for (auto& animation : m_scene->m_animations) {
+    for (auto& animation : (*scene)->m_animations) {
       auto track = m_timeline->AddTrack("gltf", animation->Duration());
-      track->Callbacks.push_back(
-        [animation, scene = m_scene](auto time, bool repeat) {
+      std::weak_ptr<libvrm::gltf::Scene> weak = *scene;
+      track->Callbacks.push_back([animation, weak](auto time, bool repeat) {
+        if (auto scene = weak.lock()) {
           animation->Update(time, scene->m_nodes, repeat);
-        });
+          return true;
+        } else {
+          return false;
+        }
+      });
 
       // first animation only
       break;
     }
 
     // update view position
-    auto bb = m_scene->GetBoundingBox();
+    auto bb = (*scene)->GetBoundingBox();
     m_view->Fit(bb.Min, bb.Max);
 
     Log(LogLevel::Info) << path;
 
     return true;
   } else {
-    Log(LogLevel::Error) << result.error();
+    Log(LogLevel::Error) << scene.error();
+    SetScene(std::make_shared<libvrm::gltf::Scene>());
     return false;
   }
 }
@@ -216,7 +244,7 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
   };
 
   auto dock = m_assets.back()->CreateDock(callback);
-  m_gui->m_docks.push_back(dock);
+  m_gui->AddDock(dock);
 
   Log(LogLevel::Info) << name << " => " << path;
   return true;
@@ -229,24 +257,11 @@ App::Run()
   m_lua->DoFile(m_ini);
 
   auto addDock = [gui = m_gui](const Dock& dock) {
-    gui->m_docks.push_back(dock);
+    gui->AddDock(dock);
   };
-  auto indent = m_gui->m_fontSize * 0.5f;
-
-  {
-    JsonDock::Create(addDock, "gltf-json", m_scene, indent);
-    HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
-    auto selection =
-      SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
-    ViewDock::Create(
-      addDock, "scene-view", m_scene, selection, m_view, m_timeline);
-    VrmDock::CreateVrm(addDock, "vrm", m_scene);
-    VrmDock::CreateExpression(addDock, "expression", m_scene);
-  }
 
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
-  ExportDock::Create(addDock, "export", m_timeline, m_scene, indent);
   glr::CreateDock(addDock, "OpenGL resource");
 
   PoseStream->CreateDock(addDock);

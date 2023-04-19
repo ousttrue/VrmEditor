@@ -60,11 +60,22 @@ Scene::Scene()
   m_spring = std::make_shared<vrm::SpringSolver>();
 }
 
-std::expected<bool, std::string>
+Scene::~Scene()
+{
+  std::cout << "Scene::~Scene()" << std::endl;
+}
+
+std::expected<std::shared_ptr<Scene>, std::string>
 Scene::LoadPath(const std::filesystem::path& path)
 {
   if (auto bytes = ReadAllBytes(path)) {
-    return LoadBytes(*bytes, std::make_shared<Directory>(path.parent_path()));
+    auto ptr = std::make_shared<Scene>();
+    if (auto load = ptr->LoadBytes(
+          *bytes, std::make_shared<Directory>(path.parent_path()))) {
+      return ptr;
+    } else {
+      return std::unexpected(load.error());
+    }
   } else {
     return std::unexpected{ bytes.error() };
   }

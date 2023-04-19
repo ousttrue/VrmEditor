@@ -92,8 +92,12 @@ HumanPoseStream::HumanPoseStream()
   sink->Pull = [this](GraphNodeBase::InputNodes inputs) {
     if (std::holds_alternative<libvrm::vrm::HumanPose>(inputs[0])) {
       auto value = std::get<libvrm::vrm::HumanPose>(inputs[0]);
-      for (auto& callback : HumanPoseChanged) {
-        callback(value);
+      for (auto it = HumanPoseChanged.begin(); it != HumanPoseChanged.end();) {
+        if ((*it)(value)) {
+          ++it;
+        } else {
+          it = HumanPoseChanged.erase(it);
+        }
       }
     }
   };

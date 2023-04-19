@@ -15,7 +15,7 @@ class io_context;
 namespace libvrm {
 using Time = std::chrono::duration<double, std::ratio<1, 1>>;
 
-using OnTime = std::function<void(Time, bool loop)>;
+using OnTime = std::function<bool(Time, bool loop)>;
 
 struct Track
 {
@@ -40,8 +40,12 @@ struct Track
       // delta is zero
       StartTime = time;
     }
-    for (auto& callback : Callbacks) {
-      callback(delta, Loop);
+    for (auto it = Callbacks.begin(); it != Callbacks.end();) {
+      if ((*it)(delta, Loop)) {
+        ++it;
+      } else {
+        it = Callbacks.erase(it);
+      }
     }
   }
 };

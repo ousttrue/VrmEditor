@@ -104,6 +104,7 @@ struct Scene
   vrm::HumanPose m_pose;
 
   Scene();
+  ~Scene();
   Scene(const Scene&) = delete;
   Scene& operator=(const Scene&) = delete;
 
@@ -169,7 +170,7 @@ struct Scene
     return -1;
   }
 
-  std::expected<bool, std::string> LoadPath(const std::filesystem::path& path);
+  static std::expected<std::shared_ptr<Scene>, std::string> LoadPath(const std::filesystem::path& path);
   std::expected<bool, std::string> LoadBytes(
     std::span<const uint8_t> bytes,
     const std::shared_ptr<Directory>& dir = nullptr);
