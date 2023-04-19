@@ -313,6 +313,39 @@ Exporter::ExportMesh(const Scene& scene, const std::shared_ptr<Mesh>& mesh)
   m_writer.object_close();
 }
 
+template<typename T, typename V, typename S>
+inline void
+PushVertices(std::vector<T>& indices,
+             const std::shared_ptr<Mesh>& mesh,
+             uint32_t& index,
+             uint32_t drawCount,
+             const V& push_vertex,
+             bool has_skinning,
+             const S& push_skinning)
+{
+  std::unordered_map<uint32_t, uint32_t> vertexIndexMap;
+  for (int i = 0; i < drawCount; ++i, ++index) {
+    auto vertex_index = mesh->m_indices[index];
+    auto found = vertexIndexMap.find(vertex_index);
+    if (found == vertexIndexMap.end()) {
+      // new vertex
+      // 分割するので index が 0 に戻るので vertex_index ではなく i を使う
+      indices.push_back(i);
+      vertexIndexMap.insert({ vertex_index, i });
+    } else {
+      // already exists
+      indices.push_back(found->second);
+    }
+    push_vertex(mesh->m_vertices[vertex_index]);
+    if (has_skinning) {
+      push_skinning(mesh->m_bindings[vertex_index]);
+    }
+  }
+}
+
+//
+// vertex buffer を submesh で分割する
+//
 uint32_t
 Exporter::ExportMeshPrimitive(const Scene& scene,
                               const std::shared_ptr<Mesh>& mesh,
@@ -345,42 +378,39 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
 
   if (mesh->m_vertices.size() < 255) {
     std::vector<uint8_t> indices;
-    for (int i = 0; i < prim.drawCount; ++i, ++index) {
-      auto vertex_index = mesh->m_indices[index];
-      indices.push_back(vertex_index);
-      push_vertex(mesh->m_vertices[vertex_index]);
-      if (has_skinning) {
-        push_skinning(mesh->m_bindings[vertex_index]);
-      }
-    }
+    PushVertices(indices,
+                 mesh,
+                 index,
+                 prim.drawCount,
+                 push_vertex,
+                 has_skinning,
+                 push_skinning);
     auto indices_index = m_binWriter.PushAccessor(indices);
     m_writer.key("indices");
     m_writer.value(indices_index);
 
   } else if (mesh->m_vertices.size() < 65535) {
     std::vector<uint16_t> indices;
-    for (int i = 0; i < prim.drawCount; ++i, ++index) {
-      auto vertex_index = mesh->m_indices[index];
-      indices.push_back(vertex_index);
-      push_vertex(mesh->m_vertices[vertex_index]);
-      if (has_skinning) {
-        push_skinning(mesh->m_bindings[vertex_index]);
-      }
-    }
+    PushVertices(indices,
+                 mesh,
+                 index,
+                 prim.drawCount,
+                 push_vertex,
+                 has_skinning,
+                 push_skinning);
     auto indices_index = m_binWriter.PushAccessor(indices);
     m_writer.key("indices");
     m_writer.value(indices_index);
 
   } else {
     std::vector<uint32_t> indices;
-    for (int i = 0; i < prim.drawCount; ++i, ++index) {
-      auto vertex_index = mesh->m_indices[index];
-      indices.push_back(vertex_index);
-      push_vertex(mesh->m_vertices[vertex_index]);
-      if (has_skinning) {
-        push_skinning(mesh->m_bindings[vertex_index]);
-      }
-    }
+    PushVertices(indices,
+                 mesh,
+                 index,
+                 prim.drawCount,
+                 push_vertex,
+                 has_skinning,
+                 push_skinning);
     auto indices_index = m_binWriter.PushAccessor(indices);
     m_writer.key("indices");
     m_writer.value(indices_index);
@@ -417,6 +447,7 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
   }
 
   m_writer.object_close();
+
   return index;
 }
 
