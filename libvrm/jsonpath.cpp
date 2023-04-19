@@ -12,7 +12,7 @@ size_t
 JsonPath::Size() const
 {
   size_t size = 0;
-  for (auto jp : m_str | std::views::split('.')) {
+  for (auto jp : m_str | std::views::split(DELIMITER)) {
     ++size;
   }
   return size;
@@ -22,7 +22,7 @@ std::string_view
 JsonPath::operator[](size_t i) const
 {
   size_t size = 0;
-  for (auto jp : m_str | std::views::split('.')) {
+  for (auto jp : m_str | std::views::split(DELIMITER)) {
     if (i == size) {
       return std::string_view{ jp };
     }
@@ -53,8 +53,8 @@ JsonPath::Match(std::string_view rhs) const
   auto rs = rhs.begin();
 
   for (; ls != m_str.end() && rs != rhs.end();) {
-    auto le = std::find(ls, m_str.end(), '.');
-    auto re = std::find(rs, rhs.end(), '.');
+    auto le = std::find(ls, m_str.end(), DELIMITER);
+    auto re = std::find(rs, rhs.end(), DELIMITER);
 
     std::string_view ll(ls, le);
     std::string_view rr(rs, re);

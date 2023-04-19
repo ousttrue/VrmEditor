@@ -9,7 +9,7 @@
 #include <vrm/material.h>
 
 inline ShowGui
-ShowSelected_images(const std::shared_ptr<libvrm::gltf::Scene>& scene,
+JsonGuiImageList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                     std::string_view jsonpath)
 {
   std::vector<std::weak_ptr<grapho::gl3::Texture>> textures;

@@ -3,6 +3,7 @@
 #include "vrm/bvh.h"
 #include "vrm/dmath.h"
 #include "vrm/glb.h"
+#include "vrm/jsonpath.h"
 #include "vrm/material.h"
 #include "vrm/mesh.h"
 #include "vrm/node.h"
@@ -935,10 +936,9 @@ Scene::TraverseJson(const EnterJson& enter,
 {
   if (!item) {
     // root
-    m_jsonpath.clear();
+    m_jsonpath = "/";
     auto size = m_jsonpath.size();
     for (auto& kv : m_gltf.Json.items()) {
-      // m_jsonpath.push_back('.');
       m_jsonpath += kv.key();
       TraverseJson(enter, leave, &kv.value());
       m_jsonpath.resize(size);
@@ -950,7 +950,7 @@ Scene::TraverseJson(const EnterJson& enter,
     if (item->is_object()) {
       auto size = m_jsonpath.size();
       for (auto& kv : item->items()) {
-        m_jsonpath.push_back('.');
+        m_jsonpath.push_back(DELIMITER);
         m_jsonpath += kv.key();
         TraverseJson(enter, leave, &kv.value());
         m_jsonpath.resize(size);
@@ -961,7 +961,7 @@ Scene::TraverseJson(const EnterJson& enter,
         std::stringstream ss;
         ss << i;
         auto str = ss.str();
-        m_jsonpath.push_back('.');
+        m_jsonpath.push_back(DELIMITER);
         m_jsonpath += str;
         TraverseJson(enter, leave, &(*item)[i]);
         m_jsonpath.resize(size);

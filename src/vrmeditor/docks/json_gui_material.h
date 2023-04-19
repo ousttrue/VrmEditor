@@ -3,7 +3,7 @@
 #include <imgui.h>
 
 inline ShowGui
-ShowSelected_materials(const std::shared_ptr<libvrm::gltf::Scene>& scene,
+JsonGuiMaterialList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                        std::string_view jsonpath)
 {
   return []() {

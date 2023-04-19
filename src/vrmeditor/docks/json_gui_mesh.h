@@ -4,7 +4,7 @@
 #include <imgui.h>
 
 inline ShowGui
-ShowSelected_meshes(const std::shared_ptr<libvrm::gltf::Scene>& scene,
+JsonGuiMeshList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                     std::string_view jsonpath)
 {
   return [scene]() {
@@ -28,10 +28,10 @@ ShowSelected_meshes(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 }
 
 inline ShowGui
-ShowSelected_prims(const std::shared_ptr<libvrm::gltf::Scene>& scene,
+JsonGuiMesh(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                    std::string_view jsonpath)
 {
-  if (auto _i = libvrm::JsonPath(jsonpath).GetInt(1)) {
+  if (auto _i = libvrm::JsonPath(jsonpath).GetLastInt()) {
     auto i = *_i;
     return [scene,
             prims = scene->m_gltf.Json.at("meshes").at(i).at("primitives")]() {

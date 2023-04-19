@@ -11,10 +11,11 @@
 
 JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
   : m_factories({
-      { "accessors.*", ShowSelected_accessors },
-      { "images", ShowSelected_images },
-      { "meshes", ShowSelected_meshes },
-      { "meshes.*", ShowSelected_prims },
+      { "/accessors/*", JsonGuiAccessor },
+      { "/images", JsonGuiImageList },
+      { "/meshes", JsonGuiMeshList },
+      { "/meshes/*", JsonGuiMesh },
+      { "/skins/*/inverseBindMatrices", JsonGuiAccessor },
     })
   , m_scene(scene)
 {
@@ -43,7 +44,7 @@ JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
   std::string_view kind;
   std::string_view key;
   int i = 0;
-  for (auto jp : jsonpath | std::views::split('.')) {
+  for (auto jp : jsonpath | std::views::split(libvrm::DELIMITER)) {
     key = std::string_view(jp);
     if (i == 0) {
       kind = key;

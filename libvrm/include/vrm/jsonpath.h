@@ -5,6 +5,9 @@
 #include <vector>
 
 namespace libvrm {
+
+const auto DELIMITER = '/';
+
 class JsonPath
 {
   std::string_view m_str;
@@ -14,6 +17,7 @@ public:
   size_t Size() const;
   std::string_view operator[](size_t i) const;
   std::optional<int> GetInt(int n) const;
+  std::optional<int> GetLastInt() const { return GetInt(Size() - 1); }
 
   bool operator==(const JsonPath& rhs) const { return m_str == rhs.m_str; }
   bool operator!=(const JsonPath& rhs) const { return m_str != rhs.m_str; }
