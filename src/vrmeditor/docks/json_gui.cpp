@@ -3,6 +3,7 @@
 #include "json_gui_images.h"
 #include "json_gui_material.h"
 #include "json_gui_mesh.h"
+#include "json_gui_node.h"
 #include <charconv>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -16,6 +17,7 @@ JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
       { "/meshes", JsonGuiMeshList },
       { "/meshes/*", JsonGuiMesh },
       { "/skins/*/inverseBindMatrices", JsonGuiAccessor },
+      { "/nodes", JsonGuiNodeList },
     })
   , m_scene(scene)
 {
