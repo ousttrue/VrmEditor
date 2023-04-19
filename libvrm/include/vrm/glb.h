@@ -44,7 +44,7 @@ struct Glb
       + 8 + BinChunk.size() + BinPadding();
   }
 
-  bool WriteTo(const std::filesystem::path& path);
+  bool WriteTo(std::ostream &os);
 };
 
 }

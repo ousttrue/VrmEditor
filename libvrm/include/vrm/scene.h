@@ -168,11 +168,17 @@ struct Scene
   }
 
   std::expected<bool, std::string> LoadPath(const std::filesystem::path& path);
+  std::expected<bool, std::string> LoadBytes(
+    std::span<const uint8_t> bytes,
+    const std::shared_ptr<Directory>& dir = nullptr);
+
+private:
   std::expected<bool, std::string> Load(
     std::span<const uint8_t> json_chunk,
     std::span<const uint8_t> bin_chunk = {},
     const std::shared_ptr<Directory>& dir = nullptr);
 
+public:
   std::expected<bool, std::string> AddIndices(
     int vertex_offset,
     Mesh* mesh,

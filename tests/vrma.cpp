@@ -33,11 +33,14 @@ TEST(VRMA, simple)
   libvrm::gltf::Exporter exporter;
   exporter.Export(scene);
 
+  std::ofstream os("out.vrma", std::ios::binary);
+  assert (os);
+
   libvrm::gltf::Glb{
     .JsonChunk = exporter.JsonChunk,
     .BinChunk = exporter.BinChunk,
   }
-    .WriteTo("out.vrma");
+    .WriteTo(os);
 
   EXPECT_TRUE(true);
 }

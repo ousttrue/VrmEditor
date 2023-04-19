@@ -125,11 +125,16 @@ App::WriteScene(const std::filesystem::path& path)
   libvrm::gltf::Exporter exporter;
   exporter.Export(*m_scene);
 
+  std::ofstream os(path, std::ios::binary);
+  if (!os) {
+    return false;
+  }
+
   return libvrm::gltf::Glb{
     .JsonChunk = exporter.JsonChunk,
     .BinChunk = exporter.BinChunk,
   }
-    .WriteTo(path);
+    .WriteTo(os);
 }
 
 bool

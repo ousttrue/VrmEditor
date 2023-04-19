@@ -17,6 +17,8 @@ public:
 
   bool operator==(const JsonPath& rhs) const { return m_str == rhs.m_str; }
   bool operator!=(const JsonPath& rhs) const { return m_str != rhs.m_str; }
+
+  bool Match(std::string_view rhs) const;
 };
 
 }

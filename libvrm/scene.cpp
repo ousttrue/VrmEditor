@@ -62,20 +62,25 @@ Scene::Scene()
 std::expected<bool, std::string>
 Scene::LoadPath(const std::filesystem::path& path)
 {
-  if (auto bytes = ReadAllBytes(path, m_bytes)) {
-    auto dir = std::make_shared<Directory>(path.parent_path());
-
-    if (auto glb = Glb::Parse(m_bytes)) {
-      // as glb
-      return Load(glb->JsonChunk, glb->BinChunk, dir);
-    }
-
-    // try gltf
-    return Load(m_bytes, {}, dir);
-
+  if (auto bytes = ReadAllBytes(path)) {
+    return LoadBytes(*bytes, std::make_shared<Directory>(path.parent_path()));
   } else {
     return std::unexpected{ bytes.error() };
   }
+}
+
+std::expected<bool, std::string>
+Scene::LoadBytes(std::span<const uint8_t> bytes,
+                 const std::shared_ptr<Directory>& dir)
+{
+  m_bytes.assign(bytes.begin(), bytes.end());
+  if (auto glb = Glb::Parse(m_bytes)) {
+    // as glb
+    return Load(glb->JsonChunk, glb->BinChunk, dir);
+  }
+
+  // try gltf
+  return Load(m_bytes, {}, dir);
 }
 
 std::expected<bool, std::string>

@@ -30,7 +30,16 @@ ExportDock::Create(const AddDockFunc& addDock,
     if (ImGui::Button("export scene")) {
       libvrm::gltf::Exporter exporter;
       exporter.Export(*scene);
-      debug_scene->Load(exporter.JsonChunk, exporter.BinChunk);
+
+      std::stringstream ss;
+      libvrm::gltf::Glb{
+        .JsonChunk = exporter.JsonChunk,
+        .BinChunk = exporter.BinChunk,
+      }
+        .WriteTo(ss);
+      auto str = ss.str();
+      
+      debug_scene->LoadBytes({ (const uint8_t*)str.data(), str.size() });
     }
 
     // json tree

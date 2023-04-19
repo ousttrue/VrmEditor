@@ -108,13 +108,8 @@ Glb::Parse(std::span<const uint8_t> bytes)
 }
 
 bool
-Glb::WriteTo(const std::filesystem::path& path)
+Glb::WriteTo(std::ostream &os)
 {
-  std::ofstream os(path, std::ios::binary);
-  if (!os) {
-    return false;
-  }
-
   BinaryWriter w(os);
 
   // GLB header

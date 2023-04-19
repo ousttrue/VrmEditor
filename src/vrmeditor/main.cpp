@@ -15,9 +15,9 @@ main(int __argc, char** __argv)
 #endif
 {
 
-#ifdef _WIN32
-  RedirectIOToConsole();
-#endif
+// #ifdef _WIN32
+//   RedirectIOToConsole();
+// #endif
 
   auto& app = App::Instance();
 

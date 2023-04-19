@@ -10,7 +10,13 @@
 #include <string_view>
 
 JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
-  : m_scene(scene)
+  : m_factories({
+      { "accessors.*", ShowSelected_accessors },
+      { "images", ShowSelected_images },
+      { "meshes", ShowSelected_meshes },
+      { "meshes.*", ShowSelected_prims },
+    })
+  , m_scene(scene)
 {
 }
 
@@ -88,7 +94,11 @@ JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     m_selected = jsonpath;
-    m_cache = {};
+    if (auto mached = Match(m_selected)) {
+      m_cache = (*mached)(m_scene, m_selected);
+    } else {
+      m_cache = []() {};
+    }
   }
 
   return node_open && !is_leaf;
@@ -148,31 +158,19 @@ JsonGui::Show(float indent)
 
   if (ImGui::BeginChild("##split-second", { size.x, s })) {
     ImGui::TextUnformatted(m_selected.c_str());
-
-    if (!m_cache) {
-      m_cache = CreateGui();
-    }
     m_cache();
   }
   ImGui::EndChild();
 }
 
-std::function<void()>
-JsonGui::CreateGui()
+std::optional<ShowGuiFactory>
+JsonGui::Match(std::string_view jsonpath)
 {
-  if (m_selected.size()) {
-    auto top = libvrm::JsonPath(m_selected)[0];
-    if (top == "accessors") {
-      return ShowSelected_accessors(m_scene, m_selected);
-    } else if (top == "meshes") {
-      return ShowSelected_meshes(m_scene, m_selected);
-    } else if (top == "materials") {
-      return ShowSelected_materials(m_scene, m_selected);
-    } else if (top == "images") {
-      return ShowSelected_images(m_scene, m_selected);
+  for (auto& f : m_factories) {
+    if (f.Match(jsonpath)) {
+      return f.Factory;
     }
   }
-
-  // default
-  return []() {};
+  // not found
+  return {};
 }

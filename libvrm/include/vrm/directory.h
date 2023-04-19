@@ -10,7 +10,7 @@
 
 namespace libvrm {
 inline std::expected<std::vector<uint8_t>, std::string>
-ReadAllBytes(const std::filesystem::path& path, std::vector<uint8_t>& buffer)
+ReadAllBytes(const std::filesystem::path& path)
 {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
@@ -18,7 +18,7 @@ ReadAllBytes(const std::filesystem::path& path, std::vector<uint8_t>& buffer)
   }
 
   auto pos = ifs.tellg();
-  buffer.resize(pos);
+  std::vector<uint8_t> buffer(pos);
   ifs.seekg(0, std::ios::beg);
   ifs.read((char*)buffer.data(), pos);
   return buffer;
@@ -57,10 +57,9 @@ struct Directory
     }
 
     auto path = Base / uri;
-    std::vector<uint8_t> buffer;
-    if (auto bytes = ReadAllBytes(path, buffer)) {
+    if (auto bytes = ReadAllBytes(path)) {
       std::string key{ uri.begin(), uri.end() };
-      FileCaches.insert({ key, buffer });
+      FileCaches.insert({ key, *bytes });
       return FileCaches[key];
     } else {
       return bytes;

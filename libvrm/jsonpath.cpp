@@ -46,4 +46,36 @@ JsonPath::GetInt(int n) const
   return {};
 }
 
+bool
+JsonPath::Match(std::string_view rhs) const
+{
+  auto ls = m_str.begin();
+  auto rs = rhs.begin();
+
+  for (; ls != m_str.end() && rs != rhs.end();) {
+    auto le = std::find(ls, m_str.end(), '.');
+    auto re = std::find(rs, rhs.end(), '.');
+
+    std::string_view ll(ls, le);
+    std::string_view rr(rs, re);
+
+    if (ll == "*") {
+      // wildcard
+    } else if (ll != rr) {
+      return false;
+    }
+
+    ls = le;
+    if (ls != m_str.end()) {
+      ++ls;
+    }
+    rs = re;
+    if (rs != rhs.end()) {
+      ++rs;
+    }
+  }
+
+  return ls == m_str.end() && rs == rhs.end();
+}
+
 }
