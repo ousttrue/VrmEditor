@@ -63,6 +63,7 @@ void
 InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
                        const std::shared_ptr<bvh::Bvh>& bvh)
 {
+  scene->m_title = "BVH";
   for (auto& joint : bvh->joints) {
     PushJoint(scene, joint, bvh->GuessScaling());
   };

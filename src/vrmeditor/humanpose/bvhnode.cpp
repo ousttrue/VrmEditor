@@ -64,7 +64,7 @@ void
 BvhNode::DrawContent()
 {
   ImGui::Checkbox("init pose", &m_initialPose);
-  m_preview->Draw();
+  m_preview->Draw(m_scene->m_title.c_str());
 }
 
 }

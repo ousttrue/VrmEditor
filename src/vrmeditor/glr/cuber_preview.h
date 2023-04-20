@@ -1,6 +1,7 @@
 #pragma once
 #include "cuber.h"
 #include "gl3renderer.h"
+#include "overlay.h"
 #include "rendertarget.h"
 #include <imgui.h>
 #include <vrm/scene.h>
@@ -37,11 +38,15 @@ struct CuberPreview
     }
   }
 
-  void Draw()
+  void Draw(const char* title)
   {
+    auto sc = ImGui::GetCursorScreenPos();
     auto pos = ImGui::GetCursorPos();
+
     auto size = ImVec2{ 300, 300 };
     m_rt->show_fbo(pos.x, pos.y, size.x, size.y);
+
+    Overlay({ sc.x + size.x - 10, sc.y + 10 }, title);
   }
 };
 }

@@ -119,6 +119,8 @@ Scene::Load(std::span<const uint8_t> json_chunk,
 std::expected<bool, std::string>
 Scene::Parse()
 {
+  m_title = "glTF";
+
   if (has(m_gltf.Json, "extensionsRequired")) {
     for (auto& ex : m_gltf.Json.at("extensionsRequired")) {
       if (ex == "KHR_draco_mesh_compression") {
@@ -136,9 +138,11 @@ Scene::Parse()
       auto VRM = extensions.at("VRM");
       // TODO: meta
       m_vrm0 = std::make_shared<vrm::v0::Vrm>();
+      m_title = "vrm-0.x";
     }
     if (has(extensions, "VRMC_vrm")) {
       m_vrm1 = std::make_shared<vrm::v1::Vrm>();
+      m_title = "vrm-1.0";
     }
   }
 
@@ -315,7 +319,9 @@ Scene::ParseTexture(int i, const nlohmann::json& texture)
   auto name = texture.value("name", ss.str());
   auto ptr = std::make_shared<gltf::Texture>();
   ptr->Source = m_images[texture.at("source")];
-  ptr->Sampler = m_samplers[texture.at("sampler")];
+  if (has(texture, "sampler")) {
+    ptr->Sampler = m_samplers[texture.at("sampler")];
+  }
   return ptr;
 }
 

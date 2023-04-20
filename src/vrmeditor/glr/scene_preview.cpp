@@ -1,4 +1,5 @@
 #include "scene_preview.h"
+#include "overlay.h"
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <vrm/gizmo.h>
@@ -60,12 +61,15 @@ ScenePreview::ScenePreview(
 }
 
 void
-ScenePreview::Show()
+ScenePreview::Show(const char* title)
 {
+  auto sc = ImGui::GetCursorScreenPos();
   auto pos = ImGui::GetWindowPos();
   pos.y += ImGui::GetFrameHeight();
   auto size = ImGui::GetContentRegionAvail();
   Show(pos.x, pos.y, size.x, size.y);
+
+  Overlay({ sc.x + size.x - 10, sc.y + 10 }, title);
 }
 
 }

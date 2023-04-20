@@ -9,6 +9,7 @@ srcs = [
     'glr/scene_preview.cpp',
     'glr/rendertarget.cpp',
     'glr/line_gizmo.cpp',
+    'glr/overlay.cpp',
     'docks/gui.cpp',
     'docks/scene_dock.cpp',
     'docks/vrm_dock.cpp',

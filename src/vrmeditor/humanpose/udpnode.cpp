@@ -11,6 +11,7 @@ UdpNode::UdpNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
   m_scene = std::make_shared<libvrm::gltf::Scene>();
+  m_scene->m_title = "UDP";
 
   // update preview
   m_preview = std::make_shared<glr::CuberPreview>();
@@ -44,7 +45,7 @@ void
 UdpNode::DrawContent()
 {
   ImGui::Checkbox("init pose", &m_initialPose);
-  m_preview->Draw();
+  m_preview->Draw(m_scene->m_title.c_str());
 }
 
 }

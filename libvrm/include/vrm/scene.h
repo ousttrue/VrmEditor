@@ -76,6 +76,7 @@ struct Scene
 
   std::vector<uint8_t> m_bytes;
   Gltf m_gltf;
+  std::string m_title = "scene";
   std::vector<std::shared_ptr<TextureSampler>> m_samplers;
   std::vector<std::shared_ptr<Image>> m_images;
   std::vector<std::shared_ptr<Texture>> m_textures;
@@ -170,7 +171,8 @@ struct Scene
     return -1;
   }
 
-  static std::expected<std::shared_ptr<Scene>, std::string> LoadPath(const std::filesystem::path& path);
+  static std::expected<std::shared_ptr<Scene>, std::string> LoadPath(
+    const std::filesystem::path& path);
   std::expected<bool, std::string> LoadBytes(
     std::span<const uint8_t> bytes,
     const std::shared_ptr<Directory>& dir = nullptr);
