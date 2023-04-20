@@ -144,6 +144,9 @@ Exporter::Export(const Scene& scene)
   // last
   ExportBuffersViewsAccessors(scene);
 
+  //
+  // extensions
+  //
   if (scene.m_vrma) {
     m_writer.key("extensions");
     m_writer.object_open();
