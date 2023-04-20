@@ -76,7 +76,7 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
   });
 
   auto addDock = [gui = m_gui](const Dock& dock) { gui->AddDock(dock); };
-  auto indent = m_gui->m_fontSize * 0.5f;
+  auto indent = m_gui->FontSize * 0.5f;
 
   {
     JsonDock::Create(addDock, "gltf-json", m_scene, indent);
@@ -134,6 +134,14 @@ App::SaveState()
   // imgui
   os << "vrmeditor.imgui_load_ini [===[\n"
      << m_gui->SaveState() << "\n]===]\n\n";
+
+  // dock visibility
+  for (auto& dock : m_gui->Docks) {
+    if (!dock.IsOpen) {
+      os << "vrmeditor.show_dock('" << dock.Name << "', false)\n";
+    }
+  }
+  os << "\n";
 
   auto [width, height] = m_platform->WindowSize();
   auto maximize = m_platform->IsWindowMaximized();
@@ -256,9 +264,7 @@ App::Run()
   // must after App::App
   m_lua->DoFile(m_ini);
 
-  auto addDock = [gui = m_gui](const Dock& dock) {
-    gui->AddDock(dock);
-  };
+  auto addDock = [gui = m_gui](const Dock& dock) { gui->AddDock(dock); };
 
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
@@ -296,4 +302,10 @@ App::Run()
   SaveState();
 
   return 0;
+}
+
+void
+App::ShowDock(std::string_view name, bool visible)
+{
+  m_gui->SetDockVisible(name, visible);
 }

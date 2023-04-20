@@ -17,7 +17,7 @@
 const auto OPEN_FILE_DIALOG = "OPEN_FILE_DIALOG";
 const auto SAVE_FILE_DIALOG = "SAVE_FILE_DIALOG";
 
-const auto DOCK_SPACE = "VRM_DOCKSPACE";
+const auto DOCK_SPACE = "VRDocksPACE";
 
 void
 Dock::Show()
@@ -76,19 +76,19 @@ Gui::Gui(const void* window, const char* glsl_version)
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
 
-  m_docks.push_back(Dock(
+  Docks.push_back(Dock(
     "demo", [](const char*, bool* p_open) { ImGui::ShowDemoWindow(p_open); }));
-  m_docks.back().IsOpen = false;
+  Docks.back().IsOpen = false;
 
-  m_docks.push_back(Dock("metrics", [](const char*, bool* p_open) {
+  Docks.push_back(Dock("metrics", [](const char*, bool* p_open) {
     ImGui::ShowMetricsWindow(p_open);
   }));
-  m_docks.back().IsOpen = false;
+  Docks.back().IsOpen = false;
 
   PostTask([this]() { LoadFont(); });
 
-  m_docks.push_back(Dock("font", [this]() {
-    if (ImGui::SliderInt("fontSize", &m_fontSize, 10, 50)) {
+  Docks.push_back(Dock("font", [this]() {
+    if (ImGui::SliderInt("fontSize", &FontSize, 10, 50)) {
       PostTask([this]() { LoadFont(); });
     }
 
@@ -120,7 +120,7 @@ Gui::Gui(const void* window, const char* glsl_version)
     // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
     // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
   }));
-  m_docks.back().IsOpen = false;
+  Docks.back().IsOpen = false;
 
   ImGuiFileDialog::Instance()->SetFileStyle(
     IGFD_FileStyleByTypeDir,
@@ -214,10 +214,10 @@ Gui::LoadFont()
   m_initialized = true;
 
   ImFontConfig config;
-  config.SizePixels = static_cast<float>(m_fontSize);
+  config.SizePixels = static_cast<float>(FontSize);
   if (m_baseFont.string().size()) {
     io.Fonts->AddFontFromFileTTF(m_baseFont.string().c_str(),
-                                 static_cast<float>(m_fontSize));
+                                 static_cast<float>(FontSize));
   } else {
     // default font
     io.Fonts->AddFontDefault(&config);
@@ -243,7 +243,7 @@ Gui::LoadFont()
       //
       0,
     };
-    auto iconFontSize = static_cast<float>(m_fontSize * 2.0f / 3.0f);
+    auto iconFontSize = static_cast<float>(FontSize * 2.0f / 3.0f);
     config.PixelSnapH = true;
     config.GlyphMinAdvanceX = iconFontSize;
     config.SizePixels = iconFontSize;
@@ -460,7 +460,7 @@ Gui::DockSpace()
       // Disabling fullscreen would allow the window to be moved to the front of
       // other windows, which we can't undo at the moment without finer window
       // depth/z control.
-      for (auto& dock : m_docks) {
+      for (auto& dock : Docks) {
         ImGui::MenuItem(dock.Name.c_str(), nullptr, &dock.IsOpen);
       }
       ImGui::EndMenu();
@@ -471,7 +471,7 @@ Gui::DockSpace()
 
   ImGui::End();
 
-  for (auto& dock : m_docks) {
+  for (auto& dock : Docks) {
     dock.Show();
   }
 

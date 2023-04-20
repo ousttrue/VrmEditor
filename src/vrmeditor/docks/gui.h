@@ -65,21 +65,36 @@ class Gui
   std::filesystem::path m_iconFont;
   bool m_resetLayout = false;
 
-  std::list<Dock> m_docks;
-
 public:
-  int m_fontSize = 20;
+  std::list<Dock> Docks;
+  int FontSize = 20;
   Gui(const void* window, const char* glsl_version);
   ~Gui();
   void AddDock(const Dock& dock)
   {
-    auto found = std::find_if(m_docks.begin(), m_docks.end(), [&dock](auto& d) {
+    bool visible = true;
+    auto found = std::find_if(Docks.begin(), Docks.end(), [&dock](auto& d) {
       return d.Name == dock.Name;
     });
-    if (found != m_docks.end()) {
-      m_docks.erase(found);
+    if (found != Docks.end()) {
+      visible = found->IsOpen;
+      Docks.erase(found);
     }
-    m_docks.push_back(dock);
+
+    Docks.push_back(dock);
+    Docks.back().IsOpen = visible;
+  }
+  void SetDockVisible(std::string_view name, bool visible)
+  {
+    for (auto& dock : Docks) {
+      if (dock.Name == name) {
+        dock.IsOpen = visible;
+        return;
+      }
+    }
+
+    Docks.push_back(Dock(name, []() {}));
+    Docks.back().IsOpen = visible;
   }
 
   void LoadState(std::string_view ini);
@@ -93,7 +108,6 @@ public:
   void PostTask(const Task& task) { m_tasks.push(task); }
 
   void LoadFont();
-  void SetFontSize(int size) { m_fontSize = size; }
   bool SetFont(const std::filesystem::path& path);
   bool AddJapaneseFont(const std::filesystem::path& path);
   bool AddIconFont(const std::filesystem::path& path);

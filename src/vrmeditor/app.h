@@ -75,4 +75,5 @@ public:
 
   void LoadLua(const std::filesystem::path& path);
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
+  void ShowDock(std::string_view name, bool visible);
 };

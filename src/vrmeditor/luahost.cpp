@@ -62,7 +62,7 @@ struct LuaEngineImpl
         }) },
       // font settings
       { "set_font_size", MakeLuaFunc([](int font_size) {
-          App::Instance().GetGui()->SetFontSize(font_size);
+          App::Instance().GetGui()->FontSize = font_size;
         }) },
       { "set_font", MakeLuaFunc([](const std::filesystem::path& path) {
           return App::Instance().GetGui()->SetFont(path);
@@ -86,6 +86,9 @@ struct LuaEngineImpl
             App::Instance().AddAssetDir(name, dir);
           }) },
       { "add_human_map", vrmeditor_add_human_map },
+      { "show_dock", MakeLuaFunc([](const std::string& name, bool visible) {
+          App::Instance().ShowDock(name, visible);
+        }) },
       { nullptr, nullptr },
     };
     luaL_register(m_lua, "vrmeditor", VrmEditorLuaModule);
