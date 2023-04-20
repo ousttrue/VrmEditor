@@ -3,25 +3,25 @@
 
 struct RenderingEnv
 {
-  float viewport[4];
-  float clear_color[4] = { 0.45f, 0.55f, 0.60f, 1.00f };
-  float view[16];
-  float projection[16];
+  float Viewport[4];
+  float ClearColor[4] = { 0.45f, 0.55f, 0.60f, 1.00f };
+  float ViewMatrix[16];
+  float ProjectionMatrix[16];
 
   // w == 0 ? directional : point
-  float light_position[4] = {2, 2, 2, 0};
-  float shadowmatrix[16];
+  DirectX::XMFLOAT4 LightPosition = { 2, 2, 2, 0 };
+  DirectX::XMFLOAT4X4 ShadowMatrix;
 
-  void resize(int width, int height)
+  void Resize(int width, int height)
   {
-    viewport[2] = static_cast<float>(width);
-    viewport[3] = static_cast<float>(height);
+    Viewport[2] = static_cast<float>(width);
+    Viewport[3] = static_cast<float>(height);
   }
-  int width() const { return static_cast<int>(viewport[2]); }
-  int height() const { return static_cast<int>(viewport[3]); }
+  int Width() const { return static_cast<int>(Viewport[2]); }
+  int Height() const { return static_cast<int>(Viewport[3]); }
 
-  float premul_r() const { return clear_color[0] * clear_color[3]; }
-  float premul_g() const { return clear_color[1] * clear_color[3]; }
-  float premul_b() const { return clear_color[2] * clear_color[3]; }
-  float alpha() const { return clear_color[3]; }
+  float PremulR() const { return ClearColor[0] * ClearColor[3]; }
+  float PremulG() const { return ClearColor[1] * ClearColor[3]; }
+  float PremulB() const { return ClearColor[2] * ClearColor[3]; }
+  float Alpha() const { return ClearColor[3]; }
 };

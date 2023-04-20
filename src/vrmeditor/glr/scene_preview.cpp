@@ -20,20 +20,20 @@ ScenePreview::ScenePreview(
   m_rt.color[3] = 1.0f;
 
   m_rt.render = [timeline, scene, selection = context, gizmo = &m_gizmo](
-                  const RenderingEnv& camera) {
-    glr::ClearRendertarget(camera);
+                  const RenderingEnv& env) {
+    glr::ClearRendertarget(env);
 
     auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
 
     libvrm::gltf::RenderFunc render =
-      [liner, &camera](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-                       const libvrm::gltf::MeshInstance& instance,
-                       const float m[16]) {
-        glr::Render(RenderPass::Color, camera, mesh, instance, m);
-        glr::Render(RenderPass::ShadowMatrix, camera, mesh, instance, m);
+      [liner, &env](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+                    const libvrm::gltf::MeshInstance& instance,
+                    const float m[16]) {
+        glr::Render(RenderPass::Color, env, mesh, instance, m);
+        glr::Render(RenderPass::ShadowMatrix, env, mesh, instance, m);
       };
     scene->Render(timeline->CurrentTime, render, gizmo);
-    liner->Render(camera.projection, camera.view, gizmo->m_lines);
+    liner->Render(env.ProjectionMatrix, env.ViewMatrix, gizmo->m_lines);
     gizmo->Clear();
 
     // gizmo
@@ -42,8 +42,8 @@ ScenePreview::ScenePreview(
       DirectX::XMFLOAT4X4 m;
       DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
       ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-      if (ImGuizmo::Manipulate(camera.view,
-                               camera.projection,
+      if (ImGuizmo::Manipulate(env.ViewMatrix,
+                               env.ProjectionMatrix,
                                ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
                                ImGuizmo::LOCAL,
                                (float*)&m,

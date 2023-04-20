@@ -16,10 +16,10 @@ RenderTarget::RenderTarget(const std::shared_ptr<grapho::OrbitView>& view)
 {
   DirectX::XMFLOAT4 plane = { 0, 1, 0, 0 };
   DirectX::XMStoreFloat4x4(
-    (DirectX::XMFLOAT4X4*)&Env.shadowmatrix,
+    &Env.ShadowMatrix,
     DirectX::XMMatrixShadow(
       DirectX::XMLoadFloat4(&plane),
-      DirectX::XMLoadFloat4((const DirectX::XMFLOAT4*)&Env.light_position)));
+      DirectX::XMLoadFloat4(&Env.LightPosition)));
 }
 
 uint32_t
@@ -70,7 +70,7 @@ RenderTarget::show_fbo(float x, float y, float w, float h)
 
     // update camera
     auto& io = ImGui::GetIO();
-    Env.resize((int)w, (int)h);
+    Env.Resize((int)w, (int)h);
     view->SetSize((int)w, (int)h);
     if (ImGui::IsItemActive()) {
       if (io.MouseDown[ImGuiMouseButton_Right]) {
@@ -83,7 +83,7 @@ RenderTarget::show_fbo(float x, float y, float w, float h)
     if (ImGui::IsItemHovered()) {
       view->Dolly((int)io.MouseWheel);
     }
-    view->Update(Env.projection, Env.view);
+    view->Update(Env.ProjectionMatrix, Env.ViewMatrix);
     if (render) {
       render(Env);
     }

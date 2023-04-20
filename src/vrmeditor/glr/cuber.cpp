@@ -12,9 +12,9 @@ Cuber::Cuber()
 }
 
 void
-Cuber::Render(const RenderingEnv& camera)
+Cuber::Render(const RenderingEnv& env)
 {
   m_cuber->Render(
-    camera.projection, camera.view, Instances.data(), Instances.size());
-  m_liner->Render(camera.projection, camera.view, m_lines);
+    env.ProjectionMatrix, env.ViewMatrix, Instances.data(), Instances.size());
+  m_liner->Render(env.ProjectionMatrix, env.ViewMatrix, m_lines);
 }

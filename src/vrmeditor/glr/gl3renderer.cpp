@@ -225,7 +225,7 @@ public:
   }
 
   void Render(RenderPass pass,
-              const RenderingEnv& camera,
+              const RenderingEnv& env,
               const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
               const libvrm::gltf::MeshInstance& instance,
               const float m[16])
@@ -241,16 +241,16 @@ public:
     switch (pass) {
       case RenderPass::Color:
         m_program->Bind();
-        m_program->SetUniformMatrix("Projection", camera.projection);
-        m_program->SetUniformMatrix("View", camera.view);
+        m_program->SetUniformMatrix("Projection", env.ProjectionMatrix);
+        m_program->SetUniformMatrix("View", env.ViewMatrix);
         m_program->_SetUniformMatrix("Model", m);
         break;
 
       case RenderPass::ShadowMatrix:
         m_shadow->Bind();
-        m_shadow->SetUniformMatrix("Projection", camera.projection);
-        m_shadow->SetUniformMatrix("View", camera.view);
-        m_shadow->SetUniformMatrix("Shadow", camera.shadowmatrix);
+        m_shadow->SetUniformMatrix("Projection", env.ProjectionMatrix);
+        m_shadow->SetUniformMatrix("View", env.ViewMatrix);
+        m_shadow->SetUniformMatrix("Shadow", env.ShadowMatrix);
         m_shadow->_SetUniformMatrix("Model", m);
         break;
     }
@@ -277,20 +277,20 @@ public:
 
 void
 Render(RenderPass pass,
-       const RenderingEnv& camera,
+       const RenderingEnv& env,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
        const libvrm::gltf::MeshInstance& instance,
        const float m[16])
 {
-  Gl3Renderer::Instance().Render(pass, camera, mesh, instance, m);
+  Gl3Renderer::Instance().Render(pass, env, mesh, instance, m);
 }
 
 void
-ClearRendertarget(const RenderingEnv& camera)
+ClearRendertarget(const RenderingEnv& env)
 {
-  glViewport(0, 0, camera.width(), camera.height());
+  glViewport(0, 0, env.Width(), env.Height());
   glClearColor(
-    camera.premul_r(), camera.premul_g(), camera.premul_b(), camera.alpha());
+    env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha());
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
