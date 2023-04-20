@@ -20,7 +20,7 @@ ScenePreview::ScenePreview(
   m_rt.color[3] = 1.0f;
 
   m_rt.render = [timeline, scene, selection = context, gizmo = &m_gizmo](
-                  const ViewProjection& camera) {
+                  const RenderingEnv& camera) {
     glr::ClearRendertarget(camera);
 
     auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
@@ -29,7 +29,8 @@ ScenePreview::ScenePreview(
       [liner, &camera](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
                        const libvrm::gltf::MeshInstance& instance,
                        const float m[16]) {
-        glr::Render(camera, mesh, instance, m);
+        glr::Render(RenderPass::Color, camera, mesh, instance, m);
+        glr::Render(RenderPass::ShadowMatrix, camera, mesh, instance, m);
       };
     scene->Render(timeline->CurrentTime, render, gizmo);
     liner->Render(camera.projection, camera.view, gizmo->m_lines);

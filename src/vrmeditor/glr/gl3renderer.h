@@ -1,8 +1,9 @@
 #pragma once
 #include "docks/gui.h"
+#include "renderpass.h"
 #include <memory>
 
-struct ViewProjection;
+struct RenderingEnv;
 namespace libvrm {
 namespace gltf {
 struct Mesh;
@@ -19,14 +20,15 @@ struct Texture;
 namespace glr {
 
 void
-Render(const ViewProjection& camera,
+Render(RenderPass pass,
+       const RenderingEnv& camera,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
        const libvrm::gltf::MeshInstance& instance,
        const float m[16]);
 
 // clear current render target
 void
-ClearRendertarget(const ViewProjection& camera);
+ClearRendertarget(const RenderingEnv& camera);
 
 // release all resource
 void

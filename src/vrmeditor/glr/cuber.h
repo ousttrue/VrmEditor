@@ -15,5 +15,5 @@ class Cuber
 public:
   Cuber();
   std::vector<DirectX::XMFLOAT4X4> Instances;
-  void Render(const struct ViewProjection& camera);
+  void Render(const struct RenderingEnv& camera);
 };

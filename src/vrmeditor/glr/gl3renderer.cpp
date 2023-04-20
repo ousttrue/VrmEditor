@@ -1,5 +1,5 @@
 #include "gl3renderer.h"
-#include "viewporjection.h"
+#include "rendering_env.h"
 #include <GL/glew.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/texture.h>
@@ -40,6 +40,35 @@ void main()
 };
 )";
 
+static const char* shadow_vertex_text = R"(#version 400
+uniform mat4 Model;
+uniform mat4 View;
+uniform mat4 Projection;
+uniform mat4 Shadow;
+in vec3 vPosition;
+in vec3 vNormal;
+in vec2 vUv;
+out vec3 normal;
+out vec2 uv;
+void main()
+{
+  gl_Position = Projection * View * Shadow * Model * vec4(vPosition, 1.0);
+  normal = vNormal;
+  uv = vUv;
+}
+)";
+
+static const char* shadow_fragment_text = R"(#version 400
+in vec3 normal;
+in vec2 uv;
+out vec4 FragColor;
+uniform sampler2D colorTexture;
+void main()
+{
+  FragColor = vec4(0, 0, 0, 0.7);
+};
+)";
+
 namespace glr {
 struct SubMesh
 {
@@ -50,23 +79,18 @@ struct SubMesh
 
 struct Drawable
 {
-  std::shared_ptr<grapho::gl3::ShaderProgram> program;
   std::shared_ptr<grapho::gl3::Vao> vao;
   std::vector<SubMesh> submeshes;
 
-  void draw(const ViewProjection& camera, const float m[16])
+  void draw()
   {
     // state
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
     glCullFace(GL_BGR);
     glEnable(GL_DEPTH_TEST);
-    // mesh
-    program->Bind();
-    program->SetUniformMatrix("Projection", camera.projection);
-    program->SetUniformMatrix("View", camera.view);
-    program->_SetUniformMatrix("Model", m);
 
+    // mesh
     for (auto& submesh : submeshes) {
       // setup material
       if (submesh.texture) {
@@ -93,10 +117,18 @@ class Gl3Renderer
     m_drawableMap;
   std::shared_ptr<grapho::gl3::Texture> m_white;
 
+  std::shared_ptr<grapho::gl3::ShaderProgram> m_program;
+  std::shared_ptr<grapho::gl3::ShaderProgram> m_shadow;
+
   Gl3Renderer()
   {
     static uint8_t white[] = { 255, 255, 255, 255 };
     m_white = grapho::gl3::Texture::Create(1, 1, white);
+
+    m_program = *grapho::gl3::ShaderProgram::Create(vertex_shader_text,
+                                                    fragment_shader_text);
+    m_shadow = *grapho::gl3::ShaderProgram::Create(shadow_vertex_text,
+                                                   shadow_fragment_text);
   }
 
   ~Gl3Renderer() {}
@@ -167,19 +199,7 @@ public:
     };
     auto vao = grapho::gl3::Vao::Create(layouts, slots, ibo);
 
-    auto program = grapho::gl3::ShaderProgram::Create(vertex_shader_text,
-                                                      fragment_shader_text);
-    if (!program) {
-      std::cout << program.error() << std::endl;
-      return {};
-    }
-
-    // projection_location = *m_program->UniformLocation("Projection");
-    // view_location = *m_program->UniformLocation("View");
-    // std::cout << "shader OK" << std::endl;
-
     auto drawable = std::shared_ptr<Drawable>(new Drawable);
-    drawable->program = *program;
     drawable->vao = vao;
 
     uint32_t byteOffset = 0;
@@ -204,7 +224,8 @@ public:
     return drawable;
   }
 
-  void Render(const ViewProjection& camera,
+  void Render(RenderPass pass,
+              const RenderingEnv& camera,
               const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
               const libvrm::gltf::MeshInstance& instance,
               const float m[16])
@@ -217,7 +238,24 @@ public:
       // m_updated.clear();
     }
 
-    drawable->draw(camera, m);
+    switch (pass) {
+      case RenderPass::Color:
+        m_program->Bind();
+        m_program->SetUniformMatrix("Projection", camera.projection);
+        m_program->SetUniformMatrix("View", camera.view);
+        m_program->_SetUniformMatrix("Model", m);
+        break;
+
+      case RenderPass::ShadowMatrix:
+        m_shadow->Bind();
+        m_shadow->SetUniformMatrix("Projection", camera.projection);
+        m_shadow->SetUniformMatrix("View", camera.view);
+        m_shadow->SetUniformMatrix("Shadow", camera.shadowmatrix);
+        m_shadow->_SetUniformMatrix("Model", m);
+        break;
+    }
+
+    drawable->draw();
   }
 
   void CreateDock(const AddDockFunc& addDock, std::string_view title)
@@ -238,16 +276,17 @@ public:
 };
 
 void
-Render(const ViewProjection& camera,
+Render(RenderPass pass,
+       const RenderingEnv& camera,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
        const libvrm::gltf::MeshInstance& instance,
        const float m[16])
 {
-  Gl3Renderer::Instance().Render(camera, mesh, instance, m);
+  Gl3Renderer::Instance().Render(pass, camera, mesh, instance, m);
 }
 
 void
-ClearRendertarget(const ViewProjection& camera)
+ClearRendertarget(const RenderingEnv& camera)
 {
   glViewport(0, 0, camera.width(), camera.height());
   glClearColor(

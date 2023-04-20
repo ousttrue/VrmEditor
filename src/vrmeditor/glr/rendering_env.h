@@ -1,11 +1,16 @@
 #pragma once
+#include <DirectXMath.h>
 
-struct ViewProjection
+struct RenderingEnv
 {
   float viewport[4];
   float clear_color[4] = { 0.45f, 0.55f, 0.60f, 1.00f };
   float view[16];
   float projection[16];
+
+  // w == 0 ? directional : point
+  float light_position[4] = {2, 2, 2, 0};
+  float shadowmatrix[16];
 
   void resize(int width, int height)
   {

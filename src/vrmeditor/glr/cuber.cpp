@@ -1,5 +1,5 @@
 #include "cuber.h"
-#include "viewporjection.h"
+#include "rendering_env.h"
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <vrm/scene.h>
@@ -12,7 +12,7 @@ Cuber::Cuber()
 }
 
 void
-Cuber::Render(const ViewProjection& camera)
+Cuber::Render(const RenderingEnv& camera)
 {
   m_cuber->Render(
     camera.projection, camera.view, Instances.data(), Instances.size());

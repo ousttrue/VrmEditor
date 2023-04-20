@@ -1,7 +1,7 @@
 #include <GL/glew.h>
 
+#include "rendering_env.h"
 #include "rendertarget.h"
-#include "viewporjection.h"
 #include <functional>
 #include <grapho/gl3/fbo.h>
 #include <grapho/orbitview.h>
@@ -14,6 +14,12 @@ namespace glr {
 RenderTarget::RenderTarget(const std::shared_ptr<grapho::OrbitView>& view)
   : view(view)
 {
+  DirectX::XMFLOAT4 plane = { 0, 1, 0, 0 };
+  DirectX::XMStoreFloat4x4(
+    (DirectX::XMFLOAT4X4*)&Env.shadowmatrix,
+    DirectX::XMMatrixShadow(
+      DirectX::XMLoadFloat4(&plane),
+      DirectX::XMLoadFloat4((const DirectX::XMFLOAT4*)&Env.light_position)));
 }
 
 uint32_t
@@ -64,7 +70,7 @@ RenderTarget::show_fbo(float x, float y, float w, float h)
 
     // update camera
     auto& io = ImGui::GetIO();
-    camera.resize((int)w, (int)h);
+    Env.resize((int)w, (int)h);
     view->SetSize((int)w, (int)h);
     if (ImGui::IsItemActive()) {
       if (io.MouseDown[ImGuiMouseButton_Right]) {
@@ -77,9 +83,9 @@ RenderTarget::show_fbo(float x, float y, float w, float h)
     if (ImGui::IsItemHovered()) {
       view->Dolly((int)io.MouseWheel);
     }
-    view->Update(camera.projection, camera.view);
+    view->Update(Env.projection, Env.view);
     if (render) {
-      render(camera);
+      render(Env);
     }
   }
   fbo->Unbind();
