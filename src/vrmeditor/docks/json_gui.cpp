@@ -11,6 +11,61 @@
 #include <ranges>
 #include <string_view>
 
+static std::string
+LabelImages(const std::shared_ptr<libvrm::gltf::Scene>& scene,
+            std::string_view jsonpath)
+{
+  return " images";
+}
+
+static std::string
+LabelDefault(const std::shared_ptr<libvrm::gltf::Scene>& scene,
+             std::string_view jsonpath)
+{
+  std::stringstream ss;
+  std::string key{ jsonpath.begin(), jsonpath.end() };
+  auto item = scene->m_gltf.Json.at(nlohmann::json::json_pointer(key));
+  auto path = libvrm::JsonPath(jsonpath);
+  auto name = path.Back();
+  if (path.Size() == 2) {
+    auto kind = path[1];
+    if (kind == "extensions") {
+      ss << " ";
+    } else if (kind == "images" || kind == "textures" || kind == "samplers") {
+      ss << " ";
+    } else if (kind == "bufferViews" || kind == "buffers") {
+      ss << " ";
+    } else if (kind == "accessors") {
+      ss << " ";
+    } else if (kind == "meshes" || kind == "skins") {
+      ss << "󰕣 ";
+    } else if (kind == "materials") {
+      ss << " ";
+    } else if (kind == "nodes" || kind == "scenes" || kind == "scene") {
+      ss << "󰵉 ";
+    } else if (kind == "animations") {
+      ss << " ";
+    } else if (kind == "asset") {
+      ss << " ";
+    } else if (kind == "extensionsUsed") {
+      ss << " ";
+    }
+  }
+
+  if (item.is_object()) {
+    if (item.find("name") != item.end()) {
+      ss << name << ": " << (std::string_view)item.at("name");
+    } else {
+      ss << name << ": object";
+    }
+  } else if (item.is_array()) {
+    ss << name << ": [" << item.size() << "]";
+  } else {
+    ss << name << ": " << item.dump();
+  }
+  return ss.str();
+}
+
 JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
   : m_guiFactories({
       { "/accessors/*", JsonGuiAccessor },
@@ -25,6 +80,10 @@ JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
       { "/skins", JsonGuiSkinList },
       { "/skins/*/inverseBindMatrices", JsonGuiAccessor },
       { "/nodes", JsonGuiNodeList },
+    })
+  , m_labelFactories({
+      //
+      // { "/images", LabelArray },
     })
   , m_scene(scene)
 {
@@ -47,58 +106,19 @@ JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
     node_flags |= ImGuiTreeNodeFlags_Selected;
   }
 
-  m_ss.str("");
-
-  bool extension = false;
-  std::string_view kind;
-  std::string_view key;
-  int i = 0;
-  for (auto jp : jsonpath | std::views::split(libvrm::DELIMITER)) {
-    key = std::string_view(jp);
-    if (i == 0) {
-      kind = key;
-    }
-    ++i;
-    if (key == "extensions" || key == "extrans") {
-      extension = true;
-      break;
-    }
-  }
-
-  if (extension) {
-    m_ss << " ";
-  } else if (kind == "images" || kind == "textures" || kind == "samplers") {
-    m_ss << " ";
-  } else if (kind == "bufferViews" || kind == "buffers") {
-    m_ss << " ";
-  } else if (kind == "accessors") {
-    m_ss << " ";
-  } else if (kind == "meshes" || kind == "skins") {
-    m_ss << "󰕣 ";
-  } else if (kind == "materials") {
-    m_ss << " ";
-  } else if (kind == "nodes" || kind == "scenes" || kind == "scene") {
-    m_ss << "󰵉 ";
-  } else if (kind == "animations") {
-    m_ss << " ";
-  } else if (kind == "asset") {
-    m_ss << " ";
-  } else if (kind == "extensionsUsed") {
-    m_ss << " ";
-  }
-
-  if (item.is_object()) {
-    if (item.find("name") != item.end()) {
-      m_ss << key << ": " << (std::string_view)item.at("name");
-    } else {
-      m_ss << key << ": object";
-    }
-  } else if (item.is_array()) {
-    m_ss << key << ": [" << item.size() << "]";
+  std::string label = "not found";
+  auto found = m_labelCache.find({ jsonpath.begin(), jsonpath.end() });
+  if (found != m_labelCache.end()) {
+    label = found->second;
   } else {
-    m_ss << key << ": " << item.dump();
+    if (auto factory = MatchLabel(jsonpath)) {
+      label = (*factory)(m_scene, jsonpath);
+    } else {
+      label = LabelDefault(m_scene, jsonpath);
+    }
+    m_labelCache.insert({ { jsonpath.begin(), jsonpath.end() }, label });
   }
-  auto label = m_ss.str();
+
   bool node_open =
     ImGui::TreeNodeEx((void*)(intptr_t)&item, node_flags, "%s", label.c_str());
 
@@ -172,4 +192,3 @@ JsonGui::Show(float indent)
   }
   ImGui::EndChild();
 }
-

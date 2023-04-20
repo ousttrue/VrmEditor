@@ -37,8 +37,8 @@ struct JsonLabelFactory
 
 struct JsonGui
 {
-  std::stringstream m_ss;
-  float m_f = 500;
+  // splitter ?
+  float m_f = 300;
 
   std::list<JsonGuiFactory> m_guiFactories;
   std::list<JsonLabelFactory> m_labelFactories;
@@ -46,6 +46,7 @@ struct JsonGui
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::string m_selected;
   ShowGui m_cache = []() {};
+  std::unordered_map<std::string, std::string> m_labelCache;
 
   JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene);
   bool Enter(nlohmann::json& item, std::string_view jsonpath);
