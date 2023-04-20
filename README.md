@@ -7,48 +7,47 @@ read, write, edit and animation test.
 | function                              | read | write | edit |
 | ------------------------------------- | ---- | ----- | ---- |
 | glTF-2.0                              |      |       |      |
-| (mesh)                                | ☑    | ☑     | ---  |
-| (draco)                               | ☐    | ---   | ---  |
-| (quantity)                            | ☐    | ---   | ---  |
-| (quantity)                            | ☐    | ---   | ---  |
-| (material)                            | ☐    | ☐     | ☐    |
-| (material.ColorTexture)               | ☑    | ☑     | ---  |
-| (material.mtoon-0.x)                  | ☐    | ☐     | ☐    |
-| (material.mtoon-1.0)                  | ☐    | ☐     | ☐    |
-| (animation.TRS)                       | ☑    | ☑     | ☐    |
-| (animation.morphTarget)               | ☑    | ☑     | ☐    |
-| (animation.linear_interpolation)      | ☐    | ☐     | ☐    |
-| (animation.cubic_interpolation)       | ☐    | ☐     | ☐    |
+| (mesh)                                | ✅   | ✅    | ---  |
+| (draco)                               | 🟩   | ---   | ---  |
+| (quantity)                            | 🟩   | ---   | ---  |
+| (material)                            | 🟩   | 🟩    | 🟩   |
+| (material.ColorTexture)               | ✅   | ✅    | ---  |
+| (material.mtoon-0.x)                  | 🟩   | 🟩    | 🟩   |
+| (material.mtoon-1.0)                  | 🟩   | 🟩    | 🟩   |
+| (animation.TRS)                       | ✅   | ✅    | 🟩   |
+| (animation.morphTarget)               | ✅   | ✅    | 🟩   |
+| (animation.linear_interpolation)      | 🟩   | 🟩    | 🟩   |
+| (animation.cubic_interpolation)       | 🟩   | 🟩    | 🟩   |
 | vrm-0.x                               |      |       |      |
-| (meta)                                | ☐    | ☐     | ☐    |
-| (expression.morphtarget)              | ☑    | ☐     | ☐    |
-| (expression.material)                 | ☐    | ☐     | ☐    |
-| (lookat.bone)                         | ☐    | ☐     | ☐    |
-| (lookat.expression)                   | ☐    | ☐     | ☐    |
-| (springbone. basic without collision) | ☑    | ☐     | ☐    |
-| (humanoid)                            | ☑    | ☐     | ☐    |
-| (retarget Y180 rotation)              | ☐    | ---   | ---  |
+| (meta)                                | 🟩   | 🟩    | 🟩   |
+| (expression.morphtarget)              | ✅   | 🟩    | 🟩   |
+| (expression.material)                 | 🟩   | 🟩    | 🟩   |
+| (lookat.bone)                         | 🟩   | 🟩    | 🟩   |
+| (lookat.expression)                   | 🟩   | 🟩    | 🟩   |
+| (springbone. basic without collision) | ✅   | 🟩    | 🟩   |
+| (humanoid)                            | ✅   | 🟩    | 🟩   |
+| (Y180 rotation)                       | ✅   | 🟩    | ---  |
 | vrm-1.0                               |      |       |      |
-| (expression.morphtarget)              | ☑    | ☐     | ☐    |
-| (expression.material)                 | ☐    | ☐     | ☐    |
-| (lookat.bone)                         | ☐    | ☐     | ☐    |
-| (lookat.expression)                   | ☐    | ☐     | ☐    |
-| (springbone. basic without collision) | ☑    | ☐     | ☐    |
-| (humanoid)                            | ☑    | ☐     | ☐    |
-| (constraint)                          | ☐    | ☐     | ☐    |
+| (expression.morphtarget)              | ✅   | 🟩    | 🟩   |
+| (expression.material)                 | 🟩   | 🟩    | 🟩   |
+| (lookat.bone)                         | 🟩   | 🟩    | 🟩   |
+| (lookat.expression)                   | 🟩   | 🟩    | 🟩   |
+| (springbone. basic without collision) | ✅   | 🟩    | 🟩   |
+| (humanoid)                            | ✅   | 🟩    | 🟩   |
+| (constraint)                          | 🟩   | 🟩    | 🟩   |
 | vrm-animation                         |      |       |      |
-| (humanoid)                            | ☑    | ☐     | ☐    |
-| (expression)                          | ☑    | ☑     | ☐    |
-| (lookat)                              | ☐    | ☐     | ☐    |
-| bvh                                   | ☑    | ---   | ---  |
-| (humanoid mapping)                    | ☑    | ---   | ---  |
-| fbx                                   | ☐    | ---   | ---  |
+| (humanoid)                            | ✅   | 🟩    | 🟩   |
+| (expression)                          | ✅   | ✅    | 🟩   |
+| (lookat)                              | 🟩   | 🟩    | 🟩   |
+| bvh                                   | ✅   | ---   | ---  |
+| (humanoid mapping)                    | ✅   | ---   | ---  |
+| fbx                                   | 🟩   | ---   | ---  |
 
 # milestone
 
 ## 1
 
-- read / write vrm-0 & 1
+- read / write vrm-0.x & 1.0
 
 ## x
 
