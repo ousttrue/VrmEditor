@@ -62,7 +62,9 @@ LabelDefault(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 
 JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
   : m_guiFactories(
-      { { "/accessors/*", JsonGuiAccessor },
+      { //
+        { "/accessors", JsonGuiAccessorList },
+        { "/accessors/*", JsonGuiAccessor },
         { "/images", JsonGuiImageList },
         { "/meshes", JsonGuiMeshList },
         { "/meshes/*", JsonGuiMesh },

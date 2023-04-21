@@ -40,6 +40,50 @@ component_size(ComponentType component_type)
   }
 }
 
+inline const char*
+component_type_name(ComponentType component_type)
+{
+  switch (component_type) {
+    case ComponentType::BYTE:
+      return "byte";
+    case ComponentType::UNSIGNED_BYTE:
+      return "ubyte";
+    case ComponentType::SHORT:
+      return "short";
+    case ComponentType::UNSIGNED_SHORT:
+      return "ushort";
+    case ComponentType::UNSIGNED_INT:
+      return "uint";
+    case ComponentType::FLOAT:
+      return "float";
+    default:
+      return "invalid";
+  }
+}
+
+inline std::string
+component_type_name(ComponentType component_type, std::string_view type)
+{
+  if (type == "SCALAR") {
+    return component_type_name(component_type);
+  }
+
+  std::string base = component_type_name(component_type);
+  if (type == "VEC2") {
+    return base + "2";
+  } else if (type == "VEC3") {
+    return base + "3";
+  } else if (type == "VEC4" || type == "MAT2") {
+    return base + "4";
+  } else if (type == "MAT3") {
+    return base + "9";
+  } else if (type == "MAT4") {
+    return base + "16";
+  } else {
+    return base + "?";
+  }
+}
+
 enum class Type
 {
   SCALAR,
@@ -51,7 +95,7 @@ enum class Type
   MAT4,
 };
 inline std::expected<size_t, std::string>
-type_size(std::string_view type)
+type_count(std::string_view type)
 {
   if (type == "SCALAR") {
     return 1;
@@ -98,10 +142,10 @@ inline std::expected<size_t, std::string>
 item_size(const nlohmann::json& accessor)
 {
   if (auto cs = component_size(accessor["componentType"])) {
-    if (auto ts = type_size(accessor["type"])) {
-      return *cs * *ts;
+    if (auto count = type_count(accessor["type"])) {
+      return *cs * *count;
     } else {
-      return ts;
+      return count;
     }
   } else {
     throw cs;

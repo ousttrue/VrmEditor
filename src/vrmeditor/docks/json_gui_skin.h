@@ -7,8 +7,7 @@ inline ShowGui
 JsonGuiSkinList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                 std::string_view jsonpath)
 {
-  return [scene]() {
-    auto skins = scene->m_gltf.Json.at("skins");
+  return [skins = scene->m_gltf.Json.at("skins")]() {
     std::array<const char*, 2> cols = {
       "index",
       "joints",

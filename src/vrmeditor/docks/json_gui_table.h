@@ -1,7 +1,7 @@
 #pragma once
 #include <imgui.h>
 
-bool
+inline bool
 JsonGuiTable(const char* title, std::span<const char*> cols)
 {
   static ImGuiTableFlags flags =
