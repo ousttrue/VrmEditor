@@ -747,15 +747,13 @@ Scene::ParseVrm0()
     if (has(secondaryAnimation, "boneGroups")) {
       auto& boneGroups = secondaryAnimation.at("boneGroups");
       for (auto& boneGroup : boneGroups) {
-        auto spring = std::make_shared<vrm::SpringSolver>();
         float stiffness = boneGroup.at("stiffiness");
         float dragForce = boneGroup.at("dragForce");
         for (auto& bone : boneGroup.at("bones")) {
+          auto spring = std::make_shared<vrm::SpringSolver>();
           spring->AddRecursive(m_nodes[bone], dragForce, stiffness);
+          m_springSolvers.push_back(spring);
         }
-
-        // *spring = boneGroup;
-        m_springSolvers.push_back(spring);
       }
     }
   }
@@ -796,6 +794,19 @@ Scene::ParseVrm1()
     auto& springBone = extensions.at("VRMC_springBone");
     auto& springs = springBone.at("springs");
     for (auto& spring : springs) {
+      auto solver = std::make_shared<vrm::SpringSolver>();
+      std::shared_ptr<Node> head;
+      for (auto& joint : spring.at("joints")) {
+        int node_index = joint.at("node");
+        auto tail = m_nodes[node_index];
+        if (head) {
+          float stiffness = joint.at("stiffness");
+          float dragForce = joint.at("dragForce");
+          solver->Add(head, tail->Transform.Translation, stiffness, dragForce);
+        }
+        head = tail;
+      }
+      m_springSolvers.push_back(solver);
     }
   }
   return true;

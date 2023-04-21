@@ -50,6 +50,10 @@ struct SpringSolver
   Time LastTime = {};
 
   std::vector<SpringJoint> Joints;
+  void Add(const std::shared_ptr<gltf::Node>& head,
+           const DirectX::XMFLOAT3& tail,
+           float dragForce,
+           float stiffiness);
   // for vrm0
   void AddRecursive(const std::shared_ptr<gltf::Node>& node,
                     float dragForce,

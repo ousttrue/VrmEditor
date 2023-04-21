@@ -117,17 +117,23 @@ SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3& nextTail) const
 }
 
 void
+SpringSolver::Add(const std::shared_ptr<gltf::Node>& head,
+                  const DirectX::XMFLOAT3& tail,
+                  float dragForce,
+                  float stiffiness)
+{
+  Joints.push_back(SpringJoint(head, tail, dragForce, stiffiness));
+}
+
+void
 SpringSolver::AddRecursive(const std::shared_ptr<gltf::Node>& node,
                            float dragForce,
                            float stiffiness)
 {
 
-  DirectX::XMFLOAT3 localTailPosition;
   if (node->Children.size()) {
     for (auto& child : node->Children) {
-      localTailPosition = child->Transform.Translation;
-      Joints.push_back(
-        SpringJoint(node, localTailPosition, dragForce, stiffiness));
+      Add(node, child->Transform.Translation, dragForce, stiffiness);
       break;
     }
   } else {
@@ -135,11 +141,14 @@ SpringSolver::AddRecursive(const std::shared_ptr<gltf::Node>& node,
     auto childPosition =
       node->WorldTransform.Translation + dmath::normalized(delta) * 0.07f;
 
+    DirectX::XMFLOAT3 localTailPosition;
     DirectX::XMStoreFloat3(
       &localTailPosition,
       DirectX::XMVector3Transform(
         DirectX::XMLoadFloat3(&childPosition),
         DirectX::XMMatrixInverse(nullptr, node->WorldMatrix())));
+
+    Add(node, localTailPosition, dragForce, stiffiness);
   }
 
   for (auto& child : node->Children) {
