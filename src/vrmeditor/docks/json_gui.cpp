@@ -6,6 +6,7 @@
 #include "json_gui_node.h"
 #include "json_gui_skin.h"
 #include "json_gui_vrm0.h"
+#include "json_gui_vrm1.h"
 #include <charconv>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -61,26 +62,31 @@ LabelDefault(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 }
 
 JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
-  : m_guiFactories(
-      { //
-        { "/accessors", JsonGuiAccessorList },
-        { "/accessors/*", JsonGuiAccessor },
-        { "/images", JsonGuiImageList },
-        { "/materials", JsonGuiMaterialList },
-        { "/meshes", JsonGuiMeshList },
-        { "/meshes/*", JsonGuiMesh },
-        { "/meshes/*/primitives/*/attributes/POSITION", JsonGuiAccessor },
-        { "/meshes/*/primitives/*/attributes/NORMAL", JsonGuiAccessor },
-        { "/meshes/*/primitives/*/attributes/TEXCOORD_0", JsonGuiAccessor },
-        { "/meshes/*/primitives/*/attributes/JOINTS_0", JsonGuiAccessor },
-        { "/meshes/*/primitives/*/attributes/WEIGHTS_0", JsonGuiAccessor },
-        { "/skins", JsonGuiSkinList },
-        { "/skins/*/inverseBindMatrices", JsonGuiAccessor },
-        { "/nodes", JsonGuiNodeList },
-        {
-          "/extensions/VRM/secondaryAnimation/boneGroups",
-          JsonGuiVrm0SpringList,
-        } })
+  : //
+  m_guiFactories({
+    //
+    { "/accessors", JsonGuiAccessorList },
+    { "/accessors/*", JsonGuiAccessor },
+    { "/images", JsonGuiImageList },
+    { "/materials", JsonGuiMaterialList },
+    { "/meshes", JsonGuiMeshList },
+    { "/meshes/*", JsonGuiMesh },
+    { "/meshes/*/primitives/*/attributes/POSITION", JsonGuiAccessor },
+    { "/meshes/*/primitives/*/attributes/NORMAL", JsonGuiAccessor },
+    { "/meshes/*/primitives/*/attributes/TEXCOORD_0", JsonGuiAccessor },
+    { "/meshes/*/primitives/*/attributes/JOINTS_0", JsonGuiAccessor },
+    { "/meshes/*/primitives/*/attributes/WEIGHTS_0", JsonGuiAccessor },
+    { "/skins", JsonGuiSkinList },
+    { "/skins/*/inverseBindMatrices", JsonGuiAccessor },
+    { "/nodes", JsonGuiNodeList },
+    {
+      "/extensions/VRM/secondaryAnimation/boneGroups",
+      JsonGuiVrm0SpringList,
+    },
+    { "/extensions/VRMC_springBone/springs/*/joints", JsonGuiVrm1SpringJoints },
+    //
+  })
+  //
   , m_labelFactories({
       //
       // { "/images", LabelArray },
