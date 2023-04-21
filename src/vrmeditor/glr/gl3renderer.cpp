@@ -205,7 +205,7 @@ public:
     uint32_t byteOffset = 0;
     for (auto& primitive : mesh->m_primitives) {
       auto texture = m_white;
-      if (auto t = primitive.material->Texture) {
+      if (auto t = primitive.material->ColorTexture) {
         if (auto image = t->Source) {
           texture = GetOrCreate(image);
         }

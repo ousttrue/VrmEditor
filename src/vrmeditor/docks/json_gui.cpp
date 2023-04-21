@@ -66,6 +66,7 @@ JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
         { "/accessors", JsonGuiAccessorList },
         { "/accessors/*", JsonGuiAccessor },
         { "/images", JsonGuiImageList },
+        { "/materials", JsonGuiMaterialList },
         { "/meshes", JsonGuiMeshList },
         { "/meshes/*", JsonGuiMesh },
         { "/meshes/*/primitives/*/attributes/POSITION", JsonGuiAccessor },

@@ -243,7 +243,7 @@ JsonGuiAccessor(const std::shared_ptr<libvrm::gltf::Scene>& scene,
   return []() {};
 }
 
-struct AccessorInfo
+struct AccessorItem
 {
   std::string Type;
   int Size;
@@ -254,7 +254,7 @@ ShowGui
 JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                     std::string_view jsonpath)
 {
-  std::vector<AccessorInfo> items;
+  std::vector<AccessorItem> items;
   auto& accessors = scene->m_gltf.Json.at("accessors");
   for (size_t i = 0; i < accessors.size(); ++i) {
     std::vector<std::string> refs;

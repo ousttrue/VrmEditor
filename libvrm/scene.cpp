@@ -337,7 +337,7 @@ Scene::ParseMaterial(int i, const nlohmann::json& material)
     if (has(pbrMetallicRoughness, "baseColorTexture")) {
       auto& baseColorTexture = pbrMetallicRoughness.at("baseColorTexture");
       int texture_index = baseColorTexture.at("index");
-      ptr->Texture = m_textures[texture_index];
+      ptr->ColorTexture = m_textures[texture_index];
       // auto& textures = m_gltf.Json.at("textures");
       // auto texture = textures.at(texture_index);
       // int image_index = texture.at("source");
@@ -704,6 +704,15 @@ Scene::ParseVrm0()
 
   // firstPerson
   // materialProperties
+  if (has(VRM, "materialProperties")) {
+    auto& props = VRM.at("materialProperties");
+    for (int i = 0; i < props.size(); ++i) {
+      if (props[i].at("shader") == "VRM/MToon") {
+        // TODO
+        m_materials[i]->Type = MaterialTypes::MToon0;
+      }
+    }
+  }
 
   if (has(VRM, "blendShapeMaster")) {
 

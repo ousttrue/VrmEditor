@@ -285,12 +285,12 @@ Exporter::ExportMaterial(const Scene& scene,
   m_writer.key("pbrMetallicRoughness");
   {
     m_writer.object_open();
-    if (material->Texture) {
+    if (material->ColorTexture) {
       m_writer.key("baseColorTexture");
       {
         m_writer.object_open();
         m_writer.key("index");
-        m_writer.value(*scene.IndexOf(material->Texture));
+        m_writer.value(*scene.IndexOf(material->ColorTexture));
         m_writer.object_close();
       }
     }
