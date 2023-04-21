@@ -81,6 +81,8 @@ Link::Draw()
 HumanPoseStream::HumanPoseStream()
 {
   ImNodes::CreateContext();
+  ImNodes::PushAttributeFlag(
+    ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
 
   // sink node
   auto sink = CreateNode<HumanPoseSink>(
@@ -116,7 +118,11 @@ HumanPoseStream::HumanPoseStream()
     std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
 }
 
-HumanPoseStream::~HumanPoseStream() {}
+HumanPoseStream::~HumanPoseStream()
+{
+  ImNodes::PopAttributeFlag();
+  ImNodes::DestroyContext();
+}
 
 void
 HumanPoseStream::LoadIni(std::string_view ini)
