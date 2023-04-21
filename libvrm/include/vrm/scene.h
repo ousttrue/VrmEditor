@@ -99,8 +99,7 @@ struct Scene
   std::shared_ptr<vrm::Expressions> m_expressions;
 
   std::vector<std::shared_ptr<vrm::ColliderGroup>> m_colliderGroups;
-  std::vector<std::shared_ptr<vrm::Spring>> m_springs;
-  std::shared_ptr<vrm::SpringSolver> m_spring;
+  std::vector<std::shared_ptr<vrm::SpringSolver>> m_springSolvers;
 
   std::unordered_map<vrm::MorphTargetKey, float> m_morphTargetMap;
 
@@ -130,8 +129,7 @@ struct Scene
     m_animations.clear();
 
     m_colliderGroups.clear();
-    m_springs.clear();
-    m_spring = {};
+    m_springSolvers.clear();
 
     m_morphTargetMap.clear();
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "gizmo.h"
 #include "node.h"
+#include "sprintgcollider.h"
 #include "timeline.h"
 #include <DirectXMath.h>
 #include <chrono>
@@ -36,142 +37,86 @@ public:
               const DirectX::XMFLOAT3& localTailPosition,
               float dragForce,
               float stiffiness);
-  void Update();
+  void Update(Time time);
 
   DirectX::XMFLOAT4 WorldPosToLocalRotation(
     const DirectX::XMFLOAT3& nextTail) const;
   void DrawGizmo(IGizmoDrawer* gizmo);
 };
 
-class SpringSolver
+struct SpringSolver
 {
+  std::string Comment;
+  Time LastTime = {};
 
-  std::vector<SpringJoint> m_joints;
-  Time m_lastTime = {};
-
-public:
-  void Clear() { m_joints.clear(); }
-  void Add(const std::shared_ptr<gltf::Node>& node,
-           float dragForce,
-           float stiffiness);
+  std::vector<SpringJoint> Joints;
+  // for vrm0
+  void AddRecursive(const std::shared_ptr<gltf::Node>& node,
+                    float dragForce,
+                    float stiffiness);
   void Update(Time time);
   void DrawGizmo(IGizmoDrawer* gizmo);
 };
 
-struct Spring
-{
-  std::string comment;
-  float stiffiness = 0;
-  float gravityPower = 0;
-  DirectX::XMFLOAT3 gravityDir = {};
-  float dragForce = 0;
-  std::optional<uint32_t> center;
-  float hitRadius = 0;
-  std::vector<uint32_t> bones;
-  std::vector<uint32_t> colliderGroups;
-};
-inline void
-from_json(const nlohmann::json& j, Spring& spring)
-{
-  spring.stiffiness = j.at("stiffiness");
-  spring.dragForce = j.at("dragForce");
-  if (j.find("bones") != j.end()) {
-    auto& bones = j.at("bones");
-    spring.bones.assign(bones.begin(), bones.end());
-  }
-  if (j.find("colliderGroups") != j.end()) {
-    auto& colliderGroups = j.at("colliderGroups");
-    spring.colliderGroups.assign(colliderGroups.begin(), colliderGroups.end());
-  }
-}
-inline std::ostream&
-operator<<(std::ostream& os, const Spring& spring)
-{
-  os << "<spring";
-  if (spring.comment.size()) {
-    os << " \"" << spring.comment << "\"";
-  }
-  os << " dragForce:" << spring.dragForce;
-  os << " stiffiness:" << spring.stiffiness;
-  if (spring.bones.size()) {
-    os << " bones[";
-    for (int i = 0; i < spring.bones.size(); ++i) {
-      if (i) {
-        os << ",";
-      }
-      os << spring.bones[i];
-    }
-    os << "]";
-  }
-  // collision
-  os << " radius:" << spring.hitRadius;
-  if (auto center = spring.center) {
-    os << " center:" << *center;
-  }
-  if (spring.colliderGroups.size()) {
-    os << " colliderGroups[";
-    for (int i = 0; i < spring.colliderGroups.size(); ++i) {
-      if (i) {
-        os << ",";
-      }
-      os << spring.colliderGroups[i];
-    }
-    os << "]";
-  }
-  os << ">";
-  return os;
-}
-
-struct ColliderItem
-{
-  DirectX::XMFLOAT3 offset;
-  float radius = 0;
-};
-inline void
-from_json(const nlohmann::json& j, ColliderItem& collider)
-{
-  // collider.node = j.at("node");
-  // auto &colliders = j.at("colliders");
-  // collider.colliders.assign(colliders.begin(), colliders.end());
-  collider.radius = j.at("radius");
-}
-inline std::ostream&
-operator<<(std::ostream& os, const ColliderItem& collider)
-{
-  os << "(";
-  os << collider.radius;
-  os << ")";
-  return os;
-}
-
-struct ColliderGroup
-{
-  uint32_t node = 0;
-  std::vector<ColliderItem> colliders;
-};
-inline void
-from_json(const nlohmann::json& j, ColliderGroup& colliderGroup)
-{
-  colliderGroup.node = j.at("node");
-  auto& colliders = j.at("colliders");
-  colliderGroup.colliders.assign(colliders.begin(), colliders.end());
-}
-inline std::ostream&
-operator<<(std::ostream& os, const ColliderGroup& colliderGroup)
-{
-  os << "<colliderGroup";
-  os << " node:" << colliderGroup.node;
-  os << " colliders: [";
-  for (int i = 0; i < colliderGroup.colliders.size(); ++i) {
-    if (i) {
-      os << ",";
-    }
-    os << colliderGroup.colliders[i];
-  }
-  os << "]";
-  os << ">";
-  return os;
-}
+// struct Spring
+// {
+//   std::optional<uint32_t> center;
+//   float hitRadius = 0;
+//   std::vector<uint32_t> bones;
+//   std::vector<uint32_t> colliderGroups;
+// };
+// inline void
+// from_json(const nlohmann::json& j, Spring& spring)
+// {
+//   spring.stiffiness = j.at("stiffiness");
+//   spring.dragForce = j.at("dragForce");
+//   if (j.find("bones") != j.end()) {
+//     auto& bones = j.at("bones");
+//     spring.bones.assign(bones.begin(), bones.end());
+//   }
+//   if (j.find("colliderGroups") != j.end()) {
+//     auto& colliderGroups = j.at("colliderGroups");
+//     spring.colliderGroups.assign(colliderGroups.begin(),
+//     colliderGroups.end());
+//   }
+// }
+// inline std::ostream&
+// operator<<(std::ostream& os, const Spring& spring)
+// {
+//   os << "<spring";
+//   if (spring.comment.size()) {
+//     os << " \"" << spring.comment << "\"";
+//   }
+//   os << " dragForce:" << spring.dragForce;
+//   os << " stiffiness:" << spring.stiffiness;
+//   if (spring.bones.size()) {
+//     os << " bones[";
+//     for (int i = 0; i < spring.bones.size(); ++i) {
+//       if (i) {
+//         os << ",";
+//       }
+//       os << spring.bones[i];
+//     }
+//     os << "]";
+//   }
+//   // collision
+//   os << " radius:" << spring.hitRadius;
+//   if (auto center = spring.center) {
+//     os << " center:" << *center;
+//   }
+//   if (spring.colliderGroups.size()) {
+//     os << " colliderGroups[";
+//     for (int i = 0; i < spring.colliderGroups.size(); ++i) {
+//       if (i) {
+//         os << ",";
+//       }
+//       os << spring.colliderGroups[i];
+//     }
+//     os << "]";
+//   }
+//   os << ">";
+//   return os;
+// }
 
 }
 }

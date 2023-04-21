@@ -53,10 +53,7 @@ from_json(const nlohmann::json& j, DirectX::XMFLOAT4X4& m)
 }
 
 namespace libvrm::gltf {
-Scene::Scene()
-{
-  m_spring = std::make_shared<vrm::SpringSolver>();
-}
+Scene::Scene() {}
 
 Scene::~Scene()
 {
@@ -743,26 +740,22 @@ Scene::ParseVrm0()
       auto& colliderGroups = secondaryAnimation.at("colliderGroups");
       for (auto& colliderGroup : colliderGroups) {
         auto group = std::make_shared<vrm::ColliderGroup>();
-        *group = colliderGroup;
-        std::cout << *group << std::endl;
+        // *group = colliderGroup;
         m_colliderGroups.push_back(group);
       }
     }
     if (has(secondaryAnimation, "boneGroups")) {
       auto& boneGroups = secondaryAnimation.at("boneGroups");
       for (auto& boneGroup : boneGroups) {
-        auto spring = std::make_shared<vrm::Spring>();
-        *spring = boneGroup;
-        std::cout << *spring << std::endl;
-        m_springs.push_back(spring);
-      }
-    }
+        auto spring = std::make_shared<vrm::SpringSolver>();
+        float stiffness = boneGroup.at("stiffiness");
+        float dragForce = boneGroup.at("dragForce");
+        for (auto& bone : boneGroup.at("bones")) {
+          spring->AddRecursive(m_nodes[bone], dragForce, stiffness);
+        }
 
-    m_spring->Clear();
-    for (auto& spring : m_springs) {
-      for (auto node_index : spring->bones) {
-        m_spring->Add(
-          m_nodes[node_index], spring->dragForce, spring->stiffiness);
+        // *spring = boneGroup;
+        m_springSolvers.push_back(spring);
       }
     }
   }
@@ -863,8 +856,8 @@ Scene::Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo)
   SyncHierarchy();
 
   // springbone
-  if (m_spring) {
-    m_spring->Update(time);
+  for (auto& spring : m_springSolvers) {
+    spring->Update(time);
   }
 
   if (m_expressions) {
@@ -927,8 +920,8 @@ Scene::Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo)
     }
   }
 
-  if (m_spring) {
-    m_spring->DrawGizmo(gizmo);
+  for (auto& spring : m_springSolvers) {
+    spring->DrawGizmo(gizmo);
   }
 }
 

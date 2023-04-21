@@ -55,7 +55,7 @@ SpringJoint::DrawGizmo(IGizmoDrawer* gizmo)
 }
 
 void
-SpringJoint::Update()
+SpringJoint::Update(Time time)
 {
   auto currentTail = m_currentTailPosotion;
 
@@ -66,8 +66,9 @@ SpringJoint::Update()
                   // 前フレームの移動を継続する
                   + delta * (1.0f - DragForce)
                   // 親の回転による子ボーンの移動目標
-                  + dmath::rotate(m_initLocalTailDir * Stiffiness * 0.01f,
-                                  Head->ParentWorldRotation())
+                  +
+                  dmath::rotate(m_initLocalTailDir * Stiffiness * time.count(),
+                                Head->ParentWorldRotation())
     // 外力による移動量
     // + external;
     ;
@@ -116,16 +117,16 @@ SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3& nextTail) const
 }
 
 void
-SpringSolver::Add(const std::shared_ptr<gltf::Node>& node,
-                  float dragForce,
-                  float stiffiness)
+SpringSolver::AddRecursive(const std::shared_ptr<gltf::Node>& node,
+                           float dragForce,
+                           float stiffiness)
 {
 
   DirectX::XMFLOAT3 localTailPosition;
   if (node->Children.size()) {
     for (auto& child : node->Children) {
       localTailPosition = child->Transform.Translation;
-      m_joints.push_back(
+      Joints.push_back(
         SpringJoint(node, localTailPosition, dragForce, stiffiness));
       break;
     }
@@ -142,28 +143,32 @@ SpringSolver::Add(const std::shared_ptr<gltf::Node>& node,
   }
 
   for (auto& child : node->Children) {
-    Add(child, dragForce, stiffiness);
+    AddRecursive(child, dragForce, stiffiness);
   }
 }
 
 void
 SpringSolver::Update(Time time)
 {
-  bool doUpdate = time != m_lastTime;
-  m_lastTime = time;
+  bool doUpdate = time != LastTime;
+  auto delta = time - LastTime;
+  LastTime = time;
   if (!doUpdate) {
     return;
   }
+  if (delta.count() == 0) {
+    return;
+  }
 
-  for (auto& joint : m_joints) {
-    joint.Update();
+  for (auto& joint : Joints) {
+    joint.Update(delta);
   }
 }
 
 void
 SpringSolver::DrawGizmo(IGizmoDrawer* gizmo)
 {
-  for (auto& joint : m_joints) {
+  for (auto& joint : Joints) {
     joint.DrawGizmo(gizmo);
   }
 }

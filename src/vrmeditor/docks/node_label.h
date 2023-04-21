@@ -82,14 +82,12 @@ Label(const libvrm::gltf::Scene& scene,
 
   // vrm0
   // spring
-  if (scene.m_springs.size()) {
-    for (auto& spring : scene.m_springs) {
-      for (auto joint : spring->bones) {
-        auto joint_node = scene.m_nodes[joint];
-        if (joint_node == node) {
-          ss << "󰚟 ";
-          break;
-        }
+  for (auto& solver : scene.m_springSolvers) {
+    for (auto& joint : solver->Joints) {
+      auto joint_node = joint.Head;
+      if (joint_node == node) {
+        ss << "󰚟 ";
+        break;
       }
     }
   }
