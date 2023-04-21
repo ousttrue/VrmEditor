@@ -12,7 +12,8 @@
 #include <stdint.h>
 #include <vector>
 
-namespace libvrm::vrm {
+namespace libvrm {
+namespace vrm {
 
 class SpringJoint
 {
@@ -39,7 +40,7 @@ public:
 
   DirectX::XMFLOAT4 WorldPosToLocalRotation(
     const DirectX::XMFLOAT3& nextTail) const;
-  void DrawGizmo(IGizmoDrawer *gizmo);
+  void DrawGizmo(IGizmoDrawer* gizmo);
 };
 
 class SpringSolver
@@ -54,10 +55,8 @@ public:
            float dragForce,
            float stiffiness);
   void Update(Time time);
-  void DrawGizmo(IGizmoDrawer *gizmo);
+  void DrawGizmo(IGizmoDrawer* gizmo);
 };
-
-namespace v0 {
 
 struct Spring
 {

@@ -286,4 +286,5 @@ HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
   // process
   node->PullData(inputs);
 }
+
 }

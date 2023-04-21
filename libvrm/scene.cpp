@@ -9,8 +9,6 @@
 #include "vrm/node.h"
 #include "vrm/skin.h"
 #include "vrm/springbone.h"
-#include "vrm/vrm0.h"
-#include "vrm/vrm1.h"
 #include <DirectXMath.h>
 #include <array>
 #include <expected>
@@ -137,11 +135,11 @@ Scene::Parse()
     if (has(extensions, "VRM")) {
       auto VRM = extensions.at("VRM");
       // TODO: meta
-      m_vrm0 = std::make_shared<vrm::v0::Vrm>();
+      m_type = ModelType::Vrm0;
       m_title = "vrm-0.x";
     }
     if (has(extensions, "VRMC_vrm")) {
-      m_vrm1 = std::make_shared<vrm::v1::Vrm>();
+      m_type = ModelType::Vrm1;
       m_title = "vrm-1.0";
     }
   }
@@ -256,17 +254,15 @@ Scene::Parse()
     }
   }
 
-  if (m_vrm0) {
+  if (m_type == ModelType::Vrm0) {
     if (auto vrm0 = ParseVrm0()) {
-      m_vrm0 = *vrm0;
     } else {
       return std::unexpected{ vrm0.error() };
     }
   }
 
-  if (m_vrm1) {
+  if (m_type == ModelType::Vrm1) {
     if (auto vrm1 = ParseVrm1()) {
-      m_vrm1 = *vrm1;
     } else {
       return std::unexpected{ vrm1.error() };
     }
@@ -382,7 +378,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
         return std::unexpected{ accessor.error() };
       }
       std::vector<DirectX::XMFLOAT3> copy;
-      if (m_vrm0) {
+      if (m_type == ModelType::Vrm0) {
         copy.reserve(positions.size());
         for (auto& p : positions) {
           copy.push_back({ -p.x, p.y, -p.z });
@@ -449,7 +445,7 @@ Scene::ParseMesh(int i, const nlohmann::json& mesh)
             return std::unexpected{ accessor.error() };
           }
           std::vector<DirectX::XMFLOAT3> copy;
-          if (m_vrm0) {
+          if (m_type == ModelType::Vrm0) {
             copy.reserve(positions.size());
             for (auto& p : positions) {
               copy.push_back({ -p.x, p.y, -p.z });
@@ -521,7 +517,7 @@ Scene::ParseSkin(int i, const nlohmann::json& skin)
     return std::unexpected{ accessor.error() };
   }
   std::vector<DirectX::XMFLOAT4X4> copy;
-  if (m_vrm0) {
+  if (m_type == ModelType::Vrm0) {
     copy.reserve(matrices.size());
     for (auto& m : matrices) {
       copy.push_back(m);
@@ -562,7 +558,7 @@ Scene::ParseNode(int i, const nlohmann::json& node)
     // T
     ptr->Transform.Translation =
       node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
-    if (m_vrm0) {
+    if (m_type == ModelType::Vrm0) {
       // rotate: Y180
       auto t = ptr->Transform.Translation;
       ptr->Transform.Translation = { -t.x, t.y, -t.z };
@@ -665,7 +661,7 @@ Scene::ParseAnimation(int i, const nlohmann::json& animation)
   return ptr;
 }
 
-std::expected<std::shared_ptr<vrm::v0::Vrm>, std::string>
+std::expected<bool, std::string>
 Scene::ParseVrm0()
 {
   if (!has(m_gltf.Json, "extensions")) {
@@ -677,8 +673,6 @@ Scene::ParseVrm0()
     return std::unexpected{ "no extensions.VRM" };
   }
   auto VRM = extensions.at("VRM");
-
-  auto ptr = std::make_shared<vrm::v0::Vrm>();
 
   if (has(VRM, "humanoid")) {
     auto& humanoid = VRM.at("humanoid");
@@ -748,34 +742,35 @@ Scene::ParseVrm0()
     if (has(secondaryAnimation, "colliderGroups")) {
       auto& colliderGroups = secondaryAnimation.at("colliderGroups");
       for (auto& colliderGroup : colliderGroups) {
-        auto group = std::make_shared<vrm::v0::ColliderGroup>();
+        auto group = std::make_shared<vrm::ColliderGroup>();
         *group = colliderGroup;
         std::cout << *group << std::endl;
-        ptr->m_colliderGroups.push_back(group);
+        m_colliderGroups.push_back(group);
       }
     }
     if (has(secondaryAnimation, "boneGroups")) {
       auto& boneGroups = secondaryAnimation.at("boneGroups");
       for (auto& boneGroup : boneGroups) {
-        auto spring = std::make_shared<vrm::v0::Spring>();
+        auto spring = std::make_shared<vrm::Spring>();
         *spring = boneGroup;
         std::cout << *spring << std::endl;
-        ptr->m_springs.push_back(spring);
+        m_springs.push_back(spring);
       }
     }
 
     m_spring->Clear();
-    for (auto& spring : ptr->m_springs) {
+    for (auto& spring : m_springs) {
       for (auto node_index : spring->bones) {
         m_spring->Add(
           m_nodes[node_index], spring->dragForce, spring->stiffiness);
       }
     }
   }
-  return ptr;
+
+  return true;
 }
 
-std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string>
+std::expected<bool, std::string>
 Scene::ParseVrm1()
 {
   if (!has(m_gltf.Json, "extensions")) {
@@ -786,9 +781,8 @@ Scene::ParseVrm1()
   if (!has(extensions, "VRMC_vrm")) {
     return std::unexpected{ "no extensions.VRMC_vrm" };
   }
-  auto VRMC_vrm = extensions.at("VRMC_vrm");
 
-  auto ptr = std::make_shared<vrm::v1::Vrm>();
+  auto VRMC_vrm = extensions.at("VRMC_vrm");
   if (has(VRMC_vrm, "humanoid")) {
     auto& humanoid = VRMC_vrm.at("humanoid");
     if (has(humanoid, "humanBones")) {
@@ -805,8 +799,13 @@ Scene::ParseVrm1()
       }
     }
   }
-
-  return ptr;
+  if (has(extensions, "VRMC_springBone")) {
+    auto& springBone = extensions.at("VRMC_springBone");
+    auto& springs = springBone.at("springs");
+    for (auto& spring : springs) {
+    }
+  }
+  return true;
 }
 
 std::expected<bool, std::string>
@@ -864,7 +863,7 @@ Scene::Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo)
   SyncHierarchy();
 
   // springbone
-  if (m_vrm0) {
+  if (m_spring) {
     m_spring->Update(time);
   }
 
@@ -928,7 +927,7 @@ Scene::Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo)
     }
   }
 
-  if (m_vrm0) {
+  if (m_spring) {
     m_spring->DrawGizmo(gizmo);
   }
 }

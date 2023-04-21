@@ -4,7 +4,6 @@
 #include <memory>
 #include <vrm/mesh.h>
 #include <vrm/node.h>
-#include <vrm/vrm0.h>
 
 std::shared_ptr<libvrm::gltf::SceneContext>
 SceneDock::CreateTree(const AddDockFunc& addDock,

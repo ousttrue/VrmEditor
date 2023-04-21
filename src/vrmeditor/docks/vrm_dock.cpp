@@ -1,8 +1,6 @@
 #include "vrm_dock.h"
 #include "csscolor.h"
 #include <imgui.h>
-#include <vrm/vrm0.h>
-#include <vrm/vrm1.h>
 
 struct SliderColor
 {
@@ -234,11 +232,15 @@ VrmDock::CreateVrm(const AddDockFunc& addDock,
                    const std::shared_ptr<libvrm::gltf::Scene>& scene)
 {
   addDock(Dock(title, [scene]() {
-    if (auto vrm = scene->m_vrm0) {
-      ImGui::Text("%s", "vrm-0.x");
-    }
-    if (auto vrm = scene->m_vrm1) {
-      ImGui::Text("%s", "vrm-1.0");
+    switch (scene->m_type) {
+      case libvrm::gltf::ModelType::Gltf:
+        break;
+      case libvrm::gltf::ModelType::Vrm0:
+        ImGui::Text("%s", "vrm-0.x");
+        break;
+      case libvrm::gltf::ModelType::Vrm1:
+        ImGui::Text("%s", "vrm-1.0");
+        break;
     }
   }));
 }

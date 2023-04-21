@@ -71,9 +71,16 @@ _IndexOf(std::span<const T> values, const T& target)
   return {};
 }
 
+enum class ModelType
+{
+  Gltf,
+  Vrm0,
+  Vrm1,
+};
+
 struct Scene
 {
-
+  ModelType m_type = ModelType::Gltf;
   std::vector<uint8_t> m_bytes;
   Gltf m_gltf;
   std::string m_title = "scene";
@@ -88,16 +95,16 @@ struct Scene
   std::vector<std::shared_ptr<Animation>> m_animations;
 
   // extensions
-  std::shared_ptr<vrm::v0::Vrm> m_vrm0;
-  std::shared_ptr<vrm::v1::Vrm> m_vrm1;
   std::shared_ptr<vrm::animation::Animation> m_vrma;
-
   std::shared_ptr<vrm::Expressions> m_expressions;
+
+  std::vector<std::shared_ptr<vrm::ColliderGroup>> m_colliderGroups;
+  std::vector<std::shared_ptr<vrm::Spring>> m_springs;
   std::shared_ptr<vrm::SpringSolver> m_spring;
 
-  std::list<std::function<void(const Scene& scene)>> m_sceneUpdated;
+  std::unordered_map<vrm::MorphTargetKey, float> m_morphTargetMap;
 
-  std::string m_jsonpath;
+  std::list<std::function<void(const Scene& scene)>> m_sceneUpdated;
 
   // humanpose
   std::vector<vrm::HumanBones> m_humanBoneMap;
@@ -111,7 +118,7 @@ struct Scene
 
   void Clear()
   {
-    m_vrm0 = nullptr;
+    m_type = {};
     m_samplers.clear();
     m_images.clear();
     m_textures.clear();
@@ -121,7 +128,16 @@ struct Scene
     m_roots.clear();
     m_skins.clear();
     m_animations.clear();
+
+    m_colliderGroups.clear();
+    m_springs.clear();
+    m_spring = {};
+
+    m_morphTargetMap.clear();
+
     m_gltf = {};
+    m_vrma = {};
+    m_expressions = {};
   }
 
   std::optional<size_t> IndexOf(
@@ -196,9 +212,12 @@ public:
   void Traverse(const EnterFunc& enter,
                 const LeaveFunc& leave,
                 const std::shared_ptr<Node>& node = nullptr);
+
+  std::string m_jsonpath;
   void TraverseJson(const EnterJson& enter,
                     const LeaveJson& leave,
                     nlohmann::json* j = nullptr);
+
   vrm::HumanPose UpdateHumanPose();
   void SetHumanPose(const vrm::HumanPose& pose);
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
@@ -253,8 +272,8 @@ private:
   std::expected<std::shared_ptr<Animation>, std::string> ParseAnimation(
     int i,
     const nlohmann::json& animation);
-  std::expected<std::shared_ptr<vrm::v0::Vrm>, std::string> ParseVrm0();
-  std::expected<std::shared_ptr<vrm::v1::Vrm>, std::string> ParseVrm1();
+  std::expected<bool, std::string> ParseVrm0();
+  std::expected<bool, std::string> ParseVrm1();
 };
 
 struct SceneContext

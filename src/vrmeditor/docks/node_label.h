@@ -5,7 +5,6 @@
 #include <vrm/node.h>
 #include <vrm/scene.h>
 #include <vrm/springbone.h>
-#include <vrm/vrm0.h>
 
 inline const std::string
 Label(const libvrm::gltf::Scene& scene,
@@ -82,22 +81,20 @@ Label(const libvrm::gltf::Scene& scene,
   }
 
   // vrm0
-  if (auto vrm = scene.m_vrm0) {
-    // spring
-    if (vrm->m_springs.size()) {
-      for (auto& spring : vrm->m_springs) {
-        for (auto joint : spring->bones) {
-          auto joint_node = scene.m_nodes[joint];
-          if (joint_node == node) {
-            ss << "󰚟 ";
-            break;
-          }
+  // spring
+  if (scene.m_springs.size()) {
+    for (auto& spring : scene.m_springs) {
+      for (auto joint : spring->bones) {
+        auto joint_node = scene.m_nodes[joint];
+        if (joint_node == node) {
+          ss << "󰚟 ";
+          break;
         }
       }
     }
-    // collider
-    if (vrm->m_colliderGroups.size()) {
-    }
+  }
+  // collider
+  if (scene.m_colliderGroups.size()) {
   }
 
   ss << node->Name;
