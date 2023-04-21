@@ -108,12 +108,12 @@ struct Node
       return DirectX::XMMatrixIdentity();
     }
   }
-  DirectX::XMFLOAT4 ParentWorldRotation() const
+  DirectX::XMVECTOR ParentWorldRotation() const
   {
     if (auto p = Parent.lock()) {
-      return p->WorldTransform.Rotation;
+      return DirectX::XMLoadFloat4(&p->WorldTransform.Rotation);
     } else {
-      return { 0, 0, 0, 1 };
+      return DirectX::XMQuaternionIdentity();
     }
   }
   DirectX::XMFLOAT3 ParentWorldPosition() const

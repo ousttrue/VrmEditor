@@ -39,8 +39,8 @@ public:
               float stiffiness);
   void Update(Time time);
 
-  DirectX::XMFLOAT4 WorldPosToLocalRotation(
-    const DirectX::XMFLOAT3& nextTail) const;
+  DirectX::XMVECTOR WorldPosToLocalRotation(
+    const DirectX::XMVECTOR& nextTail) const;
   void DrawGizmo(IGizmoDrawer* gizmo);
 };
 

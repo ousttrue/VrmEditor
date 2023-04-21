@@ -1,5 +1,4 @@
 #include "vrm/springbone.h"
-#include "vrm/dmath.h"
 #include "vrm/gizmo.h"
 #include "vrm/scenetypes.h"
 #include <iostream>
@@ -14,13 +13,17 @@ SpringJoint::SpringJoint(const std::shared_ptr<gltf::Node>& head,
   , DragForce(dragForce)
   , Stiffiness(stiffiness)
 {
-
-  m_currentTailPosotion =
-    dmath::transform(localTailPosition, head->ParentWorldMatrix());
+  DirectX::XMStoreFloat3(
+    &m_currentTailPosotion,
+    DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&localTailPosition),
+                                head->ParentWorldMatrix()));
   m_lastTailPosotion = m_currentTailPosotion;
-  m_tailLength = dmath::length(localTailPosition);
+  m_tailLength = DirectX::XMVectorGetX(
+    DirectX::XMVector3Length(DirectX::XMLoadFloat3(&localTailPosition)));
   assert(m_tailLength);
-  m_initLocalTailDir = dmath::normalized(localTailPosition);
+  DirectX::XMStoreFloat3(
+    &m_initLocalTailDir,
+    DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&localTailPosition)));
 }
 
 void
@@ -57,36 +60,44 @@ SpringJoint::DrawGizmo(IGizmoDrawer* gizmo)
 void
 SpringJoint::Update(Time time)
 {
-  auto currentTail = m_currentTailPosotion;
+  auto currentTail = DirectX::XMLoadFloat3(&m_currentTailPosotion);
 
-  auto delta = currentTail - m_lastTailPosotion;
+  auto delta = DirectX::XMVectorSubtract(
+    currentTail, DirectX::XMLoadFloat3(&m_lastTailPosotion));
 
   // verlet積分で次の位置を計算
-  auto nextTail = currentTail
-                  // 前フレームの移動を継続する
-                  + delta * (1.0f - DragForce)
-                  // 親の回転による子ボーンの移動目標
-                  +
-                  dmath::rotate(m_initLocalTailDir * Stiffiness * time.count(),
-                                Head->ParentWorldRotation())
+  auto nextTail = DirectX::XMVectorAdd(
+    DirectX::XMVectorAdd(currentTail,
+                         // 前フレームの移動を継続する
+                         DirectX::XMVectorScale(delta, 1.0f - DragForce))
+    // 親の回転による子ボーンの移動目標
+    ,
+    DirectX::XMVector3Rotate(
+      DirectX::XMVectorScale(DirectX::XMLoadFloat3(&m_initLocalTailDir),
+                             static_cast<float>(Stiffiness * time.count())),
+      Head->ParentWorldRotation()))
     // 外力による移動量
     // + external;
     ;
 
-  assert(!std::isnan(nextTail.x));
+  assert(!std::isnan(DirectX::XMVectorGetX(nextTail)));
 
-  auto position = Head->WorldTransform.Translation;
-  nextTail = position + dmath::normalized(nextTail - position) * m_tailLength;
+  auto position = DirectX::XMLoadFloat3(&Head->WorldTransform.Translation);
+  nextTail = DirectX::XMVectorAdd(
+    position,
+    DirectX::XMVectorScale(DirectX::XMVector3Normalize(
+                             DirectX::XMVectorSubtract(nextTail, position)),
+                           m_tailLength));
 
   // auto head = Head.get();
-  assert(!std::isnan(nextTail.x));
+  assert(!std::isnan(DirectX::XMVectorGetX(nextTail)));
 
   // update
-  m_currentTailPosotion = nextTail;
-  m_lastTailPosotion = currentTail;
+  DirectX::XMStoreFloat3(&m_currentTailPosotion, nextTail);
+  DirectX::XMStoreFloat3(&m_lastTailPosotion, currentTail);
   auto newLocalRotation = WorldPosToLocalRotation(nextTail);
-  assert(!std::isnan(newLocalRotation.x));
-  Head->Transform.Rotation = newLocalRotation;
+  assert(!std::isnan(DirectX::XMVectorGetX(newLocalRotation)));
+  DirectX::XMStoreFloat4(&Head->Transform.Rotation, newLocalRotation);
   Head->CalcWorldMatrix(false);
   for (auto& child : Head->Children) {
     // ひとつ下まで
@@ -94,8 +105,22 @@ SpringJoint::Update(Time time)
   }
 }
 
-DirectX::XMFLOAT4
-SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3& nextTail) const
+inline DirectX::XMVECTOR
+rotate_from_to(DirectX::XMFLOAT3 _lhs, DirectX::XMFLOAT3 _rhs)
+{
+  auto lhs = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&_lhs));
+  auto rhs = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&_rhs));
+  auto axis = DirectX::XMVector3Cross(lhs, rhs);
+  auto dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(lhs, rhs));
+  if (fabs(1 - dot) < 1e-4) {
+    return { 0, 0, 0, 1 };
+  }
+  auto angle = acos(dot);
+  return DirectX::XMQuaternionRotationAxis(axis, angle);
+}
+
+DirectX::XMVECTOR
+SpringJoint::WorldPosToLocalRotation(const DirectX::XMVECTOR& nextTail) const
 {
   DirectX::XMFLOAT3 localNextTail;
 
@@ -103,7 +128,7 @@ SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3& nextTail) const
   DirectX::XMStoreFloat3(
     &localNextTail,
     DirectX::XMVector3Transform(
-      DirectX::XMLoadFloat3(&nextTail),
+      nextTail,
       DirectX::XMMatrixInverse(
         &det,
         DirectX::XMMatrixMultiply(Head->InitialMatrix(),
@@ -111,8 +136,8 @@ SpringJoint::WorldPosToLocalRotation(const DirectX::XMFLOAT3& nextTail) const
 
   assert(DirectX::XMVectorGetX(det) != 0);
 
-  auto r = dmath::rotate_from_to(m_initLocalTailDir, localNextTail);
-  assert(!std::isnan(r.x));
+  auto r = rotate_from_to(m_initLocalTailDir, localNextTail);
+  assert(!std::isnan(DirectX::XMVectorGetX(r)));
   return r;
 }
 
@@ -130,7 +155,6 @@ SpringSolver::AddRecursive(const std::shared_ptr<gltf::Node>& node,
                            float dragForce,
                            float stiffiness)
 {
-
   if (node->Children.size()) {
     for (auto& child : node->Children) {
       Add(node, child->Transform.Translation, dragForce, stiffiness);
@@ -138,15 +162,16 @@ SpringSolver::AddRecursive(const std::shared_ptr<gltf::Node>& node,
     }
   } else {
     auto delta = node->WorldTransform.Translation - node->ParentWorldPosition();
-    auto childPosition =
-      node->WorldTransform.Translation + dmath::normalized(delta) * 0.07f;
+    auto childPosition = DirectX::XMVectorAdd(
+      DirectX::XMLoadFloat3(&node->WorldTransform.Translation),
+      DirectX::XMVectorScale(
+        DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&delta)), 0.07f));
 
     DirectX::XMFLOAT3 localTailPosition;
     DirectX::XMStoreFloat3(
       &localTailPosition,
       DirectX::XMVector3Transform(
-        DirectX::XMLoadFloat3(&childPosition),
-        DirectX::XMMatrixInverse(nullptr, node->WorldMatrix())));
+        childPosition, DirectX::XMMatrixInverse(nullptr, node->WorldMatrix())));
 
     Add(node, localTailPosition, dragForce, stiffiness);
   }
@@ -182,4 +207,4 @@ SpringSolver::DrawGizmo(IGizmoDrawer* gizmo)
   }
 }
 
-} // namespace vrm
+}
