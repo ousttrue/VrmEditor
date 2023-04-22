@@ -112,7 +112,7 @@ rotate_from_to(DirectX::XMFLOAT3 _lhs, DirectX::XMFLOAT3 _rhs)
   auto rhs = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&_rhs));
   auto axis = DirectX::XMVector3Cross(lhs, rhs);
   auto dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(lhs, rhs));
-  if (fabs(1 - dot) < 1e-4) {
+  if (fabs(1 - fabs(dot)) < 1e-4) {
     return { 0, 0, 0, 1 };
   }
   auto angle = acos(dot);
