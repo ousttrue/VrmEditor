@@ -128,6 +128,7 @@ struct Node
   void CalcShape();
   void UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
                                     std::vector<DirectX::XMFLOAT4X4>& out);
+  void UpdateShapeAttributeRecursive(std::vector<DirectX::XMFLOAT4>& out);
 };
 
 inline std::ostream&

@@ -51,6 +51,12 @@ ScenePreview::ScenePreview(
           root->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
                                              m_cuber->Instances);
         }
+        if (m_cuber->Colors.size() != m_cuber->Instances.size()) {
+          m_cuber->Colors.clear();
+          for (auto& root : scene->m_roots) {
+            root->UpdateShapeAttributeRecursive(m_cuber->Colors);
+          }
+        }
         m_cuber->Render(env);
       }
 

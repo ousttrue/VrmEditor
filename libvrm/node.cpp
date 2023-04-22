@@ -129,6 +129,10 @@ const float DEFAULT_SIZE = 0.04f;
 void
 Node::CalcShape()
 {
+  DirectX::XMStoreFloat4x4(
+    &ShapeMatrix,
+    DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
+
   if (auto parent = Parent.lock()) {
     std::shared_ptr<gltf::Node> tail;
     switch (Children.size()) {
@@ -182,10 +186,6 @@ Node::CalcShape()
 
     auto shape = center * scale * r;
     DirectX::XMStoreFloat4x4(&ShapeMatrix, shape);
-  } else {
-    DirectX::XMStoreFloat4x4(
-      &ShapeMatrix,
-      DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
   }
 
   for (auto& child : Children) {
@@ -203,6 +203,20 @@ Node::UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
   DirectX::XMStoreFloat4x4(&out.back(), shape * m);
   for (auto& child : Children) {
     child->UpdateShapeInstanceRecursive(m, out);
+  }
+}
+
+void
+Node::UpdateShapeAttributeRecursive(std::vector<DirectX::XMFLOAT4>& out)
+{
+  if (auto humanoid = Humanoid) {
+    out.push_back({ 0.5f, 1, 0.8f, 1 });
+  } else {
+    out.push_back({ 1, 1, 1, 1 });
+  }
+  // DirectX::XMStoreFloat4x4(&out.back(), shape * m);
+  for (auto& child : Children) {
+    child->UpdateShapeAttributeRecursive(out);
   }
 }
 
