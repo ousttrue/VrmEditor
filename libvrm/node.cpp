@@ -127,14 +127,9 @@ Node::Print(int level)
 const float DEFAULT_SIZE = 0.04f;
 
 void
-Node::CalcShape(int level)
+Node::CalcShape()
 {
-  DirectX::XMStoreFloat4x4(
-    &ShapeMatrix,
-    DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
-
-  auto isRoot_ = level == 0;
-  if (!isRoot_) {
+  if (auto parent = Parent.lock()) {
     std::shared_ptr<gltf::Node> tail;
     switch (Children.size()) {
       case 0:
@@ -187,10 +182,14 @@ Node::CalcShape(int level)
 
     auto shape = center * scale * r;
     DirectX::XMStoreFloat4x4(&ShapeMatrix, shape);
+  } else {
+    DirectX::XMStoreFloat4x4(
+      &ShapeMatrix,
+      DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
   }
 
   for (auto& child : Children) {
-    child->CalcShape(level + 1);
+    child->CalcShape();
   }
 }
 
