@@ -19,7 +19,7 @@ public:
                        p_open,
                        ImGuiWindowFlags_NoScrollbar |
                          ImGuiWindowFlags_NoScrollWithMouse)) {
-        preview->Show(scene->m_title.c_str());
+        preview->ShowFullWindow(scene->m_title.c_str());
       }
       ImGui::End();
       ImGui::PopStyleVar();

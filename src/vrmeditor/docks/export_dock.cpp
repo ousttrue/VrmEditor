@@ -25,7 +25,7 @@ ExportDock::Create(const AddDockFunc& addDock,
 
   addDock(Dock(title, [scene, debug_scene, impl, indent, preview]() {
     auto pos = ImGui::GetCursorScreenPos();
-    preview->Show("debug", DirectX::XMFLOAT4{ pos.x, pos.y, 300, 300 });
+    preview->ShowScreenRect("debug", pos.x, pos.y, 300, 300);
 
     if (ImGui::Button("export scene")) {
       libvrm::gltf::Exporter exporter;

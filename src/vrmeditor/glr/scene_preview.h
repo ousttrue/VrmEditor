@@ -1,9 +1,4 @@
 #pragma once
-// #include "gl3renderer.h"
-// #include "line_gizmo.h"
-// #include "rendertarget.h"
-// #include <vrm/scene.h>
-// #include <memory>
 #include <grapho/orbitview.h>
 #include <optional>
 #include <vrm/scene.h>
@@ -11,11 +6,10 @@
 namespace glr {
 class Cuber;
 struct RenderTarget;
-// struct LineGizmo;
 struct ScenePreview
 {
-  std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<RenderTarget> m_rt;
+  std::shared_ptr<Cuber> m_cuber;
   ScenePreview(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                const std::shared_ptr<grapho::OrbitView>& view,
                const std::shared_ptr<libvrm::gltf::SceneContext>& context);
@@ -25,6 +19,8 @@ struct ScenePreview
                    std::make_shared<libvrm::gltf::SceneContext>())
   {
   }
-  void Show(const char* title, std::optional<DirectX::XMFLOAT4> rect = {});
+
+  void ShowScreenRect(const char* title, float x, float y, float w, float h);
+  void ShowFullWindow(const char* title);
 };
 }
