@@ -13,6 +13,8 @@ public:
                      const std::shared_ptr<libvrm::gltf::SceneContext>& context)
   {
     auto preview = std::make_shared<glr::ScenePreview>(scene, view, context);
+    preview->m_showCuber = false;
+
     addDock(Dock(title, [preview, scene](const char* title, bool* p_open) {
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
       if (ImGui::Begin(title,

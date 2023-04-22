@@ -22,53 +22,67 @@ ScenePreview::ScenePreview(
   m_rt->color[2] = 0.2f;
   m_rt->color[3] = 1.0f;
 
-  m_rt->render = [cuber = m_cuber,
-                  scene,
-                  selection = context,
-                  gizmo =
-                    std::make_shared<LineGizmo>()](const RenderingEnv& env) {
-    glr::ClearRendertarget(env);
+  m_rt->render =
+    [this, scene, selection = context, gizmo = std::make_shared<LineGizmo>()](
+      const RenderingEnv& env) {
+      glr::ClearRendertarget(env);
 
-    auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
+      libvrm::gltf::RenderFunc render =
+        [this, &env](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+                     const libvrm::gltf::MeshInstance& instance,
+                     const float m[16]) {
+          if (m_showMesh) {
+            glr::Render(RenderPass::Color, env, mesh, instance, m);
+          }
+          if (m_showShadow) {
+            glr::Render(RenderPass::ShadowMatrix, env, mesh, instance, m);
+          }
+        };
 
-    libvrm::gltf::RenderFunc render =
-      [liner, &env](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-                    const libvrm::gltf::MeshInstance& instance,
-                    const float m[16]) {
-        glr::Render(RenderPass::Color, env, mesh, instance, m);
-        glr::Render(RenderPass::ShadowMatrix, env, mesh, instance, m);
-      };
-
-    scene->Render(render, gizmo.get());
-    liner->Render(env.ProjectionMatrix, env.ViewMatrix, gizmo->m_lines);
-    gizmo->Clear();
-
-    cuber->Instances.clear();
-    for (auto& root : scene->m_roots) {
-      root->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
-                                         cuber->Instances);
-    }
-    cuber->Render(env);
-
-    // gizmo
-    if (auto node = selection->selected.lock()) {
-      // TODO: conflict mouse event(left) with ImageButton
-      DirectX::XMFLOAT4X4 m;
-      DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
-      ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-      if (ImGuizmo::Manipulate(env.ViewMatrix,
-                               env.ProjectionMatrix,
-                               ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
-                               ImGuizmo::LOCAL,
-                               (float*)&m,
-                               nullptr,
-                               nullptr,
-                               nullptr,
-                               nullptr)) {
-        // decompose feedback
-        node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+      scene->Render(render, gizmo.get());
+      if (m_showLine) {
+        glr::RenderLine(env, gizmo->m_lines);
       }
-      ImGuizmo::GetContext().mAllowActiveHoverItem = false;
+      gizmo->Clear();
+
+      if (m_showCuber) {
+        m_cuber->Instances.clear();
+        for (auto& root : scene->m_roots) {
+          root->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
+                                             m_cuber->Instances);
+        }
+        m_cuber->Render(env);
+      }
+
+      // gizmo
+      if (auto node = selection->selected.lock()) {
+        // TODO: conflict mouse event(left) with ImageButton
+        DirectX::XMFLOAT4X4 m;
+        DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
+        ImGuizmo::GetContext().mAllowActiveHoverItem = true;
+        if (ImGuizmo::Manipulate(env.ViewMatrix,
+                                 env.ProjectionMatrix,
+                                 ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
+                                 ImGuizmo::LOCAL,
+                                 (float*)&m,
+                                 nullptr,
+                                 nullptr,
+                                 nullptr,
+                                 nullptr)) {
+          // decompose feedback
+          node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+        }
+        ImGuizmo::GetContext().mAllowActiveHoverItem = false;
+      }
+    };
+
+  m_popup = [this]() {
+    if (ImGui::BeginPopupContextItem(m_popupName.c_str())) {
+      ImGui::Checkbox("mesh", &m_showMesh);
+      ImGui::Checkbox("shadow", &m_showShadow);
+      ImGui::Checkbox("line", &m_showLine);
+      ImGui::Checkbox("bone", &m_showCuber);
+      ImGui::EndPopup();
     }
   };
 }
@@ -83,7 +97,7 @@ ScenePreview::ShowScreenRect(const char* title,
   auto sc = ImGui::GetCursorScreenPos();
   m_rt->show_fbo(x, y, w, h);
   // top, right pivot
-  Overlay({ sc.x + w - 10, sc.y + 10 }, title);
+  Overlay({ sc.x + w - 10, sc.y + 10 }, title, m_popupName.c_str(), m_popup);
 }
 
 void

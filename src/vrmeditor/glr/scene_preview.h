@@ -15,9 +15,12 @@ struct ScenePreview
   bool m_showMesh = true;
   bool m_showShadow = true;
   // gizmo
-  bool m_showGrid = true;
-  bool m_showSpring = true;
+  bool m_showLine = true;
   bool m_showCuber = true;
+
+  // imgui
+  std::string m_popupName = "ScenePreviewPopup";
+  std::function<void()> m_popup;
 
   ScenePreview(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                const std::shared_ptr<grapho::OrbitView>& view,

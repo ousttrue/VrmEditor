@@ -1,6 +1,7 @@
 #include "gl3renderer.h"
 #include "rendering_env.h"
 #include <GL/glew.h>
+#include <cuber/gl3/GlLineRenderer.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/texture.h>
 #include <grapho/gl3/vao.h>
@@ -289,8 +290,7 @@ void
 ClearRendertarget(const RenderingEnv& env)
 {
   glViewport(0, 0, env.Width(), env.Height());
-  glClearColor(
-    env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha());
+  glClearColor(env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha());
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -310,6 +310,13 @@ std::shared_ptr<grapho::gl3::Texture>
 GetOrCreate(const std::shared_ptr<libvrm::gltf::Image>& image)
 {
   return Gl3Renderer::Instance().GetOrCreate(image);
+}
+
+void
+RenderLine(const RenderingEnv& camera, std::span<const grapho::LineVertex> data)
+{
+  static cuber::gl3::GlLineRenderer s_liner;
+  s_liner.Render(camera.ProjectionMatrix, camera.ViewMatrix, data);
 }
 
 }
