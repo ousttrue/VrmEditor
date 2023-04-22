@@ -147,6 +147,7 @@ SpringSolver::Add(const std::shared_ptr<gltf::Node>& head,
                   float dragForce,
                   float stiffiness)
 {
+  head->ShapeColor = { 0.5f, 0.5f, 1.0f, 1 };
   Joints.push_back(SpringJoint(head, tail, dragForce, stiffiness));
 }
 

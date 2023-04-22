@@ -61,12 +61,24 @@ PushJoint(const std::shared_ptr<gltf::Scene>& scene,
 
 void
 InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
-                       const std::shared_ptr<bvh::Bvh>& bvh)
+                       const std::shared_ptr<bvh::Bvh>& bvh,
+                       const std::shared_ptr<vrm::HumanBoneMap>& map)
 {
   scene->m_title = "BVH";
   for (auto& joint : bvh->joints) {
     PushJoint(scene, joint, bvh->GuessScaling());
   };
+
+  // assign human bone
+  for (auto& node : scene->m_nodes) {
+    auto found = map->NameBoneMap.find(node->Name);
+    if (found != map->NameBoneMap.end()) {
+      node->Humanoid = libvrm::gltf::NodeHumanoidInfo{
+        .HumanBone = found->second,
+      };
+    }
+  }
+
   scene->m_roots[0]->CalcWorldMatrix(true);
   // move ground
   auto bb = scene->GetBoundingBox();

@@ -124,37 +124,92 @@ Node::Print(int level)
   }
 }
 
-const float DEFAULT_SIZE = 0.04f;
+std::shared_ptr<Node>
+Node::GetShapeTail()
+{
+  auto parent = Parent.lock();
+  if (!parent) {
+    // root not use tail
+    return nullptr;
+  }
+
+  switch (Children.size()) {
+    case 0:
+      return nullptr;
+
+    case 1:
+      return Children.front();
+  }
+
+  std::shared_ptr<Node> tail;
+  for (auto& child : Children) {
+    if (auto childHumanoid = child->Humanoid) {
+      switch (childHumanoid->HumanBone) {
+        case vrm::HumanBones::spine:
+        case vrm::HumanBones::neck:
+        case vrm::HumanBones::leftMiddleProximal:
+        case vrm::HumanBones::rightMiddleProximal:
+          return child;
+
+        case vrm::HumanBones::leftEye:
+        case vrm::HumanBones::rightEye:
+          break;
+
+        default:
+          tail = child;
+          break;
+      }
+    } else {
+      if (!tail) {
+        tail = child;
+      } else if (std::abs(child->Transform.Translation.x) <
+                 std::abs(tail->Transform.Translation.x)) {
+        // coose center node
+        tail = child;
+      }
+    }
+  }
+  return tail;
+}
+
+std::optional<vrm::HumanBones>
+Node::ClosestBone()
+{
+  if (Humanoid) {
+    return Humanoid->HumanBone;
+  }
+  if (AnyTail()) {
+    for (auto current = Parent.lock(); current;
+         current = current->Parent.lock()) {
+      if (auto humanoid = current->Humanoid) {
+        return humanoid->HumanBone;
+      }
+    }
+  }
+  return {};
+}
 
 void
 Node::CalcShape()
 {
-  DirectX::XMStoreFloat4x4(
-    &ShapeMatrix,
-    DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
+  float w = 0.02f;
+  float d = 0.02f;
+  // ShapeColor = { 1, 1, 1, 1 };
+  auto humanBone = ClosestBone();
+  if (humanBone) {
+    ShapeColor = vrm::HumanBoneToColor(*humanBone);
+    auto size = vrm::HumanBoneToWidthDepth(*humanBone);
+    w = size.x;
+    d = size.y;
+  }
 
-  if (auto parent = Parent.lock()) {
-    std::shared_ptr<gltf::Node> tail;
-    switch (Children.size()) {
-      case 0:
-        return;
+  DirectX::XMStoreFloat4x4(&ShapeMatrix, DirectX::XMMatrixScaling(w, 0.04f, d));
 
-      case 1:
-        tail = Children.front();
-        break;
+  if (Children.empty()) {
+    return;
+  }
 
-      default:
-        for (auto& child : Children) {
-          if (!tail) {
-            tail = child;
-          } else if (std::abs(child->Transform.Translation.x) <
-                     std::abs(tail->Transform.Translation.x)) {
-            // coose center node
-            tail = child;
-          }
-        }
-    }
-
+  if (auto tail = GetShapeTail()) {
     auto _Y = DirectX::XMFLOAT3(tail->Transform.Translation.x,
                                 tail->Transform.Translation.y,
                                 tail->Transform.Translation.z);
@@ -180,7 +235,7 @@ Node::CalcShape()
     }
 
     auto center = DirectX::XMMatrixTranslation(0, 0.5f, 0);
-    auto scale = DirectX::XMMatrixScaling(DEFAULT_SIZE, length, DEFAULT_SIZE);
+    auto scale = DirectX::XMMatrixScaling(w, length, d);
     DirectX::XMFLOAT4 _(0, 0, 0, 1);
     auto r = DirectX::XMMATRIX(X, Y, Z, DirectX::XMLoadFloat4(&_));
 
@@ -202,11 +257,7 @@ Node::UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
 
   Instance instance;
   DirectX::XMStoreFloat4x4(&instance.Matrix, shape * m);
-  if (auto humanoid = Humanoid) {
-    instance.Color = vrm::HumanBoneToColor(humanoid->HumanBone);
-  } else {
-    instance.Color = { 1, 1, 1, 1 };
-  }
+  instance.Color = ShapeColor;
   pushInstance(instance);
   for (auto& child : Children) {
     child->UpdateShapeInstanceRecursive(m, pushInstance);

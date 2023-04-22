@@ -24,22 +24,14 @@ BvhNode::SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
                 const std::shared_ptr<libvrm::vrm::HumanBoneMap>& map)
 {
   m_bvh = bvh;
-  libvrm::bvh::InitializeSceneFromBvh(m_scene, bvh);
 
   if (map) {
-    // assign human bone
-    for (auto& node : m_scene->m_nodes) {
-      auto found = map->NameBoneMap.find(node->Name);
-      if (found != map->NameBoneMap.end()) {
-        node->Humanoid = libvrm::gltf::NodeHumanoidInfo{
-          .HumanBone = found->second,
-        };
-      }
-    }
 
   } else {
     App::Instance().Log(LogLevel::Wran) << "humanoid map not found";
   }
+
+  libvrm::bvh::InitializeSceneFromBvh(m_scene, bvh, map);
 }
 
 void

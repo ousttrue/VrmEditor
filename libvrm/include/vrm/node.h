@@ -89,6 +89,7 @@ struct Node
   std::shared_ptr<Skin> Skin;
 
   DirectX::XMFLOAT4X4 ShapeMatrix;
+  DirectX::XMFLOAT4 ShapeColor = { 1, 1, 1, 1 };
 
   Node(std::string_view name);
   Node(const Node&) = delete;
@@ -132,6 +133,20 @@ struct Node
     }
   }
   void Print(int level = 0);
+  std::shared_ptr<Node> GetShapeTail();
+  std::optional<vrm::HumanBones> ClosestBone();
+  bool AnyTail()
+  {
+    for (auto& child : Children) {
+      if (child->Humanoid) {
+        return true;
+      }
+      if (child->AnyTail()) {
+        return true;
+      }
+    }
+    return false;
+  }
   void CalcShape();
   void UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
                                     const PushInstance& pushInstance);
