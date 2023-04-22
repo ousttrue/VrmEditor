@@ -220,13 +220,13 @@ public:
 
   void InitializeNodes()
   {
-    if (m_roots.size()) {
-      m_roots[0]->CalcWorldMatrix(true);
+    for (auto& root : m_roots) {
+      root->CalcWorldMatrix(true);
       for (auto& node : m_nodes) {
         node->InitialTransform = node->Transform;
         node->WorldInitialTransform = node->WorldTransform;
       }
-      m_roots[0]->CalcShape();
+      root->CalcShape();
     }
   }
 

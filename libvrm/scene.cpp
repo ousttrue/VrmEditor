@@ -265,6 +265,8 @@ Scene::Parse()
     }
   }
 
+  InitializeNodes();
+
   return true;
 }
 

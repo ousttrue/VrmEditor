@@ -22,58 +22,55 @@ ScenePreview::ScenePreview(
   m_rt->color[2] = 0.2f;
   m_rt->color[3] = 1.0f;
 
-  scene->m_sceneUpdated.push_back([this](const auto& s) {
-    m_cuber->Instances.clear();
-    if (s.m_roots.size()) {
-      s.m_roots[0]->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
-                                                 m_cuber->Instances);
+  m_rt->render = [cuber = m_cuber,
+                  scene,
+                  selection = context,
+                  gizmo =
+                    std::make_shared<LineGizmo>()](const RenderingEnv& env) {
+    glr::ClearRendertarget(env);
+
+    auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
+
+    libvrm::gltf::RenderFunc render =
+      [liner, &env](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+                    const libvrm::gltf::MeshInstance& instance,
+                    const float m[16]) {
+        glr::Render(RenderPass::Color, env, mesh, instance, m);
+        glr::Render(RenderPass::ShadowMatrix, env, mesh, instance, m);
+      };
+
+    scene->Render(render, gizmo.get());
+    liner->Render(env.ProjectionMatrix, env.ViewMatrix, gizmo->m_lines);
+    gizmo->Clear();
+
+    cuber->Instances.clear();
+    for (auto& root : scene->m_roots) {
+      root->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
+                                         cuber->Instances);
     }
-  });
+    cuber->Render(env);
 
-  // void OnSceneUpdated(const libvrm::gltf::Scene& scene)
-  // {
-  // }
-
-  m_rt->render =
-    [scene, selection = context, gizmo = std::make_shared<LineGizmo>()](
-      const RenderingEnv& env) {
-      glr::ClearRendertarget(env);
-
-      auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
-
-      libvrm::gltf::RenderFunc render =
-        [liner, &env](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-                      const libvrm::gltf::MeshInstance& instance,
-                      const float m[16]) {
-          glr::Render(RenderPass::Color, env, mesh, instance, m);
-          glr::Render(RenderPass::ShadowMatrix, env, mesh, instance, m);
-        };
-
-      scene->Render(render, gizmo.get());
-      liner->Render(env.ProjectionMatrix, env.ViewMatrix, gizmo->m_lines);
-      gizmo->Clear();
-
-      // gizmo
-      if (auto node = selection->selected.lock()) {
-        // TODO: conflict mouse event(left) with ImageButton
-        DirectX::XMFLOAT4X4 m;
-        DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
-        ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-        if (ImGuizmo::Manipulate(env.ViewMatrix,
-                                 env.ProjectionMatrix,
-                                 ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
-                                 ImGuizmo::LOCAL,
-                                 (float*)&m,
-                                 nullptr,
-                                 nullptr,
-                                 nullptr,
-                                 nullptr)) {
-          // decompose feedback
-          node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
-        }
-        ImGuizmo::GetContext().mAllowActiveHoverItem = false;
+    // gizmo
+    if (auto node = selection->selected.lock()) {
+      // TODO: conflict mouse event(left) with ImageButton
+      DirectX::XMFLOAT4X4 m;
+      DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
+      ImGuizmo::GetContext().mAllowActiveHoverItem = true;
+      if (ImGuizmo::Manipulate(env.ViewMatrix,
+                               env.ProjectionMatrix,
+                               ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
+                               ImGuizmo::LOCAL,
+                               (float*)&m,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr)) {
+        // decompose feedback
+        node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       }
-    };
+      ImGuizmo::GetContext().mAllowActiveHoverItem = false;
+    }
+  };
 }
 
 void
