@@ -1,6 +1,6 @@
 #include "bvhnode.h"
 #include "app.h"
-#include "glr/cuber_preview.h"
+#include "glr/scene_preview.h"
 #include "humanpose_stream.h"
 #include <grapho/orbitview.h>
 #include <vrm/bvhscene.h>
@@ -16,11 +16,7 @@ BvhNode::BvhNode(int id, std::string_view name)
   m_scene = std::make_shared<libvrm::gltf::Scene>();
 
   // update preview
-  m_preview = std::make_shared<glr::CuberPreview>();
-  m_scene->m_sceneUpdated.push_back(
-    std::bind(&glr::CuberPreview::OnSceneUpdated,
-              m_preview.get(),
-              std::placeholders::_1));
+  m_preview = std::make_shared<glr::ScenePreview>(m_scene);
 }
 
 void
@@ -64,7 +60,8 @@ void
 BvhNode::DrawContent()
 {
   ImGui::Checkbox("init pose", &m_initialPose);
-  m_preview->Draw(m_scene->m_title.c_str());
+  auto sc = ImGui::GetCursorScreenPos();
+  m_preview->ShowScreenRect(m_scene->m_title.c_str(), sc.x, sc.y, 300, 300);
 }
 
 }

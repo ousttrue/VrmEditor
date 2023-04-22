@@ -9,7 +9,7 @@ struct Scene;
 }
 
 namespace glr {
-struct CuberPreview;
+struct ScenePreview;
 }
 
 namespace humanpose {
@@ -17,7 +17,7 @@ struct UdpNode : public GraphNodeBase
 {
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<UdpReceiver> m_udp;
-  std::shared_ptr<glr::CuberPreview> m_preview;
+  std::shared_ptr<glr::ScenePreview> m_preview;
 
   bool m_initialPose = false;
 

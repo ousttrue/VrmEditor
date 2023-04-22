@@ -5,7 +5,7 @@
 #include <vrm/scene.h>
 
 namespace glr {
-struct CuberPreview;
+struct ScenePreview;
 }
 
 namespace humanpose {
@@ -14,7 +14,7 @@ struct BvhNode : public GraphNodeBase
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<libvrm::bvh::Bvh> m_bvh;
 
-  std::shared_ptr<glr::CuberPreview> m_preview;
+  std::shared_ptr<glr::ScenePreview> m_preview;
 
   bool m_initialPose = false;
 
