@@ -1,13 +1,19 @@
 #include "line_gizmo.h"
+#include <cuber/mesh.h>
 
 namespace glr {
+
+LineGizmo::LineGizmo()
+{
+  cuber::PushGrid(m_lines);
+  Fix();
+}
 
 void
 LineGizmo::DrawLine(const DirectX::XMFLOAT3& p0,
                     const DirectX::XMFLOAT3& p1,
                     const grapho::RGBA& color)
 {
-
   m_lines.push_back({
     .position = { p0.x, p0.y, p0.z },
     .color = color,

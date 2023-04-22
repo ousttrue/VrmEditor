@@ -3,7 +3,6 @@
 #include "renderpass.h"
 #include <memory>
 
-struct RenderingEnv;
 namespace libvrm {
 namespace gltf {
 struct Mesh;
@@ -18,6 +17,7 @@ struct Texture;
 }
 
 namespace glr {
+struct RenderingEnv;
 
 void
 Render(RenderPass pass,

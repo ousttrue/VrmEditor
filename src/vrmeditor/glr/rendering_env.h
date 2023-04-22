@@ -1,6 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
 
+namespace glr {
 struct RenderingEnv
 {
   float Viewport[4];
@@ -25,3 +26,4 @@ struct RenderingEnv
   float PremulB() const { return ClearColor[2] * ClearColor[3]; }
   float Alpha() const { return ClearColor[3]; }
 };
+}

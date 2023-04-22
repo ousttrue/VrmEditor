@@ -11,9 +11,6 @@ ScenePreview::ScenePreview(
   const std::shared_ptr<libvrm::gltf::SceneContext>& context)
   : m_rt(view)
 {
-  cuber::PushGrid(m_gizmo.m_lines);
-  m_gizmo.Fix();
-
   m_rt.color[0] = 0.2f;
   m_rt.color[1] = 0.2f;
   m_rt.color[2] = 0.2f;

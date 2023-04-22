@@ -11,6 +11,8 @@ struct LineGizmo : public libvrm::IGizmoDrawer
 {
   std::vector<grapho::LineVertex> m_lines;
   size_t m_keep = 0;
+
+  LineGizmo();
   void Fix() override { m_keep = m_lines.size(); }
   void Clear() override { m_lines.resize(m_keep); }
 
