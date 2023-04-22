@@ -83,11 +83,10 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
     HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
     auto selection =
       SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
-    ViewDock::Create(
-      addDock, "scene-view", m_scene, selection, m_view, m_timeline);
+    ViewDock::Create(addDock, "scene-view", m_scene, selection, m_view);
     VrmDock::CreateVrm(addDock, "vrm", m_scene);
     VrmDock::CreateExpression(addDock, "expression", m_scene);
-    ExportDock::Create(addDock, "export", m_timeline, m_scene, indent);
+    ExportDock::Create(addDock, "export", m_scene, indent);
   }
 }
 
@@ -192,6 +191,7 @@ App::LoadModel(const std::filesystem::path& path)
   if (auto scene = libvrm::gltf::Scene::LoadPath(path)) {
     SetScene(*scene);
     // bind time line
+
     for (auto& animation : (*scene)->m_animations) {
       auto track = m_timeline->AddTrack("gltf", animation->Duration());
       std::weak_ptr<libvrm::gltf::Scene> weak = *scene;
@@ -277,7 +277,8 @@ App::Run()
     auto time = info->Time;
 
     if (lastTime) {
-      m_timeline->SetDeltaTime(time - *lastTime);
+      auto delta = time - *lastTime;
+      m_timeline->SetDeltaTime(delta);
     } else {
       m_timeline->SetDeltaTime({}, true);
     }

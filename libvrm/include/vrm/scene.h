@@ -29,12 +29,6 @@ struct Joint;
 struct Frame;
 }
 namespace vrm {
-namespace v0 {
-struct Vrm;
-}
-namespace v1 {
-struct Vrm;
-}
 namespace animation {
 struct Animation;
 }
@@ -98,6 +92,8 @@ struct Scene
   std::shared_ptr<vrm::animation::Animation> m_vrma;
   std::shared_ptr<vrm::Expressions> m_expressions;
 
+  // spring
+  Time m_nextSpringDelta = Time(0.0);
   std::vector<std::shared_ptr<vrm::ColliderGroup>> m_colliderGroups;
   std::vector<std::shared_ptr<vrm::SpringSolver>> m_springSolvers;
 
@@ -206,7 +202,7 @@ public:
 
   void SyncHierarchy();
 
-  void Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo);
+  void Render(const RenderFunc& render, IGizmoDrawer* gizmo);
   void Traverse(const EnterFunc& enter,
                 const LeaveFunc& leave,
                 const std::shared_ptr<Node>& node = nullptr);

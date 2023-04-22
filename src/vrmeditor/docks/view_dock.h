@@ -9,11 +9,9 @@ public:
                      std::string_view title,
                      const std::shared_ptr<libvrm::gltf::Scene>& scene,
                      const std::shared_ptr<libvrm::gltf::SceneContext>& context,
-                     const std::shared_ptr<grapho::OrbitView>& view,
-                     const std::shared_ptr<libvrm::Timeline>& timeline)
+                     const std::shared_ptr<grapho::OrbitView>& view)
   {
-    auto preview =
-      std::make_shared<glr::ScenePreview>(view, timeline, scene, context);
+    auto preview = std::make_shared<glr::ScenePreview>(view, scene, context);
     addDock(Dock(title, [preview, scene](const char* title, bool* p_open) {
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
       if (ImGui::Begin(title,

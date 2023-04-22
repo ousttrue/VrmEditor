@@ -182,15 +182,10 @@ SpringSolver::AddRecursive(const std::shared_ptr<gltf::Node>& node,
 }
 
 void
-SpringSolver::Update(Time time)
+SpringSolver::Update(Time delta)
 {
-  bool doUpdate = time != LastTime;
-  auto delta = time - LastTime;
-  LastTime = time;
+  bool doUpdate = delta.count() > 0;
   if (!doUpdate) {
-    return;
-  }
-  if (delta.count() == 0) {
     return;
   }
 

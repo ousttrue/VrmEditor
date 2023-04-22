@@ -10,10 +10,9 @@ struct ScenePreview
   RenderTarget m_rt;
   LineGizmo m_gizmo;
   ScenePreview(const std::shared_ptr<grapho::OrbitView>& view,
-               const std::shared_ptr<libvrm::Timeline>& timeline,
                const std::shared_ptr<libvrm::gltf::Scene>& scene,
                const std::shared_ptr<libvrm::gltf::SceneContext>& context);
-  void Show(const char *title);
+  void Show(const char* title);
   void Show(float x, float y, float z, float w) { m_rt.show_fbo(x, y, z, w); }
 };
 }

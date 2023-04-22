@@ -47,7 +47,6 @@ public:
 struct SpringSolver
 {
   std::string Comment;
-  Time LastTime = {};
 
   std::vector<SpringJoint> Joints;
   void Add(const std::shared_ptr<gltf::Node>& head,
@@ -58,7 +57,7 @@ struct SpringSolver
   void AddRecursive(const std::shared_ptr<gltf::Node>& node,
                     float dragForce,
                     float stiffiness);
-  void Update(Time time);
+  void Update(Time deltaForSimulation);
   void DrawGizmo(IGizmoDrawer* gizmo);
 };
 

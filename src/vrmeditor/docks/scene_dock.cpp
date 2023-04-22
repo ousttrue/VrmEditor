@@ -50,66 +50,77 @@ SceneDock::CreateTree(const AddDockFunc& addDock,
   };
   auto leave = []() { ImGui::TreePop(); };
 
-  addDock(Dock(
-    title,
-    [scene, enter, leave, context, indent](const char* title, bool* p_open) {
-      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-      int window_flags = 0;
-      std::shared_ptr<libvrm::gltf::Node> showSelected;
-      if (auto selected = context->selected.lock()) {
-        {
-          if (auto mesh_index = selected->Mesh) {
-            showSelected = selected;
-            window_flags |= ImGuiWindowFlags_NoScrollbar;
-          }
-        }
-      }
+  addDock(Dock(title,
+               [scene, enter, leave, context, indent, enableSpring = true](
+                 const char* title, bool* p_open) mutable {
+                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+                 int window_flags = 0;
+                 std::shared_ptr<libvrm::gltf::Node> showSelected;
+                 if (auto selected = context->selected.lock()) {
+                   {
+                     if (auto mesh_index = selected->Mesh) {
+                       showSelected = selected;
+                       window_flags |= ImGuiWindowFlags_NoScrollbar;
+                     }
+                   }
+                 }
 
-      if (ImGui::Begin(title, p_open, window_flags)) {
-        auto size = ImGui::GetContentRegionAvail();
-        context->selected = context->new_selected;
+                 if (ImGui::Begin(title, p_open, window_flags)) {
+                   auto size = ImGui::GetContentRegionAvail();
+                   context->selected = context->new_selected;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-        if (showSelected) {
-          if (ImGui::BeginChild("##scene-tree",
-                                { size.x, size.y / 2 },
-                                true,
-                                ImGuiWindowFlags_None)) {
+                   // 60FPS
+                   ImGui::Checkbox("spring", &enableSpring);
+                   if (enableSpring) {
+                     scene->m_nextSpringDelta = libvrm::Time(1.0 / 60);
+                   } else {
+                     if (ImGui::Button("spring step")) {
+                       scene->m_nextSpringDelta = libvrm::Time(1.0 / 60);
+                     }
+                   }
 
-            scene->Traverse(enter, leave);
-          }
-          ImGui::EndChild();
+                   ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
+                   if (showSelected) {
+                     if (ImGui::BeginChild("##scene-tree",
+                                           { size.x, size.y / 2 },
+                                           true,
+                                           ImGuiWindowFlags_None)) {
 
-          if (ImGui::BeginChild("##scene-selected",
-                                { size.x, size.y / 2 },
-                                true,
-                                ImGuiWindowFlags_None)) {
-            ImGui::Text("%s", showSelected->Name.c_str());
-            if (auto mesh_index = showSelected->Mesh) {
-              auto mesh = scene->m_meshes[*mesh_index];
-              auto instance = showSelected->Instance;
-              char morph_id[256];
-              for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
-                auto& morph = mesh->m_morphTargets[i];
-                snprintf(morph_id,
-                         sizeof(morph_id),
-                         "[%d]%s##morph%d",
-                         i,
-                         morph->Name.c_str(),
-                         i);
-                ImGui::SliderFloat(morph_id, &instance->weights[i], 0, 1);
-              }
-            }
-          }
-          ImGui::EndChild();
-        } else {
-          scene->Traverse(enter, leave);
-        }
-        ImGui::PopStyleVar();
-      }
-      ImGui::End();
-      ImGui::PopStyleVar();
-    }));
+                       scene->Traverse(enter, leave);
+                     }
+                     ImGui::EndChild();
+
+                     if (ImGui::BeginChild("##scene-selected",
+                                           { size.x, size.y / 2 },
+                                           true,
+                                           ImGuiWindowFlags_None)) {
+                       ImGui::Text("%s", showSelected->Name.c_str());
+                       if (auto mesh_index = showSelected->Mesh) {
+                         auto mesh = scene->m_meshes[*mesh_index];
+                         auto instance = showSelected->Instance;
+                         char morph_id[256];
+                         for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
+                           auto& morph = mesh->m_morphTargets[i];
+                           snprintf(morph_id,
+                                    sizeof(morph_id),
+                                    "[%d]%s##morph%d",
+                                    i,
+                                    morph->Name.c_str(),
+                                    i);
+                           ImGui::SliderFloat(
+                             morph_id, &instance->weights[i], 0, 1);
+                         }
+                       }
+                     }
+                     ImGui::EndChild();
+                   } else {
+                     scene->Traverse(enter, leave);
+                   }
+                   ImGui::PopStyleVar();
+                 }
+                 ImGui::End();
+                 ImGui::PopStyleVar();
+               }));
 
   return context;
 }

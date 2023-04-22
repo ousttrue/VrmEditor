@@ -862,14 +862,13 @@ Scene::AddIndices(int vertex_offset,
 }
 
 void
-Scene::Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo)
+Scene::Render(const RenderFunc& render, IGizmoDrawer* gizmo)
 {
-  SyncHierarchy();
-
   // springbone
   for (auto& spring : m_springSolvers) {
-    spring->Update(time);
+    spring->Update(m_nextSpringDelta);
   }
+  m_nextSpringDelta = {};
 
   if (m_expressions) {
     // VRM0 expression to morphTarget
@@ -889,7 +888,6 @@ Scene::Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo)
   }
 
   // skinning
-
   for (auto& node : m_nodes) {
     if (auto mesh_index = node->Mesh) {
       auto mesh = m_meshes[*mesh_index];
@@ -921,7 +919,6 @@ Scene::Render(Time time, const RenderFunc& render, IGizmoDrawer* gizmo)
       node->Instance->applyMorphTargetAndSkinning(*mesh, skinningMatrices);
     }
   }
-
   DirectX::XMFLOAT4X4 m;
   for (auto& node : m_nodes) {
     if (auto mesh_index = node->Mesh) {
@@ -1079,6 +1076,8 @@ Scene::SetHumanPose(const vrm::HumanPose& pose)
           localInitial));
     }
   }
+
+  SyncHierarchy();
 }
 
 void

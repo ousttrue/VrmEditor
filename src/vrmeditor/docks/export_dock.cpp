@@ -12,7 +12,6 @@
 void
 ExportDock::Create(const AddDockFunc& addDock,
                    std::string_view title,
-                   const std::shared_ptr<libvrm::Timeline>& timeline,
                    const std::shared_ptr<libvrm::gltf::Scene>& scene,
                    float indent)
 {
@@ -22,7 +21,7 @@ ExportDock::Create(const AddDockFunc& addDock,
   auto context = std::make_shared<libvrm::gltf::SceneContext>();
 
   auto preview =
-    std::make_shared<glr::ScenePreview>(view, timeline, debug_scene, context);
+    std::make_shared<glr::ScenePreview>(view, debug_scene, context);
 
   addDock(Dock(title, [scene, debug_scene, impl, indent, preview]() {
     auto pos = ImGui::GetCursorScreenPos();
