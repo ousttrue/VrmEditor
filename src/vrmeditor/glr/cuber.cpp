@@ -14,11 +14,8 @@ Cuber::Cuber()
 void
 Cuber::Render(const RenderingEnv& env)
 {
-  m_cuber->Render(env.ProjectionMatrix,
-                  env.ViewMatrix,
-                  Instances.data(),
-                  Instances.size(),
-                  Colors.data());
+  m_cuber->Render(
+    env.ProjectionMatrix, env.ViewMatrix, Instances.data(), Instances.size());
   m_liner->Render(env.ProjectionMatrix, env.ViewMatrix, m_gizmo.m_lines);
 }
 }

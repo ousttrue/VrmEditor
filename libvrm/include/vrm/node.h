@@ -27,6 +27,13 @@ struct NodeHumanoidInfo
   std::list<std::shared_ptr<Node>> Children;
 };
 
+struct Instance
+{
+  DirectX::XMFLOAT4X4 Matrix;
+  DirectX::XMFLOAT4 Color;
+};
+using PushInstance = std::function<void(const Instance&)>;
+
 struct Node
 {
   // uint32_t Index;
@@ -77,7 +84,7 @@ struct Node
   std::weak_ptr<Node> Parent;
 
   std::optional<uint32_t> Mesh;
-  std::shared_ptr<MeshInstance> Instance;
+  std::shared_ptr<MeshInstance> MeshInstance;
 
   std::shared_ptr<Skin> Skin;
 
@@ -127,8 +134,7 @@ struct Node
   void Print(int level = 0);
   void CalcShape();
   void UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
-                                    std::vector<DirectX::XMFLOAT4X4>& out);
-  void UpdateShapeAttributeRecursive(std::vector<DirectX::XMFLOAT4>& out);
+                                    const PushInstance& pushInstance);
 };
 
 inline std::ostream&

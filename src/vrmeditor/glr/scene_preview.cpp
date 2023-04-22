@@ -29,13 +29,13 @@ ScenePreview::ScenePreview(
 
       libvrm::gltf::RenderFunc render =
         [this, &env](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-                     const libvrm::gltf::MeshInstance& instance,
+                     const libvrm::gltf::MeshInstance& meshInstance,
                      const float m[16]) {
           if (m_showMesh) {
-            glr::Render(RenderPass::Color, env, mesh, instance, m);
+            glr::Render(RenderPass::Color, env, mesh, meshInstance, m);
           }
           if (m_showShadow) {
-            glr::Render(RenderPass::ShadowMatrix, env, mesh, instance, m);
+            glr::Render(RenderPass::ShadowMatrix, env, mesh, meshInstance, m);
           }
         };
 
@@ -47,15 +47,14 @@ ScenePreview::ScenePreview(
 
       if (m_showCuber) {
         m_cuber->Instances.clear();
+        static_assert(sizeof(cuber::Instance) == sizeof(libvrm::gltf::Instance),
+                      "Instance size");
         for (auto& root : scene->m_roots) {
-          root->UpdateShapeInstanceRecursive(DirectX::XMMatrixIdentity(),
-                                             m_cuber->Instances);
-        }
-        if (m_cuber->Colors.size() != m_cuber->Instances.size()) {
-          m_cuber->Colors.clear();
-          for (auto& root : scene->m_roots) {
-            root->UpdateShapeAttributeRecursive(m_cuber->Colors);
-          }
+          root->UpdateShapeInstanceRecursive(
+            DirectX::XMMatrixIdentity(),
+            [cuber = m_cuber](const libvrm::gltf::Instance& instance) {
+              cuber->Instances.push_back(*((const cuber::Instance*)&instance));
+            });
         }
         m_cuber->Render(env);
       }

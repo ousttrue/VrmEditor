@@ -195,28 +195,21 @@ Node::CalcShape()
 
 void
 Node::UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
-                                   std::vector<DirectX::XMFLOAT4X4>& out)
+                                   const PushInstance& pushInstance)
 {
   auto m = Transform.Matrix() * parent;
   auto shape = DirectX::XMLoadFloat4x4(&ShapeMatrix);
-  out.push_back({});
-  DirectX::XMStoreFloat4x4(&out.back(), shape * m);
-  for (auto& child : Children) {
-    child->UpdateShapeInstanceRecursive(m, out);
-  }
-}
 
-void
-Node::UpdateShapeAttributeRecursive(std::vector<DirectX::XMFLOAT4>& out)
-{
+  Instance instance;
+  DirectX::XMStoreFloat4x4(&instance.Matrix, shape * m);
   if (auto humanoid = Humanoid) {
-    out.push_back({ 0.5f, 1, 0.8f, 1 });
+    instance.Color = vrm::HumanBoneToColor(humanoid->HumanBone);
   } else {
-    out.push_back({ 1, 1, 1, 1 });
+    instance.Color = { 1, 1, 1, 1 };
   }
-  // DirectX::XMStoreFloat4x4(&out.back(), shape * m);
+  pushInstance(instance);
   for (auto& child : Children) {
-    child->UpdateShapeAttributeRecursive(out);
+    child->UpdateShapeInstanceRecursive(m, pushInstance);
   }
 }
 

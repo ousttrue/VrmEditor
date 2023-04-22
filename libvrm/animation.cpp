@@ -24,7 +24,7 @@ Animation::Update(Time time,
   for (auto& [k, v] : m_weightsMap) {
     auto node = nodes[k];
     auto values = v.GetValue(seconds, repeat);
-    node->Instance->weights.assign(values.begin(), values.end());
+    node->MeshInstance->weights.assign(values.begin(), values.end());
   }
 }
 

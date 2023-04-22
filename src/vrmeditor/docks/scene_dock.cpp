@@ -97,7 +97,7 @@ SceneDock::CreateTree(const AddDockFunc& addDock,
                        ImGui::Text("%s", showSelected->Name.c_str());
                        if (auto mesh_index = showSelected->Mesh) {
                          auto mesh = scene->m_meshes[*mesh_index];
-                         auto instance = showSelected->Instance;
+                         auto meshInstance = showSelected->MeshInstance;
                          char morph_id[256];
                          for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
                            auto& morph = mesh->m_morphTargets[i];
@@ -108,7 +108,7 @@ SceneDock::CreateTree(const AddDockFunc& addDock,
                                     morph->Name.c_str(),
                                     i);
                            ImGui::SliderFloat(
-                             morph_id, &instance->weights[i], 0, 1);
+                             morph_id, &meshInstance->weights[i], 0, 1);
                          }
                        }
                      }

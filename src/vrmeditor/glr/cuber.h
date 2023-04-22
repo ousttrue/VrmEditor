@@ -16,8 +16,7 @@ class Cuber
 
 public:
   Cuber();
-  std::vector<DirectX::XMFLOAT4X4> Instances;
-  std::vector<DirectX::XMFLOAT4> Colors;
+  std::vector<cuber::Instance> Instances;
   void Render(const struct RenderingEnv& camera);
 };
 }

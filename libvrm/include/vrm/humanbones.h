@@ -1,4 +1,5 @@
 #pragma once
+#include <DirectXMath.h>
 #include <optional>
 #include <stdint.h>
 #include <string_view>
@@ -167,6 +168,47 @@ inline const char*
 HumanBoneToName(HumanBones bone)
 {
   return HumanBonesNames[(int)bone];
+}
+
+inline DirectX::XMFLOAT4
+HumanBoneToColor(HumanBones bone)
+{
+  switch (bone) {
+    case HumanBones::leftThumbMetacarpal:
+    case HumanBones::leftThumbProximal:
+    case HumanBones::leftThumbDistal:
+    case HumanBones::leftIndexProximal:
+    case HumanBones::leftIndexIntermediate:
+    case HumanBones::leftIndexDistal:
+    case HumanBones::leftMiddleProximal:
+    case HumanBones::leftMiddleIntermediate:
+    case HumanBones::leftMiddleDistal:
+    case HumanBones::leftRingProximal:
+    case HumanBones::leftRingIntermediate:
+    case HumanBones::leftRingDistal:
+    case HumanBones::leftLittleProximal:
+    case HumanBones::leftLittleIntermediate:
+    case HumanBones::leftLittleDistal:
+    case HumanBones::rightThumbMetacarpal:
+    case HumanBones::rightThumbProximal:
+    case HumanBones::rightThumbDistal:
+    case HumanBones::rightIndexProximal:
+    case HumanBones::rightIndexIntermediate:
+    case HumanBones::rightIndexDistal:
+    case HumanBones::rightMiddleProximal:
+    case HumanBones::rightMiddleIntermediate:
+    case HumanBones::rightMiddleDistal:
+    case HumanBones::rightRingProximal:
+    case HumanBones::rightRingIntermediate:
+    case HumanBones::rightRingDistal:
+    case HumanBones::rightLittleProximal:
+    case HumanBones::rightLittleIntermediate:
+    case HumanBones::rightLittleDistal:
+      return { 0.5f, 0.5f, 0.4f, 1 };
+
+    default:
+      return { 0.5f, 1, 0.8f, 1 };
+  }
 }
 
 }

@@ -578,7 +578,8 @@ Scene::ParseNode(int i, const nlohmann::json& node)
       ptr->Skin = skin;
     }
 
-    ptr->Instance = std::make_shared<gltf::MeshInstance>(m_meshes[mesh_index]);
+    ptr->MeshInstance =
+      std::make_shared<gltf::MeshInstance>(m_meshes[mesh_index]);
   }
   return ptr;
 }
@@ -885,7 +886,7 @@ Scene::Render(const RenderFunc& render, IGizmoDrawer* gizmo)
     };
     for (auto& [k, v] : m_expressions->EvalMorphTargetMap(nodeToIndex)) {
       auto& morph_node = m_nodes[k.NodeIndex];
-      morph_node->Instance->weights[k.MorphIndex] = v;
+      morph_node->MeshInstance->weights[k.MorphIndex] = v;
     }
   }
 
@@ -918,7 +919,7 @@ Scene::Render(const RenderFunc& render, IGizmoDrawer* gizmo)
       }
 
       // apply morphtarget & skinning
-      node->Instance->applyMorphTargetAndSkinning(*mesh, skinningMatrices);
+      node->MeshInstance->applyMorphTargetAndSkinning(*mesh, skinningMatrices);
     }
   }
   DirectX::XMFLOAT4X4 m;
@@ -926,7 +927,7 @@ Scene::Render(const RenderFunc& render, IGizmoDrawer* gizmo)
     if (auto mesh_index = node->Mesh) {
       auto mesh = m_meshes[*mesh_index];
       DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
-      render(mesh, *node->Instance, &m._11);
+      render(mesh, *node->MeshInstance, &m._11);
     }
   }
 

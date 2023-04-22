@@ -17,7 +17,7 @@ class BvhPanelImpl
   asio::ip::udp::endpoint m_ep;
   bool m_enablePackQuat = false;
 
-  std::vector<DirectX::XMFLOAT4X4> m_instances;
+  std::vector<cuber::Instance> m_instances;
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<libvrm::IntervalTimer> m_clock;
 
@@ -32,6 +32,11 @@ public:
 
   ~BvhPanelImpl() { m_work.reset(); }
 
+  void PushInstance(const libvrm::gltf::Instance& instance)
+  {
+    m_instances.push_back(*((const cuber::Instance*)&instance));
+  }
+
   void SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh)
   {
     m_bvh = bvh;
@@ -41,7 +46,8 @@ public:
 
     libvrm::bvh::InitializeSceneFromBvh(m_scene, m_bvh);
     m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
-      DirectX::XMMatrixIdentity(), m_instances);
+      DirectX::XMMatrixIdentity(),
+      std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
 
     m_sender.SendBvhSkeleton(m_ep, m_bvh);
 
@@ -86,10 +92,11 @@ public:
     m_scene->m_roots[0]->CalcWorldMatrix(true);
     m_instances.clear();
     m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
-      DirectX::XMMatrixIdentity(), m_instances);
+      DirectX::XMMatrixIdentity(),
+      std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
   }
 
-  std::span<const DirectX::XMFLOAT4X4> GetCubes() { return m_instances; }
+  std::span<const cuber::Instance> GetCubes() { return m_instances; }
 };
 
 BvhPanel::BvhPanel()
@@ -110,7 +117,7 @@ BvhPanel::UpdateGui()
 {
   impl_->UpdateGui();
 }
-std::span<const DirectX::XMFLOAT4X4>
+std::span<const cuber::Instance>
 BvhPanel::GetCubes()
 {
   return impl_->GetCubes();

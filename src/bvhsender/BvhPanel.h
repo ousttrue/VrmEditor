@@ -1,11 +1,11 @@
 #pragma once
 #include <DirectXMath.h>
 #include <chrono>
+#include <cuber/mesh.h>
 #include <functional>
 #include <span>
 #include <string_view>
 #include <vrm/bvh.h>
-
 
 class BvhPanel
 {
@@ -16,5 +16,5 @@ public:
   ~BvhPanel();
   void SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh);
   void UpdateGui();
-  std::span<const DirectX::XMFLOAT4X4> GetCubes();
+  std::span<const cuber::Instance> GetCubes();
 };
