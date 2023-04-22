@@ -10,6 +10,7 @@
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
 #include "fs_util.h"
+#include "glr/gl3renderer.h"
 #include "humanpose/humanpose_stream.h"
 #include "luahost.h"
 #include "platform.h"
@@ -83,7 +84,7 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
     HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
     auto selection =
       SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
-    ViewDock::Create(addDock, "scene-view", m_scene, selection, m_view);
+    ViewDock::Create(addDock, "scene-view", m_scene, m_view, selection);
     VrmDock::CreateVrm(addDock, "vrm", m_scene);
     VrmDock::CreateExpression(addDock, "expression", m_scene);
     ExportDock::Create(addDock, "export", m_scene, indent);

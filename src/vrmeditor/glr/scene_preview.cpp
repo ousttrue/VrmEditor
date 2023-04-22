@@ -1,23 +1,28 @@
 #include "scene_preview.h"
+#include "gl3renderer.h"
+#include "line_gizmo.h"
 #include "overlay.h"
+#include "rendertarget.h"
+#include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <vrm/gizmo.h>
 
 namespace glr {
 ScenePreview::ScenePreview(
-  const std::shared_ptr<grapho::OrbitView>& view,
   const std::shared_ptr<libvrm::gltf::Scene>& scene,
+  const std::shared_ptr<grapho::OrbitView>& view,
   const std::shared_ptr<libvrm::gltf::SceneContext>& context)
-  : m_rt(view)
+  : m_rt(std::make_shared<RenderTarget>(view))
 {
-  m_rt.color[0] = 0.2f;
-  m_rt.color[1] = 0.2f;
-  m_rt.color[2] = 0.2f;
-  m_rt.color[3] = 1.0f;
+  m_rt->color[0] = 0.2f;
+  m_rt->color[1] = 0.2f;
+  m_rt->color[2] = 0.2f;
+  m_rt->color[3] = 1.0f;
 
-  m_rt.render =
-    [scene, selection = context, gizmo = &m_gizmo](const RenderingEnv& env) {
+  m_rt->render =
+    [scene, selection = context, gizmo = std::make_shared<LineGizmo>()](
+      const RenderingEnv& env) {
       glr::ClearRendertarget(env);
 
       auto liner = std::make_shared<cuber::gl3::GlLineRenderer>();
@@ -30,7 +35,7 @@ ScenePreview::ScenePreview(
           glr::Render(RenderPass::ShadowMatrix, env, mesh, instance, m);
         };
 
-      scene->Render(render, gizmo);
+      scene->Render(render, gizmo.get());
       liner->Render(env.ProjectionMatrix, env.ViewMatrix, gizmo->m_lines);
       gizmo->Clear();
 
@@ -58,13 +63,22 @@ ScenePreview::ScenePreview(
 }
 
 void
-ScenePreview::Show(const char* title)
+ScenePreview::Show(const char* title, std::optional<DirectX::XMFLOAT4> rect)
 {
+  ImVec2 pos;
+  ImVec2 size;
+  if (auto xywh = rect) {
+    pos = { rect->x, rect->y };
+    size = { rect->z, rect->w };
+  } else {
+    pos = ImGui::GetWindowPos();
+    pos.y += ImGui::GetFrameHeight();
+    size = ImGui::GetContentRegionAvail();
+  }
+
   auto sc = ImGui::GetCursorScreenPos();
-  auto pos = ImGui::GetWindowPos();
-  pos.y += ImGui::GetFrameHeight();
-  auto size = ImGui::GetContentRegionAvail();
-  Show(pos.x, pos.y, size.x, size.y);
+
+  m_rt->show_fbo(pos.x, pos.y, size.x, size.y);
 
   Overlay({ sc.x + size.x - 10, sc.y + 10 }, title);
 }

@@ -21,11 +21,11 @@ ExportDock::Create(const AddDockFunc& addDock,
   auto context = std::make_shared<libvrm::gltf::SceneContext>();
 
   auto preview =
-    std::make_shared<glr::ScenePreview>(view, debug_scene, context);
+    std::make_shared<glr::ScenePreview>(debug_scene, view, context);
 
   addDock(Dock(title, [scene, debug_scene, impl, indent, preview]() {
     auto pos = ImGui::GetCursorScreenPos();
-    preview->Show(pos.x, pos.y, 300, 300);
+    preview->Show("debug", DirectX::XMFLOAT4{ pos.x, pos.y, 300, 300 });
 
     if (ImGui::Button("export scene")) {
       libvrm::gltf::Exporter exporter;
