@@ -76,6 +76,46 @@ enum class HumanBones
   rightLittleDistal,
   tip,
 };
+inline bool
+HumanBoneIsFinger(HumanBones bone)
+{
+  switch (bone) {
+    case HumanBones::leftThumbMetacarpal:
+    case HumanBones::leftThumbProximal:
+    case HumanBones::leftThumbDistal:
+    case HumanBones::leftIndexProximal:
+    case HumanBones::leftIndexIntermediate:
+    case HumanBones::leftIndexDistal:
+    case HumanBones::leftMiddleProximal:
+    case HumanBones::leftMiddleIntermediate:
+    case HumanBones::leftMiddleDistal:
+    case HumanBones::leftRingProximal:
+    case HumanBones::leftRingIntermediate:
+    case HumanBones::leftRingDistal:
+    case HumanBones::leftLittleProximal:
+    case HumanBones::leftLittleIntermediate:
+    case HumanBones::leftLittleDistal:
+    case HumanBones::rightThumbMetacarpal:
+    case HumanBones::rightThumbProximal:
+    case HumanBones::rightThumbDistal:
+    case HumanBones::rightIndexProximal:
+    case HumanBones::rightIndexIntermediate:
+    case HumanBones::rightIndexDistal:
+    case HumanBones::rightMiddleProximal:
+    case HumanBones::rightMiddleIntermediate:
+    case HumanBones::rightMiddleDistal:
+    case HumanBones::rightRingProximal:
+    case HumanBones::rightRingIntermediate:
+    case HumanBones::rightRingDistal:
+    case HumanBones::rightLittleProximal:
+    case HumanBones::rightLittleIntermediate:
+    case HumanBones::rightLittleDistal:
+      return true;
+
+    default:
+      return false;
+  }
+}
 constexpr const char* HumanBonesNames[] = {
   "unknown",
   "hips",
@@ -235,7 +275,7 @@ HumanBoneToWidthDepth(HumanBones bone)
 {
   switch (bone) {
     case HumanBones::spine:
-      return { 0.15, 0.10f };
+      return { 0.15f, 0.10f };
 
     case HumanBones::hips:
     case HumanBones::chest:
@@ -308,6 +348,5 @@ HumanBoneToWidthDepth(HumanBones bone)
       return { 0.05f, 0.05f };
   }
 }
-
 }
 }

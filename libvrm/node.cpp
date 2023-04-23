@@ -185,6 +185,12 @@ Node::ClosestBone()
         return humanoid->HumanBone;
       }
     }
+  } else if (auto parent = Parent.lock()) {
+    if (auto parentHumanoid = parent->Humanoid) {
+      if (vrm::HumanBoneIsFinger(parentHumanoid->HumanBone)) {
+        return parentHumanoid->HumanBone;
+      }
+    }
   }
   return {};
 }
@@ -203,7 +209,7 @@ Node::CalcShape()
     d = size.y;
   }
 
-  DirectX::XMStoreFloat4x4(&ShapeMatrix, DirectX::XMMatrixScaling(w, 0.04f, d));
+  DirectX::XMStoreFloat4x4(&ShapeMatrix, DirectX::XMMatrixScaling(w, w, w));
 
   if (Children.empty()) {
     return;
