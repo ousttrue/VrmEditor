@@ -75,6 +75,7 @@ enum class HumanBones
   rightLittleIntermediate,
   rightLittleDistal,
   tip,
+  VRM_BONE_COUNT = tip,
 };
 inline bool
 HumanBoneIsFinger(HumanBones bone)
