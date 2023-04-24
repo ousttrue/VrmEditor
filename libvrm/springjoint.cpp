@@ -107,21 +107,19 @@ SpringJoint::Update(Time time)
 DirectX::XMVECTOR
 SpringJoint::WorldPosToLocalRotation(const DirectX::XMVECTOR& nextTail) const
 {
-  DirectX::XMFLOAT3 localNextTail;
-
   DirectX::XMVECTOR det;
-  DirectX::XMStoreFloat3(
-    &localNextTail,
-    DirectX::XMVector3Transform(
-      nextTail,
-      DirectX::XMMatrixInverse(
-        &det,
-        DirectX::XMMatrixMultiply(Head->InitialMatrix(),
-                                  Head->ParentWorldMatrix()))));
+  auto m = DirectX::XMMatrixInverse(
+    &det,
+    DirectX::XMMatrixTranslationFromVector(
+      DirectX::XMLoadFloat3(&Head->InitialTransform.Translation)) *
+      Head->ParentWorldMatrix());
+
+  auto localNextTail = DirectX::XMVector3Transform(nextTail, m);
 
   assert(DirectX::XMVectorGetX(det) != 0);
 
-  auto r = dmath::rotate_from_to(m_initLocalTailDir, localNextTail);
+  auto r = dmath::rotate_from_to(DirectX::XMLoadFloat3(&m_initLocalTailDir),
+                                 localNextTail);
   assert(!std::isnan(DirectX::XMVectorGetX(r)));
   return r;
 }

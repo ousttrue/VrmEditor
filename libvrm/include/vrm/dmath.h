@@ -129,6 +129,8 @@ axisAngle(const DirectX::XMFLOAT3& axis, float angle)
 inline DirectX::XMVECTOR
 rotate_from_to(DirectX::XMVECTOR lhs, DirectX::XMVECTOR rhs)
 {
+  lhs = DirectX::XMVector3Normalize(lhs);
+  rhs = DirectX::XMVector3Normalize(rhs);
   auto axis = DirectX::XMVector3Cross(lhs, rhs);
   auto dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(lhs, rhs));
   if (fabs(1 - fabs(dot)) < 1e-4) {
@@ -141,9 +143,8 @@ rotate_from_to(DirectX::XMVECTOR lhs, DirectX::XMVECTOR rhs)
 inline DirectX::XMVECTOR
 rotate_from_to(DirectX::XMFLOAT3 _lhs, DirectX::XMFLOAT3 _rhs)
 {
-  auto lhs = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&_lhs));
-  auto rhs = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&_rhs));
-  return rotate_from_to(lhs, rhs);
+  return rotate_from_to(DirectX::XMLoadFloat3(&_lhs),
+                        DirectX::XMLoadFloat3(&_rhs));
 }
 
 inline DirectX::XMFLOAT4X4
