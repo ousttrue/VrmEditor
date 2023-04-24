@@ -1,5 +1,6 @@
 #include "vrm/importer.h"
 #include "vrm/animation.h"
+#include "vrm/directory.h"
 #include "vrm/glb.h"
 #include "vrm/json.h"
 #include "vrm/material.h"
@@ -374,6 +375,7 @@ ParseNode(const std::shared_ptr<Scene>& scene,
     // S
     ptr->Scale = node.value("scale", DirectX::XMFLOAT3{ 1, 1, 1 });
   }
+
   if (has(node, "mesh")) {
     auto mesh_index = node.at("mesh");
     ptr->Mesh = mesh_index;
@@ -387,6 +389,7 @@ ParseNode(const std::shared_ptr<Scene>& scene,
     ptr->MeshInstance =
       std::make_shared<gltf::MeshInstance>(scene->m_meshes[mesh_index]);
   }
+
   return ptr;
 }
 
@@ -607,6 +610,7 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
       }
     }
   }
+
   if (has(extensions, "VRMC_springBone")) {
     auto& springBone = extensions.at("VRMC_springBone");
     auto& springs = springBone.at("springs");
@@ -626,6 +630,49 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
       scene->m_springSolvers.push_back(solver);
     }
   }
+
+  auto& nodes = scene->m_gltf.Json.at("nodes");
+  for (size_t i = 0; i < nodes.size(); ++i) {
+    auto& node = nodes[i];
+    auto ptr = scene->m_nodes[i];
+    if (has(node, "extensions")) {
+      auto& extensions = node.at("extensions");
+      if (has(extensions, "VRMC_node_constraint")) {
+        auto& VRMC_node_constraint = extensions.at("VRMC_node_constraint");
+        if (has(VRMC_node_constraint, "constraint")) {
+          auto& constraint = VRMC_node_constraint.at("constraint");
+          // roll
+          if (has(constraint, "roll")) {
+            auto& roll = constraint.at("roll");
+            int source_index = roll.at("source");
+            ptr->Constraint = NodeConstraint{
+              .Type = NodeConstraintTypes::Roll,
+              .Source = scene->m_nodes[source_index],
+            };
+          }
+          // aim
+          if (has(constraint, "aim")) {
+            auto& aim = constraint.at("aim");
+            int source_index = aim.at("source");
+            ptr->Constraint = NodeConstraint{
+              .Type = NodeConstraintTypes::Aim,
+              .Source = scene->m_nodes[source_index],
+            };
+          }
+          // rotation
+          if (has(constraint, "rotation")) {
+            auto& rotation = constraint.at("rotation");
+            int source_index = rotation.at("source");
+            ptr->Constraint = NodeConstraint{
+              .Type = NodeConstraintTypes::Rotation,
+              .Source = scene->m_nodes[source_index],
+            };
+          }
+        }
+      }
+    }
+  }
+
   return true;
 }
 

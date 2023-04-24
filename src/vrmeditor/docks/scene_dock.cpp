@@ -1,5 +1,5 @@
 #include "scene_dock.h"
-#include "node_label.h"
+#include "scene_node_label.h"
 #include <imgui.h>
 #include <memory>
 #include <vrm/mesh.h>
@@ -12,42 +12,46 @@ SceneDock::CreateTree(const AddDockFunc& addDock,
                       float indent)
 {
   auto context = std::make_shared<libvrm::gltf::SceneContext>();
+  auto gui = std::make_shared<SceneGui>();
 
-  auto enter = [scene,
-                context](const std::shared_ptr<libvrm::gltf::Node>& node) {
-    static ImGuiTreeNodeFlags base_flags =
-      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
-      ImGuiTreeNodeFlags_SpanAvailWidth;
-    ImGuiTreeNodeFlags node_flags = base_flags;
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+  auto enter =
+    [scene, context, gui](const std::shared_ptr<libvrm::gltf::Node>& node) {
+      static ImGuiTreeNodeFlags base_flags =
+        ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+        ImGuiTreeNodeFlags_SpanAvailWidth;
+      ImGuiTreeNodeFlags node_flags = base_flags;
+      ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
-    if (node->Children.empty()) {
-      node_flags |=
-        ImGuiTreeNodeFlags_Leaf |
-        ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-    }
-    if (context->selected.lock() == node) {
-      node_flags |= ImGuiTreeNodeFlags_Selected;
-    }
+      if (node->Children.empty()) {
+        node_flags |=
+          ImGuiTreeNodeFlags_Leaf |
+          ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+      }
+      if (context->selected.lock() == node) {
+        node_flags |= ImGuiTreeNodeFlags_Selected;
+      }
 
-    bool hasRotation = node->InitialTransform.HasRotation();
-    if (hasRotation) {
-      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
-    }
+      bool hasRotation = node->InitialTransform.HasRotation();
+      int push = 0;
+      if (node->Constraint) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+        ++push;
+      } else if (hasRotation) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
+        ++push;
+      }
 
-    bool node_open =
-      ImGui::TreeNodeEx(&*node, node_flags, "%s", Label(*scene, node).c_str());
+      bool node_open = ImGui::TreeNodeEx(
+        &*node, node_flags, "%s", gui->Label(*scene, node).c_str());
 
-    if (hasRotation) {
-      ImGui::PopStyleColor();
-    }
+      ImGui::PopStyleColor(push);
 
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-      context->new_selected = node;
-    }
+      if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+        context->new_selected = node;
+      }
 
-    return node->Children.size() && node_open;
-  };
+      return node->Children.size() && node_open;
+    };
   auto leave = []() { ImGui::TreePop(); };
 
   addDock(Dock(title,

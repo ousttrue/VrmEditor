@@ -1,8 +1,8 @@
 #pragma once
 #include "gui.h"
-#include <vrm/scene.h>
 #include <memory>
 #include <string_view>
+#include <vrm/scene.h>
 
 class SceneDock
 {

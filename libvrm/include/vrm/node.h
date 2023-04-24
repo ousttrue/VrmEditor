@@ -34,11 +34,25 @@ struct Instance
 };
 using PushInstance = std::function<void(const Instance&)>;
 
+enum class NodeConstraintTypes
+{
+  Roll,
+  Aim,
+  Rotation,
+};
+
+struct NodeConstraint
+{
+  NodeConstraintTypes Type;
+  std::weak_ptr<Node> Source;
+};
+
 struct Node
 {
   // uint32_t Index;
   std::string Name;
   std::optional<NodeHumanoidInfo> Humanoid;
+  std::optional<NodeConstraint> Constraint;
 
   // local
   EuclideanTransform Transform = {};

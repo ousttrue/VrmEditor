@@ -1,7 +1,6 @@
 #include "export_dock.h"
 #include "glr/scene_preview.h"
 #include "json_gui.h"
-#include "node_label.h"
 #include <fstream>
 #include <grapho/orbitview.h>
 #include <imgui.h>

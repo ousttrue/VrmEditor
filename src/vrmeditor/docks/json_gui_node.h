@@ -9,8 +9,8 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 {
   return [scene]() {
     auto nodes = scene->m_gltf.Json.at("nodes");
-    std::array<const char*, 8> cols = {
-      "index", "name", "T", "R", "S", "children", "mesh", "skin",
+    std::array<const char*, 9> cols = {
+      "index", "name", "T", "R", "S", "children", "mesh", "skin", "extensions",
     };
     std::string no_name;
     if (JsonGuiTable("##nodes", cols)) {
@@ -54,6 +54,16 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         if (libvrm::gltf::has(node, "skin")) {
           ImGui::TableSetColumnIndex(7);
           ImGui::Text("%d", (int)node.at("skin"));
+        }
+        if (libvrm::gltf::has(node, "extensions")) {
+          std::stringstream ss;
+          int j = 0;
+          for (auto kv : node.at("extensions").items()) {
+            ss << ',';
+            ss << kv.key();
+          }
+          ImGui::TableSetColumnIndex(8);
+          ImGui::Text("%s", ss.str().c_str());
         }
       }
       ImGui::EndTable();
