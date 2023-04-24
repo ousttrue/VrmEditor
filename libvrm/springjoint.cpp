@@ -63,12 +63,12 @@ SpringJoint::Update(Time time)
     currentTail, DirectX::XMLoadFloat3(&m_lastTailPosotion));
 
   // verlet積分で次の位置を計算
+  auto dragInv = std::max(0.0f, 1.0f - DragForce);
   auto nextTail = DirectX::XMVectorAdd(
     DirectX::XMVectorAdd(currentTail,
                          // 前フレームの移動を継続する
-                         DirectX::XMVectorScale(delta, 1.0f - DragForce))
+                         DirectX::XMVectorScale(delta, dragInv)),
     // 親の回転による子ボーンの移動目標
-    ,
     DirectX::XMVector3Rotate(
       DirectX::XMVectorScale(DirectX::XMLoadFloat3(&m_initLocalTailDir),
                              static_cast<float>(Stiffiness * time.count())),
@@ -82,22 +82,21 @@ SpringJoint::Update(Time time)
   assert(!std::isnan(DirectX::XMVectorGetX(nextTail)));
 
   auto position = DirectX::XMLoadFloat3(&Head->WorldTransform.Translation);
+  auto nextTailDir =
+    DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(nextTail, position));
   nextTail = DirectX::XMVectorAdd(
-    position,
-    DirectX::XMVectorScale(DirectX::XMVector3Normalize(
-                             DirectX::XMVectorSubtract(nextTail, position)),
-                           m_tailLength));
+    position, DirectX::XMVectorScale(nextTailDir, m_tailLength));
 
-  // auto head = Head.get();
   assert(!std::isnan(DirectX::XMVectorGetX(nextTail)));
 
   // update
   DirectX::XMStoreFloat3(&m_currentTailPosotion, nextTail);
   DirectX::XMStoreFloat3(&m_lastTailPosotion, currentTail);
-  auto newLocalRotation = WorldPosToLocalRotation(nextTail);
-  assert(!std::isnan(DirectX::XMVectorGetX(newLocalRotation)));
-  DirectX::XMStoreFloat4(&Head->Transform.Rotation, newLocalRotation);
-  Head->CalcWorldMatrix(false);
+  auto newRotation = WorldPosToLocalRotation(nextTailDir);
+  assert(!std::isnan(DirectX::XMVectorGetX(newRotation)));
+  // DirectX::XMStoreFloat4(&Head->Transform.Rotation, newLocalRotation);
+  // Head->CalcWorldMatrix(false);
+  Head->SetWorldRotation(newRotation);
   for (auto& child : Head->Children) {
     // ひとつ下まで
     child->CalcWorldMatrix(false);
@@ -105,23 +104,17 @@ SpringJoint::Update(Time time)
 }
 
 DirectX::XMVECTOR
-SpringJoint::WorldPosToLocalRotation(const DirectX::XMVECTOR& nextTail) const
+SpringJoint::WorldPosToLocalRotation(const DirectX::XMVECTOR& nextTailDir) const
 {
-  DirectX::XMVECTOR det;
-  auto m = DirectX::XMMatrixInverse(
-    &det,
-    DirectX::XMMatrixTranslationFromVector(
-      DirectX::XMLoadFloat3(&Head->InitialTransform.Translation)) *
-      Head->ParentWorldMatrix());
-
-  auto localNextTail = DirectX::XMVector3Transform(nextTail, m);
-
-  assert(DirectX::XMVectorGetX(det) != 0);
-
-  auto r = dmath::rotate_from_to(DirectX::XMLoadFloat3(&m_initLocalTailDir),
-                                 localNextTail);
-  assert(!std::isnan(DirectX::XMVectorGetX(r)));
-  return r;
+  auto rotation = DirectX::XMQuaternionMultiply(
+    DirectX::XMLoadFloat4(&Head->InitialTransform.Rotation),
+    Head->ParentWorldRotation());
+  return DirectX::XMQuaternionMultiply(
+    rotation,
+    dmath::rotate_from_to(
+      DirectX::XMVector3Rotate(DirectX::XMLoadFloat3(&m_initLocalTailDir),
+                               rotation),
+      nextTailDir));
 }
 
 }

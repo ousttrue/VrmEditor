@@ -84,13 +84,12 @@ Node::SetWorldMatrix(const DirectX::XMMATRIX& world)
 }
 
 void
-Node::SetWorldRotation(const DirectX::XMFLOAT4& world, bool recursive)
+Node::SetWorldRotation(const DirectX::XMVECTOR& world, bool recursive)
 {
   auto parent = ParentWorldRotation();
   DirectX::XMStoreFloat4(
     &Transform.Rotation,
-    DirectX::XMQuaternionMultiply(DirectX::XMLoadFloat4(&world),
-                                  DirectX::XMQuaternionInverse(parent)));
+    DirectX::XMQuaternionMultiply(world, DirectX::XMQuaternionInverse(parent)));
   CalcWorldMatrix(recursive);
 }
 

@@ -176,7 +176,7 @@ struct Node
       DirectX::XMMatrixScaling(WorldScale.x, WorldScale.y, WorldScale.z),
       WorldTransform.Matrix());
   }
-  DirectX::XMVECTOR WorldTransformPoint(const DirectX::XMVECTOR &p)
+  DirectX::XMVECTOR WorldTransformPoint(const DirectX::XMVECTOR& p)
   {
     return DirectX::XMVector3Transform(p, WorldMatrix());
   }
@@ -226,7 +226,7 @@ struct Node
 
   void CalcWorldMatrix(bool recursive = false);
   bool SetWorldMatrix(const DirectX::XMMATRIX& world);
-  void SetWorldRotation(const DirectX::XMFLOAT4& world, bool recursive = false);
+  void SetWorldRotation(const DirectX::XMVECTOR& world, bool recursive = false);
   void SetWorldRotation(const DirectX::XMFLOAT4X4& world,
                         bool recursive = false);
 
