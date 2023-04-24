@@ -176,6 +176,10 @@ struct Node
       DirectX::XMMatrixScaling(WorldScale.x, WorldScale.y, WorldScale.z),
       WorldTransform.Matrix());
   }
+  DirectX::XMVECTOR WorldTransformPoint(const DirectX::XMVECTOR &p)
+  {
+    return DirectX::XMVector3Transform(p, WorldMatrix());
+  }
 
   // initial local
   EuclideanTransform InitialTransform = {};

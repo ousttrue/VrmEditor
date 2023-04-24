@@ -75,7 +75,9 @@ SpringJoint::Update(Time time)
     DirectX::XMVector3Rotate(
       DirectX::XMVectorScale(DirectX::XMLoadFloat3(&m_initLocalTailDir),
                              static_cast<float>(Stiffiness * time.count())),
-      Head->ParentWorldRotation()))
+      DirectX::XMQuaternionMultiply(
+        DirectX::XMLoadFloat4(&Head->InitialTransform.Rotation),
+        Head->ParentWorldRotation())))
     // 外力による移動量
     // + external;
     ;
