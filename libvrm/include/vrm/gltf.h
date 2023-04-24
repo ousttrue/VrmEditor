@@ -2,27 +2,15 @@
 #include "base64.h"
 #include "directory.h"
 #include "gltf_buffer.h"
+#include "json.h"
 #include <algorithm>
 #include <expected>
 #include <filesystem>
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include <span>
 #include <stdint.h>
 #include <string_view>
 #include <unordered_map>
-
-inline bool
-has(const nlohmann::json& obj, std::string_view key)
-{
-  if (!obj.is_object()) {
-    return {};
-  }
-  if (obj.find(key) == obj.end()) {
-    return {};
-  }
-  return true;
-}
 
 namespace libvrm::gltf {
 const auto VERTEX_JOINT = "JOINTS_0";

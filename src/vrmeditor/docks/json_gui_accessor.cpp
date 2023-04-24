@@ -1,6 +1,7 @@
 #include "json_gui_accessor.h"
 #include "json_gui_table.h"
 #include <imgui.h>
+#include <vrm/json.h>
 
 static std::optional<int>
 GetIndex(const std::shared_ptr<libvrm::gltf::Scene>& scene,
@@ -262,14 +263,14 @@ JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
     // "%s[%s]", .c_str());
     libvrm::gltf::ComponentType component = accessor.at("componentType");
     std::string type = accessor.at("type");
-    if (has(scene->m_gltf.Json, "meshes")) {
+    if (libvrm::gltf::has(scene->m_gltf.Json, "meshes")) {
       auto& meshes = scene->m_gltf.Json.at("meshes");
       for (size_t j = 0; j < meshes.size(); ++j) {
         auto& mesh = meshes[j];
         auto& prims = mesh.at("primitives");
         for (size_t k = 0; k < prims.size(); ++k) {
           auto& prim = prims[k];
-          if (has(prim, "attributes")) {
+          if (libvrm::gltf::has(prim, "attributes")) {
             for (auto& kv : prim.at("attributes").items()) {
               if (kv.value() == i) {
                 std::stringstream ss2;
@@ -279,14 +280,14 @@ JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
               }
             }
           }
-          if (has(prim, "indices")) {
+          if (libvrm::gltf::has(prim, "indices")) {
             if (prim.at("indices") == i) {
               std::stringstream ss2;
               ss2 << "/meshes/" << j << "/primitives/" << k << "/indices";
               refs.push_back(ss2.str());
             }
           }
-          if (has(prim, "targets")) {
+          if (libvrm::gltf::has(prim, "targets")) {
             auto& targets = prim.at("targets");
             for (size_t l = 0; l < targets.size(); ++l) {
               auto& target = targets[l];
@@ -303,11 +304,11 @@ JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         }
       }
     }
-    if (has(scene->m_gltf.Json, "skins")) {
+    if (libvrm::gltf::has(scene->m_gltf.Json, "skins")) {
       auto& skins = scene->m_gltf.Json.at("skins");
       for (size_t j = 0; j < skins.size(); ++j) {
         auto& skin = skins[j];
-        if (has(skin, "inverseBindMatrices")) {
+        if (libvrm::gltf::has(skin, "inverseBindMatrices")) {
           if (skin.at("inverseBindMatrices") == i) {
             std::stringstream ss2;
             ss2 << "/skins/" << j << "/inverseBindMatrices";

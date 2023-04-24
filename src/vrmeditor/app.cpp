@@ -24,6 +24,7 @@
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
 #include <vrm/glb.h>
+#include <vrm/importer.h>
 #include <vrm/timeline.h>
 
 const auto WINDOW_TITLE = "VrmEditor";
@@ -189,7 +190,7 @@ App::LoadPath(const std::filesystem::path& path)
 bool
 App::LoadModel(const std::filesystem::path& path)
 {
-  if (auto scene = libvrm::gltf::Scene::LoadPath(path)) {
+  if (auto scene = libvrm::gltf::LoadPath(path)) {
     SetScene(*scene);
     // bind time line
 

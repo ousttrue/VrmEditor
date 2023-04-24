@@ -1,5 +1,6 @@
 #pragma once
 #include "json_gui.h"
+#include <vrm/json.h>
 #include <vrm/node.h>
 
 inline ShowGui
@@ -20,7 +21,7 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         ImGui::Text("%d", i);
         ImGui::TableSetColumnIndex(1);
         ImGui::Text("%s", node.value("name", no_name).c_str());
-        if (has(node, "translation")) {
+        if (libvrm::gltf::has(node, "translation")) {
           auto t = node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
           ImGui::TableSetColumnIndex(2);
           ImGui::Text("%f, %f, %f", t.x, t.y, t.z);
@@ -34,7 +35,7 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         // ImGui::TableSetColumnIndex(4);
         // ImGui::Text(
         //   "%f, %f, %f", node->Scaling.x, node->Scaling.y, node->Scaling.z);
-        if (has(node, "children")) {
+        if (libvrm::gltf::has(node, "children")) {
           std::stringstream ss;
           int j = 0;
           for (int child : node.at("children")) {
@@ -46,11 +47,11 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           ImGui::TableSetColumnIndex(5);
           ImGui::Text("%s", ss.str().c_str());
         }
-        if (has(node, "mesh")) {
+        if (libvrm::gltf::has(node, "mesh")) {
           ImGui::TableSetColumnIndex(6);
           ImGui::Text("%d", (int)node.at("mesh"));
         }
-        if (has(node, "skin")) {
+        if (libvrm::gltf::has(node, "skin")) {
           ImGui::TableSetColumnIndex(7);
           ImGui::Text("%d", (int)node.at("skin"));
         }

@@ -7,6 +7,7 @@
 #include <imgui.h>
 #include <vrm/exporter.h>
 #include <vrm/glb.h>
+#include <vrm/importer.h>
 #include <vrm/scene.h>
 
 void
@@ -48,7 +49,8 @@ ExportDock::Create(const AddDockFunc& addDock,
       w.write(str.data(), str.size());
 #endif
 
-      debug_scene->LoadBytes({ (const uint8_t*)str.data(), str.size() });
+      libvrm::gltf::LoadBytes(debug_scene,
+                              { (const uint8_t*)str.data(), str.size() });
     }
 
     // json tree

@@ -1,6 +1,7 @@
 #include "json_gui_material.h"
 #include "json_gui_table.h"
 #include <imgui.h>
+#include <vrm/json.h>
 #include <vrm/material.h>
 
 struct MaterialItem
@@ -14,16 +15,16 @@ JsonGuiMaterialList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                     std::string_view jsonpath)
 {
   std::vector<MaterialItem> items;
-  if (has(scene->m_gltf.Json, "materials")) {
+  if (libvrm::gltf::has(scene->m_gltf.Json, "materials")) {
     auto& materials = scene->m_gltf.Json.at("materials");
     for (auto& material : materials) {
       items.push_back({
         material.value("name", "no name"),
         "Pbr",
       });
-      if (has(material, "extensions")) {
+      if (libvrm::gltf::has(material, "extensions")) {
         auto& extensions = material.at("extensions");
-        if (has(extensions, "KHR_materials_unlit")) {
+        if (libvrm::gltf::has(extensions, "KHR_materials_unlit")) {
           items.back().MaterialType = "UnLit";
         }
       }
