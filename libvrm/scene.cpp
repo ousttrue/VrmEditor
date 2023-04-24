@@ -33,6 +33,26 @@ Scene::~Scene()
 void
 Scene::Render(const RenderFunc& render, IGizmoDrawer* gizmo)
 {
+  // update order
+  // 1. ヒューマノイドボーンを解決
+  // 2. 頭の位置が決まるのでLookAtを解決
+  //  * Bone型 => leftEye, rightEye ボーンを回転
+  //  * Expression型 => 次項
+  // 3. ExpressionUpdate
+  //  * Expression を Apply する
+  // 4. コンストレイントを解決
+  // 5. SpringBoneを解決
+
+  // constraint
+  for (auto& node : m_nodes) {
+    if (auto constraint = node->Constraint) {
+      constraint->Process(node);
+    }
+  }
+  for (auto& root : m_roots) {
+    root->CalcWorldMatrix(true);
+  }
+
   // springbone
   for (auto& spring : m_springSolvers) {
     spring->Update(m_nextSpringDelta);

@@ -642,13 +642,17 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
         if (has(VRMC_node_constraint, "constraint")) {
           auto& constraint = VRMC_node_constraint.at("constraint");
           // roll
+          auto weight = constraint.value("weight", 1.0f);
           if (has(constraint, "roll")) {
             auto& roll = constraint.at("roll");
             int source_index = roll.at("source");
             ptr->Constraint = NodeConstraint{
               .Type = NodeConstraintTypes::Roll,
               .Source = scene->m_nodes[source_index],
+              .Weight = weight,
             };
+            std::string_view axis = roll.at("rollAxis");
+            ptr->Constraint->RollAxis = NodeConstraintRollAxisFromName(axis);
           }
           // aim
           if (has(constraint, "aim")) {
@@ -657,7 +661,10 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
             ptr->Constraint = NodeConstraint{
               .Type = NodeConstraintTypes::Aim,
               .Source = scene->m_nodes[source_index],
+              .Weight = weight,
             };
+            std::string_view axis = aim.at("aimAxis");
+            ptr->Constraint->AimAxis = NodeConstraintAimAxisFromName(axis);
           }
           // rotation
           if (has(constraint, "rotation")) {
@@ -666,6 +673,7 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
             ptr->Constraint = NodeConstraint{
               .Type = NodeConstraintTypes::Rotation,
               .Source = scene->m_nodes[source_index],
+              .Weight = weight,
             };
           }
         }
