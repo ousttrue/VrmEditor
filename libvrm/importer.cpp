@@ -643,6 +643,7 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
           auto& constraint = VRMC_node_constraint.at("constraint");
           // roll
           auto weight = constraint.value("weight", 1.0f);
+          static DirectX::XMFLOAT4 s_constraint_color{ 1, 0.6f, 1, 1 };
           if (has(constraint, "roll")) {
             auto& roll = constraint.at("roll");
             int source_index = roll.at("source");
@@ -653,6 +654,7 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
             };
             std::string_view axis = roll.at("rollAxis");
             ptr->Constraint->RollAxis = NodeConstraintRollAxisFromName(axis);
+            ptr->ShapeColor = s_constraint_color;
           }
           // aim
           if (has(constraint, "aim")) {
@@ -665,6 +667,7 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
             };
             std::string_view axis = aim.at("aimAxis");
             ptr->Constraint->AimAxis = NodeConstraintAimAxisFromName(axis);
+            ptr->ShapeColor = s_constraint_color;
           }
           // rotation
           if (has(constraint, "rotation")) {
@@ -675,6 +678,7 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
               .Source = scene->m_nodes[source_index],
               .Weight = weight,
             };
+            ptr->ShapeColor = s_constraint_color;
           }
         }
       }
