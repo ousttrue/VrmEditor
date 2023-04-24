@@ -230,10 +230,10 @@ HumanBoneToColor(HumanBones bone)
     case HumanBones::rightLowerLeg:
     case HumanBones::rightFoot:
     case HumanBones::rightToes:
-      return { 1, 0.8f, 0.5f, 1 };
-
     case HumanBones::leftHand:
     case HumanBones::rightHand:
+      return { 1, 0.8f, 0.5f, 1 };
+
     case HumanBones::leftThumbMetacarpal:
     case HumanBones::leftThumbProximal:
     case HumanBones::leftThumbDistal:

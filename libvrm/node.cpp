@@ -127,18 +127,8 @@ Node::Print(int level)
 std::shared_ptr<Node>
 Node::GetShapeTail()
 {
-  auto parent = Parent.lock();
-  if (!parent) {
-    // root not use tail
+  if (Children.empty()) {
     return nullptr;
-  }
-
-  switch (Children.size()) {
-    case 0:
-      return nullptr;
-
-    case 1:
-      return Children.front();
   }
 
   std::shared_ptr<Node> tail;
@@ -169,7 +159,14 @@ Node::GetShapeTail()
       }
     }
   }
-  return tail;
+
+  for (auto current = Parent.lock(); current;
+       current = current->Parent.lock()) {
+    if (current->Humanoid) {
+      return tail;
+    }
+  }
+  return nullptr;
 }
 
 std::optional<vrm::HumanBones>
@@ -200,18 +197,20 @@ Node::CalcShape()
 {
   float w = 0.02f;
   float d = 0.02f;
-  // ShapeColor = { 1, 1, 1, 1 };
-  auto humanBone = ClosestBone();
-  if (humanBone) {
-    ShapeColor = vrm::HumanBoneToColor(*humanBone);
+  if (Humanoid) {
+    ShapeColor = vrm::HumanBoneToColor(Humanoid->HumanBone);
+    auto size = vrm::HumanBoneToWidthDepth(Humanoid->HumanBone);
+    w = size.x;
+    d = size.y;
+  } else if (auto humanBone = ClosestBone()) {
     auto size = vrm::HumanBoneToWidthDepth(*humanBone);
     w = size.x;
     d = size.y;
   }
 
-  DirectX::XMStoreFloat4x4(&ShapeMatrix, DirectX::XMMatrixScaling(w, w, w));
-
   if (Children.empty()) {
+    // ShapeColor = { 0.2f, 0.2f, 0.2f, 1 };
+    DirectX::XMStoreFloat4x4(&ShapeMatrix, DirectX::XMMatrixScaling(w, w, w));
     return;
   }
 
@@ -220,22 +219,20 @@ Node::CalcShape()
                                 tail->Transform.Translation.y,
                                 tail->Transform.Translation.z);
     auto Y = DirectX::XMLoadFloat3(&_Y);
-
     auto length = DirectX::XMVectorGetX(DirectX::XMVector3Length(Y));
-    // std::cout << name_ << "=>" << tail->name_ << "=" << length <<
-    // std::endl;
     Y = DirectX::XMVector3Normalize(Y);
-    auto _Z = DirectX::XMFLOAT3(0, 0, 1);
 
-    DirectX::XMVECTOR X;
+    auto _Z = DirectX::XMFLOAT3(0, 0, 1);
     auto Z = DirectX::XMLoadFloat3(&_Z);
+
     auto dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(Y, Z));
+    DirectX::XMVECTOR X;
     if (fabs(dot) < 0.9) {
-      X = DirectX::XMVector3Cross(Y, Z);
+      X = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(Y, Z));
       Z = DirectX::XMVector3Cross(X, Y);
     } else {
       auto _X = DirectX::XMFLOAT3(1, 0, 0);
-      X = DirectX::XMLoadFloat3(&_X);
+      X = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&_X));
       Z = DirectX::XMVector3Cross(X, Y);
       X = DirectX::XMVector3Cross(Y, Z);
     }
@@ -247,6 +244,9 @@ Node::CalcShape()
 
     auto shape = center * scale * r;
     DirectX::XMStoreFloat4x4(&ShapeMatrix, shape);
+  } else {
+    ShapeColor = { 1, 0.2f, 0.2f, 1 };
+    DirectX::XMStoreFloat4x4(&ShapeMatrix, DirectX::XMMatrixScaling(w, w, w));
   }
 
   for (auto& child : Children) {
