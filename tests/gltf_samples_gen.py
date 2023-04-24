@@ -7,7 +7,7 @@ TEMPLATE = """
 TEST(VrmLoad, {name}) {{
   auto path = get_path("{relative}");
   libvrm::gltf::Scene scene;
-  auto result = scene.LoadPath(path);
+  auto result = libvrm::gltf::LoadPath(path);
   EXPECT_TRUE(result) << result.error();
 }}
 """
@@ -20,6 +20,7 @@ def process(gltf_dir: pathlib.Path, path: pathlib.Path):
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <vrm/scene.h>
+#include <vrm/importer.h>
 
 std::filesystem::path get_path(std::string_view relative) {
   std::filesystem::path base = std::getenv("GLTF_SAMPLE_MODELS");
