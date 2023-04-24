@@ -5,6 +5,7 @@
 #include "humanpose.h"
 #include "scenetypes.h"
 #include "springbone.h"
+#include "springcollider.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <expected>
