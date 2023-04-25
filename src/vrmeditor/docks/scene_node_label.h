@@ -1,4 +1,6 @@
 #pragma once
+#include <imgui.h>
+#include <span>
 #include <string>
 #include <vrm/humanbones.h>
 #include <vrm/mesh.h>
@@ -11,8 +13,138 @@ using NodeWeakPtr = std::weak_ptr<libvrm::gltf::Node>;
 class SceneGui
 {
   std::map<NodeWeakPtr, std::string, std::owner_less<NodeWeakPtr>> m_map;
+  bool m_enableSpring = true;
+  std::shared_ptr<libvrm::gltf::Scene> m_scene;
+  float m_indent;
 
 public:
+  std::shared_ptr<libvrm::gltf::SceneContext> Context;
+  SceneGui(const std::shared_ptr<libvrm::gltf::Scene>& scene, float indent)
+    : m_scene(scene)
+    , m_indent(indent)
+    , Context(new libvrm::gltf::SceneContext)
+  {
+  }
+
+  void Show(const char* title, bool* p_open)
+  {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+    int window_flags = 0;
+    std::shared_ptr<libvrm::gltf::Node> showSelected;
+    if (auto selected = Context->selected.lock()) {
+      {
+        if (auto mesh_index = selected->Mesh) {
+          showSelected = selected;
+          window_flags |= ImGuiWindowFlags_NoScrollbar;
+        }
+      }
+    }
+
+    if (ImGui::Begin(title, p_open, window_flags)) {
+      auto size = ImGui::GetContentRegionAvail();
+      Context->selected = Context->new_selected;
+
+      // 60FPS
+      ImGui::Checkbox("spring", &m_enableSpring);
+      if (m_enableSpring) {
+        m_scene->m_nextSpringDelta = libvrm::Time(1.0 / 60);
+      } else {
+        if (ImGui::Button("spring step")) {
+          m_scene->m_nextSpringDelta = libvrm::Time(1.0 / 60);
+        }
+      }
+
+      ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, m_indent);
+      if (showSelected) {
+        if (ImGui::BeginChild("##scene-tree",
+                              { size.x, size.y / 2 },
+                              true,
+                              ImGuiWindowFlags_None)) {
+
+          m_scene->Traverse(
+            [this](const std::shared_ptr<libvrm::gltf::Node>& node) {
+              return Enter(node);
+            },
+            [this]() { Leave(); });
+        }
+        ImGui::EndChild();
+
+        if (ImGui::BeginChild("##scene-selected",
+                              { size.x, size.y / 2 },
+                              true,
+                              ImGuiWindowFlags_None)) {
+          ImGui::Text("%s", showSelected->Name.c_str());
+          if (auto mesh_index = showSelected->Mesh) {
+            auto mesh = m_scene->m_meshes[*mesh_index];
+            auto meshInstance = showSelected->MeshInstance;
+            char morph_id[256];
+            for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
+              auto& morph = mesh->m_morphTargets[i];
+              snprintf(morph_id,
+                       sizeof(morph_id),
+                       "[%d]%s##morph%d",
+                       i,
+                       morph->Name.c_str(),
+                       i);
+              ImGui::SliderFloat(morph_id, &meshInstance->weights[i], 0, 1);
+            }
+          }
+        }
+        ImGui::EndChild();
+      } else {
+        m_scene->Traverse(
+          [this](const std::shared_ptr<libvrm::gltf::Node>& node) {
+            return Enter(node);
+          },
+          [this]() { Leave(); });
+      }
+      ImGui::PopStyleVar();
+    }
+    ImGui::End();
+    ImGui::PopStyleVar();
+  }
+
+  bool Enter(const std::shared_ptr<libvrm::gltf::Node>& node)
+  {
+    static ImGuiTreeNodeFlags base_flags =
+      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+      ImGuiTreeNodeFlags_SpanAvailWidth;
+    ImGuiTreeNodeFlags node_flags = base_flags;
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+    if (node->Children.empty()) {
+      node_flags |=
+        ImGuiTreeNodeFlags_Leaf |
+        ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+    }
+    if (Context->selected.lock() == node) {
+      node_flags |= ImGuiTreeNodeFlags_Selected;
+    }
+
+    bool hasRotation = node->InitialTransform.HasRotation();
+    int push = 0;
+    if (node->Constraint) {
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+      ++push;
+    } else if (hasRotation) {
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
+      ++push;
+    }
+
+    bool node_open = ImGui::TreeNodeEx(
+      &*node, node_flags, "%s", Label(*m_scene, node).c_str());
+
+    ImGui::PopStyleColor(push);
+
+    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+      Context->new_selected = node;
+    }
+
+    return node->Children.size() && node_open;
+  }
+
+  void Leave() { ImGui::TreePop(); }
+
   const std::string& Label(const libvrm::gltf::Scene& scene,
                            const std::shared_ptr<libvrm::gltf::Node>& node)
   {
