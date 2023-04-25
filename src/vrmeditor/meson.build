@@ -12,6 +12,7 @@ srcs = [
     'glr/overlay.cpp',
     'docks/gui.cpp',
     'docks/scene_dock.cpp',
+    'docks/scene_gui.cpp',
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',
     'docks/json_dock.cpp',

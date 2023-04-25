@@ -1,5 +1,5 @@
 #include "scene_dock.h"
-#include "scene_node_label.h"
+#include "scene_gui.h"
 #include <imgui.h>
 #include <memory>
 #include <vrm/mesh.h>
