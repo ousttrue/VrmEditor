@@ -25,8 +25,9 @@ SpringCollider::DrawGizmo(IGizmoDrawer* gizmo)
       DirectX::XMStoreFloat3(
         &tail, node->WorldTransformPoint(DirectX::XMLoadFloat3(&Tail)));
 
-      gizmo->DrawSphere(offset, Radius, { 0, 1, 1, 1 });
-      gizmo->DrawSphere(tail, Radius, { 0, 1, 1, 1 });
+      // gizmo->DrawSphere(offset, Radius, { 0, 1, 1, 1 });
+      // gizmo->DrawSphere(tail, Radius, { 0, 1, 1, 1 });
+      gizmo->DrawCapsule(offset, tail, Radius, { 0, 1, 1, 1 });
       break;
     }
   }

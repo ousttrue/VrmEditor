@@ -22,19 +22,56 @@ struct LineGizmo : public libvrm::IGizmoDrawer
   void DrawSphere(const DirectX::XMFLOAT3& pos,
                   float radius,
                   const grapho::RGBA& color) override;
+  void DrawCapsule(const DirectX::XMFLOAT3& p0,
+                   const DirectX::XMFLOAT3& p1,
+                   float radius,
+                   const grapho::RGBA& color) override;
 
-  void CircleXY(const DirectX::XMMATRIX& pos,
+  void Arc(const grapho::RGBA& color,
+           const DirectX::XMFLOAT3& pos,
+           const DirectX::XMFLOAT3& normal,
+           const DirectX::XMFLOAT3& base,
+           float delta,
+           int count);
+
+  void CircleXY(const DirectX::XMFLOAT3& pos,
                 float r,
                 const grapho::RGBA& color,
-                int division = 16);
-  void CircleYZ(const DirectX::XMMATRIX& pos,
+                int division = 16)
+  {
+    Arc(color,
+        pos,
+        { 0, 0, 1 },
+        { r, 0, 0 },
+        DirectX::XM_2PI / division,
+        division);
+  }
+
+  void CircleYZ(const DirectX::XMFLOAT3& pos,
                 float r,
                 const grapho::RGBA& color,
-                int division = 16);
-  void CircleZX(const DirectX::XMMATRIX& pos,
+                int division = 16)
+  {
+    Arc(color,
+        pos,
+        { 1, 0, 0 },
+        { 0, r, 0 },
+        DirectX::XM_2PI / division,
+        division);
+  }
+
+  void CircleZX(const DirectX::XMFLOAT3& pos,
                 float r,
                 const grapho::RGBA& color,
-                int division = 16);
+                int division = 16)
+  {
+    Arc(color,
+        pos,
+        { 0, 1, 0 },
+        { 0, 0, r },
+        DirectX::XM_2PI / division,
+        division);
+  }
 };
 
 }

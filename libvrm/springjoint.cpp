@@ -37,7 +37,7 @@ SpringJoint::DrawGizmo(IGizmoDrawer* gizmo)
   // gizmo->drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
 
   // gizmo->drawSphere(lastHead, {1, 1, 1, 1});
-  gizmo->DrawSphere(Head->WorldTransform.Translation, Radius, { 0, 1, 0, 1 });
+  // gizmo->DrawSphere(Head->WorldTransform.Translation, Radius, { 0, 1, 0, 1 });
   // gizmo->drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
 
   // gizmo->drawSphere(currentTail, {1, 1, 1, 1});

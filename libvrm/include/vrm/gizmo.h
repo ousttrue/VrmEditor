@@ -15,6 +15,10 @@ struct IGizmoDrawer
   virtual void DrawSphere(const DirectX::XMFLOAT3& pos,
                           float radius,
                           const grapho::RGBA& color) = 0;
+  virtual void DrawCapsule(const DirectX::XMFLOAT3& p0,
+                           const DirectX::XMFLOAT3& p1,
+                           float radius,
+                           const grapho::RGBA& color) = 0;
 };
 
 }

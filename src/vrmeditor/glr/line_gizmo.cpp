@@ -25,72 +25,33 @@ LineGizmo::DrawLine(const DirectX::XMFLOAT3& p0,
 }
 
 void
-LineGizmo::CircleXY(const DirectX::XMMATRIX& m,
-                    float r,
-                    const grapho::RGBA& color,
-                    int division)
+LineGizmo::Arc(const grapho::RGBA& color,
+               const DirectX::XMFLOAT3& pos,
+               const DirectX::XMFLOAT3& normal,
+               const DirectX::XMFLOAT3& base,
+               float delta,
+               int count)
 {
-  auto delta = DirectX::XM_2PI / division;
+  auto Y = DirectX::XMLoadFloat3(&normal);
+  auto Z = DirectX::XMLoadFloat3(&base);
+  auto X = DirectX::XMVector3Cross(Y, Z);
+  auto XX = DirectX::XMVector3Normalize(X);
+  auto YY = DirectX::XMVector3Normalize(Y);
+  auto ZZ = DirectX::XMVector3Normalize(Z);
+  DirectX::XMFLOAT4 _{ 0, 0, 0, 1 };
+  auto r = DirectX::XMMATRIX(XX, YY, ZZ, DirectX::XMLoadFloat4(&_));
+  auto t = DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+  auto m = r * t;
+
   auto begin = 0.0f;
-  auto _p = DirectX::XMFLOAT3{ r, 0, 0 };
-  auto p = DirectX::XMLoadFloat3(&_p);
   DirectX::XMFLOAT3 p0;
-  DirectX::XMStoreFloat3(&p0, DirectX::XMVector3Transform(p, m));
-  for (int i = 0; i < division; ++i) {
+  DirectX::XMStoreFloat3(&p0, DirectX::XMVector3Transform(Z, m));
+  for (int i = 0; i < count; ++i) {
     auto end = begin + delta;
     DirectX::XMFLOAT3 p1;
-    DirectX::XMStoreFloat3(
-      &p1, DirectX::XMVector3Transform(p, DirectX::XMMatrixRotationZ(end) * m));
-
-    DrawLine(p0, p1, color);
-
-    // next
-    p0 = p1;
-    begin = end;
-  }
-}
-void
-LineGizmo::CircleYZ(const DirectX::XMMATRIX& m,
-                    float r,
-                    const grapho::RGBA& color,
-                    int division)
-{
-  auto delta = DirectX::XM_2PI / division;
-  auto begin = 0.0f;
-  auto _p = DirectX::XMFLOAT3{ 0, r, 0 };
-  auto p = DirectX::XMLoadFloat3(&_p);
-  DirectX::XMFLOAT3 p0;
-  DirectX::XMStoreFloat3(&p0, DirectX::XMVector3Transform(p, m));
-  for (int i = 0; i < division; ++i) {
-    auto end = begin + delta;
-    DirectX::XMFLOAT3 p1;
-    DirectX::XMStoreFloat3(
-      &p1, DirectX::XMVector3Transform(p, DirectX::XMMatrixRotationX(end) * m));
-
-    DrawLine(p0, p1, color);
-
-    // next
-    p0 = p1;
-    begin = end;
-  }
-}
-void
-LineGizmo::CircleZX(const DirectX::XMMATRIX& m,
-                    float r,
-                    const grapho::RGBA& color,
-                    int division)
-{
-  auto delta = DirectX::XM_2PI / division;
-  auto begin = 0.0f;
-  auto _p = DirectX::XMFLOAT3{ 0, 0, r };
-  auto p = DirectX::XMLoadFloat3(&_p);
-  DirectX::XMFLOAT3 p0;
-  DirectX::XMStoreFloat3(&p0, DirectX::XMVector3Transform(p, m));
-  for (int i = 0; i < division; ++i) {
-    auto end = begin + delta;
-    DirectX::XMFLOAT3 p1;
-    DirectX::XMStoreFloat3(
-      &p1, DirectX::XMVector3Transform(p, DirectX::XMMatrixRotationY(end) * m));
+    DirectX::XMStoreFloat3(&p1,
+                           DirectX::XMVector3Transform(
+                             Z, DirectX::XMMatrixRotationAxis(YY, end) * m));
 
     DrawLine(p0, p1, color);
 
@@ -105,54 +66,79 @@ LineGizmo::DrawSphere(const DirectX::XMFLOAT3& pos,
                       float r,
                       const grapho::RGBA& color)
 {
-  CircleXY(DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z), r, color);
-  CircleYZ(DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z), r, color);
-  CircleZX(DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z), r, color);
-  // DirectX::XMFLOAT3 points[]{
-  //   { r, 0, 0 }, { 0, 0, -r }, { -r, 0, 0 },
-  //   { 0, 0, r }, { 0, r, 0 },  { 0, -r, 0 },
-  // };
-  // //  /\
+  CircleXY(pos, r, color);
+  CircleYZ(pos, r, color);
+  CircleZX(pos, r, color);
+}
+
+void
+LineGizmo::DrawCapsule(const DirectX::XMFLOAT3& p0,
+                       const DirectX::XMFLOAT3& p1,
+                       float radius,
+                       const grapho::RGBA& color)
+{
+  DrawSphere(p0, radius, color);
+  DrawSphere(p1, radius, color);
+  DrawLine(p0, p1, color);
+  // auto P0 = DirectX::XMLoadFloat3(&p0);
+  // auto P1 = DirectX::XMLoadFloat3(&p1);
+  // auto P01 = DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(P1, P0));
+  // DirectX::XMFLOAT3 z{ 0, 0, 1 };
+  // auto Z = DirectX::XMLoadFloat3(&z);
+  // auto dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(P01, Z));
+  // if (fabs(fabs(dot) - 1) < 1e-4) {
+  //
+  // } else {
+  //   DirectX::XMFLOAT3 x{ 1, 0, 0 };
+  //   auto X = DirectX::XMLoadFloat3(&x);
+  // }
+  // Arc(color, p0, P01, )
+}
+
+// DirectX::XMFLOAT3 points[]{
+//   { r, 0, 0 }, { 0, 0, -r }, { -r, 0, 0 },
+//   { 0, 0, r }, { 0, r, 0 },  { 0, -r, 0 },
+// };
+// //  /\
   // // /  \
   // //+----+
-  // // \  /
-  // //  \/
-  // DrawLine(dmath::add(pos, points[0]),
-  //          dmath::add(pos, points[1]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[1]),
-  //          dmath::add(pos, points[2]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[2]),
-  //          dmath::add(pos, points[3]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[3]),
-  //          dmath::add(pos, points[4]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[0]),
-  //          dmath::add(pos, points[4]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[1]),
-  //          dmath::add(pos, points[4]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[2]),
-  //          dmath::add(pos, points[4]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[3]),
-  //          dmath::add(pos, points[4]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[0]),
-  //          dmath::add(pos, points[5]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[1]),
-  //          dmath::add(pos, points[5]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[2]),
-  //          dmath::add(pos, points[5]),
-  //          *((grapho::RGBA*)&color));
-  // DrawLine(dmath::add(pos, points[3]),
-  //          dmath::add(pos, points[5]),
-  //          *((grapho::RGBA*)&color));
-}
+// // \  /
+// //  \/
+// DrawLine(dmath::add(pos, points[0]),
+//          dmath::add(pos, points[1]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[1]),
+//          dmath::add(pos, points[2]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[2]),
+//          dmath::add(pos, points[3]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[3]),
+//          dmath::add(pos, points[4]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[0]),
+//          dmath::add(pos, points[4]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[1]),
+//          dmath::add(pos, points[4]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[2]),
+//          dmath::add(pos, points[4]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[3]),
+//          dmath::add(pos, points[4]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[0]),
+//          dmath::add(pos, points[5]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[1]),
+//          dmath::add(pos, points[5]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[2]),
+//          dmath::add(pos, points[5]),
+//          *((grapho::RGBA*)&color));
+// DrawLine(dmath::add(pos, points[3]),
+//          dmath::add(pos, points[5]),
+//          *((grapho::RGBA*)&color));
 
 } // namespace gizmo

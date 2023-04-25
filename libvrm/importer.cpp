@@ -660,10 +660,12 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
         auto& shape = collider.at("shape");
         if (has(shape, "sphere")) {
           auto& sphere = shape.at("sphere");
+          ptr->Type = vrm::SpringColliderShapeType::Sphere;
           ptr->Radius = sphere.value("radius", 0.0f);
           ptr->Offset = sphere.value("offset", DirectX::XMFLOAT3{ 0, 0, 0 });
         } else if (has(shape, "capsule")) {
           auto& capsule = shape.at("capsule");
+          ptr->Type = vrm::SpringColliderShapeType::Capsule;
           ptr->Radius = capsule.value("radius", 0.0f);
           ptr->Offset = capsule.value("offset", DirectX::XMFLOAT3{ 0, 0, 0 });
           ptr->Tail = capsule.value("tail", DirectX::XMFLOAT3{ 0, 0, 0 });
