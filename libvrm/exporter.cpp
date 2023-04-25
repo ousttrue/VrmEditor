@@ -373,9 +373,9 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
 {
   m_writer.object_open();
 
-  if (prim.material) {
+  if (prim.Material) {
     m_writer.key("material");
-    m_writer.value(*scene.IndexOf(prim.material));
+    m_writer.value(*scene.IndexOf(prim.Material));
   }
 
   std::vector<DirectX::XMFLOAT3> positions;
@@ -400,7 +400,7 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
     PushVertices(indices,
                  mesh,
                  index,
-                 prim.drawCount,
+                 prim.DrawCount,
                  push_vertex,
                  has_skinning,
                  push_skinning);
@@ -413,7 +413,7 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
     PushVertices(indices,
                  mesh,
                  index,
-                 prim.drawCount,
+                 prim.DrawCount,
                  push_vertex,
                  has_skinning,
                  push_skinning);
@@ -426,7 +426,7 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
     PushVertices(indices,
                  mesh,
                  index,
-                 prim.drawCount,
+                 prim.DrawCount,
                  push_vertex,
                  has_skinning,
                  push_skinning);

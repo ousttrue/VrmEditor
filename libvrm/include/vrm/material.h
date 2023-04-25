@@ -12,6 +12,13 @@ enum MaterialTypes
   MToon1,
 };
 
+enum BlendMode
+{
+  Opaque,
+  Mask,
+  Blend,
+};
+
 struct Material
 {
   Material(std::string_view name)
@@ -19,7 +26,8 @@ struct Material
   {
   }
   std::string Name;
-  MaterialTypes Type;
+  MaterialTypes Type = {};
+  BlendMode AlphaBlend = {};
   std::shared_ptr<Texture> ColorTexture;
 };
 

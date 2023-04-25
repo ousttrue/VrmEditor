@@ -14,8 +14,8 @@ ShowGui
 JsonGuiMaterialList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                     std::string_view jsonpath)
 {
-  std::vector<MaterialItem> items;
   if (libvrm::gltf::has(scene->m_gltf.Json, "materials")) {
+    std::vector<MaterialItem> items;
     auto& materials = scene->m_gltf.Json.at("materials");
     for (auto& material : materials) {
       items.push_back({
@@ -29,8 +29,6 @@ JsonGuiMaterialList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         }
       }
     }
-  }
-  {
     for (int i = 0; i < scene->m_materials.size(); ++i) {
       auto& material = scene->m_materials[i];
       switch (material->Type) {
@@ -48,28 +46,35 @@ JsonGuiMaterialList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           break;
       }
     }
+    return [items, materials]() {
+      std::array<const char*, 4> cols = {
+        "index",
+        "name",
+        "type",
+        "alphamode",
+      };
+      if (JsonGuiTable("##materials", cols)) {
+        for (int i = 0; i < items.size(); ++i) {
+          auto& item = items[i];
+          ImGui::TableNextRow();
+          ImGui::TableSetColumnIndex(0);
+          ImGui::Text("%d", i);
+
+          ImGui::TableSetColumnIndex(1);
+          ImGui::Text("%s", item.Name.c_str());
+
+          ImGui::TableSetColumnIndex(2);
+          ImGui::Text("%s", item.MaterialType.c_str());
+
+          ImGui::TableSetColumnIndex(3);
+          auto& material = materials[i];
+          ImGui::Text(
+            "%s", material.value("alphaMode", std::string("OPAQUE")).c_str());
+        }
+        ImGui::EndTable();
+      }
+    };
   }
 
-  return [items]() {
-    std::array<const char*, 3> cols = {
-      "index",
-      "name",
-      "type",
-    };
-    if (JsonGuiTable("##materials", cols)) {
-      for (int i = 0; i < items.size(); ++i) {
-        auto& item = items[i];
-        ImGui::TableNextRow();
-        ImGui::TableSetColumnIndex(0);
-        ImGui::Text("%d", i);
-
-        ImGui::TableSetColumnIndex(1);
-        ImGui::Text("%s", item.Name.c_str());
-
-        ImGui::TableSetColumnIndex(2);
-        ImGui::Text("%s", item.MaterialType.c_str());
-      }
-      ImGui::EndTable();
-    }
-  };
+  return []() {};
 }

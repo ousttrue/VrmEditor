@@ -71,38 +71,6 @@ void main()
 )";
 
 namespace glr {
-struct SubMesh
-{
-  uint32_t offset;
-  uint32_t drawCount;
-  std::shared_ptr<grapho::gl3::Texture> texture;
-};
-
-struct Drawable
-{
-  std::shared_ptr<grapho::gl3::Vao> vao;
-  std::vector<SubMesh> submeshes;
-
-  void draw()
-  {
-    // state
-    glEnable(GL_CULL_FACE);
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BGR);
-    glEnable(GL_DEPTH_TEST);
-
-    // mesh
-    for (auto& submesh : submeshes) {
-      // setup material
-      if (submesh.texture) {
-        submesh.texture->Bind();
-      } else {
-        // dummy white texture
-      }
-      vao->Draw(GL_TRIANGLES, submesh.drawCount, submesh.offset);
-    }
-  }
-};
 
 class Gl3Renderer
 {
@@ -114,7 +82,9 @@ class Gl3Renderer
            std::shared_ptr<grapho::gl3::Texture>,
            std::owner_less<ImageWeakPtr>>
     m_textureMap;
-  std::map<MeshWeakPtr, std::shared_ptr<Drawable>, std::owner_less<MeshWeakPtr>>
+  std::map<MeshWeakPtr,
+           std::shared_ptr<grapho::gl3::Vao>,
+           std::owner_less<MeshWeakPtr>>
     m_drawableMap;
   std::shared_ptr<grapho::gl3::Texture> m_white;
 
@@ -156,7 +126,7 @@ public:
     return texture;
   }
 
-  std::shared_ptr<Drawable> GetOrCreate(
+  std::shared_ptr<grapho::gl3::Vao> GetOrCreate(
     const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
   {
     auto found = m_drawableMap.find(mesh);
@@ -200,29 +170,9 @@ public:
     };
     auto vao = grapho::gl3::Vao::Create(layouts, slots, ibo);
 
-    auto drawable = std::shared_ptr<Drawable>(new Drawable);
-    drawable->vao = vao;
+    m_drawableMap.insert(std::make_pair(mesh, vao));
 
-    uint32_t byteOffset = 0;
-    for (auto& primitive : mesh->m_primitives) {
-      auto texture = m_white;
-      if (auto t = primitive.material->ColorTexture) {
-        if (auto image = t->Source) {
-          texture = GetOrCreate(image);
-        }
-      }
-      drawable->submeshes.push_back({
-        .offset = byteOffset,
-        .drawCount = primitive.drawCount,
-        .texture = texture,
-      });
-      // GL_UNSIGNED_INT
-      byteOffset += primitive.drawCount * 4;
-    }
-
-    m_drawableMap.insert(std::make_pair(mesh, drawable));
-
-    return drawable;
+    return vao;
   }
 
   void Render(RenderPass pass,
@@ -231,12 +181,11 @@ public:
               const libvrm::gltf::MeshInstance& instance,
               const float m[16])
   {
-    auto drawable = GetOrCreate(mesh);
+    auto vao = GetOrCreate(mesh);
 
     if (instance.m_updated.size()) {
-      drawable->vao->slots_[0].vbo->Upload(
-        instance.m_updated.size() * sizeof(Vertex), instance.m_updated.data());
-      // m_updated.clear();
+      vao->slots_[0].vbo->Upload(instance.m_updated.size() * sizeof(Vertex),
+                                 instance.m_updated.data());
     }
 
     switch (pass) {
@@ -256,7 +205,43 @@ public:
         break;
     }
 
-    drawable->draw();
+    uint32_t drawOffset = 0;
+    for (auto& primitive : mesh->m_primitives) {
+      if (auto material = primitive.Material) {
+        auto texture = m_white;
+        if (auto t = primitive.Material->ColorTexture) {
+          if (auto image = t->Source) {
+            texture = GetOrCreate(image);
+          }
+        }
+
+        // state
+        glEnable(GL_CULL_FACE);
+        glFrontFace(GL_CCW);
+        glCullFace(GL_BGR);
+        glEnable(GL_DEPTH_TEST);
+
+        switch (material->AlphaBlend) {
+          case libvrm::gltf::BlendMode::Opaque:
+            glDisable(GL_BLEND);
+            break;
+          case libvrm::gltf::BlendMode::Mask:
+            glDisable(GL_BLEND);
+            break;
+          case libvrm::gltf::BlendMode::Blend:
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            // glBlendFunc(GL_ONE, GL_ZERO);
+            break;
+        }
+
+        texture->Bind(0);
+      }
+
+      vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
+      drawOffset += primitive.DrawCount * 4;
+    }
   }
 
   void CreateDock(const AddDockFunc& addDock, std::string_view title)

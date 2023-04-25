@@ -11,8 +11,8 @@ namespace libvrm::gltf {
 struct Material;
 struct Primitive
 {
-  uint32_t drawCount;
-  std::shared_ptr<Material> material;
+  uint32_t DrawCount;
+  std::shared_ptr<Material> Material;
 };
 
 struct MorphVertex
@@ -125,8 +125,8 @@ struct Mesh
     }
 
     m_primitives.push_back({
-      .drawCount = static_cast<uint32_t>(values.size()),
-      .material = material,
+      .DrawCount = static_cast<uint32_t>(values.size()),
+      .Material = material,
     });
   }
 

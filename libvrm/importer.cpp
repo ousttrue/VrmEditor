@@ -76,6 +76,12 @@ ParseMaterial(const std::shared_ptr<Scene>& scene,
   ss << "material" << i;
   auto ptr = std::make_shared<gltf::Material>(material.value("name", ss.str()));
 
+  if (has(material, "alphaMode")) {
+    std::string_view alphaMode = material.at("alphaMode");
+    if (alphaMode == "BLEND") {
+      ptr->AlphaBlend = BlendMode::Blend;
+    }
+  }
   if (has(material, "pbrMetallicRoughness")) {
     auto pbrMetallicRoughness = material.at("pbrMetallicRoughness");
     if (has(pbrMetallicRoughness, "baseColorTexture")) {

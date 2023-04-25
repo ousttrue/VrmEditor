@@ -11,6 +11,22 @@ SceneGui::SceneGui(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 {
 }
 
+// [gltf]
+// textures
+// materials
+// meshes
+// nodes/node-hierarchy/select
+// animations
+//
+// [vrm]
+// meta
+// humanoid
+// expression
+// lookat
+// firstperson
+// spring
+// constraint
+//
 void
 SceneGui::Show(const char* title, bool* p_open)
 {
