@@ -12,46 +12,40 @@
 
 namespace glr {
 RenderTarget::RenderTarget(const std::shared_ptr<grapho::OrbitView>& view)
-  : view(view)
+  : View(view)
 {
-  DirectX::XMFLOAT4 plane = { 0, 1, 0, 0 };
-  DirectX::XMStoreFloat4x4(
-    &Env.ShadowMatrix,
-    DirectX::XMMatrixShadow(
-      DirectX::XMLoadFloat4(&plane),
-      DirectX::XMLoadFloat4(&Env.LightPosition)));
 }
 
 uint32_t
-RenderTarget::clear(int width, int height)
+RenderTarget::Clear(int width, int height, const float color[4])
 {
   if (width == 0 || height == 0) {
     return 0;
   }
 
-  if (fbo) {
-    if (fbo->texture->width_ != width || fbo->texture->height_ != height) {
-      fbo = nullptr;
+  if (Fbo) {
+    if (Fbo->texture->width_ != width || Fbo->texture->height_ != height) {
+      Fbo = nullptr;
     }
   }
-  if (!fbo) {
-    fbo = grapho::gl3::Fbo::Create(width, height);
+  if (!Fbo) {
+    Fbo = grapho::gl3::Fbo::Create(width, height);
   }
 
-  fbo->Clear(color, 1.0f);
+  Fbo->Clear(color, 1.0f);
 
-  return fbo->texture->texture_;
+  return Fbo->texture->texture_;
 }
 
 void
-RenderTarget::show_fbo(float x, float y, float w, float h)
+RenderTarget::ShowFbo(float x, float y, float w, float h, const float color[4])
 {
   ImGuizmo::SetDrawlist();
   ImGuizmo::SetRect(x, y, w, h);
 
   assert(w);
   assert(h);
-  auto texture = clear(int(w), int(h));
+  auto texture = Clear(int(w), int(h), color);
   if (texture) {
     // image button. capture mouse event
     ImGui::ImageButton((ImTextureID)(intptr_t)texture,
@@ -70,24 +64,24 @@ RenderTarget::show_fbo(float x, float y, float w, float h)
 
     // update camera
     auto& io = ImGui::GetIO();
-    Env.Resize((int)w, (int)h);
-    view->SetSize((int)w, (int)h);
+    View->SetSize((int)w, (int)h);
     if (ImGui::IsItemActive()) {
       if (io.MouseDown[ImGuiMouseButton_Right]) {
-        view->YawPitch((int)io.MouseDelta.x, (int)io.MouseDelta.y);
+        View->YawPitch((int)io.MouseDelta.x, (int)io.MouseDelta.y);
       }
       if (io.MouseDown[ImGuiMouseButton_Middle]) {
-        view->Shift((int)io.MouseDelta.x, (int)io.MouseDelta.y);
+        View->Shift((int)io.MouseDelta.x, (int)io.MouseDelta.y);
       }
     }
     if (ImGui::IsItemHovered()) {
-      view->Dolly((int)io.MouseWheel);
+      View->Dolly((int)io.MouseWheel);
     }
-    view->Update(Env.ProjectionMatrix, Env.ViewMatrix);
     if (render) {
-      render(Env);
+      render(*View);
     }
   }
-  fbo->Unbind();
+  Fbo->Unbind();
 }
 }
+
+

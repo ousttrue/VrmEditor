@@ -1,5 +1,4 @@
 #pragma once
-#include "rendering_env.h"
 #include <functional>
 #include <memory>
 
@@ -11,16 +10,19 @@ struct Fbo;
 }
 
 namespace glr {
+using RenderFunc = std::function<void(const grapho::OrbitView& view)>;
+
 struct RenderTarget
 {
-  RenderingEnv Env = {};
-  std::shared_ptr<grapho::OrbitView> view;
-  std::shared_ptr<grapho::gl3::Fbo> fbo;
-  float color[4];
-  std::function<void(const RenderingEnv& camera)> render;
+  std::shared_ptr<grapho::OrbitView> View;
+  std::shared_ptr<grapho::gl3::Fbo> Fbo;
+  RenderFunc render;
 
   RenderTarget(const std::shared_ptr<grapho::OrbitView>& view);
-  uint32_t clear(int width, int height);
-  void show_fbo(float x, float y, float w, float h);
+  void ShowFbo(float x, float y, float w, float h, const float color[4]);
+
+private:
+  uint32_t Clear(int width, int height, const float color[4]);
 };
+
 }

@@ -42,8 +42,15 @@ void
 UdpNode::DrawContent()
 {
   ImGui::Checkbox("init pose", &m_initialPose);
+  static float color[] = {
+    0.2f,
+    0.2f,
+    0.2f,
+    1.0f,
+  };
   auto sc = ImGui::GetCursorScreenPos();
-  m_preview->ShowScreenRect(m_scene->m_title.c_str(), sc.x, sc.y, 300, 300);
+  m_preview->ShowScreenRect(
+    m_scene->m_title.c_str(), color, sc.x, sc.y, 300, 300);
 }
 
 }

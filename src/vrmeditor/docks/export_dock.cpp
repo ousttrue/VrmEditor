@@ -17,15 +17,19 @@ ExportDock::Create(const AddDockFunc& addDock,
 {
   auto debug_scene = std::make_shared<libvrm::gltf::Scene>();
   auto impl = std::make_shared<JsonGui>(debug_scene);
-  auto view = std::make_shared<grapho::OrbitView>();
-  auto context = std::make_shared<libvrm::gltf::SceneContext>();
 
-  auto preview =
-    std::make_shared<glr::ScenePreview>(debug_scene, view, context);
+  auto preview = std::make_shared<glr::ScenePreview>(debug_scene);
 
   addDock(Dock(title, [scene, debug_scene, impl, indent, preview]() {
     auto pos = ImGui::GetCursorScreenPos();
-    preview->ShowScreenRect("debug", pos.x, pos.y, 300, 300);
+
+    static float color[] = {
+      0.4f,
+      0.2f,
+      0.2f,
+      1.0f,
+    };
+    preview->ShowScreenRect("debug", color, pos.x, pos.y, 300, 300);
 
     if (ImGui::Button("export scene")) {
       libvrm::gltf::Exporter exporter;

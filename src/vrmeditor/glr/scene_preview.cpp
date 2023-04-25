@@ -3,6 +3,7 @@
 #include "gl3renderer.h"
 #include "line_gizmo.h"
 #include "overlay.h"
+#include "rendering_env.h"
 #include "rendertarget.h"
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
@@ -10,53 +11,79 @@
 #include <vrm/gizmo.h>
 
 namespace glr {
+
+void
+ViewSettings::Popup(const std::string& name)
+{
+  if (ImGui::BeginPopupContextItem(name.c_str())) {
+    ImGui::Checkbox("mesh", &ShowMesh);
+    ImGui::Checkbox("shadow", &ShowShadow);
+    ImGui::Checkbox("line", &ShowLine);
+    ImGui::Checkbox("bone", &ShowCuber);
+    ImGui::EndPopup();
+  }
+}
+
 ScenePreview::ScenePreview(
   const std::shared_ptr<libvrm::gltf::Scene>& scene,
+  const std::shared_ptr<libvrm::gltf::SceneContext>& selection,
   const std::shared_ptr<grapho::OrbitView>& view,
-  const std::shared_ptr<libvrm::gltf::SceneContext>& context)
+  const std::shared_ptr<ViewSettings>& settings)
   : m_rt(std::make_shared<RenderTarget>(view))
   , m_cuber(std::make_shared<Cuber>())
 {
-  m_rt->color[0] = 0.2f;
-  m_rt->color[1] = 0.2f;
-  m_rt->color[2] = 0.2f;
-  m_rt->color[3] = 1.0f;
+
+  auto env = std::make_shared<RenderingEnv>();
+  DirectX::XMFLOAT4 plane = { 0, 1, 0, 0 };
+  DirectX::XMStoreFloat4x4(
+    &env->ShadowMatrix,
+    DirectX::XMMatrixShadow(DirectX::XMLoadFloat4(&plane),
+                            DirectX::XMLoadFloat4(&env->LightPosition)));
+
+  m_popup = std::bind(&ViewSettings::Popup, settings.get(), m_popupName);
 
   m_rt->render =
-    [this, scene, selection = context, gizmo = std::make_shared<LineGizmo>()](
-      const RenderingEnv& env) {
-      glr::ClearRendertarget(env);
+    [scene,
+     selection,
+     settings,
+     env,
+     cuber = m_cuber,
+     gizmo = std::make_shared<LineGizmo>()](const grapho::OrbitView& view) {
+      view.Update(env->ProjectionMatrix, env->ViewMatrix);
+      env->Resize(view.width_, view.height_);
+
+      glr::ClearRendertarget(*env);
 
       libvrm::gltf::RenderFunc render =
-        [this, &env](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-                     const libvrm::gltf::MeshInstance& meshInstance,
-                     const float m[16]) {
-          if (m_showMesh) {
-            glr::Render(RenderPass::Color, env, mesh, meshInstance, m);
+        [env, settings](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+                        const libvrm::gltf::MeshInstance& meshInstance,
+                        const float m[16]) {
+          if (settings->ShowMesh) {
+            glr::Render(RenderPass::Color, *env, mesh, meshInstance, m);
           }
-          if (m_showShadow) {
-            glr::Render(RenderPass::ShadowMatrix, env, mesh, meshInstance, m);
+          if (settings->ShowShadow) {
+            glr::Render(RenderPass::ShadowMatrix, *env, mesh, meshInstance, m);
           }
         };
 
       scene->Render(render, gizmo.get());
-      if (m_showLine) {
-        glr::RenderLine(env, gizmo->m_lines);
+      if (settings->ShowLine) {
+        glr::RenderLine(*env, gizmo->m_lines);
       }
       gizmo->Clear();
 
-      if (m_showCuber) {
-        m_cuber->Instances.clear();
+      if (settings->ShowCuber) {
+        cuber->Instances.clear();
         static_assert(sizeof(cuber::Instance) == sizeof(libvrm::gltf::Instance),
                       "Instance size");
         for (auto& root : scene->m_roots) {
           root->UpdateShapeInstanceRecursive(
             DirectX::XMMatrixIdentity(),
-            [cuber = m_cuber](const libvrm::gltf::Instance& instance) {
+            [cuber](const libvrm::gltf::Instance& instance) {
               cuber->Instances.push_back(*((const cuber::Instance*)&instance));
             });
         }
-        m_cuber->Render(env);
+        cuber->Render(*env);
       }
 
       // gizmo
@@ -65,8 +92,8 @@ ScenePreview::ScenePreview(
         DirectX::XMFLOAT4X4 m;
         DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
         ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-        if (ImGuizmo::Manipulate(env.ViewMatrix,
-                                 env.ProjectionMatrix,
+        if (ImGuizmo::Manipulate(env->ViewMatrix,
+                                 env->ProjectionMatrix,
                                  ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
                                  ImGuizmo::LOCAL,
                                  (float*)&m,
@@ -80,38 +107,29 @@ ScenePreview::ScenePreview(
         ImGuizmo::GetContext().mAllowActiveHoverItem = false;
       }
     };
-
-  m_popup = [this]() {
-    if (ImGui::BeginPopupContextItem(m_popupName.c_str())) {
-      ImGui::Checkbox("mesh", &m_showMesh);
-      ImGui::Checkbox("shadow", &m_showShadow);
-      ImGui::Checkbox("line", &m_showLine);
-      ImGui::Checkbox("bone", &m_showCuber);
-      ImGui::EndPopup();
-    }
-  };
 }
 
 void
 ScenePreview::ShowScreenRect(const char* title,
+                             const float color[4],
                              float x,
                              float y,
                              float w,
                              float h)
 {
   auto sc = ImGui::GetCursorScreenPos();
-  m_rt->show_fbo(x, y, w, h);
+  m_rt->ShowFbo(x, y, w, h, color);
   // top, right pivot
   Overlay({ sc.x + w - 10, sc.y + 10 }, title, m_popupName.c_str(), m_popup);
 }
 
 void
-ScenePreview::ShowFullWindow(const char* title)
+ScenePreview::ShowFullWindow(const char* title, const float color[4])
 {
   auto pos = ImGui::GetWindowPos();
   pos.y += ImGui::GetFrameHeight();
   auto size = ImGui::GetContentRegionAvail();
-  ShowScreenRect(title, pos.x, pos.y, size.x, size.y);
+  ShowScreenRect(title, color, pos.x, pos.y, size.x, size.y);
 }
 
 }

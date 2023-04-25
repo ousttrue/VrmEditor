@@ -53,7 +53,16 @@ BvhNode::DrawContent()
 {
   ImGui::Checkbox("init pose", &m_initialPose);
   auto sc = ImGui::GetCursorScreenPos();
-  m_preview->ShowScreenRect(m_scene->m_title.c_str(), sc.x, sc.y, 300, 300);
+
+  static float color[] = {
+    0.2f,
+    0.2f,
+    0.2f,
+    1.0f,
+  };
+
+  m_preview->ShowScreenRect(
+    m_scene->m_title.c_str(), color, sc.x, sc.y, 300, 300);
 }
 
 }
