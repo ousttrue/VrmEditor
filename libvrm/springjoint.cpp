@@ -6,10 +6,12 @@ namespace vrm {
 SpringJoint::SpringJoint(const std::shared_ptr<gltf::Node>& head,
                          const DirectX::XMFLOAT3& localTailPosition,
                          float dragForce,
-                         float stiffiness)
+                         float stiffiness,
+                         float radius)
   : Head(head)
   , DragForce(dragForce)
   , Stiffiness(stiffiness)
+  , Radius(radius)
 {
   auto world =
     head->WorldTransformPoint(DirectX::XMLoadFloat3(&localTailPosition));
@@ -35,11 +37,11 @@ SpringJoint::DrawGizmo(IGizmoDrawer* gizmo)
   // gizmo->drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
 
   // gizmo->drawSphere(lastHead, {1, 1, 1, 1});
-  gizmo->DrawSphere(Head->WorldTransform.Translation, { 0, 1, 0, 1 });
+  gizmo->DrawSphere(Head->WorldTransform.Translation, Radius, { 0, 1, 0, 1 });
   // gizmo->drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
 
   // gizmo->drawSphere(currentTail, {1, 1, 1, 1});
-  gizmo->DrawSphere(m_currentTailPosotion, { 1, 0, 1, 1 });
+  gizmo->DrawSphere(m_currentTailPosotion, Radius, { 1, 0, 1, 1 });
   // gizmo->drawLine(currentTail, nextTail, {0, 1, 0, 1});
 
   gizmo->DrawLine(
@@ -47,6 +49,7 @@ SpringJoint::DrawGizmo(IGizmoDrawer* gizmo)
 
   if (Head->Children.size()) {
     gizmo->DrawSphere(Head->Children.front()->WorldTransform.Translation,
+                      Radius,
                       { 1, 0, 0, 1 });
     gizmo->DrawLine(Head->WorldTransform.Translation,
                     Head->Children.front()->WorldTransform.Translation,

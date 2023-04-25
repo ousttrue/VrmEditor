@@ -16,6 +16,7 @@ public:
   // 剛性。初期姿勢への復元力[0~]
   // 増えれば増えるほど比率が高まる。
   float Stiffiness = 0;
+  float Radius = 0;
 
 private:
   DirectX::XMFLOAT3 m_currentTailPosotion;
@@ -27,7 +28,8 @@ public:
   SpringJoint(const std::shared_ptr<gltf::Node>& head,
               const DirectX::XMFLOAT3& localTailPosition,
               float dragForce,
-              float stiffiness);
+              float stiffiness,
+              float radius);
   void Update(Time time);
 
   DirectX::XMVECTOR WorldPosToLocalRotation(

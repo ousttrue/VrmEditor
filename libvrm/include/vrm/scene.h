@@ -224,6 +224,8 @@ struct Scene
     }
     RaiseSceneUpdated();
   }
+
+  void DrawGizmo(IGizmoDrawer* gizmo);
 };
 
 struct SceneContext

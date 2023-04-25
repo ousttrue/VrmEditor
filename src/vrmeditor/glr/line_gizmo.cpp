@@ -25,11 +25,10 @@ LineGizmo::DrawLine(const DirectX::XMFLOAT3& p0,
 }
 
 void
-LineGizmo::DrawSphere(const DirectX::XMFLOAT3& pos, const grapho::RGBA& color)
+LineGizmo::DrawSphere(const DirectX::XMFLOAT3& pos,
+                      float r,
+                      const grapho::RGBA& color)
 {
-
-  float r = 0.01f;
-
   static DirectX::XMFLOAT3 points[]{
     { r, 0, 0 }, { 0, 0, -r }, { -r, 0, 0 },
     { 0, 0, r }, { 0, r, 0 },  { 0, -r, 0 },

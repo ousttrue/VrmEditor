@@ -13,6 +13,7 @@ struct IGizmoDrawer
                         const DirectX::XMFLOAT3& p1,
                         const grapho::RGBA& color) = 0;
   virtual void DrawSphere(const DirectX::XMFLOAT3& pos,
+                          float radius,
                           const grapho::RGBA& color) = 0;
 };
 

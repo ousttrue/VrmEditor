@@ -20,6 +20,7 @@ struct LineGizmo : public libvrm::IGizmoDrawer
                 const DirectX::XMFLOAT3& p1,
                 const grapho::RGBA& color) override;
   void DrawSphere(const DirectX::XMFLOAT3& pos,
+                  float radius,
                   const grapho::RGBA& color) override;
 };
 

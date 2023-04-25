@@ -120,6 +120,9 @@ Scene::Render(const RenderFunc& render, IGizmoDrawer* gizmo)
   for (auto& spring : m_springSolvers) {
     spring->DrawGizmo(gizmo);
   }
+  for (auto& collider : m_springColliders) {
+    collider->DrawGizmo(gizmo);
+  }
 }
 
 void

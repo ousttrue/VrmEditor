@@ -1,4 +1,6 @@
 #pragma once
+#include "gizmo.h"
+#include "node.h"
 #include <DirectXMath.h>
 #include <memory>
 #include <optional>
@@ -25,6 +27,14 @@ struct SpringCollider
   DirectX::XMFLOAT3 Offset = { 0, 0, 0 };
   float Radius = 0;
   DirectX::XMFLOAT3 Tail = { 0, 0, 0 };
+
+  void DrawGizmo(IGizmoDrawer* gizmo)
+  {
+    if (auto node = Node.lock()) {
+      gizmo->DrawSphere(
+        node->WorldTransform.Translation, Radius, { 0, 1, 1, 1 });
+    }
+  }
 };
 // inline void
 // from_json(const nlohmann::json& j, ColliderItem& collider)

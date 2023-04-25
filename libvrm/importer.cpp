@@ -560,11 +560,13 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
       auto& colliderGroups = secondaryAnimation.at("colliderGroups");
       for (auto& colliderGroup : colliderGroups) {
         auto group = std::make_shared<vrm::SpringColliderGroup>();
+        uint32_t node_index = colliderGroup.at("node");
+        auto colliderNode = scene->m_nodes[node_index];
         if (has(colliderGroup, "colliders")) {
-          uint32_t node_index = colliderGroup.at("node");
-          auto colliderNode = scene->m_nodes[node_index];
-          for (auto& colliders : colliderGroup.at("colliders")) {
+          for (auto& collider : colliderGroup.at("colliders")) {
             auto item = std::make_shared<vrm::SpringCollider>();
+            auto radius = collider.value("radius", 0.0f);
+            item->Radius = radius;
             item->Node = colliderNode;
             scene->m_springColliders.push_back(item);
             group->Colliders.push_back(item);
@@ -578,9 +580,11 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
       for (auto& boneGroup : boneGroups) {
         float stiffness = boneGroup.at("stiffiness");
         float dragForce = boneGroup.at("dragForce");
+        float radius = boneGroup.at("hitRadius");
         for (auto& bone : boneGroup.at("bones")) {
           auto spring = std::make_shared<vrm::SpringSolver>();
-          spring->AddRecursive(scene->m_nodes[bone], dragForce, stiffness);
+          spring->AddRecursive(
+            scene->m_nodes[bone], dragForce, stiffness, radius);
           scene->m_springSolvers.push_back(spring);
         }
       }
@@ -633,8 +637,9 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
           if (head) {
             float stiffness = joint.at("stiffness");
             float dragForce = joint.at("dragForce");
+            float radius = joint.at("hitRadius");
             solver->Add(
-              head, tail->Transform.Translation, stiffness, dragForce);
+              head, tail->Transform.Translation, stiffness, dragForce, radius);
           }
           head = tail;
         }
