@@ -84,6 +84,7 @@ JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
       JsonGuiVrm0SpringList,
     },
     { "/extensions/VRMC_springBone/springs/*/joints", JsonGuiVrm1SpringJoints },
+    { "/extensions/VRMC_springBone/colliders", JsonGuiVrm1SpringColliders },
     //
   })
   //
