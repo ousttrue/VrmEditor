@@ -1,13 +1,7 @@
 #include "json_gui.h"
 #include "json_gui_table.h"
 #include <imgui.h>
-
-inline std::ostream&
-operator<<(std::ostream& os, const DirectX::XMFLOAT3& v)
-{
-  os << "{" << v.x << ", " << v.y << ", " << v.z << "}";
-  return os;
-}
+#include <vrm/dmath.h>
 
 inline ShowGui
 JsonGuiVrm1SpringColliders(const std::shared_ptr<libvrm::gltf::Scene>& scene,

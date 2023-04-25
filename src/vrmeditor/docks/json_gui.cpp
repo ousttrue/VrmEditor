@@ -79,10 +79,9 @@ JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
     { "/skins", JsonGuiSkinList },
     { "/skins/*/inverseBindMatrices", JsonGuiAccessor },
     { "/nodes", JsonGuiNodeList },
-    {
-      "/extensions/VRM/secondaryAnimation/boneGroups",
-      JsonGuiVrm0SpringList,
-    },
+    { "/extensions/VRM/secondaryAnimation/colliderGroups/*/colliders",
+      JsonGuiVrm0ColliderList },
+    { "/extensions/VRM/secondaryAnimation/boneGroups", JsonGuiVrm0SpringList },
     { "/extensions/VRMC_springBone/springs/*/joints", JsonGuiVrm1SpringJoints },
     { "/extensions/VRMC_springBone/colliders", JsonGuiVrm1SpringColliders },
     //

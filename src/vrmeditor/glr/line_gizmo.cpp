@@ -29,7 +29,7 @@ LineGizmo::DrawSphere(const DirectX::XMFLOAT3& pos,
                       float r,
                       const grapho::RGBA& color)
 {
-  static DirectX::XMFLOAT3 points[]{
+  DirectX::XMFLOAT3 points[]{
     { r, 0, 0 }, { 0, 0, -r }, { -r, 0, 0 },
     { 0, 0, r }, { 0, r, 0 },  { 0, -r, 0 },
   };

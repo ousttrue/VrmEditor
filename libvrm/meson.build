@@ -24,6 +24,7 @@ libvrm_lib = static_library(
         'srht_sender.cpp',
         'importer.cpp',
         'springjoint.cpp',
+        'springcollider.cpp',
     ],
     include_directories: libvrm_inc,
     dependencies: libvrm_deps,

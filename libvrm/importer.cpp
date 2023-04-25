@@ -565,8 +565,13 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
         if (has(colliderGroup, "colliders")) {
           for (auto& collider : colliderGroup.at("colliders")) {
             auto item = std::make_shared<vrm::SpringCollider>();
-            auto radius = collider.value("radius", 0.0f);
-            item->Radius = radius;
+            auto& offset = collider.at("offset");
+            float x = offset.at("x");
+            float y = offset.at("y");
+            float z = offset.at("z");
+            // vrm0: springbone collider offset is UnityCoordinate(LeftHanded)
+            item->Offset = { x, y, -z };
+            item->Radius = collider.at("radius");
             item->Node = colliderNode;
             scene->m_springColliders.push_back(item);
             group->Colliders.push_back(item);
@@ -650,9 +655,21 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
       auto& colliders = VRMC_springBone.at("colliders");
       for (auto& collider : colliders) {
         auto ptr = std::make_shared<vrm::SpringCollider>();
-        ptr->Radius = collider.value("radius", 0.0f);
         uint32_t node_index = collider.at("node");
         ptr->Node = scene->m_nodes[node_index];
+        auto& shape = collider.at("shape");
+        if (has(shape, "sphere")) {
+          auto& sphere = shape.at("sphere");
+          ptr->Radius = sphere.value("radius", 0.0f);
+          ptr->Offset = sphere.value("offset", DirectX::XMFLOAT3{ 0, 0, 0 });
+        } else if (has(shape, "capsule")) {
+          auto& capsule = shape.at("capsule");
+          ptr->Radius = capsule.value("radius", 0.0f);
+          ptr->Offset = capsule.value("offset", DirectX::XMFLOAT3{ 0, 0, 0 });
+          ptr->Tail = capsule.value("tail", DirectX::XMFLOAT3{ 0, 0, 0 });
+        } else {
+          assert(false);
+        }
         scene->m_springColliders.push_back(ptr);
       }
     }

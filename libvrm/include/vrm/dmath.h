@@ -1,6 +1,14 @@
 #pragma once
 #include <DirectXMath.h>
-#include <math.h>
+#include <ostream>
+#include <vrm/dmath.h>
+
+inline std::ostream&
+operator<<(std::ostream& os, const DirectX::XMFLOAT3& v)
+{
+  os << "{" << v.x << ", " << v.y << ", " << v.z << "}";
+  return os;
+}
 
 namespace dmath {
 
