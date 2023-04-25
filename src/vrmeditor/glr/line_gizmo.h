@@ -22,6 +22,19 @@ struct LineGizmo : public libvrm::IGizmoDrawer
   void DrawSphere(const DirectX::XMFLOAT3& pos,
                   float radius,
                   const grapho::RGBA& color) override;
+
+  void CircleXY(const DirectX::XMMATRIX& pos,
+                float r,
+                const grapho::RGBA& color,
+                int division = 16);
+  void CircleYZ(const DirectX::XMMATRIX& pos,
+                float r,
+                const grapho::RGBA& color,
+                int division = 16);
+  void CircleZX(const DirectX::XMMATRIX& pos,
+                float r,
+                const grapho::RGBA& color,
+                int division = 16);
 };
 
 }
