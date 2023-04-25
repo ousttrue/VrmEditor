@@ -6,6 +6,20 @@
 
 namespace libvrm::vrm {
 
+SpringSolver::SpringSolver()
+  : Collision(new SpringCollision)
+{
+}
+
+void
+SpringSolver::AddColliderGroup(
+  const std::shared_ptr<SpringColliderGroup>& colliderGroup)
+{
+  for (auto& collider : colliderGroup->Colliders) {
+    Collision->Colliders.push_back(collider);
+  }
+}
+
 void
 SpringSolver::Add(const std::shared_ptr<gltf::Node>& head,
                   const DirectX::XMFLOAT3& tail,
@@ -58,7 +72,8 @@ SpringSolver::Update(Time delta)
   }
 
   for (auto& joint : Joints) {
-    joint.Update(delta);
+    Collision->Clear();
+    joint.Update(delta, Collision.get());
   }
 }
 

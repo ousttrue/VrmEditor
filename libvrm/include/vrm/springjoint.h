@@ -30,7 +30,8 @@ public:
               float dragForce,
               float stiffiness,
               float radius);
-  void Update(Time time);
+  void Update(Time time, struct SpringCollision* collision);
+  DirectX::XMVECTOR ConstraintTailPosition(const DirectX::XMVECTOR& src);
 
   DirectX::XMVECTOR WorldPosToLocalRotation(
     const DirectX::XMVECTOR& nextTail) const;

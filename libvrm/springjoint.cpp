@@ -1,4 +1,5 @@
 #include "vrm/springjoint.h"
+#include "vrm/springcollider.h"
 
 namespace libvrm {
 namespace vrm {
@@ -37,8 +38,8 @@ SpringJoint::DrawGizmo(IGizmoDrawer* gizmo)
   // gizmo->drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
 
   // gizmo->drawSphere(lastHead, {1, 1, 1, 1});
-  // gizmo->DrawSphere(Head->WorldTransform.Translation, Radius, { 0, 1, 0, 1 });
-  // gizmo->drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
+  // gizmo->DrawSphere(Head->WorldTransform.Translation, Radius, { 0, 1, 0, 1
+  // }); gizmo->drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
 
   // gizmo->drawSphere(currentTail, {1, 1, 1, 1});
   gizmo->DrawSphere(m_currentTailPosotion, Radius, { 1, 0, 1, 1 });
@@ -58,7 +59,7 @@ SpringJoint::DrawGizmo(IGizmoDrawer* gizmo)
 }
 
 void
-SpringJoint::Update(Time time)
+SpringJoint::Update(Time time, SpringCollision* collision)
 {
   auto currentTail = DirectX::XMLoadFloat3(&m_currentTailPosotion);
 
@@ -81,20 +82,23 @@ SpringJoint::Update(Time time)
     // 外力による移動量
     // + external;
     ;
-
   assert(!std::isnan(DirectX::XMVectorGetX(nextTail)));
 
-  auto position = DirectX::XMLoadFloat3(&Head->WorldTransform.Translation);
-  auto nextTailDir =
-    DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(nextTail, position));
-  nextTail = DirectX::XMVectorAdd(
-    position, DirectX::XMVectorScale(nextTailDir, m_tailLength));
+  nextTail = ConstraintTailPosition(nextTail);
 
-  assert(!std::isnan(DirectX::XMVectorGetX(nextTail)));
+  // collision
+  while (auto position = collision->Collide(nextTail, Radius)) {
+    nextTail = ConstraintTailPosition(*position);
+  }
 
   // update
   DirectX::XMStoreFloat3(&m_currentTailPosotion, nextTail);
   DirectX::XMStoreFloat3(&m_lastTailPosotion, currentTail);
+
+  auto position = DirectX::XMLoadFloat3(&Head->WorldTransform.Translation);
+  auto nextTailDir =
+    DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(nextTail, position));
+
   auto newRotation = WorldPosToLocalRotation(nextTailDir);
   assert(!std::isnan(DirectX::XMVectorGetX(newRotation)));
   // DirectX::XMStoreFloat4(&Head->Transform.Rotation, newLocalRotation);
@@ -104,6 +108,18 @@ SpringJoint::Update(Time time)
     // ひとつ下まで
     child->CalcWorldMatrix(false);
   }
+}
+
+DirectX::XMVECTOR
+SpringJoint::ConstraintTailPosition(const DirectX::XMVECTOR& tail)
+{
+  auto position = DirectX::XMLoadFloat3(&Head->WorldTransform.Translation);
+  auto nextTailDir =
+    DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(tail, position));
+  auto nextTail = DirectX::XMVectorAdd(
+    position, DirectX::XMVectorScale(nextTailDir, m_tailLength));
+  assert(!std::isnan(DirectX::XMVectorGetX(nextTail)));
+  return nextTail;
 }
 
 DirectX::XMVECTOR

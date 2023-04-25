@@ -28,6 +28,7 @@ struct SpringCollider
   float Radius = 0;
   DirectX::XMFLOAT3 Tail = { 0, 0, 0 };
   void DrawGizmo(IGizmoDrawer* gizmo);
+  DirectX::XMVECTOR Position() const;
 };
 // inline void
 // from_json(const nlohmann::json& j, ColliderItem& collider)
@@ -73,6 +74,15 @@ struct SpringColliderGroup
 //   os << ">";
 //   return os;
 // }
+
+struct SpringCollision
+{
+  std::vector<std::shared_ptr<SpringCollider>> Colliders;
+  int Current = 0;
+  void Clear() { Current = 0; }
+  std::optional<DirectX::XMVECTOR> Collide(const DirectX::XMVECTOR& pos,
+                                           float radius);
+};
 
 }
 }

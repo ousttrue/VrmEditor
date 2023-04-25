@@ -586,11 +586,22 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
         float stiffness = boneGroup.at("stiffiness");
         float dragForce = boneGroup.at("dragForce");
         float radius = boneGroup.at("hitRadius");
+        std::vector<std::shared_ptr<vrm::SpringColliderGroup>> colliderGroups;
+        if (has(boneGroup, "colliderGroups")) {
+          for (uint32_t colliderGroup_index : boneGroup.at("colliderGroups")) {
+            auto colliderGroup =
+              scene->m_springColliderGroups[colliderGroup_index];
+            colliderGroups.push_back(colliderGroup);
+          }
+        }
         for (auto& bone : boneGroup.at("bones")) {
           auto spring = std::make_shared<vrm::SpringSolver>();
           spring->AddRecursive(
             scene->m_nodes[bone], dragForce, stiffness, radius);
           scene->m_springSolvers.push_back(spring);
+          for (auto& g : colliderGroups) {
+            spring->AddColliderGroup(g);
+          }
         }
       }
     }

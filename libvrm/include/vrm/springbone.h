@@ -12,8 +12,11 @@ struct SpringSolver
   std::string Comment;
 
   std::vector<SpringJoint> Joints;
-  std::vector<std::shared_ptr<SpringColliderGroup>> ColliderGroups;
+  std::shared_ptr<SpringCollision> Collision;
 
+  SpringSolver();
+  void AddColliderGroup(
+    const std::shared_ptr<SpringColliderGroup>& colliderGroup);
   void Add(const std::shared_ptr<gltf::Node>& head,
            const DirectX::XMFLOAT3& tail,
            float dragForce,
