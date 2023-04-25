@@ -103,7 +103,13 @@ public:
       }
     }
     // collider
-    if (scene.m_colliderGroups.size()) {
+    for (auto& collider : scene.m_springColliders) {
+      if (auto colliderNode = collider->Node.lock()) {
+        if (colliderNode == node) {
+          ss << "󱥔 ";
+          break;
+        }
+      }
     }
 
     ss << node->Name;

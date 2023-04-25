@@ -559,9 +559,18 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
     if (has(secondaryAnimation, "colliderGroups")) {
       auto& colliderGroups = secondaryAnimation.at("colliderGroups");
       for (auto& colliderGroup : colliderGroups) {
-        auto group = std::make_shared<vrm::ColliderGroup>();
-        // *group = colliderGroup;
-        scene->m_colliderGroups.push_back(group);
+        auto group = std::make_shared<vrm::SpringColliderGroup>();
+        if (has(colliderGroup, "colliders")) {
+          uint32_t node_index = colliderGroup.at("node");
+          auto colliderNode = scene->m_nodes[node_index];
+          for (auto& colliders : colliderGroup.at("colliders")) {
+            auto item = std::make_shared<vrm::SpringCollider>();
+            item->Node = colliderNode;
+            scene->m_springColliders.push_back(item);
+            group->Colliders.push_back(item);
+          }
+        }
+        scene->m_springColliderGroups.push_back(group);
       }
     }
     if (has(secondaryAnimation, "boneGroups")) {
@@ -612,22 +621,45 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
   }
 
   if (has(extensions, "VRMC_springBone")) {
-    auto& springBone = extensions.at("VRMC_springBone");
-    auto& springs = springBone.at("springs");
-    for (auto& spring : springs) {
-      auto solver = std::make_shared<vrm::SpringSolver>();
-      std::shared_ptr<Node> head;
-      for (auto& joint : spring.at("joints")) {
-        int node_index = joint.at("node");
-        auto tail = scene->m_nodes[node_index];
-        if (head) {
-          float stiffness = joint.at("stiffness");
-          float dragForce = joint.at("dragForce");
-          solver->Add(head, tail->Transform.Translation, stiffness, dragForce);
+    auto& VRMC_springBone = extensions.at("VRMC_springBone");
+    if (has(VRMC_springBone, "springs")) {
+      auto& springs = VRMC_springBone.at("springs");
+      for (auto& spring : springs) {
+        auto solver = std::make_shared<vrm::SpringSolver>();
+        std::shared_ptr<Node> head;
+        for (auto& joint : spring.at("joints")) {
+          int node_index = joint.at("node");
+          auto tail = scene->m_nodes[node_index];
+          if (head) {
+            float stiffness = joint.at("stiffness");
+            float dragForce = joint.at("dragForce");
+            solver->Add(
+              head, tail->Transform.Translation, stiffness, dragForce);
+          }
+          head = tail;
         }
-        head = tail;
+        scene->m_springSolvers.push_back(solver);
       }
-      scene->m_springSolvers.push_back(solver);
+    }
+    if (has(VRMC_springBone, "colliders")) {
+      auto& colliders = VRMC_springBone.at("colliders");
+      for (auto& collider : colliders) {
+        auto ptr = std::make_shared<vrm::SpringCollider>();
+        ptr->Radius = collider.value("radius", 0.0f);
+        uint32_t node_index = collider.at("node");
+        ptr->Node = scene->m_nodes[node_index];
+        scene->m_springColliders.push_back(ptr);
+      }
+    }
+    if (has(VRMC_springBone, "colliderGroups")) {
+      auto& colliderGroups = VRMC_springBone.at("colliderGroups");
+      for (auto& colliderGroup : colliderGroups) {
+        auto ptr = std::make_shared<vrm::SpringColliderGroup>();
+        for (uint32_t collider_index : colliderGroup.at("colliders")) {
+          ptr->Colliders.push_back(scene->m_springColliders[collider_index]);
+        }
+        scene->m_springColliderGroups.push_back(ptr);
+      }
     }
   }
 

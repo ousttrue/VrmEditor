@@ -95,7 +95,8 @@ struct Scene
 
   // spring
   Time m_nextSpringDelta = Time(0.0);
-  std::vector<std::shared_ptr<vrm::ColliderGroup>> m_colliderGroups;
+  std::vector<std::shared_ptr<vrm::SpringCollider>> m_springColliders;
+  std::vector<std::shared_ptr<vrm::SpringColliderGroup>> m_springColliderGroups;
   std::vector<std::shared_ptr<vrm::SpringSolver>> m_springSolvers;
 
   std::unordered_map<vrm::MorphTargetKey, float> m_morphTargetMap;
@@ -125,7 +126,8 @@ struct Scene
     m_skins.clear();
     m_animations.clear();
 
-    m_colliderGroups.clear();
+    m_springColliders.clear();
+    m_springColliderGroups.clear();
     m_springSolvers.clear();
 
     m_morphTargetMap.clear();

@@ -1,15 +1,30 @@
 #pragma once
 #include <DirectXMath.h>
+#include <memory>
+#include <optional>
 #include <stdint.h>
 #include <vector>
 
 namespace libvrm {
+namespace gltf {
+struct Node;
+}
+
 namespace vrm {
 
-struct ColliderItem
+enum class SpringColliderShapeType
 {
-  DirectX::XMFLOAT3 offset;
-  float radius = 0;
+  Sphere,
+  Capsule,
+};
+
+struct SpringCollider
+{
+  std::weak_ptr<gltf::Node> Node;
+  SpringColliderShapeType Type = SpringColliderShapeType::Sphere;
+  DirectX::XMFLOAT3 Offset = { 0, 0, 0 };
+  float Radius = 0;
+  DirectX::XMFLOAT3 Tail = { 0, 0, 0 };
 };
 // inline void
 // from_json(const nlohmann::json& j, ColliderItem& collider)
@@ -28,10 +43,9 @@ struct ColliderItem
 //   return os;
 // }
 
-struct ColliderGroup
+struct SpringColliderGroup
 {
-  uint32_t node = 0;
-  std::vector<ColliderItem> colliders;
+  std::vector<std::shared_ptr<SpringCollider>> Colliders;
 };
 // inline void
 // from_json(const nlohmann::json& j, ColliderGroup& colliderGroup)
