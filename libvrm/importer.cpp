@@ -570,7 +570,7 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
             float y = offset.at("y");
             float z = offset.at("z");
             // vrm0: springbone collider offset is UnityCoordinate(LeftHanded)
-            item->Offset = { x, y, -z };
+            item->Offset = { -x, y, z };
             item->Radius = collider.at("radius");
             item->Node = colliderNode;
             scene->m_springColliders.push_back(item);
