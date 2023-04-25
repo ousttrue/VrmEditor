@@ -11,6 +11,7 @@
 #include "docks/vrm_dock.h"
 #include "fs_util.h"
 #include "glr/gl3renderer.h"
+#include "glr/rendering_env.h"
 #include "humanpose/humanpose_stream.h"
 #include "luahost.h"
 #include "platform.h"
@@ -38,6 +39,9 @@ App::App()
 
   m_view = std::make_shared<grapho::OrbitView>();
   m_timeline = std::make_shared<libvrm::Timeline>();
+  m_env = std::make_shared<glr::RenderingEnv>();
+  m_settings = std::make_shared<glr::ViewSettings>();
+  m_settings->ShowCuber = false;
 
   m_platform = std::make_shared<Platform>();
   auto window = m_platform->CreateWindow(2000, 1200, false, WINDOW_TITLE);
@@ -85,7 +89,10 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
     HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
     auto selection =
       SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
-    ViewDock::Create(addDock, "scene-view", m_scene, m_view, selection);
+
+    ViewDock::Create(
+      addDock, "scene-view", m_scene, selection, m_env, m_view, m_settings);
+
     VrmDock::CreateVrm(addDock, "vrm", m_scene);
     VrmDock::CreateExpression(addDock, "expression", m_scene);
     ExportDock::Create(addDock, "export", m_scene, indent);
@@ -271,6 +278,7 @@ App::Run()
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
   glr::CreateDock(addDock, "OpenGL resource");
+  ViewDock::CreateSetting(addDock, "view-settings", m_env, m_view, m_settings);
 
   PoseStream->CreateDock(addDock);
 

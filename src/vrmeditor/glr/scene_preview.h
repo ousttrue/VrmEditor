@@ -1,5 +1,6 @@
 #pragma once
 #include "rendertarget.h"
+#include "rendering_env.h"
 #include <grapho/orbitview.h>
 #include <optional>
 #include <vrm/scene.h>
@@ -33,12 +34,14 @@ struct ScenePreview
 
   ScenePreview(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                const std::shared_ptr<libvrm::gltf::SceneContext>& selection,
+               const std::shared_ptr<RenderingEnv> &env,
                const std::shared_ptr<grapho::OrbitView>& view,
                const std::shared_ptr<ViewSettings>& settings);
 
   ScenePreview(const std::shared_ptr<libvrm::gltf::Scene>& scene)
     : ScenePreview(scene,
                    std::make_shared<libvrm::gltf::SceneContext>(),
+                   std::make_shared<RenderingEnv>(),
                    std::make_shared<grapho::OrbitView>(),
                    std::make_shared<ViewSettings>())
   {

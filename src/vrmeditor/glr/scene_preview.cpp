@@ -3,7 +3,6 @@
 #include "gl3renderer.h"
 #include "line_gizmo.h"
 #include "overlay.h"
-#include "rendering_env.h"
 #include "rendertarget.h"
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
@@ -27,13 +26,12 @@ ViewSettings::Popup(const std::string& name)
 ScenePreview::ScenePreview(
   const std::shared_ptr<libvrm::gltf::Scene>& scene,
   const std::shared_ptr<libvrm::gltf::SceneContext>& selection,
+  const std::shared_ptr<RenderingEnv>& env,
   const std::shared_ptr<grapho::OrbitView>& view,
   const std::shared_ptr<ViewSettings>& settings)
   : m_rt(std::make_shared<RenderTarget>(view))
   , m_cuber(std::make_shared<Cuber>())
 {
-
-  auto env = std::make_shared<RenderingEnv>();
   DirectX::XMFLOAT4 plane = { 0, 1, 0, 0 };
   DirectX::XMStoreFloat4x4(
     &env->ShadowMatrix,

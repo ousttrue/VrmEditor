@@ -23,6 +23,11 @@ namespace humanpose {
 struct HumanPoseStream;
 }
 
+namespace glr {
+struct ViewSettings;
+struct RenderingEnv;
+}
+
 class Gui;
 struct AssetDir;
 class LuaEngine;
@@ -39,10 +44,11 @@ class App
   std::list<std::shared_ptr<AssetDir>> m_assets;
   std::shared_ptr<ImLogger> m_logger;
 
-  // root timeline
   std::shared_ptr<libvrm::Timeline> m_timeline;
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::shared_ptr<grapho::OrbitView> m_view;
+  std::shared_ptr<glr::ViewSettings> m_settings;
+  std::shared_ptr<glr::RenderingEnv> m_env;
 
   App();
 
