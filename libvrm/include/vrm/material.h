@@ -29,7 +29,8 @@ struct Material
   }
   std::string Name;
   MaterialTypes Type = {};
-  BlendMode AlphaBlend = {};
+  BlendMode AlphaBlendMode = {};
+  float AlphaCutoff = 0.5f;
   std::shared_ptr<Texture> ColorTexture;
 };
 

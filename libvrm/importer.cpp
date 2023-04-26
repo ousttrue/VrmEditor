@@ -80,7 +80,12 @@ ParseMaterial(const std::shared_ptr<Scene>& scene,
   if (has(material, "alphaMode")) {
     std::string_view alphaMode = material.at("alphaMode");
     if (alphaMode == "BLEND") {
-      ptr->AlphaBlend = BlendMode::Blend;
+      ptr->AlphaBlendMode = BlendMode::Blend;
+    } else if (alphaMode == "MASK") {
+      ptr->AlphaBlendMode = BlendMode::Mask;
+      if (has(material, "alphaCutoff")) {
+        ptr->AlphaCutoff = material.at("alphaCutoff");
+      }
     }
   }
   if (has(material, "pbrMetallicRoughness")) {

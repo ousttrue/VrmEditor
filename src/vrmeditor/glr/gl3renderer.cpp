@@ -1,4 +1,5 @@
 #include "gl3renderer.h"
+#include "app.h"
 #include "rendering_env.h"
 #include <GL/glew.h>
 #include <cuber/gl3/GlLineRenderer.h>
@@ -35,11 +36,17 @@ static const char* fragment_shader_text = R"(#version 400
 in vec3 normal;
 in vec2 uv;
 out vec4 FragColor;
+uniform float cutoff=1;
 uniform sampler2D colorTexture;
 void main()
 {
   vec4 texel = texture(colorTexture, uv);
-  FragColor = vec4(texel.rgb, 1);
+  // vec4 pixel = vec4(texel.rgb, 1);
+  if(texel.a < cutoff)
+  {
+    discard;
+  }
+  FragColor = texel;
 };
 )";
 
@@ -98,10 +105,18 @@ class Gl3Renderer
     static uint8_t white[] = { 255, 255, 255, 255 };
     m_white = grapho::gl3::Texture::Create(1, 1, white);
 
-    m_program = *grapho::gl3::ShaderProgram::Create(vertex_shader_text,
-                                                    fragment_shader_text);
-    m_shadow = *grapho::gl3::ShaderProgram::Create(shadow_vertex_text,
-                                                   shadow_fragment_text);
+    if (auto program = grapho::gl3::ShaderProgram::Create(
+          vertex_shader_text, fragment_shader_text)) {
+      m_program = *program;
+    } else {
+      App::Instance().Log(LogLevel::Error) << program.error();
+    }
+    if (auto shadow = grapho::gl3::ShaderProgram::Create(
+          shadow_vertex_text, shadow_fragment_text)) {
+      m_shadow = *shadow;
+    } else {
+      App::Instance().Log(LogLevel::Error) << shadow.error();
+    }
   }
 
   ~Gl3Renderer() {}
@@ -183,6 +198,10 @@ public:
               const libvrm::gltf::MeshInstance& instance,
               const float m[16])
   {
+    if (!m_program) {
+      return;
+    }
+
     auto vao = GetOrCreate(mesh);
 
     if (instance.m_updated.size()) {
@@ -223,7 +242,7 @@ public:
         glCullFace(GL_BGR);
         glEnable(GL_DEPTH_TEST);
 
-        switch (material->AlphaBlend) {
+        switch (material->AlphaBlendMode) {
           case libvrm::gltf::BlendMode::Opaque:
             glDisable(GL_BLEND);
             break;
@@ -233,10 +252,9 @@ public:
           case libvrm::gltf::BlendMode::Blend:
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            // glBlendFunc(GL_ONE, GL_ZERO);
             break;
         }
+        m_program->SetUniformValue("cutoff", material->AlphaCutoff);
 
         texture->Bind(0);
       }
