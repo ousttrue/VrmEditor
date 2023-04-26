@@ -6,11 +6,12 @@
 #include "json_gui_table.h"
 #include <grapho/gl3/texture.h>
 #include <imgui.h>
+#include <vrm/image.h>
 #include <vrm/material.h>
 
 inline ShowGui
 JsonGuiImageList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-                    std::string_view jsonpath)
+                 std::string_view jsonpath)
 {
   std::vector<std::weak_ptr<grapho::gl3::Texture>> textures;
   for (auto& image : scene->m_images) {
@@ -19,8 +20,8 @@ JsonGuiImageList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
   }
   return [&images = scene->m_images, textures]() {
     //
-    std::array<const char*, 5> cols = {
-      "index", "name", "image", "width", "height",
+    std::array<const char*, 6> cols = {
+      "index", "name", "image", "width", "height", "channels"
     };
     if (JsonGuiTable("##images", cols)) {
 
@@ -38,6 +39,8 @@ JsonGuiImageList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         ImGui::Text("%d", images[i]->Width());
         ImGui::TableSetColumnIndex(4);
         ImGui::Text("%d", images[i]->Height());
+        ImGui::TableSetColumnIndex(5);
+        ImGui::Text("%d", images[i]->Channels());
       }
 
       ImGui::EndTable();

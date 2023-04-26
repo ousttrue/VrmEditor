@@ -1,11 +1,13 @@
 #include "vrm/exporter.h"
 #include "vrm/animation.h"
 #include "vrm/glb.h"
+#include "vrm/image.h"
 #include "vrm/jsons.h"
 #include "vrm/material.h"
 #include "vrm/mesh.h"
 #include "vrm/scene.h"
 #include "vrm/skin.h"
+#include "vrm/texture.h"
 
 namespace libvrm::gltf {
 

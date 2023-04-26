@@ -2,6 +2,7 @@
 #include "vrm/animation.h"
 #include "vrm/directory.h"
 #include "vrm/glb.h"
+#include "vrm/image.h"
 #include "vrm/json.h"
 #include "vrm/material.h"
 #include "vrm/mesh.h"

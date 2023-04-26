@@ -1,9 +1,11 @@
 #pragma once
-#include "texture.h"
+#include <memory>
+#include <string_view>
 
 namespace libvrm {
 namespace gltf {
 
+struct Texture;
 enum MaterialTypes
 {
   Pbr,

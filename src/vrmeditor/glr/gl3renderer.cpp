@@ -9,8 +9,10 @@
 #include <iostream>
 #include <map>
 #include <unordered_map>
+#include <vrm/image.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
+#include <vrm/texture.h>
 
 static const char* vertex_shader_text = R"(#version 400
 uniform mat4 Model;
