@@ -57,6 +57,10 @@ public:
       }
 
       ImGui::ColorEdit4("clear color", env->ClearColor);
+
+      // camera
+      // near, far
+      // reset
     }));
   }
 };

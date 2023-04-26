@@ -277,7 +277,9 @@ public:
         }
       }
 
-      ImGui::Text("%zd", m_drawableMap.size());
+      ImGui::Text("%zd(textures)", m_textureMap.size());
+      ImGui::SameLine();
+      ImGui::Text("%zd(meshes)", m_drawableMap.size());
     }));
   }
 };

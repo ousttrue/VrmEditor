@@ -8,6 +8,7 @@
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <vrm/gizmo.h>
+#include <vrm/humanbones.h>
 
 namespace glr {
 
@@ -86,15 +87,23 @@ ScenePreview::ScenePreview(
         cuber->Render(*env);
       }
 
-      // gizmo
+      // manipulator
       if (auto node = selection->selected.lock()) {
         // TODO: conflict mouse event(left) with ImageButton
         DirectX::XMFLOAT4X4 m;
         DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
         ImGuizmo::GetContext().mAllowActiveHoverItem = true;
+        ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
+        if (auto humanoid = node->Humanoid) {
+          if (humanoid->HumanBone == libvrm::vrm::HumanBones::hips) {
+            operation = operation | ImGuizmo::TRANSLATE;
+          }
+        } else {
+          operation = operation | ImGuizmo::TRANSLATE;
+        }
         if (ImGuizmo::Manipulate(env->ViewMatrix,
                                  env->ProjectionMatrix,
-                                 ImGuizmo::TRANSLATE | ImGuizmo::ROTATE,
+                                 operation,
                                  ImGuizmo::LOCAL,
                                  (float*)&m,
                                  nullptr,
@@ -103,6 +112,7 @@ ScenePreview::ScenePreview(
                                  nullptr)) {
           // decompose feedback
           node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+          node->CalcWorldMatrix(true);
         }
         ImGuizmo::GetContext().mAllowActiveHoverItem = false;
       }

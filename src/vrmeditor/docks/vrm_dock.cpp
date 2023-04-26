@@ -63,13 +63,19 @@ Enable(const std::shared_ptr<libvrm::vrm::Expression>& ex)
   return !ex->Empty();
 }
 
-void
-VrmDock::CreateExpression(const AddDockFunc& addDock,
-                          std::string_view title,
-                          const std::shared_ptr<libvrm::gltf::Scene>& scene)
+class VrmGui
 {
-  addDock(Dock(title, [scene]() {
-    if (auto ex = scene->m_expressions) {
+  std::shared_ptr<libvrm::gltf::Scene> m_scene;
+
+public:
+  VrmGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
+    : m_scene(scene)
+  {
+  }
+
+  void ShowExpression()
+  {
+    if (auto ex = m_scene->m_expressions) {
       // ImGui::Text("%s", "expressions");
       const float spacing = 4;
       {
@@ -223,25 +229,20 @@ VrmDock::CreateExpression(const AddDockFunc& addDock,
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + lineheight);
       }
     }
-  }));
-}
+  }
 
-// [vrm]
-// meta
-// humanoid
-// expression
-// lookat
-// firstperson
-// spring
-// constraint
-//
-void
-VrmDock::CreateVrm(const AddDockFunc& addDock,
-                   std::string_view title,
-                   const std::shared_ptr<libvrm::gltf::Scene>& scene)
-{
-  addDock(Dock(title, [scene]() {
-    switch (scene->m_type) {
+  // [vrm]
+  // meta
+  // humanoid
+  // expression
+  // lookat
+  // firstperson
+  // spring
+  // constraint
+  //
+  void Show()
+  {
+    switch (m_scene->m_type) {
       case libvrm::gltf::ModelType::Gltf:
         break;
       case libvrm::gltf::ModelType::Vrm0:
@@ -251,5 +252,31 @@ VrmDock::CreateVrm(const AddDockFunc& addDock,
         ImGui::Text("%s", "vrm-1.0");
         break;
     }
-  }));
+
+    if (ImGui::CollapsingHeader("meta", ImGuiTreeNodeFlags_None)) {
+    }
+    if (ImGui::CollapsingHeader("humanoid", ImGuiTreeNodeFlags_None)) {
+    }
+    if (ImGui::CollapsingHeader("expression", ImGuiTreeNodeFlags_None)) {
+      ShowExpression();
+    }
+    if (ImGui::CollapsingHeader("lookat", ImGuiTreeNodeFlags_None)) {
+    }
+    if (ImGui::CollapsingHeader("firstperson", ImGuiTreeNodeFlags_None)) {
+    }
+    if (ImGui::CollapsingHeader("spring", ImGuiTreeNodeFlags_None)) {
+    }
+    if (ImGui::CollapsingHeader("constraint", ImGuiTreeNodeFlags_None)) {
+    }
+  }
+};
+
+void
+VrmDock::CreateVrm(const AddDockFunc& addDock,
+                   std::string_view title,
+                   const std::shared_ptr<libvrm::gltf::Scene>& scene)
+{
+  auto gui = std::make_shared<VrmGui>(scene);
+
+  addDock(Dock(title, [gui]() { gui->Show(); }));
 }

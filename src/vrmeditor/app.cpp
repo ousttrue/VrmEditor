@@ -79,6 +79,8 @@ void
 App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
 {
   m_scene = scene;
+  m_timeline->Tracks.clear();
+
   std::weak_ptr<libvrm::gltf::Scene> weak = scene;
   PoseStream->HumanPoseChanged.push_back([weak](const auto& pose) {
     if (auto scene = weak.lock()) {
@@ -102,7 +104,6 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
       addDock, "scene-view", m_scene, selection, m_env, m_view, m_settings);
 
     VrmDock::CreateVrm(addDock, "vrm", m_scene);
-    VrmDock::CreateExpression(addDock, "expression", m_scene);
     ExportDock::Create(addDock, "export", m_scene, indent);
   }
 }

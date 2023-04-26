@@ -43,13 +43,17 @@ read, write, edit and animation test.
 | (humanoid mapping)               | ✅   | ---   | ---  |
 | fbx                              | 🟩   | ---   | ---  |
 
-# milestone
+## TODO
 
-## 1
+* BoxInterleaved
+
+## milestone
+
+### 1
 
 - read / write vrm-0.x & 1.0
 
-## x
+### x
 
 - fbx import
 - vrma export
@@ -125,7 +129,7 @@ Naming conventions for variables with a wider scope than local variables.
 - `libvrm::bvh`
 - `libvrm::gltf`
 
-# icon
+## icon
 
 - [ ]  : play
 - [ ]  : stop
