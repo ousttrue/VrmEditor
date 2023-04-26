@@ -5,7 +5,7 @@
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
-#include "docks/json_dock.h"
+#include "docks/json_gui.h"
 #include "docks/scene_dock.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
@@ -63,6 +63,14 @@ App::App()
     pose->Update(time);
     return true;
   });
+
+  m_jsonGui = std::make_shared<JsonGui>();
+  auto indent = m_gui->FontSize * 0.5f;
+  m_gui->AddDock(
+    Dock("gltf-json",
+         [jsonGui = m_jsonGui, indent](const char* title, bool* p_open) {
+           jsonGui->Show(title, p_open, indent);
+         }));
 }
 
 App::~App() {}
@@ -85,7 +93,7 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
   auto indent = m_gui->FontSize * 0.5f;
 
   {
-    JsonDock::Create(addDock, "gltf-json", m_scene, indent);
+    m_jsonGui->SetScene(m_scene);
     HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
     auto selection =
       SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);

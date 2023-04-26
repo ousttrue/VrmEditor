@@ -1,6 +1,8 @@
 #include "json_gui_material.h"
 #include "json_gui_table.h"
 #include <imgui.h>
+#include <nlohmann/json.hpp>
+#include <vrm/gltf.h>
 #include <vrm/json.h>
 #include <vrm/material.h>
 
@@ -47,11 +49,8 @@ JsonGuiMaterialList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
       }
     }
     return [items, materials]() {
-      std::array<const char*, 4> cols = {
-        "index",
-        "name",
-        "type",
-        "alphamode",
+      std::array<const char*, 6> cols = {
+        "index", "name", "type", "alphamode", "colorFactor", "colorTexture",
       };
       if (JsonGuiTable("##materials", cols)) {
         for (int i = 0; i < items.size(); ++i) {
@@ -70,6 +69,16 @@ JsonGuiMaterialList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           auto& material = materials[i];
           ImGui::Text(
             "%s", material.value("alphaMode", std::string("OPAQUE")).c_str());
+
+          if (libvrm::gltf::has(material, "pbrMetallicRoughness")) {
+            auto& pbrMetallicRoughness = material.at("pbrMetallicRoughness");
+            auto color = pbrMetallicRoughness.value(
+              "baseColorFactor", DirectX::XMFLOAT4{ 1, 1, 1, 1 });
+            ImGui::TableSetColumnIndex(4);
+            ImGui::ColorButton("##colorFactor", *((const ImVec4*)&color));
+
+            ImGui::TableSetColumnIndex(5);
+          }
         }
         ImGui::EndTable();
       }

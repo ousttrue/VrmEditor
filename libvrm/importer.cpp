@@ -99,6 +99,10 @@ ParseMaterial(const std::shared_ptr<Scene>& scene,
       // int image_index = texture.at("source");
       // ptr->Texture.Image = m_images[image_index];
     }
+    if(has(pbrMetallicRoughness, "baseColorFactor"))
+    {
+      ptr->Color = pbrMetallicRoughness.value("baseColorFactor", DirectX::XMFLOAT4{1, 1, 1, 1});
+    }
   }
   return ptr;
 }

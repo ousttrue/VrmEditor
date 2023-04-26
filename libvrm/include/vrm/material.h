@@ -1,5 +1,7 @@
 #pragma once
+#include <DirectXMath.h>
 #include <memory>
+#include <string>
 #include <string_view>
 
 namespace libvrm {
@@ -31,6 +33,7 @@ struct Material
   MaterialTypes Type = {};
   BlendMode AlphaBlendMode = {};
   float AlphaCutoff = 0.5f;
+  DirectX::XMFLOAT4 Color = { 1, 1, 1, 1 };
   std::shared_ptr<Texture> ColorTexture;
 };
 

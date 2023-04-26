@@ -1,4 +1,5 @@
 #pragma once
+#include "gui.h"
 #include <sstream>
 #include <vector>
 #include <vrm/jsonpath.h>
@@ -45,10 +46,18 @@ struct JsonGui
 
   std::shared_ptr<libvrm::gltf::Scene> m_scene;
   std::string m_selected;
-  ShowGui m_cache = []() {};
+  ShowGui m_cache;
   std::unordered_map<std::string, std::string> m_labelCache;
 
-  JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene);
+  JsonGui();
+
+  void SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
+  {
+    m_scene = scene;
+    m_cache = {};
+    m_labelCache.clear();
+  }
+
   bool Enter(nlohmann::json& item, std::string_view jsonpath);
   void Show(float indent);
   void ShowSelected();
@@ -72,4 +81,6 @@ struct JsonGui
     // not found
     return {};
   }
+
+  void Show(const char* title, bool* p_open, float indent);
 };

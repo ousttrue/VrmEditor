@@ -1,5 +1,6 @@
 #include "scene_gui.h"
 #include <imgui.h>
+#include <vrm/material.h>
 #include <vrm/mesh.h>
 #include <vrm/scene.h>
 
@@ -40,6 +41,9 @@ SceneGui::Show(const char* title, bool* p_open)
     if (ImGui::CollapsingHeader("textures", ImGuiTreeNodeFlags_None)) {
     }
     if (ImGui::CollapsingHeader("materials", ImGuiTreeNodeFlags_None)) {
+      for (auto& m : m_scene->m_materials) {
+        ShowMaterial(m);
+      }
     }
     if (ImGui::CollapsingHeader("meshes", ImGuiTreeNodeFlags_None)) {
     }
@@ -51,6 +55,17 @@ SceneGui::Show(const char* title, bool* p_open)
   }
   ImGui::End();
   ImGui::PopStyleVar();
+}
+
+void
+SceneGui::ShowMaterial(const std::shared_ptr<libvrm::gltf::Material>& material)
+{
+  ImGui::Text("%s", material->Name.c_str());
+
+  // material type[pbr, unlit, mtoon]
+
+  // color
+  ImGui::ColorEdit4("color", &material->Color.x);
 }
 
 void
@@ -70,8 +85,10 @@ SceneGui::ShowNodes()
 
   ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, m_indent);
   if (showSelected) {
-    if (ImGui::BeginChild(
-          "##scene-tree", { size.x, size.y / 2 }, true, ImGuiWindowFlags_None)) {
+    if (ImGui::BeginChild("##scene-tree",
+                          { size.x, size.y / 2 },
+                          true,
+                          ImGuiWindowFlags_None)) {
 
       m_scene->Traverse(
         [this](const std::shared_ptr<libvrm::gltf::Node>& node) {
@@ -81,8 +98,10 @@ SceneGui::ShowNodes()
     }
     ImGui::EndChild();
 
-    if (ImGui::BeginChild(
-          "##scene-selected", { size.x, size.y / 2 }, true, ImGuiWindowFlags_None)) {
+    if (ImGui::BeginChild("##scene-selected",
+                          { size.x, size.y / 2 },
+                          true,
+                          ImGuiWindowFlags_None)) {
       ImGui::Text("%s", showSelected->Name.c_str());
       if (auto mesh_index = showSelected->Mesh) {
         auto mesh = m_scene->m_meshes[*mesh_index];

@@ -16,7 +16,8 @@ ExportDock::Create(const AddDockFunc& addDock,
                    float indent)
 {
   auto debug_scene = std::make_shared<libvrm::gltf::Scene>();
-  auto impl = std::make_shared<JsonGui>(debug_scene);
+  auto impl = std::make_shared<JsonGui>();
+  impl->SetScene(debug_scene);
 
   auto preview = std::make_shared<glr::ScenePreview>(debug_scene);
 

@@ -15,7 +15,6 @@ srcs = [
     'docks/scene_gui.cpp',
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',
-    'docks/json_dock.cpp',
     'docks/json_gui.cpp',
     'docks/json_gui_accessor.cpp',
     'docks/json_gui_material.cpp',

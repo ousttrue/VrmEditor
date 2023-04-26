@@ -7,6 +7,7 @@ namespace libvrm {
 namespace gltf {
 struct Scene;
 struct SceneContext;
+struct Material;
 struct Node;
 }
 }
@@ -28,5 +29,6 @@ public:
                            const std::shared_ptr<libvrm::gltf::Node>& node);
 
 private:
+  void ShowMaterial(const std::shared_ptr<libvrm::gltf::Material>& material);
   void ShowNodes();
 };

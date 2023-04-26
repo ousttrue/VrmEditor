@@ -56,7 +56,7 @@ public:
         }
       }
 
-      ImGui::ColorPicker4("clear color", env->ClearColor);
+      ImGui::ColorEdit4("clear color", env->ClearColor);
     }));
   }
 };

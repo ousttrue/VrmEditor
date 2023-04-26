@@ -61,7 +61,7 @@ LabelDefault(const std::shared_ptr<libvrm::gltf::Scene>& scene,
   return ss.str();
 }
 
-JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
+JsonGui::JsonGui()
   : //
   m_guiFactories({
     //
@@ -91,7 +91,6 @@ JsonGui::JsonGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
       //
       // { "/images", LabelArray },
     })
-  , m_scene(scene)
 {
 }
 
@@ -130,11 +129,7 @@ JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     m_selected = jsonpath;
-    if (auto mached = MatchGui(m_selected)) {
-      m_cache = (*mached)(m_scene, m_selected);
-    } else {
-      m_cache = []() {};
-    }
+    m_cache = {};
   }
 
   return node_open && !is_leaf;
@@ -194,7 +189,27 @@ JsonGui::Show(float indent)
 
   if (ImGui::BeginChild("##split-second", { size.x, s })) {
     ImGui::TextUnformatted(m_selected.c_str());
+    if (!m_cache) {
+      if (auto mached = MatchGui(m_selected)) {
+        m_cache = (*mached)(m_scene, m_selected);
+      } else {
+        m_cache = []() {};
+      }
+    }
     m_cache();
   }
   ImGui::EndChild();
+}
+
+// Dock("gltf-json"
+void
+JsonGui::Show(const char* title, bool* p_open, float indent)
+{
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+  auto is_open = ImGui::Begin(title, p_open);
+  ImGui::PopStyleVar();
+  if (is_open) {
+    Show(indent);
+  }
+  ImGui::End();
 }

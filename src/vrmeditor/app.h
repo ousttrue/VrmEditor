@@ -35,6 +35,8 @@ class Platform;
 class ImLogger;
 class Gl3Renderer;
 
+struct JsonGui;
+
 class App
 {
   std::filesystem::path m_ini;
@@ -49,6 +51,8 @@ class App
   std::shared_ptr<grapho::OrbitView> m_view;
   std::shared_ptr<glr::ViewSettings> m_settings;
   std::shared_ptr<glr::RenderingEnv> m_env;
+
+  std::shared_ptr<JsonGui> m_jsonGui;
 
   App();
 
