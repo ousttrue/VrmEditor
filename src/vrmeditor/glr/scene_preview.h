@@ -1,6 +1,6 @@
 #pragma once
-#include "rendertarget.h"
 #include "rendering_env.h"
+#include "rendertarget.h"
 #include <grapho/orbitview.h>
 #include <optional>
 #include <vrm/scene.h>
@@ -11,6 +11,9 @@ struct RenderingEnv;
 
 struct ViewSettings
 {
+  bool EnableSpring = true;
+  libvrm::Time NextSpringDelta = libvrm::Time(0.0);
+
   // mesh
   bool ShowMesh = true;
   bool ShowShadow = true;
@@ -34,7 +37,7 @@ struct ScenePreview
 
   ScenePreview(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                const std::shared_ptr<libvrm::gltf::SceneContext>& selection,
-               const std::shared_ptr<RenderingEnv> &env,
+               const std::shared_ptr<RenderingEnv>& env,
                const std::shared_ptr<grapho::OrbitView>& view,
                const std::shared_ptr<ViewSettings>& settings);
 

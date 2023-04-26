@@ -226,6 +226,15 @@ VrmDock::CreateExpression(const AddDockFunc& addDock,
   }));
 }
 
+// [vrm]
+// meta
+// humanoid
+// expression
+// lookat
+// firstperson
+// spring
+// constraint
+//
 void
 VrmDock::CreateVrm(const AddDockFunc& addDock,
                    std::string_view title,

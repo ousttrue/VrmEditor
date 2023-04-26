@@ -46,6 +46,16 @@ public:
       ImGui::SameLine();
       ImGui::Checkbox("Bone", &settings->ShowCuber);
 
+      // 60FPS
+      ImGui::Checkbox("spring", &settings->EnableSpring);
+      if (settings->EnableSpring) {
+        settings->NextSpringDelta = libvrm::Time(1.0 / 60);
+      } else {
+        if (ImGui::Button("spring step")) {
+          settings->NextSpringDelta = libvrm::Time(1.0 / 60);
+        }
+      }
+
       ImGui::ColorPicker4("clear color", env->ClearColor);
     }));
   }

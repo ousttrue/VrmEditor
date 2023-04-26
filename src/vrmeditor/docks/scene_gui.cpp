@@ -18,91 +18,96 @@ SceneGui::SceneGui(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 // nodes/node-hierarchy/select
 // animations
 //
-// [vrm]
-// meta
-// humanoid
-// expression
-// lookat
-// firstperson
-// spring
-// constraint
-//
 void
 SceneGui::Show(const char* title, bool* p_open)
 {
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
   int window_flags = 0;
   std::shared_ptr<libvrm::gltf::Node> showSelected;
   if (auto selected = Context->selected.lock()) {
     {
       if (auto mesh_index = selected->Mesh) {
-        showSelected = selected;
+        // showSelected = selected;
         window_flags |= ImGuiWindowFlags_NoScrollbar;
       }
     }
   }
 
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
   if (ImGui::Begin(title, p_open, window_flags)) {
     auto size = ImGui::GetContentRegionAvail();
     Context->selected = Context->new_selected;
 
-    // 60FPS
-    ImGui::Checkbox("spring", &m_enableSpring);
-    if (m_enableSpring) {
-      m_scene->m_nextSpringDelta = libvrm::Time(1.0 / 60);
-    } else {
-      if (ImGui::Button("spring step")) {
-        m_scene->m_nextSpringDelta = libvrm::Time(1.0 / 60);
+    if (ImGui::CollapsingHeader("textures", ImGuiTreeNodeFlags_None)) {
+    }
+    if (ImGui::CollapsingHeader("materials", ImGuiTreeNodeFlags_None)) {
+    }
+    if (ImGui::CollapsingHeader("meshes", ImGuiTreeNodeFlags_None)) {
+    }
+    if (ImGui::CollapsingHeader("nodes", ImGuiTreeNodeFlags_None)) {
+      ShowNodes();
+    }
+    if (ImGui::CollapsingHeader("animations", ImGuiTreeNodeFlags_None)) {
+    }
+  }
+  ImGui::End();
+  ImGui::PopStyleVar();
+}
+
+void
+SceneGui::ShowNodes()
+{
+  auto size = ImGui::GetContentRegionAvail();
+  Context->selected = Context->new_selected;
+
+  std::shared_ptr<libvrm::gltf::Node> showSelected;
+  if (auto selected = Context->selected.lock()) {
+    {
+      if (auto mesh_index = selected->Mesh) {
+        showSelected = selected;
       }
     }
+  }
 
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, m_indent);
-    if (showSelected) {
-      if (ImGui::BeginChild("##scene-tree",
-                            { size.x, size.y / 2 },
-                            true,
-                            ImGuiWindowFlags_None)) {
+  ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, m_indent);
+  if (showSelected) {
+    if (ImGui::BeginChild(
+          "##scene-tree", { size.x, size.y / 2 }, true, ImGuiWindowFlags_None)) {
 
-        m_scene->Traverse(
-          [this](const std::shared_ptr<libvrm::gltf::Node>& node) {
-            return Enter(node);
-          },
-          [this]() { Leave(); });
-      }
-      ImGui::EndChild();
-
-      if (ImGui::BeginChild("##scene-selected",
-                            { size.x, size.y / 2 },
-                            true,
-                            ImGuiWindowFlags_None)) {
-        ImGui::Text("%s", showSelected->Name.c_str());
-        if (auto mesh_index = showSelected->Mesh) {
-          auto mesh = m_scene->m_meshes[*mesh_index];
-          auto meshInstance = showSelected->MeshInstance;
-          char morph_id[256];
-          for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
-            auto& morph = mesh->m_morphTargets[i];
-            snprintf(morph_id,
-                     sizeof(morph_id),
-                     "[%d]%s##morph%d",
-                     i,
-                     morph->Name.c_str(),
-                     i);
-            ImGui::SliderFloat(morph_id, &meshInstance->weights[i], 0, 1);
-          }
-        }
-      }
-      ImGui::EndChild();
-    } else {
       m_scene->Traverse(
         [this](const std::shared_ptr<libvrm::gltf::Node>& node) {
           return Enter(node);
         },
         [this]() { Leave(); });
     }
-    ImGui::PopStyleVar();
+    ImGui::EndChild();
+
+    if (ImGui::BeginChild(
+          "##scene-selected", { size.x, size.y / 2 }, true, ImGuiWindowFlags_None)) {
+      ImGui::Text("%s", showSelected->Name.c_str());
+      if (auto mesh_index = showSelected->Mesh) {
+        auto mesh = m_scene->m_meshes[*mesh_index];
+        auto meshInstance = showSelected->MeshInstance;
+        char morph_id[256];
+        for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
+          auto& morph = mesh->m_morphTargets[i];
+          snprintf(morph_id,
+                   sizeof(morph_id),
+                   "[%d]%s##morph%d",
+                   i,
+                   morph->Name.c_str(),
+                   i);
+          ImGui::SliderFloat(morph_id, &meshInstance->weights[i], 0, 1);
+        }
+      }
+    }
+    ImGui::EndChild();
+  } else {
+    m_scene->Traverse(
+      [this](const std::shared_ptr<libvrm::gltf::Node>& node) {
+        return Enter(node);
+      },
+      [this]() { Leave(); });
   }
-  ImGui::End();
   ImGui::PopStyleVar();
 }
 

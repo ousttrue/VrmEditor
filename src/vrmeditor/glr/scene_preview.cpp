@@ -64,6 +64,8 @@ ScenePreview::ScenePreview(
           }
         };
 
+      scene->m_nextSpringDelta = settings->NextSpringDelta;
+      settings->NextSpringDelta = {};
       scene->Render(render, gizmo.get());
       if (settings->ShowLine) {
         glr::RenderLine(*env, gizmo->m_lines);
