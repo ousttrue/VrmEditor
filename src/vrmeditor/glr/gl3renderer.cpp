@@ -36,12 +36,12 @@ static const char* fragment_shader_text = R"(#version 400
 in vec3 normal;
 in vec2 uv;
 out vec4 FragColor;
+uniform vec4 color=vec4(1, 1, 1, 1);
 uniform float cutoff=1;
 uniform sampler2D colorTexture;
 void main()
 {
-  vec4 texel = texture(colorTexture, uv);
-  // vec4 pixel = vec4(texel.rgb, 1);
+  vec4 texel = color * texture(colorTexture, uv);
   if(texel.a < cutoff)
   {
     discard;
@@ -255,6 +255,7 @@ public:
             break;
         }
         m_program->SetUniformValue("cutoff", material->AlphaCutoff);
+        m_program->SetUniformValue4("color", &material->Color.x);
 
         texture->Bind(0);
       }
