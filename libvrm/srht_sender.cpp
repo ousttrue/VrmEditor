@@ -7,6 +7,8 @@
 #include <iostream>
 
 namespace libvrm {
+namespace srht {
+
 struct Payload
 {
   std::vector<uint8_t> buffer;
@@ -37,25 +39,24 @@ struct Payload
     buffer.assign(magic.data(), magic.data() + magic.size());
   }
 
-  void SetSkeleton(std::span<const libvrm::srht::JointDefinition> joints,
+  void SetSkeleton(std::span<const JointDefinition> joints,
                    std::span<const DirectX::XMFLOAT4> rotations)
   {
-    SetMagic(buffer, libvrm::srht::SRHT_SKELETON_MAGIC1);
+    SetMagic(buffer, SRHT_SKELETON_MAGIC1);
 
-    auto flags = libvrm::srht::SkeletonFlags::NONE;
+    auto flags = SkeletonFlags::NONE;
     if (rotations.size()) {
-      flags = flags | libvrm::srht::SkeletonFlags::HAS_INITIAL_ROTATION;
+      flags = flags | SkeletonFlags::HAS_INITIAL_ROTATION;
     }
 
-    libvrm::srht::SkeletonHeader header{
+    SkeletonHeader header{
       .skeletonId = 0,
       .jointCount = static_cast<uint16_t>(joints.size()),
       .flags = flags,
     };
     Push((const char*)&header, (const char*)&header + sizeof(header));
     Push(joints.data(), joints.data() + joints.size());
-    if ((flags & libvrm::srht::SkeletonFlags::HAS_INITIAL_ROTATION) !=
-        libvrm::srht::SkeletonFlags::NONE) {
+    if ((flags & SkeletonFlags::HAS_INITIAL_ROTATION) != SkeletonFlags::NONE) {
       Push(rotations.data(), rotations.data() + rotations.size());
     }
   }
@@ -66,12 +67,11 @@ struct Payload
                 float z,
                 bool usePack)
   {
-    SetMagic(buffer, libvrm::srht::SRHT_FRAME_MAGIC1);
+    SetMagic(buffer, SRHT_FRAME_MAGIC1);
 
-    libvrm::srht::FrameHeader header{
+    FrameHeader header{
       .time = time.count(),
-      .flags = usePack ? libvrm::srht::FrameFlags::USE_QUAT32
-                       : libvrm::srht::FrameFlags::NONE,
+      .flags = usePack ? FrameFlags::USE_QUAT32 : FrameFlags::NONE,
       .skeletonId = 0,
       .x = x,
       .y = y,
@@ -213,7 +213,7 @@ IsIdentity(const DirectX::XMFLOAT4& q)
 }
 
 int
-PushJoints(std::vector<libvrm::srht::JointDefinition>& joints,
+PushJoints(std::vector<JointDefinition>& joints,
            std::vector<DirectX::XMFLOAT4>& rotations,
            const std::shared_ptr<gltf::Node>& node,
            const std::function<uint16_t(const std::shared_ptr<gltf::Node>&)>&
@@ -235,7 +235,7 @@ PushJoints(std::vector<libvrm::srht::JointDefinition>& joints,
 
   if (auto humanoid = node->Humanoid) {
     joints.back().boneType =
-      static_cast<uint16_t>(libvrm::srht::FromVrmBone(humanoid->HumanBone));
+      static_cast<uint16_t>(FromVrmBone(humanoid->HumanBone));
   }
 
   for (auto& child : node->Children) {
@@ -324,5 +324,7 @@ UdpSender::SendFrame(asio::ip::udp::endpoint ep,
     [self = this, payload](asio::error_code ec, std::size_t bytes_transferred) {
       self->ReleasePayload(payload);
     });
+}
+
 }
 }
