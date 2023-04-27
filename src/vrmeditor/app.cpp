@@ -58,11 +58,11 @@ App::App()
   PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
 
-  auto track = m_timeline->AddTrack("PoseStream", {});
-  track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
-    pose->Update(time);
-    return true;
-  });
+  // auto track = m_timeline->AddTrack("PoseStream", {});
+  // track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
+  //   pose->Update(time);
+  //   return true;
+  // });
 
   m_jsonGui = std::make_shared<JsonGui>();
   auto indent = m_gui->FontSize * 0.5f;
@@ -301,6 +301,7 @@ App::Run()
     } else {
       m_timeline->SetDeltaTime({}, true);
     }
+    PoseStream->Update(time);
     lastTime = time;
 
     // newFrame
