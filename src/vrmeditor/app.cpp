@@ -1,3 +1,5 @@
+#include <GL/glew.h>
+
 #include "app.h"
 #include "assetdir.h"
 #include "docks/export_dock.h"

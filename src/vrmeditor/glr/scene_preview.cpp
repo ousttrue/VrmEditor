@@ -48,7 +48,7 @@ ScenePreview::ScenePreview(
      cuber = m_cuber,
      gizmo = std::make_shared<LineGizmo>()](const grapho::OrbitView& view) {
       view.Update(env->ProjectionMatrix, env->ViewMatrix);
-      env->Resize(view.width_, view.height_);
+      env->Resize(view.Width, view.Height);
 
       glr::ClearRendertarget(*env);
 

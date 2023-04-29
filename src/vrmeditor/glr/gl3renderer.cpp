@@ -3,6 +3,7 @@
 #include "rendering_env.h"
 #include <GL/glew.h>
 #include <cuber/gl3/GlLineRenderer.h>
+#include <cuber/mesh.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/texture.h>
 #include <grapho/gl3/vao.h>
@@ -157,33 +158,31 @@ public:
     auto ibo = grapho::gl3::Ibo::Create(
       mesh->indicesBytes(), mesh->m_indices.data(), GL_UNSIGNED_INT);
 
+    grapho::gl3::VertexSlot slots[] = {
+      { vbo },
+    };
     grapho::VertexLayout layouts[] = {
       {
-        .id = { "vPosition", 0 },
-        .type = grapho::ValueType::Float,
-        .count = 3,
-        .offset = offsetof(Vertex, Position),
-        .stride = sizeof(Vertex),
+        .Id = { 0, 0, "vPosition" },
+        .Type = grapho::ValueType::Float,
+        .Count = 3,
+        .Offset = offsetof(Vertex, Position),
+        .Stride = sizeof(Vertex),
       },
       {
-        .id = { "vNormal", 1 },
-        .type = grapho::ValueType::Float,
-        .count = 3,
-        .offset = offsetof(Vertex, Normal),
-        .stride = sizeof(Vertex),
+        .Id = { 1, 0, "vNormal" },
+        .Type = grapho::ValueType::Float,
+        .Count = 3,
+        .Offset = offsetof(Vertex, Normal),
+        .Stride = sizeof(Vertex),
       },
       {
-        .id = { "vUv", 0 },
-        .type = grapho::ValueType::Float,
-        .count = 2,
-        .offset = offsetof(Vertex, Uv),
-        .stride = sizeof(Vertex),
+        .Id = { 2, 0, "vUv" },
+        .Type = grapho::ValueType::Float,
+        .Count = 2,
+        .Offset = offsetof(Vertex, Uv),
+        .Stride = sizeof(Vertex),
       },
-    };
-    grapho::gl3::VertexSlot slots[] = {
-      { .location = 0, .vbo = vbo },
-      { .location = 1, .vbo = vbo },
-      { .location = 2, .vbo = vbo },
     };
     auto vao = grapho::gl3::Vao::Create(layouts, slots, ibo);
 
@@ -205,7 +204,7 @@ public:
     auto vao = GetOrCreate(mesh);
 
     if (instance.m_updated.size()) {
-      vao->slots_[0].vbo->Upload(instance.m_updated.size() * sizeof(Vertex),
+      vao->slots_[0].Vbo->Upload(instance.m_updated.size() * sizeof(Vertex),
                                  instance.m_updated.data());
     }
 
@@ -318,7 +317,7 @@ GetOrCreate(const std::shared_ptr<libvrm::gltf::Image>& image)
 }
 
 void
-RenderLine(const RenderingEnv& camera, std::span<const grapho::LineVertex> data)
+RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data)
 {
   static cuber::gl3::GlLineRenderer s_liner;
   s_liner.Render(camera.ProjectionMatrix, camera.ViewMatrix, data);

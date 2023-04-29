@@ -1,6 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
-#include <grapho/mesh.h>
+#include <cuber/mesh.h>
 #include <vector>
 #include <vrm/dmath.h>
 #include <vrm/gizmo.h>
@@ -9,7 +9,7 @@ namespace glr {
 
 struct LineGizmo : public libvrm::IGizmoDrawer
 {
-  std::vector<grapho::LineVertex> m_lines;
+  std::vector<cuber::LineVertex> m_lines;
   size_t m_keep = 0;
 
   LineGizmo();
@@ -18,16 +18,16 @@ struct LineGizmo : public libvrm::IGizmoDrawer
 
   void DrawLine(const DirectX::XMFLOAT3& p0,
                 const DirectX::XMFLOAT3& p1,
-                const grapho::RGBA& color) override;
+                const DirectX::XMFLOAT4& color) override;
   void DrawSphere(const DirectX::XMFLOAT3& pos,
                   float radius,
-                  const grapho::RGBA& color) override;
+                  const DirectX::XMFLOAT4& color) override;
   void DrawCapsule(const DirectX::XMFLOAT3& p0,
                    const DirectX::XMFLOAT3& p1,
                    float radius,
-                   const grapho::RGBA& color) override;
+                   const DirectX::XMFLOAT4& color) override;
 
-  void Arc(const grapho::RGBA& color,
+  void Arc(const DirectX::XMFLOAT4& color,
            const DirectX::XMFLOAT3& pos,
            const DirectX::XMFLOAT3& normal,
            const DirectX::XMFLOAT3& base,
@@ -36,7 +36,7 @@ struct LineGizmo : public libvrm::IGizmoDrawer
 
   void CircleXY(const DirectX::XMFLOAT3& pos,
                 float r,
-                const grapho::RGBA& color,
+                const DirectX::XMFLOAT4& color,
                 int division = 16)
   {
     Arc(color,
@@ -49,7 +49,7 @@ struct LineGizmo : public libvrm::IGizmoDrawer
 
   void CircleYZ(const DirectX::XMFLOAT3& pos,
                 float r,
-                const grapho::RGBA& color,
+                const DirectX::XMFLOAT4& color,
                 int division = 16)
   {
     Arc(color,
@@ -62,7 +62,7 @@ struct LineGizmo : public libvrm::IGizmoDrawer
 
   void CircleZX(const DirectX::XMFLOAT3& pos,
                 float r,
-                const grapho::RGBA& color,
+                const DirectX::XMFLOAT4& color,
                 int division = 16)
   {
     Arc(color,

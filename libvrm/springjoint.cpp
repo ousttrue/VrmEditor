@@ -1,4 +1,5 @@
 #include "vrm/springjoint.h"
+#include "vrm/dmath.h"
 #include "vrm/springcollider.h"
 
 namespace libvrm {

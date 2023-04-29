@@ -12,20 +12,20 @@ LineGizmo::LineGizmo()
 void
 LineGizmo::DrawLine(const DirectX::XMFLOAT3& p0,
                     const DirectX::XMFLOAT3& p1,
-                    const grapho::RGBA& color)
+                    const DirectX::XMFLOAT4& color)
 {
   m_lines.push_back({
-    .position = { p0.x, p0.y, p0.z },
-    .color = color,
+    .Position = { p0.x, p0.y, p0.z },
+    .Color = color,
   });
   m_lines.push_back({
-    .position = { p1.x, p1.y, p1.z },
-    .color = color,
+    .Position = { p1.x, p1.y, p1.z },
+    .Color = color,
   });
 }
 
 void
-LineGizmo::Arc(const grapho::RGBA& color,
+LineGizmo::Arc(const DirectX::XMFLOAT4& color,
                const DirectX::XMFLOAT3& pos,
                const DirectX::XMFLOAT3& normal,
                const DirectX::XMFLOAT3& base,
@@ -64,7 +64,7 @@ LineGizmo::Arc(const grapho::RGBA& color,
 void
 LineGizmo::DrawSphere(const DirectX::XMFLOAT3& pos,
                       float r,
-                      const grapho::RGBA& color)
+                      const DirectX::XMFLOAT4& color)
 {
   CircleXY(pos, r, color);
   CircleYZ(pos, r, color);
@@ -75,7 +75,7 @@ void
 LineGizmo::DrawCapsule(const DirectX::XMFLOAT3& p0,
                        const DirectX::XMFLOAT3& p1,
                        float radius,
-                       const grapho::RGBA& color)
+                       const DirectX::XMFLOAT4& color)
 {
   DrawSphere(p0, radius, color);
   DrawSphere(p1, radius, color);
@@ -106,39 +106,39 @@ LineGizmo::DrawCapsule(const DirectX::XMFLOAT3& p0,
 // //  \/
 // DrawLine(dmath::add(pos, points[0]),
 //          dmath::add(pos, points[1]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[1]),
 //          dmath::add(pos, points[2]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[2]),
 //          dmath::add(pos, points[3]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[3]),
 //          dmath::add(pos, points[4]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[0]),
 //          dmath::add(pos, points[4]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[1]),
 //          dmath::add(pos, points[4]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[2]),
 //          dmath::add(pos, points[4]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[3]),
 //          dmath::add(pos, points[4]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[0]),
 //          dmath::add(pos, points[5]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[1]),
 //          dmath::add(pos, points[5]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[2]),
 //          dmath::add(pos, points[5]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 // DrawLine(dmath::add(pos, points[3]),
 //          dmath::add(pos, points[5]),
-//          *((grapho::RGBA*)&color));
+//          *((DirectX::XMFLOAT4*)&color));
 
 } // namespace gizmo

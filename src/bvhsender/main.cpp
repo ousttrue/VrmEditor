@@ -30,7 +30,7 @@ main(int argc, char** argv)
   cuber::gl3::GlCubeRenderer cubeRenderer;
   cuber::gl3::GlLineRenderer lineRenderer;
 
-  std::vector<grapho::LineVertex> lines;
+  std::vector<cuber::LineVertex> lines;
   cuber::PushGrid(lines);
 
   // main loop

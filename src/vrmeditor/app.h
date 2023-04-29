@@ -16,7 +16,7 @@ struct Timeline;
 }
 
 namespace grapho {
-class OrbitView;
+struct OrbitView;
 }
 
 namespace humanpose {

@@ -1,7 +1,7 @@
 #pragma once
 #include "docks/gui.h"
 #include "renderpass.h"
-#include <grapho/mesh.h>
+#include <cuber/mesh.h>
 #include <memory>
 
 namespace libvrm {
@@ -43,7 +43,6 @@ std::shared_ptr<grapho::gl3::Texture>
 GetOrCreate(const std::shared_ptr<libvrm::gltf::Image>& image);
 
 void
-RenderLine(const RenderingEnv& camera,
-           std::span<const grapho::LineVertex> data);
+RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data);
 
 }

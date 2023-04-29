@@ -3,7 +3,7 @@
 #include <memory>
 
 namespace grapho {
-class OrbitView;
+struct OrbitView;
 namespace gl3 {
 struct Fbo;
 }
