@@ -75,13 +75,20 @@ ScenePreview::ScenePreview(
 
       if (settings->ShowCuber) {
         cuber->Instances.clear();
-        static_assert(sizeof(cuber::Instance) == sizeof(libvrm::gltf::Instance),
-                      "Instance size");
+        // static_assert(sizeof(cuber::Instance) ==
+        // sizeof(libvrm::gltf::Instance),
+        //               "Instance size");
         for (auto& root : scene->m_roots) {
           root->UpdateShapeInstanceRecursive(
             DirectX::XMMatrixIdentity(),
             [cuber](const libvrm::gltf::Instance& instance) {
-              cuber->Instances.push_back(*((const cuber::Instance*)&instance));
+              // cuber->Instances.push_back(*((const
+              // cuber::Instance*)&instance));
+              cuber->Instances.push_back({
+                .Matrix = instance.Matrix,
+                .PositiveFaceFlag = { 0, 1, 2, 0 },
+                .NegativeFaceFlag = { 3, 4, 5, 0 },
+              });
             });
         }
         cuber->Render(*env);
