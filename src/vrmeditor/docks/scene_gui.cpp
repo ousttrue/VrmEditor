@@ -1,8 +1,13 @@
+#include <GL/glew.h>
+
 #include "scene_gui.h"
+#include <glr/gl3renderer.h>
+#include <grapho/gl3/Texture.h>
 #include <imgui.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
 #include <vrm/scene.h>
+#include <vrm/texture.h>
 
 SceneGui::SceneGui(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                    float indent)
@@ -41,8 +46,9 @@ SceneGui::Show(const char* title, bool* p_open)
     if (ImGui::CollapsingHeader("textures", ImGuiTreeNodeFlags_None)) {
     }
     if (ImGui::CollapsingHeader("materials", ImGuiTreeNodeFlags_None)) {
+      int i = 0;
       for (auto& m : m_scene->m_materials) {
-        ShowMaterial(m);
+        ShowMaterial(i++, m);
       }
     }
     if (ImGui::CollapsingHeader("meshes", ImGuiTreeNodeFlags_None)) {
@@ -58,14 +64,30 @@ SceneGui::Show(const char* title, bool* p_open)
 }
 
 void
-SceneGui::ShowMaterial(const std::shared_ptr<libvrm::gltf::Material>& material)
+SceneGui::ShowMaterial(int i,
+                       const std::shared_ptr<libvrm::gltf::Material>& material)
 {
+  if (i) {
+    ImGui::Separator();
+  }
+
   ImGui::Text("%s", material->Name.c_str());
 
   // material type[pbr, unlit, mtoon]
 
   // color
-  ImGui::ColorEdit4("color", &material->Color.x);
+  char id[64];
+  snprintf(id, sizeof(id), "##color%d", i);
+  ImGui::ColorEdit4(id, &material->Color.x);
+
+  if (auto texture = material->ColorTexture) {
+    if (auto image = texture->Source) {
+      if (auto glTexture = glr::GetOrCreate(image)) {
+        // ImGui::Image(material->);
+        ImGui::Image((ImTextureID)(uint64_t)glTexture->texture_, { 150, 150 });
+      }
+    }
+  }
 }
 
 void

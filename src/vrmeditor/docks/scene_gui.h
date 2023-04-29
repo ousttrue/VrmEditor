@@ -29,6 +29,7 @@ public:
                            const std::shared_ptr<libvrm::gltf::Node>& node);
 
 private:
-  void ShowMaterial(const std::shared_ptr<libvrm::gltf::Material>& material);
+  void ShowMaterial(int i,
+                    const std::shared_ptr<libvrm::gltf::Material>& material);
   void ShowNodes();
 };

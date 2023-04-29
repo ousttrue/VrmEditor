@@ -60,11 +60,11 @@ App::App()
   PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
 
-  auto track = m_timeline->AddTrack("PoseStream", {});
-  track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
-    pose->Update(time);
-    return true;
-  });
+  // auto track = m_timeline->AddTrack("PoseStream", {});
+  // track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
+  //   pose->Update(time);
+  //   return true;
+  // });
 
   m_jsonGui = std::make_shared<JsonGui>();
   auto indent = m_gui->FontSize * 0.5f;
@@ -81,6 +81,8 @@ void
 App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
 {
   m_scene = scene;
+  m_timeline->Tracks.clear();
+
   std::weak_ptr<libvrm::gltf::Scene> weak = scene;
   PoseStream->HumanPoseChanged.push_back([weak](const auto& pose) {
     if (auto scene = weak.lock()) {
@@ -104,7 +106,6 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
       addDock, "scene-view", m_scene, selection, m_env, m_view, m_settings);
 
     VrmDock::CreateVrm(addDock, "vrm", m_scene);
-    VrmDock::CreateExpression(addDock, "expression", m_scene);
     ExportDock::Create(addDock, "export", m_scene, indent);
   }
 }
@@ -302,6 +303,7 @@ App::Run()
     } else {
       m_timeline->SetDeltaTime({}, true);
     }
+    PoseStream->Update(time);
     lastTime = time;
 
     // newFrame
