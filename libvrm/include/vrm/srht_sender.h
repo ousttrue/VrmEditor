@@ -1,5 +1,4 @@
 #pragma once
-#include <asio.hpp>
 #include <chrono>
 #include <list>
 #include <memory>
@@ -8,6 +7,11 @@
 #include <vector>
 #include <vrm/bvh.h>
 #include <vrm/srht.h>
+
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0601
+#endif
+#include <asio.hpp>
 
 namespace libvrm {
 namespace gltf {

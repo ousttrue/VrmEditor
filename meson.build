@@ -31,9 +31,8 @@ asio_dep = dependency('asio')
 subdir('libvrm')
 
 if get_option('executables')
-  subdir('src')
+    subdir('src')
 endif
 if get_option('tests')
-  subdir('tests')
+    subdir('tests')
 endif
-

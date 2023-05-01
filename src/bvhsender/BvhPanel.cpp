@@ -1,11 +1,15 @@
 #include "BvhPanel.h"
-#include <asio.hpp>
 #include <imgui.h>
 #include <thread>
 #include <vrm/bvhscene.h>
 #include <vrm/scene.h>
 #include <vrm/srht_sender.h>
 #include <vrm/timeline.h>
+
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0601
+#endif
+#include <asio.hpp>
 
 class BvhPanelImpl
 {
