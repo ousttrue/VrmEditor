@@ -8,6 +8,7 @@ executable(
         'json.cpp',
         'vrma.cpp',
         'text.cpp',
+        'gltfon.cpp',
     ],
     install: true,
     dependencies: [gtest_main_dep, libvrm_dep],
