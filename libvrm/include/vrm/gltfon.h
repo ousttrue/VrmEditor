@@ -1,10 +1,11 @@
 #pragma once
-// #include <expected>
-// #include <vector>
-// #include <string>
-// #include <string_view>
-#pragma warning(suppress : 5050)
-import std.core;
+#include <expected>
+#include <vector>
+#include <string>
+#include <string_view>
+#include <charconv>
+// #pragma warning(suppress : 5050)
+// import std.core;
 
 // glTF Object Notation(JSON for glTF)
 namespace gltfon {

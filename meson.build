@@ -4,7 +4,7 @@ project(
     version: '0.1.0',
     default_options: [],
 )
-add_global_arguments('/experimental:module', language: 'cpp')
+# add_global_arguments('/experimental:module', language: 'cpp')
 
 glew_dep = dependency('glew', default_options: ['default_library=static'])
 glfw_dep = dependency('glfw3', default_options: ['default_library=static'])
