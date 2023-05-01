@@ -16,7 +16,7 @@ GetIndex(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 }
 
 static ShowGui
-JsonGuiAccessorUShort4(std::span<const ushort4> items)
+JsonGuiAccessorUShort4(std::span<const libvrm::ushort4> items)
 {
   return [items]() {
     ImGui::Text("ushort4[%zu]", items.size());
@@ -208,7 +208,8 @@ JsonGuiAccessor(const std::shared_ptr<libvrm::gltf::Scene>& scene,
     if (accessor.at("componentType") == 5123) {
       // ushort
       if (accessor.at("type") == "VEC4") {
-        if (auto values = scene->m_gltf.accessor<ushort4>(*accessor_index)) {
+        if (auto values =
+              scene->m_gltf.accessor<libvrm::ushort4>(*accessor_index)) {
           return JsonGuiAccessorUShort4(*values);
         }
       }

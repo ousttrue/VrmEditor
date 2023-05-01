@@ -1,4 +1,5 @@
 #pragma once
+#include "scenetypes.h"
 #include <chrono>
 #include <functional>
 #include <list>
@@ -13,7 +14,6 @@ class io_context;
 }
 
 namespace libvrm {
-using Time = std::chrono::duration<double, std::ratio<1, 1>>;
 
 using OnTime = std::function<bool(Time, bool loop)>;
 

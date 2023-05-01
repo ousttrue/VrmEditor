@@ -3,6 +3,7 @@
 #include "gizmo.h"
 #include "gltf.h"
 #include "humanpose.h"
+#include "mesh.h"
 #include "scenetypes.h"
 #include "springbone.h"
 #include "springcollider.h"

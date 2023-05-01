@@ -166,22 +166,22 @@ public:
         .Id = { 0, 0, "vPosition" },
         .Type = grapho::ValueType::Float,
         .Count = 3,
-        .Offset = offsetof(Vertex, Position),
-        .Stride = sizeof(Vertex),
+        .Offset = offsetof(libvrm::Vertex, Position),
+        .Stride = sizeof(libvrm::Vertex),
       },
       {
         .Id = { 1, 0, "vNormal" },
         .Type = grapho::ValueType::Float,
         .Count = 3,
-        .Offset = offsetof(Vertex, Normal),
-        .Stride = sizeof(Vertex),
+        .Offset = offsetof(libvrm::Vertex, Normal),
+        .Stride = sizeof(libvrm::Vertex),
       },
       {
         .Id = { 2, 0, "vUv" },
         .Type = grapho::ValueType::Float,
         .Count = 2,
-        .Offset = offsetof(Vertex, Uv),
-        .Stride = sizeof(Vertex),
+        .Offset = offsetof(libvrm::Vertex, Uv),
+        .Stride = sizeof(libvrm::Vertex),
       },
     };
     auto vao = grapho::gl3::Vao::Create(layouts, slots, ibo);
@@ -204,7 +204,7 @@ public:
     auto vao = GetOrCreate(mesh);
 
     if (instance.m_updated.size()) {
-      vao->slots_[0].Vbo->Upload(instance.m_updated.size() * sizeof(Vertex),
+      vao->slots_[0].Vbo->Upload(instance.m_updated.size() * sizeof(libvrm::Vertex),
                                  instance.m_updated.data());
     }
 
