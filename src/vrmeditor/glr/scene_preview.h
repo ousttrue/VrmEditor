@@ -2,8 +2,14 @@
 #include "rendering_env.h"
 #include "rendertarget.h"
 #include <grapho/orbitview.h>
+#include <memory>
 #include <optional>
+#include <string>
 #include <vrm/scene.h>
+
+namespace scenetuntime {
+struct Scene;
+}
 
 namespace glr {
 class Cuber;

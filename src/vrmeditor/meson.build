@@ -48,5 +48,6 @@ executable(
         iconfont_cpp_headers_dep,
         imnodes_dep,
         asio_dep,
+        runtimescene_dep,
     ],
 )
