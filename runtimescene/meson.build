@@ -3,9 +3,12 @@ runtimescene_lib = static_library(
     'runtimescene',
     [
         'runtime_node.cpp',
+        'animation.cpp',
     ],
     include_directories: runtimescene_inc,
+    dependencies: [libvrm_dep],
 )
 runtimescene_dep = declare_dependency(
+    link_with: runtimescene_lib,
     include_directories: runtimescene_inc,
 )

@@ -15,7 +15,6 @@ libvrm_lib = static_library(
         'node.cpp',
         'springbone.cpp',
         'exporter.cpp',
-        'animation.cpp',
         'bvh.cpp',
         'bvhframe.cpp',
         'bvhscene.cpp',

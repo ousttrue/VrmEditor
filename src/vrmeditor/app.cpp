@@ -22,6 +22,7 @@
 #include <fstream>
 #include <grapho/orbitview.h>
 #include <imgui.h>
+#include <runtimescene/animation.h>
 #include <vrm/animation.h>
 #include <vrm/exporter.h>
 #include <vrm/fileutil.h>
@@ -217,7 +218,8 @@ App::LoadModel(const std::filesystem::path& path)
       std::weak_ptr<libvrm::gltf::Scene> weak = *scene;
       track->Callbacks.push_back([animation, weak](auto time, bool repeat) {
         if (auto scene = weak.lock()) {
-          animation->Update(time, scene->m_nodes, repeat);
+          runtimescene::AnimationUpdate(
+            *animation, time, scene->m_nodes, repeat);
           return true;
         } else {
           return false;

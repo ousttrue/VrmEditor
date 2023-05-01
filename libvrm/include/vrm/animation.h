@@ -185,10 +185,6 @@ struct Animation
         .WeightsCount = static_cast<uint32_t>(values.size() / times.size()),
       });
   }
-
-  void Update(Time time,
-              std::span<std::shared_ptr<Node>> nodes,
-              bool repeat = false);
 };
 
 } // namespace gltf
