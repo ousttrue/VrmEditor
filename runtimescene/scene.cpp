@@ -1,10 +1,23 @@
-#include "runtimescene/scene_updater.h"
+#include "runtimescene/scene.h"
 #include <vrm/skin.h>
 
 namespace runtimescene {
 
+std::shared_ptr<RuntimeSpringJoint>
+RuntimeScene::GetRuntimeJoint(const libvrm::vrm::SpringJoint& joint)
+{
+  auto found = m_jointMap.find(joint.Head);
+  if (found != m_jointMap.end()) {
+    return found->second;
+  }
+
+  auto runtime = std::make_shared<RuntimeSpringJoint>(joint);
+  m_jointMap.insert({ joint.Head, runtime });
+  return runtime;
+}
+
 void
-SceneUpdater::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
+RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                      const RenderFunc& render,
                      libvrm::IGizmoDrawer* gizmo)
 {
@@ -108,7 +121,7 @@ SceneUpdater::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 }
 
 void
-SceneUpdater::SpringUpdate(
+RuntimeScene::SpringUpdate(
   const std::shared_ptr<libvrm::vrm::SpringSolver>& solver,
   libvrm::Time delta)
 {
@@ -119,32 +132,18 @@ SceneUpdater::SpringUpdate(
 
   for (auto& joint : solver->Joints) {
     solver->Collision->Clear();
-    auto found = m_jointMap.find(joint.Head);
-    std::shared_ptr<SpringJoint> runtime;
-    if (found == m_jointMap.end()) {
-      runtime = std::make_shared<SpringJoint>(joint);
-      m_jointMap.insert({ joint.Head, runtime });
-    } else {
-      runtime = found->second;
-    }
+    auto runtime = GetRuntimeJoint(joint);
     runtime->Update(joint, delta, solver->Collision.get());
   }
 }
 
 void
-SceneUpdater::SpringDrawGizmo(
+RuntimeScene::SpringDrawGizmo(
   const std::shared_ptr<libvrm::vrm::SpringSolver>& solver,
   libvrm::IGizmoDrawer* gizmo)
 {
   for (auto& joint : solver->Joints) {
-    auto found = m_jointMap.find(joint.Head);
-    std::shared_ptr<SpringJoint> runtime;
-    if (found == m_jointMap.end()) {
-      runtime = std::make_shared<SpringJoint>(joint);
-      m_jointMap.insert({ joint.Head, runtime });
-    } else {
-      runtime = found->second;
-    }
+    auto runtime = GetRuntimeJoint(joint);
     runtime->DrawGizmo(joint, gizmo);
   }
 }

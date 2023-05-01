@@ -12,19 +12,25 @@ using RenderFunc =
                      const libvrm::gltf::MeshInstance&,
                      const float[16])>;
 
-struct Node
+struct RuntimeNode
 {};
 
-struct SceneUpdater
+struct RuntimeScene
 {
   libvrm::Time NextSpringDelta = libvrm::Time(0.0);
   std::shared_ptr<libvrm::gltf::Scene> m_lastScene;
-  std::unordered_map<std::shared_ptr<libvrm::gltf::Node>,
-                     std::shared_ptr<SpringJoint>>
-    m_jointMap;
 
-  std::unordered_map<std::shared_ptr<libvrm::gltf::Node>, std::shared_ptr<Node>>
+  std::unordered_map<std::shared_ptr<libvrm::gltf::Node>,
+                     std::shared_ptr<RuntimeSpringJoint>>
+    m_jointMap;
+  std::shared_ptr<RuntimeSpringJoint> GetRuntimeJoint(
+    const libvrm::vrm::SpringJoint& joint);
+
+  std::unordered_map<std::shared_ptr<libvrm::gltf::Node>,
+                     std::shared_ptr<RuntimeNode>>
     m_nodeMap;
+  std::shared_ptr<RuntimeNode> GetRuntimeNode(
+    const std::shared_ptr<libvrm::gltf::Node>& node);
 
   void Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
               const RenderFunc& render,

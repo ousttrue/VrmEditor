@@ -3,7 +3,7 @@
 
 namespace runtimescene {
 
-SpringJoint::SpringJoint(const libvrm::vrm::SpringJoint& joint)
+RuntimeSpringJoint::RuntimeSpringJoint(const libvrm::vrm::SpringJoint& joint)
 {
   auto world = joint.Head->WorldInitialTransformPoint(
     DirectX::XMLoadFloat3(&joint.LocalTailPosition));
@@ -18,8 +18,8 @@ SpringJoint::SpringJoint(const libvrm::vrm::SpringJoint& joint)
 }
 
 void
-SpringJoint::DrawGizmo(const libvrm::vrm::SpringJoint& joint,
-                       libvrm::IGizmoDrawer* gizmo)
+RuntimeSpringJoint::DrawGizmo(const libvrm::vrm::SpringJoint& joint,
+                              libvrm::IGizmoDrawer* gizmo)
 {
   // gizmo->drawSphere(Head->worldPosition(), {1, 1, 1, 1});
   // gizmo->drawSphere(m_currentTailPosotion, {0, 1, 0, 1});
@@ -52,9 +52,9 @@ SpringJoint::DrawGizmo(const libvrm::vrm::SpringJoint& joint,
 }
 
 void
-SpringJoint::Update(const libvrm::vrm::SpringJoint& joint,
-                    libvrm::Time time,
-                    libvrm::vrm::SpringCollision* collision)
+RuntimeSpringJoint::Update(const libvrm::vrm::SpringJoint& joint,
+                           libvrm::Time time,
+                           libvrm::vrm::SpringCollision* collision)
 {
   auto currentTail = DirectX::XMLoadFloat3(&m_currentTailPosotion);
 
@@ -108,8 +108,9 @@ SpringJoint::Update(const libvrm::vrm::SpringJoint& joint,
 }
 
 DirectX::XMVECTOR
-SpringJoint::ConstraintTailPosition(const libvrm::vrm::SpringJoint& joint,
-                                    const DirectX::XMVECTOR& tail)
+RuntimeSpringJoint::ConstraintTailPosition(
+  const libvrm::vrm::SpringJoint& joint,
+  const DirectX::XMVECTOR& tail)
 {
   auto position =
     DirectX::XMLoadFloat3(&joint.Head->WorldTransform.Translation);
@@ -122,8 +123,9 @@ SpringJoint::ConstraintTailPosition(const libvrm::vrm::SpringJoint& joint,
 }
 
 DirectX::XMVECTOR
-SpringJoint::WorldPosToLocalRotation(const libvrm::vrm::SpringJoint& joint,
-                                     const DirectX::XMVECTOR& nextTailDir) const
+RuntimeSpringJoint::WorldPosToLocalRotation(
+  const libvrm::vrm::SpringJoint& joint,
+  const DirectX::XMVECTOR& nextTailDir) const
 {
   auto rotation = DirectX::XMQuaternionMultiply(
     DirectX::XMLoadFloat4(&joint.Head->InitialTransform.Rotation),

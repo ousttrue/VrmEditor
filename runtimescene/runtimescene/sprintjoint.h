@@ -6,14 +6,14 @@
 
 namespace runtimescene {
 
-struct SpringJoint
+struct RuntimeSpringJoint
 {
   DirectX::XMFLOAT3 m_currentTailPosotion;
   DirectX::XMFLOAT3 m_lastTailPosotion;
   float m_tailLength;
   DirectX::XMFLOAT3 m_initLocalTailDir;
 
-  SpringJoint(const libvrm::vrm::SpringJoint& joint);
+  RuntimeSpringJoint(const libvrm::vrm::SpringJoint& joint);
   void Update(const libvrm::vrm::SpringJoint& joint,
               libvrm::Time time,
               struct libvrm::vrm::SpringCollision* collision);

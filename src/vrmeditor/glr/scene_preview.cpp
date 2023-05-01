@@ -7,7 +7,7 @@
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <runtimescene/scene_updater.h>
+#include <runtimescene/scene.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanbones.h>
 
@@ -42,7 +42,7 @@ ScenePreview::ScenePreview(
 
   m_popup = std::bind(&ViewSettings::Popup, settings.get(), m_popupName);
 
-  auto runtime = std::make_shared<runtimescene::SceneUpdater>();
+  auto runtime = std::make_shared<runtimescene::RuntimeScene>();
 
   m_rt->render =
     [scene,

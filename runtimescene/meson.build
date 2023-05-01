@@ -4,7 +4,7 @@ runtimescene_lib = static_library(
     [
         'animation_update.cpp',
         'springjoint.cpp',
-        'scene_updater.cpp',
+        'scene.cpp',
     ],
     include_directories: runtimescene_inc,
     dependencies: [libvrm_dep],
