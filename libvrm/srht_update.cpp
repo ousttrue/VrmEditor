@@ -83,9 +83,7 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
       ptr->Transform.Rotation = rotation;
 
       if (auto vrm_bone = ToVrmBone((HumanoidBones)joint.boneType)) {
-        ptr->Humanoid = gltf::NodeHumanoidInfo{
-          .HumanBone = *vrm_bone,
-        };
+        ptr->Humanoid = *vrm_bone;
       }
       scene->m_nodes.push_back(ptr);
     }
@@ -106,7 +104,7 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
       auto header = r.Get<FrameHeader>();
       auto root = scene->m_roots[0];
       auto humanoid = root->Humanoid;
-      if (!humanoid || humanoid->HumanBone == vrm::HumanBones::hips) {
+      if (!humanoid || *humanoid == vrm::HumanBones::hips) {
         // only move non humanoid or hips
         // root->Transform.Translation.x = header.x;
         // root->Transform.Translation.y = header.y;

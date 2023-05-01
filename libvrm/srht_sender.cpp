@@ -234,8 +234,7 @@ PushJoints(std::vector<JointDefinition>& joints,
   }
 
   if (auto humanoid = node->Humanoid) {
-    joints.back().boneType =
-      static_cast<uint16_t>(FromVrmBone(humanoid->HumanBone));
+    joints.back().boneType = static_cast<uint16_t>(FromVrmBone(*humanoid));
   }
 
   for (auto& child : node->Children) {

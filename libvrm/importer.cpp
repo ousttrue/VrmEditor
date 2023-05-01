@@ -517,9 +517,7 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
         std::string_view name = humanBone.at("bone");
         // std::cout << name << ": " << index << std::endl;
         if (auto bone = vrm::HumanBoneFromName(name, vrm::VrmVersion::_0_x)) {
-          scene->m_nodes[index]->Humanoid = NodeHumanoidInfo{
-            .HumanBone = *bone,
-          };
+          scene->m_nodes[index]->Humanoid = *bone;
         }
       }
     }
@@ -646,9 +644,7 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
       for (auto& kv : humanBones.items()) {
         if (auto bone =
               vrm::HumanBoneFromName(kv.key(), vrm::VrmVersion::_1_0)) {
-          scene->m_nodes[kv.value().at("node")]->Humanoid = NodeHumanoidInfo{
-            .HumanBone = *bone,
-          };
+          scene->m_nodes[kv.value().at("node")]->Humanoid = *bone;
         } else {
           std::cout << kv.key() << std::endl;
         }

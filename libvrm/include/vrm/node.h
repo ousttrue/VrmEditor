@@ -21,13 +21,6 @@ struct MeshInstance;
 struct Scene;
 struct Node;
 
-struct NodeHumanoidInfo
-{
-  vrm::HumanBones HumanBone;
-  std::weak_ptr<Node> Parent;
-  std::list<std::shared_ptr<Node>> Children;
-};
-
 struct Instance
 {
   DirectX::XMFLOAT4X4 Matrix;
@@ -189,7 +182,7 @@ struct Node
 {
   // uint32_t Index;
   std::string Name;
-  std::optional<NodeHumanoidInfo> Humanoid;
+  std::optional<vrm::HumanBones> Humanoid;
   std::optional<NodeConstraint> Constraint;
 
   // local

@@ -131,8 +131,8 @@ Node::GetShapeTail()
 
   std::shared_ptr<Node> tail;
   for (auto& child : Children) {
-    if (auto childHumanoid = child->Humanoid) {
-      switch (childHumanoid->HumanBone) {
+    if (auto childHumanBone = child->Humanoid) {
+      switch (*childHumanBone) {
         case vrm::HumanBones::spine:
         case vrm::HumanBones::neck:
         case vrm::HumanBones::leftMiddleProximal:
@@ -171,19 +171,19 @@ std::optional<vrm::HumanBones>
 Node::ClosestBone()
 {
   if (Humanoid) {
-    return Humanoid->HumanBone;
+    return *Humanoid;
   }
   if (AnyTail()) {
     for (auto current = Parent.lock(); current;
          current = current->Parent.lock()) {
       if (auto humanoid = current->Humanoid) {
-        return humanoid->HumanBone;
+        return *humanoid;
       }
     }
   } else if (auto parent = Parent.lock()) {
     if (auto parentHumanoid = parent->Humanoid) {
-      if (vrm::HumanBoneIsFinger(parentHumanoid->HumanBone)) {
-        return parentHumanoid->HumanBone;
+      if (vrm::HumanBoneIsFinger(*parentHumanoid)) {
+        return *parentHumanoid;
       }
     }
   }
@@ -196,8 +196,8 @@ Node::CalcShape()
   float w = 0.02f;
   float d = 0.02f;
   if (Humanoid) {
-    ShapeColor = vrm::HumanBoneToColor(Humanoid->HumanBone);
-    auto size = vrm::HumanBoneToWidthDepth(Humanoid->HumanBone);
+    ShapeColor = vrm::HumanBoneToColor(*Humanoid);
+    auto size = vrm::HumanBoneToWidthDepth(*Humanoid);
     w = size.x;
     d = size.y;
   } else if (auto humanBone = ClosestBone()) {

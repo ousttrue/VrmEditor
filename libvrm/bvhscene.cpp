@@ -73,9 +73,7 @@ InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
   for (auto& node : scene->m_nodes) {
     auto found = map->NameBoneMap.find(node->Name);
     if (found != map->NameBoneMap.end()) {
-      node->Humanoid = libvrm::gltf::NodeHumanoidInfo{
-        .HumanBone = found->second,
-      };
+      node->Humanoid = found->second;
     }
   }
 

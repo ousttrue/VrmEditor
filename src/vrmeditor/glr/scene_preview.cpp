@@ -106,7 +106,7 @@ ScenePreview::ScenePreview(
         ImGuizmo::GetContext().mAllowActiveHoverItem = true;
         ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
         if (auto humanoid = node->Humanoid) {
-          if (humanoid->HumanBone == libvrm::vrm::HumanBones::hips) {
+          if (*humanoid == libvrm::vrm::HumanBones::hips) {
             operation = operation | ImGuizmo::TRANSLATE;
           }
         } else {

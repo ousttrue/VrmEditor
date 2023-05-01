@@ -113,7 +113,7 @@ Scene::UpdateHumanPose()
   m_rotations.clear();
   for (auto& node : m_nodes) {
     if (auto humanoid = node->Humanoid) {
-      m_humanBoneMap.push_back(humanoid->HumanBone);
+      m_humanBoneMap.push_back(*humanoid);
       if (m_humanBoneMap.back() == vrm::HumanBones::hips) {
         // delta move
         DirectX::XMStoreFloat3(
@@ -193,7 +193,7 @@ Scene::GetBoneNode(vrm::HumanBones bone)
 {
   for (auto& node : m_nodes) {
     if (auto humanoid = node->Humanoid) {
-      if (humanoid->HumanBone == bone) {
+      if (*humanoid == bone) {
         return node;
       }
     }

@@ -12,6 +12,9 @@ using RenderFunc =
                      const libvrm::gltf::MeshInstance&,
                      const float[16])>;
 
+struct Node
+{};
+
 struct SceneUpdater
 {
   libvrm::Time NextSpringDelta = libvrm::Time(0.0);
@@ -20,14 +23,17 @@ struct SceneUpdater
                      std::shared_ptr<SpringJoint>>
     m_jointMap;
 
+  std::unordered_map<std::shared_ptr<libvrm::gltf::Node>, std::shared_ptr<Node>>
+    m_nodeMap;
+
   void Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
               const RenderFunc& render,
               libvrm::IGizmoDrawer* gizmo);
 
   void SpringUpdate(const std::shared_ptr<libvrm::vrm::SpringSolver>& solver,
-              libvrm::Time deltaForSimulation);
+                    libvrm::Time deltaForSimulation);
   void SpringDrawGizmo(const std::shared_ptr<libvrm::vrm::SpringSolver>& solver,
-                 libvrm::IGizmoDrawer* gizmo);
+                       libvrm::IGizmoDrawer* gizmo);
 };
 
 }

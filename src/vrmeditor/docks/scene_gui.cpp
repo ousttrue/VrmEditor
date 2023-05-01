@@ -218,7 +218,7 @@ SceneGui::Label(const libvrm::gltf::Scene& scene,
 
   if (auto humanoid = node->Humanoid) {
     // HumanBone = static_cast<libvrm::vrm::HumanBones>(i);
-    switch (humanoid->HumanBone) {
+    switch (*humanoid) {
       case libvrm::vrm::HumanBones::hips:
         ss << " ";
         break;
