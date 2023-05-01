@@ -394,7 +394,8 @@ ParseNode(const std::shared_ptr<Scene>& scene,
 
   if (has(node, "mesh")) {
     auto mesh_index = node.at("mesh");
-    ptr->Mesh = mesh_index;
+    auto mesh = scene->m_meshes[mesh_index];
+    ptr->Mesh = mesh;
 
     if (has(node, "skin")) {
       int skin_index = node.at("skin");
@@ -403,7 +404,7 @@ ParseNode(const std::shared_ptr<Scene>& scene,
     }
 
     ptr->MeshInstance =
-      std::make_shared<gltf::MeshInstance>(scene->m_meshes[mesh_index]);
+      std::make_shared<gltf::MeshInstance>(mesh);
   }
 
   return ptr;
@@ -470,9 +471,9 @@ ParseAnimation(const std::shared_ptr<Scene>& scene,
       } else if (path == "weights") {
         if (auto values = scene->m_gltf.accessor<float>(output_index)) {
           auto node = scene->m_nodes[node_index];
-          if (auto mesh_index = node->Mesh) {
-            auto mesh = scene->m_meshes[*mesh_index];
-            if (values->size() != mesh->m_morphTargets.size() * times->size()) {
+          if (node->Mesh) {
+            if (values->size() !=
+                node->Mesh->m_morphTargets.size() * times->size()) {
               return std::unexpected{ "animation-weights: size not match" };
             }
             ptr->AddWeights(
@@ -556,7 +557,7 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
             // [0-100] to [0-1]
             bind.weight *= 0.01f;
             for (auto& node : scene->m_nodes) {
-              if (node->Mesh == bind.mesh) {
+              if (node->Mesh == scene->m_meshes[bind.mesh]) {
                 bind.Node = node;
                 break;
               }

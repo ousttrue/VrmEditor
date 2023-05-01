@@ -524,9 +524,9 @@ Exporter::ExportNode(const Scene& scene, const std::shared_ptr<Node>& node)
     }
     m_writer.array_close();
   }
-  if (auto mesh_index = node->Mesh) {
+  if (node->Mesh) {
     m_writer.key("mesh");
-    m_writer.value(*mesh_index);
+    m_writer.value(*scene.IndexOf(node->Mesh));
   }
   if (node->Skin) {
     m_writer.key("skin");

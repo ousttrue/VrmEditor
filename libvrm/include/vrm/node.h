@@ -20,6 +20,7 @@ struct Skin;
 struct MeshInstance;
 struct Scene;
 struct Node;
+struct Mesh;
 
 struct Instance
 {
@@ -236,7 +237,7 @@ struct Node
   std::list<std::shared_ptr<Node>> Children;
   std::weak_ptr<Node> Parent;
 
-  std::optional<uint32_t> Mesh;
+  std::shared_ptr<Mesh> Mesh;
   std::shared_ptr<MeshInstance> MeshInstance;
 
   std::shared_ptr<Skin> Skin;
@@ -305,18 +306,18 @@ struct Node
                                     const PushInstance& pushInstance);
 };
 
-inline std::ostream&
-operator<<(std::ostream& os, const Node& node)
-{
-  os << "Node: " << node.Name
-    // << ": " << node.translation
-    // << node.rotation
-    // << node.scale
-    ;
-  if (node.Mesh) {
-    os << ", mesh: " << *node.Mesh;
-  }
-  return os;
-}
+// inline std::ostream&
+// operator<<(std::ostream& os, const Node& node)
+// {
+//   os << "Node: " << node.Name
+//     // << ": " << node.translation
+//     // << node.rotation
+//     // << node.scale
+//     ;
+//   if (node.Mesh) {
+//     os << ", mesh: " << *node.Mesh;
+//   }
+//   return os;
+// }
 } // namespace gltf
 }

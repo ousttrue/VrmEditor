@@ -125,12 +125,11 @@ SceneGui::ShowNodes()
                           true,
                           ImGuiWindowFlags_None)) {
       ImGui::Text("%s", showSelected->Name.c_str());
-      if (auto mesh_index = showSelected->Mesh) {
-        auto mesh = m_scene->m_meshes[*mesh_index];
+      if (showSelected->Mesh) {
         auto meshInstance = showSelected->MeshInstance;
         char morph_id[256];
-        for (int i = 0; i < mesh->m_morphTargets.size(); ++i) {
-          auto& morph = mesh->m_morphTargets[i];
+        for (int i = 0; i < showSelected->Mesh->m_morphTargets.size(); ++i) {
+          auto& morph = showSelected->Mesh->m_morphTargets[i];
           snprintf(morph_id,
                    sizeof(morph_id),
                    "[%d]%s##morph%d",
@@ -208,10 +207,9 @@ SceneGui::Label(const libvrm::gltf::Scene& scene,
   }
 
   std::stringstream ss;
-  if (auto mesh_index = node->Mesh) {
+  if (node->Mesh) {
     ss << "󰕣 ";
-    auto mesh = scene.m_meshes[*mesh_index];
-    if (mesh->m_morphTargets.size()) {
+    if (node->Mesh->m_morphTargets.size()) {
       ss << " ";
     }
   }

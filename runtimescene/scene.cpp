@@ -73,8 +73,8 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 
   // skinning
   for (auto& node : scene->m_nodes) {
-    if (auto mesh_index = node->Mesh) {
-      auto mesh = scene->m_meshes[*mesh_index];
+    if (node->Mesh) {
+      // auto mesh = scene->m_meshes[*mesh_index];
 
       // mesh animation
       std::span<DirectX::XMFLOAT4X4> skinningMatrices;
@@ -100,15 +100,15 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
       }
 
       // apply morphtarget & skinning
-      node->MeshInstance->applyMorphTargetAndSkinning(*mesh, skinningMatrices);
+      node->MeshInstance->applyMorphTargetAndSkinning(*node->Mesh,
+                                                      skinningMatrices);
     }
   }
   DirectX::XMFLOAT4X4 m;
   for (auto& node : scene->m_nodes) {
-    if (auto mesh_index = node->Mesh) {
-      auto mesh = scene->m_meshes[*mesh_index];
+    if (node->Mesh) {
       DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
-      render(mesh, *node->MeshInstance, &m._11);
+      render(node->Mesh, *node->MeshInstance, &m._11);
     }
   }
 

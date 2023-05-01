@@ -1,4 +1,5 @@
 #include "udp_receiver.h"
+#include <iostream>
 #include <unordered_map>
 
 #ifdef _WIN32
@@ -48,9 +49,15 @@ struct UdpReceiverImpl
 
   void Start(uint16_t port, const OnRecv& callback)
   {
-    auto receiver = std::make_shared<UdpHandle>(m_io, port);
-    m_handles.insert({ port, receiver });
-    receiver->Start(callback);
+    try {
+      auto receiver = std::make_shared<UdpHandle>(m_io, port);
+      m_handles.insert({ port, receiver });
+      receiver->Start(callback);
+    } catch (const std::system_error& ex) {
+      std::cerr << ex.what() << std::endl;
+    } catch (const std::runtime_error& ex) {
+      std::cerr << ex.what() << std::endl;
+    }
   }
 
   void Stop(uint16_t port)
