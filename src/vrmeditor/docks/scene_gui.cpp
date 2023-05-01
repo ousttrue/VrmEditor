@@ -290,11 +290,9 @@ SceneGui::Label(const libvrm::gltf::Scene& scene,
   }
   // collider
   for (auto& collider : scene.m_springColliders) {
-    if (auto colliderNode = collider->Node.lock()) {
-      if (colliderNode == node) {
-        ss << "󱥔 ";
-        break;
-      }
+    if (collider->Node == node) {
+      ss << "󱥔 ";
+      break;
     }
   }
 
