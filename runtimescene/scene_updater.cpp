@@ -8,6 +8,12 @@ SceneUpdater::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                      const RenderFunc& render,
                      libvrm::IGizmoDrawer* gizmo)
 {
+  if (scene != m_lastScene) {
+    // clear
+    m_jointMap.clear();
+    m_lastScene = scene;
+  }
+
   // update order
   // 1. ヒューマノイドボーンを解決
   // 2. 頭の位置が決まるのでLookAtを解決
