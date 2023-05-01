@@ -22,7 +22,6 @@ libvrm_lib = static_library(
         'srht_update.cpp',
         'srht_sender.cpp',
         'importer.cpp',
-        'springjoint.cpp',
         'springcollider.cpp',
         'image.cpp',
     ],

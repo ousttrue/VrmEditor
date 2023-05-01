@@ -18,7 +18,8 @@ struct SpringSolver
   void AddColliderGroup(
     const std::shared_ptr<SpringColliderGroup>& colliderGroup);
   void Add(const std::shared_ptr<gltf::Node>& head,
-           const DirectX::XMFLOAT3& tail,
+           const std::shared_ptr<gltf::Node>& tail,
+           const DirectX::XMFLOAT3& localTailPosition,
            float dragForce,
            float stiffiness,
            float radius);
@@ -27,8 +28,6 @@ struct SpringSolver
                     float dragForce,
                     float stiffiness,
                     float radius);
-  void Update(Time deltaForSimulation);
-  void DrawGizmo(IGizmoDrawer* gizmo);
 };
 
 }

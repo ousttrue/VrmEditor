@@ -7,6 +7,7 @@
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
+#include <runtimescene/scene_updater.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanbones.h>
 
@@ -41,11 +42,14 @@ ScenePreview::ScenePreview(
 
   m_popup = std::bind(&ViewSettings::Popup, settings.get(), m_popupName);
 
+  auto runtime = std::make_shared<runtimescene::SceneUpdater>();
+
   m_rt->render =
     [scene,
      selection,
      settings,
      env,
+     runtime,
      cuber = m_cuber,
      gizmo = std::make_shared<LineGizmo>()](const grapho::OrbitView& view) {
       view.Update(env->ProjectionMatrix, env->ViewMatrix);
@@ -53,7 +57,7 @@ ScenePreview::ScenePreview(
 
       glr::ClearRendertarget(*env);
 
-      libvrm::gltf::RenderFunc render =
+      runtimescene::RenderFunc render =
         [env, settings](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
                         const libvrm::gltf::MeshInstance& meshInstance,
                         const float m[16]) {
@@ -65,9 +69,9 @@ ScenePreview::ScenePreview(
           }
         };
 
-      scene->m_nextSpringDelta = settings->NextSpringDelta;
+      runtime->NextSpringDelta = settings->NextSpringDelta;
       settings->NextSpringDelta = {};
-      scene->Render(render, gizmo.get());
+      runtime->Render(scene, render, gizmo.get());
       if (settings->ShowLine) {
         glr::RenderLine(*env, gizmo->m_lines);
       }

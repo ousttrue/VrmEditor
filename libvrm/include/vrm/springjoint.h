@@ -1,41 +1,44 @@
 #pragma once
-#include "gizmo.h"
-#include "node.h"
-#include "timeline.h"
 #include <DirectXMath.h>
+#include <memory>
 
 namespace libvrm {
-namespace vrm {
+namespace gltf {
+struct Node;
+}
 
+namespace vrm {
 class SpringJoint
 {
 public:
   std::shared_ptr<gltf::Node> Head;
+  std::shared_ptr<gltf::Node> Tail;
+  // if Tail is nullptr
+  DirectX::XMFLOAT3 LocalTailPosition;
+
   // 減衰[0~1]
   float DragForce = 0;
   // 剛性。初期姿勢への復元力[0~]
   // 増えれば増えるほど比率が高まる。
-  float Stiffiness = 0;
+  float Stiffness = 0;
+  // tail hit radius
   float Radius = 0;
-
-private:
-  DirectX::XMFLOAT3 m_currentTailPosotion;
-  DirectX::XMFLOAT3 m_lastTailPosotion;
-  float m_tailLength;
-  DirectX::XMFLOAT3 m_initLocalTailDir;
 
 public:
   SpringJoint(const std::shared_ptr<gltf::Node>& head,
+              const std::shared_ptr<gltf::Node>& tail,
               const DirectX::XMFLOAT3& localTailPosition,
               float dragForce,
-              float stiffiness,
-              float radius);
-  void Update(Time time, struct SpringCollision* collision);
-  DirectX::XMVECTOR ConstraintTailPosition(const DirectX::XMVECTOR& src);
-
-  DirectX::XMVECTOR WorldPosToLocalRotation(
-    const DirectX::XMVECTOR& nextTail) const;
-  void DrawGizmo(IGizmoDrawer* gizmo);
+              float stiffness,
+              float radius)
+    : Head(head)
+    , Tail(tail)
+    , LocalTailPosition(localTailPosition)
+    , DragForce(dragForce)
+    , Stiffness(stiffness)
+    , Radius(radius)
+  {
+  }
 };
 
 }

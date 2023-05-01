@@ -99,9 +99,9 @@ ParseMaterial(const std::shared_ptr<Scene>& scene,
       // int image_index = texture.at("source");
       // ptr->Texture.Image = m_images[image_index];
     }
-    if(has(pbrMetallicRoughness, "baseColorFactor"))
-    {
-      ptr->Color = pbrMetallicRoughness.value("baseColorFactor", DirectX::XMFLOAT4{1, 1, 1, 1});
+    if (has(pbrMetallicRoughness, "baseColorFactor")) {
+      ptr->Color = pbrMetallicRoughness.value("baseColorFactor",
+                                              DirectX::XMFLOAT4{ 1, 1, 1, 1 });
     }
   }
   return ptr;
@@ -670,8 +670,12 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
             float stiffness = joint.at("stiffness");
             float dragForce = joint.at("dragForce");
             float radius = joint.at("hitRadius");
-            solver->Add(
-              head, tail->Transform.Translation, stiffness, dragForce, radius);
+            solver->Add(head,
+                        tail,
+                        tail->Transform.Translation,
+                        stiffness,
+                        dragForce,
+                        radius);
           }
           head = tail;
         }

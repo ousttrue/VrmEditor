@@ -235,6 +235,10 @@ struct Node
         WorldInitialScale.x, WorldInitialScale.y, WorldInitialScale.z),
       WorldInitialTransform.Matrix());
   }
+  DirectX::XMVECTOR WorldInitialTransformPoint(const DirectX::XMVECTOR& p)
+  {
+    return DirectX::XMVector3Transform(p, WorldInitialMatrix());
+  }
 
   std::list<std::shared_ptr<Node>> Children;
   std::weak_ptr<Node> Parent;

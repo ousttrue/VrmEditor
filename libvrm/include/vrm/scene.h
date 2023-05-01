@@ -46,8 +46,6 @@ class Image;
 struct TextureSampler;
 struct Texture;
 struct Material;
-using RenderFunc = std::function<
-  void(const std::shared_ptr<Mesh>&, const MeshInstance&, const float[16])>;
 
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;
@@ -95,7 +93,6 @@ struct Scene
   std::shared_ptr<vrm::Expressions> m_expressions;
 
   // spring
-  Time m_nextSpringDelta = Time(0.0);
   std::vector<std::shared_ptr<vrm::SpringCollider>> m_springColliders;
   std::vector<std::shared_ptr<vrm::SpringColliderGroup>> m_springColliderGroups;
   std::vector<std::shared_ptr<vrm::SpringSolver>> m_springSolvers;
@@ -187,7 +184,6 @@ struct Scene
 
   void SyncHierarchy();
 
-  void Render(const RenderFunc& render, IGizmoDrawer* gizmo);
   void Traverse(const EnterFunc& enter,
                 const LeaveFunc& leave,
                 const std::shared_ptr<Node>& node = nullptr);
