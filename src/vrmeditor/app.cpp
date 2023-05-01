@@ -22,7 +22,7 @@
 #include <fstream>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <runtimescene/animation.h>
+#include <runtimescene/animation_update.h>
 #include <vrm/animation.h>
 #include <vrm/exporter.h>
 #include <vrm/fileutil.h>

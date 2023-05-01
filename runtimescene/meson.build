@@ -2,8 +2,7 @@ runtimescene_inc = include_directories('.')
 runtimescene_lib = static_library(
     'runtimescene',
     [
-        'runtime_node.cpp',
-        'animation.cpp',
+        'animation_update.cpp',
     ],
     include_directories: runtimescene_inc,
     dependencies: [libvrm_dep],
