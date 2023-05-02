@@ -1,33 +1,36 @@
 #pragma once
+#include "springcollider.h"
 #include "springjoint.h"
-#include "vrm/springcollider.h"
 #include <memory>
 #include <vector>
 
 namespace libvrm {
 namespace vrm {
 
-struct SpringSolver
+struct SpringBone
 {
   std::string Comment;
+  std::vector<std::shared_ptr<SpringJoint>> Joints;
+  std::vector<std::shared_ptr<SpringColliderGroup>> Colliders;
 
-  std::vector<SpringJoint> Joints;
-  std::shared_ptr<SpringCollision> Collision;
-
-  SpringSolver();
   void AddColliderGroup(
-    const std::shared_ptr<SpringColliderGroup>& colliderGroup);
-  void Add(const std::shared_ptr<gltf::Node>& head,
-           const std::shared_ptr<gltf::Node>& tail,
-           const DirectX::XMFLOAT3& localTailPosition,
-           float dragForce,
-           float stiffiness,
-           float radius);
+    const std::shared_ptr<SpringColliderGroup>& colliderGroup)
+  {
+    Colliders.push_back(colliderGroup);
+  }
+
+  void AddJoint(const std::shared_ptr<gltf::Node>& head,
+                const std::shared_ptr<gltf::Node>& tail,
+                const DirectX::XMFLOAT3& localTailPosition,
+                float dragForce,
+                float stiffiness,
+                float radius);
+
   // for vrm0
-  void AddRecursive(const std::shared_ptr<gltf::Node>& node,
-                    float dragForce,
-                    float stiffiness,
-                    float radius);
+  void AddJointRecursive(const std::shared_ptr<gltf::Node>& node,
+                         float dragForce,
+                         float stiffiness,
+                         float radius);
 };
 
 }

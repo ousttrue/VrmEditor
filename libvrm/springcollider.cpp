@@ -34,23 +34,5 @@ SpringCollider::Position() const
   return Node->WorldTransformPoint(DirectX::XMLoadFloat3(&Offset));
 }
 
-std::optional<DirectX::XMVECTOR>
-SpringCollision::Collide(const DirectX::XMVECTOR& springTail, float radius)
-{
-  for (; Current < Colliders.size(); ++Current) {
-    auto collider = Colliders[Current];
-    auto r = radius + collider->Radius;
-    auto colliderPos = collider->Position();
-    auto d = DirectX::XMVectorSubtract(springTail, colliderPos);
-    if (DirectX::XMVectorGetX(DirectX::XMVector3Length(d)) <= (r * r)) {
-      // ヒット。Colliderの半径方向に押し出す
-      auto normal = DirectX::XMVector3Normalize(d);
-      return DirectX::XMVectorAdd(
-        colliderPos, DirectX::XMVectorScale(normal, radius + collider->Radius));
-    }
-  }
-  return {};
-}
-
 }
 }

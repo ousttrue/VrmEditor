@@ -607,10 +607,10 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
           }
         }
         for (auto& bone : boneGroup.at("bones")) {
-          auto spring = std::make_shared<vrm::SpringSolver>();
-          spring->AddRecursive(
+          auto spring = std::make_shared<vrm::SpringBone>();
+          spring->AddJointRecursive(
             scene->m_nodes[bone], dragForce, stiffness, radius);
-          scene->m_springSolvers.push_back(spring);
+          scene->m_springBones.push_back(spring);
           for (auto& g : colliderGroups) {
             spring->AddColliderGroup(g);
           }
@@ -655,7 +655,7 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
     if (has(VRMC_springBone, "springs")) {
       auto& springs = VRMC_springBone.at("springs");
       for (auto& spring : springs) {
-        auto solver = std::make_shared<vrm::SpringSolver>();
+        auto springBone = std::make_shared<vrm::SpringBone>();
         std::shared_ptr<Node> head;
         for (auto& joint : spring.at("joints")) {
           int node_index = joint.at("node");
@@ -664,16 +664,16 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
             float stiffness = joint.at("stiffness");
             float dragForce = joint.at("dragForce");
             float radius = joint.at("hitRadius");
-            solver->Add(head,
-                        tail,
-                        tail->Transform.Translation,
-                        stiffness,
-                        dragForce,
-                        radius);
+            springBone->AddJoint(head,
+                             tail,
+                             tail->Transform.Translation,
+                             stiffness,
+                             dragForce,
+                             radius);
           }
           head = tail;
         }
-        scene->m_springSolvers.push_back(solver);
+        scene->m_springBones.push_back(springBone);
       }
     }
     if (has(VRMC_springBone, "colliders")) {

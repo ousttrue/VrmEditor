@@ -6,47 +6,33 @@
 
 namespace libvrm::vrm {
 
-SpringSolver::SpringSolver()
-  : Collision(new SpringCollision)
-{
-}
-
 void
-SpringSolver::AddColliderGroup(
-  const std::shared_ptr<SpringColliderGroup>& colliderGroup)
-{
-  for (auto& collider : colliderGroup->Colliders) {
-    Collision->Colliders.push_back(collider);
-  }
-}
-
-void
-SpringSolver::Add(const std::shared_ptr<gltf::Node>& head,
-                  const std::shared_ptr<gltf::Node>& tail,
-                  const DirectX::XMFLOAT3& localTailPosition,
-                  float dragForce,
-                  float stiffiness,
-                  float radius)
+SpringBone::AddJoint(const std::shared_ptr<gltf::Node>& head,
+                     const std::shared_ptr<gltf::Node>& tail,
+                     const DirectX::XMFLOAT3& localTailPosition,
+                     float dragForce,
+                     float stiffiness,
+                     float radius)
 {
   head->ShapeColor = { 0.5f, 0.5f, 1.0f, 1 };
-  Joints.push_back(
-    SpringJoint(head, tail, localTailPosition, dragForce, stiffiness, radius));
+  Joints.push_back(std::make_shared<SpringJoint>(
+    head, tail, localTailPosition, dragForce, stiffiness, radius));
 }
 
 void
-SpringSolver::AddRecursive(const std::shared_ptr<gltf::Node>& node,
-                           float dragForce,
-                           float stiffiness,
-                           float radius)
+SpringBone::AddJointRecursive(const std::shared_ptr<gltf::Node>& node,
+                              float dragForce,
+                              float stiffiness,
+                              float radius)
 {
   if (node->Children.size()) {
     for (auto& child : node->Children) {
-      Add(node,
-          child,
-          child->Transform.Translation,
-          dragForce,
-          stiffiness,
-          radius);
+      AddJoint(node,
+               child,
+               child->Transform.Translation,
+               dragForce,
+               stiffiness,
+               radius);
       break;
     }
   } else {
@@ -62,11 +48,11 @@ SpringSolver::AddRecursive(const std::shared_ptr<gltf::Node>& node,
       DirectX::XMVector3Transform(
         childPosition, DirectX::XMMatrixInverse(nullptr, node->WorldMatrix())));
 
-    Add(node, nullptr, localTailPosition, dragForce, stiffiness, radius);
+    AddJoint(node, nullptr, localTailPosition, dragForce, stiffiness, radius);
   }
 
   for (auto& child : node->Children) {
-    AddRecursive(child, dragForce, stiffiness, radius);
+    AddJointRecursive(child, dragForce, stiffiness, radius);
   }
 }
 

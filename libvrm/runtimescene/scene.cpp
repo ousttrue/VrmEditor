@@ -1,19 +1,21 @@
 #include "vrm/runtimescene/scene.h"
 #include "vrm/runtimescene/mesh.h"
+#include "vrm/runtimescene/springcollision.h"
 #include <vrm/skin.h>
 
 namespace runtimescene {
 
 std::shared_ptr<RuntimeSpringJoint>
-RuntimeScene::GetRuntimeJoint(const libvrm::vrm::SpringJoint& joint)
+RuntimeScene::GetRuntimeJoint(
+  const std::shared_ptr<libvrm::vrm::SpringJoint>& joint)
 {
-  auto found = m_jointMap.find(joint.Head);
+  auto found = m_jointMap.find(joint);
   if (found != m_jointMap.end()) {
     return found->second;
   }
 
   auto runtime = std::make_shared<RuntimeSpringJoint>(joint);
-  m_jointMap.insert({ joint.Head, runtime });
+  m_jointMap.insert({ joint, runtime });
   return runtime;
 }
 
@@ -62,7 +64,7 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
   }
 
   // springbone
-  for (auto& spring : scene->m_springSolvers) {
+  for (auto& spring : scene->m_springBones) {
     SpringUpdate(spring, NextSpringDelta);
   }
   NextSpringDelta = {};
@@ -128,7 +130,7 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
     }
   }
 
-  for (auto& spring : scene->m_springSolvers) {
+  for (auto& spring : scene->m_springBones) {
     SpringDrawGizmo(spring, gizmo);
   }
   for (auto& collider : scene->m_springColliders) {
@@ -138,7 +140,7 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 
 void
 RuntimeScene::SpringUpdate(
-  const std::shared_ptr<libvrm::vrm::SpringSolver>& solver,
+  const std::shared_ptr<libvrm::vrm::SpringBone>& spring,
   libvrm::Time delta)
 {
   bool doUpdate = delta.count() > 0;
@@ -146,21 +148,22 @@ RuntimeScene::SpringUpdate(
     return;
   }
 
-  for (auto& joint : solver->Joints) {
-    solver->Collision->Clear();
+  auto collision = GetRuntimeSpringCollision(spring);
+  for (auto& joint : spring->Joints) {
+    collision->Clear();
     auto runtime = GetRuntimeJoint(joint);
-    runtime->Update(joint, delta, solver->Collision.get());
+    runtime->Update(*joint, delta, collision.get());
   }
 }
 
 void
 RuntimeScene::SpringDrawGizmo(
-  const std::shared_ptr<libvrm::vrm::SpringSolver>& solver,
+  const std::shared_ptr<libvrm::vrm::SpringBone>& solver,
   libvrm::IGizmoDrawer* gizmo)
 {
   for (auto& joint : solver->Joints) {
     auto runtime = GetRuntimeJoint(joint);
-    runtime->DrawGizmo(joint, gizmo);
+    runtime->DrawGizmo(*joint, gizmo);
   }
 }
 

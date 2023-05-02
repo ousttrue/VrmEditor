@@ -6,6 +6,8 @@
 
 namespace runtimescene {
 
+struct RuntimeSpringCollision;
+
 struct RuntimeSpringJoint
 {
   DirectX::XMFLOAT3 m_currentTailPosotion;
@@ -13,10 +15,10 @@ struct RuntimeSpringJoint
   float m_tailLength;
   DirectX::XMFLOAT3 m_initLocalTailDir;
 
-  RuntimeSpringJoint(const libvrm::vrm::SpringJoint& joint);
+  RuntimeSpringJoint(const std::shared_ptr<libvrm::vrm::SpringJoint>& joint);
   void Update(const libvrm::vrm::SpringJoint& joint,
               libvrm::Time time,
-              struct libvrm::vrm::SpringCollision* collision);
+              RuntimeSpringCollision* collision);
   DirectX::XMVECTOR ConstraintTailPosition(
     const libvrm::vrm::SpringJoint& joint,
     const DirectX::XMVECTOR& src);

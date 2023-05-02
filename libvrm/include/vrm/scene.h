@@ -95,7 +95,7 @@ struct Scene
   // spring
   std::vector<std::shared_ptr<vrm::SpringCollider>> m_springColliders;
   std::vector<std::shared_ptr<vrm::SpringColliderGroup>> m_springColliderGroups;
-  std::vector<std::shared_ptr<vrm::SpringSolver>> m_springSolvers;
+  std::vector<std::shared_ptr<vrm::SpringBone>> m_springBones;
 
   std::unordered_map<vrm::MorphTargetKey, float> m_morphTargetMap;
 
@@ -126,7 +126,7 @@ struct Scene
 
     m_springColliders.clear();
     m_springColliderGroups.clear();
-    m_springSolvers.clear();
+    m_springBones.clear();
 
     m_morphTargetMap.clear();
 

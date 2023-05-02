@@ -1,20 +1,22 @@
 #include "vrm/runtimescene/springjoint.h"
+#include "vrm/runtimescene/springcollision.h"
 #include <vrm/dmath.h>
 
 namespace runtimescene {
 
-RuntimeSpringJoint::RuntimeSpringJoint(const libvrm::vrm::SpringJoint& joint)
+RuntimeSpringJoint::RuntimeSpringJoint(
+  const std::shared_ptr<libvrm::vrm::SpringJoint>& joint)
 {
-  auto world = joint.Head->WorldInitialTransformPoint(
-    DirectX::XMLoadFloat3(&joint.LocalTailPosition));
+  auto world = joint->Head->WorldInitialTransformPoint(
+    DirectX::XMLoadFloat3(&joint->LocalTailPosition));
   DirectX::XMStoreFloat3(&m_currentTailPosotion, world);
   m_lastTailPosotion = m_currentTailPosotion;
   m_tailLength = DirectX::XMVectorGetX(
-    DirectX::XMVector3Length(DirectX::XMLoadFloat3(&joint.LocalTailPosition)));
+    DirectX::XMVector3Length(DirectX::XMLoadFloat3(&joint->LocalTailPosition)));
   assert(m_tailLength);
   DirectX::XMStoreFloat3(&m_initLocalTailDir,
                          DirectX::XMVector3Normalize(
-                           DirectX::XMLoadFloat3(&joint.LocalTailPosition)));
+                           DirectX::XMLoadFloat3(&joint->LocalTailPosition)));
 }
 
 void
@@ -54,7 +56,7 @@ RuntimeSpringJoint::DrawGizmo(const libvrm::vrm::SpringJoint& joint,
 void
 RuntimeSpringJoint::Update(const libvrm::vrm::SpringJoint& joint,
                            libvrm::Time time,
-                           libvrm::vrm::SpringCollision* collision)
+                           RuntimeSpringCollision* collision)
 {
   auto currentTail = DirectX::XMLoadFloat3(&m_currentTailPosotion);
 

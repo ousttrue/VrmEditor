@@ -75,14 +75,5 @@ struct SpringColliderGroup
 //   return os;
 // }
 
-struct SpringCollision
-{
-  std::vector<std::shared_ptr<SpringCollider>> Colliders;
-  int Current = 0;
-  void Clear() { Current = 0; }
-  std::optional<DirectX::XMVECTOR> Collide(const DirectX::XMVECTOR& pos,
-                                           float radius);
-};
-
 }
 }

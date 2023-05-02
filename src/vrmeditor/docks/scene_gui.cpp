@@ -4,10 +4,10 @@
 #include <glr/gl3renderer.h>
 #include <grapho/gl3/Texture.h>
 #include <imgui.h>
-#include <vrm/runtimescene/mesh.h>
-#include <vrm/runtimescene/scene.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
+#include <vrm/runtimescene/mesh.h>
+#include <vrm/runtimescene/scene.h>
 #include <vrm/scene.h>
 #include <vrm/texture.h>
 
@@ -277,9 +277,9 @@ SceneGui::Label(const std::shared_ptr<libvrm::gltf::Node>& node)
 
   // vrm0
   // spring
-  for (auto& solver : m_scene->m_table->m_springSolvers) {
+  for (auto& solver : m_scene->m_table->m_springBones) {
     for (auto& joint : solver->Joints) {
-      auto joint_node = joint.Head;
+      auto joint_node = joint->Head;
       if (joint_node == node) {
         ss << "󰚟 ";
         break;
