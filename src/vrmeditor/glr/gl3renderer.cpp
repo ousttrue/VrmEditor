@@ -10,11 +10,11 @@
 #include <imgui.h>
 #include <iostream>
 #include <map>
-#include <runtimescene/mesh.h>
 #include <unordered_map>
 #include <vrm/image.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
+#include <vrm/runtimescene/mesh.h>
 #include <vrm/texture.h>
 
 static const char* vertex_shader_text = R"(#version 400

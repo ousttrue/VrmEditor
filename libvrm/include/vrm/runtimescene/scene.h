@@ -1,5 +1,5 @@
 #pragma once
-#include "runtimescene/sprintjoint.h"
+#include "springjoint.h"
 #include <unordered_map>
 #include <vrm/mesh.h>
 #include <vrm/scene.h>

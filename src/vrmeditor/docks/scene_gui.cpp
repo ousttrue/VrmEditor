@@ -4,8 +4,8 @@
 #include <glr/gl3renderer.h>
 #include <grapho/gl3/Texture.h>
 #include <imgui.h>
-#include <runtimescene/mesh.h>
-#include <runtimescene/scene.h>
+#include <vrm/runtimescene/mesh.h>
+#include <vrm/runtimescene/scene.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
 #include <vrm/scene.h>

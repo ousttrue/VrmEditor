@@ -7,7 +7,7 @@
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <runtimescene/scene.h>
+#include <vrm/runtimescene/scene.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanbones.h>
 

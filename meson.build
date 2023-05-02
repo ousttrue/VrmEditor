@@ -32,7 +32,6 @@ asio_dep = dependency('asio')
 subdir('libvrm')
 
 if get_option('executables')
-    subdir('runtimescene')
     subdir('src')
 endif
 if get_option('tests')

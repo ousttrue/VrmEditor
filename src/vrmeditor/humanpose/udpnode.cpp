@@ -3,7 +3,7 @@
 #include <glr/scene_preview.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <runtimescene/scene.h>
+#include <vrm/runtimescene/scene.h>
 #include <vrm/scene.h>
 #include <vrm/srht_update.h>
 

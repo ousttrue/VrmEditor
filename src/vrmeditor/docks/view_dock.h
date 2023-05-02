@@ -1,7 +1,7 @@
 #pragma once
 #include "glr/scene_preview.h"
 #include "gui.h"
-#include "runtimescene/scene.h"
+#include <vrm/runtimescene/scene.h>
 #include <imgui.h>
 
 class ViewDock

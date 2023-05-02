@@ -1,4 +1,4 @@
-#include "runtimescene/sprintjoint.h"
+#include "vrm/runtimescene/springjoint.h"
 #include <vrm/dmath.h>
 
 namespace runtimescene {

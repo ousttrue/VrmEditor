@@ -3,9 +3,9 @@
 #include "glr/scene_preview.h"
 #include "humanpose_stream.h"
 #include <grapho/orbitview.h>
-#include <runtimescene/scene.h>
 #include <vrm/bvhscene.h>
 #include <vrm/humanpose.h>
+#include <vrm/runtimescene/scene.h>
 #include <vrm/timeline.h>
 
 namespace humanpose {

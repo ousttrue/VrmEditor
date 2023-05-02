@@ -1,6 +1,6 @@
-#include "runtimescene/animation_update.h"
-#include "runtimescene/scene.h"
-#include "runtimescene/mesh.h"
+#include "vrm/runtimescene/animation_update.h"
+#include "vrm/runtimescene/scene.h"
+#include "vrm/runtimescene/mesh.h"
 
 namespace runtimescene {
 

@@ -1,5 +1,5 @@
-#include "runtimescene/scene.h"
-#include "runtimescene/mesh.h"
+#include "vrm/runtimescene/scene.h"
+#include "vrm/runtimescene/mesh.h"
 #include <vrm/skin.h>
 
 namespace runtimescene {

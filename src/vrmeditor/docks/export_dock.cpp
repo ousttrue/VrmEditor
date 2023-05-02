@@ -4,10 +4,10 @@
 #include <fstream>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <runtimescene/scene.h>
 #include <vrm/exporter.h>
 #include <vrm/glb.h>
 #include <vrm/importer.h>
+#include <vrm/runtimescene/scene.h>
 #include <vrm/scene.h>
 
 void
