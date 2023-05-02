@@ -48,7 +48,7 @@ BvhNode::TimeUpdate(libvrm::Time time)
     libvrm::bvh::UpdateSceneFromBvhFrame(m_scene->m_table, m_bvh, time);
   }
 
-  Outputs[0].Value = m_scene->m_table->UpdateHumanPose();
+  // Outputs[0].Value = m_scene->m_table->UpdateHumanPose();
 }
 
 void

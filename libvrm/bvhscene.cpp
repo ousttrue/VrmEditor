@@ -10,7 +10,7 @@ UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
                         const bvh::Frame& frame,
                         float scaling)
 {
-  auto joint = &bvh->joints[scene->GetNodeIndex(node)];
+  auto joint = &bvh->joints[*scene->IndexOf(node)];
   auto transform = frame.Resolve(joint->channels);
   // node->Transform.Translation = transform.Translation;
   // node->Transform.Translation.x *= scaling;

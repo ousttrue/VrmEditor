@@ -87,7 +87,7 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
   std::weak_ptr<runtimescene::RuntimeScene> weak = m_scene;
   PoseStream->HumanPoseChanged.push_back([weak](const auto& pose) {
     if (auto scene = weak.lock()) {
-      scene->m_table->SetHumanPose(pose);
+      // scene->m_table->SetHumanPose(pose);
       return true;
     } else {
       return false;

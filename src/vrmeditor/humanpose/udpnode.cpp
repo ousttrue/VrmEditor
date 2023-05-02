@@ -37,7 +37,7 @@ UdpNode::TimeUpdate(libvrm::Time time)
   if (m_initialPose) {
     // m_scene->m_table->SetInitialPose();
   }
-  Outputs[0].Value = m_scene->m_table->UpdateHumanPose();
+  // Outputs[0].Value = m_scene->m_table->UpdateHumanPose();
 }
 
 void

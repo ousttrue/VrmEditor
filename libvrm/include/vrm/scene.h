@@ -72,6 +72,12 @@ enum class ModelType
   Vrm1,
 };
 
+struct DrawItem
+{
+  std::shared_ptr<Mesh> Mesh;
+  DirectX::XMFLOAT4X4 Matrix;
+};
+
 struct Scene
 {
   ModelType m_type = ModelType::Gltf;
@@ -105,6 +111,8 @@ struct Scene
   std::vector<vrm::HumanBones> m_humanBoneMap;
   std::vector<DirectX::XMFLOAT4> m_rotations;
   vrm::HumanPose m_pose;
+
+  std::vector<DrawItem> m_drawables;
 
   Scene();
   ~Scene();
@@ -172,18 +180,6 @@ struct Scene
     }
   }
 
-  int GetNodeIndex(const std::shared_ptr<gltf::Node>& node) const
-  {
-    for (int i = 0; i < m_nodes.size(); ++i) {
-      if (m_nodes[i] == node) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  void SyncHierarchy();
-
   void Traverse(const EnterFunc& enter,
                 const LeaveFunc& leave,
                 const std::shared_ptr<Node>& node = nullptr);
@@ -193,8 +189,6 @@ struct Scene
                     const LeaveJson& leave,
                     nlohmann::json* j = nullptr);
 
-  vrm::HumanPose UpdateHumanPose();
-  void SetHumanPose(const vrm::HumanPose& pose);
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
 
   BoundingBox GetBoundingBox() const;
@@ -211,19 +205,8 @@ struct Scene
     }
   }
 
-  // void SetInitialPose()
-  // {
-  //   for (auto& node : m_nodes) {
-  //     node->Transform = node->InitialTransform;
-  //   }
-  //   for (auto& root : m_roots) {
-  //     root->CalcWorldMatrix(true);
-  //   }
-  //   RaiseSceneUpdated();
-  // }
-
-  void DrawGizmo(IGizmoDrawer* gizmo);
+  std::span<const DrawItem> Drawables();
 };
 
-} // gltf
+}
 }

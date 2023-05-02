@@ -66,6 +66,21 @@ struct RuntimeScene
     libvrm::IGizmoDrawer* gizmo);
   DirectX::XMVECTOR SpringColliderPosition(
     const std::shared_ptr<libvrm::vrm::SpringCollider>& collider);
-};
+
+  // vrm::HumanPose UpdateHumanPose();
+  // void SetHumanPose(const vrm::HumanPose& pose);
+  // void SyncHierarchy();
+}  // void SetInitialPose()
+  // {
+  //   for (auto& node : m_nodes) {
+  //     node->Transform = node->InitialTransform;
+  //   }
+  //   for (auto& root : m_roots) {
+  //     root->CalcWorldMatrix(true);
+  //   }
+  //   RaiseSceneUpdated();
+  // }
+
+;
 
 }

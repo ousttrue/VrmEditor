@@ -51,21 +51,34 @@ ScenePreview::ScenePreview(
 
       glr::ClearRendertarget(*env);
 
-      runtimescene::RenderFunc render =
-        [env, settings](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-                        const runtimescene::RuntimeMesh& meshInstance,
-                        const float m[16]) {
-          if (settings->ShowMesh) {
-            glr::Render(RenderPass::Color, *env, mesh, meshInstance, m);
-          }
-          if (settings->ShowShadow) {
-            glr::Render(RenderPass::ShadowMatrix, *env, mesh, meshInstance, m);
-          }
-        };
+      // runtimescene::RenderFunc render =
+      //   [env, settings](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+      //                   const runtimescene::RuntimeMesh& meshInstance,
+      //                   const float m[16]) {
+      //     if (settings->ShowMesh) {
+      //       glr::Render(RenderPass::Color, *env, mesh, meshInstance, m);
+      //     }
+      //     if (settings->ShowShadow) {
+      //       glr::Render(RenderPass::ShadowMatrix, *env, mesh, meshInstance,
+      //       m);
+      //     }
+      //   };
 
       scene->NextSpringDelta = settings->NextSpringDelta;
       settings->NextSpringDelta = {};
-      scene->Render(scene->m_table, render, gizmo.get());
+
+      for (auto [mesh, m] : scene->m_table->Drawables()) {
+        auto meshInstance = scene->GetRuntimeMesh(mesh);
+        if (settings->ShowMesh) {
+          glr::Render(RenderPass::Color, *env, mesh, *meshInstance, &m._11);
+        }
+        if (settings->ShowShadow) {
+          glr::Render(
+            RenderPass::ShadowMatrix, *env, mesh, *meshInstance, &m._11);
+        }
+      }
+      // scene->Render(scene->m_table, render, gizmo.get());
+
       if (settings->ShowLine) {
         glr::RenderLine(*env, gizmo->m_lines);
       }
