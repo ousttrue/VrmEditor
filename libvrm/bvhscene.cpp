@@ -4,28 +4,30 @@
 namespace libvrm::bvh {
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void
-UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
-                        std::shared_ptr<gltf::Node>& node,
-                        const std::shared_ptr<bvh::Bvh>& bvh,
-                        const bvh::Frame& frame,
-                        float scaling)
+UpdateSceneFromBvhFrame(
+  const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+  std::shared_ptr<runtimescene::RuntimeNode>& node,
+  const std::shared_ptr<bvh::Bvh>& bvh,
+  const bvh::Frame& frame,
+  float scaling)
 {
   auto joint = &bvh->joints[*scene->IndexOf(node)];
   auto transform = frame.Resolve(joint->channels);
-  // node->Transform.Translation = transform.Translation;
-  // node->Transform.Translation.x *= scaling;
-  // node->Transform.Translation.y *= scaling;
-  // node->Transform.Translation.z *= scaling;
-  // node->Transform.Rotation = transform.Rotation;
+  node->Transform.Translation = transform.Translation;
+  node->Transform.Translation.x *= scaling;
+  node->Transform.Translation.y *= scaling;
+  node->Transform.Translation.z *= scaling;
+  node->Transform.Rotation = transform.Rotation;
   for (auto& child : node->Children) {
     UpdateSceneFromBvhFrame(scene, child, bvh, frame, scaling);
   }
 }
 
 void
-UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
-                        const std::shared_ptr<bvh::Bvh>& bvh,
-                        Time time)
+UpdateSceneFromBvhFrame(
+  const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+  const std::shared_ptr<bvh::Bvh>& bvh,
+  Time time)
 {
   if (scene->m_roots.empty()) {
     return;
@@ -34,7 +36,7 @@ UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
   auto frame = bvh->GetFrame(index);
   UpdateSceneFromBvhFrame(
     scene, scene->m_roots[0], bvh, frame, bvh->GuessScaling());
-  // scene->m_roots[0]->CalcWorldMatrix(true);
+  scene->m_roots[0]->CalcWorldMatrix(true);
   scene->RaiseSceneUpdated();
 }
 

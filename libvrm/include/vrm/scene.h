@@ -102,11 +102,6 @@ struct Scene
 
   std::list<std::function<void(const Scene& scene)>> m_sceneUpdated;
 
-  // humanpose
-  std::vector<vrm::HumanBones> m_humanBoneMap;
-  std::vector<DirectX::XMFLOAT4> m_rotations;
-  vrm::HumanPose m_pose;
-
   std::vector<DrawItem> m_drawables;
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
 

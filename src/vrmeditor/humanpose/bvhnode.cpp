@@ -41,14 +41,14 @@ void
 BvhNode::TimeUpdate(libvrm::Time time)
 {
   if (m_initialPose) {
-    // Outputs[0].Value = libvrm::vrm::HumanPose::Initial();
-    // m_scene->m_table->SetInitialPose();
+    Outputs[0].Value = libvrm::vrm::HumanPose::Initial();
+    // m_scene->SetInitialPose();
   } else {
     // update scene from bvh
-    libvrm::bvh::UpdateSceneFromBvhFrame(m_scene->m_table, m_bvh, time);
+    libvrm::bvh::UpdateSceneFromBvhFrame(m_scene, m_bvh, time);
   }
 
-  // Outputs[0].Value = m_scene->m_table->UpdateHumanPose();
+  Outputs[0].Value = m_scene->UpdateHumanPose();
 }
 
 void

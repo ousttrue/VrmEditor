@@ -1,6 +1,7 @@
 #pragma once
 #include "springjoint.h"
 #include <unordered_map>
+#include <vrm/humanpose.h>
 #include <vrm/mesh.h>
 #include <vrm/scene.h>
 #include <vrm/springbone.h>
@@ -19,6 +20,21 @@ using RenderFunc =
 struct RuntimeScene
 {
   std::shared_ptr<libvrm::gltf::Scene> m_table;
+  std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
+  std::vector<std::shared_ptr<RuntimeNode>> m_roots;
+
+  std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
+  {
+    return libvrm::gltf::_IndexOf<std::shared_ptr<RuntimeNode>>(m_nodes, node);
+  }
+
+  std::list<std::function<void(const RuntimeScene& scene)>> m_sceneUpdated;
+  void RaiseSceneUpdated()
+  {
+    for (auto& callback : m_sceneUpdated) {
+      callback(*this);
+    }
+  }
 
   libvrm::Time NextSpringDelta = libvrm::Time(0.0);
   std::shared_ptr<libvrm::gltf::Scene> m_lastScene;
@@ -69,20 +85,24 @@ struct RuntimeScene
   DirectX::XMVECTOR SpringColliderPosition(
     const std::shared_ptr<libvrm::vrm::SpringCollider>& collider);
 
-  // vrm::HumanPose UpdateHumanPose();
-  // void SetHumanPose(const vrm::HumanPose& pose);
-  // void SyncHierarchy();
-} // void SetInitialPose()
-  // {
-  //   for (auto& node : m_nodes) {
-  //     node->Transform = node->InitialTransform;
-  //   }
-  //   for (auto& root : m_roots) {
-  //     root->CalcWorldMatrix(true);
-  //   }
-  //   RaiseSceneUpdated();
-  // }
+  // humanpose
+  std::vector<libvrm::vrm::HumanBones> m_humanBoneMap;
+  std::vector<DirectX::XMFLOAT4> m_rotations;
+  libvrm::vrm::HumanPose m_pose;
+  libvrm::vrm::HumanPose UpdateHumanPose();
+  void SetHumanPose(const libvrm::vrm::HumanPose& pose);
+  void SyncHierarchy();
+};
 
-;
+// void SetInitialPose()
+// {
+//   for (auto& node : m_nodes) {
+//     node->Transform = node->InitialTransform;
+//   }
+//   for (auto& root : m_roots) {
+//     root->CalcWorldMatrix(true);
+//   }
+//   RaiseSceneUpdated();
+// }
 
 }

@@ -63,11 +63,11 @@ App::App()
   PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
 
-  // auto track = m_timeline->AddTrack("PoseStream", {});
-  // track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
-  //   pose->Update(time);
-  //   return true;
-  // });
+  auto track = m_timeline->AddTrack("PoseStream", {});
+  track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
+    pose->Update(time);
+    return true;
+  });
 
   m_jsonGui = std::make_shared<JsonGui>();
   auto indent = m_gui->FontSize * 0.5f;
@@ -89,7 +89,7 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
   std::weak_ptr<runtimescene::RuntimeScene> weak = m_scene;
   PoseStream->HumanPoseChanged.push_back([weak](const auto& pose) {
     if (auto scene = weak.lock()) {
-      // scene->m_table->SetHumanPose(pose);
+      scene->SetHumanPose(pose);
       return true;
     } else {
       return false;

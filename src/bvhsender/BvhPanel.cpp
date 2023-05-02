@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <thread>
 #include <vrm/bvhscene.h>
+#include <vrm/runtimescene/scene.h>
 #include <vrm/scene.h>
 #include <vrm/srht_sender.h>
 #include <vrm/timeline.h>
@@ -22,7 +23,7 @@ class BvhPanelImpl
   bool m_enablePackQuat = false;
 
   std::vector<cuber::Instance> m_instances;
-  std::shared_ptr<libvrm::gltf::Scene> m_scene;
+  std::shared_ptr<runtimescene::RuntimeScene> m_scene;
   std::shared_ptr<libvrm::IntervalTimer> m_clock;
 
 public:
@@ -31,7 +32,8 @@ public:
     , m_sender(m_io)
     , m_ep(asio::ip::address::from_string("127.0.0.1"), 54345)
   {
-    m_scene = std::make_shared<libvrm::gltf::Scene>();
+    auto scene = std::make_shared<libvrm::gltf::Scene>();
+    m_scene = std::make_shared<runtimescene::RuntimeScene>(scene);
   }
 
   ~BvhPanelImpl() { m_work.reset(); }
@@ -48,10 +50,11 @@ public:
       return;
     }
 
-    libvrm::bvh::InitializeSceneFromBvh(m_scene, m_bvh);
-    // m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
-    //   DirectX::XMMatrixIdentity(),
-    //   std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
+    libvrm::bvh::InitializeSceneFromBvh(m_scene->m_table, m_bvh);
+    m_scene->Reset();
+    m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
+      DirectX::XMMatrixIdentity(),
+      std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
 
     m_sender.SendBvhSkeleton(m_ep, m_bvh);
 
@@ -93,11 +96,11 @@ public:
   {
     libvrm::bvh::UpdateSceneFromBvhFrame(
       m_scene, m_scene->m_roots[0], m_bvh, frame, m_bvh->GuessScaling());
-    // m_scene->m_roots[0]->CalcWorldMatrix(true);
-    // m_instances.clear();
-    // m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
-    //   DirectX::XMMatrixIdentity(),
-    //   std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
+    m_scene->m_roots[0]->CalcWorldMatrix(true);
+    m_instances.clear();
+    m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
+      DirectX::XMMatrixIdentity(),
+      std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
   }
 
   std::span<const cuber::Instance> GetCubes() { return m_instances; }
