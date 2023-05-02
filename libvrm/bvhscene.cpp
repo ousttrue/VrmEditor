@@ -81,8 +81,8 @@ InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
   // move ground
   auto bb = scene->GetBoundingBox();
   scene->m_roots[0]->InitialTransform.Translation.y -= bb.Min.y;
-
-  scene->InitializeNodes();
+  scene->m_roots[0]->CalcWorldInitialMatrix(true);
+  scene->m_roots[0]->CalcShape();
   scene->RaiseSceneUpdated();
 }
 

@@ -25,11 +25,7 @@
 #include <vector>
 
 namespace libvrm {
-namespace bvh {
-struct Bvh;
-struct Joint;
-struct Frame;
-}
+
 namespace vrm {
 namespace animation {
 struct Animation;
@@ -38,7 +34,6 @@ struct Animation;
 
 namespace gltf {
 struct Mesh;
-struct MeshInstance;
 struct Skin;
 struct Node;
 struct Animation;
@@ -198,10 +193,6 @@ struct Scene
   {
     for (auto& root : m_roots) {
       root->CalcWorldInitialMatrix(true);
-      // for (auto& node : m_nodes) {
-      //   node->InitialTransform = node->Transform;
-      //   node->WorldInitialTransform = node->WorldTransform;
-      // }
       root->CalcShape();
     }
   }
