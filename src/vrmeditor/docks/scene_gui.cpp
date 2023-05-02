@@ -4,16 +4,17 @@
 #include <glr/gl3renderer.h>
 #include <grapho/gl3/Texture.h>
 #include <imgui.h>
+#include <runtimescene/mesh.h>
+#include <runtimescene/scene.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
 #include <vrm/scene.h>
 #include <vrm/texture.h>
 
-SceneGui::SceneGui(const std::shared_ptr<libvrm::gltf::Scene>& scene,
+SceneGui::SceneGui(const std::shared_ptr<runtimescene::RuntimeScene>& scene,
                    float indent)
   : m_scene(scene)
   , m_indent(indent)
-  , Context(new libvrm::gltf::SceneContext)
 {
 }
 
@@ -29,7 +30,7 @@ SceneGui::Show(const char* title, bool* p_open)
 {
   int window_flags = 0;
   std::shared_ptr<libvrm::gltf::Node> showSelected;
-  if (auto selected = Context->selected.lock()) {
+  if (auto selected = m_scene->selected.lock()) {
     {
       if (auto mesh_index = selected->Mesh) {
         // showSelected = selected;
@@ -41,13 +42,13 @@ SceneGui::Show(const char* title, bool* p_open)
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
   if (ImGui::Begin(title, p_open, window_flags)) {
     auto size = ImGui::GetContentRegionAvail();
-    Context->selected = Context->new_selected;
+    m_scene->selected = m_scene->new_selected;
 
     if (ImGui::CollapsingHeader("textures", ImGuiTreeNodeFlags_None)) {
     }
     if (ImGui::CollapsingHeader("materials", ImGuiTreeNodeFlags_None)) {
       int i = 0;
-      for (auto& m : m_scene->m_materials) {
+      for (auto& m : m_scene->m_table->m_materials) {
         ShowMaterial(i++, m);
       }
     }
@@ -94,10 +95,10 @@ void
 SceneGui::ShowNodes()
 {
   auto size = ImGui::GetContentRegionAvail();
-  Context->selected = Context->new_selected;
+  m_scene->selected = m_scene->new_selected;
 
   std::shared_ptr<libvrm::gltf::Node> showSelected;
-  if (auto selected = Context->selected.lock()) {
+  if (auto selected = m_scene->selected.lock()) {
     {
       if (auto mesh_index = selected->Mesh) {
         showSelected = selected;
@@ -112,7 +113,7 @@ SceneGui::ShowNodes()
                           true,
                           ImGuiWindowFlags_None)) {
 
-      m_scene->Traverse(
+      m_scene->m_table->Traverse(
         [this](const std::shared_ptr<libvrm::gltf::Node>& node) {
           return Enter(node);
         },
@@ -126,7 +127,7 @@ SceneGui::ShowNodes()
                           ImGuiWindowFlags_None)) {
       ImGui::Text("%s", showSelected->Name.c_str());
       if (showSelected->Mesh) {
-        auto meshInstance = showSelected->MeshInstance;
+        auto meshInstance = m_scene->GetRuntimeMesh(showSelected->Mesh);
         char morph_id[256];
         for (int i = 0; i < showSelected->Mesh->m_morphTargets.size(); ++i) {
           auto& morph = showSelected->Mesh->m_morphTargets[i];
@@ -142,7 +143,7 @@ SceneGui::ShowNodes()
     }
     ImGui::EndChild();
   } else {
-    m_scene->Traverse(
+    m_scene->m_table->Traverse(
       [this](const std::shared_ptr<libvrm::gltf::Node>& node) {
         return Enter(node);
       },
@@ -165,7 +166,7 @@ SceneGui::Enter(const std::shared_ptr<libvrm::gltf::Node>& node)
       ImGuiTreeNodeFlags_Leaf |
       ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
   }
-  if (Context->selected.lock() == node) {
+  if (m_scene->selected.lock() == node) {
     node_flags |= ImGuiTreeNodeFlags_Selected;
   }
 
@@ -180,12 +181,12 @@ SceneGui::Enter(const std::shared_ptr<libvrm::gltf::Node>& node)
   }
 
   bool node_open =
-    ImGui::TreeNodeEx(&*node, node_flags, "%s", Label(*m_scene, node).c_str());
+    ImGui::TreeNodeEx(&*node, node_flags, "%s", Label(node).c_str());
 
   ImGui::PopStyleColor(push);
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-    Context->new_selected = node;
+    m_scene->new_selected = node;
   }
 
   return node->Children.size() && node_open;
@@ -198,8 +199,7 @@ SceneGui::Leave()
 }
 
 const std::string&
-SceneGui::Label(const libvrm::gltf::Scene& scene,
-                const std::shared_ptr<libvrm::gltf::Node>& node)
+SceneGui::Label(const std::shared_ptr<libvrm::gltf::Node>& node)
 {
   auto found = m_map.find(node);
   if (found != m_map.end()) {
@@ -277,7 +277,7 @@ SceneGui::Label(const libvrm::gltf::Scene& scene,
 
   // vrm0
   // spring
-  for (auto& solver : scene.m_springSolvers) {
+  for (auto& solver : m_scene->m_table->m_springSolvers) {
     for (auto& joint : solver->Joints) {
       auto joint_node = joint.Head;
       if (joint_node == node) {
@@ -287,7 +287,7 @@ SceneGui::Label(const libvrm::gltf::Scene& scene,
     }
   }
   // collider
-  for (auto& collider : scene.m_springColliders) {
+  for (auto& collider : m_scene->m_table->m_springColliders) {
     if (collider->Node == node) {
       ss << "󱥔 ";
       break;

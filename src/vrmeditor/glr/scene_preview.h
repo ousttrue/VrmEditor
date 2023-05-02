@@ -5,10 +5,10 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vrm/scene.h>
+#include <vrm/timeline.h>
 
-namespace scenetuntime {
-struct Scene;
+namespace runtimescene {
+struct RuntimeScene;
 }
 
 namespace glr {
@@ -41,15 +41,13 @@ struct ScenePreview
   std::string m_popupName = "ScenePreviewPopup";
   std::function<void()> m_popup;
 
-  ScenePreview(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-               const std::shared_ptr<libvrm::gltf::SceneContext>& selection,
+  ScenePreview(const std::shared_ptr<runtimescene::RuntimeScene>& scene,
                const std::shared_ptr<RenderingEnv>& env,
                const std::shared_ptr<grapho::OrbitView>& view,
                const std::shared_ptr<ViewSettings>& settings);
 
-  ScenePreview(const std::shared_ptr<libvrm::gltf::Scene>& scene)
+  ScenePreview(const std::shared_ptr<runtimescene::RuntimeScene>& scene)
     : ScenePreview(scene,
-                   std::make_shared<libvrm::gltf::SceneContext>(),
                    std::make_shared<RenderingEnv>(),
                    std::make_shared<grapho::OrbitView>(),
                    std::make_shared<ViewSettings>())

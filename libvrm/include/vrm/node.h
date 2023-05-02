@@ -236,10 +236,7 @@ struct Node
 
   std::list<std::shared_ptr<Node>> Children;
   std::weak_ptr<Node> Parent;
-
   std::shared_ptr<Mesh> Mesh;
-  std::shared_ptr<MeshInstance> MeshInstance;
-
   std::shared_ptr<Skin> Skin;
 
   DirectX::XMFLOAT4X4 ShapeMatrix;

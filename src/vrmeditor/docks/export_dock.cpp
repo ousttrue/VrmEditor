@@ -4,6 +4,7 @@
 #include <fstream>
 #include <grapho/orbitview.h>
 #include <imgui.h>
+#include <runtimescene/scene.h>
 #include <vrm/exporter.h>
 #include <vrm/glb.h>
 #include <vrm/importer.h>
@@ -12,13 +13,14 @@
 void
 ExportDock::Create(const AddDockFunc& addDock,
                    std::string_view title,
-                   const std::shared_ptr<libvrm::gltf::Scene>& scene,
+                   const std::shared_ptr<runtimescene::RuntimeScene>& scene,
                    float indent)
 {
-  auto debug_scene = std::make_shared<libvrm::gltf::Scene>();
+  auto debug_table = std::make_shared<libvrm::gltf::Scene>();
   auto impl = std::make_shared<JsonGui>();
-  impl->SetScene(debug_scene);
+  impl->SetScene(debug_table);
 
+  auto debug_scene = std::make_shared<runtimescene::RuntimeScene>(debug_table);
   auto preview = std::make_shared<glr::ScenePreview>(debug_scene);
 
   addDock(Dock(title, [scene, debug_scene, impl, indent, preview]() {
@@ -34,7 +36,7 @@ ExportDock::Create(const AddDockFunc& addDock,
 
     if (ImGui::Button("export scene")) {
       libvrm::gltf::Exporter exporter;
-      exporter.Export(*scene);
+      exporter.Export(*scene->m_table);
 
       std::stringstream ss;
       libvrm::gltf::Glb{
@@ -53,7 +55,7 @@ ExportDock::Create(const AddDockFunc& addDock,
       w.write(str.data(), str.size());
 #endif
 
-      libvrm::gltf::LoadBytes(debug_scene,
+      libvrm::gltf::LoadBytes(debug_scene->m_table,
                               { (const uint8_t*)str.data(), str.size() });
     }
 

@@ -3,6 +3,7 @@
 #include "glr/scene_preview.h"
 #include "humanpose_stream.h"
 #include <grapho/orbitview.h>
+#include <runtimescene/scene.h>
 #include <vrm/bvhscene.h>
 #include <vrm/humanpose.h>
 #include <vrm/timeline.h>
@@ -13,7 +14,8 @@ namespace humanpose {
 BvhNode::BvhNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
-  m_scene = std::make_shared<libvrm::gltf::Scene>();
+  auto table = std::make_shared<libvrm::gltf::Scene>();
+  m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
 
   // update preview
   m_preview = std::make_shared<glr::ScenePreview>(m_scene);
@@ -31,7 +33,7 @@ BvhNode::SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
     App::Instance().Log(LogLevel::Wran) << "humanoid map not found";
   }
 
-  libvrm::bvh::InitializeSceneFromBvh(m_scene, bvh, map);
+  libvrm::bvh::InitializeSceneFromBvh(m_scene->m_table, bvh, map);
 }
 
 void
@@ -39,13 +41,13 @@ BvhNode::TimeUpdate(libvrm::Time time)
 {
   if (m_initialPose) {
     // Outputs[0].Value = libvrm::vrm::HumanPose::Initial();
-    m_scene->SetInitialPose();
+    m_scene->m_table->SetInitialPose();
   } else {
     // update scene from bvh
-    libvrm::bvh::UpdateSceneFromBvhFrame(m_scene, m_bvh, time);
+    libvrm::bvh::UpdateSceneFromBvhFrame(m_scene->m_table, m_bvh, time);
   }
 
-  Outputs[0].Value = m_scene->UpdateHumanPose();
+  Outputs[0].Value = m_scene->m_table->UpdateHumanPose();
 }
 
 void
@@ -62,7 +64,7 @@ BvhNode::DrawContent()
   };
 
   m_preview->ShowScreenRect(
-    m_scene->m_title.c_str(), color, sc.x, sc.y, 300, 300);
+    m_scene->m_table->m_title.c_str(), color, sc.x, sc.y, 300, 300);
 }
 
 }

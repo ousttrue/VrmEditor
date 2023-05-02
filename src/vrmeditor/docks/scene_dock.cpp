@@ -5,10 +5,10 @@
 #include <vrm/mesh.h>
 #include <vrm/node.h>
 
-std::shared_ptr<libvrm::gltf::SceneContext>
+void
 SceneDock::CreateTree(const AddDockFunc& addDock,
                       std::string_view title,
-                      const std::shared_ptr<libvrm::gltf::Scene>& scene,
+                      const std::shared_ptr<runtimescene::RuntimeScene>& scene,
                       float indent)
 {
   auto gui = std::make_shared<SceneGui>(scene, indent);
@@ -16,6 +16,4 @@ SceneDock::CreateTree(const AddDockFunc& addDock,
   addDock(Dock(title, [gui](const char* title, bool* p_open) {
     gui->Show(title, p_open);
   }));
-
-  return gui->Context;
 }

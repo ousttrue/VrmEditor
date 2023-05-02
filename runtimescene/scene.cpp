@@ -1,4 +1,5 @@
 #include "runtimescene/scene.h"
+#include "runtimescene/mesh.h"
 #include <vrm/skin.h>
 
 namespace runtimescene {
@@ -13,6 +14,19 @@ RuntimeScene::GetRuntimeJoint(const libvrm::vrm::SpringJoint& joint)
 
   auto runtime = std::make_shared<RuntimeSpringJoint>(joint);
   m_jointMap.insert({ joint.Head, runtime });
+  return runtime;
+}
+
+std::shared_ptr<RuntimeMesh>
+RuntimeScene::GetRuntimeMesh(const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
+{
+  auto found = m_meshMap.find(mesh);
+  if (found != m_meshMap.end()) {
+    return found->second;
+  }
+
+  auto runtime = std::make_shared<RuntimeMesh>(mesh);
+  m_meshMap.insert({ mesh, runtime });
   return runtime;
 }
 
@@ -67,7 +81,8 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
     };
     for (auto& [k, v] : scene->m_expressions->EvalMorphTargetMap(nodeToIndex)) {
       auto& morph_node = scene->m_nodes[k.NodeIndex];
-      morph_node->MeshInstance->weights[k.MorphIndex] = v;
+      auto instance = GetRuntimeMesh(morph_node->Mesh);
+      instance->weights[k.MorphIndex] = v;
     }
   }
 
@@ -100,15 +115,16 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
       }
 
       // apply morphtarget & skinning
-      node->MeshInstance->applyMorphTargetAndSkinning(*node->Mesh,
-                                                      skinningMatrices);
+      auto instance = GetRuntimeMesh(node->Mesh);
+      instance->applyMorphTargetAndSkinning(*node->Mesh, skinningMatrices);
     }
   }
   DirectX::XMFLOAT4X4 m;
   for (auto& node : scene->m_nodes) {
     if (node->Mesh) {
       DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
-      render(node->Mesh, *node->MeshInstance, &m._11);
+      auto instance = GetRuntimeMesh(node->Mesh);
+      render(node->Mesh, *instance, &m._11);
     }
   }
 

@@ -402,9 +402,6 @@ ParseNode(const std::shared_ptr<Scene>& scene,
       auto skin = scene->m_skins[skin_index];
       ptr->Skin = skin;
     }
-
-    ptr->MeshInstance =
-      std::make_shared<gltf::MeshInstance>(mesh);
   }
 
   return ptr;

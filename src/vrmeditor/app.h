@@ -28,6 +28,10 @@ struct ViewSettings;
 struct RenderingEnv;
 }
 
+namespace runtimescene {
+struct RuntimeScene;
+}
+
 class Gui;
 struct AssetDir;
 class LuaEngine;
@@ -47,7 +51,7 @@ class App
   std::shared_ptr<ImLogger> m_logger;
 
   std::shared_ptr<libvrm::Timeline> m_timeline;
-  std::shared_ptr<libvrm::gltf::Scene> m_scene;
+  std::shared_ptr<runtimescene::RuntimeScene> m_scene;
   std::shared_ptr<grapho::OrbitView> m_view;
   std::shared_ptr<glr::ViewSettings> m_settings;
   std::shared_ptr<glr::RenderingEnv> m_env;
@@ -67,7 +71,8 @@ public:
     return s_instance;
   }
 
-  void SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene);
+  std::shared_ptr<runtimescene::RuntimeScene> SetScene(
+    const std::shared_ptr<libvrm::gltf::Scene>& scene);
   LogStream Log(LogLevel level);
   void LoadImGuiIni(std::string_view ini);
   void LoadImNodesIni(std::string_view ini);

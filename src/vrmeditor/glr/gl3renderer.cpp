@@ -10,6 +10,7 @@
 #include <imgui.h>
 #include <iostream>
 #include <map>
+#include <runtimescene/mesh.h>
 #include <unordered_map>
 #include <vrm/image.h>
 #include <vrm/material.h>
@@ -194,7 +195,7 @@ public:
   void Render(RenderPass pass,
               const RenderingEnv& env,
               const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-              const libvrm::gltf::MeshInstance& instance,
+              const runtimescene::RuntimeMesh& instance,
               const float m[16])
   {
     if (!m_program) {
@@ -204,7 +205,8 @@ public:
     auto vao = GetOrCreate(mesh);
 
     if (instance.m_updated.size()) {
-      vao->slots_[0].Vbo->Upload(instance.m_updated.size() * sizeof(libvrm::Vertex),
+      vao->slots_[0].Vbo->Upload(instance.m_updated.size() *
+                                   sizeof(libvrm::Vertex),
                                  instance.m_updated.data());
     }
 
@@ -287,7 +289,7 @@ void
 Render(RenderPass pass,
        const RenderingEnv& env,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-       const libvrm::gltf::MeshInstance& instance,
+       const runtimescene::RuntimeMesh& instance,
        const float m[16])
 {
   Gl3Renderer::Instance().Render(pass, env, mesh, instance, m);

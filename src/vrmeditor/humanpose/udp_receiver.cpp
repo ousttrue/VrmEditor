@@ -53,10 +53,9 @@ struct UdpReceiverImpl
       auto receiver = std::make_shared<UdpHandle>(m_io, port);
       m_handles.insert({ port, receiver });
       receiver->Start(callback);
-    } catch (const std::system_error& ex) {
-      std::cerr << ex.what() << std::endl;
     } catch (const std::runtime_error& ex) {
-      std::cerr << ex.what() << std::endl;
+      OutputDebugStringA(ex.what());
+      // std::cerr << ex.what() << std::endl;
     }
   }
 

@@ -7,19 +7,21 @@
 
 namespace runtimescene {
 
+struct RuntimeNode;
+struct RuntimeMesh;
+
 using RenderFunc =
   std::function<void(const std::shared_ptr<libvrm::gltf::Mesh>&,
-                     const libvrm::gltf::MeshInstance&,
+                     const RuntimeMesh&,
                      const float[16])>;
-
-struct RuntimeNode
-{};
-
-struct RuntimeMesh
-{};
 
 struct RuntimeScene
 {
+  std::shared_ptr<libvrm::gltf::Scene> m_table;
+
+  std::weak_ptr<libvrm::gltf::Node> selected;
+  std::weak_ptr<libvrm::gltf::Node> new_selected;
+
   libvrm::Time NextSpringDelta = libvrm::Time(0.0);
   std::shared_ptr<libvrm::gltf::Scene> m_lastScene;
   std::unordered_map<std::shared_ptr<libvrm::gltf::Node>,
@@ -32,10 +34,15 @@ struct RuntimeScene
                      std::shared_ptr<RuntimeNode>>
     m_nodeMap;
 
+  RuntimeScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
+    : m_table(table)
+  {
+  }
+
   std::shared_ptr<RuntimeSpringJoint> GetRuntimeJoint(
     const libvrm::vrm::SpringJoint& joint);
 
-  std::shared_ptr<RuntimeNode> GetRuntimeMesh(
+  std::shared_ptr<RuntimeMesh> GetRuntimeMesh(
     const std::shared_ptr<libvrm::gltf::Mesh>& mesh);
 
   std::shared_ptr<RuntimeNode> GetRuntimeNode(

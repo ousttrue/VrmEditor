@@ -7,7 +7,6 @@
 namespace libvrm {
 namespace gltf {
 struct Mesh;
-struct MeshInstance;
 class Image;
 }
 }
@@ -17,6 +16,11 @@ struct Texture;
 }
 }
 
+namespace runtimescene
+{
+  struct RuntimeMesh;
+}
+
 namespace glr {
 struct RenderingEnv;
 
@@ -24,7 +28,7 @@ void
 Render(RenderPass pass,
        const RenderingEnv& camera,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-       const libvrm::gltf::MeshInstance& instance,
+       const runtimescene::RuntimeMesh& instance,
        const float m[16]);
 
 // clear current render target

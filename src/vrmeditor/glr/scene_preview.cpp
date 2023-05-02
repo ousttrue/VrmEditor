@@ -26,8 +26,7 @@ ViewSettings::Popup(const std::string& name)
 }
 
 ScenePreview::ScenePreview(
-  const std::shared_ptr<libvrm::gltf::Scene>& scene,
-  const std::shared_ptr<libvrm::gltf::SceneContext>& selection,
+  const std::shared_ptr<runtimescene::RuntimeScene>& scene,
   const std::shared_ptr<RenderingEnv>& env,
   const std::shared_ptr<grapho::OrbitView>& view,
   const std::shared_ptr<ViewSettings>& settings)
@@ -42,14 +41,10 @@ ScenePreview::ScenePreview(
 
   m_popup = std::bind(&ViewSettings::Popup, settings.get(), m_popupName);
 
-  auto runtime = std::make_shared<runtimescene::RuntimeScene>();
-
   m_rt->render =
     [scene,
-     selection,
      settings,
      env,
-     runtime,
      cuber = m_cuber,
      gizmo = std::make_shared<LineGizmo>()](const grapho::OrbitView& view) {
       view.Update(env->ProjectionMatrix, env->ViewMatrix);
@@ -59,7 +54,7 @@ ScenePreview::ScenePreview(
 
       runtimescene::RenderFunc render =
         [env, settings](const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-                        const libvrm::gltf::MeshInstance& meshInstance,
+                        const runtimescene::RuntimeMesh& meshInstance,
                         const float m[16]) {
           if (settings->ShowMesh) {
             glr::Render(RenderPass::Color, *env, mesh, meshInstance, m);
@@ -69,9 +64,9 @@ ScenePreview::ScenePreview(
           }
         };
 
-      runtime->NextSpringDelta = settings->NextSpringDelta;
+      scene->NextSpringDelta = settings->NextSpringDelta;
       settings->NextSpringDelta = {};
-      runtime->Render(scene, render, gizmo.get());
+      scene->Render(scene->m_table, render, gizmo.get());
       if (settings->ShowLine) {
         glr::RenderLine(*env, gizmo->m_lines);
       }
@@ -82,7 +77,7 @@ ScenePreview::ScenePreview(
         // static_assert(sizeof(cuber::Instance) ==
         // sizeof(libvrm::gltf::Instance),
         //               "Instance size");
-        for (auto& root : scene->m_roots) {
+        for (auto& root : scene->m_table->m_roots) {
           root->UpdateShapeInstanceRecursive(
             DirectX::XMMatrixIdentity(),
             [cuber](const libvrm::gltf::Instance& instance) {
@@ -99,7 +94,7 @@ ScenePreview::ScenePreview(
       }
 
       // manipulator
-      if (auto node = selection->selected.lock()) {
+      if (auto node = scene->selected.lock()) {
         // TODO: conflict mouse event(left) with ImageButton
         DirectX::XMFLOAT4X4 m;
         DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());

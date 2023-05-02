@@ -2,10 +2,9 @@
 #include "graphnode_base.h"
 
 class UdpReceiver;
-namespace libvrm {
-namespace gltf {
-struct Scene;
-}
+
+namespace runtimescene {
+struct RuntimeScene;
 }
 
 namespace glr {
@@ -15,7 +14,7 @@ struct ScenePreview;
 namespace humanpose {
 struct UdpNode : public GraphNodeBase
 {
-  std::shared_ptr<libvrm::gltf::Scene> m_scene;
+  std::shared_ptr<runtimescene::RuntimeScene> m_scene;
   std::shared_ptr<UdpReceiver> m_udp;
   std::shared_ptr<glr::ScenePreview> m_preview;
 

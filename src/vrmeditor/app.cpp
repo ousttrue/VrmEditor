@@ -78,16 +78,16 @@ App::App()
 
 App::~App() {}
 
-void
-App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
+std::shared_ptr<runtimescene::RuntimeScene>
+App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
 {
-  m_scene = scene;
+  m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
   m_timeline->Tracks.clear();
 
-  std::weak_ptr<libvrm::gltf::Scene> weak = scene;
+  std::weak_ptr<runtimescene::RuntimeScene> weak = m_scene;
   PoseStream->HumanPoseChanged.push_back([weak](const auto& pose) {
     if (auto scene = weak.lock()) {
-      scene->SetHumanPose(pose);
+      scene->m_table->SetHumanPose(pose);
       return true;
     } else {
       return false;
@@ -98,17 +98,18 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& scene)
   auto indent = m_gui->FontSize * 0.5f;
 
   {
-    m_jsonGui->SetScene(m_scene);
-    HumanoidDock::Create(addDock, "humanoid-body", "humanoid-finger", m_scene);
-    auto selection =
-      SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
+    m_jsonGui->SetScene(m_scene->m_table);
+    HumanoidDock::Create(
+      addDock, "humanoid-body", "humanoid-finger", m_scene->m_table);
+    SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
 
-    ViewDock::Create(
-      addDock, "scene-view", m_scene, selection, m_env, m_view, m_settings);
+    ViewDock::Create(addDock, "scene-view", m_scene, m_env, m_view, m_settings);
 
-    VrmDock::CreateVrm(addDock, "vrm", m_scene);
+    VrmDock::CreateVrm(addDock, "vrm", m_scene->m_table);
     ExportDock::Create(addDock, "export", m_scene, indent);
   }
+
+  return m_scene;
 }
 
 LogStream
@@ -173,7 +174,7 @@ bool
 App::WriteScene(const std::filesystem::path& path)
 {
   libvrm::gltf::Exporter exporter;
-  exporter.Export(*m_scene);
+  exporter.Export(*m_scene->m_table);
 
   std::ofstream os(path, std::ios::binary);
   if (!os) {
@@ -209,17 +210,17 @@ App::LoadPath(const std::filesystem::path& path)
 bool
 App::LoadModel(const std::filesystem::path& path)
 {
-  if (auto scene = libvrm::gltf::LoadPath(path)) {
-    SetScene(*scene);
+  if (auto table = libvrm::gltf::LoadPath(path)) {
+    auto scene = SetScene(*table);
     // bind time line
 
-    for (auto& animation : (*scene)->m_animations) {
+    for (auto& animation : scene->m_table->m_animations) {
       auto track = m_timeline->AddTrack("gltf", animation->Duration());
-      std::weak_ptr<libvrm::gltf::Scene> weak = *scene;
+      std::weak_ptr<runtimescene::RuntimeScene> weak = scene;
       track->Callbacks.push_back([animation, weak](auto time, bool repeat) {
         if (auto scene = weak.lock()) {
           runtimescene::AnimationUpdate(
-            *animation, time, scene->m_nodes, repeat);
+            *animation, time, scene->m_table->m_nodes, scene, repeat);
           return true;
         } else {
           return false;
@@ -231,14 +232,14 @@ App::LoadModel(const std::filesystem::path& path)
     }
 
     // update view position
-    auto bb = (*scene)->GetBoundingBox();
+    auto bb = scene->m_table->GetBoundingBox();
     m_view->Fit(bb.Min, bb.Max);
 
     Log(LogLevel::Info) << path;
 
     return true;
   } else {
-    Log(LogLevel::Error) << scene.error();
+    Log(LogLevel::Error) << table.error();
     SetScene(std::make_shared<libvrm::gltf::Scene>());
     return false;
   }

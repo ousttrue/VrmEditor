@@ -225,11 +225,5 @@ struct Scene
   void DrawGizmo(IGizmoDrawer* gizmo);
 };
 
-struct SceneContext
-{
-  std::weak_ptr<Node> selected;
-  std::weak_ptr<Node> new_selected;
-};
-
 } // gltf
 }

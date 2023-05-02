@@ -1,5 +1,6 @@
 #include "runtimescene/animation_update.h"
-#include <vrm/mesh.h>
+#include "runtimescene/scene.h"
+#include "runtimescene/mesh.h"
 
 namespace runtimescene {
 
@@ -7,6 +8,7 @@ void
 AnimationUpdate(const libvrm::gltf::Animation& animation,
                 libvrm::Time time,
                 std::span<std::shared_ptr<libvrm::gltf::Node>> nodes,
+                const std::shared_ptr<RuntimeScene>& runtime,
                 bool repeat)
 {
   float seconds = time.count();
@@ -25,7 +27,8 @@ AnimationUpdate(const libvrm::gltf::Animation& animation,
   for (auto& [k, v] : animation.m_weightsMap) {
     auto node = nodes[k];
     auto values = v.GetValue(seconds, repeat);
-    node->MeshInstance->weights.assign(values.begin(), values.end());
+    auto instance = runtime->GetRuntimeMesh(node->Mesh);
+    instance->weights.assign(values.begin(), values.end());
   }
 }
 
