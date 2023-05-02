@@ -113,6 +113,7 @@ struct Scene
   vrm::HumanPose m_pose;
 
   std::vector<DrawItem> m_drawables;
+  std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
 
   Scene();
   ~Scene();
@@ -206,6 +207,7 @@ struct Scene
   }
 
   std::span<const DrawItem> Drawables();
+  std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
 };
 
 }

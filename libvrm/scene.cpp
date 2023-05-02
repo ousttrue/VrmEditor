@@ -141,4 +141,17 @@ Scene::Drawables()
   return m_drawables;
 }
 
+std::span<const DirectX::XMFLOAT4X4>
+Scene::ShapeMatrices()
+{
+  m_shapeMatrices.clear();
+  for (auto& node : m_nodes) {
+    m_shapeMatrices.push_back({});
+    auto shape = DirectX::XMLoadFloat4x4(&node->ShapeMatrix);
+    DirectX::XMStoreFloat4x4(&m_shapeMatrices.back(),
+                             shape * node->WorldInitialMatrix());
+  }
+  return m_shapeMatrices;
+}
+
 }
