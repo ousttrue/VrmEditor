@@ -109,8 +109,8 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
     ViewDock::Create(
       addDock, "scene-view", m_scene, m_env, m_view, m_settings, m_selection);
 
-    ViewDock::Create(
-      addDock, "T-Pose", m_scene, m_env, m_view, m_settings, m_selection);
+    ViewDock::CreateTPose(
+      addDock, "T-Pose", m_scene->m_table, m_env, m_settings, m_selection);
 
     VrmDock::CreateVrm(addDock, "vrm", m_scene->m_table);
     ExportDock::Create(addDock, "export", m_scene, indent);

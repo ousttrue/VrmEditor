@@ -85,8 +85,6 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
     for (auto m : m_scene->m_table->ShapeMatrices()) {
       m_cuber->Instances.push_back({
         .Matrix = m,
-        .PositiveFaceFlag = { 0, 1, 2, 0 },
-        .NegativeFaceFlag = { 3, 4, 5, 0 },
       });
     }
     m_cuber->Render(*m_env);
@@ -155,34 +153,20 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
     for (auto m : m_scene->ShapeMatrices()) {
       m_cuber->Instances.push_back({
         .Matrix = m,
-        .PositiveFaceFlag = { 0, 1, 2, 0 },
-        .NegativeFaceFlag = { 3, 4, 5, 0 },
       });
     }
-    // for (auto& root : scene->m_table->m_roots) {
-    //   root->UpdateShapeInstanceRecursive(
-    //     DirectX::XMMatrixIdentity(),
-    //     [cuber](const runtimescene::Instance& instance) {
-    //       // cuber->Instances.push_back(*((const
-    //       // cuber::Instance*)&instance));
-    //       cuber->Instances.push_back({
-    //         .Matrix = instance.Matrix,
-    //         .PositiveFaceFlag = { 0, 1, 2, 0 },
-    //         .NegativeFaceFlag = { 3, 4, 5, 0 },
-    //       });
-    //     });
-    // }
     m_cuber->Render(*m_env);
   }
 
   // manipulator
-  if (auto node = m_selection->selected.lock()) {
+  if (auto init = m_selection->selected.lock()) {
     // TODO: conflict mouse event(left) with ImageButton
+    auto node = m_scene->GetRuntimeNode(init);
     DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(&m, node->WorldInitialMatrix());
+    DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
     ImGuizmo::GetContext().mAllowActiveHoverItem = true;
     ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
-    if (auto humanoid = node->Humanoid) {
+    if (auto humanoid = init->Humanoid) {
       if (*humanoid == libvrm::vrm::HumanBones::hips) {
         operation = operation | ImGuizmo::TRANSLATE;
       }
@@ -199,9 +183,8 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
                              nullptr,
                              nullptr)) {
       // decompose feedback
-      m_scene->GetRuntimeNode(node)->SetWorldMatrix(
-        DirectX::XMLoadFloat4x4(&m));
-      m_scene->GetRuntimeNode(node)->CalcWorldMatrix(true);
+      node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+      node->CalcWorldMatrix(true);
     }
     ImGuizmo::GetContext().mAllowActiveHoverItem = false;
   }

@@ -33,15 +33,15 @@ public:
       }));
   }
 
-  static void CreateTPose(
-    const AddDockFunc& addDock,
-    std::string_view title,
-    const std::shared_ptr<runtimescene::RuntimeScene>& scene,
-    const std::shared_ptr<glr::RenderingEnv>& env,
-    const std::shared_ptr<grapho::OrbitView>& view,
-    const std::shared_ptr<glr::ViewSettings>& settings,
-    const std::shared_ptr<SceneNodeSelection>& selection)
+  static void CreateTPose(const AddDockFunc& addDock,
+                          std::string_view title,
+                          const std::shared_ptr<libvrm::gltf::Scene>& table,
+                          const std::shared_ptr<glr::RenderingEnv>& env,
+                          const std::shared_ptr<glr::ViewSettings>& settings,
+                          const std::shared_ptr<SceneNodeSelection>& selection)
   {
+    auto view = std::make_shared<grapho::OrbitView>();
+    auto scene = std::make_shared<runtimescene::RuntimeScene>(table);
     auto preview = std::make_shared<glr::ScenePreview>(
       scene, env, view, settings, selection, true);
 
