@@ -9,6 +9,7 @@
 #include "docks/imtimeline.h"
 #include "docks/json_gui.h"
 #include "docks/scene_dock.h"
+#include "docks/scene_selection.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
 #include "fs_util.h"
@@ -39,6 +40,7 @@ App::App()
   m_lua = std::make_shared<LuaEngine>();
   auto file = get_home() / ".vrmeditor.ini.lua";
   m_ini = file.u8string();
+  m_selection = std::make_shared<SceneNodeSelection>();
 
   m_view = std::make_shared<grapho::OrbitView>();
   m_timeline = std::make_shared<libvrm::Timeline>();
@@ -101,9 +103,11 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
     m_jsonGui->SetScene(m_scene->m_table);
     HumanoidDock::Create(
       addDock, "humanoid-body", "humanoid-finger", m_scene->m_table);
-    SceneDock::CreateTree(addDock, "scene-hierarchy", m_scene, indent);
+    SceneDock::CreateTree(
+      addDock, "scene-hierarchy", m_scene, m_selection, indent);
 
-    ViewDock::Create(addDock, "scene-view", m_scene, m_env, m_view, m_settings);
+    ViewDock::Create(
+      addDock, "scene-view", m_scene, m_env, m_view, m_settings, m_selection);
 
     VrmDock::CreateVrm(addDock, "vrm", m_scene->m_table);
     ExportDock::Create(addDock, "export", m_scene, indent);

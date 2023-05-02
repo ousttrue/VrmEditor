@@ -30,101 +30,106 @@ ScenePreview::ScenePreview(
   const std::shared_ptr<runtimescene::RuntimeScene>& scene,
   const std::shared_ptr<RenderingEnv>& env,
   const std::shared_ptr<grapho::OrbitView>& view,
-  const std::shared_ptr<ViewSettings>& settings)
-  : m_rt(std::make_shared<RenderTarget>(view))
+  const std::shared_ptr<ViewSettings>& settings,
+  const std::shared_ptr<SceneNodeSelection>& selection)
+  : m_scene(scene)
+  , m_env(env)
+  , m_settings(settings)
+  , m_selection(selection)
+  //
+  , m_rt(std::make_shared<RenderTarget>(view))
   , m_cuber(std::make_shared<Cuber>())
+  , m_gizmo(std::make_shared<LineGizmo>())
 {
   DirectX::XMFLOAT4 plane = { 0, 1, 0, 0 };
   DirectX::XMStoreFloat4x4(
-    &env->ShadowMatrix,
+    &m_env->ShadowMatrix,
     DirectX::XMMatrixShadow(DirectX::XMLoadFloat4(&plane),
                             DirectX::XMLoadFloat4(&env->LightPosition)));
+  m_rt->render = std::bind(&ScenePreview::Render, this, std::placeholders::_1);
+}
 
-  m_rt->render =
-    [scene,
-     settings,
-     env,
-     cuber = m_cuber,
-     gizmo = std::make_shared<LineGizmo>()](const grapho::OrbitView& view) {
-      view.Update(env->ProjectionMatrix, env->ViewMatrix);
-      env->Resize(view.Width, view.Height);
+void
+ScenePreview::Render(const grapho::OrbitView& view)
+{
+  view.Update(m_env->ProjectionMatrix, m_env->ViewMatrix);
+  m_env->Resize(view.Width, view.Height);
 
-      glr::ClearRendertarget(*env);
+  glr::ClearRendertarget(*m_env);
 
-      scene->NextSpringDelta = settings->NextSpringDelta;
-      settings->NextSpringDelta = {};
+  m_scene->NextSpringDelta = m_settings->NextSpringDelta;
+  m_settings->NextSpringDelta = {};
 
-      for (auto [mesh, m] : scene->m_table->Drawables()) {
-        auto meshInstance = scene->GetRuntimeMesh(mesh);
-        if (settings->ShowMesh) {
-          glr::Render(RenderPass::Color, *env, mesh, *meshInstance, &m._11);
-        }
-        if (settings->ShowShadow) {
-          glr::Render(
-            RenderPass::ShadowMatrix, *env, mesh, *meshInstance, &m._11);
-        }
+  for (auto [mesh, m] : m_scene->m_table->Drawables()) {
+    auto meshInstance = m_scene->GetRuntimeMesh(mesh);
+    if (m_settings->ShowMesh) {
+      glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, &m._11);
+    }
+    if (m_settings->ShowShadow) {
+      glr::Render(
+        RenderPass::ShadowMatrix, *m_env, mesh, *meshInstance, &m._11);
+    }
+  }
+
+  if (m_settings->ShowLine) {
+    glr::RenderLine(*m_env, m_gizmo->m_lines);
+  }
+  m_gizmo->Clear();
+
+  if (m_settings->ShowCuber) {
+    m_cuber->Instances.clear();
+    for (auto m : m_scene->m_table->ShapeMatrices()) {
+      m_cuber->Instances.push_back({
+        .Matrix = m,
+        .PositiveFaceFlag = { 0, 1, 2, 0 },
+        .NegativeFaceFlag = { 3, 4, 5, 0 },
+      });
+    }
+    // for (auto& root : scene->m_table->m_roots) {
+    //   root->UpdateShapeInstanceRecursive(
+    //     DirectX::XMMatrixIdentity(),
+    //     [cuber](const runtimescene::Instance& instance) {
+    //       // cuber->Instances.push_back(*((const
+    //       // cuber::Instance*)&instance));
+    //       cuber->Instances.push_back({
+    //         .Matrix = instance.Matrix,
+    //         .PositiveFaceFlag = { 0, 1, 2, 0 },
+    //         .NegativeFaceFlag = { 3, 4, 5, 0 },
+    //       });
+    //     });
+    // }
+    m_cuber->Render(*m_env);
+  }
+
+  // manipulator
+  if (auto node = m_selection->selected.lock()) {
+    // TODO: conflict mouse event(left) with ImageButton
+    DirectX::XMFLOAT4X4 m;
+    DirectX::XMStoreFloat4x4(&m, node->WorldInitialMatrix());
+    ImGuizmo::GetContext().mAllowActiveHoverItem = true;
+    ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
+    if (auto humanoid = node->Humanoid) {
+      if (*humanoid == libvrm::vrm::HumanBones::hips) {
+        operation = operation | ImGuizmo::TRANSLATE;
       }
-
-      if (settings->ShowLine) {
-        glr::RenderLine(*env, gizmo->m_lines);
-      }
-      gizmo->Clear();
-
-      if (settings->ShowCuber) {
-        cuber->Instances.clear();
-        for (auto m : scene->m_table->ShapeMatrices()) {
-          cuber->Instances.push_back({
-            .Matrix = m,
-            .PositiveFaceFlag = { 0, 1, 2, 0 },
-            .NegativeFaceFlag = { 3, 4, 5, 0 },
-          });
-        }
-        // for (auto& root : scene->m_table->m_roots) {
-        //   root->UpdateShapeInstanceRecursive(
-        //     DirectX::XMMatrixIdentity(),
-        //     [cuber](const runtimescene::Instance& instance) {
-        //       // cuber->Instances.push_back(*((const
-        //       // cuber::Instance*)&instance));
-        //       cuber->Instances.push_back({
-        //         .Matrix = instance.Matrix,
-        //         .PositiveFaceFlag = { 0, 1, 2, 0 },
-        //         .NegativeFaceFlag = { 3, 4, 5, 0 },
-        //       });
-        //     });
-        // }
-        cuber->Render(*env);
-      }
-
-      // manipulator
-      if (auto node = scene->selected.lock()) {
-        // TODO: conflict mouse event(left) with ImageButton
-        DirectX::XMFLOAT4X4 m;
-        DirectX::XMStoreFloat4x4(&m, node->WorldInitialMatrix());
-        ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-        ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
-        if (auto humanoid = node->Humanoid) {
-          if (*humanoid == libvrm::vrm::HumanBones::hips) {
-            operation = operation | ImGuizmo::TRANSLATE;
-          }
-        } else {
-          operation = operation | ImGuizmo::TRANSLATE;
-        }
-        if (ImGuizmo::Manipulate(env->ViewMatrix,
-                                 env->ProjectionMatrix,
-                                 operation,
-                                 ImGuizmo::LOCAL,
-                                 (float*)&m,
-                                 nullptr,
-                                 nullptr,
-                                 nullptr,
-                                 nullptr)) {
-          // decompose feedback
-          node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
-          node->CalcWorldInitialMatrix(true);
-        }
-        ImGuizmo::GetContext().mAllowActiveHoverItem = false;
-      }
-    };
+    } else {
+      operation = operation | ImGuizmo::TRANSLATE;
+    }
+    if (ImGuizmo::Manipulate(m_env->ViewMatrix,
+                             m_env->ProjectionMatrix,
+                             operation,
+                             ImGuizmo::LOCAL,
+                             (float*)&m,
+                             nullptr,
+                             nullptr,
+                             nullptr,
+                             nullptr)) {
+      // decompose feedback
+      node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
+      node->CalcWorldInitialMatrix(true);
+    }
+    ImGuizmo::GetContext().mAllowActiveHoverItem = false;
+  }
 }
 
 void
@@ -149,5 +154,4 @@ ScenePreview::ShowFullWindow(const char* title, const float color[4])
   auto size = ImGui::GetContentRegionAvail();
   ShowScreenRect(title, color, pos.x, pos.y, size.x, size.y);
 }
-
 }

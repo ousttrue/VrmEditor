@@ -1,8 +1,8 @@
 #pragma once
 #include "glr/scene_preview.h"
 #include "gui.h"
-#include <vrm/runtimescene/scene.h>
 #include <imgui.h>
+#include <vrm/runtimescene/scene.h>
 
 class ViewDock
 {
@@ -12,10 +12,11 @@ public:
                      const std::shared_ptr<runtimescene::RuntimeScene>& scene,
                      const std::shared_ptr<glr::RenderingEnv>& env,
                      const std::shared_ptr<grapho::OrbitView>& view,
-                     const std::shared_ptr<glr::ViewSettings>& settings)
+                     const std::shared_ptr<glr::ViewSettings>& settings,
+                     const std::shared_ptr<SceneNodeSelection>& selection)
   {
-    auto preview =
-      std::make_shared<glr::ScenePreview>(scene, env, view, settings);
+    auto preview = std::make_shared<glr::ScenePreview>(
+      scene, env, view, settings, selection);
 
     addDock(
       Dock(title, [preview, scene, settings](const char* title, bool* p_open) {

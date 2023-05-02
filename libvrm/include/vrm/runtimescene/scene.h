@@ -20,9 +20,6 @@ struct RuntimeScene
 {
   std::shared_ptr<libvrm::gltf::Scene> m_table;
 
-  std::weak_ptr<libvrm::gltf::Node> selected;
-  std::weak_ptr<libvrm::gltf::Node> new_selected;
-
   libvrm::Time NextSpringDelta = libvrm::Time(0.0);
   std::shared_ptr<libvrm::gltf::Scene> m_lastScene;
 

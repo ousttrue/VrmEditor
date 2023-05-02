@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 
+#include "docks/scene_selection.h"
 #include "scene_gui.h"
 #include <glr/gl3renderer.h>
 #include <grapho/gl3/Texture.h>
@@ -12,8 +13,10 @@
 #include <vrm/texture.h>
 
 SceneGui::SceneGui(const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+                   const std::shared_ptr<SceneNodeSelection>& selection,
                    float indent)
   : m_scene(scene)
+  , m_selection(selection)
   , m_indent(indent)
 {
 }
@@ -30,7 +33,7 @@ SceneGui::Show(const char* title, bool* p_open)
 {
   int window_flags = 0;
   std::shared_ptr<libvrm::gltf::Node> showSelected;
-  if (auto selected = m_scene->selected.lock()) {
+  if (auto selected = m_selection->selected.lock()) {
     {
       if (auto mesh_index = selected->Mesh) {
         // showSelected = selected;
@@ -42,7 +45,7 @@ SceneGui::Show(const char* title, bool* p_open)
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
   if (ImGui::Begin(title, p_open, window_flags)) {
     auto size = ImGui::GetContentRegionAvail();
-    m_scene->selected = m_scene->new_selected;
+    m_selection->selected = m_selection->new_selected;
 
     if (ImGui::CollapsingHeader("textures", ImGuiTreeNodeFlags_None)) {
     }
@@ -95,10 +98,10 @@ void
 SceneGui::ShowNodes()
 {
   auto size = ImGui::GetContentRegionAvail();
-  m_scene->selected = m_scene->new_selected;
+  m_selection->selected = m_selection->new_selected;
 
   std::shared_ptr<libvrm::gltf::Node> showSelected;
-  if (auto selected = m_scene->selected.lock()) {
+  if (auto selected = m_selection->selected.lock()) {
     {
       if (auto mesh_index = selected->Mesh) {
         showSelected = selected;
@@ -166,7 +169,7 @@ SceneGui::Enter(const std::shared_ptr<libvrm::gltf::Node>& node)
       ImGuiTreeNodeFlags_Leaf |
       ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
   }
-  if (m_scene->selected.lock() == node) {
+  if (m_selection->selected.lock() == node) {
     node_flags |= ImGuiTreeNodeFlags_Selected;
   }
 
@@ -186,7 +189,7 @@ SceneGui::Enter(const std::shared_ptr<libvrm::gltf::Node>& node)
   ImGui::PopStyleColor(push);
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-    m_scene->new_selected = node;
+    m_selection->new_selected = node;
   }
 
   return node->Children.size() && node_open;

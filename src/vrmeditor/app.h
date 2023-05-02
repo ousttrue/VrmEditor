@@ -52,6 +52,7 @@ class App
 
   std::shared_ptr<libvrm::Timeline> m_timeline;
   std::shared_ptr<runtimescene::RuntimeScene> m_scene;
+  std::shared_ptr<struct SceneNodeSelection> m_selection;
   std::shared_ptr<grapho::OrbitView> m_view;
   std::shared_ptr<glr::ViewSettings> m_settings;
   std::shared_ptr<glr::RenderingEnv> m_env;
