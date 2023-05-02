@@ -20,17 +20,15 @@ struct RuntimeSpringJoint
 
   RuntimeSpringJoint(const std::shared_ptr<libvrm::vrm::SpringJoint>& joint);
 
-  void Update(const std::shared_ptr<RuntimeScene>& runtime,
+  void Update(RuntimeScene* runtime,
               libvrm::Time time,
               RuntimeSpringCollision* collision);
-  DirectX::XMVECTOR ConstraintTailPosition(
-    const std::shared_ptr<RuntimeScene>& runtime,
-    const DirectX::XMVECTOR& src);
+  DirectX::XMVECTOR ConstraintTailPosition(RuntimeScene* runtime,
+                                           const DirectX::XMVECTOR& src);
   DirectX::XMVECTOR WorldPosToLocalRotation(
-    const std::shared_ptr<RuntimeScene>& runtime,
+    RuntimeScene* runtime,
     const DirectX::XMVECTOR& nextTail) const;
-  void DrawGizmo(const std::shared_ptr<RuntimeScene>& runtime,
-                 libvrm::IGizmoDrawer* gizmo);
+  void DrawGizmo(RuntimeScene* runtime, libvrm::IGizmoDrawer* gizmo);
 };
 
 }

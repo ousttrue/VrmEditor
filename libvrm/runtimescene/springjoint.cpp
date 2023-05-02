@@ -23,7 +23,7 @@ RuntimeSpringJoint::RuntimeSpringJoint(
 }
 
 void
-RuntimeSpringJoint::DrawGizmo(const std::shared_ptr<RuntimeScene>& runtime,
+RuntimeSpringJoint::DrawGizmo(RuntimeScene* runtime,
                               libvrm::IGizmoDrawer* gizmo)
 {
   // gizmo->drawSphere(Head->worldPosition(), {1, 1, 1, 1});
@@ -61,7 +61,7 @@ RuntimeSpringJoint::DrawGizmo(const std::shared_ptr<RuntimeScene>& runtime,
 }
 
 void
-RuntimeSpringJoint::Update(const std::shared_ptr<RuntimeScene>& runtime,
+RuntimeSpringJoint::Update(RuntimeScene* runtime,
                            libvrm::Time time,
                            RuntimeSpringCollision* collision)
 {
@@ -117,9 +117,8 @@ RuntimeSpringJoint::Update(const std::shared_ptr<RuntimeScene>& runtime,
 }
 
 DirectX::XMVECTOR
-RuntimeSpringJoint::ConstraintTailPosition(
-  const std::shared_ptr<RuntimeScene>& runtime,
-  const DirectX::XMVECTOR& tail)
+RuntimeSpringJoint::ConstraintTailPosition(RuntimeScene* runtime,
+                                           const DirectX::XMVECTOR& tail)
 {
   auto position = DirectX::XMLoadFloat3(
     &runtime->GetRuntimeNode(Joint->Head)->WorldTransform.Translation);
@@ -133,7 +132,7 @@ RuntimeSpringJoint::ConstraintTailPosition(
 
 DirectX::XMVECTOR
 RuntimeSpringJoint::WorldPosToLocalRotation(
-  const std::shared_ptr<RuntimeScene>& runtime,
+  RuntimeScene* runtime,
   const DirectX::XMVECTOR& nextTailDir) const
 {
   auto rotation = DirectX::XMQuaternionMultiply(

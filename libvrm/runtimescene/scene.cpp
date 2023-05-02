@@ -224,7 +224,7 @@ RuntimeScene::SpringUpdate(
   for (auto& joint : spring->Joints) {
     collision->Clear();
     auto runtime = GetRuntimeJoint(joint);
-    // runtime->Update(*joint, delta, collision.get());
+    runtime->Update(this, delta, collision.get());
   }
 }
 
