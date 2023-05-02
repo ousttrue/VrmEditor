@@ -37,10 +37,6 @@ struct ScenePreview
   std::shared_ptr<RenderTarget> m_rt;
   std::shared_ptr<Cuber> m_cuber;
 
-  // imgui
-  std::string m_popupName = "ScenePreviewPopup";
-  std::function<void()> m_popup;
-
   ScenePreview(const std::shared_ptr<runtimescene::RuntimeScene>& scene,
                const std::shared_ptr<RenderingEnv>& env,
                const std::shared_ptr<grapho::OrbitView>& view,

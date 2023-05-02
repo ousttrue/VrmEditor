@@ -6,6 +6,6 @@ namespace glr {
 void
 Overlay(const ImVec2& pos,
         const char* title,
-        const char* popupName,
+        const char* popupName = {},
         const std::function<void()>& popup = {});
 }

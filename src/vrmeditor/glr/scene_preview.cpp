@@ -40,8 +40,6 @@ ScenePreview::ScenePreview(
     DirectX::XMMatrixShadow(DirectX::XMLoadFloat4(&plane),
                             DirectX::XMLoadFloat4(&env->LightPosition)));
 
-  m_popup = std::bind(&ViewSettings::Popup, settings.get(), m_popupName);
-
   m_rt->render =
     [scene,
      settings,
@@ -137,7 +135,7 @@ ScenePreview::ShowScreenRect(const char* title,
   auto sc = ImGui::GetCursorScreenPos();
   m_rt->ShowFbo(x, y, w, h, color);
   // top, right pivot
-  Overlay({ sc.x + w - 10, sc.y + 10 }, title, m_popupName.c_str(), m_popup);
+  Overlay({ sc.x + w - 10, sc.y + 10 }, title);
 }
 
 void
