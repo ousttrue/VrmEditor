@@ -17,8 +17,6 @@ namespace libvrm {
 namespace gltf {
 
 struct Skin;
-struct MeshInstance;
-struct Scene;
 struct Node;
 struct Mesh;
 
@@ -303,18 +301,5 @@ struct Node
                                     const PushInstance& pushInstance);
 };
 
-// inline std::ostream&
-// operator<<(std::ostream& os, const Node& node)
-// {
-//   os << "Node: " << node.Name
-//     // << ": " << node.translation
-//     // << node.rotation
-//     // << node.scale
-//     ;
-//   if (node.Mesh) {
-//     os << ", mesh: " << *node.Mesh;
-//   }
-//   return os;
-// }
-} // namespace gltf
+}
 }
