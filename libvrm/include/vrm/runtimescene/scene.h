@@ -50,9 +50,14 @@ struct RuntimeScene
   std::shared_ptr<RuntimeSpringCollision> GetRuntimeSpringCollision(
     const std::shared_ptr<libvrm::vrm::SpringBone>& springBone);
 
-  void Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-              const RenderFunc& render,
-              libvrm::IGizmoDrawer* gizmo);
+  // void Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
+  //             const RenderFunc& render,
+  //             libvrm::IGizmoDrawer* gizmo);
+  std::vector<libvrm::gltf::DrawItem> m_drawables;
+  std::span<const libvrm::gltf::DrawItem> Drawables();
+
+  std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
+  std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
 
   void SpringUpdate(const std::shared_ptr<libvrm::vrm::SpringBone>& solver,
                     libvrm::Time deltaForSimulation);
@@ -67,7 +72,7 @@ struct RuntimeScene
   // vrm::HumanPose UpdateHumanPose();
   // void SetHumanPose(const vrm::HumanPose& pose);
   // void SyncHierarchy();
-}  // void SetInitialPose()
+} // void SetInitialPose()
   // {
   //   for (auto& node : m_nodes) {
   //     node->Transform = node->InitialTransform;

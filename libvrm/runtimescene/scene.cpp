@@ -83,17 +83,9 @@ RuntimeScene::GetRuntimeSpringCollision(
   return runtime;
 }
 
-void
-RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-                     const RenderFunc& render,
-                     libvrm::IGizmoDrawer* gizmo)
+std::span<const libvrm::gltf::DrawItem>
+RuntimeScene::Drawables()
 {
-  if (scene != m_lastScene) {
-    // clear
-    m_jointMap.clear();
-    m_lastScene = scene;
-  }
-
   // update order
   // 1. ヒューマノイドボーンを解決
   // 2. 頭の位置が決まるのでLookAtを解決
@@ -105,25 +97,25 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
   // 5. SpringBoneを解決
 
   // constraint
-  for (auto& node : scene->m_nodes) {
+  for (auto& node : m_table->m_nodes) {
     if (auto constraint = node->Constraint) {
       constraint->Process(node);
     }
   }
-  for (auto& root : scene->m_roots) {
+  for (auto& root : m_table->m_roots) {
     GetRuntimeNode(root)->CalcWorldMatrix(true);
   }
 
   // springbone
-  for (auto& spring : scene->m_springBones) {
+  for (auto& spring : m_table->m_springBones) {
     SpringUpdate(spring, NextSpringDelta);
   }
   NextSpringDelta = {};
 
-  if (scene->m_expressions) {
+  if (m_table->m_expressions) {
     // VRM0 expression to morphTarget
-    auto nodeToIndex = [nodes = scene->m_nodes,
-                        expressions = scene->m_expressions](
+    auto nodeToIndex = [nodes = m_table->m_nodes,
+                        expressions = m_table->m_expressions](
                          const std::shared_ptr<libvrm::gltf::Node>& node) {
       for (uint32_t i = 0; i < nodes.size(); ++i) {
         if (node == nodes[i]) {
@@ -132,17 +124,18 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
       }
       return (uint32_t)-1;
     };
-    for (auto& [k, v] : scene->m_expressions->EvalMorphTargetMap(nodeToIndex)) {
-      auto& morph_node = scene->m_nodes[k.NodeIndex];
+    for (auto& [k, v] :
+         m_table->m_expressions->EvalMorphTargetMap(nodeToIndex)) {
+      auto& morph_node = m_table->m_nodes[k.NodeIndex];
       auto instance = GetRuntimeMesh(morph_node->Mesh);
       instance->weights[k.MorphIndex] = v;
     }
   }
 
   // skinning
-  for (auto& node : scene->m_nodes) {
+  for (auto& node : m_table->m_nodes) {
     if (node->Mesh) {
-      // auto mesh = scene->m_meshes[*mesh_index];
+      // auto mesh = m_table->m_meshes[*mesh_index];
 
       // mesh animation
       std::span<DirectX::XMFLOAT4X4> skinningMatrices;
@@ -158,7 +151,7 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         }
 
         for (int i = 0; i < skin->Joints.size(); ++i) {
-          auto node = scene->m_nodes[skin->Joints[i]];
+          auto node = m_table->m_nodes[skin->Joints[i]];
           auto m = skin->BindMatrices[i];
           DirectX::XMStoreFloat4x4(&skin->CurrentMatrices[i],
                                    DirectX::XMLoadFloat4x4(&m) *
@@ -174,21 +167,40 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
       instance->applyMorphTargetAndSkinning(*node->Mesh, skinningMatrices);
     }
   }
-  DirectX::XMFLOAT4X4 m;
-  for (auto& node : scene->m_nodes) {
+
+  m_drawables.clear();
+  for (auto& node : m_table->m_nodes) {
     if (node->Mesh) {
-      DirectX::XMStoreFloat4x4(&m, GetRuntimeNode(node)->WorldMatrix());
+      m_drawables.push_back({
+        .Mesh = node->Mesh,
+      });
+      DirectX::XMStoreFloat4x4(&m_drawables.back().Matrix,
+                               GetRuntimeNode(node)->WorldMatrix());
       auto instance = GetRuntimeMesh(node->Mesh);
-      render(node->Mesh, *instance, &m._11);
     }
   }
 
-  for (auto& spring : scene->m_springBones) {
-    SpringDrawGizmo(spring, gizmo);
+  // for (auto& spring : m_table->m_springBones) {
+  //   SpringDrawGizmo(spring, gizmo);
+  // }
+  // for (auto& collider : m_table->m_springColliders) {
+  //   // collider->DrawGizmo(gizmo);
+  // }
+
+  return m_drawables;
+}
+
+std::span<const DirectX::XMFLOAT4X4>
+RuntimeScene::ShapeMatrices()
+{
+  m_shapeMatrices.clear();
+  for (auto& node : m_table->m_nodes) {
+    m_shapeMatrices.push_back({});
+    auto shape = DirectX::XMLoadFloat4x4(&node->ShapeMatrix);
+    DirectX::XMStoreFloat4x4(&m_shapeMatrices.back(),
+                             shape * GetRuntimeNode(node)->WorldMatrix());
   }
-  for (auto& collider : scene->m_springColliders) {
-    // collider->DrawGizmo(gizmo);
-  }
+  return m_shapeMatrices;
 }
 
 void
@@ -266,8 +278,8 @@ RuntimeScene::SpringColliderPosition(
 //                   const DirectX::XMVECTOR& q2,
 //                   const DirectX::XMVECTOR& q3) -> DirectX::XMVECTOR {
 //     return DirectX::XMQuaternionMultiply(
-//       DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(q0, q1), q2),
-//       q3);
+//       DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(q0, q1),
+//       q2), q3);
 //   };
 //
 //   // // retarget human pose
@@ -282,17 +294,17 @@ RuntimeScene::SpringColliderPosition(
 //   //         &m_pose.RootPosition,
 //   //         DirectX::XMVectorSubtract(
 //   //           DirectX::XMLoadFloat3(&node->WorldTransform.Translation),
-//   //           DirectX::XMLoadFloat3(&node->WorldInitialTransform.Translation)));
+//   // DirectX::XMLoadFloat3(&node->WorldInitialTransform.Translation)));
 //   //     }
 //   //
 //   //     // retarget
 //   //     auto normalized =
 //   //       mult4(DirectX::XMQuaternionInverse(
-//   //               DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation)),
+//   // DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation)),
 //   //             DirectX::XMLoadFloat4(&node->Transform.Rotation),
 //   //             DirectX::XMQuaternionInverse(
 //   //               DirectX::XMLoadFloat4(&node->InitialTransform.Rotation)),
-//   //             DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation));
+//   // DirectX::XMLoadFloat4(&node->WorldInitialTransform.Rotation));
 //   //
 //   //     m_rotations.push_back({});
 //   //     DirectX::XMStoreFloat4(&m_rotations.back(), normalized);
@@ -331,7 +343,8 @@ RuntimeScene::SpringColliderPosition(
 //   //       &node->Transform.Rotation,
 //   //       DirectX::XMQuaternionMultiply(
 //   //         DirectX::XMQuaternionMultiply(
-//   //           DirectX::XMQuaternionMultiply(worldInitial, q), worldInitialInv),
+//   //           DirectX::XMQuaternionMultiply(worldInitial, q),
+//   worldInitialInv),
 //   //         localInitial));
 //   //   }
 //   // }
@@ -349,6 +362,5 @@ RuntimeScene::SpringColliderPosition(
 //   };
 //   Traverse(enter, {});
 // }
-
 
 }

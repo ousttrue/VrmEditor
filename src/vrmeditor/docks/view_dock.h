@@ -16,7 +16,34 @@ public:
                      const std::shared_ptr<SceneNodeSelection>& selection)
   {
     auto preview = std::make_shared<glr::ScenePreview>(
-      scene, env, view, settings, selection);
+      scene, env, view, settings, selection, false);
+
+    addDock(
+      Dock(title, [preview, scene, settings](const char* title, bool* p_open) {
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+        if (ImGui::Begin(title,
+                         p_open,
+                         ImGuiWindowFlags_NoScrollbar |
+                           ImGuiWindowFlags_NoScrollWithMouse)) {
+          preview->ShowFullWindow(scene->m_table->m_title.c_str(),
+                                  settings->Color);
+        }
+        ImGui::End();
+        ImGui::PopStyleVar();
+      }));
+  }
+
+  static void CreateTPose(
+    const AddDockFunc& addDock,
+    std::string_view title,
+    const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+    const std::shared_ptr<glr::RenderingEnv>& env,
+    const std::shared_ptr<grapho::OrbitView>& view,
+    const std::shared_ptr<glr::ViewSettings>& settings,
+    const std::shared_ptr<SceneNodeSelection>& selection)
+  {
+    auto preview = std::make_shared<glr::ScenePreview>(
+      scene, env, view, settings, selection, true);
 
     addDock(
       Dock(title, [preview, scene, settings](const char* title, bool* p_open) {

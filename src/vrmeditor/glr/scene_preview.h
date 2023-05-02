@@ -49,14 +49,16 @@ struct ScenePreview
                const std::shared_ptr<RenderingEnv>& env,
                const std::shared_ptr<grapho::OrbitView>& view,
                const std::shared_ptr<ViewSettings>& settings,
-               const std::shared_ptr<SceneNodeSelection>& selection);
+               const std::shared_ptr<SceneNodeSelection>& selection,
+               bool useTPose);
 
   ScenePreview(const std::shared_ptr<runtimescene::RuntimeScene>& scene)
     : ScenePreview(scene,
                    std::make_shared<RenderingEnv>(),
                    std::make_shared<grapho::OrbitView>(),
                    std::make_shared<ViewSettings>(),
-                   std::make_shared<SceneNodeSelection>())
+                   std::make_shared<SceneNodeSelection>(),
+                   false)
   {
   }
 
@@ -68,7 +70,8 @@ struct ScenePreview
                       float h);
   void ShowFullWindow(const char* title, const float color[4]);
 
-  void Render(const grapho::OrbitView& view);
+  void RenderTPose(const grapho::OrbitView& view);
+  void RenderAnimation(const grapho::OrbitView& view);
 };
 
 }

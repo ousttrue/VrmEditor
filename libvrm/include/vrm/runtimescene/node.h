@@ -14,6 +14,13 @@ struct RuntimeNode
 {
   std::shared_ptr<libvrm::gltf::Node> Node;
 
+  RuntimeNode(const std::shared_ptr<libvrm::gltf::Node>& node)
+    : Node(node)
+  {
+    Transform = node->InitialTransform;
+    WorldTransform = node->WorldInitialTransform;
+  }
+
   std::list<std::shared_ptr<RuntimeNode>> Children;
   std::weak_ptr<RuntimeNode> Parent;
   static void AddChild(const std::shared_ptr<RuntimeNode>& parent,
