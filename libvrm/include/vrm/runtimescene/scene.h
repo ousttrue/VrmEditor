@@ -85,6 +85,9 @@ struct RuntimeScene
   DirectX::XMVECTOR SpringColliderPosition(
     const std::shared_ptr<libvrm::vrm::SpringCollider>& collider);
 
+  void NodeConstraintProcess(const libvrm::vrm::NodeConstraint& constraint,
+                             const std::shared_ptr<RuntimeNode>& dst);
+
   // humanpose
   std::vector<libvrm::vrm::HumanBones> m_humanBoneMap;
   std::vector<DirectX::XMFLOAT4> m_rotations;

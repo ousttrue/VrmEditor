@@ -125,7 +125,6 @@ struct NodeConstraint
     NodeConstraintAimAxis AimAxis;
     NodeConstraintRollAxis RollAxis;
   };
-  void Process(const std::shared_ptr<gltf::Node>& dst);
 };
 
 }
