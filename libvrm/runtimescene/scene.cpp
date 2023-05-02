@@ -1,9 +1,59 @@
 #include "vrm/runtimescene/scene.h"
 #include "vrm/runtimescene/mesh.h"
+#include "vrm/runtimescene/node.h"
 #include "vrm/runtimescene/springcollision.h"
 #include <vrm/skin.h>
 
 namespace runtimescene {
+
+RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
+  : m_table(table)
+{
+  Reset();
+}
+
+void
+RuntimeScene::Reset()
+{
+  // COPY hierarchy
+  for (auto& node : m_table->m_nodes) {
+    auto runtime = std::make_shared<RuntimeNode>(node);
+    m_nodeMap.insert({ node, runtime });
+  }
+
+  for (auto& node : m_table->m_nodes) {
+    auto runtime = GetRuntimeNode(node);
+    if (auto parent = node->Parent.lock()) {
+      auto runtimeParent = GetRuntimeNode(parent);
+      RuntimeNode::AddChild(runtimeParent, runtime);
+    }
+  }
+}
+
+std::shared_ptr<RuntimeNode>
+RuntimeScene::GetRuntimeNode(const std::shared_ptr<libvrm::gltf::Node>& node)
+{
+  auto found = m_nodeMap.find(node);
+  if (found != m_nodeMap.end()) {
+    return found->second;
+  }
+
+  assert(false);
+  return {};
+}
+
+std::shared_ptr<RuntimeMesh>
+RuntimeScene::GetRuntimeMesh(const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
+{
+  auto found = m_meshMap.find(mesh);
+  if (found != m_meshMap.end()) {
+    return found->second;
+  }
+
+  auto runtime = std::make_shared<RuntimeMesh>(mesh);
+  m_meshMap.insert({ mesh, runtime });
+  return runtime;
+}
 
 std::shared_ptr<RuntimeSpringJoint>
 RuntimeScene::GetRuntimeJoint(
@@ -19,16 +69,17 @@ RuntimeScene::GetRuntimeJoint(
   return runtime;
 }
 
-std::shared_ptr<RuntimeMesh>
-RuntimeScene::GetRuntimeMesh(const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
+std::shared_ptr<RuntimeSpringCollision>
+RuntimeScene::GetRuntimeSpringCollision(
+  const std::shared_ptr<libvrm::vrm::SpringBone>& springBone)
 {
-  auto found = m_meshMap.find(mesh);
-  if (found != m_meshMap.end()) {
+  auto found = m_springCollisionMap.find(springBone);
+  if (found != m_springCollisionMap.end()) {
     return found->second;
   }
 
-  auto runtime = std::make_shared<RuntimeMesh>(mesh);
-  m_meshMap.insert({ mesh, runtime });
+  auto runtime = std::make_shared<RuntimeSpringCollision>(springBone);
+  m_springCollisionMap.insert({ springBone, runtime });
   return runtime;
 }
 
@@ -60,7 +111,7 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
     }
   }
   for (auto& root : scene->m_roots) {
-    root->CalcWorldMatrix(true);
+    GetRuntimeNode(root)->CalcWorldMatrix(true);
   }
 
   // springbone
@@ -102,7 +153,8 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 
         auto rootInverse = DirectX::XMMatrixIdentity();
         if (auto root_index = skin->Root) {
-          rootInverse = DirectX::XMMatrixInverse(nullptr, node->WorldMatrix());
+          rootInverse = DirectX::XMMatrixInverse(
+            nullptr, GetRuntimeNode(node)->WorldMatrix());
         }
 
         for (int i = 0; i < skin->Joints.size(); ++i) {
@@ -110,7 +162,8 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           auto m = skin->BindMatrices[i];
           DirectX::XMStoreFloat4x4(&skin->CurrentMatrices[i],
                                    DirectX::XMLoadFloat4x4(&m) *
-                                     node->WorldMatrix() * rootInverse);
+                                     GetRuntimeNode(node)->WorldMatrix() *
+                                     rootInverse);
         }
 
         skinningMatrices = skin->CurrentMatrices;
@@ -124,7 +177,7 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
   DirectX::XMFLOAT4X4 m;
   for (auto& node : scene->m_nodes) {
     if (node->Mesh) {
-      DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
+      DirectX::XMStoreFloat4x4(&m, GetRuntimeNode(node)->WorldMatrix());
       auto instance = GetRuntimeMesh(node->Mesh);
       render(node->Mesh, *instance, &m._11);
     }
@@ -134,7 +187,7 @@ RuntimeScene::Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
     SpringDrawGizmo(spring, gizmo);
   }
   for (auto& collider : scene->m_springColliders) {
-    collider->DrawGizmo(gizmo);
+    // collider->DrawGizmo(gizmo);
   }
 }
 
@@ -152,7 +205,7 @@ RuntimeScene::SpringUpdate(
   for (auto& joint : spring->Joints) {
     collision->Clear();
     auto runtime = GetRuntimeJoint(joint);
-    runtime->Update(*joint, delta, collision.get());
+    // runtime->Update(*joint, delta, collision.get());
   }
 }
 
@@ -163,8 +216,46 @@ RuntimeScene::SpringDrawGizmo(
 {
   for (auto& joint : solver->Joints) {
     auto runtime = GetRuntimeJoint(joint);
-    runtime->DrawGizmo(*joint, gizmo);
+    // runtime->DrawGizmo(*joint, gizmo);
   }
+}
+
+void
+RuntimeScene::SpringColliderDrawGizmo(
+  const std::shared_ptr<libvrm::vrm::SpringCollider>& collider,
+  libvrm::IGizmoDrawer* gizmo)
+{
+  DirectX::XMFLOAT3 offset;
+  DirectX::XMStoreFloat3(
+    &offset,
+    GetRuntimeNode(collider->Node)
+      ->WorldTransformPoint(DirectX::XMLoadFloat3(&collider->Offset)));
+  switch (collider->Type) {
+    case libvrm::vrm::SpringColliderShapeType::Sphere:
+      // gizmo->DrawSphere(offset, Radius, { 0, 1, 1, 1 });
+      break;
+
+    case libvrm::vrm::SpringColliderShapeType::Capsule: {
+      DirectX::XMFLOAT3 tail;
+      DirectX::XMStoreFloat3(
+        &tail,
+        GetRuntimeNode(collider->Node)
+          ->WorldTransformPoint(DirectX::XMLoadFloat3(&collider->Tail)));
+
+      // gizmo->DrawSphere(offset, Radius, { 0, 1, 1, 1 });
+      // gizmo->DrawSphere(tail, Radius, { 0, 1, 1, 1 });
+      gizmo->DrawCapsule(offset, tail, collider->Radius, { 0, 1, 1, 1 });
+      break;
+    }
+  }
+}
+
+DirectX::XMVECTOR
+RuntimeScene::SpringColliderPosition(
+  const std::shared_ptr<libvrm::vrm::SpringCollider>& collider)
+{
+  return GetRuntimeNode(collider->Node)
+    ->WorldTransformPoint(DirectX::XMLoadFloat3(&collider->Offset));
 }
 
 }

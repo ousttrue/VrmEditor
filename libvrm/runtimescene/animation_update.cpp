@@ -1,6 +1,7 @@
 #include "vrm/runtimescene/animation_update.h"
-#include "vrm/runtimescene/scene.h"
 #include "vrm/runtimescene/mesh.h"
+#include "vrm/runtimescene/node.h"
+#include "vrm/runtimescene/scene.h"
 
 namespace runtimescene {
 
@@ -14,15 +15,17 @@ AnimationUpdate(const libvrm::gltf::Animation& animation,
   float seconds = time.count();
   for (auto& [k, v] : animation.m_translationMap) {
     auto node = nodes[k];
-    node->Transform.Translation = v.GetValue(seconds, repeat);
+    runtime->GetRuntimeNode(node)->Transform.Translation =
+      v.GetValue(seconds, repeat);
   }
   for (auto& [k, v] : animation.m_rotationMap) {
     auto node = nodes[k];
-    node->Transform.Rotation = v.GetValue(seconds, repeat);
+    runtime->GetRuntimeNode(node)->Transform.Rotation =
+      v.GetValue(seconds, repeat);
   }
   for (auto& [k, v] : animation.m_scaleMap) {
     auto node = nodes[k];
-    node->Scale = v.GetValue(seconds, repeat);
+    runtime->GetRuntimeNode(node)->Scale = v.GetValue(seconds, repeat);
   }
   for (auto& [k, v] : animation.m_weightsMap) {
     auto node = nodes[k];

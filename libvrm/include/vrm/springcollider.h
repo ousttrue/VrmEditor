@@ -27,8 +27,6 @@ struct SpringCollider
   DirectX::XMFLOAT3 Offset = { 0, 0, 0 };
   float Radius = 0;
   DirectX::XMFLOAT3 Tail = { 0, 0, 0 };
-  void DrawGizmo(IGizmoDrawer* gizmo);
-  DirectX::XMVECTOR Position() const;
 };
 // inline void
 // from_json(const nlohmann::json& j, ColliderItem& collider)

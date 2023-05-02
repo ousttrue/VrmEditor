@@ -14,7 +14,7 @@ SpringBone::AddJoint(const std::shared_ptr<gltf::Node>& head,
                      float stiffiness,
                      float radius)
 {
-  head->ShapeColor = { 0.5f, 0.5f, 1.0f, 1 };
+  // head->ShapeColor = { 0.5f, 0.5f, 1.0f, 1 };
   Joints.push_back(std::make_shared<SpringJoint>(
     head, tail, localTailPosition, dragForce, stiffiness, radius));
 }
@@ -29,16 +29,17 @@ SpringBone::AddJointRecursive(const std::shared_ptr<gltf::Node>& node,
     for (auto& child : node->Children) {
       AddJoint(node,
                child,
-               child->Transform.Translation,
+               child->InitialTransform.Translation,
                dragForce,
                stiffiness,
                radius);
       break;
     }
   } else {
-    auto delta = node->WorldTransform.Translation - node->ParentWorldPosition();
+    auto delta = node->WorldInitialTransform.Translation -
+                 node->ParentWorldInitialPosition();
     auto childPosition = DirectX::XMVectorAdd(
-      DirectX::XMLoadFloat3(&node->WorldTransform.Translation),
+      DirectX::XMLoadFloat3(&node->WorldInitialTransform.Translation),
       DirectX::XMVectorScale(
         DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&delta)), 0.07f));
 
@@ -46,7 +47,8 @@ SpringBone::AddJointRecursive(const std::shared_ptr<gltf::Node>& node,
     DirectX::XMStoreFloat3(
       &localTailPosition,
       DirectX::XMVector3Transform(
-        childPosition, DirectX::XMMatrixInverse(nullptr, node->WorldMatrix())));
+        childPosition,
+        DirectX::XMMatrixInverse(nullptr, node->WorldInitialMatrix())));
 
     AddJoint(node, nullptr, localTailPosition, dragForce, stiffiness, radius);
   }

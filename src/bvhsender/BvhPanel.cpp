@@ -36,7 +36,7 @@ public:
 
   ~BvhPanelImpl() { m_work.reset(); }
 
-  void PushInstance(const libvrm::gltf::Instance& instance)
+  void PushInstance(const runtimescene::Instance& instance)
   {
     m_instances.push_back(*((const cuber::Instance*)&instance));
   }
@@ -49,9 +49,9 @@ public:
     }
 
     libvrm::bvh::InitializeSceneFromBvh(m_scene, m_bvh);
-    m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
-      DirectX::XMMatrixIdentity(),
-      std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
+    // m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
+    //   DirectX::XMMatrixIdentity(),
+    //   std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
 
     m_sender.SendBvhSkeleton(m_ep, m_bvh);
 
@@ -93,11 +93,11 @@ public:
   {
     libvrm::bvh::UpdateSceneFromBvhFrame(
       m_scene, m_scene->m_roots[0], m_bvh, frame, m_bvh->GuessScaling());
-    m_scene->m_roots[0]->CalcWorldMatrix(true);
-    m_instances.clear();
-    m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
-      DirectX::XMMatrixIdentity(),
-      std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
+    // m_scene->m_roots[0]->CalcWorldMatrix(true);
+    // m_instances.clear();
+    // m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
+    //   DirectX::XMMatrixIdentity(),
+    //   std::bind(&BvhPanelImpl::PushInstance, this, std::placeholders::_1));
   }
 
   std::span<const cuber::Instance> GetCubes() { return m_instances; }

@@ -40,10 +40,8 @@ struct RuntimeScene
                      std::shared_ptr<RuntimeSpringCollision>>
     m_springCollisionMap;
 
-  RuntimeScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
-    : m_table(table)
-  {
-  }
+  RuntimeScene(const std::shared_ptr<libvrm::gltf::Scene>& table);
+  void Reset();
 
   std::shared_ptr<RuntimeMesh> GetRuntimeMesh(
     const std::shared_ptr<libvrm::gltf::Mesh>& mesh);
@@ -63,6 +61,11 @@ struct RuntimeScene
                     libvrm::Time deltaForSimulation);
   void SpringDrawGizmo(const std::shared_ptr<libvrm::vrm::SpringBone>& solver,
                        libvrm::IGizmoDrawer* gizmo);
+  void SpringColliderDrawGizmo(
+    const std::shared_ptr<libvrm::vrm::SpringCollider>& collider,
+    libvrm::IGizmoDrawer* gizmo);
+  DirectX::XMVECTOR SpringColliderPosition(
+    const std::shared_ptr<libvrm::vrm::SpringCollider>& collider);
 };
 
 }

@@ -202,25 +202,25 @@ struct Scene
   void InitializeNodes()
   {
     for (auto& root : m_roots) {
-      root->CalcWorldMatrix(true);
-      for (auto& node : m_nodes) {
-        node->InitialTransform = node->Transform;
-        node->WorldInitialTransform = node->WorldTransform;
-      }
+      root->CalcWorldInitialMatrix(true);
+      // for (auto& node : m_nodes) {
+      //   node->InitialTransform = node->Transform;
+      //   node->WorldInitialTransform = node->WorldTransform;
+      // }
       root->CalcShape();
     }
   }
 
-  void SetInitialPose()
-  {
-    for (auto& node : m_nodes) {
-      node->Transform = node->InitialTransform;
-    }
-    for (auto& root : m_roots) {
-      root->CalcWorldMatrix(true);
-    }
-    RaiseSceneUpdated();
-  }
+  // void SetInitialPose()
+  // {
+  //   for (auto& node : m_nodes) {
+  //     node->Transform = node->InitialTransform;
+  //   }
+  //   for (auto& root : m_roots) {
+  //     root->CalcWorldMatrix(true);
+  //   }
+  //   RaiseSceneUpdated();
+  // }
 
   void DrawGizmo(IGizmoDrawer* gizmo);
 };

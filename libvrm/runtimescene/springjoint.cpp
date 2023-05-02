@@ -1,4 +1,6 @@
-#include "vrm/runtimescene/springjoint.h"
+#include "vrm/runtimescene/springJoint.h"
+#include "vrm/runtimescene/node.h"
+#include "vrm/runtimescene/scene.h"
 #include "vrm/runtimescene/springcollision.h"
 #include <vrm/dmath.h>
 
@@ -6,6 +8,7 @@ namespace runtimescene {
 
 RuntimeSpringJoint::RuntimeSpringJoint(
   const std::shared_ptr<libvrm::vrm::SpringJoint>& joint)
+  : Joint(joint)
 {
   auto world = joint->Head->WorldInitialTransformPoint(
     DirectX::XMLoadFloat3(&joint->LocalTailPosition));
@@ -20,7 +23,7 @@ RuntimeSpringJoint::RuntimeSpringJoint(
 }
 
 void
-RuntimeSpringJoint::DrawGizmo(const libvrm::vrm::SpringJoint& joint,
+RuntimeSpringJoint::DrawGizmo(const std::shared_ptr<RuntimeScene>& runtime,
                               libvrm::IGizmoDrawer* gizmo)
 {
   // gizmo->drawSphere(Head->worldPosition(), {1, 1, 1, 1});
@@ -36,25 +39,29 @@ RuntimeSpringJoint::DrawGizmo(const libvrm::vrm::SpringJoint& joint,
   // }); gizmo->drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
 
   // gizmo->drawSphere(currentTail, {1, 1, 1, 1});
-  gizmo->DrawSphere(m_currentTailPosotion, joint.Radius, { 1, 0, 1, 1 });
+  gizmo->DrawSphere(m_currentTailPosotion, Joint->Radius, { 1, 0, 1, 1 });
   // gizmo->drawLine(currentTail, nextTail, {0, 1, 0, 1});
 
-  gizmo->DrawLine(joint.Head->WorldTransform.Translation,
-                  m_currentTailPosotion,
-                  { 1, 1, 0, 1 });
+  gizmo->DrawLine(
+    runtime->GetRuntimeNode(Joint->Head)->WorldTransform.Translation,
+    m_currentTailPosotion,
+    { 1, 1, 0, 1 });
 
-  if (joint.Head->Children.size()) {
-    gizmo->DrawSphere(joint.Head->Children.front()->WorldTransform.Translation,
-                      joint.Radius,
+  if (Joint->Head->Children.size()) {
+    gizmo->DrawSphere(runtime->GetRuntimeNode(Joint->Head->Children.front())
+                        ->WorldTransform.Translation,
+                      Joint->Radius,
                       { 1, 0, 0, 1 });
-    gizmo->DrawLine(joint.Head->WorldTransform.Translation,
-                    joint.Head->Children.front()->WorldTransform.Translation,
-                    { 1, 0, 0, 1 });
+    gizmo->DrawLine(
+      runtime->GetRuntimeNode(Joint->Head)->WorldTransform.Translation,
+      runtime->GetRuntimeNode(Joint->Head->Children.front())
+        ->WorldTransform.Translation,
+      { 1, 0, 0, 1 });
   }
 }
 
 void
-RuntimeSpringJoint::Update(const libvrm::vrm::SpringJoint& joint,
+RuntimeSpringJoint::Update(const std::shared_ptr<RuntimeScene>& runtime,
                            libvrm::Time time,
                            RuntimeSpringCollision* collision)
 {
@@ -64,7 +71,7 @@ RuntimeSpringJoint::Update(const libvrm::vrm::SpringJoint& joint,
     currentTail, DirectX::XMLoadFloat3(&m_lastTailPosotion));
 
   // verlet積分で次の位置を計算
-  auto dragInv = std::max(0.0f, 1.0f - joint.DragForce);
+  auto dragInv = std::max(0.0f, 1.0f - Joint->DragForce);
   auto nextTail = DirectX::XMVectorAdd(
     DirectX::XMVectorAdd(currentTail,
                          // 前フレームの移動を継続する
@@ -73,49 +80,49 @@ RuntimeSpringJoint::Update(const libvrm::vrm::SpringJoint& joint,
     DirectX::XMVector3Rotate(
       DirectX::XMVectorScale(
         DirectX::XMLoadFloat3(&m_initLocalTailDir),
-        static_cast<float>(joint.Stiffness * time.count())),
+        static_cast<float>(Joint->Stiffness * time.count())),
       DirectX::XMQuaternionMultiply(
-        DirectX::XMLoadFloat4(&joint.Head->InitialTransform.Rotation),
-        joint.Head->ParentWorldRotation())))
+        DirectX::XMLoadFloat4(&Joint->Head->InitialTransform.Rotation),
+        runtime->GetRuntimeNode(Joint->Head)->ParentWorldRotation())))
     // 外力による移動量
     // + external;
     ;
   assert(!std::isnan(DirectX::XMVectorGetX(nextTail)));
 
-  nextTail = ConstraintTailPosition(joint, nextTail);
+  nextTail = ConstraintTailPosition(runtime, nextTail);
 
   // collision
-  while (auto position = collision->Collide(nextTail, joint.Radius)) {
-    nextTail = ConstraintTailPosition(joint, *position);
+  while (auto position = collision->Collide(nextTail, Joint->Radius)) {
+    nextTail = ConstraintTailPosition(runtime, *position);
   }
 
   // update
   DirectX::XMStoreFloat3(&m_currentTailPosotion, nextTail);
   DirectX::XMStoreFloat3(&m_lastTailPosotion, currentTail);
 
-  auto position =
-    DirectX::XMLoadFloat3(&joint.Head->WorldTransform.Translation);
+  auto position = DirectX::XMLoadFloat3(
+    &runtime->GetRuntimeNode(Joint->Head)->WorldTransform.Translation);
   auto nextTailDir =
     DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(nextTail, position));
 
-  auto newRotation = WorldPosToLocalRotation(joint, nextTailDir);
+  auto newRotation = WorldPosToLocalRotation(runtime, nextTailDir);
   assert(!std::isnan(DirectX::XMVectorGetX(newRotation)));
   // DirectX::XMStoreFloat4(&Head->Transform.Rotation, newLocalRotation);
   // Head->CalcWorldMatrix(false);
-  joint.Head->SetWorldRotation(newRotation);
-  for (auto& child : joint.Head->Children) {
+  runtime->GetRuntimeNode(Joint->Head)->SetWorldRotation(newRotation);
+  for (auto& child : Joint->Head->Children) {
     // ひとつ下まで
-    child->CalcWorldMatrix(false);
+    runtime->GetRuntimeNode(child)->CalcWorldMatrix(false);
   }
 }
 
 DirectX::XMVECTOR
 RuntimeSpringJoint::ConstraintTailPosition(
-  const libvrm::vrm::SpringJoint& joint,
+  const std::shared_ptr<RuntimeScene>& runtime,
   const DirectX::XMVECTOR& tail)
 {
-  auto position =
-    DirectX::XMLoadFloat3(&joint.Head->WorldTransform.Translation);
+  auto position = DirectX::XMLoadFloat3(
+    &runtime->GetRuntimeNode(Joint->Head)->WorldTransform.Translation);
   auto nextTailDir =
     DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(tail, position));
   auto nextTail = DirectX::XMVectorAdd(
@@ -126,12 +133,12 @@ RuntimeSpringJoint::ConstraintTailPosition(
 
 DirectX::XMVECTOR
 RuntimeSpringJoint::WorldPosToLocalRotation(
-  const libvrm::vrm::SpringJoint& joint,
+  const std::shared_ptr<RuntimeScene>& runtime,
   const DirectX::XMVECTOR& nextTailDir) const
 {
   auto rotation = DirectX::XMQuaternionMultiply(
-    DirectX::XMLoadFloat4(&joint.Head->InitialTransform.Rotation),
-    joint.Head->ParentWorldRotation());
+    DirectX::XMLoadFloat4(&Joint->Head->InitialTransform.Rotation),
+    runtime->GetRuntimeNode(Joint->Head)->ParentWorldRotation());
   return DirectX::XMQuaternionMultiply(
     rotation,
     dmath::rotate_from_to(

@@ -12,11 +12,11 @@ UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
 {
   auto joint = &bvh->joints[scene->GetNodeIndex(node)];
   auto transform = frame.Resolve(joint->channels);
-  node->Transform.Translation = transform.Translation;
-  node->Transform.Translation.x *= scaling;
-  node->Transform.Translation.y *= scaling;
-  node->Transform.Translation.z *= scaling;
-  node->Transform.Rotation = transform.Rotation;
+  // node->Transform.Translation = transform.Translation;
+  // node->Transform.Translation.x *= scaling;
+  // node->Transform.Translation.y *= scaling;
+  // node->Transform.Translation.z *= scaling;
+  // node->Transform.Rotation = transform.Rotation;
   for (auto& child : node->Children) {
     UpdateSceneFromBvhFrame(scene, child, bvh, frame, scaling);
   }
@@ -34,7 +34,7 @@ UpdateSceneFromBvhFrame(const std::shared_ptr<gltf::Scene>& scene,
   auto frame = bvh->GetFrame(index);
   UpdateSceneFromBvhFrame(
     scene, scene->m_roots[0], bvh, frame, bvh->GuessScaling());
-  scene->m_roots[0]->CalcWorldMatrix(true);
+  // scene->m_roots[0]->CalcWorldMatrix(true);
   scene->RaiseSceneUpdated();
 }
 
@@ -44,11 +44,11 @@ PushJoint(const std::shared_ptr<gltf::Scene>& scene,
           float scaling)
 {
   auto node = std::make_shared<gltf::Node>(joint.name);
-  node->Transform.Rotation = { 0, 0, 0, 1 };
-  node->Transform.Translation = joint.localOffset;
-  node->Transform.Translation.x *= scaling;
-  node->Transform.Translation.y *= scaling;
-  node->Transform.Translation.z *= scaling;
+  node->InitialTransform.Rotation = { 0, 0, 0, 1 };
+  node->InitialTransform.Translation = joint.localOffset;
+  node->InitialTransform.Translation.x *= scaling;
+  node->InitialTransform.Translation.y *= scaling;
+  node->InitialTransform.Translation.z *= scaling;
 
   scene->m_nodes.push_back(node);
   if (auto parent_index = joint.parent) {
@@ -77,10 +77,10 @@ InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
     }
   }
 
-  scene->m_roots[0]->CalcWorldMatrix(true);
+  scene->m_roots[0]->CalcWorldInitialMatrix(true);
   // move ground
   auto bb = scene->GetBoundingBox();
-  scene->m_roots[0]->Transform.Translation.y -= bb.Min.y;
+  scene->m_roots[0]->InitialTransform.Translation.y -= bb.Min.y;
 
   scene->InitializeNodes();
   scene->RaiseSceneUpdated();

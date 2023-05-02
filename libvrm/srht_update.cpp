@@ -76,11 +76,11 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
       snprintf(buf, sizeof(buf), "%d", i);
       auto ptr = std::make_shared<gltf::Node>(buf);
       auto& joint = joints[i];
-      ptr->Transform.Translation.x = joint.xFromParent;
-      ptr->Transform.Translation.y = joint.yFromParent;
-      ptr->Transform.Translation.z = joint.zFromParent;
+      ptr->InitialTransform.Translation.x = joint.xFromParent;
+      ptr->InitialTransform.Translation.y = joint.yFromParent;
+      ptr->InitialTransform.Translation.z = joint.zFromParent;
       auto& rotation = rotations[i];
-      ptr->Transform.Rotation = rotation;
+      ptr->InitialTransform.Rotation = rotation;
 
       if (auto vrm_bone = ToVrmBone((HumanoidBones)joint.boneType)) {
         ptr->Humanoid = *vrm_bone;
@@ -121,10 +121,10 @@ UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
         r.CopyTo(std::span(rotations));
       }
       for (int i = 0; i < rotations.size(); ++i) {
-        scene->m_nodes[i]->Transform.Rotation = rotations[i];
+        // scene->m_nodes[i]->Transform.Rotation = rotations[i];
       }
-      scene->m_roots[0]->CalcWorldMatrix(true);
-      scene->RaiseSceneUpdated();
+      // scene->m_roots[0]->CalcWorldMatrix(true);
+      // scene->RaiseSceneUpdated();
     }
   } else {
     assert(false);

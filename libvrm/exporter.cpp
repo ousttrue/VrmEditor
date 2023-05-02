@@ -504,14 +504,14 @@ Exporter::ExportNode(const Scene& scene, const std::shared_ptr<Node>& node)
   m_writer.key("name");
   m_writer.value(node->Name);
   // TRS
-  if (node->Transform.Translation.x != 0 ||
-      node->Transform.Translation.y != 0 ||
-      node->Transform.Translation.z != 0) {
+  if (node->InitialTransform.Translation.x != 0 ||
+      node->InitialTransform.Translation.y != 0 ||
+      node->InitialTransform.Translation.z != 0) {
     m_writer.key("translation");
     m_writer.array_open();
-    m_writer.value(node->Transform.Translation.x);
-    m_writer.value(node->Transform.Translation.y);
-    m_writer.value(node->Transform.Translation.z);
+    m_writer.value(node->InitialTransform.Translation.x);
+    m_writer.value(node->InitialTransform.Translation.y);
+    m_writer.value(node->InitialTransform.Translation.z);
     m_writer.array_close();
   }
   if (node->Children.size()) {

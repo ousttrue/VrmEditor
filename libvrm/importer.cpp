@@ -375,21 +375,21 @@ ParseNode(const std::shared_ptr<Scene>& scene,
       m[8],  m[9],  m[10], m[11], //
       m[12], m[13], m[14], m[15], //
     };
-    ptr->SetLocalMatrix(DirectX::XMLoadFloat4x4(&local));
+    ptr->SetLocalInitialMatrix(DirectX::XMLoadFloat4x4(&local));
   } else {
     // T
-    ptr->Transform.Translation =
+    ptr->InitialTransform.Translation =
       node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
     if (scene->m_type == ModelType::Vrm0) {
       // rotate: Y180
-      auto t = ptr->Transform.Translation;
-      ptr->Transform.Translation = { -t.x, t.y, -t.z };
+      auto t = ptr->InitialTransform.Translation;
+      ptr->InitialTransform.Translation = { -t.x, t.y, -t.z };
     }
     // R
-    ptr->Transform.Rotation =
+    ptr->InitialTransform.Rotation =
       node.value("rotation", DirectX::XMFLOAT4{ 0, 0, 0, 1 });
     // S
-    ptr->Scale = node.value("scale", DirectX::XMFLOAT3{ 1, 1, 1 });
+    ptr->InitialScale = node.value("scale", DirectX::XMFLOAT3{ 1, 1, 1 });
   }
 
   if (has(node, "mesh")) {
@@ -665,11 +665,11 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
             float dragForce = joint.at("dragForce");
             float radius = joint.at("hitRadius");
             springBone->AddJoint(head,
-                             tail,
-                             tail->Transform.Translation,
-                             stiffness,
-                             dragForce,
-                             radius);
+                                 tail,
+                                 tail->InitialTransform.Translation,
+                                 stiffness,
+                                 dragForce,
+                                 radius);
           }
           head = tail;
         }
@@ -728,34 +728,35 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
           if (has(constraint, "roll")) {
             auto& roll = constraint.at("roll");
             int source_index = roll.at("source");
-            ptr->Constraint = NodeConstraint{
-              .Type = NodeConstraintTypes::Roll,
+            ptr->Constraint = vrm::NodeConstraint{
+              .Type = vrm::NodeConstraintTypes::Roll,
               .Source = scene->m_nodes[source_index],
               .Weight = weight,
             };
             std::string_view axis = roll.at("rollAxis");
-            ptr->Constraint->RollAxis = NodeConstraintRollAxisFromName(axis);
+            ptr->Constraint->RollAxis =
+              vrm::NodeConstraintRollAxisFromName(axis);
             ptr->ShapeColor = s_constraint_color;
           }
           // aim
           if (has(constraint, "aim")) {
             auto& aim = constraint.at("aim");
             int source_index = aim.at("source");
-            ptr->Constraint = NodeConstraint{
-              .Type = NodeConstraintTypes::Aim,
+            ptr->Constraint = vrm::NodeConstraint{
+              .Type = vrm::NodeConstraintTypes::Aim,
               .Source = scene->m_nodes[source_index],
               .Weight = weight,
             };
             std::string_view axis = aim.at("aimAxis");
-            ptr->Constraint->AimAxis = NodeConstraintAimAxisFromName(axis);
+            ptr->Constraint->AimAxis = vrm::NodeConstraintAimAxisFromName(axis);
             ptr->ShapeColor = s_constraint_color;
           }
           // rotation
           if (has(constraint, "rotation")) {
             auto& rotation = constraint.at("rotation");
             int source_index = rotation.at("source");
-            ptr->Constraint = NodeConstraint{
-              .Type = NodeConstraintTypes::Rotation,
+            ptr->Constraint = vrm::NodeConstraint{
+              .Type = vrm::NodeConstraintTypes::Rotation,
               .Source = scene->m_nodes[source_index],
               .Weight = weight,
             };
@@ -892,8 +893,8 @@ Parse(const std::shared_ptr<Scene>& scene)
 
   // calc world
   auto enter = [](const std::shared_ptr<gltf::Node>& node) {
-    node->CalcWorldMatrix();
-    node->CalcInitialMatrix();
+    node->CalcWorldInitialMatrix();
+    // node->CalcInitialMatrix();
     return true;
   };
   scene->Traverse(enter, {});

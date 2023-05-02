@@ -7,9 +7,10 @@
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <vrm/runtimescene/scene.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanbones.h>
+#include <vrm/runtimescene/node.h>
+#include <vrm/runtimescene/scene.h>
 
 namespace glr {
 
@@ -78,17 +79,17 @@ ScenePreview::ScenePreview(
         // sizeof(libvrm::gltf::Instance),
         //               "Instance size");
         for (auto& root : scene->m_table->m_roots) {
-          root->UpdateShapeInstanceRecursive(
-            DirectX::XMMatrixIdentity(),
-            [cuber](const libvrm::gltf::Instance& instance) {
-              // cuber->Instances.push_back(*((const
-              // cuber::Instance*)&instance));
-              cuber->Instances.push_back({
-                .Matrix = instance.Matrix,
-                .PositiveFaceFlag = { 0, 1, 2, 0 },
-                .NegativeFaceFlag = { 3, 4, 5, 0 },
-              });
-            });
+          // root->UpdateShapeInstanceRecursive(
+          //   DirectX::XMMatrixIdentity(),
+          //   [cuber](const runtimescene::Instance& instance) {
+          //     // cuber->Instances.push_back(*((const
+          //     // cuber::Instance*)&instance));
+          //     cuber->Instances.push_back({
+          //       .Matrix = instance.Matrix,
+          //       .PositiveFaceFlag = { 0, 1, 2, 0 },
+          //       .NegativeFaceFlag = { 3, 4, 5, 0 },
+          //     });
+          //   });
         }
         cuber->Render(*env);
       }
@@ -97,7 +98,7 @@ ScenePreview::ScenePreview(
       if (auto node = scene->selected.lock()) {
         // TODO: conflict mouse event(left) with ImageButton
         DirectX::XMFLOAT4X4 m;
-        DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
+        DirectX::XMStoreFloat4x4(&m, node->WorldInitialMatrix());
         ImGuizmo::GetContext().mAllowActiveHoverItem = true;
         ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
         if (auto humanoid = node->Humanoid) {
@@ -117,8 +118,8 @@ ScenePreview::ScenePreview(
                                  nullptr,
                                  nullptr)) {
           // decompose feedback
-          node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
-          node->CalcWorldMatrix(true);
+          node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
+          node->CalcWorldInitialMatrix(true);
         }
         ImGuizmo::GetContext().mAllowActiveHoverItem = false;
       }

@@ -34,6 +34,7 @@ BvhNode::SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
   }
 
   libvrm::bvh::InitializeSceneFromBvh(m_scene->m_table, bvh, map);
+  m_scene->Reset();
 }
 
 void
@@ -41,7 +42,7 @@ BvhNode::TimeUpdate(libvrm::Time time)
 {
   if (m_initialPose) {
     // Outputs[0].Value = libvrm::vrm::HumanPose::Initial();
-    m_scene->m_table->SetInitialPose();
+    // m_scene->m_table->SetInitialPose();
   } else {
     // update scene from bvh
     libvrm::bvh::UpdateSceneFromBvhFrame(m_scene->m_table, m_bvh, time);

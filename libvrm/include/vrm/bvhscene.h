@@ -5,6 +5,7 @@
 #include "vrm/node.h"
 #include "vrm/scene.h"
 #include "vrm/timeline.h"
+#include "vrm/runtimescene/node.h"
 #include <memory>
 
 namespace libvrm::bvh {

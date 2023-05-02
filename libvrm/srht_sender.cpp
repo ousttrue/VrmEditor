@@ -285,13 +285,13 @@ PushJoints(std::shared_ptr<Payload>& payload,
            bool pack)
 {
   if (pack) {
-    auto packed = libvrm::quat_packer::Pack(node->Transform.Rotation.x,
-                                            node->Transform.Rotation.y,
-                                            node->Transform.Rotation.z,
-                                            node->Transform.Rotation.w);
+    auto packed = libvrm::quat_packer::Pack(node->InitialTransform.Rotation.x,
+                                            node->InitialTransform.Rotation.y,
+                                            node->InitialTransform.Rotation.z,
+                                            node->InitialTransform.Rotation.w);
     payload->Push(packed);
   } else {
-    payload->Push(node->Transform.Rotation);
+    payload->Push(node->InitialTransform.Rotation);
   }
 
   for (auto& child : node->Children) {
@@ -309,11 +309,11 @@ UdpSender::SendFrame(asio::ip::udp::endpoint ep,
 
   // root
   auto root = scene->m_roots[0];
-  payload->SetFrame(std::chrono::steady_clock::now() - m_start,
-                    root->Transform.Translation.x,
-                    root->Transform.Translation.y,
-                    root->Transform.Translation.z,
-                    pack);
+  // payload->SetFrame(std::chrono::steady_clock::now() - m_start,
+  //                   root->Transform.Translation.x,
+  //                   root->Transform.Translation.y,
+  //                   root->Transform.Translation.z,
+  //                   pack);
 
   PushJoints(payload, root, pack);
 
