@@ -187,13 +187,6 @@ RuntimeScene::Drawables()
     }
   }
 
-  // for (auto& spring : m_table->m_springBones) {
-  //   SpringDrawGizmo(spring, gizmo);
-  // }
-  // for (auto& collider : m_table->m_springColliders) {
-  //   // collider->DrawGizmo(gizmo);
-  // }
-
   return m_drawables;
 }
 
@@ -208,6 +201,17 @@ RuntimeScene::ShapeMatrices()
                              shape * GetRuntimeNode(node)->WorldMatrix());
   }
   return m_shapeMatrices;
+}
+
+void
+RuntimeScene::DrawGizmo(libvrm::IGizmoDrawer* gizmo)
+{
+  for (auto& spring : m_table->m_springBones) {
+    SpringDrawGizmo(spring, gizmo);
+  }
+  for (auto& collider : m_table->m_springColliders) {
+    SpringColliderDrawGizmo(collider, gizmo);
+  }
 }
 
 void
@@ -235,7 +239,7 @@ RuntimeScene::SpringDrawGizmo(
 {
   for (auto& joint : solver->Joints) {
     auto runtime = GetRuntimeJoint(joint);
-    // runtime->DrawGizmo(*joint, gizmo);
+    runtime->DrawGizmo(this, gizmo);
   }
 }
 
@@ -251,7 +255,7 @@ RuntimeScene::SpringColliderDrawGizmo(
       ->WorldTransformPoint(DirectX::XMLoadFloat3(&collider->Offset)));
   switch (collider->Type) {
     case libvrm::vrm::SpringColliderShapeType::Sphere:
-      // gizmo->DrawSphere(offset, Radius, { 0, 1, 1, 1 });
+      gizmo->DrawSphere(offset, collider->Radius, { 0, 1, 1, 1 });
       break;
 
     case libvrm::vrm::SpringColliderShapeType::Capsule: {

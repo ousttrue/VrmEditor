@@ -92,6 +92,7 @@ struct RuntimeScene
   libvrm::vrm::HumanPose UpdateHumanPose();
   void SetHumanPose(const libvrm::vrm::HumanPose& pose);
   void SyncHierarchy();
+  void DrawGizmo(libvrm::IGizmoDrawer* gizmo);
 };
 
 // void SetInitialPose()

@@ -76,6 +76,7 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
   }
 
   if (m_settings->ShowLine) {
+    m_scene->DrawGizmo(m_gizmo.get());
     glr::RenderLine(*m_env, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
@@ -144,6 +145,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   }
 
   if (m_settings->ShowLine) {
+    m_scene->DrawGizmo(m_gizmo.get());
     glr::RenderLine(*m_env, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
