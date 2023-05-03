@@ -34,7 +34,7 @@ executable(
     'vrmeditor',
     srcs,
     install: true,
-    gui_app: true,
+    # gui_app: true,
     dependencies: [
         glew_dep,
         glfw_dep,

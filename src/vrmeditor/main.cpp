@@ -2,17 +2,17 @@
 #include "fs_util.h"
 #include <iostream>
 
-#ifdef _WIN32
-#include "windows_helper.h"
-int WINAPI
-WinMain(HINSTANCE hInstance,
-        HINSTANCE hPrevInstance,
-        LPSTR lpCmdLine,
-        int nCmdShow)
-#else
+// #ifdef _WIN32
+// #include "windows_helper.h"
+// int WINAPI
+// WinMain(HINSTANCE hInstance,
+//         HINSTANCE hPrevInstance,
+//         LPSTR lpCmdLine,
+//         int nCmdShow)
+// #else
 int
 main(int __argc, char** __argv)
-#endif
+// #endif
 {
 
 // #ifdef _WIN32
