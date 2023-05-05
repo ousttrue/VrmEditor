@@ -77,32 +77,67 @@ ParseMaterial(const std::shared_ptr<Scene>& scene,
   ss << "material" << i;
   auto ptr = std::make_shared<gltf::Material>(material.value("name", ss.str()));
 
-  if (has(material, "alphaMode")) {
-    std::string_view alphaMode = material.at("alphaMode");
-    if (alphaMode == "BLEND") {
-      ptr->AlphaBlendMode = BlendMode::Blend;
-    } else if (alphaMode == "MASK") {
-      ptr->AlphaBlendMode = BlendMode::Mask;
-      if (has(material, "alphaCutoff")) {
-        ptr->AlphaCutoff = material.at("alphaCutoff");
-      }
+  if (has(material, "extensions")) {
+    auto& extensions = material.at("extensions");
+    if (has(extensions, "KHR_materials_unlit")) {
+      ptr->Type = MaterialTypes::UnLit;
     }
   }
   if (has(material, "pbrMetallicRoughness")) {
     auto pbrMetallicRoughness = material.at("pbrMetallicRoughness");
     if (has(pbrMetallicRoughness, "baseColorTexture")) {
-      auto& baseColorTexture = pbrMetallicRoughness.at("baseColorTexture");
-      int texture_index = baseColorTexture.at("index");
-      ptr->ColorTexture = scene->m_textures[texture_index];
-      // auto& textures = m_gltf.Json.at("textures");
-      // auto texture = textures.at(texture_index);
-      // int image_index = texture.at("source");
-      // ptr->Texture.Image = m_images[image_index];
+      auto& texture = pbrMetallicRoughness.at("baseColorTexture");
+      int texture_index = texture.at("index");
+      ptr->Pbr.BaseColorTexture = scene->m_textures[texture_index];
     }
     if (has(pbrMetallicRoughness, "baseColorFactor")) {
-      ptr->Color = pbrMetallicRoughness.value("baseColorFactor",
-                                              DirectX::XMFLOAT4{ 1, 1, 1, 1 });
+      ptr->Pbr.BaseColorFactor = pbrMetallicRoughness.at("baseColorFactor");
     }
+    if (has(pbrMetallicRoughness, "metallicFactor")) {
+      ptr->Pbr.MetallicFactor = pbrMetallicRoughness.at("metallicFactor");
+    }
+    if (has(pbrMetallicRoughness, "roughnessFactor")) {
+      ptr->Pbr.RoughnessFactor = pbrMetallicRoughness.at("roughnessFactor");
+    }
+    if (has(pbrMetallicRoughness, "metallicRoughnessTexture")) {
+      auto& texture = pbrMetallicRoughness.at("texture");
+      int texture_index = texture.at("index");
+      ptr->Pbr.MetallicRoughnessTexture = scene->m_textures[texture_index];
+    }
+  }
+  if (has(material, "normalTexture")) {
+    auto& texture = material.at("normalTexture");
+    int texture_index = texture.at("index");
+    ptr->NormalTexture = scene->m_textures[texture_index];
+    ptr->NormalTextureScale = texture.value("scale", 1.0f);
+  }
+  if (has(material, "occlusionTexture")) {
+    auto& texture = material.at("occlusionTexture");
+    int texture_index = texture.at("index");
+    ptr->OcclusionTexture = scene->m_textures[texture_index];
+    ptr->OcclusionTextureStrength = texture.value("strength", 1.0f);
+  }
+  if (has(material, "emissiveTexture")) {
+    auto& texture = material.at("emissiveTexture");
+    int texture_index = texture.at("index");
+    ptr->EmissiveTexture = scene->m_textures[texture_index];
+  }
+  if (has(material, "emissiveFactor")) {
+    ptr->EmissiveFactor = material.at("emissiveFactor");
+  }
+  if (has(material, "alphaMode")) {
+    std::string_view alphaMode = material.at("alphaMode");
+    if (alphaMode == "BLEND") {
+      ptr->AlphaMode = BlendMode::Blend;
+    } else if (alphaMode == "MASK") {
+      ptr->AlphaMode = BlendMode::Mask;
+    }
+  }
+  if (has(material, "alphaCutoff")) {
+    ptr->AlphaCutoff = material.at("alphaCutoff");
+  }
+  if (has(material, "doubleSided")) {
+    ptr->DoubleSided = material.at("doubleSided");
   }
   return ptr;
 }
@@ -581,7 +616,8 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
             float x = offset.at("x");
             float y = offset.at("y");
             float z = offset.at("z");
-            // vrm0: springbone collider offset is UnityCoordinate(LeftHanded)
+            // vrm0: springbone collider offset is
+            // UnityCoordinate(LeftHanded)
             item->Offset = { -x, y, z };
             item->Radius = collider.at("radius");
             item->Node = colliderNode;
@@ -981,6 +1017,5 @@ LoadPath(const std::filesystem::path& path)
     return std::unexpected{ bytes.error() };
   }
 }
-
 }
 }

@@ -168,7 +168,14 @@ public:
       return found->second;
     }
 
-    auto material = grapho::gl3::PbrMaterial::Create({}, {}, {}, {}, {});
+    std::shared_ptr<grapho::gl3::Texture> albedo;
+    std::shared_ptr<grapho::gl3::Texture> normal;
+    std::shared_ptr<grapho::gl3::Texture> metallic;
+    std::shared_ptr<grapho::gl3::Texture> roughness;
+    std::shared_ptr<grapho::gl3::Texture> ao;
+
+    auto material =
+      grapho::gl3::PbrMaterial::Create(albedo, normal, metallic, roughness, ao);
     m_materialMap.insert({ src, material });
     return material;
   }
@@ -274,11 +281,11 @@ public:
                      const libvrm::gltf::Primitive& primitive,
                      uint32_t drawOffset)
   {
-    if (auto material = primitive.Material) {
-      auto texture = m_white;
-      if (auto t = primitive.Material->ColorTexture) {
-        texture = GetOrCreate(t);
-      }
+    if (auto material = GetOrCreate(primitive.Material)) {
+      // auto texture = m_white;
+      // if (auto t = primitive.Material->ColorTexture) {
+      //   texture = GetOrCreate(t);
+      // }
 
       // state
       glEnable(GL_CULL_FACE);
@@ -286,7 +293,7 @@ public:
       glCullFace(GL_BGR);
       glEnable(GL_DEPTH_TEST);
 
-      switch (material->AlphaBlendMode) {
+      switch (primitive.Material->AlphaMode) {
         case libvrm::gltf::BlendMode::Opaque:
           glDisable(GL_BLEND);
           break;
@@ -298,10 +305,13 @@ public:
           glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
           break;
       }
-      m_program->Uniform("cutoff")->SetFloat(material->AlphaCutoff);
-      m_program->Uniform("color")->SetFloat4(material->Color);
+      m_program->Uniform("cutoff")->SetFloat(primitive.Material->AlphaCutoff);
+      m_program->Uniform("color")->SetFloat4(
+        primitive.Material->Pbr.BaseColorFactor);
 
-      texture->Activate(0);
+      // texture->Activate(0);
+    } else {
+      // default
     }
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
   }

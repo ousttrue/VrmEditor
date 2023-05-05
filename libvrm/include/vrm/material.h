@@ -23,6 +23,15 @@ enum BlendMode
   Blend,
 };
 
+struct PbrMetallicRoughness
+{
+  DirectX::XMFLOAT4 BaseColorFactor = { 1, 1, 1, 1 };
+  std::shared_ptr<Texture> BaseColorTexture;
+  float MetallicFactor = 1.0f;
+  float RoughnessFactor = 1.0f;
+  std::shared_ptr<Texture> MetallicRoughnessTexture;
+};
+
 struct Material
 {
   Material(std::string_view name)
@@ -31,10 +40,16 @@ struct Material
   }
   std::string Name;
   MaterialTypes Type = {};
-  BlendMode AlphaBlendMode = {};
+  PbrMetallicRoughness Pbr;
+  std::shared_ptr<Texture> NormalTexture;
+  float NormalTextureScale = 1.0f;
+  std::shared_ptr<Texture> OcclusionTexture;
+  float OcclusionTextureStrength = 1.0f;
+  std::shared_ptr<Texture> EmissiveTexture;
+  DirectX::XMFLOAT3 EmissiveFactor = { 0, 0, 0 };
+  BlendMode AlphaMode = {};
   float AlphaCutoff = 0.5f;
-  DirectX::XMFLOAT4 Color = { 1, 1, 1, 1 };
-  std::shared_ptr<Texture> ColorTexture;
+  bool DoubleSided = false;
 };
 
 }
