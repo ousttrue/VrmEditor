@@ -60,9 +60,10 @@ Image::LoadHdr(std::span<const uint8_t> data)
   stbi_set_flip_vertically_on_load(true);
 
   auto pixels = (uint8_t*)stbi_loadf_from_memory(
-        data.data(), data.size(), &m_width, &m_height, 0, 4);
+    data.data(), data.size(), &m_width, &m_height, &m_sourceChannels, 0);
   stbi_set_flip_vertically_on_load(false);
-  if(pixels){
+  assert(m_sourceChannels==3);
+  if (pixels) {
     m_pixels.assign(pixels, pixels + m_width * m_height * 12);
     stbi_image_free(pixels);
 

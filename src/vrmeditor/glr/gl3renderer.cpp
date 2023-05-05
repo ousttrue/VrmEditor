@@ -162,7 +162,7 @@ public:
 
     auto texture = grapho::gl3::Texture::Create(hdr->Width(),
                                                 hdr->Height(),
-                                                grapho::PixelFormat::f16_RGB,
+                                                grapho::PixelFormat::f32_RGB,
                                                 hdr->Pixels(),
                                                 true);
     if (!texture) {
