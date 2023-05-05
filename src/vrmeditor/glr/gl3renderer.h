@@ -8,6 +8,7 @@ namespace libvrm {
 namespace gltf {
 struct Mesh;
 class Image;
+struct Texture;
 }
 }
 namespace grapho {
@@ -43,7 +44,7 @@ void
 CreateDock(const AddDockFunc& addDock, std::string_view title);
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreate(const std::shared_ptr<libvrm::gltf::Image>& image);
+GetOrCreate(const std::shared_ptr<libvrm::gltf::Texture>& texture);
 
 void
 RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data);

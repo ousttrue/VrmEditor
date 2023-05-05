@@ -87,19 +87,22 @@ namespace glr {
 class Gl3Renderer
 {
   // https://stackoverflow.com/questions/12875652/how-can-i-use-a-stdmap-with-stdweak-ptr-as-key
-  using ImageWeakPtr = std::weak_ptr<libvrm::gltf::Image>;
+  // using ImageWeakPtr = std::weak_ptr<libvrm::gltf::Image>;
+  using TextureWeakPtr = std::weak_ptr<libvrm::gltf::Texture>;
+  using MaterialWeakPtr = std::weak_ptr<libvrm::gltf::Material>;
   using MeshWeakPtr = std::weak_ptr<libvrm::gltf::Mesh>;
 
-  std::map<ImageWeakPtr,
+  std::map<TextureWeakPtr,
            std::shared_ptr<grapho::gl3::Texture>,
-           std::owner_less<ImageWeakPtr>>
+           std::owner_less<TextureWeakPtr>>
     m_textureMap;
+
   std::map<MeshWeakPtr,
            std::shared_ptr<grapho::gl3::Vao>,
            std::owner_less<MeshWeakPtr>>
     m_drawableMap;
-  std::shared_ptr<grapho::gl3::Texture> m_white;
 
+  std::shared_ptr<grapho::gl3::Texture> m_white;
   std::shared_ptr<grapho::gl3::ShaderProgram> m_program;
   std::shared_ptr<grapho::gl3::ShaderProgram> m_shadow;
 
@@ -135,17 +138,18 @@ public:
   void Release() { m_drawableMap.clear(); }
 
   std::shared_ptr<grapho::gl3::Texture> GetOrCreate(
-    const std::shared_ptr<libvrm::gltf::Image>& image)
+    const std::shared_ptr<libvrm::gltf::Texture>& src)
   {
-    auto found = m_textureMap.find(image);
+    auto found = m_textureMap.find(src);
     if (found != m_textureMap.end()) {
       return found->second;
     }
-    auto texture = grapho::gl3::Texture::Create(image->Width(),
-                                                image->Height(),
+
+    auto texture = grapho::gl3::Texture::Create(src->Source->Width(),
+                                                src->Source->Height(),
                                                 grapho::PixelFormat::u8_RGBA,
-                                                image->Pixels());
-    m_textureMap.insert(std::make_pair(image, texture));
+                                                src->Source->Pixels());
+    m_textureMap.insert(std::make_pair(src, texture));
     return texture;
   }
 
@@ -238,9 +242,7 @@ public:
       if (auto material = primitive.Material) {
         auto texture = m_white;
         if (auto t = primitive.Material->ColorTexture) {
-          if (auto image = t->Source) {
-            texture = GetOrCreate(image);
-          }
+          texture = GetOrCreate(t);
         }
 
         // state
@@ -322,9 +324,9 @@ CreateDock(const AddDockFunc& addDock, std::string_view title)
 }
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreate(const std::shared_ptr<libvrm::gltf::Image>& image)
+GetOrCreate(const std::shared_ptr<libvrm::gltf::Texture>& texture)
 {
-  return Gl3Renderer::Instance().GetOrCreate(image);
+  return Gl3Renderer::Instance().GetOrCreate(texture);
 }
 
 void
