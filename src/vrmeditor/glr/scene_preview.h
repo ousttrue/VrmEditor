@@ -31,6 +31,8 @@ struct ViewSettings
 
   float Color[4] = { 0.2f, 0.2f, 0.2f, 1 };
 
+  bool Skybox = true;
+
   void Popup(const std::string& name);
 };
 

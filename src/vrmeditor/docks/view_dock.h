@@ -66,7 +66,7 @@ public:
                             const std::shared_ptr<grapho::OrbitView>& view,
                             const std::shared_ptr<glr::ViewSettings>& settings)
   {
-    addDock(Dock(title, [env, settings]() {
+    addDock(Dock(title, [env, settings, view]() {
       ImGui::Checkbox("Mesh", &settings->ShowMesh);
       ImGui::SameLine();
       ImGui::Checkbox("Shadow", &settings->ShowShadow);
@@ -75,17 +75,22 @@ public:
       ImGui::SameLine();
       ImGui::Checkbox("Bone", &settings->ShowCuber);
 
+      ImGui::Checkbox("Skybox", &settings->Skybox);
+
+      ImGui::SliderFloat("Near", &view->NearZ, 0.001f, 1000.0f);
+      ImGui::SliderFloat("Far", &view->FarZ, 0.001f, 1000.0f);
+
       // 60FPS
-      ImGui::Checkbox("spring", &settings->EnableSpring);
+      ImGui::Checkbox("Spring", &settings->EnableSpring);
       if (settings->EnableSpring) {
         settings->NextSpringDelta = libvrm::Time(1.0 / 60);
       } else {
-        if (ImGui::Button("spring step")) {
+        if (ImGui::Button("Spring step")) {
           settings->NextSpringDelta = libvrm::Time(1.0 / 60);
         }
       }
 
-      ImGui::ColorEdit4("clear color", env->ClearColor);
+      ImGui::ColorEdit4("Clear color", &env->ClearColor.x);
 
       // camera
       // near, far

@@ -1,6 +1,7 @@
 #include "luahost.h"
 #include "app.h"
 #include "docks/gui.h"
+#include "glr/gl3renderer.h"
 #include "humanpose/humanpose_stream.h"
 #include "makeluafunc.h"
 #include <filesystem>
@@ -88,6 +89,9 @@ struct LuaEngineImpl
       { "add_human_map", vrmeditor_add_human_map },
       { "show_dock", MakeLuaFunc([](const std::string& name, bool visible) {
           App::Instance().ShowDock(name, visible);
+        }) },
+      { "load_pbr", MakeLuaFunc([](const std::filesystem::path& path) {
+          glr::LoadPbr(path);
         }) },
       { nullptr, nullptr },
     };

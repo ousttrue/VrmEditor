@@ -4,10 +4,11 @@
 namespace glr {
 struct RenderingEnv
 {
-  float Viewport[4];
-  float ClearColor[4] = { 0.45f, 0.55f, 0.60f, 1.00f };
-  float ViewMatrix[16];
-  float ProjectionMatrix[16];
+  DirectX::XMFLOAT4 Viewport;
+  DirectX::XMFLOAT4 ClearColor = { 0.45f, 0.55f, 0.60f, 1.00f };
+  DirectX::XMFLOAT4X4 ViewMatrix;
+  DirectX::XMFLOAT4X4 ProjectionMatrix;
+  DirectX::XMFLOAT3 CameraPosition;
 
   // w == 0 ? directional : point
   DirectX::XMFLOAT4 LightPosition = { 2, 2, 2, 0 };
@@ -15,15 +16,15 @@ struct RenderingEnv
 
   void Resize(int width, int height)
   {
-    Viewport[2] = static_cast<float>(width);
-    Viewport[3] = static_cast<float>(height);
+    Viewport.z = static_cast<float>(width);
+    Viewport.w = static_cast<float>(height);
   }
-  int Width() const { return static_cast<int>(Viewport[2]); }
-  int Height() const { return static_cast<int>(Viewport[3]); }
+  int Width() const { return static_cast<int>(Viewport.z); }
+  int Height() const { return static_cast<int>(Viewport.w); }
 
-  float PremulR() const { return ClearColor[0] * ClearColor[3]; }
-  float PremulG() const { return ClearColor[1] * ClearColor[3]; }
-  float PremulB() const { return ClearColor[2] * ClearColor[3]; }
-  float Alpha() const { return ClearColor[3]; }
+  float PremulR() const { return ClearColor.x * ClearColor.w; }
+  float PremulG() const { return ClearColor.y * ClearColor.w; }
+  float PremulB() const { return ClearColor.z * ClearColor.w; }
+  float Alpha() const { return ClearColor.w; }
 };
 }

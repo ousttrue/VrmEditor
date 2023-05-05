@@ -228,7 +228,7 @@ HumanPoseStream::TryRemoveLink(int link_id)
 bool
 HumanPoseStream::LoadMotion(const std::filesystem::path& path)
 {
-  auto bytes = libvrm::fileutil::ReadAllBytes<uint8_t>(path);
+  auto bytes = libvrm::fileutil::ReadAllBytes(path);
   if (bytes.empty()) {
     App::Instance().Log(LogLevel::Error) << "fail to read: " + path.string();
     return false;

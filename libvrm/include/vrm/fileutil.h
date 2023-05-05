@@ -6,8 +6,7 @@
 
 namespace libvrm {
 namespace fileutil {
-template<typename T>
-static std::vector<T>
+static std::vector<uint8_t>
 ReadAllBytes(const std::filesystem::path& filename)
 {
   std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
@@ -15,11 +14,7 @@ ReadAllBytes(const std::filesystem::path& filename)
     return {};
   }
   auto pos = ifs.tellg();
-  auto size = pos / sizeof(T);
-  if (pos % sizeof(T)) {
-    ++size;
-  }
-  std::vector<T> buffer(size);
+  std::vector<uint8_t> buffer(pos);
   ifs.seekg(0, std::ios::beg);
   ifs.read((char*)buffer.data(), pos);
   return buffer;

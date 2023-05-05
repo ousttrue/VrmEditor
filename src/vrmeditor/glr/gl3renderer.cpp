@@ -14,6 +14,7 @@
 #include <map>
 #include <unordered_map>
 #include <variant>
+#include <vrm/fileutil.h>
 #include <vrm/image.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
@@ -110,8 +111,9 @@ class Gl3Renderer
     m_drawableMap;
 
   std::shared_ptr<grapho::gl3::Texture> m_white;
-  std::shared_ptr<grapho::gl3::ShaderProgram> m_program;
   std::shared_ptr<grapho::gl3::ShaderProgram> m_shadow;
+
+  std::shared_ptr<grapho::gl3::PbrEnv> m_pbr;
 
   Gl3Renderer()
   {
@@ -119,12 +121,12 @@ class Gl3Renderer
     m_white =
       grapho::gl3::Texture::Create(1, 1, grapho::PixelFormat::u8_RGBA, white);
 
-    if (auto program = grapho::gl3::ShaderProgram::Create(
-          vertex_shader_text, fragment_shader_text)) {
-      m_program = *program;
-    } else {
-      App::Instance().Log(LogLevel::Error) << program.error();
-    }
+    // if (auto program = grapho::gl3::ShaderProgram::Create(
+    //       vertex_shader_text, fragment_shader_text)) {
+    //   m_program = *program;
+    // } else {
+    //   App::Instance().Log(LogLevel::Error) << program.error();
+    // }
     if (auto shadow = grapho::gl3::ShaderProgram::Create(
           shadow_vertex_text, shadow_fragment_text)) {
       m_shadow = *shadow;
@@ -143,6 +145,33 @@ public:
   }
 
   void Release() { m_drawableMap.clear(); }
+
+  bool LoadPbr(const std::filesystem::path& path)
+  {
+    auto bytes = libvrm::fileutil::ReadAllBytes(path);
+    if (bytes.empty()) {
+      App::Instance().Log(LogLevel::Error) << "fail to read: " << path;
+      return false;
+    }
+
+    auto hdr = std::make_shared<libvrm::gltf::Image>("pbr");
+    if (!hdr->LoadHdr(bytes)) {
+      App::Instance().Log(LogLevel::Error) << "fail to load: " << path;
+      return false;
+    }
+
+    auto texture = grapho::gl3::Texture::Create(hdr->Width(),
+                                                hdr->Height(),
+                                                grapho::PixelFormat::f16_RGB,
+                                                hdr->Pixels(),
+                                                true);
+    if (!texture) {
+      return false;
+    }
+
+    m_pbr = std::make_shared<grapho::gl3::PbrEnv>(texture);
+    return true;
+  }
 
   std::shared_ptr<grapho::gl3::Texture> GetOrCreate(
     const std::shared_ptr<libvrm::gltf::Texture>& src)
@@ -169,10 +198,23 @@ public:
     }
 
     std::shared_ptr<grapho::gl3::Texture> albedo;
+    if (src->Pbr.BaseColorTexture) {
+      albedo = GetOrCreate(src->Pbr.BaseColorTexture);
+    }
     std::shared_ptr<grapho::gl3::Texture> normal;
+    if (src->NormalTexture) {
+      normal = GetOrCreate(src->NormalTexture);
+    }
     std::shared_ptr<grapho::gl3::Texture> metallic;
     std::shared_ptr<grapho::gl3::Texture> roughness;
+    if (src->Pbr.MetallicRoughnessTexture) {
+      metallic = GetOrCreate(src->Pbr.MetallicRoughnessTexture);
+      roughness = GetOrCreate(src->Pbr.MetallicRoughnessTexture);
+    }
     std::shared_ptr<grapho::gl3::Texture> ao;
+    if (src->OcclusionTexture) {
+      ao = GetOrCreate(src->OcclusionTexture);
+    }
 
     auto material =
       grapho::gl3::PbrMaterial::Create(albedo, normal, metallic, roughness, ao);
@@ -233,9 +275,11 @@ public:
               const runtimescene::RuntimeMesh& instance,
               const DirectX::XMFLOAT4X4& m)
   {
-    if (!m_program) {
+    if (!m_pbr) {
       return;
     }
+
+    m_pbr->Activate();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -249,13 +293,19 @@ public:
 
     switch (pass) {
       case RenderPass::Color: {
-        m_program->Use();
-        m_program->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
-        m_program->Uniform("View")->SetMat4(env.ViewMatrix);
-        m_program->Uniform("Model")->SetMat4(m);
+        // m_program->Use();
+        // m_program->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
+        // m_program->Uniform("View")->SetMat4(env.ViewMatrix);
+        // m_program->Uniform("Model")->SetMat4(m);
         uint32_t drawOffset = 0;
         for (auto& primitive : mesh->m_primitives) {
-          DrawPrimitive(vao, primitive, drawOffset);
+          DrawPrimitive(env.ProjectionMatrix,
+                        env.ViewMatrix,
+                        m,
+                        env.CameraPosition,
+                        vao,
+                        primitive,
+                        drawOffset);
           drawOffset += primitive.DrawCount * 4;
         }
         break;
@@ -277,7 +327,18 @@ public:
     }
   }
 
-  void DrawPrimitive(const std::shared_ptr<grapho::gl3::Vao>& vao,
+  void RenderSkybox(const RenderingEnv& env)
+  {
+    if (m_pbr) {
+      m_pbr->DrawSkybox(env.ProjectionMatrix, env.ViewMatrix);
+    }
+  }
+
+  void DrawPrimitive(const DirectX::XMFLOAT4X4& projection,
+                     const DirectX::XMFLOAT4X4& view,
+                     const DirectX::XMFLOAT4X4& model,
+                     const DirectX::XMFLOAT3& cameraPos,
+                     const std::shared_ptr<grapho::gl3::Vao>& vao,
                      const libvrm::gltf::Primitive& primitive,
                      uint32_t drawOffset)
   {
@@ -286,6 +347,11 @@ public:
       // if (auto t = primitive.Material->ColorTexture) {
       //   texture = GetOrCreate(t);
       // }
+      material->Activate(projection,
+                         view,
+                         model,
+                         cameraPos,
+                         grapho::gl3::PbrEnv::UBO_LIGHTS_BINDING);
 
       // state
       glEnable(GL_CULL_FACE);
@@ -305,9 +371,9 @@ public:
           glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
           break;
       }
-      m_program->Uniform("cutoff")->SetFloat(primitive.Material->AlphaCutoff);
-      m_program->Uniform("color")->SetFloat4(
-        primitive.Material->Pbr.BaseColorFactor);
+      // m_program->Uniform("cutoff")->SetFloat(primitive.Material->AlphaCutoff);
+      // m_program->Uniform("color")->SetFloat4(
+      //   primitive.Material->Pbr.BaseColorFactor);
 
       // texture->Activate(0);
     } else {
@@ -336,6 +402,12 @@ public:
 };
 
 void
+LoadPbr(const std::filesystem::path& hdr)
+{
+  Gl3Renderer::Instance().LoadPbr(hdr);
+}
+
+void
 Render(RenderPass pass,
        const RenderingEnv& env,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
@@ -346,11 +418,22 @@ Render(RenderPass pass,
 }
 
 void
+RenderSkybox(const RenderingEnv& camera)
+{
+  Gl3Renderer::Instance().RenderSkybox(camera);
+}
+
+void
 ClearRendertarget(const RenderingEnv& env)
 {
-  glViewport(0, 0, env.Width(), env.Height());
-  glClearColor(env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha());
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  grapho::gl3::ClearViewport({
+    env.Width(),
+    env.Height(),
+    { env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha() },
+  });
+  // glViewport(0, 0, env.Width(), env.Height());
+  // glClearColor(env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha());
+  // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void
@@ -375,6 +458,6 @@ void
 RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data)
 {
   static cuber::gl3::GlLineRenderer s_liner;
-  s_liner.Render(camera.ProjectionMatrix, camera.ViewMatrix, data);
+  s_liner.Render(&camera.ProjectionMatrix._11, &camera.ViewMatrix._11, data);
 }
 }

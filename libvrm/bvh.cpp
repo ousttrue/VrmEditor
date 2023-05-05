@@ -398,15 +398,15 @@ Bvh::~Bvh() {}
 std::expected<std::shared_ptr<Bvh>, std::string>
 Bvh::FromFile(const std::filesystem::path& path)
 {
-  auto bytes = fileutil::ReadAllBytes<char>(path);
+  auto bytes = fileutil::ReadAllBytes(path);
   if (bytes.empty()) {
     return std::unexpected{ std::string("fail to read: " + path.string()) };
   }
 
   auto ptr = std::make_shared<Bvh>();
   if (auto result = ptr->Parse({
-        bytes.data(),
-        bytes.data() + bytes.size(),
+        (const char*)bytes.data(),
+        (const char*)(bytes.data() + bytes.size()),
       })) {
     return ptr;
   } else {

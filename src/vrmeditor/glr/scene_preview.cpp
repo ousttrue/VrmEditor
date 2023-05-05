@@ -60,7 +60,8 @@ ScenePreview::ScenePreview(
 void
 ScenePreview::RenderTPose(const grapho::OrbitView& view)
 {
-  view.Update(m_env->ProjectionMatrix, m_env->ViewMatrix);
+  view.Update(&m_env->ProjectionMatrix._11, &m_env->ViewMatrix._11);
+  m_env->CameraPosition = view.Position;
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
@@ -69,6 +70,12 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, m);
     }
+  }
+  if (m_settings) {
+    glr::RenderSkybox(*m_env);
+  }
+  for (auto [mesh, m] : m_scene->m_table->Drawables()) {
+    auto meshInstance = m_scene->GetRuntimeMesh(mesh);
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix, *m_env, mesh, *meshInstance, m);
     }
@@ -104,8 +111,8 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
     } else {
       operation = operation | ImGuizmo::TRANSLATE;
     }
-    if (ImGuizmo::Manipulate(m_env->ViewMatrix,
-                             m_env->ProjectionMatrix,
+    if (ImGuizmo::Manipulate(&m_env->ViewMatrix._11,
+                             &m_env->ProjectionMatrix._11,
                              operation,
                              ImGuizmo::LOCAL,
                              (float*)&m,
@@ -124,9 +131,9 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
 void
 ScenePreview::RenderAnimation(const grapho::OrbitView& view)
 {
-  view.Update(m_env->ProjectionMatrix, m_env->ViewMatrix);
+  view.Update(&m_env->ProjectionMatrix._11, &m_env->ViewMatrix._11);
+  m_env->CameraPosition = view.Position;
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
-
   glr::ClearRendertarget(*m_env);
 
   m_scene->NextSpringDelta = m_settings->NextSpringDelta;
@@ -137,6 +144,13 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, m);
     }
+  }
+  if (m_settings) {
+    glr::RenderSkybox(*m_env);
+  }
+
+  for (auto [mesh, m] : m_scene->Drawables()) {
+    auto meshInstance = m_scene->GetRuntimeMesh(mesh);
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix, *m_env, mesh, *meshInstance, m);
     }
@@ -173,8 +187,8 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
     } else {
       operation = operation | ImGuizmo::TRANSLATE;
     }
-    if (ImGuizmo::Manipulate(m_env->ViewMatrix,
-                             m_env->ProjectionMatrix,
+    if (ImGuizmo::Manipulate(&m_env->ViewMatrix._11,
+                             &m_env->ProjectionMatrix._11,
                              operation,
                              ImGuizmo::LOCAL,
                              (float*)&m,

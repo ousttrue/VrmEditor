@@ -100,7 +100,7 @@ ParseMaterial(const std::shared_ptr<Scene>& scene,
       ptr->Pbr.RoughnessFactor = pbrMetallicRoughness.at("roughnessFactor");
     }
     if (has(pbrMetallicRoughness, "metallicRoughnessTexture")) {
-      auto& texture = pbrMetallicRoughness.at("texture");
+      auto& texture = pbrMetallicRoughness.at("metallicRoughnessTexture");
       int texture_index = texture.at("index");
       ptr->Pbr.MetallicRoughnessTexture = scene->m_textures[texture_index];
     }

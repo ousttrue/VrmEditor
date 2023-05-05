@@ -40,6 +40,7 @@ public:
     return m_pixels.empty() ? nullptr : m_pixels.data();
   }
   bool Load(std::span<const uint8_t> data);
+  bool LoadHdr(std::span<const uint8_t> data);
 };
 
 }
