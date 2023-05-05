@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <cuber/mesh.h>
+#include <grapho/gl3/pbr.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/texture.h>
 #include <grapho/gl3/vao.h>
@@ -12,6 +13,7 @@
 #include <iostream>
 #include <map>
 #include <unordered_map>
+#include <variant>
 #include <vrm/image.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
@@ -97,6 +99,11 @@ class Gl3Renderer
            std::owner_less<TextureWeakPtr>>
     m_textureMap;
 
+  std::map<MaterialWeakPtr,
+           std::shared_ptr<grapho::gl3::PbrMaterial>,
+           std::owner_less<MaterialWeakPtr>>
+    m_materialMap;
+
   std::map<MeshWeakPtr,
            std::shared_ptr<grapho::gl3::Vao>,
            std::owner_less<MeshWeakPtr>>
@@ -151,6 +158,19 @@ public:
                                                 src->Source->Pixels());
     m_textureMap.insert(std::make_pair(src, texture));
     return texture;
+  }
+
+  std::shared_ptr<grapho::gl3::PbrMaterial> GetOrCreate(
+    const std::shared_ptr<libvrm::gltf::Material>& src)
+  {
+    auto found = m_materialMap.find(src);
+    if (found != m_materialMap.end()) {
+      return found->second;
+    }
+
+    auto material = grapho::gl3::PbrMaterial::Create({}, {}, {}, {}, {});
+    m_materialMap.insert({ src, material });
+    return material;
   }
 
   std::shared_ptr<grapho::gl3::Vao> GetOrCreate(
@@ -221,57 +241,69 @@ public:
     }
 
     switch (pass) {
-      case RenderPass::Color:
+      case RenderPass::Color: {
         m_program->Use();
         m_program->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
         m_program->Uniform("View")->SetMat4(env.ViewMatrix);
         m_program->Uniform("Model")->SetMat4(m);
+        uint32_t drawOffset = 0;
+        for (auto& primitive : mesh->m_primitives) {
+          DrawPrimitive(vao, primitive, drawOffset);
+          drawOffset += primitive.DrawCount * 4;
+        }
         break;
+      }
 
-      case RenderPass::ShadowMatrix:
+      case RenderPass::ShadowMatrix: {
         m_shadow->Use();
         m_shadow->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
         m_shadow->Uniform("View")->SetMat4(env.ViewMatrix);
         m_shadow->Uniform("Shadow")->SetMat4(env.ShadowMatrix);
         m_shadow->Uniform("Model")->SetMat4(m);
+        uint32_t drawCount = 0;
+        for (auto& primitive : mesh->m_primitives) {
+          drawCount += primitive.DrawCount * 4;
+        }
+        vao->Draw(GL_TRIANGLES, drawCount, 0);
         break;
+      }
     }
+  }
 
-    uint32_t drawOffset = 0;
-    for (auto& primitive : mesh->m_primitives) {
-      if (auto material = primitive.Material) {
-        auto texture = m_white;
-        if (auto t = primitive.Material->ColorTexture) {
-          texture = GetOrCreate(t);
-        }
-
-        // state
-        glEnable(GL_CULL_FACE);
-        glFrontFace(GL_CCW);
-        glCullFace(GL_BGR);
-        glEnable(GL_DEPTH_TEST);
-
-        switch (material->AlphaBlendMode) {
-          case libvrm::gltf::BlendMode::Opaque:
-            glDisable(GL_BLEND);
-            break;
-          case libvrm::gltf::BlendMode::Mask:
-            glDisable(GL_BLEND);
-            break;
-          case libvrm::gltf::BlendMode::Blend:
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            break;
-        }
-        m_program->Uniform("cutoff")->SetFloat(material->AlphaCutoff);
-        m_program->Uniform("color")->SetFloat4(material->Color);
-
-        texture->Activate(0);
+  void DrawPrimitive(const std::shared_ptr<grapho::gl3::Vao>& vao,
+                     const libvrm::gltf::Primitive& primitive,
+                     uint32_t drawOffset)
+  {
+    if (auto material = primitive.Material) {
+      auto texture = m_white;
+      if (auto t = primitive.Material->ColorTexture) {
+        texture = GetOrCreate(t);
       }
 
-      vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
-      drawOffset += primitive.DrawCount * 4;
+      // state
+      glEnable(GL_CULL_FACE);
+      glFrontFace(GL_CCW);
+      glCullFace(GL_BGR);
+      glEnable(GL_DEPTH_TEST);
+
+      switch (material->AlphaBlendMode) {
+        case libvrm::gltf::BlendMode::Opaque:
+          glDisable(GL_BLEND);
+          break;
+        case libvrm::gltf::BlendMode::Mask:
+          glDisable(GL_BLEND);
+          break;
+        case libvrm::gltf::BlendMode::Blend:
+          glEnable(GL_BLEND);
+          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+          break;
+      }
+      m_program->Uniform("cutoff")->SetFloat(material->AlphaCutoff);
+      m_program->Uniform("color")->SetFloat4(material->Color);
+
+      texture->Activate(0);
     }
+    vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
   }
 
   void CreateDock(const AddDockFunc& addDock, std::string_view title)
@@ -335,5 +367,4 @@ RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data)
   static cuber::gl3::GlLineRenderer s_liner;
   s_liner.Render(camera.ProjectionMatrix, camera.ViewMatrix, data);
 }
-
 }
