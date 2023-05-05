@@ -13,6 +13,7 @@
 namespace glr {
 RenderTarget::RenderTarget(const std::shared_ptr<grapho::OrbitView>& view)
   : View(view)
+  , Fbo(new grapho::gl3::Fbo)
 {
 }
 
@@ -23,18 +24,27 @@ RenderTarget::Clear(int width, int height, const float color[4])
     return 0;
   }
 
-  if (Fbo) {
-    if (Fbo->texture->width_ != width || Fbo->texture->height_ != height) {
-      Fbo = nullptr;
+  if (FboTexture) {
+    if (FboTexture->width_ != width || FboTexture->height_ != height) {
+      FboTexture = nullptr;
     }
   }
-  if (!Fbo) {
-    Fbo = grapho::gl3::Fbo::Create(width, height);
+  if (!FboTexture) {
+    FboTexture =
+      grapho::gl3::Texture::Create(width, height, grapho::PixelFormat::u8_RGBA);
+    Fbo->AttachTexture2D(FboTexture->texture_);
+    Fbo->AttachDepth(width, height);
   }
 
-  Fbo->Clear(color, 1.0f);
+  Fbo->Bind();
+  grapho::gl3::ClearViewport({
+    .Width = width,
+    .Height = height,
+    .Color = { color[0], color[1], color[2], color[3] },
+    .Depth = 1.0f,
+  });
 
-  return Fbo->texture->texture_;
+  return FboTexture->texture_;
 }
 
 void
@@ -83,5 +93,3 @@ RenderTarget::ShowFbo(float x, float y, float w, float h, const float color[4])
   Fbo->Unbind();
 }
 }
-
-

@@ -6,6 +6,7 @@ namespace grapho {
 struct OrbitView;
 namespace gl3 {
 struct Fbo;
+struct Texture;
 }
 }
 
@@ -16,6 +17,7 @@ struct RenderTarget
 {
   std::shared_ptr<grapho::OrbitView> View;
   std::shared_ptr<grapho::gl3::Fbo> Fbo;
+  std::shared_ptr<grapho::gl3::Texture> FboTexture;
   RenderFunc render;
 
   RenderTarget(const std::shared_ptr<grapho::OrbitView>& view);

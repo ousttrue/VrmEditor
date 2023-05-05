@@ -61,17 +61,16 @@ void
 ScenePreview::RenderTPose(const grapho::OrbitView& view)
 {
   view.Update(m_env->ProjectionMatrix, m_env->ViewMatrix);
-  m_env->Resize(view.Width, view.Height);
+  m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
   for (auto [mesh, m] : m_scene->m_table->Drawables()) {
     auto meshInstance = m_scene->GetRuntimeMesh(mesh);
     if (m_settings->ShowMesh) {
-      glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, &m._11);
+      glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, m);
     }
     if (m_settings->ShowShadow) {
-      glr::Render(
-        RenderPass::ShadowMatrix, *m_env, mesh, *meshInstance, &m._11);
+      glr::Render(RenderPass::ShadowMatrix, *m_env, mesh, *meshInstance, m);
     }
   }
 
@@ -126,7 +125,7 @@ void
 ScenePreview::RenderAnimation(const grapho::OrbitView& view)
 {
   view.Update(m_env->ProjectionMatrix, m_env->ViewMatrix);
-  m_env->Resize(view.Width, view.Height);
+  m_env->Resize(view.Viewport.Width, view.Viewport.Height);
 
   glr::ClearRendertarget(*m_env);
 
@@ -136,11 +135,10 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   for (auto [mesh, m] : m_scene->Drawables()) {
     auto meshInstance = m_scene->GetRuntimeMesh(mesh);
     if (m_settings->ShowMesh) {
-      glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, &m._11);
+      glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, m);
     }
     if (m_settings->ShowShadow) {
-      glr::Render(
-        RenderPass::ShadowMatrix, *m_env, mesh, *meshInstance, &m._11);
+      glr::Render(RenderPass::ShadowMatrix, *m_env, mesh, *meshInstance, m);
     }
   }
 

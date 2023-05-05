@@ -11,7 +11,7 @@
 //         int nCmdShow)
 // #else
 int
-main(int __argc, char** __argv)
+main(int argc, char** argv)
 // #endif
 {
 
@@ -27,12 +27,12 @@ main(int __argc, char** __argv)
     app.LoadLua(user_conf);
   }
 
-  if (__argc > 1) {
-    std::string_view arg = __argv[1];
+  if (argc > 1) {
+    std::string_view arg = argv[1];
     if (arg.ends_with(".lua")) {
-      app.LoadLua(__argv[1]);
+      app.LoadLua(argv[1]);
     } else {
-      app.LoadModel(__argv[1]);
+      app.LoadModel(argv[1]);
     }
   }
 

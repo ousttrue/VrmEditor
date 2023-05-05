@@ -1,6 +1,7 @@
 #include "gl3renderer.h"
 #include "app.h"
 #include "rendering_env.h"
+#include <DirectXMath.h>
 #include <GL/glew.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <cuber/mesh.h>
@@ -17,7 +18,7 @@
 #include <vrm/runtimescene/mesh.h>
 #include <vrm/texture.h>
 
-static const char* vertex_shader_text = R"(#version 400
+static auto vertex_shader_text = u8R"(#version 400
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
@@ -34,7 +35,7 @@ void main()
 }
 )";
 
-static const char* fragment_shader_text = R"(#version 400
+static auto fragment_shader_text = u8R"(#version 400
 in vec3 normal;
 in vec2 uv;
 out vec4 FragColor;
@@ -52,7 +53,7 @@ void main()
 };
 )";
 
-static const char* shadow_vertex_text = R"(#version 400
+static auto shadow_vertex_text = u8R"(#version 400
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
@@ -70,7 +71,7 @@ void main()
 }
 )";
 
-static const char* shadow_fragment_text = R"(#version 400
+static auto shadow_fragment_text = u8R"(#version 400
 in vec3 normal;
 in vec2 uv;
 out vec4 FragColor;
@@ -105,7 +106,8 @@ class Gl3Renderer
   Gl3Renderer()
   {
     static uint8_t white[] = { 255, 255, 255, 255 };
-    m_white = grapho::gl3::Texture::Create(1, 1, white);
+    m_white =
+      grapho::gl3::Texture::Create(1, 1, grapho::PixelFormat::u8_RGBA, white);
 
     if (auto program = grapho::gl3::ShaderProgram::Create(
           vertex_shader_text, fragment_shader_text)) {
@@ -139,8 +141,10 @@ public:
     if (found != m_textureMap.end()) {
       return found->second;
     }
-    auto texture = grapho::gl3::Texture::Create(
-      image->Width(), image->Height(), image->Pixels());
+    auto texture = grapho::gl3::Texture::Create(image->Width(),
+                                                image->Height(),
+                                                grapho::PixelFormat::u8_RGBA,
+                                                image->Pixels());
     m_textureMap.insert(std::make_pair(image, texture));
     return texture;
   }
@@ -159,8 +163,8 @@ public:
     auto ibo = grapho::gl3::Ibo::Create(
       mesh->indicesBytes(), mesh->m_indices.data(), GL_UNSIGNED_INT);
 
-    grapho::gl3::VertexSlot slots[] = {
-      { vbo },
+    std::shared_ptr<grapho::gl3::Vbo> slots[] = {
+      vbo,
     };
     grapho::VertexLayout layouts[] = {
       {
@@ -196,34 +200,36 @@ public:
               const RenderingEnv& env,
               const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
               const runtimescene::RuntimeMesh& instance,
-              const float m[16])
+              const DirectX::XMFLOAT4X4& m)
   {
     if (!m_program) {
       return;
     }
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
     auto vao = GetOrCreate(mesh);
 
     if (instance.m_updated.size()) {
-      vao->slots_[0].Vbo->Upload(instance.m_updated.size() *
-                                   sizeof(libvrm::Vertex),
-                                 instance.m_updated.data());
+      vao->slots_[0]->Upload(instance.m_updated.size() * sizeof(libvrm::Vertex),
+                             instance.m_updated.data());
     }
 
     switch (pass) {
       case RenderPass::Color:
-        m_program->Bind();
-        m_program->SetUniformMatrix("Projection", env.ProjectionMatrix);
-        m_program->SetUniformMatrix("View", env.ViewMatrix);
-        m_program->_SetUniformMatrix("Model", m);
+        m_program->Use();
+        m_program->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
+        m_program->Uniform("View")->SetMat4(env.ViewMatrix);
+        m_program->Uniform("Model")->SetMat4(m);
         break;
 
       case RenderPass::ShadowMatrix:
-        m_shadow->Bind();
-        m_shadow->SetUniformMatrix("Projection", env.ProjectionMatrix);
-        m_shadow->SetUniformMatrix("View", env.ViewMatrix);
-        m_shadow->SetUniformMatrix("Shadow", env.ShadowMatrix);
-        m_shadow->_SetUniformMatrix("Model", m);
+        m_shadow->Use();
+        m_shadow->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
+        m_shadow->Uniform("View")->SetMat4(env.ViewMatrix);
+        m_shadow->Uniform("Shadow")->SetMat4(env.ShadowMatrix);
+        m_shadow->Uniform("Model")->SetMat4(m);
         break;
     }
 
@@ -255,10 +261,10 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         }
-        m_program->SetUniformValue("cutoff", material->AlphaCutoff);
-        m_program->SetUniformValue4("color", &material->Color.x);
+        m_program->Uniform("cutoff")->SetFloat(material->AlphaCutoff);
+        m_program->Uniform("color")->SetFloat4(material->Color);
 
-        texture->Bind(0);
+        texture->Activate(0);
       }
 
       vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
@@ -290,7 +296,7 @@ Render(RenderPass pass,
        const RenderingEnv& env,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
        const runtimescene::RuntimeMesh& instance,
-       const float m[16])
+       const DirectX::XMFLOAT4X4& m)
 {
   Gl3Renderer::Instance().Render(pass, env, mesh, instance, m);
 }

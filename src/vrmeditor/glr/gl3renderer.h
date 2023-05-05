@@ -16,9 +16,8 @@ struct Texture;
 }
 }
 
-namespace runtimescene
-{
-  struct RuntimeMesh;
+namespace runtimescene {
+struct RuntimeMesh;
 }
 
 namespace glr {
@@ -29,7 +28,7 @@ Render(RenderPass pass,
        const RenderingEnv& camera,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
        const runtimescene::RuntimeMesh& instance,
-       const float m[16]);
+       const DirectX::XMFLOAT4X4& m);
 
 // clear current render target
 void
