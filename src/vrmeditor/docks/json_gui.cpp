@@ -65,10 +65,12 @@ JsonGui::JsonGui()
   : //
   m_guiFactories({
     //
+    { "/images", JsonGuiImageList },
+    { "/samplers", JsonGuiSamplerList },
+    { "/textures", JsonGuiTextureList },
+    { "/materials", JsonGuiMaterialList },
     { "/accessors", JsonGuiAccessorList },
     { "/accessors/*", JsonGuiAccessor },
-    { "/images", JsonGuiImageList },
-    { "/materials", JsonGuiMaterialList },
     { "/meshes", JsonGuiMeshList },
     { "/meshes/*", JsonGuiMesh },
     { "/meshes/*/primitives/*/attributes/POSITION", JsonGuiAccessor },

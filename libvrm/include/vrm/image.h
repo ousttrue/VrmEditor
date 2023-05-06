@@ -29,6 +29,23 @@ class Image
 public:
   static bool IsJpeg(std::span<const uint8_t> data);
   static bool IsPng(std::span<const uint8_t> data);
+  std::string Type() const
+  {
+    if (Encoded) {
+      switch (Encoded->Type) {
+        case ImageType::Jpeg:
+          return "jpg";
+
+        case ImageType::Png:
+          return "png";
+
+        default:
+          return "unknown";
+      }
+    } else {
+      return "raw";
+    }
+  }
   std::string Name;
   std::optional<EncodedImage> Encoded;
   Image(std::string_view name);

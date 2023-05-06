@@ -185,6 +185,19 @@ public:
                                                 src->Source->Height(),
                                                 grapho::PixelFormat::u8_RGBA,
                                                 src->Source->Pixels());
+
+    if (auto sampler = src->Sampler) {
+
+      texture->Bind();
+      glTexParameteri(
+        GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)sampler->MagFilter);
+      glTexParameteri(
+        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)sampler->MinFilter);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)sampler->WrapS);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)sampler->WrapT);
+      texture->UnBind();
+    }
+
     m_textureMap.insert(std::make_pair(src, texture));
     return texture;
   }
@@ -282,7 +295,7 @@ public:
     m_pbr->Activate();
 
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    // glDepthFunc(GL_LESS);
 
     auto vao = GetOrCreate(mesh);
 
@@ -427,9 +440,10 @@ void
 ClearRendertarget(const RenderingEnv& env)
 {
   grapho::gl3::ClearViewport({
-    env.Width(),
-    env.Height(),
-    { env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha() },
+    .Width = env.Width(),
+    .Height = env.Height(),
+    .Color = { env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha() },
+    .Depth = 1.0f,
   });
   // glViewport(0, 0, env.Width(), env.Height());
   // glClearColor(env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha());

@@ -71,7 +71,7 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
       glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, m);
     }
   }
-  if (m_settings) {
+  if (m_settings->Skybox) {
     glr::RenderSkybox(*m_env);
   }
   for (auto [mesh, m] : m_scene->m_table->Drawables()) {
@@ -145,7 +145,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
       glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, m);
     }
   }
-  if (m_settings) {
+  if (m_settings->Skybox) {
     glr::RenderSkybox(*m_env);
   }
 

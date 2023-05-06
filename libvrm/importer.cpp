@@ -18,6 +18,18 @@ static std::expected<std::shared_ptr<TextureSampler>, std::string>
 ParseTextureSampler(int i, const nlohmann::json& sampler)
 {
   auto ptr = std::make_shared<gltf::TextureSampler>();
+  if (has(sampler, "magFilter")) {
+    ptr->MagFilter = (TextureMagFilter)sampler.at("magFilter");
+  }
+  if (has(sampler, "minFilter")) {
+    ptr->MinFilter = (TextureMinFilter)sampler.at("minFilter");
+  }
+  if (has(sampler, "wrapS")) {
+    ptr->WrapS = (TextureWrap)sampler.at("wrapS");
+  }
+  if (has(sampler, "wrapT")) {
+    ptr->WrapT = (TextureWrap)sampler.at("wrapT");
+  }
   return ptr;
 }
 

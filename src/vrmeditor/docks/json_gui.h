@@ -1,5 +1,6 @@
 #pragma once
 #include "gui.h"
+#include <imgui.h>
 #include <sstream>
 #include <vector>
 #include <vrm/jsonpath.h>
@@ -10,6 +11,7 @@ using ShowGui = std::function<void()>;
 using CreateGuiFunc =
   std::function<ShowGui(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                         std::string_view jsonpath)>;
+
 struct JsonGuiFactory
 {
   std::string m_match;
