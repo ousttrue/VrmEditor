@@ -98,7 +98,11 @@ class Gl3Renderer
   std::map<TextureWeakPtr,
            std::shared_ptr<grapho::gl3::Texture>,
            std::owner_less<TextureWeakPtr>>
-    m_textureMap;
+    m_srgbTextureMap;
+  std::map<TextureWeakPtr,
+           std::shared_ptr<grapho::gl3::Texture>,
+           std::owner_less<TextureWeakPtr>>
+    m_linearTextureMap;
 
   std::map<MaterialWeakPtr,
            std::shared_ptr<grapho::gl3::PbrMaterial>,
@@ -118,8 +122,13 @@ class Gl3Renderer
   Gl3Renderer()
   {
     static uint8_t white[] = { 255, 255, 255, 255 };
-    m_white =
-      grapho::gl3::Texture::Create(1, 1, grapho::PixelFormat::u8_RGBA, white);
+    m_white = grapho::gl3::Texture::Create({
+      1,
+      1,
+      grapho::PixelFormat::u8_RGBA,
+      grapho::ColorSpace::sRGB,
+      white,
+    });
 
     // if (auto program = grapho::gl3::ShaderProgram::Create(
     //       vertex_shader_text, fragment_shader_text)) {
@@ -160,11 +169,15 @@ public:
       return false;
     }
 
-    auto texture = grapho::gl3::Texture::Create(hdr->Width(),
-                                                hdr->Height(),
-                                                grapho::PixelFormat::f32_RGB,
-                                                hdr->Pixels(),
-                                                true);
+    auto texture = grapho::gl3::Texture::Create(
+      {
+        .Width = hdr->Width(),
+        .Height = hdr->Height(),
+        .Format = grapho::PixelFormat::f32_RGB,
+        .ColorSpace = grapho::ColorSpace::Linear,
+        .Pixels = hdr->Pixels(),
+      },
+      true);
     if (!texture) {
       return false;
     }
@@ -174,17 +187,26 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::Texture> GetOrCreate(
-    const std::shared_ptr<libvrm::gltf::Texture>& src)
+    const std::shared_ptr<libvrm::gltf::Texture>& src,
+    libvrm::gltf::ColorSpace colorspace)
   {
-    auto found = m_textureMap.find(src);
-    if (found != m_textureMap.end()) {
+    auto& map = colorspace == libvrm::gltf::ColorSpace::sRGB
+                  ? m_srgbTextureMap
+                  : m_linearTextureMap;
+
+    auto found = map.find(src);
+    if (found != map.end()) {
       return found->second;
     }
 
-    auto texture = grapho::gl3::Texture::Create(src->Source->Width(),
-                                                src->Source->Height(),
-                                                grapho::PixelFormat::u8_RGBA,
-                                                src->Source->Pixels());
+    auto texture = grapho::gl3::Texture::Create({
+      src->Source->Width(),
+      src->Source->Height(),
+      grapho::PixelFormat::u8_RGBA,
+      colorspace == libvrm::gltf::ColorSpace::sRGB ? grapho::ColorSpace::sRGB
+                                                   : grapho::ColorSpace::Linear,
+      src->Source->Pixels(),
+    });
 
     if (auto sampler = src->Sampler) {
 
@@ -198,7 +220,7 @@ public:
       texture->UnBind();
     }
 
-    m_textureMap.insert(std::make_pair(src, texture));
+    map.insert(std::make_pair(src, texture));
     return texture;
   }
 
@@ -212,21 +234,25 @@ public:
 
     std::shared_ptr<grapho::gl3::Texture> albedo;
     if (src->Pbr.BaseColorTexture) {
-      albedo = GetOrCreate(src->Pbr.BaseColorTexture);
+      albedo =
+        GetOrCreate(src->Pbr.BaseColorTexture, libvrm::gltf::ColorSpace::sRGB);
     }
     std::shared_ptr<grapho::gl3::Texture> normal;
     if (src->NormalTexture) {
-      normal = GetOrCreate(src->NormalTexture);
+      normal =
+        GetOrCreate(src->NormalTexture, libvrm::gltf::ColorSpace::Linear);
     }
     std::shared_ptr<grapho::gl3::Texture> metallic;
     std::shared_ptr<grapho::gl3::Texture> roughness;
     if (src->Pbr.MetallicRoughnessTexture) {
-      metallic = GetOrCreate(src->Pbr.MetallicRoughnessTexture);
-      roughness = GetOrCreate(src->Pbr.MetallicRoughnessTexture);
+      metallic = GetOrCreate(src->Pbr.MetallicRoughnessTexture,
+                             libvrm::gltf::ColorSpace::Linear);
+      roughness = GetOrCreate(src->Pbr.MetallicRoughnessTexture,
+                              libvrm::gltf::ColorSpace::Linear);
     }
     std::shared_ptr<grapho::gl3::Texture> ao;
     if (src->OcclusionTexture) {
-      ao = GetOrCreate(src->OcclusionTexture);
+      ao = GetOrCreate(src->OcclusionTexture, libvrm::gltf::ColorSpace::Linear);
     }
 
     auto material =
@@ -407,7 +433,8 @@ public:
         }
       }
 
-      ImGui::Text("%zd(textures)", m_textureMap.size());
+      ImGui::Text("srgb: %zd(textures)", m_srgbTextureMap.size());
+      ImGui::Text("linear: %zd(textures)", m_linearTextureMap.size());
       ImGui::SameLine();
       ImGui::Text("%zd(meshes)", m_drawableMap.size());
     }));
@@ -463,9 +490,10 @@ CreateDock(const AddDockFunc& addDock, std::string_view title)
 }
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreate(const std::shared_ptr<libvrm::gltf::Texture>& texture)
+GetOrCreate(const std::shared_ptr<libvrm::gltf::Texture>& texture,
+            libvrm::gltf::ColorSpace colorspace)
 {
-  return Gl3Renderer::Instance().GetOrCreate(texture);
+  return Gl3Renderer::Instance().GetOrCreate(texture, colorspace);
 }
 
 void

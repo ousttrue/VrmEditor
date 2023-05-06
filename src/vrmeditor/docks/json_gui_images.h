@@ -70,7 +70,7 @@ JsonGuiTextureList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
     { "index", [](auto i, const auto&) { ImGui::Text("%zu", i); } },
     { "image",
       [](auto, const auto& value) {
-        if (auto texture = glr::GetOrCreate(value)) {
+        if (auto texture = glr::GetOrCreate(value, value->ColorSpace)) {
           ImGui::Image((void*)(uint64_t)texture->texture_, { 150, 150 });
         }
       } },

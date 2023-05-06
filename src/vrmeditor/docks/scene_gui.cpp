@@ -85,9 +85,11 @@ SceneGui::ShowMaterial(int i,
   ImGui::ColorEdit4(id, &material->Pbr.BaseColorFactor.x);
 
   if (auto texture = material->Pbr.BaseColorTexture) {
-    if (auto glTexture = glr::GetOrCreate(texture)) {
+    if (auto glTexture =
+          glr::GetOrCreate(texture, libvrm::gltf::ColorSpace::sRGB)) {
       // ImGui::Image(material->);
       ImGui::Image((ImTextureID)(uint64_t)glTexture->texture_, { 150, 150 });
+      ++i;
     }
   }
 }

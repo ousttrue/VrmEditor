@@ -101,6 +101,7 @@ ParseMaterial(const std::shared_ptr<Scene>& scene,
       auto& texture = pbrMetallicRoughness.at("baseColorTexture");
       int texture_index = texture.at("index");
       ptr->Pbr.BaseColorTexture = scene->m_textures[texture_index];
+      ptr->Pbr.BaseColorTexture->ColorSpace = ColorSpace::sRGB;
     }
     if (has(pbrMetallicRoughness, "baseColorFactor")) {
       ptr->Pbr.BaseColorFactor = pbrMetallicRoughness.at("baseColorFactor");
@@ -115,24 +116,28 @@ ParseMaterial(const std::shared_ptr<Scene>& scene,
       auto& texture = pbrMetallicRoughness.at("metallicRoughnessTexture");
       int texture_index = texture.at("index");
       ptr->Pbr.MetallicRoughnessTexture = scene->m_textures[texture_index];
+      ptr->Pbr.MetallicRoughnessTexture->ColorSpace = ColorSpace::Linear;
     }
   }
   if (has(material, "normalTexture")) {
     auto& texture = material.at("normalTexture");
     int texture_index = texture.at("index");
     ptr->NormalTexture = scene->m_textures[texture_index];
+    ptr->NormalTexture->ColorSpace = ColorSpace::Linear;
     ptr->NormalTextureScale = texture.value("scale", 1.0f);
   }
   if (has(material, "occlusionTexture")) {
     auto& texture = material.at("occlusionTexture");
     int texture_index = texture.at("index");
     ptr->OcclusionTexture = scene->m_textures[texture_index];
+    ptr->OcclusionTexture->ColorSpace = ColorSpace::Linear;
     ptr->OcclusionTextureStrength = texture.value("strength", 1.0f);
   }
   if (has(material, "emissiveTexture")) {
     auto& texture = material.at("emissiveTexture");
     int texture_index = texture.at("index");
     ptr->EmissiveTexture = scene->m_textures[texture_index];
+    ptr->EmissiveTexture->ColorSpace = ColorSpace::sRGB;
   }
   if (has(material, "emissiveFactor")) {
     ptr->EmissiveFactor = material.at("emissiveFactor");

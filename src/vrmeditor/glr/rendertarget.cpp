@@ -30,8 +30,8 @@ RenderTarget::Clear(int width, int height, const float color[4])
     }
   }
   if (!FboTexture) {
-    FboTexture =
-      grapho::gl3::Texture::Create(width, height, grapho::PixelFormat::u8_RGBA);
+    FboTexture = grapho::gl3::Texture::Create(
+      { width, height, grapho::PixelFormat::u8_RGBA });
     Fbo->AttachTexture2D(FboTexture->texture_);
     Fbo->AttachDepth(width, height);
   }
