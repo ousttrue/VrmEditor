@@ -14,7 +14,7 @@ SceneDock::CreateTree(const AddDockFunc& addDock,
 {
   auto gui = std::make_shared<SceneGui>(scene, selection, indent);
 
-  addDock(Dock(title, [gui](const char* title, bool* p_open) {
+  addDock(grapho::imgui::Dock(title, [gui](const char* title, bool* p_open) {
     gui->Show(title, p_open);
   }));
 }

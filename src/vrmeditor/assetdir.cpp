@@ -4,12 +4,12 @@
 #include <algorithm>
 #include <imgui.h>
 
-
 std::optional<Asset>
 Asset::FromPath(const std::filesystem::path& path)
 {
   auto extension = path.extension().string();
-  std::transform(extension.begin(), extension.end(), extension.begin(), tolower);
+  std::transform(
+    extension.begin(), extension.end(), extension.begin(), tolower);
 
   if (extension == ".gltf") {
     return Asset{
@@ -84,10 +84,10 @@ AssetDir::Update()
   std::sort(Assets.begin(), Assets.end());
 }
 
-Dock
+grapho::imgui::Dock
 AssetDir::CreateDock(const LoadFunc& callback)
 {
-  return Dock{
+  return {
     std::string("[") + Name + "]",
     [this, callback]() {
       if (ImGui::Button(" Open")) {

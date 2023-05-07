@@ -423,7 +423,7 @@ public:
 
   void CreateDock(const AddDockFunc& addDock, std::string_view title)
   {
-    addDock(Dock(title, [this]() {
+    addDock(grapho::imgui::Dock(title, [this]() {
       for (auto it = m_drawableMap.begin(); it != m_drawableMap.end();) {
         if (it->first.lock()) {
           ++it;

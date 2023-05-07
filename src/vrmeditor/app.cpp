@@ -71,11 +71,11 @@ App::App()
 
   m_jsonGui = std::make_shared<JsonGui>();
   auto indent = m_gui->FontSize * 0.5f;
-  m_gui->AddDock(
-    Dock("gltf-json",
-         [jsonGui = m_jsonGui, indent](const char* title, bool* p_open) {
-           jsonGui->Show(title, p_open, indent);
-         }));
+  m_gui->AddDock(grapho::imgui::Dock(
+    "gltf-json",
+    [jsonGui = m_jsonGui, indent](const char* title, bool* p_open) {
+      jsonGui->Show(title, p_open, indent);
+    }));
 
   glEnable(GL_DEPTH_TEST);
   // set depth function to less than AND equal for skybox depth trick.
@@ -103,7 +103,9 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
     }
   });
 
-  auto addDock = [gui = m_gui](const Dock& dock) { gui->AddDock(dock); };
+  auto addDock = [gui = m_gui](const grapho::imgui::Dock& dock) {
+    gui->AddDock(dock);
+  };
   auto indent = m_gui->FontSize * 0.5f;
 
   {
@@ -301,7 +303,9 @@ App::Run()
   // must after App::App
   m_lua->DoFile(m_ini);
 
-  auto addDock = [gui = m_gui](const Dock& dock) { gui->AddDock(dock); };
+  auto addDock = [gui = m_gui](const grapho::imgui::Dock& dock) {
+    gui->AddDock(dock);
+  };
 
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);

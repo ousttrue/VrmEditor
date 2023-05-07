@@ -143,7 +143,7 @@ HumanPoseStream::Save()
 void
 HumanPoseStream::CreateDock(const AddDockFunc& addDock)
 {
-  addDock(Dock("input-stream", [this]() {
+  addDock(grapho::imgui::Dock("input-stream", [this]() {
     //
     // draw nodes
     ImNodes::BeginNodeEditor();

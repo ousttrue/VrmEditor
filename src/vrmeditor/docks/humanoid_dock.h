@@ -12,8 +12,8 @@ public:
   {
     auto imHumanoid = std::make_shared<ImHumanoid>();
 
-    addDock(
-      Dock(body_title, [scene, imHumanoid](const char* title, bool* p_open) {
+    addDock(grapho::imgui::Dock(
+      body_title, [scene, imHumanoid](const char* title, bool* p_open) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
         if (ImGui::Begin(title, p_open)) {
           imHumanoid->ShowBody(*scene);
@@ -21,8 +21,8 @@ public:
         ImGui::End();
         ImGui::PopStyleVar();
       }));
-    addDock(
-      Dock(finger_title, [scene, imHumanoid](const char* title, bool* p_open) {
+    addDock(grapho::imgui::Dock(
+      finger_title, [scene, imHumanoid](const char* title, bool* p_open) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
         if (ImGui::Begin(title, p_open)) {
           imHumanoid->ShowFingers(*scene);

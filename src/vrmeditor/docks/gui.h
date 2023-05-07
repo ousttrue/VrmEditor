@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <functional>
+#include <grapho/imgui/dockspace.h>
 #include <list>
 #include <memory>
 #include <optional>
@@ -21,32 +22,7 @@ struct MouseEvent
   std::optional<int> Wheel;
 };
 
-using DockShow = std::function<void(const char* title, bool* popen)>;
-
-struct Dock
-{
-  std::string Name;
-  DockShow OnShow;
-  bool UseWindow = true;
-  bool IsOpen = true;
-
-  Dock(std::string_view name, const DockShow& show)
-    : Name(name)
-    , OnShow(show)
-    , UseWindow(false)
-  {
-  }
-  Dock(std::string_view name, const std::function<void()>& show)
-    : Name(name)
-    , UseWindow(true)
-  {
-    OnShow = [show](const char* title, bool*) { show(); };
-  }
-
-  void Show();
-};
-
-using AddDockFunc = std::function<void(const Dock& dock)>;
+using AddDockFunc = std::function<void(const grapho::imgui::Dock& dock)>;
 
 using Task = std::function<void()>;
 
@@ -66,11 +42,12 @@ class Gui
   bool m_resetLayout = false;
 
 public:
-  std::list<Dock> Docks;
+  std::vector<grapho::imgui::Dock> Docks;
   int FontSize = 20;
   Gui(const void* window, const char* glsl_version);
   ~Gui();
-  void AddDock(const Dock& dock)
+
+  void AddDock(const grapho::imgui::Dock& dock)
   {
     bool visible = true;
     auto found = std::find_if(Docks.begin(), Docks.end(), [&dock](auto& d) {
@@ -93,7 +70,7 @@ public:
       }
     }
 
-    Docks.push_back(Dock(name, []() {}));
+    Docks.push_back(grapho::imgui::Dock(name, []() {}));
     Docks.back().IsOpen = visible;
   }
 

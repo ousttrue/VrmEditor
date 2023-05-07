@@ -18,8 +18,8 @@ public:
     auto preview = std::make_shared<glr::ScenePreview>(
       scene, env, view, settings, selection, false);
 
-    addDock(
-      Dock(title, [preview, scene, settings](const char* title, bool* p_open) {
+    addDock(grapho::imgui::Dock(
+      title, [preview, scene, settings](const char* title, bool* p_open) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
         if (ImGui::Begin(title,
                          p_open,
@@ -45,8 +45,8 @@ public:
     auto preview = std::make_shared<glr::ScenePreview>(
       scene, env, view, settings, selection, true);
 
-    addDock(
-      Dock(title, [preview, scene, settings](const char* title, bool* p_open) {
+    addDock(grapho::imgui::Dock(
+      title, [preview, scene, settings](const char* title, bool* p_open) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
         if (ImGui::Begin(title,
                          p_open,
@@ -66,7 +66,7 @@ public:
                             const std::shared_ptr<grapho::OrbitView>& view,
                             const std::shared_ptr<glr::ViewSettings>& settings)
   {
-    addDock(Dock(title, [env, settings, view]() {
+    addDock(grapho::imgui::Dock(title, [env, settings, view]() {
       ImGui::Checkbox("Mesh", &settings->ShowMesh);
       ImGui::SameLine();
       ImGui::Checkbox("Shadow", &settings->ShowShadow);

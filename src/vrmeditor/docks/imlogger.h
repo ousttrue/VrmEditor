@@ -48,7 +48,7 @@ public:
                      std::string_view title,
                      const std::shared_ptr<ImLogger>& logger)
   {
-    addDock(Dock(title, [logger]() { logger->Draw(); }));
+    addDock(grapho::imgui::Dock(title, [logger]() { logger->Draw(); }));
   }
 
   void Clear()

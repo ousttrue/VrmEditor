@@ -42,5 +42,5 @@ struct AssetDir
   }
 
   void Update();
-  Dock CreateDock(const LoadFunc& callback);
+  grapho::imgui::Dock CreateDock(const LoadFunc& callback);
 };
