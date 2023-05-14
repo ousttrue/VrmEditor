@@ -4,6 +4,7 @@
 #include "rendertarget.h"
 #include <functional>
 #include <grapho/gl3/fbo.h>
+#include <grapho/imgui/widgets.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
 #include <memory>
@@ -61,25 +62,14 @@ RenderTarget::ShowFbo(float x, float y, float w, float h, const float color[4])
   assert(h);
   auto texture = Clear(int(w), int(h), color);
   if (texture) {
-    // image button. capture mouse event
-    ImGui::ImageButton((ImTextureID)(intptr_t)texture,
-                       { w, h },
-                       { 0, 1 },
-                       { 1, 0 },
-                       0,
-                       { 1, 1, 1, 1 },
-                       { 1, 1, 1, 1 });
-    ImGui::ButtonBehavior(ImGui::GetCurrentContext()->LastItemData.Rect,
-                          ImGui::GetCurrentContext()->LastItemData.ID,
-                          nullptr,
-                          nullptr,
-                          ImGuiButtonFlags_MouseButtonMiddle |
-                            ImGuiButtonFlags_MouseButtonRight);
+
+    auto [isActive, isHovered] =
+      grapho::imgui::DraggableImage((ImTextureID)(uint64_t)texture, w, h);
 
     // update camera
     auto& io = ImGui::GetIO();
     View->SetSize((int)w, (int)h);
-    if (ImGui::IsItemActive()) {
+    if (isActive) {
       if (io.MouseDown[ImGuiMouseButton_Right]) {
         View->YawPitch((int)io.MouseDelta.x, (int)io.MouseDelta.y);
       }
@@ -87,7 +77,7 @@ RenderTarget::ShowFbo(float x, float y, float w, float h, const float color[4])
         View->Shift((int)io.MouseDelta.x, (int)io.MouseDelta.y);
       }
     }
-    if (ImGui::IsItemHovered()) {
+    if (isHovered) {
       View->Dolly((int)io.MouseWheel);
     }
     if (render) {
