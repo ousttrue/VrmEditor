@@ -19,15 +19,20 @@ struct RuntimeMesh
   void applySkinning(DirectX::XMFLOAT3* dst,
                      const DirectX::XMFLOAT3& src,
                      float w,
-                     const DirectX::XMFLOAT4X4& m)
+                     std::span<DirectX::XMFLOAT4X4> matrices,
+                     uint16_t matrixIndex)
   {
     if (w > 0) {
-      auto pos = DirectX::XMLoadFloat3(&src);
-      auto newPos =
-        DirectX::XMVector3Transform(pos, DirectX::XMLoadFloat4x4(&m));
-      DirectX::XMFLOAT3 store;
-      DirectX::XMStoreFloat3(&store, newPos);
-      *dst += (store * w);
+      if (matrixIndex < matrices.size()) {
+        auto pos = DirectX::XMLoadFloat3(&src);
+        auto newPos = DirectX::XMVector3Transform(
+          pos, DirectX::XMLoadFloat4x4(&matrices[matrixIndex]));
+        DirectX::XMFLOAT3 store;
+        DirectX::XMStoreFloat3(&store, newPos);
+        *dst += (store * w);
+      } else {
+        // error
+      }
     }
   }
 
@@ -58,16 +63,16 @@ struct RuntimeMesh
         auto binding = mesh.m_bindings[i];
         if (auto w = binding.Weights.x)
           applySkinning(
-            &dst.Position, src.Position, w, skinningMatrices[binding.Joints.X]);
+            &dst.Position, src.Position, w, skinningMatrices, binding.Joints.X);
         if (auto w = binding.Weights.y)
           applySkinning(
-            &dst.Position, src.Position, w, skinningMatrices[binding.Joints.Y]);
+            &dst.Position, src.Position, w, skinningMatrices, binding.Joints.Y);
         if (auto w = binding.Weights.z)
           applySkinning(
-            &dst.Position, src.Position, w, skinningMatrices[binding.Joints.Z]);
+            &dst.Position, src.Position, w, skinningMatrices, binding.Joints.Z);
         if (auto w = binding.Weights.w)
           applySkinning(
-            &dst.Position, src.Position, w, skinningMatrices[binding.Joints.W]);
+            &dst.Position, src.Position, w, skinningMatrices, binding.Joints.W);
       }
     }
   }

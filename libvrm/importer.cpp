@@ -277,8 +277,22 @@ ParseMesh(const std::shared_ptr<Scene>& scene,
           has(attributes, gltf::VERTEX_WEIGHT)) {
         // skinning
         int joint_accessor = attributes.at(gltf::VERTEX_JOINT);
-        switch (*gltf::item_size(
-          scene->m_gltf.Json.at("accessors").at(joint_accessor))) {
+        auto item_size = gltf::item_size(
+          scene->m_gltf.Json.at("accessors").at(joint_accessor));
+        switch (*item_size) {
+          case 4:
+            if (auto accessor = scene->m_gltf.accessor<byte4>(joint_accessor)) {
+              if (auto accessor_w = scene->m_gltf.accessor<DirectX::XMFLOAT4>(
+                    attributes.at(gltf::VERTEX_WEIGHT))) {
+                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
+              } else {
+                return std::unexpected{ accessor_w.error() };
+              }
+            } else {
+              return std::unexpected{ accessor.error() };
+            }
+            break;
+
           case 8:
             if (auto accessor =
                   scene->m_gltf.accessor<ushort4>(joint_accessor)) {

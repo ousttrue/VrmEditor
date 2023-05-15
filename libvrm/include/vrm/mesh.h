@@ -99,18 +99,23 @@ struct Mesh
     return m_morphTargets[index];
   }
 
+  // T=byte4 or ushort4
+  template<typename T>
   void setBoneSkinning(uint32_t offset,
-                       std::span<const ushort4> joints,
+                       std::span<const T> joints,
                        std::span<const DirectX::XMFLOAT4> weights)
   {
     assert(offset + joints.size() == m_vertices.size());
     assert(offset + weights.size() == m_vertices.size());
     m_bindings.resize(m_vertices.size());
     for (size_t i = 0; i < joints.size(); ++i) {
-      m_bindings[offset + i] = {
-        .Joints = joints[i],
-        .Weights = weights[i],
-      };
+      auto& dst = m_bindings[offset + i];
+      auto& src = joints[i];
+      dst.Joints.X = src.X;
+      dst.Joints.Y = src.Y;
+      dst.Joints.Z = src.Z;
+      dst.Joints.W = src.W;
+      dst.Weights = weights[i];
     }
   }
 

@@ -72,6 +72,14 @@ from_json(const nlohmann::json& j, XMFLOAT4& v)
 namespace libvrm {
 using Time = std::chrono::duration<double, std::ratio<1, 1>>;
 
+struct byte4
+{
+  uint8_t X;
+  uint8_t Y;
+  uint8_t Z;
+  uint8_t W;
+};
+
 struct ushort4
 {
   uint16_t X;

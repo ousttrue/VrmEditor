@@ -64,7 +64,7 @@ RenderTarget::ShowFbo(float x, float y, float w, float h, const float color[4])
   if (texture) {
 
     auto [isActive, isHovered] =
-      grapho::imgui::DraggableImage((ImTextureID)(uint64_t)texture, w, h);
+      grapho::imgui::DraggableImage((ImTextureID)(uint64_t)texture, {w, h});
 
     // update camera
     auto& io = ImGui::GetIO();
