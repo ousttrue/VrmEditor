@@ -21,13 +21,13 @@
 #include <ImGuizmo.h>
 #include <cuber/mesh.h>
 #include <fstream>
+#include <gltfjson/glb.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
 #include <vrm/animation.h>
 #include <vrm/exporter.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
-#include <vrm/glb.h>
 #include <vrm/importer.h>
 #include <vrm/runtimescene/animation_update.h>
 #include <vrm/timeline.h>
@@ -197,7 +197,7 @@ App::WriteScene(const std::filesystem::path& path)
     return false;
   }
 
-  return libvrm::gltf::Glb{
+  return gltfjson::Glb{
     .JsonChunk = exporter.JsonChunk,
     .BinChunk = exporter.BinChunk,
   }

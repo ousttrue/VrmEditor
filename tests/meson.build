@@ -11,6 +11,10 @@ executable(
         'gltfon.cpp',
     ],
     install: true,
-    dependencies: [gtest_main_dep, libvrm_dep],
+    dependencies: [
+        gtest_main_dep,
+        libvrm_dep,
+        gltfjson_dep,
+    ],
     cpp_args: ['-D_CRT_SECURE_NO_WARNINGS'],
 )

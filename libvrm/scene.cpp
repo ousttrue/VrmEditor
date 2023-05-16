@@ -2,7 +2,6 @@
 #include "vrm/animation.h"
 #include "vrm/bvh.h"
 #include "vrm/dmath.h"
-#include "vrm/glb.h"
 #include "vrm/jsonpath.h"
 #include "vrm/material.h"
 #include "vrm/mesh.h"
@@ -13,6 +12,7 @@
 #include <array>
 #include <expected>
 #include <fstream>
+#include <gltfjson/glb.h>
 #include <iostream>
 #include <limits>
 #include <list>

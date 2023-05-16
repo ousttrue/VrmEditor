@@ -1,7 +1,7 @@
+#include <gltfjson/glb.h>
 #include <gtest/gtest.h>
 #include <vrm/animation.h>
 #include <vrm/exporter.h>
-#include <vrm/glb.h>
 #include <vrm/gltf_buffer.h>
 #include <vrm/node.h>
 #include <vrm/scene.h>
@@ -34,9 +34,9 @@ TEST(VRMA, simple)
   exporter.Export(scene);
 
   std::ofstream os("out.vrma", std::ios::binary);
-  assert (os);
+  assert(os);
 
-  libvrm::gltf::Glb{
+  gltfjson::Glb{
     .JsonChunk = exporter.JsonChunk,
     .BinChunk = exporter.BinChunk,
   }

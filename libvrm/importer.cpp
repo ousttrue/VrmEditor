@@ -1,7 +1,6 @@
 #include "vrm/importer.h"
 #include "vrm/animation.h"
 #include "vrm/directory.h"
-#include "vrm/glb.h"
 #include "vrm/image.h"
 #include "vrm/json.h"
 #include "vrm/material.h"
@@ -10,6 +9,7 @@
 #include "vrm/scene.h"
 #include "vrm/skin.h"
 #include "vrm/texture.h"
+#include <gltfjson/glb.h>
 
 namespace libvrm {
 namespace gltf {
@@ -1024,7 +1024,7 @@ LoadBytes(const std::shared_ptr<Scene>& scene,
           const std::shared_ptr<Directory>& dir)
 {
   scene->m_bytes.assign(bytes.begin(), bytes.end());
-  if (auto glb = Glb::Parse(scene->m_bytes)) {
+  if (auto glb = gltfjson::Glb::Parse(scene->m_bytes)) {
     // as glb
     return Load(scene, glb->JsonChunk, glb->BinChunk, dir);
   }

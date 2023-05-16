@@ -2,10 +2,10 @@
 #include "glr/scene_preview.h"
 #include "json_gui.h"
 #include <fstream>
+#include <gltfjson/glb.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
 #include <vrm/exporter.h>
-#include <vrm/glb.h>
 #include <vrm/importer.h>
 #include <vrm/runtimescene/scene.h>
 #include <vrm/scene.h>
@@ -40,7 +40,7 @@ ExportDock::Create(const AddDockFunc& addDock,
         exporter.Export(*scene->m_table);
 
         std::stringstream ss;
-        libvrm::gltf::Glb{
+        gltfjson::Glb{
           .JsonChunk = exporter.JsonChunk,
           .BinChunk = exporter.BinChunk,
         }

@@ -12,7 +12,6 @@ libvrm_lib = static_library(
     [
         'jsonpath.cpp',
         'scene.cpp',
-        'glb.cpp',
         'node.cpp',
         'springbone.cpp',
         'exporter.cpp',

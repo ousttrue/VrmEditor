@@ -2,7 +2,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vrm/exporter.h>
-#include <vrm/glb.h>
+#include <gltfjson/glb.h>
 #include <vrm/scene.h>
 
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
