@@ -5,6 +5,7 @@ libvrm_deps = [
     directxmath_dep,
     grapho_dep,
     asio_dep,
+    gltfjson_dep,
 ]
 libvrm_lib = static_library(
     'vrm',

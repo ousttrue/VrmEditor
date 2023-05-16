@@ -29,6 +29,7 @@ iconfont_cpp_headers_dep = dependency('iconfont_cpp_headers')
 directxmath_dep = dependency('directxmath', include_type: 'system')
 imnodes_dep = dependency('imnodes')
 asio_dep = dependency('asio')
+gltfjson_dep = dependency('gltfjson')
 subdir('libvrm')
 
 if get_option('executables')
