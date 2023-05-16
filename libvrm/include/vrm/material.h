@@ -1,5 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
+#include <array>
+#include <gltfjson/gltf.h>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -16,16 +18,9 @@ enum MaterialTypes
   MToon1,
 };
 
-enum BlendMode
-{
-  Opaque,
-  Mask,
-  Blend,
-};
-
 struct PbrMetallicRoughness
 {
-  DirectX::XMFLOAT4 BaseColorFactor = { 1, 1, 1, 1 };
+  std::array<float, 4> BaseColorFactor = { 1, 1, 1, 1 };
   std::shared_ptr<Texture> BaseColorTexture;
   float MetallicFactor = 1.0f;
   float RoughnessFactor = 1.0f;
@@ -46,8 +41,8 @@ struct Material
   std::shared_ptr<Texture> OcclusionTexture;
   float OcclusionTextureStrength = 1.0f;
   std::shared_ptr<Texture> EmissiveTexture;
-  DirectX::XMFLOAT3 EmissiveFactor = { 0, 0, 0 };
-  BlendMode AlphaMode = {};
+  std::array<float, 3> EmissiveFactor = { 0, 0, 0 };
+  gltfjson::format::AlphaModes AlphaMode = {};
   float AlphaCutoff = 0.5f;
   bool DoubleSided = false;
 };

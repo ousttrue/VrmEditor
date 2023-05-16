@@ -7,13 +7,13 @@ inline ShowGui
 JsonGuiSkinList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                 std::string_view jsonpath)
 {
-  return [skins = scene->m_gltf.Json.at("skins")]() {
+  return [&skins = scene->m_gltf.m_gltf.Skins]() {
     std::array<const char*, 2> cols = {
       "index",
       "joints",
     };
     if (JsonGuiTable("##skins", cols)) {
-      for (int i = 0; i < skins.size(); ++i) {
+      for (int i = 0; i < skins.Size(); ++i) {
         auto& skin = skins[i];
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
@@ -22,7 +22,7 @@ JsonGuiSkinList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         ImGui::TableSetColumnIndex(1);
         int j = 0;
         std::stringstream ss;
-        for (auto joint : skin.at("joints")) {
+        for (auto joint : skin.Joints) {
           if (j++) {
             ss << ',';
           }

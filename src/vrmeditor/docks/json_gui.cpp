@@ -19,45 +19,45 @@ LabelDefault(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 {
   std::stringstream ss;
   std::string key{ jsonpath.begin(), jsonpath.end() };
-  auto item = scene->m_gltf.Json.at(nlohmann::json::json_pointer(key));
-  auto path = libvrm::JsonPath(jsonpath);
-  auto name = path.Back();
-  if (path.Size() == 2) {
-    auto kind = path[1];
-    if (kind == "extensions") {
-      ss << " ";
-    } else if (kind == "images" || kind == "textures" || kind == "samplers") {
-      ss << " ";
-    } else if (kind == "bufferViews" || kind == "buffers") {
-      ss << " ";
-    } else if (kind == "accessors") {
-      ss << " ";
-    } else if (kind == "meshes" || kind == "skins") {
-      ss << "󰕣 ";
-    } else if (kind == "materials") {
-      ss << " ";
-    } else if (kind == "nodes" || kind == "scenes" || kind == "scene") {
-      ss << "󰵉 ";
-    } else if (kind == "animations") {
-      ss << " ";
-    } else if (kind == "asset") {
-      ss << " ";
-    } else if (kind == "extensionsUsed") {
-      ss << " ";
-    }
-  }
-
-  if (item.is_object()) {
-    if (item.find("name") != item.end()) {
-      ss << name << ": " << (std::string_view)item.at("name");
-    } else {
-      ss << name << ": object";
-    }
-  } else if (item.is_array()) {
-    ss << name << ": [" << item.size() << "]";
-  } else {
-    ss << name << ": " << item.dump();
-  }
+  // auto item = scene->m_gltf.Json.at(nlohmann::json::json_pointer(key));
+  // auto path = libvrm::JsonPath(jsonpath);
+  // auto name = path.Back();
+  // if (path.Size() == 2) {
+  //   auto kind = path[1];
+  //   if (kind == "extensions") {
+  //     ss << " ";
+  //   } else if (kind == "images" || kind == "textures" || kind == "samplers") {
+  //     ss << " ";
+  //   } else if (kind == "bufferViews" || kind == "buffers") {
+  //     ss << " ";
+  //   } else if (kind == "accessors") {
+  //     ss << " ";
+  //   } else if (kind == "meshes" || kind == "skins") {
+  //     ss << "󰕣 ";
+  //   } else if (kind == "materials") {
+  //     ss << " ";
+  //   } else if (kind == "nodes" || kind == "scenes" || kind == "scene") {
+  //     ss << "󰵉 ";
+  //   } else if (kind == "animations") {
+  //     ss << " ";
+  //   } else if (kind == "asset") {
+  //     ss << " ";
+  //   } else if (kind == "extensionsUsed") {
+  //     ss << " ";
+  //   }
+  // }
+  //
+  // if (item.is_object()) {
+  //   if (item.find("name") != item.end()) {
+  //     ss << name << ": " << (std::string_view)item.at("name");
+  //   } else {
+  //     ss << name << ": object";
+  //   }
+  // } else if (item.is_array()) {
+  //   ss << name << ": [" << item.size() << "]";
+  // } else {
+  //   ss << name << ": " << item.dump();
+  // }
   return ss.str();
 }
 
@@ -96,46 +96,46 @@ JsonGui::JsonGui()
 {
 }
 
-bool
-JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
-{
-  static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow |
-                                         ImGuiTreeNodeFlags_OpenOnDoubleClick |
-                                         ImGuiTreeNodeFlags_SpanAvailWidth;
-  ImGuiTreeNodeFlags node_flags = base_flags;
-  auto is_leaf = !item.is_object() && !item.is_array();
-  if (is_leaf) {
-    node_flags |=
-      ImGuiTreeNodeFlags_Leaf |
-      ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-  }
-  if (jsonpath == m_selected) {
-    node_flags |= ImGuiTreeNodeFlags_Selected;
-  }
-
-  std::string label = "not found";
-  auto found = m_labelCache.find({ jsonpath.begin(), jsonpath.end() });
-  if (found != m_labelCache.end()) {
-    label = found->second;
-  } else {
-    if (auto factory = MatchLabel(jsonpath)) {
-      label = (*factory)(m_scene, jsonpath);
-    } else {
-      label = LabelDefault(m_scene, jsonpath);
-    }
-    m_labelCache.insert({ { jsonpath.begin(), jsonpath.end() }, label });
-  }
-
-  bool node_open =
-    ImGui::TreeNodeEx((void*)(intptr_t)&item, node_flags, "%s", label.c_str());
-
-  if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-    m_selected = jsonpath;
-    m_cache = {};
-  }
-
-  return node_open && !is_leaf;
-}
+// bool
+// JsonGui::Enter(nlohmann::json& item, std::string_view jsonpath)
+// {
+//   static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow |
+//                                          ImGuiTreeNodeFlags_OpenOnDoubleClick |
+//                                          ImGuiTreeNodeFlags_SpanAvailWidth;
+//   ImGuiTreeNodeFlags node_flags = base_flags;
+//   auto is_leaf = !item.is_object() && !item.is_array();
+//   if (is_leaf) {
+//     node_flags |=
+//       ImGuiTreeNodeFlags_Leaf |
+//       ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+//   }
+//   if (jsonpath == m_selected) {
+//     node_flags |= ImGuiTreeNodeFlags_Selected;
+//   }
+//
+//   std::string label = "not found";
+//   auto found = m_labelCache.find({ jsonpath.begin(), jsonpath.end() });
+//   if (found != m_labelCache.end()) {
+//     label = found->second;
+//   } else {
+//     if (auto factory = MatchLabel(jsonpath)) {
+//       label = (*factory)(m_scene, jsonpath);
+//     } else {
+//       label = LabelDefault(m_scene, jsonpath);
+//     }
+//     m_labelCache.insert({ { jsonpath.begin(), jsonpath.end() }, label });
+//   }
+//
+//   bool node_open =
+//     ImGui::TreeNodeEx((void*)(intptr_t)&item, node_flags, "%s", label.c_str());
+//
+//   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+//     m_selected = jsonpath;
+//     m_cache = {};
+//   }
+//
+//   return node_open && !is_leaf;
+// }
 
 // https://github.com/ocornut/imgui/issues/319
 static bool
@@ -172,10 +172,10 @@ Splitter(bool split_vertically,
 void
 JsonGui::Show(float indent)
 {
-  auto enter = [this](nlohmann::json& item, std::string_view jsonpath) {
-    return Enter(item, jsonpath);
-  };
-  auto leave = []() { ImGui::TreePop(); };
+  // auto enter = [this](nlohmann::json& item, std::string_view jsonpath) {
+  //   return Enter(item, jsonpath);
+  // };
+  // auto leave = []() { ImGui::TreePop(); };
 
   // auto size = ImGui::GetCurrentWindow()->Size;
   auto size = ImGui::GetContentRegionAvail();
@@ -184,7 +184,7 @@ JsonGui::Show(float indent)
   ::Splitter(false, 5, &m_f, &s, 8, 8);
   if (ImGui::BeginChild("##split-first", { size.x, m_f })) {
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-    m_scene->TraverseJson(enter, leave);
+    // m_scene->TraverseJson(enter, leave);
     ImGui::PopStyleVar();
   }
   ImGui::EndChild();

@@ -82,7 +82,7 @@ SceneGui::ShowMaterial(int i,
   // color
   char id[64];
   snprintf(id, sizeof(id), "##color%d", i);
-  ImGui::ColorEdit4(id, &material->Pbr.BaseColorFactor.x);
+  ImGui::ColorEdit4(id, &material->Pbr.BaseColorFactor[0]);
 
   if (auto texture = material->Pbr.BaseColorTexture) {
     if (auto glTexture =

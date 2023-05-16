@@ -1,6 +1,5 @@
 #pragma once
 #include "json_gui.h"
-#include <vrm/json.h>
 #include <vrm/node.h>
 
 inline ShowGui
@@ -8,23 +7,23 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                 std::string_view jsonpath)
 {
   return [scene]() {
-    auto nodes = scene->m_gltf.Json.at("nodes");
+    auto& nodes = scene->m_gltf.m_gltf.Nodes;
     std::array<const char*, 9> cols = {
       "index", "name", "T", "R", "S", "children", "mesh", "skin", "extensions",
     };
     std::string no_name;
     if (JsonGuiTable("##nodes", cols)) {
-      for (int i = 0; i < nodes.size(); ++i) {
+      for (int i = 0; i < nodes.Size(); ++i) {
         auto& node = nodes[i];
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("%d", i);
         ImGui::TableSetColumnIndex(1);
-        ImGui::Text("%s", node.value("name", no_name).c_str());
-        if (libvrm::gltf::has(node, "translation")) {
-          auto t = node.value("translation", DirectX::XMFLOAT3{ 0, 0, 0 });
+        ImGui::Text("%s", node.Name.c_str());
+        if (auto _t = node.Translation) {
+          auto t = *_t;
           ImGui::TableSetColumnIndex(2);
-          ImGui::Text("%f, %f, %f", t.x, t.y, t.z);
+          ImGui::Text("%f, %f, %f", t[0], t[1], t[2]);
         }
         // ImGui::TableSetColumnIndex(3);
         // ImGui::Text("%f, %f, %f, %f",
@@ -35,10 +34,10 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         // ImGui::TableSetColumnIndex(4);
         // ImGui::Text(
         //   "%f, %f, %f", node->Scaling.x, node->Scaling.y, node->Scaling.z);
-        if (libvrm::gltf::has(node, "children")) {
+        {
           std::stringstream ss;
           int j = 0;
-          for (int child : node.at("children")) {
+          for (int child : node.Children) {
             if (j++) {
               ss << ',';
             }
@@ -47,24 +46,24 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           ImGui::TableSetColumnIndex(5);
           ImGui::Text("%s", ss.str().c_str());
         }
-        if (libvrm::gltf::has(node, "mesh")) {
+        if (auto mesh = node.Mesh) {
           ImGui::TableSetColumnIndex(6);
-          ImGui::Text("%d", (int)node.at("mesh"));
+          ImGui::Text("%d", *mesh);
         }
-        if (libvrm::gltf::has(node, "skin")) {
+        if (auto skin = node.Skin) {
           ImGui::TableSetColumnIndex(7);
-          ImGui::Text("%d", (int)node.at("skin"));
+          ImGui::Text("%d", *skin);
         }
-        if (libvrm::gltf::has(node, "extensions")) {
-          std::stringstream ss;
-          int j = 0;
-          for (auto kv : node.at("extensions").items()) {
-            ss << ',';
-            ss << kv.key();
-          }
-          ImGui::TableSetColumnIndex(8);
-          ImGui::Text("%s", ss.str().c_str());
-        }
+        // if (libvrm::gltf::has(node, "extensions")) {
+        //   std::stringstream ss;
+        //   int j = 0;
+        //   // for (auto kv : node.at("extensions").items()) {
+        //   //   ss << ',';
+        //   //   ss << kv.key();
+        //   // }
+        //   ImGui::TableSetColumnIndex(8);
+        //   ImGui::Text("%s", ss.str().c_str());
+        // }
       }
       ImGui::EndTable();
     }

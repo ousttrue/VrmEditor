@@ -60,7 +60,7 @@ struct JsonGui
     m_labelCache.clear();
   }
 
-  bool Enter(nlohmann::json& item, std::string_view jsonpath);
+  // bool Enter(nlohmann::json& item, std::string_view jsonpath);
   void Show(float indent);
   void ShowSelected();
   std::optional<CreateGuiFunc> MatchGui(std::string_view jsonpath)

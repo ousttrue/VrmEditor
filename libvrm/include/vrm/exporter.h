@@ -25,7 +25,7 @@ struct Exporter
   void ExportAsset(const Scene& scene);
   void ExportImage(const Scene& scene, const std::shared_ptr<Image>& image);
   void ExportTextureSampler(const Scene& scene,
-                            const std::shared_ptr<TextureSampler>& sampler);
+                            const std::shared_ptr<gltfjson::format::Sampler>& sampler);
   void ExportTexture(const Scene& scene,
                      const std::shared_ptr<Texture>& texture);
   void ExportMaterial(const Scene& scene,

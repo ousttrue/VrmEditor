@@ -2,7 +2,7 @@
 #include "scenetypes.h"
 #include <DirectXMath.h>
 #include <expected>
-#include <nlohmann/json.hpp>
+// #include <nlohmann/json.hpp>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -138,19 +138,19 @@ type_str(Type type)
   }
 }
 
-inline std::expected<size_t, std::string>
-item_size(const nlohmann::json& accessor)
-{
-  if (auto cs = component_size(accessor["componentType"])) {
-    if (auto count = type_count(accessor["type"])) {
-      return *cs * *count;
-    } else {
-      return count;
-    }
-  } else {
-    throw cs;
-  }
-}
+// inline std::expected<size_t, std::string>
+// item_size(const nlohmann::json& accessor)
+// {
+//   if (auto cs = component_size(accessor["componentType"])) {
+//     if (auto count = type_count(accessor["type"])) {
+//       return *cs * *count;
+//     } else {
+//       return count;
+//     }
+//   } else {
+//     throw cs;
+//   }
+// }
 
 using WriteFunc = std::function<void(std::span<const uint8_t>)>;
 

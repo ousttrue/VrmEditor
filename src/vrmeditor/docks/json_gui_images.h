@@ -39,25 +39,24 @@ inline ShowGui
 JsonGuiSamplerList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                    std::string_view jsonpath)
 {
-  static TableColumn<std::shared_ptr<libvrm::gltf::TextureSampler>>
-    SamplerTable[]{
+  static TableColumn<std::shared_ptr<gltfjson::format::Sampler>> SamplerTable[]{
 
-      { "index", [](auto i, const auto&) { ImGui::Text("%zu", i); } },
-      { "magFilter",
-        [](auto, const auto& sampler) {
-          ImGui::Text("%d", sampler->MagFilter);
-        } },
-      { "minFilter",
-        [](auto, const auto& sampler) {
-          ImGui::Text("%d", sampler->MinFilter);
-        } },
-      { "wrapS",
-        [](auto, const auto& sampler) { ImGui::Text("%d", sampler->WrapS); } },
-      { "wrapT",
-        [](auto, const auto& sampler) { ImGui::Text("%d", sampler->WrapT); } },
-    };
+    { "index", [](auto i, const auto&) { ImGui::Text("%zu", i); } },
+    { "magFilter",
+      [](auto, const auto& sampler) {
+        ImGui::Text("%d", sampler->MagFilter);
+      } },
+    { "minFilter",
+      [](auto, const auto& sampler) {
+        ImGui::Text("%d", sampler->MinFilter);
+      } },
+    { "wrapS",
+      [](auto, const auto& sampler) { ImGui::Text("%d", sampler->WrapS); } },
+    { "wrapT",
+      [](auto, const auto& sampler) { ImGui::Text("%d", sampler->WrapT); } },
+  };
 
-  return TableToShowGui<std::shared_ptr<libvrm::gltf::TextureSampler>>(
+  return TableToShowGui<std::shared_ptr<gltfjson::format::Sampler>>(
     "##samplers", SamplerTable, scene->m_samplers);
 }
 

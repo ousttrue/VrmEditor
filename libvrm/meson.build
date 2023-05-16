@@ -1,7 +1,7 @@
 libvrm_inc = include_directories('include')
 libvrm_deps = [
     stb_dep,
-    json_dep,
+    # json_dep,
     directxmath_dep,
     grapho_dep,
     asio_dep,

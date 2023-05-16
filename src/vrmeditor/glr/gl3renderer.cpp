@@ -399,13 +399,13 @@ public:
       glEnable(GL_DEPTH_TEST);
 
       switch (primitive.Material->AlphaMode) {
-        case libvrm::gltf::BlendMode::Opaque:
+        case gltfjson::format::AlphaModes::Opaque:
           glDisable(GL_BLEND);
           break;
-        case libvrm::gltf::BlendMode::Mask:
+        case gltfjson::format::AlphaModes::Mask:
           glDisable(GL_BLEND);
           break;
-        case libvrm::gltf::BlendMode::Blend:
+        case gltfjson::format::AlphaModes::Blend:
           glEnable(GL_BLEND);
           glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
           break;

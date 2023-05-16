@@ -1,5 +1,6 @@
 #pragma once
 #include "node.h"
+#include <functional>
 
 namespace libvrm::vrm {
 
@@ -64,13 +65,13 @@ struct ExpressionMorphTargetBind
   // max weight value(100)
   float weight;
 };
-inline void
-from_json(const nlohmann::json& j, ExpressionMorphTargetBind& b)
-{
-  b.mesh = j.at("mesh");
-  b.index = j.at("index");
-  b.weight = j.at("weight");
-}
+// inline void
+// from_json(const nlohmann::json& j, ExpressionMorphTargetBind& b)
+// {
+//   b.mesh = j.at("mesh");
+//   b.index = j.at("index");
+//   b.weight = j.at("weight");
+// }
 
 struct ExpressionMaterialBind
 {};

@@ -9,7 +9,7 @@ project(
 glew_dep = dependency('glew', default_options: ['default_library=static'])
 glfw_dep = dependency('glfw3', default_options: ['default_library=static'])
 imgui_dep = dependency('imgui', default_options: ['default_library=static'])
-json_dep = dependency('nlohmann_json', include_type: 'system')
+# json_dep = dependency('nlohmann_json', include_type: 'system')
 grapho_dep = dependency('grapho')
 stb_dep = dependency('stb')
 # im_neo_sequencer_dep = dependency('im_neo_sequencer')

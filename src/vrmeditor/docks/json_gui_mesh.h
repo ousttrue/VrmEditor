@@ -5,22 +5,22 @@
 
 inline ShowGui
 JsonGuiMeshList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-                    std::string_view jsonpath)
+                std::string_view jsonpath)
 {
   return [scene]() {
-    auto meshes = scene->m_gltf.Json.at("meshes");
     std::array<const char*, 2> cols = {
       "index",
       "name",
     };
+    auto& meshes = scene->m_gltf.m_gltf.Meshes;
     if (JsonGuiTable("##meshes", cols)) {
-      for (int i = 0; i < meshes.size(); ++i) {
+      for (int i = 0; i < meshes.Size(); ++i) {
         auto& mesh = meshes[i];
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("%d", i);
         ImGui::TableSetColumnIndex(1);
-        ImGui::Text("%s", ((std::string)mesh["name"]).c_str());
+        ImGui::Text("%s", mesh.Name.c_str());
       }
       ImGui::EndTable();
     }
@@ -29,12 +29,11 @@ JsonGuiMeshList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 
 inline ShowGui
 JsonGuiMesh(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-                   std::string_view jsonpath)
+            std::string_view jsonpath)
 {
   if (auto _i = libvrm::JsonPath(jsonpath).GetLastInt()) {
     auto i = *_i;
-    return [scene,
-            prims = scene->m_gltf.Json.at("meshes").at(i).at("primitives")]() {
+    return [scene, &prims = scene->m_gltf.m_gltf.Meshes[i].Primitives]() {
       std::array<const char*, 4> cols = {
         "index",
         "vertices",
@@ -48,22 +47,18 @@ JsonGuiMesh(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           ImGui::TableSetColumnIndex(0);
           ImGui::Text("%d", i);
           ImGui::TableSetColumnIndex(1);
-          auto attributes = prim.at("attributes");
-          int POSITION = attributes.at("POSITION");
-          ImGui::Text(
-            "%d",
-            (int)scene->m_gltf.Json.at("accessors").at(POSITION).at("count"));
+          auto& attributes = prim.Attributes;
+          int POSITION = *attributes.POSITION;
+          ImGui::Text("%d", scene->m_gltf.m_gltf.Accessors[POSITION].Count);
           ImGui::TableSetColumnIndex(2);
-          std::stringstream ss;
-          for (auto kv : attributes.items()) {
-            ss << "," << kv.key();
-          }
-          ImGui::Text("%s", ss.str().c_str());
+          // std::stringstream ss;
+          // for (auto kv : attributes.items()) {
+          //   ss << "," << kv.key();
+          // }
+          // ImGui::Text("%s", ss.str().c_str());
           ImGui::TableSetColumnIndex(3);
-          int indices = prim.at("indices");
-          ImGui::Text(
-            "%d",
-            (int)scene->m_gltf.Json.at("accessors").at(indices).at("count"));
+          int indices = *prim.Indices;
+          ImGui::Text("%d", scene->m_gltf.m_gltf.Accessors[indices].Count);
         }
         ImGui::EndTable();
       }

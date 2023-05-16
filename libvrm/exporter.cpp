@@ -242,8 +242,9 @@ Exporter::ExportImage(const Scene& scene, const std::shared_ptr<Image>& image)
 //     "wrapT": 10497
 // }
 void
-Exporter::ExportTextureSampler(const Scene& scene,
-                               const std::shared_ptr<TextureSampler>& sampler)
+Exporter::ExportTextureSampler(
+  const Scene& scene,
+  const std::shared_ptr<gltfjson::format::Sampler>& sampler)
 {
   m_writer.object_open();
   m_writer.object_close();

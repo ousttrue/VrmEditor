@@ -1,7 +1,6 @@
 #include "json_gui_accessor.h"
 #include "json_gui_table.h"
 #include <imgui.h>
-#include <vrm/json.h>
 
 static std::optional<int>
 GetIndex(const std::shared_ptr<libvrm::gltf::Scene>& scene,
@@ -10,8 +9,9 @@ GetIndex(const std::shared_ptr<libvrm::gltf::Scene>& scene,
   if (auto i = libvrm::JsonPath(jsonpath).GetLastInt()) {
     return *i;
   } else {
-    return (int)scene->m_gltf.Json.at(
-      nlohmann::json::json_pointer(jsonpath.data()));
+    // return (int)scene->m_gltf.Json.at(
+    //   nlohmann::json::json_pointer(jsonpath.data()));
+    return std::nullopt;
   }
 }
 
@@ -204,33 +204,35 @@ JsonGuiAccessor(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                 std::string_view jsonpath)
 {
   if (auto accessor_index = GetIndex(scene, jsonpath)) {
-    auto accessor = scene->m_gltf.Json.at("accessors").at(*accessor_index);
-    if (accessor.at("componentType") == 5123) {
+    auto accessor = scene->m_gltf.m_gltf.Accessors[*accessor_index];
+    if (accessor.ComponentType ==
+        gltfjson::format::ComponentTypes::UNSIGNED_SHORT) {
       // ushort
-      if (accessor.at("type") == "VEC4") {
+      if (accessor.Type == gltfjson::format::Types::VEC4) {
         if (auto values =
               scene->m_gltf.accessor<libvrm::ushort4>(*accessor_index)) {
           return JsonGuiAccessorUShort4(*values);
         }
       }
-    } else if (accessor.at("componentType") == 5126) {
+    } else if (accessor.ComponentType ==
+               gltfjson::format::ComponentTypes::FLOAT) {
       // float
-      if (accessor.at("type") == "VEC2") {
+      if (accessor.Type == gltfjson::format::Types::VEC2) {
         if (auto values =
               scene->m_gltf.accessor<DirectX::XMFLOAT2>(*accessor_index)) {
           return JsonGuiAccessorVec2(*values);
         }
-      } else if (accessor.at("type") == "VEC3") {
+      } else if (accessor.Type == gltfjson::format::Types::VEC3) {
         if (auto values =
               scene->m_gltf.accessor<DirectX::XMFLOAT3>(*accessor_index)) {
           return JsonGuiAccessorVec3(*values);
         }
-      } else if (accessor.at("type") == "VEC4") {
+      } else if (accessor.Type == gltfjson::format::Types::VEC4) {
         if (auto values =
               scene->m_gltf.accessor<DirectX::XMFLOAT4>(*accessor_index)) {
           return JsonGuiAccessorVec4(*values);
         }
-      } else if (accessor.at("type") == "MAT4") {
+      } else if (accessor.Type == gltfjson::format::Types::MAT4) {
         if (auto values =
               scene->m_gltf.accessor<DirectX::XMFLOAT4X4>(*accessor_index)) {
           return JsonGuiAccessorMat4(*values);
@@ -238,7 +240,7 @@ JsonGuiAccessor(const std::shared_ptr<libvrm::gltf::Scene>& scene,
       }
     }
 
-    int count = accessor.at("count");
+    int count = accessor.Count;
     return [count]() { ImGui::Text("%d", count); };
   }
 
@@ -257,79 +259,79 @@ JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                     std::string_view jsonpath)
 {
   std::vector<AccessorItem> items;
-  auto& accessors = scene->m_gltf.Json.at("accessors");
-  for (size_t i = 0; i < accessors.size(); ++i) {
+  auto& accessors = scene->m_gltf.m_gltf.Accessors;
+  for (size_t i = 0; i < accessors.Size(); ++i) {
     std::vector<std::string> refs;
     auto& accessor = accessors[i];
     // "%s[%s]", .c_str());
-    libvrm::gltf::ComponentType component = accessor.at("componentType");
-    std::string type = accessor.at("type");
-    if (libvrm::gltf::has(scene->m_gltf.Json, "meshes")) {
-      auto& meshes = scene->m_gltf.Json.at("meshes");
-      for (size_t j = 0; j < meshes.size(); ++j) {
+    auto component = accessor.ComponentType;
+    auto type = accessor.Type;
+    {
+      auto& meshes = scene->m_gltf.m_gltf.Meshes;
+      for (size_t j = 0; j < meshes.Size(); ++j) {
         auto& mesh = meshes[j];
-        auto& prims = mesh.at("primitives");
+        auto& prims = mesh.Primitives;
         for (size_t k = 0; k < prims.size(); ++k) {
           auto& prim = prims[k];
-          if (libvrm::gltf::has(prim, "attributes")) {
-            for (auto& kv : prim.at("attributes").items()) {
-              if (kv.value() == i) {
-                std::stringstream ss2;
-                ss2 << "/meshes/" << j << "/primitives/" << k << "/attributes/"
-                    << kv.key();
-                refs.push_back(ss2.str());
-              }
-            }
-          }
-          if (libvrm::gltf::has(prim, "indices")) {
-            if (prim.at("indices") == i) {
-              std::stringstream ss2;
-              ss2 << "/meshes/" << j << "/primitives/" << k << "/indices";
-              refs.push_back(ss2.str());
-            }
-          }
-          if (libvrm::gltf::has(prim, "targets")) {
-            auto& targets = prim.at("targets");
-            for (size_t l = 0; l < targets.size(); ++l) {
-              auto& target = targets[l];
-              for (auto& kv : target.items()) {
-                if (kv.value() == i) {
-                  std::stringstream ss2;
-                  ss2 << "/meshes/" << j << "/primitives/" << k << "/targets/"
-                      << l << "/" << kv.key();
-                  refs.push_back(ss2.str());
-                }
-              }
-            }
-          }
+          // if (libvrm::gltf::has(prim, "attributes")) {
+          //   for (auto& kv : prim.at("attributes").items()) {
+          //     if (kv.value() == i) {
+          //       std::stringstream ss2;
+          //       ss2 << "/meshes/" << j << "/primitives/" << k << "/attributes/"
+          //           << kv.key();
+          //       refs.push_back(ss2.str());
+          //     }
+          //   }
+          // }
+          // if (libvrm::gltf::has(prim, "indices")) {
+          //   if (prim.at("indices") == i) {
+          //     std::stringstream ss2;
+          //     ss2 << "/meshes/" << j << "/primitives/" << k << "/indices";
+          //     refs.push_back(ss2.str());
+          //   }
+          // }
+          // if (libvrm::gltf::has(prim, "targets")) {
+          //   auto& targets = prim.at("targets");
+          //   for (size_t l = 0; l < targets.size(); ++l) {
+          //     auto& target = targets[l];
+          //     for (auto& kv : target.items()) {
+          //       if (kv.value() == i) {
+          //         std::stringstream ss2;
+          //         ss2 << "/meshes/" << j << "/primitives/" << k << "/targets/"
+          //             << l << "/" << kv.key();
+          //         refs.push_back(ss2.str());
+          //       }
+          //     }
+          //   }
+          // }
         }
       }
     }
-    if (libvrm::gltf::has(scene->m_gltf.Json, "skins")) {
-      auto& skins = scene->m_gltf.Json.at("skins");
-      for (size_t j = 0; j < skins.size(); ++j) {
-        auto& skin = skins[j];
-        if (libvrm::gltf::has(skin, "inverseBindMatrices")) {
-          if (skin.at("inverseBindMatrices") == i) {
-            std::stringstream ss2;
-            ss2 << "/skins/" << j << "/inverseBindMatrices";
-            refs.push_back(ss2.str());
-          }
-        }
-      }
-    }
+    // if (libvrm::gltf::has(scene->m_gltf.Json, "skins")) {
+    //   auto& skins = scene->m_gltf.Json.at("skins");
+    //   for (size_t j = 0; j < skins.size(); ++j) {
+    //     auto& skin = skins[j];
+    //     if (libvrm::gltf::has(skin, "inverseBindMatrices")) {
+    //       if (skin.at("inverseBindMatrices") == i) {
+    //         std::stringstream ss2;
+    //         ss2 << "/skins/" << j << "/inverseBindMatrices";
+    //         refs.push_back(ss2.str());
+    //       }
+    //     }
+    //   }
+    // }
 
-    {
-      int count = accessor.at("count");
-      std::stringstream ss;
-      ss << libvrm::gltf::component_type_name(component, type) << "[" << count
-         << "]";
-      items.push_back({
-        ss.str(),
-        static_cast<int>(*libvrm::gltf::component_size(component) *
-                         *libvrm::gltf::type_count(type) * count),
-      });
-    }
+    // {
+    //   int count = accessor.at("count");
+    //   std::stringstream ss;
+    //   ss << libvrm::gltf::component_type_name(component, type) << "[" << count
+    //      << "]";
+    //   items.push_back({
+    //     ss.str(),
+    //     static_cast<int>(*libvrm::gltf::component_size(component) *
+    //                      *libvrm::gltf::type_count(type) * count),
+    //   });
+    // }
     {
       std::stringstream ss2;
       size_t i = 0;

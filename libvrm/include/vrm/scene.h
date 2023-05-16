@@ -12,9 +12,9 @@
 #include <expected>
 #include <filesystem>
 #include <functional>
+#include <gltfjson/gltf.h>
 #include <list>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <ostream>
 #include <span>
@@ -38,15 +38,14 @@ struct Skin;
 struct Node;
 struct Animation;
 class Image;
-struct TextureSampler;
 struct Texture;
 struct Material;
 
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;
-using EnterJson =
-  std::function<bool(nlohmann::json&, std::string_view jsonpath)>;
-using LeaveJson = std::function<void()>;
+// using EnterJson =
+//   std::function<bool(nlohmann::json&, std::string_view jsonpath)>;
+// using LeaveJson = std::function<void()>;
 
 template<typename T>
 inline std::optional<size_t>
@@ -79,7 +78,7 @@ struct Scene
   std::vector<uint8_t> m_bytes;
   Gltf m_gltf;
   std::string m_title = "scene";
-  std::vector<std::shared_ptr<TextureSampler>> m_samplers;
+  std::vector<std::shared_ptr<gltfjson::format::Sampler>> m_samplers;
   std::vector<std::shared_ptr<Image>> m_images;
   std::vector<std::shared_ptr<Texture>> m_textures;
   std::vector<std::shared_ptr<Material>> m_materials;
@@ -135,9 +134,9 @@ struct Scene
   }
 
   std::optional<size_t> IndexOf(
-    const std::shared_ptr<TextureSampler>& sampler) const
+    const std::shared_ptr<gltfjson::format::Sampler>& sampler) const
   {
-    return _IndexOf<std::shared_ptr<TextureSampler>>(m_samplers, sampler);
+    return _IndexOf<std::shared_ptr<gltfjson::format::Sampler>>(m_samplers, sampler);
   }
   std::optional<size_t> IndexOf(const std::shared_ptr<Image>& image) const
   {
@@ -176,9 +175,9 @@ struct Scene
                 const std::shared_ptr<Node>& node = nullptr);
 
   std::string m_jsonpath;
-  void TraverseJson(const EnterJson& enter,
-                    const LeaveJson& leave,
-                    nlohmann::json* j = nullptr);
+  // void TraverseJson(const EnterJson& enter,
+  //                   const LeaveJson& leave,
+  //                   nlohmann::json* j = nullptr);
 
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
 

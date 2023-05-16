@@ -2,10 +2,11 @@
 #include "base64.h"
 #include "directory.h"
 #include "gltf_buffer.h"
-#include "json.h"
+// #include "json.h"
 #include <algorithm>
 #include <expected>
 #include <filesystem>
+#include <gltfjson/gltf.h>
 #include <iostream>
 #include <span>
 #include <stdint.h>
@@ -22,30 +23,27 @@ const auto VERTEX_UV = "TEXCOORD_0";
 struct Gltf
 {
   std::shared_ptr<Directory> Dir;
-  nlohmann::json Json;
+  gltfjson::format::Root m_gltf;
   std::span<const uint8_t> Bin;
 
   std::expected<std::span<const uint8_t>, std::string> buffer_view(
     int buffer_view_index) const
   {
-    auto buffer_view = Json.at("bufferViews").at(buffer_view_index);
+    auto buffer_view = m_gltf.BufferViews[buffer_view_index];
     // std::cout << buffer_view << std::endl;
 
-    int buffer_index = buffer_view.at("buffer");
-    auto buffer = Json.at("buffers").at(buffer_index);
-    if (has(buffer, "uri")) {
+    int buffer_index = *buffer_view.Buffer;
+    auto buffer = m_gltf.Buffers[buffer_index];
+    if (buffer.Uri.size()) {
       // external file
-      std::string_view uri = buffer.at("uri");
-      if (auto buffer = Dir->GetBuffer(uri)) {
-        return buffer->subspan(buffer_view.value("byteOffset", 0),
-                               buffer_view.at("byteLength"));
+      if (auto bytes = Dir->GetBuffer(buffer.Uri)) {
+        return bytes->subspan(buffer_view.ByteOffset, buffer_view.ByteLength);
       } else {
-        return buffer;
+        return bytes;
       }
     } else {
       // glb
-      return Bin.subspan(buffer_view.value("byteOffset", 0),
-                         buffer_view.at("byteLength"));
+      return Bin.subspan(buffer_view.ByteOffset, buffer_view.ByteLength);
     }
   }
 
@@ -71,16 +69,15 @@ struct Gltf
   std::expected<std::span<const T>, std::string> accessor(
     int accessor_index) const
   {
-    auto accessor = Json.at("accessors").at(accessor_index);
+    auto accessor = m_gltf.Accessors[accessor_index];
     // std::cout << accessor << std::endl;
-    assert(*item_size(accessor) == sizeof(T));
-    int count = accessor.at("count");
-    if (has(accessor, "sparse")) {
-      auto sparse = accessor.at("sparse");
+    // assert(*item_size(accessor) == sizeof(T));
+    int count = accessor.Count;
+    if (auto sparse = accessor.Sparse) {
       m_sparseBuffer.resize(count * sizeof(T));
       auto begin = (T*)m_sparseBuffer.data();
       auto sparse_span = std::span<T>(begin, begin + count);
-      if (has(accessor, "bufferView")) {
+      if (accessor.BufferView) {
         // non zero sparse
         return std::unexpected{ "non zero sparse not implemented" };
       } else {
@@ -88,17 +85,17 @@ struct Gltf
         T zero = {};
         std::fill(sparse_span.begin(), sparse_span.end(), zero);
       }
-      int sparse_count = sparse.at("count");
-      auto sparse_indices = sparse.at("indices");
-      auto sparse_values = sparse.at("values");
-      switch ((gltf::ComponentType)sparse_indices.at("componentType")) {
-        case gltf::ComponentType::UNSIGNED_BYTE:
+      int sparse_count = sparse->Count;
+      auto sparse_indices = sparse->Indices;
+      auto sparse_values = sparse->Values;
+      switch (sparse_indices.ComponentType) {
+        case gltfjson::format::ComponentTypes::UNSIGNED_BYTE:
           if (auto sparse_indices_bytes =
-                buffer_view(sparse_indices.at("bufferView"))) {
+                buffer_view(*sparse_indices.BufferView)) {
             auto begin = (const uint8_t*)sparse_indices_bytes->data();
             auto indices_span = std::span(begin, begin + sparse_count);
             if (auto ok = SetSparseValue(
-                  indices_span, sparse_values.at("bufferView"), sparse_span)) {
+                  indices_span, *sparse_values.BufferView, sparse_span)) {
               return sparse_span;
             } else {
               return std::unexpected{ ok.error() };
@@ -106,13 +103,13 @@ struct Gltf
           } else {
             return std::unexpected{ sparse_indices_bytes.error() };
           }
-        case gltf::ComponentType::UNSIGNED_SHORT:
+        case gltfjson::format::ComponentTypes::UNSIGNED_SHORT:
           if (auto sparse_indices_bytes =
-                buffer_view(sparse_indices.at("bufferView"))) {
+                buffer_view(*sparse_indices.BufferView)) {
             auto begin = (const uint16_t*)sparse_indices_bytes->data();
             auto indices_span = std::span(begin, begin + sparse_count);
             if (auto ok = SetSparseValue(
-                  indices_span, sparse_values.at("bufferView"), sparse_span)) {
+                  indices_span, *sparse_values.BufferView, sparse_span)) {
               return sparse_span;
             } else {
               return std::unexpected{ ok.error() };
@@ -120,13 +117,13 @@ struct Gltf
           } else {
             return std::unexpected{ sparse_indices_bytes.error() };
           }
-        case gltf::ComponentType::UNSIGNED_INT:
+        case gltfjson::format::ComponentTypes::UNSIGNED_INT:
           if (auto sparse_indices_bytes =
-                buffer_view(sparse_indices.at("bufferView"))) {
+                buffer_view(*sparse_indices.BufferView)) {
             auto begin = (const uint32_t*)sparse_indices_bytes->data();
             auto indices_span = std::span(begin, begin + sparse_count);
             if (auto ok = SetSparseValue(
-                  indices_span, sparse_values.at("bufferView"), sparse_span)) {
+                  indices_span, *sparse_values.BufferView, sparse_span)) {
 
               return sparse_span;
             } else {
@@ -139,9 +136,9 @@ struct Gltf
           return std::unexpected{ "sparse.indices: unknown" };
       }
       throw std::runtime_error("not implemented");
-    } else if (has(accessor, "bufferView")) {
-      if (auto span = buffer_view(accessor["bufferView"])) {
-        int offset = accessor.value("byteOffset", 0);
+    } else if (auto bufferView = accessor.BufferView) {
+      if (auto span = buffer_view(*bufferView)) {
+        int offset = accessor.ByteOffset;
         return std::span<const T>((const T*)(span->data() + offset), count);
 
       } else {
