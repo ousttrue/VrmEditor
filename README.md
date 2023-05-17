@@ -47,6 +47,27 @@ read, write, edit and animation test.
 
 - BoxInterleaved
 
+## Memo
+
+```
+        +------------+
+        | Renderer   |
+        +------------+
+  drawlilst ^
+            |
+        +------------+
+        |libvrm scene| <- Pose/Animation
+        +------------+
+     import ^|
+            |v export
+        +--------+
+        |gltfjson| <- ImGui/TPose
+        +--------+
+deserialize ^|
+            |v serialize
+        gltf/glb
+```
+
 ## milestone
 
 ### 1

@@ -1,6 +1,5 @@
 #include "export_dock.h"
 #include "glr/scene_preview.h"
-#include "json_gui.h"
 #include <fstream>
 #include <gltfjson/glb.h>
 #include <grapho/orbitview.h>
@@ -17,14 +16,14 @@ ExportDock::Create(const AddDockFunc& addDock,
                    float indent)
 {
   auto debug_table = std::make_shared<libvrm::gltf::Scene>();
-  auto impl = std::make_shared<JsonGui>();
-  impl->SetScene(debug_table);
+  // auto impl = std::make_shared<JsonGui>();
+  // impl->SetScene(debug_table);
 
   auto debug_scene = std::make_shared<runtimescene::RuntimeScene>(debug_table);
   auto preview = std::make_shared<glr::ScenePreview>(debug_scene);
 
   addDock(
-    grapho::imgui::Dock(title, [scene, debug_scene, impl, indent, preview]() {
+    grapho::imgui::Dock(title, [scene, debug_scene, indent, preview]() {
       auto pos = ImGui::GetCursorScreenPos();
 
       static float color[] = {
@@ -61,6 +60,6 @@ ExportDock::Create(const AddDockFunc& addDock,
       }
 
       // json tree
-      impl->Show(indent);
+      // impl->Show(indent);
     }));
 }

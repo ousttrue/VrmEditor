@@ -7,7 +7,6 @@
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
-#include "docks/json_gui.h"
 #include "docks/scene_dock.h"
 #include "docks/scene_selection.h"
 #include "docks/view_dock.h"
@@ -69,14 +68,6 @@ App::App()
     return true;
   });
 
-  m_jsonGui = std::make_shared<JsonGui>();
-  auto indent = m_gui->FontSize * 0.5f;
-  m_gui->AddDock(grapho::imgui::Dock(
-    "gltf-json",
-    [jsonGui = m_jsonGui, indent](const char* title, bool* p_open) {
-      jsonGui->Show(title, p_open, indent);
-    }));
-
   glEnable(GL_DEPTH_TEST);
   // set depth function to less than AND equal for skybox depth trick.
   glDepthFunc(GL_LEQUAL);
@@ -109,7 +100,6 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
   auto indent = m_gui->FontSize * 0.5f;
 
   {
-    m_jsonGui->SetScene(m_scene->m_table);
     HumanoidDock::Create(
       addDock, "humanoid-body", "humanoid-finger", m_scene->m_table);
     SceneDock::CreateTree(
