@@ -54,6 +54,30 @@ InputText(const char* label,
 }
 }
 
+template<typename T, size_t N>
+static void
+Combo(const char* label, T* value, const std::tuple<T, const char*> (&list)[N])
+{
+  using TUPLE = std::tuple<T, const char*>;
+  int i = 0;
+  for (; i < N; ++i) {
+    if (std::get<0>(list[i]) == *value) {
+      break;
+    }
+  }
+
+  auto callback = [](void* data, int n, const char** out_str) -> bool {
+    if (n < N) {
+      *out_str = std::get<1>(((const TUPLE*)data)[n]);
+      return true;
+    }
+    return false;
+  };
+  if (ImGui::Combo(label, &i, callback, (void*)list, N)) {
+    *value = std::get<0>(list[i]);
+  }
+}
+
 static void
 ShowGui(const char* label, std::u8string& str)
 {
@@ -117,6 +141,16 @@ void
 ShowGui(uint32_t index, gltfjson::format::Material& material)
 {
   ShowGui("/materials", index, material);
+
+  // std::optional<PbrMetallicRoughness> PbrMetallicRoughness;
+  // std::optional<NormalTextureInfo> NormalTexture;
+  // std::optional<OcclusionTextureInfo> OcclusionTexture;
+  // std::optional<TextureInfo> EmissiveTexture;
+
+  ImGui::ColorEdit3("EmissiveFactor", material.EmissiveFactor.data());
+  Combo("AlphaMode", &material.AlphaMode, gltfjson::format::AlphaModesCombo);
+  ImGui::SliderFloat("AlphaCutoff", &material.AlphaCutoff, 0, 1);
+  ImGui::Checkbox("DoubleSided", &material.DoubleSided);
 }
 void
 ShowGui(uint32_t index, gltfjson::format::Mesh& mesh)
