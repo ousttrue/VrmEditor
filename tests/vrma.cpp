@@ -2,7 +2,6 @@
 #include <gtest/gtest.h>
 #include <vrm/animation.h>
 #include <vrm/exporter.h>
-#include <vrm/gltf_buffer.h>
 #include <vrm/node.h>
 #include <vrm/scene.h>
 #include <vrm/vrma.h>
