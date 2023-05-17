@@ -4,6 +4,7 @@
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <list>
+#include <optional>
 #include <string.h>
 
 enum class UITypes
@@ -29,9 +30,10 @@ struct UI
 {
   UITypes Type;
   std::string Label;
+  std::optional<uint32_t> Index;
   std::list<UI> Children;
 
-  UI* ShowGui(const UI* selected)
+  UI* ShowSelector(const UI* selected)
   {
     static ImGuiTreeNodeFlags base_flags =
       ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -52,7 +54,7 @@ struct UI
 
     if (node_open) {
       for (auto& child : Children) {
-        if (child.ShowGui(selected)) {
+        if (child.ShowSelector(selected)) {
           clicked = &child;
         }
       }
@@ -65,6 +67,93 @@ struct UI
       return this;
     } else {
       return nullptr;
+    }
+  }
+
+  void ShowSelected(gltfjson::format::Root& gltf)
+  {
+    switch (Type) {
+      case UITypes::Asset:
+        ::ShowGui(gltf.Asset);
+        break;
+
+        // buffer/bufferView/accessor
+      case UITypes::Buffers:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Buffers[*Index]);
+        } else {
+        }
+        break;
+
+      case UITypes::BufferViews:
+        if (Index) {
+          ::ShowGui(*Index, gltf.BufferViews[*Index]);
+        } else {
+        }
+        break;
+
+      case UITypes::Accessors:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Accessors[*Index]);
+        } else {
+        }
+        break;
+        // image/sampler/texture/material/mesh
+      case UITypes::Images:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Images[*Index]);
+        } else {
+        }
+        break;
+      case UITypes::Samplers:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Samplers[*Index]);
+        } else {
+        }
+        break;
+      case UITypes::Textures:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Textures[*Index]);
+        } else {
+        }
+        break;
+      case UITypes::Materials:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Materials[*Index]);
+        } else {
+        }
+        break;
+      case UITypes::Meshes:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Meshes[*Index]);
+        } else {
+        }
+        break;
+        // skin/node/scene/animation
+      case UITypes::Skins:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Skins[*Index]);
+        } else {
+        }
+        break;
+      case UITypes::Nodes:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Nodes[*Index]);
+        } else {
+        }
+        break;
+      case UITypes::Scenes:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Scenes[*Index]);
+        } else {
+        }
+        break;
+      case UITypes::Animations:
+        if (Index) {
+          ::ShowGui(*Index, gltf.Animations[*Index]);
+        } else {
+        }
+        break;
     }
   }
 };
@@ -114,10 +203,14 @@ public:
     snprintf(buf, sizeof(buf), "%s (%zd)", label, values.Size());
     m_list.push_back({ type, buf });
 
-    for (auto i = 0; i < values.Size(); ++i) {
+    for (uint32_t i = 0; i < values.Size(); ++i) {
       snprintf(
         buf, sizeof(buf), "%02d:%s", i, (const char*)values[i].Name.c_str());
-      m_list.back().Children.push_back({ type, buf });
+      m_list.back().Children.push_back({
+        .Type = type,
+        .Label = buf,
+        .Index = i,
+      });
     }
   }
 
@@ -140,7 +233,7 @@ public:
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 0);
     UI* node_clicked = nullptr;
     for (auto& ui : m_list) {
-      if (auto current = ui.ShowGui(m_selected)) {
+      if (auto current = ui.ShowSelector(m_selected)) {
         node_clicked = current;
       }
     }
@@ -155,35 +248,14 @@ public:
   void ShowGuiRight()
   {
     ImGui::SameLine();
-    ImGui::BeginGroup();
-    ImGui::BeginChild(
-      "item view",
-      ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1
-                                                       // line below us
-    ImGui::Text("MyObject: %p", m_selected);
-    // ImGui::Separator();
-    // if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None)) {
-    //   if (ImGui::BeginTabItem("Description")) {
-    //     ImGui::TextWrapped(
-    //       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-    //       do " "eiusmod tempor incididunt ut labore et dolore magna
-    //       aliqua.
-    //       ");
-    //     ImGui::EndTabItem();
-    //   }
-    //   if (ImGui::BeginTabItem("Details")) {
-    //     ImGui::Text("ID: 0123456789");
-    //     ImGui::EndTabItem();
-    //   }
-    //   ImGui::EndTabBar();
-    // }
+
+    // Leave room for 1 line below us
+    ImGui::BeginChild("item view",
+                      ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
+    if (m_selected) {
+      m_selected->ShowSelected(m_gltf);
+    }
     ImGui::EndChild();
-    if (ImGui::Button("Revert")) {
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Save")) {
-    }
-    ImGui::EndGroup();
   }
 };
 

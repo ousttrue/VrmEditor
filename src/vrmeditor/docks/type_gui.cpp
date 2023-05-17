@@ -63,10 +63,85 @@ ShowGui(const char* label, std::u8string& str)
 void
 ShowGui(gltfjson::format::Asset& asset)
 {
-  if (ImGui::CollapsingHeader("Asset", ImGuiTreeNodeFlags_None)) {
-    ShowGui("copyright", asset.Copyright);
-    ShowGui("generator", asset.Generator);
-    ShowGui("version", asset.Version);
-    ShowGui("minversion", asset.MinVersion);
-  }
+  ShowGui("copyright", asset.Copyright);
+  ShowGui("generator", asset.Generator);
+  ShowGui("version", asset.Version);
+  ShowGui("minversion", asset.MinVersion);
+}
+
+static void
+ShowGui(const char* base,
+        uint32_t index,
+        gltfjson::format::ChildOfRootProperty& prop)
+{
+  ImGui::Text("%s/%d", base, index);
+  ShowGui("name", prop.Name);
+}
+
+// buffer/bufferView/accessor
+void
+ShowGui(uint32_t index, gltfjson::format::Buffer& buffer)
+{
+  ShowGui("/buffers", index, buffer);
+}
+
+void
+ShowGui(uint32_t index, gltfjson::format::BufferView& bufferView)
+{
+  ShowGui("/bufferViews", index, bufferView);
+}
+
+void
+ShowGui(uint32_t index, gltfjson::format::Accessor& accessor)
+{
+  ShowGui("/accessors", index, accessor);
+}
+
+// image/sampler/texture/material/mesh
+void
+ShowGui(uint32_t index, gltfjson::format::Image& image)
+{
+  ShowGui("/images", index, image);
+}
+void
+ShowGui(uint32_t index, gltfjson::format::Sampler& sampler)
+{
+  ShowGui("/samplers", index, sampler);
+}
+void
+ShowGui(uint32_t index, gltfjson::format::Texture& texture)
+{
+  ShowGui("/textures", index, texture);
+}
+void
+ShowGui(uint32_t index, gltfjson::format::Material& material)
+{
+  ShowGui("/materials", index, material);
+}
+void
+ShowGui(uint32_t index, gltfjson::format::Mesh& mesh)
+{
+  ShowGui("/meshes", index, mesh);
+}
+
+// skin/node/scene/animation
+void
+ShowGui(uint32_t index, gltfjson::format::Skin& skin)
+{
+  ShowGui("/skins", index, skin);
+}
+void
+ShowGui(uint32_t index, gltfjson::format::Node& node)
+{
+  ShowGui("/nodes", index, node);
+}
+void
+ShowGui(uint32_t index, gltfjson::format::Scene& scene)
+{
+  ShowGui("/scenes", index, scene);
+}
+void
+ShowGui(uint32_t index, gltfjson::format::Animation& animation)
+{
+  ShowGui("/animations", index, animation);
 }
