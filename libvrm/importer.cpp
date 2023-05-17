@@ -959,7 +959,7 @@ Load(const std::shared_ptr<Scene>& scene,
 {
   gltfjson::Parser parser(json_chunk);
   if (auto result = parser.Parse()) {
-    gltfjson::Deserialize(parser, scene->m_gltf);
+    gltfjson::format::Deserialize(parser, scene->m_gltf);
     scene->m_bin = { dir, bin_chunk };
     if (!scene->m_bin.Dir) {
       scene->m_bin.Dir = std::make_shared<gltfjson::Directory>();
