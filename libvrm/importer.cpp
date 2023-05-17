@@ -24,7 +24,7 @@ ParseImage(const std::shared_ptr<Scene>& scene,
   std::span<const uint8_t> bytes;
   if (auto bufferView = image.BufferView) {
     if (auto buffer_view =
-          scene->m_bin.buffer_view(scene->m_gltf, *bufferView)) {
+          scene->m_bin.GetBufferViewBytes(scene->m_gltf, *bufferView)) {
       bytes = *buffer_view;
     } else {
       return std::unexpected{ buffer_view.error() };
