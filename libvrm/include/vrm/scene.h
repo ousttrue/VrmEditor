@@ -1,7 +1,7 @@
 #pragma once
+#include "bin.h"
 #include "expression.h"
 #include "gizmo.h"
-#include "gltf.h"
 #include "humanpose.h"
 #include "mesh.h"
 #include "scenetypes.h"
@@ -136,7 +136,8 @@ struct Scene
   std::optional<size_t> IndexOf(
     const std::shared_ptr<gltfjson::format::Sampler>& sampler) const
   {
-    return _IndexOf<std::shared_ptr<gltfjson::format::Sampler>>(m_samplers, sampler);
+    return _IndexOf<std::shared_ptr<gltfjson::format::Sampler>>(m_samplers,
+                                                                sampler);
   }
   std::optional<size_t> IndexOf(const std::shared_ptr<Image>& image) const
   {

@@ -1,7 +1,7 @@
 #include "json_gui_material.h"
 #include "json_gui_table.h"
 #include <imgui.h>
-#include <vrm/gltf.h>
+// #include <vrm/gltf.h>
 #include <vrm/material.h>
 
 struct MaterialItem
