@@ -209,7 +209,7 @@ JsonGuiAccessor(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         gltfjson::format::ComponentTypes::UNSIGNED_SHORT) {
       // ushort
       if (accessor.Type == gltfjson::format::Types::VEC4) {
-        if (auto values = scene->m_bin.accessor<libvrm::ushort4>(
+        if (auto values = scene->m_bin.GetAccessorBytes<libvrm::ushort4>(
               scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorUShort4(*values);
         }
@@ -218,22 +218,22 @@ JsonGuiAccessor(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                gltfjson::format::ComponentTypes::FLOAT) {
       // float
       if (accessor.Type == gltfjson::format::Types::VEC2) {
-        if (auto values = scene->m_bin.accessor<DirectX::XMFLOAT2>(
+        if (auto values = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT2>(
               scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorVec2(*values);
         }
       } else if (accessor.Type == gltfjson::format::Types::VEC3) {
-        if (auto values = scene->m_bin.accessor<DirectX::XMFLOAT3>(
+        if (auto values = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT3>(
               scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorVec3(*values);
         }
       } else if (accessor.Type == gltfjson::format::Types::VEC4) {
-        if (auto values = scene->m_bin.accessor<DirectX::XMFLOAT4>(
+        if (auto values = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4>(
               scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorVec4(*values);
         }
       } else if (accessor.Type == gltfjson::format::Types::MAT4) {
-        if (auto values = scene->m_bin.accessor<DirectX::XMFLOAT4X4>(
+        if (auto values = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4X4>(
               scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorMat4(*values);
         }
