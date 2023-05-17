@@ -3,7 +3,6 @@ executable(
     'tests',
     [
         'gltf_samples.cpp',
-        'base64.cpp',
         'glb_export.cpp',
         'json.cpp',
         'vrma.cpp',

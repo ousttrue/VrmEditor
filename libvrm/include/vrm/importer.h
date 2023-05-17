@@ -5,8 +5,11 @@
 #include <span>
 #include <string>
 
-namespace libvrm {
+namespace gltfjson {
 struct Directory;
+}
+
+namespace libvrm {
 
 namespace gltf {
 struct Scene;
@@ -17,7 +20,7 @@ LoadPath(const std::filesystem::path& path);
 std::expected<bool, std::string>
 LoadBytes(const std::shared_ptr<Scene>& scene,
           std::span<const uint8_t> bytes,
-          const std::shared_ptr<Directory>& dir = nullptr);
+          const std::shared_ptr<gltfjson::Directory>& dir = nullptr);
 
 }
 }

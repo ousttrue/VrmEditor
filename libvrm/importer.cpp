@@ -1,6 +1,5 @@
 #include "vrm/importer.h"
 #include "vrm/animation.h"
-#include "vrm/directory.h"
 #include "vrm/image.h"
 #include "vrm/material.h"
 #include "vrm/mesh.h"
@@ -9,6 +8,7 @@
 #include "vrm/skin.h"
 #include "vrm/texture.h"
 #include <gltfjson/deserialize.h>
+#include <gltfjson/directory.h>
 #include <gltfjson/glb.h>
 #include <gltfjson/gltf.h>
 #include <gltfjson/json.h>
@@ -943,7 +943,7 @@ static std::expected<bool, std::string>
 Load(const std::shared_ptr<Scene>& scene,
      std::span<const uint8_t> json_chunk,
      std::span<const uint8_t> bin_chunk,
-     const std::shared_ptr<Directory>& dir)
+     const std::shared_ptr<gltfjson::Directory>& dir)
 {
   gltfjson::Parser parser(json_chunk);
   if (auto result = parser.Parse()) {
@@ -953,7 +953,7 @@ Load(const std::shared_ptr<Scene>& scene,
     // auto parsed = nlohmann::json::parse(json_chunk);
     scene->m_gltf = { dir, gltf, bin_chunk };
     if (!scene->m_gltf.Dir) {
-      scene->m_gltf.Dir = std::make_shared<Directory>();
+      scene->m_gltf.Dir = std::make_shared<gltfjson::Directory>();
     }
     return Parse(scene);
   } else {
@@ -967,7 +967,7 @@ Load(const std::shared_ptr<Scene>& scene,
 std::expected<bool, std::string>
 LoadBytes(const std::shared_ptr<Scene>& scene,
           std::span<const uint8_t> bytes,
-          const std::shared_ptr<Directory>& dir)
+          const std::shared_ptr<gltfjson::Directory>& dir)
 {
   scene->m_bytes.assign(bytes.begin(), bytes.end());
   if (auto glb = gltfjson::Glb::Parse(scene->m_bytes)) {
@@ -982,10 +982,12 @@ LoadBytes(const std::shared_ptr<Scene>& scene,
 std::expected<std::shared_ptr<Scene>, std::string>
 LoadPath(const std::filesystem::path& path)
 {
-  if (auto bytes = ReadAllBytes(path)) {
+  if (auto bytes = gltfjson::ReadAllBytes(path)) {
     auto ptr = std::make_shared<Scene>();
     if (auto load = LoadBytes(
-          ptr, *bytes, std::make_shared<Directory>(path.parent_path()))) {
+          ptr,
+          *bytes,
+          std::make_shared<gltfjson::Directory>(path.parent_path()))) {
       return ptr;
     } else {
       return std::unexpected(load.error());

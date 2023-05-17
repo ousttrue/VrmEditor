@@ -10,6 +10,7 @@
 #include "vrm/texture.h"
 #include <gltfjson/glb.h>
 #include <gltfjson/gltf.h>
+#include <gltfjson/gltf_types.h>
 
 namespace gltfjson {
 namespace format {
@@ -497,26 +498,26 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
     m_writer.object_open();
     {
       auto position_accessor_index = m_binWriter.PushAccessor(positions);
-      m_writer.key(gltf::VERTEX_POSITION);
+      m_writer.key(gltfjson::format::VERTEX_POSITION);
       m_writer.value(position_accessor_index);
     }
     {
       auto normal_accessor_index = m_binWriter.PushAccessor(normals);
-      m_writer.key(gltf::VERTEX_NORMAL);
+      m_writer.key(gltfjson::format::VERTEX_NORMAL);
       m_writer.value(normal_accessor_index);
     }
     {
       auto tex0_accessor_index = m_binWriter.PushAccessor(tex0);
-      m_writer.key(gltf::VERTEX_UV);
+      m_writer.key(gltfjson::format::VERTEX_UV);
       m_writer.value(tex0_accessor_index);
     }
     // skinning
     if (has_skinning) {
       auto joint_accessor_index = m_binWriter.PushAccessor(joints);
-      m_writer.key(gltf::VERTEX_JOINT);
+      m_writer.key(gltfjson::format::VERTEX_JOINT);
       m_writer.value(joint_accessor_index);
       auto weight_accessor_index = m_binWriter.PushAccessor(weights);
-      m_writer.key(gltf::VERTEX_WEIGHT);
+      m_writer.key(gltfjson::format::VERTEX_WEIGHT);
       m_writer.value(weight_accessor_index);
     }
     m_writer.object_close();

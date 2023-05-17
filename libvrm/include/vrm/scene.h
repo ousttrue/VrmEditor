@@ -1,5 +1,4 @@
 #pragma once
-#include "bin.h"
 #include "expression.h"
 #include "gizmo.h"
 #include "humanpose.h"
@@ -12,6 +11,7 @@
 #include <expected>
 #include <filesystem>
 #include <functional>
+#include <gltfjson/bin.h>
 #include <gltfjson/gltf.h>
 #include <list>
 #include <memory>
@@ -76,7 +76,7 @@ struct Scene
 {
   ModelType m_type = ModelType::Gltf;
   std::vector<uint8_t> m_bytes;
-  Gltf m_gltf;
+  gltfjson::format::Bin m_gltf;
   std::string m_title = "scene";
   std::vector<std::shared_ptr<gltfjson::format::Sampler>> m_samplers;
   std::vector<std::shared_ptr<Image>> m_images;
