@@ -15,7 +15,7 @@ JsonGuiMaterialList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                     std::string_view jsonpath)
 {
   std::vector<MaterialItem> items;
-  for (auto& material : scene->m_gltf.m_gltf.Materials) {
+  for (auto& material : scene->m_gltf.Materials) {
     items.push_back({
       material.Name,
       "Pbr",
@@ -44,7 +44,7 @@ JsonGuiMaterialList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
         break;
     }
   }
-  return [items, &materials = scene->m_gltf.m_gltf.Materials]() {
+  return [items, &materials = scene->m_gltf.Materials]() {
     std::array<const char*, 6> cols = {
       "index", "name", "type", "alphamode", "colorFactor", "colorTexture",
     };

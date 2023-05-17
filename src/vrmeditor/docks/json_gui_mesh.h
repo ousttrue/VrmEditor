@@ -12,7 +12,7 @@ JsonGuiMeshList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
       "index",
       "name",
     };
-    auto& meshes = scene->m_gltf.m_gltf.Meshes;
+    auto& meshes = scene->m_gltf.Meshes;
     if (JsonGuiTable("##meshes", cols)) {
       for (int i = 0; i < meshes.Size(); ++i) {
         auto& mesh = meshes[i];
@@ -33,7 +33,7 @@ JsonGuiMesh(const std::shared_ptr<libvrm::gltf::Scene>& scene,
 {
   if (auto _i = libvrm::JsonPath(jsonpath).GetLastInt()) {
     auto i = *_i;
-    return [scene, &prims = scene->m_gltf.m_gltf.Meshes[i].Primitives]() {
+    return [scene, &prims = scene->m_gltf.Meshes[i].Primitives]() {
       std::array<const char*, 4> cols = {
         "index",
         "vertices",
@@ -49,7 +49,7 @@ JsonGuiMesh(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           ImGui::TableSetColumnIndex(1);
           auto& attributes = prim.Attributes;
           int POSITION = *attributes.POSITION;
-          ImGui::Text("%d", scene->m_gltf.m_gltf.Accessors[POSITION].Count);
+          ImGui::Text("%d", scene->m_gltf.Accessors[POSITION].Count);
           ImGui::TableSetColumnIndex(2);
           // std::stringstream ss;
           // for (auto kv : attributes.items()) {
@@ -58,7 +58,7 @@ JsonGuiMesh(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           // ImGui::Text("%s", ss.str().c_str());
           ImGui::TableSetColumnIndex(3);
           int indices = *prim.Indices;
-          ImGui::Text("%d", scene->m_gltf.m_gltf.Accessors[indices].Count);
+          ImGui::Text("%d", scene->m_gltf.Accessors[indices].Count);
         }
         ImGui::EndTable();
       }

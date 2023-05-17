@@ -204,13 +204,13 @@ JsonGuiAccessor(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                 std::string_view jsonpath)
 {
   if (auto accessor_index = GetIndex(scene, jsonpath)) {
-    auto accessor = scene->m_gltf.m_gltf.Accessors[*accessor_index];
+    auto accessor = scene->m_gltf.Accessors[*accessor_index];
     if (accessor.ComponentType ==
         gltfjson::format::ComponentTypes::UNSIGNED_SHORT) {
       // ushort
       if (accessor.Type == gltfjson::format::Types::VEC4) {
-        if (auto values =
-              scene->m_gltf.accessor<libvrm::ushort4>(*accessor_index)) {
+        if (auto values = scene->m_bin.accessor<libvrm::ushort4>(
+              scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorUShort4(*values);
         }
       }
@@ -218,23 +218,23 @@ JsonGuiAccessor(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                gltfjson::format::ComponentTypes::FLOAT) {
       // float
       if (accessor.Type == gltfjson::format::Types::VEC2) {
-        if (auto values =
-              scene->m_gltf.accessor<DirectX::XMFLOAT2>(*accessor_index)) {
+        if (auto values = scene->m_bin.accessor<DirectX::XMFLOAT2>(
+              scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorVec2(*values);
         }
       } else if (accessor.Type == gltfjson::format::Types::VEC3) {
-        if (auto values =
-              scene->m_gltf.accessor<DirectX::XMFLOAT3>(*accessor_index)) {
+        if (auto values = scene->m_bin.accessor<DirectX::XMFLOAT3>(
+              scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorVec3(*values);
         }
       } else if (accessor.Type == gltfjson::format::Types::VEC4) {
-        if (auto values =
-              scene->m_gltf.accessor<DirectX::XMFLOAT4>(*accessor_index)) {
+        if (auto values = scene->m_bin.accessor<DirectX::XMFLOAT4>(
+              scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorVec4(*values);
         }
       } else if (accessor.Type == gltfjson::format::Types::MAT4) {
-        if (auto values =
-              scene->m_gltf.accessor<DirectX::XMFLOAT4X4>(*accessor_index)) {
+        if (auto values = scene->m_bin.accessor<DirectX::XMFLOAT4X4>(
+              scene->m_gltf, *accessor_index)) {
           return JsonGuiAccessorMat4(*values);
         }
       }
@@ -259,7 +259,7 @@ JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                     std::string_view jsonpath)
 {
   std::vector<AccessorItem> items;
-  auto& accessors = scene->m_gltf.m_gltf.Accessors;
+  auto& accessors = scene->m_gltf.Accessors;
   for (size_t i = 0; i < accessors.Size(); ++i) {
     std::vector<std::string> refs;
     auto& accessor = accessors[i];
@@ -267,7 +267,7 @@ JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
     auto component = accessor.ComponentType;
     auto type = accessor.Type;
     {
-      auto& meshes = scene->m_gltf.m_gltf.Meshes;
+      auto& meshes = scene->m_gltf.Meshes;
       for (size_t j = 0; j < meshes.Size(); ++j) {
         auto& mesh = meshes[j];
         auto& prims = mesh.Primitives;
@@ -277,7 +277,8 @@ JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           //   for (auto& kv : prim.at("attributes").items()) {
           //     if (kv.value() == i) {
           //       std::stringstream ss2;
-          //       ss2 << "/meshes/" << j << "/primitives/" << k << "/attributes/"
+          //       ss2 << "/meshes/" << j << "/primitives/" << k <<
+          //       "/attributes/"
           //           << kv.key();
           //       refs.push_back(ss2.str());
           //     }
@@ -297,7 +298,8 @@ JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
           //     for (auto& kv : target.items()) {
           //       if (kv.value() == i) {
           //         std::stringstream ss2;
-          //         ss2 << "/meshes/" << j << "/primitives/" << k << "/targets/"
+          //         ss2 << "/meshes/" << j << "/primitives/" << k <<
+          //         "/targets/"
           //             << l << "/" << kv.key();
           //         refs.push_back(ss2.str());
           //       }
@@ -324,7 +326,8 @@ JsonGuiAccessorList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
     // {
     //   int count = accessor.at("count");
     //   std::stringstream ss;
-    //   ss << libvrm::gltf::component_type_name(component, type) << "[" << count
+    //   ss << libvrm::gltf::component_type_name(component, type) << "[" <<
+    //   count
     //      << "]";
     //   items.push_back({
     //     ss.str(),

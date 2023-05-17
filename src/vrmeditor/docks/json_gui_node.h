@@ -7,7 +7,7 @@ JsonGuiNodeList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
                 std::string_view jsonpath)
 {
   return [scene]() {
-    auto& nodes = scene->m_gltf.m_gltf.Nodes;
+    auto& nodes = scene->m_gltf.Nodes;
     std::array<const char*, 9> cols = {
       "index", "name", "T", "R", "S", "children", "mesh", "skin", "extensions",
     };

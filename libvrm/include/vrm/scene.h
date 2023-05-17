@@ -76,7 +76,8 @@ struct Scene
 {
   ModelType m_type = ModelType::Gltf;
   std::vector<uint8_t> m_bytes;
-  gltfjson::format::Bin m_gltf;
+  gltfjson::format::Root m_gltf;
+  gltfjson::format::Bin m_bin;
   std::string m_title = "scene";
   std::vector<std::shared_ptr<gltfjson::format::Sampler>> m_samplers;
   std::vector<std::shared_ptr<Image>> m_images;
