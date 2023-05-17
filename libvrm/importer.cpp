@@ -124,8 +124,8 @@ AddIndices(const std::shared_ptr<Scene>& scene,
     auto accessor = scene->m_gltf.Accessors[accessor_index];
     switch (accessor.ComponentType) {
       case gltfjson::format::ComponentTypes::UNSIGNED_BYTE: {
-        if (auto span =
-              scene->m_bin.GetAccessorBytes<uint8_t>(scene->m_gltf, accessor_index)) {
+        if (auto span = scene->m_bin.GetAccessorBytes<uint8_t>(
+              scene->m_gltf, accessor_index)) {
           mesh->addSubmesh(vertex_offset, *span, material);
           return true;
         } else {
@@ -133,8 +133,8 @@ AddIndices(const std::shared_ptr<Scene>& scene,
         }
       } break;
       case gltfjson::format::ComponentTypes::UNSIGNED_SHORT: {
-        if (auto span =
-              scene->m_bin.GetAccessorBytes<uint16_t>(scene->m_gltf, accessor_index)) {
+        if (auto span = scene->m_bin.GetAccessorBytes<uint16_t>(
+              scene->m_gltf, accessor_index)) {
           mesh->addSubmesh(vertex_offset, *span, material);
           return true;
         } else {
@@ -142,8 +142,8 @@ AddIndices(const std::shared_ptr<Scene>& scene,
         }
       } break;
       case gltfjson::format::ComponentTypes::UNSIGNED_INT: {
-        if (auto span =
-              scene->m_bin.GetAccessorBytes<uint32_t>(scene->m_gltf, accessor_index)) {
+        if (auto span = scene->m_bin.GetAccessorBytes<uint32_t>(
+              scene->m_gltf, accessor_index)) {
           mesh->addSubmesh(vertex_offset, *span, material);
           return true;
         } else {
@@ -232,10 +232,11 @@ ParseMesh(const std::shared_ptr<Scene>& scene,
         auto item_size = scene->m_gltf.Accessors[joint_accessor].Stride();
         switch (item_size) {
           case 4:
-            if (auto accessor =
-                  scene->m_bin.GetAccessorBytes<byte4>(scene->m_gltf, joint_accessor)) {
-              if (auto accessor_w = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4>(
-                    scene->m_gltf, *prim.Attributes.WEIGHTS_0)) {
+            if (auto accessor = scene->m_bin.GetAccessorBytes<byte4>(
+                  scene->m_gltf, joint_accessor)) {
+              if (auto accessor_w =
+                    scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4>(
+                      scene->m_gltf, *prim.Attributes.WEIGHTS_0)) {
                 ptr->setBoneSkinning(offset, *accessor, *accessor_w);
               } else {
                 return std::unexpected{ accessor_w.error() };
@@ -248,8 +249,9 @@ ParseMesh(const std::shared_ptr<Scene>& scene,
           case 8:
             if (auto accessor = scene->m_bin.GetAccessorBytes<ushort4>(
                   scene->m_gltf, joint_accessor)) {
-              if (auto accessor_w = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4>(
-                    scene->m_gltf, *prim.Attributes.WEIGHTS_0)) {
+              if (auto accessor_w =
+                    scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4>(
+                      scene->m_gltf, *prim.Attributes.WEIGHTS_0)) {
                 ptr->setBoneSkinning(offset, *accessor, *accessor_w);
               } else {
                 return std::unexpected{ accessor_w.error() };
@@ -442,7 +444,8 @@ ParseAnimation(const std::shared_ptr<Scene>& scene,
 
     // time
     int input_index = *sampler.Input;
-    if (auto times = scene->m_bin.GetAccessorBytes<float>(scene->m_gltf, input_index)) {
+    if (auto times =
+          scene->m_bin.GetAccessorBytes<float>(scene->m_gltf, input_index)) {
       int output_index = *sampler.Output;
       if (path == gltfjson::format::PathTypes::Translation) {
         if (auto values = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT3>(
@@ -476,8 +479,8 @@ ParseAnimation(const std::shared_ptr<Scene>& scene,
           return std::unexpected{ values.error() };
         }
       } else if (path == gltfjson::format::PathTypes::Weights) {
-        if (auto values =
-              scene->m_bin.GetAccessorBytes<float>(scene->m_gltf, output_index)) {
+        if (auto values = scene->m_bin.GetAccessorBytes<float>(scene->m_gltf,
+                                                               output_index)) {
           auto node = scene->m_nodes[node_index];
           if (node->Mesh) {
             if (values->size() !=
@@ -820,11 +823,9 @@ Parse(const std::shared_ptr<Scene>& scene)
   {
     auto& samplers = scene->m_gltf.Samplers;
     for (int i = 0; i < samplers.Size(); ++i) {
-      // if (auto sampler = ParseTextureSampler(i, samplers[i])) {
-      //   scene->m_samplers.push_back(*sampler);
-      // } else {
-      //   return std::unexpected{ sampler.error() };
-      // }
+      auto sampler = std::make_shared<gltfjson::format::Sampler>();
+      *sampler = samplers[i];
+      scene->m_samplers.push_back(sampler);
     }
   }
 

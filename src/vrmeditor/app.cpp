@@ -309,7 +309,7 @@ App::Run()
 
   PoseStream->CreateDock(addDock);
 
-  addDock({ "gltf-json", [gltfjson = m_gltfjson]() {
+  addDock({ "gltf", [gltfjson = m_gltfjson]() {
              gltfjson->ShowGui();
            } });
 
