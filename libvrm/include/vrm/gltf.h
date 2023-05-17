@@ -1,11 +1,10 @@
 #pragma once
 #include "base64.h"
 #include "directory.h"
-#include "gltf_buffer.h"
-// #include "json.h"
 #include <algorithm>
 #include <expected>
 #include <filesystem>
+// #include <gltfjson/binary_writer.h>
 #include <gltfjson/gltf.h>
 #include <iostream>
 #include <span>

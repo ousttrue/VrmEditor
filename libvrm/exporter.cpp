@@ -5,9 +5,63 @@
 #include "vrm/material.h"
 #include "vrm/mesh.h"
 #include "vrm/scene.h"
+#include "vrm/scenetypes.h"
 #include "vrm/skin.h"
 #include "vrm/texture.h"
 #include <gltfjson/glb.h>
+#include <gltfjson/gltf.h>
+
+namespace gltfjson {
+namespace format {
+
+template<>
+inline Accessor
+CreateAccessor<libvrm::ushort4>()
+{
+  return Accessor{
+    .ComponentType = ComponentTypes::UNSIGNED_SHORT,
+    .Type = Types::VEC4,
+  };
+}
+template<>
+inline Accessor
+CreateAccessor<DirectX::XMFLOAT2>()
+{
+  return Accessor{
+    .ComponentType = ComponentTypes::FLOAT,
+    .Type = Types::VEC2,
+  };
+}
+template<>
+inline Accessor
+CreateAccessor<DirectX::XMFLOAT3>()
+{
+  return Accessor{
+    .ComponentType = ComponentTypes::FLOAT,
+    .Type = Types::VEC3,
+  };
+}
+template<>
+inline Accessor
+CreateAccessor<DirectX::XMFLOAT4>()
+{
+  return Accessor{
+    .ComponentType = ComponentTypes::FLOAT,
+    .Type = Types::VEC4,
+  };
+}
+template<>
+inline Accessor
+CreateAccessor<DirectX::XMFLOAT4X4>()
+{
+  return Accessor{
+    .ComponentType = ComponentTypes::FLOAT,
+    .Type = Types::MAT4,
+  };
+}
+
+}
+}
 
 namespace libvrm::gltf {
 
@@ -546,13 +600,13 @@ Exporter::ExportBuffersViewsAccessors(const Scene& scene)
       for (auto& accessor : m_binWriter.Accessors) {
         m_writer.object_open();
         m_writer.key("bufferView");
-        m_writer.value(accessor.BufferView);
+        m_writer.value(*accessor.BufferView);
         m_writer.key("count");
         m_writer.value(accessor.Count);
         m_writer.key("byteOffset");
         m_writer.value(0);
         m_writer.key("type");
-        m_writer.value(gltf::type_str(accessor.Type));
+        m_writer.value(gltfjson::format::type_str(accessor.Type));
         m_writer.key("componentType");
         m_writer.value((int)accessor.ComponentType);
         m_writer.object_close();
@@ -607,11 +661,11 @@ struct AnimationChannel
 
 struct AnimationExporter
 {
-  BinWriter& m_binWriter;
+  gltfjson::format::BinWriter& m_binWriter;
   std::vector<AnimationSampler> AnimationSamplers;
   std::vector<AnimationChannel> AnimationChannels;
 
-  AnimationExporter(BinWriter& binWriter)
+  AnimationExporter(gltfjson::format::BinWriter& binWriter)
     : m_binWriter(binWriter)
   {
   }

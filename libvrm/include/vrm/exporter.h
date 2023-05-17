@@ -2,6 +2,7 @@
 #include "animation.h"
 #include "jsons.h"
 #include "scene.h"
+#include <gltfjson/bin_writer.h>
 #include <span>
 #include <stdint.h>
 #include <vector>
@@ -15,7 +16,7 @@ struct Primitive;
 struct Exporter
 {
   jsons::Writer m_writer;
-  BinWriter m_binWriter;
+  gltfjson::format::BinWriter m_binWriter;
   std::vector<uint8_t> JsonChunk;
   std::vector<uint8_t> BinChunk;
 
@@ -24,8 +25,9 @@ struct Exporter
   void Export(const Scene& scene);
   void ExportAsset(const Scene& scene);
   void ExportImage(const Scene& scene, const std::shared_ptr<Image>& image);
-  void ExportTextureSampler(const Scene& scene,
-                            const std::shared_ptr<gltfjson::format::Sampler>& sampler);
+  void ExportTextureSampler(
+    const Scene& scene,
+    const std::shared_ptr<gltfjson::format::Sampler>& sampler);
   void ExportTexture(const Scene& scene,
                      const std::shared_ptr<Texture>& texture);
   void ExportMaterial(const Scene& scene,
