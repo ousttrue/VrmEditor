@@ -16,6 +16,12 @@
 namespace libvrm {
 namespace gltf {
 
+static std::string
+u8_to_str(const std::u8string& src)
+{
+  return { (const char*)src.data(), (const char*)src.data() + src.size() };
+}
+
 static std::expected<std::shared_ptr<gltf::Image>, std::string>
 ParseImage(const std::shared_ptr<Scene>& scene,
            int i,
@@ -41,7 +47,7 @@ ParseImage(const std::shared_ptr<Scene>& scene,
   auto name = image.Name;
   auto ptr = std::make_shared<gltf::Image>(name);
   if (!ptr->Load(bytes)) {
-    return std::unexpected{ name };
+    return std::unexpected{ "Image: fail to load" };
   }
   return ptr;
 }
@@ -171,7 +177,7 @@ ParseMesh(const std::shared_ptr<Scene>& scene,
           const gltfjson::format::Mesh& mesh)
 {
   auto ptr = std::make_shared<gltf::Mesh>();
-  ptr->Name = mesh.Name;
+  ptr->Name = u8_to_str(mesh.Name);
   gltfjson::format::MeshPrimitiveAttributes lastAtributes = {};
   for (auto& prim : mesh.Primitives) {
     std::shared_ptr<gltf::Material> material;
@@ -340,7 +346,7 @@ ParseSkin(const std::shared_ptr<Scene>& scene,
           const gltfjson::format::Skin& skin)
 {
   auto ptr = std::make_shared<gltf::Skin>();
-  ptr->Name = skin.Name;
+  ptr->Name = u8_to_str(skin.Name);
   for (auto& joint : skin.Joints) {
     ptr->Joints.push_back(joint);
   }

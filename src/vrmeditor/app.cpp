@@ -309,9 +309,7 @@ App::Run()
 
   PoseStream->CreateDock(addDock);
 
-  addDock({ "gltf", [gltfjson = m_gltfjson]() {
-             gltfjson->ShowGui();
-           } });
+  addDock({ "gltf", [gltfjson = m_gltfjson]() { gltfjson->ShowGui(); } });
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {

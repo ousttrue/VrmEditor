@@ -49,6 +49,12 @@ public:
   std::string Name;
   std::optional<EncodedImage> Encoded;
   Image(std::string_view name);
+  Image(std::u8string_view name)
+    : Image(std::string_view{ (const char*)name.data(),
+                              (const char*)name.data() + name.size() })
+  {
+  }
+
   int Width() const { return m_width; }
   int Height() const { return m_height; }
   int Channels() const { return m_sourceChannels; }

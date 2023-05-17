@@ -169,6 +169,12 @@ struct Node
   std::shared_ptr<Skin> Skin;
 
   Node(std::string_view name);
+  Node(std::u8string_view name)
+    : Node(std::string_view{ (const char*)name.data(),
+                             (const char*)name.data() + name.size()
+      })
+  {
+  }
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
 

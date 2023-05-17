@@ -33,6 +33,11 @@ struct Material
     : Name(name)
   {
   }
+  Material(std::u8string_view name)
+    : Material(std::string_view{ (const char*)name.data(),
+                                 (const char*)name.data() + name.size() })
+  {
+  }
   std::string Name;
   MaterialTypes Type = {};
   PbrMetallicRoughness Pbr;

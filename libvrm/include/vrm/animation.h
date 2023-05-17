@@ -129,6 +129,11 @@ struct Animation
     : m_name(name)
   {
   }
+  Animation(std::u8string_view name)
+    : Animation(std::string_view{ (const char*)name.data(),
+                                  (const char*)name.data() + name.size() })
+  {
+  }
   Animation(const Animation&) = delete;
   Animation& operator=(const Animation&) = delete;
 
