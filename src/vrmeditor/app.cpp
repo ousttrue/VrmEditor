@@ -3,6 +3,7 @@
 #include "app.h"
 #include "assetdir.h"
 #include "docks/export_dock.h"
+#include "docks/gltfjson_gui.h"
 #include "docks/gui.h"
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
@@ -74,6 +75,8 @@ App::App()
   // enable seamless cubemap sampling for lower mip levels in the pre-filter
   // map.
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+  m_gltfjson = std::make_shared<GltfJsonGui>();
 }
 
 App::~App() {}
@@ -100,6 +103,8 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
   auto indent = m_gui->FontSize * 0.5f;
 
   {
+    m_gltfjson->SetGltf(table->m_gltf);
+
     HumanoidDock::Create(
       addDock, "humanoid-body", "humanoid-finger", m_scene->m_table);
     SceneDock::CreateTree(
@@ -303,6 +308,10 @@ App::Run()
   ViewDock::CreateSetting(addDock, "view-settings", m_env, m_view, m_settings);
 
   PoseStream->CreateDock(addDock);
+
+  addDock({ "gltf-json", [gltfjson = m_gltfjson]() {
+             gltfjson->ShowGui();
+           } });
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {

@@ -15,6 +15,7 @@ imgui_lib = static_library(
         'imgui_widgets.cpp',
         'backends/imgui_impl_glfw.cpp',
         'backends/imgui_impl_opengl3.cpp',
+        'misc/cpp/imgui_stdlib.cpp',
     ],
     dependencies: glfw_dep,
     cpp_args: args,
