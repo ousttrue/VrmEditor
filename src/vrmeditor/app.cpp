@@ -82,7 +82,7 @@ App::App()
 App::~App() {}
 
 std::shared_ptr<runtimescene::RuntimeScene>
-App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
+App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
 {
   m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
   m_timeline->Tracks.clear();
@@ -254,7 +254,7 @@ App::LoadModel(const std::filesystem::path& path)
     return true;
   } else {
     Log(LogLevel::Error) << table.error();
-    SetScene(std::make_shared<libvrm::gltf::Scene>());
+    SetScene(std::make_shared<libvrm::gltf::GltfRoot>());
     return false;
   }
 }

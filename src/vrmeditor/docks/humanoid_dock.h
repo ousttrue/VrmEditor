@@ -8,7 +8,7 @@ public:
   static void Create(const AddDockFunc& addDock,
                      std::string_view body_title,
                      std::string_view finger_title,
-                     const std::shared_ptr<libvrm::gltf::Scene>& scene)
+                     const std::shared_ptr<libvrm::gltf::GltfRoot>& scene)
   {
     auto imHumanoid = std::make_shared<ImHumanoid>();
 

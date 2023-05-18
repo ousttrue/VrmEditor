@@ -1,13 +1,7 @@
 #include "vrm/exporter.h"
-#include "vrm/animation.h"
-#include "vrm/image.h"
+#include "vrm/gltf.h"
 #include "vrm/jsons.h"
-#include "vrm/material.h"
-#include "vrm/mesh.h"
-#include "vrm/scene.h"
 #include "vrm/scenetypes.h"
-#include "vrm/skin.h"
-#include "vrm/texture.h"
 #include <gltfjson/glb.h>
 #include <gltfjson/gltf.h>
 #include <gltfjson/gltf_types.h>
@@ -85,7 +79,7 @@ Exporter::Exporter()
 }
 
 void
-Exporter::Export(const Scene& scene)
+Exporter::Export(const GltfRoot& scene)
 {
   m_writer.object_open();
 
@@ -243,7 +237,7 @@ Exporter::Export(const Scene& scene)
 //     "copyright": "2017 (c) Khronos Group"
 // }
 void
-Exporter::ExportAsset(const Scene& scene)
+Exporter::ExportAsset(const GltfRoot& scene)
 {
   m_writer.object_open();
 
@@ -261,7 +255,8 @@ Exporter::ExportAsset(const Scene& scene)
 //     "mimeType": "image/jpeg"
 // }
 void
-Exporter::ExportImage(const Scene& scene, const std::shared_ptr<Image>& image)
+Exporter::ExportImage(const GltfRoot& scene,
+                      const std::shared_ptr<Image>& image)
 {
   m_writer.object_open();
   m_writer.key("name");
@@ -298,7 +293,7 @@ Exporter::ExportImage(const Scene& scene, const std::shared_ptr<Image>& image)
 // }
 void
 Exporter::ExportTextureSampler(
-  const Scene& scene,
+  const GltfRoot& scene,
   const std::shared_ptr<gltfjson::format::Sampler>& sampler)
 {
   m_writer.object_open();
@@ -310,7 +305,7 @@ Exporter::ExportTextureSampler(
 //     "source": 2
 // }
 void
-Exporter::ExportTexture(const Scene& scene,
+Exporter::ExportTexture(const GltfRoot& scene,
                         const std::shared_ptr<Texture>& texture)
 {
   m_writer.object_open();
@@ -334,7 +329,7 @@ Exporter::ExportTexture(const Scene& scene,
 //     }
 // }
 void
-Exporter::ExportMaterial(const Scene& scene,
+Exporter::ExportMaterial(const GltfRoot& scene,
                          const std::shared_ptr<Material>& material)
 {
   m_writer.object_open();
@@ -373,7 +368,7 @@ Exporter::ExportMaterial(const Scene& scene,
 //     ]
 // }
 void
-Exporter::ExportMesh(const Scene& scene, const std::shared_ptr<Mesh>& mesh)
+Exporter::ExportMesh(const GltfRoot& scene, const std::shared_ptr<Mesh>& mesh)
 {
   m_writer.object_open();
   if (mesh->Name.size()) {
@@ -424,7 +419,7 @@ PushVertices(std::vector<T>& indices,
 // vertex buffer を submesh で分割する
 //
 uint32_t
-Exporter::ExportMeshPrimitive(const Scene& scene,
+Exporter::ExportMeshPrimitive(const GltfRoot& scene,
                               const std::shared_ptr<Mesh>& mesh,
                               const Primitive& prim,
                               uint32_t index)
@@ -534,7 +529,7 @@ Exporter::ExportMeshPrimitive(const Scene& scene,
 //     "skeleton": 1
 // }
 void
-Exporter::ExportSkin(const Scene& scene, const std::shared_ptr<Skin>& skin)
+Exporter::ExportSkin(const GltfRoot& scene, const std::shared_ptr<Skin>& skin)
 {
   m_writer.object_open();
   m_writer.key("joints");
@@ -554,7 +549,7 @@ Exporter::ExportSkin(const Scene& scene, const std::shared_ptr<Skin>& skin)
 }
 
 void
-Exporter::ExportNode(const Scene& scene, const std::shared_ptr<Node>& node)
+Exporter::ExportNode(const GltfRoot& scene, const std::shared_ptr<Node>& node)
 {
   m_writer.object_open();
   m_writer.key("name");
@@ -592,7 +587,7 @@ Exporter::ExportNode(const Scene& scene, const std::shared_ptr<Node>& node)
 }
 
 void
-Exporter::ExportBuffersViewsAccessors(const Scene& scene)
+Exporter::ExportBuffersViewsAccessors(const GltfRoot& scene)
 {
   if (m_binWriter.Accessors.size()) {
     m_writer.key("accessors");
@@ -734,7 +729,7 @@ struct AnimationExporter
 };
 
 void
-Exporter::ExportAnimations(const Scene& scene)
+Exporter::ExportAnimations(const GltfRoot& scene)
 {
   if (scene.m_animations.empty()) {
     return;

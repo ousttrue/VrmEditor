@@ -12,13 +12,13 @@ struct Directory;
 namespace libvrm {
 
 namespace gltf {
-struct Scene;
+struct GltfRoot;
 
-std::expected<std::shared_ptr<Scene>, std::string>
+std::expected<std::shared_ptr<GltfRoot>, std::string>
 LoadPath(const std::filesystem::path& path);
 
 std::expected<bool, std::string>
-LoadBytes(const std::shared_ptr<Scene>& scene,
+LoadBytes(const std::shared_ptr<GltfRoot>& scene,
           std::span<const uint8_t> bytes,
           const std::shared_ptr<gltfjson::Directory>& dir = nullptr);
 

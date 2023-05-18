@@ -3,7 +3,7 @@
 #include <string>
 #include <vrm/exporter.h>
 #include <gltfjson/glb.h>
-#include <vrm/scene.h>
+#include <vrm/gltfroot.h>
 
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
 const std::string SRC = R"({
@@ -89,7 +89,7 @@ TEST(GlbExport, minimal)
     a.erase("min");
   }
 
-  libvrm::gltf::Scene scene;
+  libvrm::gltf::GltfRoot scene;
   std::span<const uint8_t> span{ (const uint8_t*)SRC.data(),
                                  (const uint8_t*)SRC.data() + SRC.size() };
   // EXPECT_TRUE(scene.Load(span));

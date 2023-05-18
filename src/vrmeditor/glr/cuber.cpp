@@ -2,7 +2,6 @@
 #include "rendering_env.h"
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <vrm/scene.h>
 
 namespace glr {
 Cuber::Cuber()

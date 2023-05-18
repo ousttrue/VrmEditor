@@ -1,13 +1,13 @@
 #pragma once
 #include <imgui.h>
-#include <vrm/scene.h>
+#include <vrm/gltfroot.h>
 
 class ImHumanoid
 {
   std::vector<const char*> m_items;
 
 public:
-  void ShowBody(libvrm::gltf::Scene& scene)
+  void ShowBody(libvrm::gltf::GltfRoot& scene)
   {
     m_items.clear();
     for (auto& node : scene.m_nodes) {
@@ -56,7 +56,7 @@ public:
     }
   }
 
-  void ShowFingers(libvrm::gltf::Scene& scene)
+  void ShowFingers(libvrm::gltf::GltfRoot& scene)
   {
     //   ss.str("");
     //   if (auto node_index = humanoid[i]) {

@@ -35,7 +35,7 @@ public:
 
   static void CreateTPose(const AddDockFunc& addDock,
                           std::string_view title,
-                          const std::shared_ptr<libvrm::gltf::Scene>& table,
+                          const std::shared_ptr<libvrm::gltf::GltfRoot>& table,
                           const std::shared_ptr<glr::RenderingEnv>& env,
                           const std::shared_ptr<glr::ViewSettings>& settings,
                           const std::shared_ptr<SceneNodeSelection>& selection)

@@ -65,10 +65,10 @@ Enable(const std::shared_ptr<libvrm::vrm::Expression>& ex)
 
 class VrmGui
 {
-  std::shared_ptr<libvrm::gltf::Scene> m_scene;
+  std::shared_ptr<libvrm::gltf::GltfRoot> m_scene;
 
 public:
-  VrmGui(const std::shared_ptr<libvrm::gltf::Scene>& scene)
+  VrmGui(const std::shared_ptr<libvrm::gltf::GltfRoot>& scene)
     : m_scene(scene)
   {
   }
@@ -274,7 +274,7 @@ public:
 void
 VrmDock::CreateVrm(const AddDockFunc& addDock,
                    std::string_view title,
-                   const std::shared_ptr<libvrm::gltf::Scene>& scene)
+                   const std::shared_ptr<libvrm::gltf::GltfRoot>& scene)
 {
   auto gui = std::make_shared<VrmGui>(scene);
 

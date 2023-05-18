@@ -72,7 +72,7 @@ struct DrawItem
   DirectX::XMFLOAT4X4 Matrix;
 };
 
-struct Scene
+struct GltfRoot
 {
   ModelType m_type = ModelType::Gltf;
   std::vector<uint8_t> m_bytes;
@@ -100,15 +100,15 @@ struct Scene
 
   std::unordered_map<vrm::MorphTargetKey, float> m_morphTargetMap;
 
-  std::list<std::function<void(const Scene& scene)>> m_sceneUpdated;
+  std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
 
   std::vector<DrawItem> m_drawables;
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
 
-  Scene();
-  ~Scene();
-  Scene(const Scene&) = delete;
-  Scene& operator=(const Scene&) = delete;
+  GltfRoot();
+  ~GltfRoot();
+  GltfRoot(const GltfRoot&) = delete;
+  GltfRoot& operator=(const GltfRoot&) = delete;
 
   void Clear()
   {

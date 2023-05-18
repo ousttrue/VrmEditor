@@ -6,7 +6,7 @@
 
 namespace runtimescene {
 
-RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
+RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
   : m_table(table)
 {
   Reset();

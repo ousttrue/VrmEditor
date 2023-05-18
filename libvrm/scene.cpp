@@ -1,4 +1,4 @@
-#include "vrm/scene.h"
+#include "vrm/gltfroot.h"
 #include "vrm/animation.h"
 #include "vrm/bvh.h"
 #include "vrm/dmath.h"
@@ -23,15 +23,15 @@
 #include <vector>
 
 namespace libvrm::gltf {
-Scene::Scene() {}
+GltfRoot::GltfRoot() {}
 
-Scene::~Scene()
+GltfRoot::~GltfRoot()
 {
   std::cout << "Scene::~Scene()" << std::endl;
 }
 
 void
-Scene::Traverse(const EnterFunc& enter,
+GltfRoot::Traverse(const EnterFunc& enter,
                 const LeaveFunc& leave,
                 const std::shared_ptr<gltf::Node>& node)
 {
@@ -97,7 +97,7 @@ Scene::Traverse(const EnterFunc& enter,
 // }
 
 std::shared_ptr<gltf::Node>
-Scene::GetBoneNode(vrm::HumanBones bone)
+GltfRoot::GetBoneNode(vrm::HumanBones bone)
 {
   for (auto& node : m_nodes) {
     if (auto humanoid = node->Humanoid) {
@@ -110,7 +110,7 @@ Scene::GetBoneNode(vrm::HumanBones bone)
 }
 
 BoundingBox
-Scene::GetBoundingBox() const
+GltfRoot::GetBoundingBox() const
 {
   BoundingBox bb{};
   for (auto& node : m_nodes) {
@@ -126,7 +126,7 @@ Scene::GetBoundingBox() const
 }
 
 std::span<const DrawItem>
-Scene::Drawables()
+GltfRoot::Drawables()
 {
   m_drawables.clear();
   for (auto& node : m_nodes) {
@@ -142,7 +142,7 @@ Scene::Drawables()
 }
 
 std::span<const DirectX::XMFLOAT4X4>
-Scene::ShapeMatrices()
+GltfRoot::ShapeMatrices()
 {
   m_shapeMatrices.clear();
   for (auto& node : m_nodes) {

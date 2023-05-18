@@ -4,7 +4,7 @@
 #include <grapho/orbitview.h>
 #include <imgui.h>
 #include <vrm/runtimescene/scene.h>
-#include <vrm/scene.h>
+#include <vrm/gltfroot.h>
 #include <vrm/srht_update.h>
 
 namespace humanpose {
@@ -12,7 +12,7 @@ namespace humanpose {
 UdpNode::UdpNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
-  auto table = std::make_shared<libvrm::gltf::Scene>();
+  auto table = std::make_shared<libvrm::gltf::GltfRoot>();
   m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
   m_scene->m_table->m_title = "UDP";
 

@@ -1,9 +1,8 @@
 #pragma once
 #include "springjoint.h"
 #include <unordered_map>
+#include <vrm/gltf.h>
 #include <vrm/humanpose.h>
-#include <vrm/mesh.h>
-#include <vrm/scene.h>
 #include <vrm/springbone.h>
 
 namespace runtimescene {
@@ -19,7 +18,7 @@ using RenderFunc =
 
 struct RuntimeScene
 {
-  std::shared_ptr<libvrm::gltf::Scene> m_table;
+  std::shared_ptr<libvrm::gltf::GltfRoot> m_table;
   std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
 
@@ -37,7 +36,7 @@ struct RuntimeScene
   }
 
   libvrm::Time NextSpringDelta = libvrm::Time(0.0);
-  std::shared_ptr<libvrm::gltf::Scene> m_lastScene;
+  std::shared_ptr<libvrm::gltf::GltfRoot> m_lastScene;
 
   std::unordered_map<std::shared_ptr<libvrm::gltf::Mesh>,
                      std::shared_ptr<RuntimeMesh>>
@@ -53,7 +52,7 @@ struct RuntimeScene
                      std::shared_ptr<RuntimeSpringCollision>>
     m_springCollisionMap;
 
-  RuntimeScene(const std::shared_ptr<libvrm::gltf::Scene>& table);
+  RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table);
   void Reset();
 
   std::shared_ptr<RuntimeMesh> GetRuntimeMesh(

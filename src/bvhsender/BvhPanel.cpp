@@ -3,7 +3,7 @@
 #include <thread>
 #include <vrm/bvhscene.h>
 #include <vrm/runtimescene/scene.h>
-#include <vrm/scene.h>
+#include <vrm/gltfroot.h>
 #include <vrm/srht_sender.h>
 #include <vrm/timeline.h>
 
@@ -32,7 +32,7 @@ public:
     , m_sender(m_io)
     , m_ep(asio::ip::address::from_string("127.0.0.1"), 54345)
   {
-    auto scene = std::make_shared<libvrm::gltf::Scene>();
+    auto scene = std::make_shared<libvrm::gltf::GltfRoot>();
     m_scene = std::make_shared<runtimescene::RuntimeScene>(scene);
   }
 

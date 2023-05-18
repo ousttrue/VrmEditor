@@ -1,5 +1,5 @@
 #include "vrm/srht_update.h"
-#include "vrm/scene.h"
+#include "vrm/gltfroot.h"
 #include "vrm/srht.h"
 #include <algorithm>
 
@@ -47,7 +47,7 @@ namespace libvrm {
 
 namespace srht {
 void
-UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
+UpdateScene(const std::shared_ptr<gltf::GltfRoot>& scene,
             std::span<const uint8_t> data)
 {
   BinaryReader r(data);

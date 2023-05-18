@@ -41,7 +41,7 @@ UpdateSceneFromBvhFrame(
 }
 
 static void
-PushJoint(const std::shared_ptr<gltf::Scene>& scene,
+PushJoint(const std::shared_ptr<gltf::GltfRoot>& scene,
           const bvh::Joint& joint,
           float scaling)
 {
@@ -62,7 +62,7 @@ PushJoint(const std::shared_ptr<gltf::Scene>& scene,
 }
 
 void
-InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
+InitializeSceneFromBvh(const std::shared_ptr<gltf::GltfRoot>& scene,
                        const std::shared_ptr<bvh::Bvh>& bvh,
                        const std::shared_ptr<vrm::HumanBoneMap>& map)
 {

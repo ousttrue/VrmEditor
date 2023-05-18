@@ -12,7 +12,7 @@
 #include <vrm/mesh.h>
 #include <vrm/runtimescene/mesh.h>
 #include <vrm/runtimescene/scene.h>
-#include <vrm/scene.h>
+#include <vrm/gltfroot.h>
 #include <vrm/texture.h>
 
 using NodeWeakPtr = std::weak_ptr<libvrm::gltf::Node>;

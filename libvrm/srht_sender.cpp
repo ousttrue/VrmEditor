@@ -1,7 +1,7 @@
 #include "vrm/srht_sender.h"
 #include "vrm/bvh.h"
 #include "vrm/node.h"
-#include "vrm/scene.h"
+#include "vrm/gltfroot.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <iostream>
@@ -247,7 +247,7 @@ PushJoints(std::vector<JointDefinition>& joints,
 void
 UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
                         uint32_t id,
-                        const std::shared_ptr<gltf::Scene>& scene)
+                        const std::shared_ptr<gltf::GltfRoot>& scene)
 {
   auto payload = GetOrCreatePayload();
   m_joints.clear();
@@ -302,7 +302,7 @@ PushJoints(std::shared_ptr<Payload>& payload,
 void
 UdpSender::SendFrame(asio::ip::udp::endpoint ep,
                      uint32_t id,
-                     const std::shared_ptr<gltf::Scene>& scene,
+                     const std::shared_ptr<gltf::GltfRoot>& scene,
                      bool pack)
 {
   auto payload = GetOrCreatePayload();

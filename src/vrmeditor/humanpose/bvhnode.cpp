@@ -14,7 +14,7 @@ namespace humanpose {
 BvhNode::BvhNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
-  auto table = std::make_shared<libvrm::gltf::Scene>();
+  auto table = std::make_shared<libvrm::gltf::GltfRoot>();
   m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
 
   // update preview

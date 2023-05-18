@@ -1,12 +1,5 @@
 #include "vrm/importer.h"
-#include "vrm/animation.h"
-#include "vrm/image.h"
-#include "vrm/material.h"
-#include "vrm/mesh.h"
-#include "vrm/node.h"
-#include "vrm/scene.h"
-#include "vrm/skin.h"
-#include "vrm/texture.h"
+#include "vrm/gltf.h"
 #include <gltfjson/deserialize.h>
 #include <gltfjson/directory.h>
 #include <gltfjson/glb.h>
@@ -23,7 +16,7 @@ u8_to_str(const std::u8string& src)
 }
 
 static std::expected<std::shared_ptr<gltf::Image>, std::string>
-ParseImage(const std::shared_ptr<Scene>& scene,
+ParseImage(const std::shared_ptr<GltfRoot>& scene,
            int i,
            const gltfjson::format::Image& image)
 {
@@ -53,7 +46,7 @@ ParseImage(const std::shared_ptr<Scene>& scene,
 }
 
 static std::expected<std::shared_ptr<gltf::Texture>, std::string>
-ParseTexture(const std::shared_ptr<Scene>& scene,
+ParseTexture(const std::shared_ptr<GltfRoot>& scene,
              int i,
              const gltfjson::format::Texture& texture)
 {
@@ -67,7 +60,7 @@ ParseTexture(const std::shared_ptr<Scene>& scene,
 }
 
 static std::expected<std::shared_ptr<gltf::Material>, std::string>
-ParseMaterial(const std::shared_ptr<Scene>& scene,
+ParseMaterial(const std::shared_ptr<GltfRoot>& scene,
               int i,
               const gltfjson::format::Material& material)
 {
@@ -119,7 +112,7 @@ ParseMaterial(const std::shared_ptr<Scene>& scene,
 }
 
 static std::expected<bool, std::string>
-AddIndices(const std::shared_ptr<Scene>& scene,
+AddIndices(const std::shared_ptr<GltfRoot>& scene,
            int vertex_offset,
            gltf::Mesh* mesh,
            const gltfjson::format::MeshPrimitive& prim,
@@ -172,7 +165,7 @@ AddIndices(const std::shared_ptr<Scene>& scene,
 }
 
 static std::expected<std::shared_ptr<gltf::Mesh>, std::string>
-ParseMesh(const std::shared_ptr<Scene>& scene,
+ParseMesh(const std::shared_ptr<GltfRoot>& scene,
           int i,
           const gltfjson::format::Mesh& mesh)
 {
@@ -341,7 +334,7 @@ ParseMesh(const std::shared_ptr<Scene>& scene,
 }
 
 static std::expected<std::shared_ptr<gltf::Skin>, std::string>
-ParseSkin(const std::shared_ptr<Scene>& scene,
+ParseSkin(const std::shared_ptr<GltfRoot>& scene,
           int i,
           const gltfjson::format::Skin& skin)
 {
@@ -377,7 +370,7 @@ ParseSkin(const std::shared_ptr<Scene>& scene,
 }
 
 static std::expected<std::shared_ptr<gltf::Node>, std::string>
-ParseNode(const std::shared_ptr<Scene>& scene,
+ParseNode(const std::shared_ptr<GltfRoot>& scene,
           int i,
           const gltfjson::format::Node& node)
 {
@@ -429,7 +422,7 @@ ParseNode(const std::shared_ptr<Scene>& scene,
 }
 
 static std::expected<std::shared_ptr<gltf::Animation>, std::string>
-ParseAnimation(const std::shared_ptr<Scene>& scene,
+ParseAnimation(const std::shared_ptr<GltfRoot>& scene,
                int i,
                const gltfjson::format::Animation& animation)
 {
@@ -513,7 +506,7 @@ ParseAnimation(const std::shared_ptr<Scene>& scene,
 }
 
 static std::expected<bool, std::string>
-ParseVrm0(const std::shared_ptr<Scene>& scene)
+ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
 {
   // if (!has(scene->m_gltf.Json, "extensions")) {
   //   return std::unexpected{ "no extensions" };
@@ -647,7 +640,7 @@ ParseVrm0(const std::shared_ptr<Scene>& scene)
 }
 
 static std::expected<bool, std::string>
-ParseVrm1(const std::shared_ptr<Scene>& scene)
+ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
 {
   // if (!has(scene->m_gltf.Json, "extensions")) {
   //   return std::unexpected{ "no extensions" };
@@ -797,7 +790,7 @@ ParseVrm1(const std::shared_ptr<Scene>& scene)
 }
 
 static std::expected<bool, std::string>
-Parse(const std::shared_ptr<Scene>& scene)
+Parse(const std::shared_ptr<GltfRoot>& scene)
 {
   scene->m_title = "glTF";
 
@@ -952,7 +945,7 @@ Parse(const std::shared_ptr<Scene>& scene)
 }
 
 static std::expected<bool, std::string>
-Load(const std::shared_ptr<Scene>& scene,
+Load(const std::shared_ptr<GltfRoot>& scene,
      std::span<const uint8_t> json_chunk,
      std::span<const uint8_t> bin_chunk,
      const std::shared_ptr<gltfjson::Directory>& dir)
@@ -974,7 +967,7 @@ Load(const std::shared_ptr<Scene>& scene,
 }
 
 std::expected<bool, std::string>
-LoadBytes(const std::shared_ptr<Scene>& scene,
+LoadBytes(const std::shared_ptr<GltfRoot>& scene,
           std::span<const uint8_t> bytes,
           const std::shared_ptr<gltfjson::Directory>& dir)
 {
@@ -988,11 +981,11 @@ LoadBytes(const std::shared_ptr<Scene>& scene,
   return Load(scene, scene->m_bytes, {}, dir);
 }
 
-std::expected<std::shared_ptr<Scene>, std::string>
+std::expected<std::shared_ptr<GltfRoot>, std::string>
 LoadPath(const std::filesystem::path& path)
 {
   if (auto bytes = gltfjson::ReadAllBytes(path)) {
-    auto ptr = std::make_shared<Scene>();
+    auto ptr = std::make_shared<GltfRoot>();
     if (auto load = LoadBytes(
           ptr,
           *bytes,

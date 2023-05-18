@@ -5,7 +5,7 @@
 #include "vrm/node.h"
 #include "vrm/runtimescene/node.h"
 #include "vrm/runtimescene/scene.h"
-#include "vrm/scene.h"
+#include "vrm/gltfroot.h"
 #include "vrm/timeline.h"
 #include <memory>
 
@@ -27,7 +27,7 @@ UpdateSceneFromBvhFrame(
   Time time);
 
 void
-InitializeSceneFromBvh(const std::shared_ptr<gltf::Scene>& scene,
+InitializeSceneFromBvh(const std::shared_ptr<gltf::GltfRoot>& scene,
                        const std::shared_ptr<bvh::Bvh>& bvh,
                        const std::shared_ptr<vrm::HumanBoneMap>& map = {});
 

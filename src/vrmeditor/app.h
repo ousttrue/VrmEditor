@@ -7,7 +7,7 @@
 
 namespace libvrm {
 namespace gltf {
-struct Scene;
+struct GltfRoot;
 }
 namespace bvh {
 struct Bvh;
@@ -73,7 +73,7 @@ public:
   }
 
   std::shared_ptr<runtimescene::RuntimeScene> SetScene(
-    const std::shared_ptr<libvrm::gltf::Scene>& scene);
+    const std::shared_ptr<libvrm::gltf::GltfRoot>& scene);
   LogStream Log(LogLevel level);
   void LoadImGuiIni(std::string_view ini);
   void LoadImNodesIni(std::string_view ini);

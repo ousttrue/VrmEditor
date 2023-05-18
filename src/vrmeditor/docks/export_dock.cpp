@@ -7,7 +7,7 @@
 #include <vrm/exporter.h>
 #include <vrm/importer.h>
 #include <vrm/runtimescene/scene.h>
-#include <vrm/scene.h>
+#include <vrm/gltfroot.h>
 
 void
 ExportDock::Create(const AddDockFunc& addDock,
@@ -15,7 +15,7 @@ ExportDock::Create(const AddDockFunc& addDock,
                    const std::shared_ptr<runtimescene::RuntimeScene>& scene,
                    float indent)
 {
-  auto debug_table = std::make_shared<libvrm::gltf::Scene>();
+  auto debug_table = std::make_shared<libvrm::gltf::GltfRoot>();
   // auto impl = std::make_shared<JsonGui>();
   // impl->SetScene(debug_table);
 

@@ -7,11 +7,11 @@
 
 namespace libvrm {
 namespace gltf {
-struct Scene;
+struct GltfRoot;
 }
 namespace srht {
 void
-UpdateScene(const std::shared_ptr<gltf::Scene>& scene,
+UpdateScene(const std::shared_ptr<gltf::GltfRoot>& scene,
             std::span<const uint8_t> data);
 
 // void

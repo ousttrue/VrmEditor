@@ -3,12 +3,12 @@
 #include <vrm/animation.h>
 #include <vrm/exporter.h>
 #include <vrm/node.h>
-#include <vrm/scene.h>
+#include <vrm/gltfroot.h>
 #include <vrm/vrma.h>
 
 TEST(VRMA, simple)
 {
-  libvrm::gltf::Scene scene;
+  libvrm::gltf::GltfRoot scene;
   // node
   scene.m_nodes.push_back(std::make_shared<libvrm::gltf::Node>("node0"));
   // animation

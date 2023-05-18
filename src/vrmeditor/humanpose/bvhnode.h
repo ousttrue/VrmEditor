@@ -2,7 +2,6 @@
 #include "graphnode_base.h"
 #include <vrm/bvh.h>
 #include <vrm/humanbone_map.h>
-#include <vrm/scene.h>
 
 namespace glr {
 struct ScenePreview;
