@@ -9,6 +9,6 @@ public:
   GltfJsonGui();
   ~GltfJsonGui();
 
-  void SetGltf(const gltfjson::format::Root& gltf);
+  void SetGltf(gltfjson::format::Root& gltf);
   void ShowGui();
 };
