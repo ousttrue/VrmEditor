@@ -1,6 +1,10 @@
 #pragma once
 #include <gltfjson.h>
+#include <vrm/material.h>
 
+////////////////////////////////////////////////////////////
+// gltfjson
+////////////////////////////////////////////////////////////
 void
 ShowGui(gltfjson::format::Asset& asset);
 // buffer/bufferView/accessor
@@ -31,3 +35,8 @@ ShowGui(uint32_t index, gltfjson::format::Scene& scene);
 void
 ShowGui(uint32_t index, gltfjson::format::Animation& animation);
 
+////////////////////////////////////////////////////////////
+// libvrm
+////////////////////////////////////////////////////////////
+void
+ShowGui(uint32_t index, libvrm::gltf::Material& material);

@@ -3,8 +3,10 @@
 #include "scene_gui.h"
 #include "scene_gui_material.h"
 #include "scene_selection.h"
+#include "type_gui.h"
 #include <glr/gl3renderer.h>
 #include <grapho/gl3/Texture.h>
+#include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
@@ -15,12 +17,30 @@
 
 using NodeWeakPtr = std::weak_ptr<libvrm::gltf::Node>;
 
+template<typename T>
+static void
+Push(grapho::imgui::TreeSplitter* splitter, const char* label, T& values)
+{
+  char buf[256];
+  snprintf(buf, sizeof(buf), "%s (%zd)", label, values.size());
+  auto ui = splitter->Push(buf);
+
+  for (uint32_t i = 0; i < values.size(); ++i) {
+    snprintf(
+      buf, sizeof(buf), "%02d:%s", i, (const char*)values[i]->Name.c_str());
+    auto callback = [i, value = values[i]]() { ::ShowGui(i, *value); };
+    splitter->Push(buf, ui, callback);
+  }
+}
+
 struct SceneGuiImpl
 {
   std::map<NodeWeakPtr, std::string, std::owner_less<NodeWeakPtr>> m_map;
   std::shared_ptr<runtimescene::RuntimeScene> m_scene;
   std::shared_ptr<SceneNodeSelection> m_selection;
   float m_indent;
+
+  grapho::imgui::TreeSplitter m_splitter;
 
   SceneGuiImpl(const std::shared_ptr<runtimescene::RuntimeScene>& scene,
                const std::shared_ptr<SceneNodeSelection>& selection,
@@ -29,6 +49,7 @@ struct SceneGuiImpl
     , m_selection(selection)
     , m_indent(indent)
   {
+    Push(&m_splitter, "Materials", scene->m_table->m_materials);
   }
 
   void Show(const char* title, bool* p_open)
@@ -46,54 +67,28 @@ struct SceneGuiImpl
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
     if (ImGui::Begin(title, p_open, window_flags)) {
-      auto size = ImGui::GetContentRegionAvail();
-      m_selection->selected = m_selection->new_selected;
-
-      if (ImGui::CollapsingHeader("textures", ImGuiTreeNodeFlags_None)) {
-      }
-      if (ImGui::CollapsingHeader("materials", ImGuiTreeNodeFlags_None)) {
-        int i = 0;
-        for (auto& m : m_scene->m_table->m_materials) {
-          ShowMaterial(i++, m);
-        }
-      }
-      if (ImGui::CollapsingHeader("meshes", ImGuiTreeNodeFlags_None)) {
-      }
-      if (ImGui::CollapsingHeader("nodes", ImGuiTreeNodeFlags_None)) {
-        ShowNodes();
-      }
-      if (ImGui::CollapsingHeader("animations", ImGuiTreeNodeFlags_None)) {
-      }
+      m_splitter.ShowGui();
+      // auto size = ImGui::GetContentRegionAvail();
+      // m_selection->selected = m_selection->new_selected;
+      //
+      // if (ImGui::CollapsingHeader("textures", ImGuiTreeNodeFlags_None)) {
+      // }
+      // if (ImGui::CollapsingHeader("materials", ImGuiTreeNodeFlags_None)) {
+      //   int i = 0;
+      //   for (auto& m : m_scene->m_table->m_materials) {
+      //     ShowMaterial(i++, m);
+      //   }
+      // }
+      // if (ImGui::CollapsingHeader("meshes", ImGuiTreeNodeFlags_None)) {
+      // }
+      // if (ImGui::CollapsingHeader("nodes", ImGuiTreeNodeFlags_None)) {
+      //   ShowNodes();
+      // }
+      // if (ImGui::CollapsingHeader("animations", ImGuiTreeNodeFlags_None)) {
+      // }
     }
     ImGui::End();
     ImGui::PopStyleVar();
-  }
-
-  void ShowMaterial(int i,
-                    const std::shared_ptr<libvrm::gltf::Material>& material)
-  {
-    if (i) {
-      ImGui::Separator();
-    }
-
-    ImGui::PushID((void*)&material);
-
-    switch (material->Type) {
-      case libvrm::gltf::MaterialTypes::Pbr:
-        ShowMaterialPbr(material);
-        break;
-      case libvrm::gltf::MaterialTypes::UnLit:
-        ShowMaterialUnlit(material);
-        break;
-      case libvrm::gltf::MaterialTypes::MToon0:
-        ShowMaterialMToon0(material);
-        break;
-      case libvrm::gltf::MaterialTypes::MToon1:
-        ShowMaterialMToon1(material);
-        break;
-    }
-
-    ImGui::PopID();
   }
 
   void ShowNodes()

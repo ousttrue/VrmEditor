@@ -1,4 +1,5 @@
 #include "type_gui.h"
+#include "scene_gui_material.h"
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 
@@ -156,4 +157,25 @@ void
 ShowGui(uint32_t index, gltfjson::format::Animation& animation)
 {
   ShowGui("/animations", index, animation);
+}
+
+void
+ShowGui(uint32_t index, libvrm::gltf::Material& material)
+{
+  // ImGui::PushID((void*)&material);
+  switch (material.Type) {
+    case libvrm::gltf::MaterialTypes::Pbr:
+      ShowMaterialPbr(material);
+      break;
+    case libvrm::gltf::MaterialTypes::UnLit:
+      ShowMaterialUnlit(material);
+      break;
+    case libvrm::gltf::MaterialTypes::MToon0:
+      ShowMaterialMToon0(material);
+      break;
+    case libvrm::gltf::MaterialTypes::MToon1:
+      ShowMaterialMToon1(material);
+      break;
+  }
+  // ImGui::PopID();
 }

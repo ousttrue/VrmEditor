@@ -1,9 +1,15 @@
 #pragma once
 #include <gltfjson.h>
 
+namespace grapho {
+namespace imgui {
+class TreeSplitter;
+}
+}
+
 class GltfJsonGui
 {
-  class GltfJsonGuiImpl* m_impl = nullptr;
+  grapho::imgui::TreeSplitter* m_splitter = nullptr;
 
 public:
   GltfJsonGui();
