@@ -314,11 +314,9 @@ public:
               const runtimescene::RuntimeMesh& instance,
               const DirectX::XMFLOAT4X4& m)
   {
-    if (!m_pbr) {
-      return;
+    if (m_pbr) {
+      m_pbr->Activate();
     }
-
-    m_pbr->Activate();
 
     glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);

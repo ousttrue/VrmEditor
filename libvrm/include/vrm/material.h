@@ -40,7 +40,7 @@ struct Material
   }
   std::string Name;
   MaterialTypes Type = {};
-  PbrMetallicRoughness Pbr;
+  PbrMetallicRoughness Pbr = {};
   std::shared_ptr<Texture> NormalTexture;
   float NormalTextureScale = 1.0f;
   std::shared_ptr<Texture> OcclusionTexture;
