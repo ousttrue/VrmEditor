@@ -13,6 +13,7 @@ srcs = [
     'docks/gui.cpp',
     'docks/scene_dock.cpp',
     'docks/scene_gui.cpp',
+    'docks/scene_gui_material.cpp',
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',
     'docks/gltfjson_gui.cpp',

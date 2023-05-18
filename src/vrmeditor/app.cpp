@@ -108,7 +108,7 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::Scene>& table)
     HumanoidDock::Create(
       addDock, "humanoid-body", "humanoid-finger", m_scene->m_table);
     SceneDock::CreateTree(
-      addDock, "scene-hierarchy", m_scene, m_selection, indent);
+      addDock, "scene-resource", m_scene, m_selection, indent);
 
     ViewDock::Create(
       addDock, "scene-view", m_scene, m_env, m_view, m_settings, m_selection);

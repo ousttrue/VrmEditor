@@ -1,4 +1,5 @@
 #include "type_gui.h"
+#include <grapho/imgui/widgets.h>
 #include <imgui.h>
 
 namespace ImGui {
@@ -52,30 +53,6 @@ InputText(const char* label,
                    InputTextCallback,
                    &cb_user_data);
 }
-}
-
-template<typename T, size_t N>
-static void
-Combo(const char* label, T* value, const std::tuple<T, const char*> (&list)[N])
-{
-  using TUPLE = std::tuple<T, const char*>;
-  int i = 0;
-  for (; i < N; ++i) {
-    if (std::get<0>(list[i]) == *value) {
-      break;
-    }
-  }
-
-  auto callback = [](void* data, int n, const char** out_str) -> bool {
-    if (n < N) {
-      *out_str = std::get<1>(((const TUPLE*)data)[n]);
-      return true;
-    }
-    return false;
-  };
-  if (ImGui::Combo(label, &i, callback, (void*)list, N)) {
-    *value = std::get<0>(list[i]);
-  }
 }
 
 static void
@@ -148,7 +125,8 @@ ShowGui(uint32_t index, gltfjson::format::Material& material)
   // std::optional<TextureInfo> EmissiveTexture;
 
   ImGui::ColorEdit3("EmissiveFactor", material.EmissiveFactor.data());
-  Combo("AlphaMode", &material.AlphaMode, gltfjson::format::AlphaModesCombo);
+  grapho::imgui::EnumCombo(
+    "AlphaMode", &material.AlphaMode, gltfjson::format::AlphaModesCombo);
   ImGui::SliderFloat("AlphaCutoff", &material.AlphaCutoff, 0, 1);
   ImGui::Checkbox("DoubleSided", &material.DoubleSided);
 }

@@ -1,7 +1,8 @@
 #include <GL/glew.h>
 
-#include "docks/scene_selection.h"
 #include "scene_gui.h"
+#include "scene_gui_material.h"
+#include "scene_selection.h"
 #include <glr/gl3renderer.h>
 #include <grapho/gl3/Texture.h>
 #include <imgui.h>
@@ -75,23 +76,24 @@ SceneGui::ShowMaterial(int i,
     ImGui::Separator();
   }
 
-  ImGui::Text("%s", material->Name.c_str());
+  ImGui::PushID((void*)&material);
 
-  // material type[pbr, unlit, mtoon]
-
-  // color
-  char id[64];
-  snprintf(id, sizeof(id), "##color%d", i);
-  ImGui::ColorEdit4(id, &material->Pbr.BaseColorFactor[0]);
-
-  if (auto texture = material->Pbr.BaseColorTexture) {
-    if (auto glTexture =
-          glr::GetOrCreate(texture, libvrm::gltf::ColorSpace::sRGB)) {
-      // ImGui::Image(material->);
-      ImGui::Image((ImTextureID)(uint64_t)glTexture->texture_, { 150, 150 });
-      ++i;
-    }
+  switch (material->Type) {
+    case libvrm::gltf::MaterialTypes::Pbr:
+      ShowMaterialPbr(material);
+      break;
+    case libvrm::gltf::MaterialTypes::UnLit:
+      ShowMaterialUnlit(material);
+      break;
+    case libvrm::gltf::MaterialTypes::MToon0:
+      ShowMaterialMToon0(material);
+      break;
+    case libvrm::gltf::MaterialTypes::MToon1:
+      ShowMaterialMToon1(material);
+      break;
   }
+
+  ImGui::PopID();
 }
 
 void

@@ -190,6 +190,10 @@ public:
     const std::shared_ptr<libvrm::gltf::Texture>& src,
     libvrm::gltf::ColorSpace colorspace)
   {
+    if (!src) {
+      return {};
+    }
+
     auto& map = colorspace == libvrm::gltf::ColorSpace::sRGB
                   ? m_srgbTextureMap
                   : m_linearTextureMap;
@@ -227,6 +231,10 @@ public:
   std::shared_ptr<grapho::gl3::PbrMaterial> GetOrCreate(
     const std::shared_ptr<libvrm::gltf::Material>& src)
   {
+    if (!src) {
+      return {};
+    }
+
     auto found = m_materialMap.find(src);
     if (found != m_materialMap.end()) {
       return found->second;
@@ -264,6 +272,10 @@ public:
   std::shared_ptr<grapho::gl3::Vao> GetOrCreate(
     const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
   {
+    if (!mesh) {
+      return {};
+    }
+
     auto found = m_drawableMap.find(mesh);
     if (found != m_drawableMap.end()) {
       return found->second;
