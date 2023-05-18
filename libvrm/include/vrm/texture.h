@@ -19,6 +19,7 @@ inline std::tuple<ColorSpace, const char*> ColorSpaceCombo[] = {
 
 struct Texture
 {
+  std::string Name;
   std::shared_ptr<gltfjson::format::Sampler> Sampler;
   std::shared_ptr<Image> Source;
   // Determined from how it is used in material.

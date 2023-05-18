@@ -19,11 +19,6 @@ ShowTexture(const char* label,
     ImGui::SameLine();
   }
   ImGui::TextUnformatted(label);
-
-  if (texture) {
-    grapho::imgui::EnumCombo(
-      "ColorSpace", &texture->ColorSpace, libvrm::gltf::ColorSpaceCombo);
-  }
 }
 
 void

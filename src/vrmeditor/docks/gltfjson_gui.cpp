@@ -1,5 +1,4 @@
 #include "gltfjson_gui.h"
-#include "treesplitter.h"
 #include "type_gui.h"
 #include <grapho/imgui/widgets.h>
 

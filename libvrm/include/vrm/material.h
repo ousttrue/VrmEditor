@@ -29,15 +29,6 @@ struct PbrMetallicRoughness
 
 struct Material
 {
-  Material(std::string_view name)
-    : Name(name)
-  {
-  }
-  Material(std::u8string_view name)
-    : Material(std::string_view{ (const char*)name.data(),
-                                 (const char*)name.data() + name.size() })
-  {
-  }
   std::string Name;
   MaterialTypes Type = {};
   PbrMetallicRoughness Pbr = {};
@@ -50,6 +41,16 @@ struct Material
   gltfjson::format::AlphaModes AlphaMode = {};
   float AlphaCutoff = 0.5f;
   bool DoubleSided = false;
+
+  Material(std::string_view name)
+    : Name(name)
+  {
+  }
+  Material(std::u8string_view name)
+    : Material(std::string_view{ (const char*)name.data(),
+                                 (const char*)name.data() + name.size() })
+  {
+  }
 };
 
 }

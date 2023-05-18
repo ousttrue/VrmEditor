@@ -1,6 +1,7 @@
 #pragma once
 #include <gltfjson.h>
 #include <vrm/material.h>
+#include <vrm/texture.h>
 
 ////////////////////////////////////////////////////////////
 // gltfjson
@@ -38,5 +39,14 @@ ShowGui(uint32_t index, gltfjson::format::Animation& animation);
 ////////////////////////////////////////////////////////////
 // libvrm
 ////////////////////////////////////////////////////////////
+inline void
+ShowGui(uint32_t index,
+        const std::shared_ptr<gltfjson::format::Sampler>& sampler)
+{
+  ShowGui(index, *sampler);
+}
 void
-ShowGui(uint32_t index, libvrm::gltf::Material& material);
+ShowGui(uint32_t index, const std::shared_ptr<libvrm::gltf::Texture>& texture);
+void
+ShowGui(uint32_t index,
+        const std::shared_ptr<libvrm::gltf::Material>& material);

@@ -28,7 +28,7 @@ Push(grapho::imgui::TreeSplitter* splitter, const char* label, T& values)
   for (uint32_t i = 0; i < values.size(); ++i) {
     snprintf(
       buf, sizeof(buf), "%02d:%s", i, (const char*)values[i]->Name.c_str());
-    auto callback = [i, value = values[i]]() { ::ShowGui(i, *value); };
+    auto callback = [i, value = values[i]]() { ::ShowGui(i, value); };
     splitter->Push(buf, ui, callback);
   }
 }
@@ -49,6 +49,8 @@ struct SceneGuiImpl
     , m_selection(selection)
     , m_indent(indent)
   {
+    Push(&m_splitter, "Samplers", scene->m_table->m_samplers);
+    Push(&m_splitter, "Textures", scene->m_table->m_textures);
     Push(&m_splitter, "Materials", scene->m_table->m_materials);
   }
 
