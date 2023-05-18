@@ -1,5 +1,12 @@
 #pragma once
 #include <DirectXMath.h>
+#include <filesystem>
+#include <memory>
+namespace grapho {
+namespace gl3 {
+struct PbrEnv;
+}
+}
 
 namespace glr {
 struct RenderingEnv
@@ -9,6 +16,10 @@ struct RenderingEnv
   DirectX::XMFLOAT4X4 ViewMatrix;
   DirectX::XMFLOAT4X4 ProjectionMatrix;
   DirectX::XMFLOAT3 CameraPosition;
+
+  std::shared_ptr<grapho::gl3::PbrEnv> m_pbr;
+  bool LoadPbr(const std::filesystem::path& hdr);
+  void RenderSkybox();
 
   // w == 0 ? directional : point
   DirectX::XMFLOAT4 LightPosition = { 2, 2, 2, 0 };

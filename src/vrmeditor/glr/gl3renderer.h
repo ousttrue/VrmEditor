@@ -27,17 +27,11 @@ namespace glr {
 struct RenderingEnv;
 
 void
-LoadPbr(const std::filesystem::path& hdr);
-
-void
 Render(RenderPass pass,
        const RenderingEnv& camera,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
        const runtimescene::RuntimeMesh& instance,
        const DirectX::XMFLOAT4X4& m);
-
-void
-RenderSkybox(const RenderingEnv& camera);
 
 // clear current render target
 void

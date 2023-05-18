@@ -117,8 +117,6 @@ class Gl3Renderer
   std::shared_ptr<grapho::gl3::Texture> m_white;
   std::shared_ptr<grapho::gl3::ShaderProgram> m_shadow;
 
-  std::shared_ptr<grapho::gl3::PbrEnv> m_pbr;
-
   Gl3Renderer()
   {
     static uint8_t white[] = { 255, 255, 255, 255 };
@@ -154,37 +152,6 @@ public:
   }
 
   void Release() { m_drawableMap.clear(); }
-
-  bool LoadPbr(const std::filesystem::path& path)
-  {
-    auto bytes = libvrm::fileutil::ReadAllBytes(path);
-    if (bytes.empty()) {
-      App::Instance().Log(LogLevel::Error) << "fail to read: " << path;
-      return false;
-    }
-
-    auto hdr = std::make_shared<libvrm::gltf::Image>("pbr");
-    if (!hdr->LoadHdr(bytes)) {
-      App::Instance().Log(LogLevel::Error) << "fail to load: " << path;
-      return false;
-    }
-
-    auto texture = grapho::gl3::Texture::Create(
-      {
-        .Width = hdr->Width(),
-        .Height = hdr->Height(),
-        .Format = grapho::PixelFormat::f32_RGB,
-        .ColorSpace = grapho::ColorSpace::Linear,
-        .Pixels = hdr->Pixels(),
-      },
-      true);
-    if (!texture) {
-      return false;
-    }
-
-    m_pbr = std::make_shared<grapho::gl3::PbrEnv>(texture);
-    return true;
-  }
 
   std::shared_ptr<grapho::gl3::Texture> GetOrCreate(
     const std::shared_ptr<libvrm::gltf::Texture>& src,
@@ -326,8 +293,8 @@ public:
               const runtimescene::RuntimeMesh& instance,
               const DirectX::XMFLOAT4X4& m)
   {
-    if (m_pbr) {
-      m_pbr->Activate();
+    if (env.m_pbr) {
+      env.m_pbr->Activate();
     }
 
     glEnable(GL_DEPTH_TEST);
@@ -373,13 +340,6 @@ public:
         vao->Draw(GL_TRIANGLES, drawCount, 0);
         break;
       }
-    }
-  }
-
-  void RenderSkybox(const RenderingEnv& env)
-  {
-    if (m_pbr) {
-      m_pbr->DrawSkybox(env.ProjectionMatrix, env.ViewMatrix);
     }
   }
 
@@ -452,12 +412,6 @@ public:
 };
 
 void
-LoadPbr(const std::filesystem::path& hdr)
-{
-  Gl3Renderer::Instance().LoadPbr(hdr);
-}
-
-void
 Render(RenderPass pass,
        const RenderingEnv& env,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
@@ -465,12 +419,6 @@ Render(RenderPass pass,
        const DirectX::XMFLOAT4X4& m)
 {
   Gl3Renderer::Instance().Render(pass, env, mesh, instance, m);
-}
-
-void
-RenderSkybox(const RenderingEnv& camera)
-{
-  Gl3Renderer::Instance().RenderSkybox(camera);
 }
 
 void

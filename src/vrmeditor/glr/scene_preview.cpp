@@ -72,7 +72,7 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
     }
   }
   if (m_settings->Skybox) {
-    glr::RenderSkybox(*m_env);
+    m_env->RenderSkybox();
   }
   for (auto [mesh, m] : m_scene->m_table->Drawables()) {
     auto meshInstance = m_scene->GetRuntimeMesh(mesh);
@@ -146,7 +146,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
     }
   }
   if (m_settings->Skybox) {
-    glr::RenderSkybox(*m_env);
+    m_env->RenderSkybox();
   }
 
   for (auto [mesh, m] : m_scene->Drawables()) {

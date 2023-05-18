@@ -91,7 +91,7 @@ struct LuaEngineImpl
           App::Instance().ShowDock(name, visible);
         }) },
       { "load_pbr", MakeLuaFunc([](const std::filesystem::path& path) {
-          glr::LoadPbr(path);
+          App::Instance().LoadPbr(path);
         }) },
       { nullptr, nullptr },
     };

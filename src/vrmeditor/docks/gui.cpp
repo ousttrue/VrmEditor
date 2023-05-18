@@ -281,7 +281,7 @@ Gui::DockSpace()
 {
   grapho::imgui::DockSpace(DOCK_SPACE, Docks, &m_resetLayout, [=]() {
     if (ImGui::BeginMenu("File")) {
-      static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh,.vrma";
+      static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh,.vrma,.hdr";
       if (ImGui::MenuItem("Open", "")) {
         ImGuiFileDialog::Instance()->OpenDialog(
           OPEN_FILE_DIALOG, "Open", filters, m_current.string().c_str());
@@ -313,7 +313,7 @@ Gui::DockSpace()
       // std::cout << filePathName << "::" << filePath << std::endl;
       if (std::filesystem::exists(path)) {
         m_current = path.parent_path();
-        App::Instance().LoadModel(path);
+        App::Instance().LoadPath(path);
       }
     }
 

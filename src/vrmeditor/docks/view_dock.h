@@ -67,34 +67,39 @@ public:
                             const std::shared_ptr<glr::ViewSettings>& settings)
   {
     addDock(grapho::imgui::Dock(title, [env, settings, view]() {
-      ImGui::Checkbox("Mesh", &settings->ShowMesh);
-      ImGui::SameLine();
-      ImGui::Checkbox("Shadow", &settings->ShowShadow);
-      ImGui::SameLine();
-      ImGui::Checkbox("Gizmo", &settings->ShowLine);
-      ImGui::SameLine();
-      ImGui::Checkbox("Bone", &settings->ShowCuber);
+      if (ImGui::CollapsingHeader("View")) {
+        ImGui::Checkbox("Mesh", &settings->ShowMesh);
+        ImGui::SameLine();
+        ImGui::Checkbox("Shadow", &settings->ShowShadow);
+        ImGui::SameLine();
+        ImGui::Checkbox("Gizmo", &settings->ShowLine);
+        ImGui::SameLine();
+        ImGui::Checkbox("Bone", &settings->ShowCuber);
 
-      ImGui::Checkbox("Skybox", &settings->Skybox);
+        ImGui::ColorEdit4("Clear color", &env->ClearColor.x);
+      }
 
-      ImGui::SliderFloat("Near", &view->NearZ, 0.001f, 1000.0f);
-      ImGui::SliderFloat("Far", &view->FarZ, 0.001f, 1000.0f);
+      if (ImGui::CollapsingHeader("Camera")) {
+        ImGui::SliderFloat("Near", &view->NearZ, 0.001f, 1000.0f);
+        ImGui::SliderFloat("Far", &view->FarZ, 0.001f, 1000.0f);
+        // TODO: reset position
+      }
 
-      // 60FPS
-      ImGui::Checkbox("Spring", &settings->EnableSpring);
-      if (settings->EnableSpring) {
-        settings->NextSpringDelta = libvrm::Time(1.0 / 60);
-      } else {
-        if (ImGui::Button("Spring step")) {
+      if (ImGui::CollapsingHeader("SpringBone")) {
+        // 60FPS
+        ImGui::Checkbox("Spring", &settings->EnableSpring);
+        if (settings->EnableSpring) {
           settings->NextSpringDelta = libvrm::Time(1.0 / 60);
+        } else {
+          if (ImGui::Button("Spring step")) {
+            settings->NextSpringDelta = libvrm::Time(1.0 / 60);
+          }
         }
       }
 
-      ImGui::ColorEdit4("Clear color", &env->ClearColor.x);
-
-      // camera
-      // near, far
-      // reset
+      if (ImGui::CollapsingHeader("Pbr Env")) {
+        ImGui::Checkbox("Skybox", &settings->Skybox);
+      }
     }));
   }
 };

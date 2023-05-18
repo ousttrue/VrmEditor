@@ -88,7 +88,7 @@ public:
   const std::shared_ptr<Gui>& GetGui() const { return m_gui; }
   bool LoadPath(const std::filesystem::path& path);
   bool LoadModel(const std::filesystem::path& path);
-
+  void LoadPbr(const std::filesystem::path& hdr);
   void LoadLua(const std::filesystem::path& path);
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
   void ShowDock(std::string_view name, bool visible);

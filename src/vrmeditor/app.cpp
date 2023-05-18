@@ -215,6 +215,9 @@ App::LoadPath(const std::filesystem::path& path)
   }
   // if (extension == ".fbx") {
   // }
+  if (extension == ".hdr") {
+    return m_env->LoadPbr(path);
+  }
   return false;
 }
 
@@ -254,6 +257,12 @@ App::LoadModel(const std::filesystem::path& path)
     SetScene(std::make_shared<libvrm::gltf::Scene>());
     return false;
   }
+}
+
+void
+App::LoadPbr(const std::filesystem::path& hdr)
+{
+  m_env->LoadPbr(hdr);
 }
 
 void
