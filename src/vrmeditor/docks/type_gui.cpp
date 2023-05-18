@@ -60,6 +60,33 @@ InputText(const char* label,
 }
 }
 
+template<typename T>
+static void
+ShowGuiOptional(std::optional<T>& optional,
+                const char* label,
+                const char* label_new,
+                const std::function<void(T&)> showGui)
+{
+  if (optional) {
+    ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+    bool visible = true;
+    if (ImGui::CollapsingHeader(label, &visible)) {
+      ImGui::PushID(&optional);
+      ImGui::Indent();
+      showGui(*optional);
+      ImGui::Unindent();
+      ImGui::PopID();
+    }
+    if (!visible) {
+      optional = std::nullopt;
+    }
+  } else {
+    if (ImGui::Button(label_new)) {
+      optional = T{};
+    }
+  }
+}
+
 static void
 ShowGui(const char* label, std::u8string& str)
 {
@@ -77,47 +104,51 @@ ShowGui(gltfjson::format::Asset& asset)
 
 static void
 ShowGui(const char* base,
-        uint32_t index,
+        std::optional<uint32_t> index,
         gltfjson::format::ChildOfRootProperty& prop)
 {
-  ImGui::Text("%s/%d", base, index);
+  ImGui::Text("%s/%d", base, index ? *index : -1);
   ShowGui("name", prop.Name);
 }
 
 // buffer/bufferView/accessor
 void
-ShowGui(uint32_t index, gltfjson::format::Buffer& buffer)
+ShowGui(const gltfjson::format::Root& root, gltfjson::format::Buffer& buffer)
 {
-  ShowGui("/buffers", index, buffer);
+  ShowGui("/buffers", root.Buffers.GetIndex(buffer), buffer);
 }
 
 void
-ShowGui(uint32_t index, gltfjson::format::BufferView& bufferView)
+ShowGui(const gltfjson::format::Root& root,
+        gltfjson::format::BufferView& bufferView)
 {
-  ShowGui("/bufferViews", index, bufferView);
+  ShowGui("/bufferViews", root.BufferViews.GetIndex(bufferView), bufferView);
 }
 
 void
-ShowGui(uint32_t index, gltfjson::format::Accessor& accessor)
+ShowGui(const gltfjson::format::Root& root,
+        gltfjson::format::Accessor& accessor)
 {
-  ShowGui("/accessors", index, accessor);
+  ShowGui("/accessors", root.Accessors.GetIndex(accessor), accessor);
 }
 
 // image/sampler/texture/material/mesh
 void
-ShowGui(uint32_t index, gltfjson::format::Image& image)
+ShowGui(const gltfjson::format::Root& root, gltfjson::format::Image& image)
 {
-  ShowGui("/images", index, image);
+  ShowGui("/images", root.Images.GetIndex(image), image);
 }
 
 void
-ShowGui(uint32_t index, gltfjson::format::Sampler& sampler)
+ShowGui(const gltfjson::format::Root& root, gltfjson::format::Sampler& sampler)
 {
-  ShowGui("/samplers", index, sampler);
+  ShowGui("/samplers", root.Samplers.GetIndex(sampler), sampler);
   // grapho::imgui::EnumCombo(
-  //   "magFilter", &sampler.MagFilter, gltfjson::format::TextureMagFilterCombo);
+  //   "magFilter", &sampler.MagFilter,
+  //   gltfjson::format::TextureMagFilterCombo);
   // grapho::imgui::EnumCombo(
-  //   "minFilter", &sampler.MinFilter, gltfjson::format::TextureMinFilterCombo);
+  //   "minFilter", &sampler.MinFilter,
+  //   gltfjson::format::TextureMinFilterCombo);
   // grapho::imgui::EnumCombo(
   //   "wrapS", &sampler.WrapS, gltfjson::format::TextureWrapCombo);
   // grapho::imgui::EnumCombo(
@@ -125,20 +156,97 @@ ShowGui(uint32_t index, gltfjson::format::Sampler& sampler)
 }
 
 void
-ShowGui(uint32_t index, gltfjson::format::Texture& texture)
+ShowGui(const gltfjson::format::Root& root, gltfjson::format::Texture& texture)
 {
-  ShowGui("/textures", index, texture);
+  ShowGui("/textures", root.Textures.GetIndex(texture), texture);
+}
+
+template<typename T>
+void
+SelectId(const char* label, gltfjson::format::Id& id, const T& values)
+{
+  uint32_t selected = id ? *id : -1;
+  using TUPLE = std::tuple<uint32_t, std::string>;
+  std::vector<TUPLE> combo;
+  for (int i = 0; i < values.Size(); ++i) {
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%d", i);
+    combo.push_back({ i, buf });
+  }
+  std::span<const TUPLE> span(combo.data(), combo.size());
+
+  grapho::imgui::GenericCombo<uint32_t>(label, &selected, span);
+  if (selected >= 0 && selected < values.Size()) {
+    id = selected;
+  } else {
+    id = std::nullopt;
+  }
+}
+
+static void
+ShowGui(const gltfjson::format::Root& root, gltfjson::format::TextureInfo& info)
+{
+  SelectId("Index", info.Index, root.Textures);
+  ImGui::InputScalar("TexCoord", ImGuiDataType_U8, &info.TexCoord);
+}
+
+static void
+ShowGui(const gltfjson::format::Root& root,
+        gltfjson::format::NormalTextureInfo& info)
+{
+  ShowGui(root, *static_cast<gltfjson::format::TextureInfo*>(&info));
+}
+
+static void
+ShowGui(const gltfjson::format::Root& root,
+        gltfjson::format::OcclusionTextureInfo& info)
+{
+  ShowGui(root, *static_cast<gltfjson::format::TextureInfo*>(&info));
+}
+
+static void
+ShowGui(const gltfjson::format::Root& root,
+        gltfjson::format::PbrMetallicRoughness& pbr)
+{
+  ImGui::ColorEdit4("BaseColorFactor", pbr.BaseColorFactor.data());
+  ShowGuiOptional<gltfjson::format::TextureInfo>(
+    pbr.BaseColorTexture,
+    "BaseColorTexture",
+    "BaseColorTexture +",
+    [root](auto& info) { ::ShowGui(root, info); });
+  ImGui::SliderFloat("MetallicFactor", &pbr.MetallicFactor, 0, 1);
+  ImGui::SliderFloat("RoughnessFactor", &pbr.RoughnessFactor, 0, 1);
 }
 
 void
-ShowGui(uint32_t index, gltfjson::format::Material& material)
+ShowGui(const gltfjson::format::Root& root,
+        gltfjson::format::Material& material)
 {
-  ShowGui("/materials", index, material);
+  ShowGui("/materials", root.Materials.GetIndex(material), material);
 
-  // std::optional<PbrMetallicRoughness> PbrMetallicRoughness;
-  // std::optional<NormalTextureInfo> NormalTexture;
-  // std::optional<OcclusionTextureInfo> OcclusionTexture;
-  // std::optional<TextureInfo> EmissiveTexture;
+  ShowGuiOptional<gltfjson::format::PbrMetallicRoughness>(
+    material.PbrMetallicRoughness,
+    "PbrMetallicRoughness",
+    "PbrMetallicRoughness +",
+    [&root](auto& pbr) { ::ShowGui(root, pbr); });
+
+  ShowGuiOptional<gltfjson::format::NormalTextureInfo>(
+    material.NormalTexture,
+    "NormalTexture",
+    "NormalTexture +",
+    [&root](auto& info) { ::ShowGui(root, info); });
+
+  ShowGuiOptional<gltfjson::format::OcclusionTextureInfo>(
+    material.OcclusionTexture,
+    "OcclusionTexture",
+    "OcclusionTexture +",
+    [&root](auto& info) { ::ShowGui(root, info); });
+
+  ShowGuiOptional<gltfjson::format::TextureInfo>(
+    material.EmissiveTexture,
+    "EmissiveTexture",
+    "EmissiveTexture +",
+    [&root](auto& info) { ::ShowGui(root, info); });
 
   ImGui::ColorEdit3("EmissiveFactor", material.EmissiveFactor.data());
   grapho::imgui::EnumCombo(
@@ -147,30 +255,30 @@ ShowGui(uint32_t index, gltfjson::format::Material& material)
   ImGui::Checkbox("DoubleSided", &material.DoubleSided);
 }
 void
-ShowGui(uint32_t index, gltfjson::format::Mesh& mesh)
+ShowGui(const gltfjson::format::Root& root, gltfjson::format::Mesh& mesh)
 {
-  ShowGui("/meshes", index, mesh);
+  ShowGui("/meshes", root.Meshes.GetIndex(mesh), mesh);
 }
 
 // skin/node/scene/animation
 void
-ShowGui(uint32_t index, gltfjson::format::Skin& skin)
+ShowGui(const gltfjson::format::Root& root, gltfjson::format::Skin& skin)
 {
-  ShowGui("/skins", index, skin);
+  ShowGui("/skins", root.Skins.GetIndex(skin), skin);
 }
 void
-ShowGui(uint32_t index, gltfjson::format::Node& node)
+ShowGui(const gltfjson::format::Root& root, gltfjson::format::Node& node)
 {
-  ShowGui("/nodes", index, node);
+  ShowGui("/nodes", root.Nodes.GetIndex(node), node);
 }
 void
-ShowGui(uint32_t index, gltfjson::format::Scene& scene)
+ShowGui(const gltfjson::format::Root& root, gltfjson::format::Scene& scene)
 {
-  ShowGui("/scenes", index, scene);
+  ShowGui("/scenes", root.Scenes.GetIndex(scene), scene);
 }
 void
-ShowGui(uint32_t index, gltfjson::format::Animation& animation)
+ShowGui(const gltfjson::format::Root& root,
+        gltfjson::format::Animation& animation)
 {
-  ShowGui("/animations", index, animation);
+  ShowGui("/animations", root.Animations.GetIndex(animation), animation);
 }
-

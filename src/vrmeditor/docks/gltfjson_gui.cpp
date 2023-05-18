@@ -14,7 +14,10 @@ GltfJsonGui::~GltfJsonGui()
 
 template<typename T>
 static void
-Push(grapho::imgui::TreeSplitter* splitter, const char* label, T& values)
+Push(grapho::imgui::TreeSplitter* splitter,
+     const char* label,
+     const gltfjson::format::Root& root,
+     T& values)
 {
   char buf[256];
   snprintf(buf, sizeof(buf), "%s (%zd)", label, values.Size());
@@ -23,7 +26,9 @@ Push(grapho::imgui::TreeSplitter* splitter, const char* label, T& values)
   for (uint32_t i = 0; i < values.Size(); ++i) {
     snprintf(
       buf, sizeof(buf), "%02d:%s", i, (const char*)values[i].Name.c_str());
-    auto callback = [i, value = &values[i]]() { ::ShowGui(i, *value); };
+    auto callback = [i, &root, value = &values[i]]() {
+      ::ShowGui(root, *value);
+    };
     splitter->Push(buf, ui, callback);
   }
 }
@@ -35,20 +40,20 @@ GltfJsonGui::SetGltf(gltfjson::format::Root& gltf)
   m_splitter->Push("asset");
 
   // buffer/bufferView/accessor
-  Push(m_splitter, "buffers", gltf.Buffers);
-  Push(m_splitter, "bufferViews", gltf.BufferViews);
-  Push(m_splitter, "accessors", gltf.Accessors);
+  Push(m_splitter, "buffers", gltf, gltf.Buffers);
+  Push(m_splitter, "bufferViews", gltf, gltf.BufferViews);
+  Push(m_splitter, "accessors", gltf, gltf.Accessors);
   // image/sampler/texture/material/mesh
-  Push(m_splitter, "images", gltf.Images);
-  Push(m_splitter, "samplers", gltf.Samplers);
-  Push(m_splitter, "textures", gltf.Textures);
-  Push(m_splitter, "materials", gltf.Materials);
-  Push(m_splitter, "meshes", gltf.Meshes);
+  Push(m_splitter, "images", gltf, gltf.Images);
+  Push(m_splitter, "samplers", gltf, gltf.Samplers);
+  Push(m_splitter, "textures", gltf, gltf.Textures);
+  Push(m_splitter, "materials", gltf, gltf.Materials);
+  Push(m_splitter, "meshes", gltf, gltf.Meshes);
   // skin/node/scene/animation
-  Push(m_splitter, "skins", gltf.Skins);
-  Push(m_splitter, "nodes", gltf.Nodes);
-  Push(m_splitter, "scenes", gltf.Scenes);
-  Push(m_splitter, "animations", gltf.Animations);
+  Push(m_splitter, "skins", gltf, gltf.Skins);
+  Push(m_splitter, "nodes", gltf, gltf.Nodes);
+  Push(m_splitter, "scenes", gltf, gltf.Scenes);
+  Push(m_splitter, "animations", gltf, gltf.Animations);
 
   // extensions
 }
