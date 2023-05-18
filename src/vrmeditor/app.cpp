@@ -8,7 +8,6 @@
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
-#include "docks/scene_dock.h"
 #include "docks/scene_selection.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
@@ -107,14 +106,12 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
 
     HumanoidDock::Create(
       addDock, "humanoid-body", "humanoid-finger", m_scene->m_table);
-    SceneDock::CreateTree(
-      addDock, "scene-resource", m_scene, m_selection, indent);
-
-    ViewDock::Create(
-      addDock, "scene-view", m_scene, m_env, m_view, m_settings, m_selection);
 
     ViewDock::CreateTPose(
       addDock, "T-Pose", m_scene->m_table, m_env, m_settings, m_selection);
+
+    ViewDock::Create(
+      addDock, "Animation", m_scene, m_env, m_view, m_settings, m_selection);
 
     VrmDock::CreateVrm(addDock, "vrm", m_scene->m_table);
     ExportDock::Create(addDock, "export", m_scene, indent);
@@ -318,7 +315,9 @@ App::Run()
 
   PoseStream->CreateDock(addDock);
 
-  addDock({ "gltf", [gltfjson = m_gltfjson]() { gltfjson->ShowGui(); } });
+  addDock({ "gltf", [gltfjson = m_gltfjson](const char* title, bool* p_open) {
+             gltfjson->ShowGui(title, p_open);
+           } });
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {

@@ -16,5 +16,5 @@ public:
   ~GltfJsonGui();
 
   void SetGltf(gltfjson::format::Root& gltf);
-  void ShowGui();
+  void ShowGui(const char* title, bool* p_open);
 };

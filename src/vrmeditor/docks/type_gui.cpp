@@ -114,14 +114,14 @@ void
 ShowGui(uint32_t index, gltfjson::format::Sampler& sampler)
 {
   ShowGui("/samplers", index, sampler);
-  grapho::imgui::EnumCombo(
-    "magFilter", &sampler.MagFilter, gltfjson::format::TextureMagFilterCombo);
-  grapho::imgui::EnumCombo(
-    "minFilter", &sampler.MinFilter, gltfjson::format::TextureMinFilterCombo);
-  grapho::imgui::EnumCombo(
-    "wrapS", &sampler.WrapS, gltfjson::format::TextureWrapCombo);
-  grapho::imgui::EnumCombo(
-    "wrapT", &sampler.WrapT, gltfjson::format::TextureWrapCombo);
+  // grapho::imgui::EnumCombo(
+  //   "magFilter", &sampler.MagFilter, gltfjson::format::TextureMagFilterCombo);
+  // grapho::imgui::EnumCombo(
+  //   "minFilter", &sampler.MinFilter, gltfjson::format::TextureMinFilterCombo);
+  // grapho::imgui::EnumCombo(
+  //   "wrapS", &sampler.WrapS, gltfjson::format::TextureWrapCombo);
+  // grapho::imgui::EnumCombo(
+  //   "wrapT", &sampler.WrapT, gltfjson::format::TextureWrapCombo);
 }
 
 void
@@ -174,40 +174,3 @@ ShowGui(uint32_t index, gltfjson::format::Animation& animation)
   ShowGui("/animations", index, animation);
 }
 
-void
-ShowGui(uint32_t index,
-        const std::shared_ptr<libvrm::gltf::GltfRoot>& root,
-        const std::shared_ptr<libvrm::gltf::Texture>& texture)
-{
-  // sampler
-  // source
-  if (auto glTexture = glr::GetOrCreate(texture, texture->ColorSpace)) {
-    ImGui::Image((ImTextureID)(uint64_t)glTexture->texture_, { 150, 150 });
-  }
-  // srgb
-  grapho::imgui::EnumCombo(
-    "ColorSpace", &texture->ColorSpace, libvrm::gltf::ColorSpaceCombo);
-}
-
-void
-ShowGui(uint32_t index,
-        const std::shared_ptr<libvrm::gltf::GltfRoot>& root,
-        const std::shared_ptr<libvrm::gltf::Material>& material)
-{
-  // ImGui::PushID((void*)&material);
-  switch (material->Type) {
-    case libvrm::gltf::MaterialTypes::Pbr:
-      ShowMaterialPbr(root, material);
-      break;
-    case libvrm::gltf::MaterialTypes::UnLit:
-      ShowMaterialUnlit(root, material);
-      break;
-    case libvrm::gltf::MaterialTypes::MToon0:
-      ShowMaterialMToon0(root, material);
-      break;
-    case libvrm::gltf::MaterialTypes::MToon1:
-      ShowMaterialMToon1(root, material);
-      break;
-  }
-  // ImGui::PopID();
-}

@@ -12,8 +12,6 @@ srcs = [
     'glr/overlay.cpp',
     'glr/rendering_env.cpp',
     'docks/gui.cpp',
-    'docks/scene_dock.cpp',
-    'docks/scene_gui.cpp',
     'docks/scene_gui_material.cpp',
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',
