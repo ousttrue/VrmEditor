@@ -175,7 +175,9 @@ ShowGui(uint32_t index, gltfjson::format::Animation& animation)
 }
 
 void
-ShowGui(uint32_t index, const std::shared_ptr<libvrm::gltf::Texture>& texture)
+ShowGui(uint32_t index,
+        const std::shared_ptr<libvrm::gltf::GltfRoot>& root,
+        const std::shared_ptr<libvrm::gltf::Texture>& texture)
 {
   // sampler
   // source
@@ -188,21 +190,23 @@ ShowGui(uint32_t index, const std::shared_ptr<libvrm::gltf::Texture>& texture)
 }
 
 void
-ShowGui(uint32_t index, const std::shared_ptr<libvrm::gltf::Material>& material)
+ShowGui(uint32_t index,
+        const std::shared_ptr<libvrm::gltf::GltfRoot>& root,
+        const std::shared_ptr<libvrm::gltf::Material>& material)
 {
   // ImGui::PushID((void*)&material);
   switch (material->Type) {
     case libvrm::gltf::MaterialTypes::Pbr:
-      ShowMaterialPbr(*material);
+      ShowMaterialPbr(root, material);
       break;
     case libvrm::gltf::MaterialTypes::UnLit:
-      ShowMaterialUnlit(*material);
+      ShowMaterialUnlit(root, material);
       break;
     case libvrm::gltf::MaterialTypes::MToon0:
-      ShowMaterialMToon0(*material);
+      ShowMaterialMToon0(root, material);
       break;
     case libvrm::gltf::MaterialTypes::MToon1:
-      ShowMaterialMToon1(*material);
+      ShowMaterialMToon1(root, material);
       break;
   }
   // ImGui::PopID();

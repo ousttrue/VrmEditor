@@ -8,18 +8,21 @@
 #include <grapho/gl3/Texture.h>
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
+#include <vrm/gltfroot.h>
 #include <vrm/material.h>
 #include <vrm/mesh.h>
 #include <vrm/runtimescene/mesh.h>
 #include <vrm/runtimescene/scene.h>
-#include <vrm/gltfroot.h>
 #include <vrm/texture.h>
 
 using NodeWeakPtr = std::weak_ptr<libvrm::gltf::Node>;
 
 template<typename T>
 static void
-Push(grapho::imgui::TreeSplitter* splitter, const char* label, T& values)
+Push(grapho::imgui::TreeSplitter* splitter,
+     const char* label,
+     const std::shared_ptr<libvrm::gltf::GltfRoot>& root,
+     T& values)
 {
   char buf[256];
   snprintf(buf, sizeof(buf), "%s (%zd)", label, values.size());
@@ -28,7 +31,9 @@ Push(grapho::imgui::TreeSplitter* splitter, const char* label, T& values)
   for (uint32_t i = 0; i < values.size(); ++i) {
     snprintf(
       buf, sizeof(buf), "%02d:%s", i, (const char*)values[i]->Name.c_str());
-    auto callback = [i, value = values[i]]() { ::ShowGui(i, value); };
+    auto callback = [i, root, value = values[i]]() {
+      ::ShowGui(i, root, value);
+    };
     splitter->Push(buf, ui, callback);
   }
 }
@@ -49,9 +54,9 @@ struct SceneGuiImpl
     , m_selection(selection)
     , m_indent(indent)
   {
-    Push(&m_splitter, "Samplers", scene->m_table->m_samplers);
-    Push(&m_splitter, "Textures", scene->m_table->m_textures);
-    Push(&m_splitter, "Materials", scene->m_table->m_materials);
+    Push(&m_splitter, "Samplers", scene->m_table, scene->m_table->m_samplers);
+    Push(&m_splitter, "Textures", scene->m_table, scene->m_table->m_textures);
+    Push(&m_splitter, "Materials", scene->m_table, scene->m_table->m_materials);
   }
 
   void Show(const char* title, bool* p_open)

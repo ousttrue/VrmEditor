@@ -1,12 +1,16 @@
 #pragma once
 #include <memory>
-#include <vrm/material.h>
+#include <vrm/gltf.h>
 
 void
-ShowMaterialPbr(libvrm::gltf::Material& material);
+ShowMaterialPbr(const std::shared_ptr<libvrm::gltf::GltfRoot>& root,
+                const std::shared_ptr<libvrm::gltf::Material>& material);
 void
-ShowMaterialUnlit(libvrm::gltf::Material& material);
+ShowMaterialUnlit(const std::shared_ptr<libvrm::gltf::GltfRoot>& root,
+                  const std::shared_ptr<libvrm::gltf::Material>& material);
 void
-ShowMaterialMToon0(libvrm::gltf::Material& material);
+ShowMaterialMToon0(const std::shared_ptr<libvrm::gltf::GltfRoot>& root,
+                   const std::shared_ptr<libvrm::gltf::Material>& material);
 void
-ShowMaterialMToon1(libvrm::gltf::Material& material);
+ShowMaterialMToon1(const std::shared_ptr<libvrm::gltf::GltfRoot>& root,
+                   const std::shared_ptr<libvrm::gltf::Material>& material);
