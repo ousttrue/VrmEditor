@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 
+#include "app.h"
 #include "glr/gl3renderer.h"
 #include "scene_gui_material.h"
 #include "type_gui.h"
@@ -143,16 +144,14 @@ void
 ShowGui(const gltfjson::format::Root& root, gltfjson::format::Sampler& sampler)
 {
   ShowGui("/samplers", root.Samplers.GetIndex(sampler), sampler);
-  // grapho::imgui::EnumCombo(
-  //   "magFilter", &sampler.MagFilter,
-  //   gltfjson::format::TextureMagFilterCombo);
-  // grapho::imgui::EnumCombo(
-  //   "minFilter", &sampler.MinFilter,
-  //   gltfjson::format::TextureMinFilterCombo);
-  // grapho::imgui::EnumCombo(
-  //   "wrapS", &sampler.WrapS, gltfjson::format::TextureWrapCombo);
-  // grapho::imgui::EnumCombo(
-  //   "wrapT", &sampler.WrapT, gltfjson::format::TextureWrapCombo);
+  grapho::imgui::EnumCombo(
+    "magFilter", &sampler.MagFilter, gltfjson::format::TextureMagFilterCombo);
+  grapho::imgui::EnumCombo(
+    "minFilter", &sampler.MinFilter, gltfjson::format::TextureMinFilterCombo);
+  grapho::imgui::EnumCombo(
+    "wrapS", &sampler.WrapS, gltfjson::format::TextureWrapCombo);
+  grapho::imgui::EnumCombo(
+    "wrapT", &sampler.WrapT, gltfjson::format::TextureWrapCombo);
 }
 
 void
@@ -187,6 +186,16 @@ static void
 ShowGui(const gltfjson::format::Root& root, gltfjson::format::TextureInfo& info)
 {
   SelectId("Index", info.Index, root.Textures);
+  if (info.Index) {
+    if (auto texture = App::Instance().GetTexture(
+          root, *info.Index, libvrm::gltf::ColorSpace::Linear)) {
+      ImGui::Image((ImTextureID)(int64_t)texture->Handle(), { 150, 150 });
+    }
+  } else {
+    auto pos = ImGui::GetCursorPos();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->AddRect(pos, { pos.x + 150, pos.y + 150 }, ImColor());
+  }
   ImGui::InputScalar("TexCoord", ImGuiDataType_U8, &info.TexCoord);
 }
 
@@ -213,9 +222,14 @@ ShowGui(const gltfjson::format::Root& root,
     pbr.BaseColorTexture,
     "BaseColorTexture",
     "BaseColorTexture +",
-    [root](auto& info) { ::ShowGui(root, info); });
+    [&root](auto& info) { ::ShowGui(root, info); });
   ImGui::SliderFloat("MetallicFactor", &pbr.MetallicFactor, 0, 1);
   ImGui::SliderFloat("RoughnessFactor", &pbr.RoughnessFactor, 0, 1);
+  ShowGuiOptional<gltfjson::format::TextureInfo>(
+    pbr.MetallicRoughnessTexture,
+    "MetallicRoughnessTexture",
+    "MetallicRoughnessTexture +",
+    [&root](auto& info) { ::ShowGui(root, info); });
 }
 
 void

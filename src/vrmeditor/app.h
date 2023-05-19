@@ -3,12 +3,10 @@
 #include <list>
 #include <memory>
 #include <unordered_set>
+#include <vrm/gltf.h>
 #include <vrm/humanbones.h>
 
 namespace libvrm {
-namespace gltf {
-struct GltfRoot;
-}
 namespace bvh {
 struct Bvh;
 }
@@ -17,6 +15,15 @@ struct Timeline;
 
 namespace grapho {
 struct OrbitView;
+namespace gl3 {
+class Texture;
+}
+}
+
+namespace gltfjson {
+namespace format {
+struct Root;
+}
 }
 
 namespace humanpose {
@@ -51,7 +58,7 @@ class App
   std::shared_ptr<ImLogger> m_logger;
 
   std::shared_ptr<libvrm::Timeline> m_timeline;
-  std::shared_ptr<runtimescene::RuntimeScene> m_scene;
+  std::shared_ptr<runtimescene::RuntimeScene> m_runtime;
   std::shared_ptr<struct SceneNodeSelection> m_selection;
   std::shared_ptr<grapho::OrbitView> m_view;
   std::shared_ptr<glr::ViewSettings> m_settings;
@@ -83,6 +90,12 @@ public:
   const std::shared_ptr<LuaEngine>& Lua() const { return m_lua; }
   int Run();
   bool WriteScene(const std::filesystem::path& path);
+
+  // runtime
+  std::shared_ptr<grapho::gl3::Texture> GetTexture(
+    const gltfjson::format::Root& root,
+    uint32_t texture_index,
+    libvrm::gltf::ColorSpace colorspace);
 
   // expose to lua
   const std::shared_ptr<Gui>& GetGui() const { return m_gui; }

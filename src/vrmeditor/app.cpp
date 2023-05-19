@@ -83,10 +83,10 @@ App::~App() {}
 std::shared_ptr<runtimescene::RuntimeScene>
 App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
 {
-  m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
+  m_runtime = std::make_shared<runtimescene::RuntimeScene>(table);
   m_timeline->Tracks.clear();
 
-  std::weak_ptr<runtimescene::RuntimeScene> weak = m_scene;
+  std::weak_ptr<runtimescene::RuntimeScene> weak = m_runtime;
   PoseStream->HumanPoseChanged.push_back([weak](const auto& pose) {
     if (auto scene = weak.lock()) {
       scene->SetHumanPose(pose);
@@ -105,19 +105,19 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
     m_gltfjson->SetGltf(table->m_gltf);
 
     HumanoidDock::Create(
-      addDock, "humanoid-body", "humanoid-finger", m_scene->m_table);
+      addDock, "humanoid-body", "humanoid-finger", m_runtime->m_table);
 
     ViewDock::CreateTPose(
-      addDock, "T-Pose", m_scene->m_table, m_env, m_settings, m_selection);
+      addDock, "T-Pose", m_runtime->m_table, m_env, m_settings, m_selection);
 
     ViewDock::Create(
-      addDock, "Animation", m_scene, m_env, m_view, m_settings, m_selection);
+      addDock, "Animation", m_runtime, m_env, m_view, m_settings, m_selection);
 
-    VrmDock::CreateVrm(addDock, "vrm", m_scene->m_table);
-    ExportDock::Create(addDock, "export", m_scene, indent);
+    VrmDock::CreateVrm(addDock, "vrm", m_runtime->m_table);
+    ExportDock::Create(addDock, "export", m_runtime, indent);
   }
 
-  return m_scene;
+  return m_runtime;
 }
 
 LogStream
@@ -182,7 +182,7 @@ bool
 App::WriteScene(const std::filesystem::path& path)
 {
   libvrm::gltf::Exporter exporter;
-  exporter.Export(*m_scene->m_table);
+  exporter.Export(*m_runtime->m_table);
 
   std::ofstream os(path, std::ios::binary);
   if (!os) {
@@ -194,6 +194,15 @@ App::WriteScene(const std::filesystem::path& path)
     .BinChunk = exporter.BinChunk,
   }
     .WriteTo(os);
+}
+
+std::shared_ptr<grapho::gl3::Texture>
+App::GetTexture(const gltfjson::format::Root& root,
+                uint32_t texture_index,
+                libvrm::gltf::ColorSpace colorspace)
+{
+  auto texture = m_runtime->m_table->m_textures[texture_index];
+  return glr::GetOrCreate(texture, colorspace);
 }
 
 bool

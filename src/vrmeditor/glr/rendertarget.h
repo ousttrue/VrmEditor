@@ -6,7 +6,7 @@ namespace grapho {
 struct OrbitView;
 namespace gl3 {
 struct Fbo;
-struct Texture;
+class Texture;
 }
 }
 
