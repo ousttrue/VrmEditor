@@ -30,7 +30,7 @@ SelectTexture(const char* label,
   // source
   if (auto glTexture =
         glr::GetOrCreate(*texture, libvrm::gltf::ColorSpace::sRGB)) {
-    ImGui::Image((ImTextureID)(uint64_t)glTexture->texture_, { 150, 150 });
+    ImGui::Image((ImTextureID)(uint64_t)glTexture->Handle(), { 150, 150 });
     ImGui::SameLine();
   }
   ImGui::TextUnformatted(label);

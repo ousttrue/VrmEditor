@@ -10,7 +10,7 @@ namespace libvrm {
 namespace gltf {
 struct Mesh;
 class Image;
-struct Texture;
+class Texture;
 }
 }
 namespace grapho {

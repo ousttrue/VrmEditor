@@ -26,7 +26,7 @@ RenderTarget::Clear(int width, int height, const float color[4])
   }
 
   if (FboTexture) {
-    if (FboTexture->width_ != width || FboTexture->height_ != height) {
+    if (FboTexture->Width() != width || FboTexture->Height() != height) {
       FboTexture = nullptr;
     }
   }
@@ -37,7 +37,7 @@ RenderTarget::Clear(int width, int height, const float color[4])
       grapho::PixelFormat::u8_RGBA,
       grapho::ColorSpace::Linear,
     });
-    Fbo->AttachTexture2D(FboTexture->texture_);
+    Fbo->AttachTexture2D(FboTexture->Handle());
     Fbo->AttachDepth(width, height);
   }
 
@@ -49,7 +49,7 @@ RenderTarget::Clear(int width, int height, const float color[4])
     .Depth = 1.0f,
   });
 
-  return FboTexture->texture_;
+  return FboTexture->Handle();
 }
 
 void
@@ -64,7 +64,7 @@ RenderTarget::ShowFbo(float x, float y, float w, float h, const float color[4])
   if (texture) {
 
     auto [isActive, isHovered] =
-      grapho::imgui::DraggableImage((ImTextureID)(uint64_t)texture, {w, h});
+      grapho::imgui::DraggableImage((ImTextureID)(uint64_t)texture, { w, h });
 
     // update camera
     auto& io = ImGui::GetIO();
