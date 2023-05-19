@@ -42,12 +42,6 @@ ScenePreview::ScenePreview(
   , m_cuber(std::make_shared<Cuber>())
   , m_gizmo(std::make_shared<LineGizmo>())
 {
-  DirectX::XMFLOAT4 plane = { 0, 1, 0, 0 };
-  DirectX::XMStoreFloat4x4(
-    &m_env->ShadowMatrix,
-    DirectX::XMMatrixShadow(DirectX::XMLoadFloat4(&plane),
-                            DirectX::XMLoadFloat4(&env->LightPosition)));
-
   if (useTPose) {
     m_rt->render =
       std::bind(&ScenePreview::RenderTPose, this, std::placeholders::_1);

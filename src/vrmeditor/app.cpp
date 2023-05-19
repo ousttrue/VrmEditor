@@ -266,6 +266,7 @@ App::LoadModel(const std::filesystem::path& path)
     auto bb = scene->m_table->GetBoundingBox();
     m_staticView->Fit(bb.Min, bb.Max);
     m_runtimeView->Fit(bb.Min, bb.Max);
+    m_env->SetShadowHeight(bb.Min.y);
 
     Log(LogLevel::Info) << path;
 

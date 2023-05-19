@@ -25,6 +25,15 @@ struct RenderingEnv
   DirectX::XMFLOAT4 LightPosition = { 2, 2, 2, 0 };
   DirectX::XMFLOAT4X4 ShadowMatrix;
 
+  void SetShadowHeight(float y)
+  {
+    DirectX::XMFLOAT4 plane = { 0, 1, 0, -y };
+    DirectX::XMStoreFloat4x4(
+      &ShadowMatrix,
+      DirectX::XMMatrixShadow(DirectX::XMLoadFloat4(&plane),
+                              DirectX::XMLoadFloat4(&LightPosition)));
+  }
+
   void Resize(int width, int height)
   {
     Viewport.z = static_cast<float>(width);
