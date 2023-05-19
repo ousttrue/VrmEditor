@@ -9,32 +9,52 @@ void
 ShowGui(gltfjson::format::Asset& asset);
 // buffer/bufferView/accessor
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Buffer& buffer);
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Buffer& buffer);
 void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::BufferView& bufferView);
 void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::Accessor& accessor);
 // image/sampler/texture/material/mesh
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Image& image);
-void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Sampler& sampler);
-void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Texture& texture);
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Image& image);
 void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Sampler& sampler);
+void
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Texture& texture);
+void
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::Material& material);
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Mesh& mesh);
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Mesh& mesh);
 // skin/node/scene/animation
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Skin& skin);
-void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Node& node);
-void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Scene& scene);
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Skin& skin);
 void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Node& node);
+void
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Scene& scene);
+void
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::Animation& animation);

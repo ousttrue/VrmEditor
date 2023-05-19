@@ -3,11 +3,13 @@
 #include "app.h"
 #include "glr/gl3renderer.h"
 #include "type_gui.h"
+#include "type_gui_accessor.h"
 #include "type_gui_imgui.h"
 #include <grapho/gl3/texture.h>
 #include <grapho/imgui/widgets.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <sstream>
+#include <unordered_map>
 
 class PrintfBuffer
 {
@@ -172,7 +174,9 @@ ShowGui(const char* base,
 
 // buffer/bufferView/accessor
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Buffer& buffer)
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Buffer& buffer)
 {
   ShowGui("/buffers", root.Buffers.GetIndex(buffer), buffer);
   ImGui::BeginDisabled(true);
@@ -183,6 +187,7 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Buffer& buffer)
 
 void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::BufferView& bufferView)
 {
   ShowGui("/bufferViews", root.BufferViews.GetIndex(bufferView), bufferView);
@@ -196,8 +201,23 @@ ShowGui(const gltfjson::format::Root& root,
   ImGui::EndDisabled();
 }
 
+namespace std {
+template<>
+class hash<
+  std::tuple<gltfjson::format::ComponentTypes, gltfjson::format::Types>>
+{
+public:
+  size_t operator()(const std::tuple<gltfjson::format::ComponentTypes,
+                                     gltfjson::format::Types>& x) const
+  {
+    return hash<int>()((int)std::get<0>(x)) ^ hash<int>()((int)std::get<1>(x));
+  }
+};
+}
+
 void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::Accessor& accessor)
 {
   ShowGui("/accessors", root.Accessors.GetIndex(accessor), accessor);
@@ -216,11 +236,92 @@ ShowGui(const gltfjson::format::Root& root,
   ShowGuiOptional<gltfjson::format::Sparse>(
     accessor.Sparse, "Sparse", "Sparse +", [](auto& sparse) {});
   ImGui::EndDisabled();
+
+  using ShowAccessorTable =
+    std::function<void(const gltfjson::format::Root& root,
+                       const gltfjson::format::Bin& bin,
+                       const gltfjson::format::Accessor& accessor)>;
+  static std::unordered_map<
+    std::tuple<gltfjson::format::ComponentTypes, gltfjson::format::Types>,
+    ShowAccessorTable>
+    s_GuiMap = {
+      { { gltfjson::format::ComponentTypes::UNSIGNED_BYTE,
+          gltfjson::format::Types::SCALAR },
+        [](auto& root, auto& bin, auto& accessor) {
+          if (auto values =
+                bin.template GetAccessorBytes<uint8_t>(root, accessor)) {
+            ShowGuiAccessorScalar<uint8_t>(*values);
+          }
+        } },
+      { { gltfjson::format::ComponentTypes::UNSIGNED_SHORT,
+          gltfjson::format::Types::SCALAR },
+        [](auto& root, auto& bin, auto& accessor) {
+          if (auto values =
+                bin.template GetAccessorBytes<uint16_t>(root, accessor)) {
+            ShowGuiAccessorScalar<uint16_t>(*values);
+          }
+        } },
+      { { gltfjson::format::ComponentTypes::UNSIGNED_SHORT,
+          gltfjson::format::Types::VEC4 },
+        [](auto& root, auto& bin, auto& accessor) {
+          if (auto values = bin.template GetAccessorBytes<libvrm::ushort4>(
+                root, accessor)) {
+            ShowGuiAccessorInt4<libvrm::ushort4>(*values);
+          }
+        } },
+      { { gltfjson::format::ComponentTypes::UNSIGNED_INT,
+          gltfjson::format::Types::SCALAR },
+        [](auto& root, auto& bin, auto& accessor) {
+          if (auto values =
+                bin.template GetAccessorBytes<uint32_t>(root, accessor)) {
+            ShowGuiAccessorScalar<uint32_t>(*values);
+          }
+        } },
+      { { gltfjson::format::ComponentTypes::FLOAT,
+          gltfjson::format::Types::VEC2 },
+        [](auto& root, auto& bin, auto& accessor) {
+          if (auto values = bin.template GetAccessorBytes<DirectX::XMFLOAT2>(
+                root, accessor)) {
+            ShowGuiAccessorVec2<DirectX::XMFLOAT2>(*values);
+          }
+        } },
+      { { gltfjson::format::ComponentTypes::FLOAT,
+          gltfjson::format::Types::VEC3 },
+        [](auto& root, auto& bin, auto& accessor) {
+          if (auto values = bin.template GetAccessorBytes<DirectX::XMFLOAT3>(
+                root, accessor)) {
+            ShowGuiAccessorVec3<DirectX::XMFLOAT3>(*values);
+          }
+        } },
+      { { gltfjson::format::ComponentTypes::FLOAT,
+          gltfjson::format::Types::VEC4 },
+        [](auto& root, auto& bin, auto& accessor) {
+          if (auto values = bin.template GetAccessorBytes<DirectX::XMFLOAT4>(
+                root, accessor)) {
+            ShowGuiAccessorVec4<DirectX::XMFLOAT4>(*values);
+          }
+        } },
+      { { gltfjson::format::ComponentTypes::FLOAT,
+          gltfjson::format::Types::MAT4 },
+        [](auto& root, auto& bin, auto& accessor) {
+          if (auto values = bin.template GetAccessorBytes<DirectX::XMFLOAT4X4>(
+                root, accessor)) {
+            ShowGuiAccessorMat4(*values);
+          }
+        } },
+    };
+
+  auto found = s_GuiMap.find({ accessor.ComponentType, accessor.Type });
+  if (found != s_GuiMap.end()) {
+    found->second(root, bin, accessor);
+  }
 }
 
 // image/sampler/texture/material/mesh
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Image& image)
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Image& image)
 {
   ShowGui("/images", root.Images.GetIndex(image), image);
   ImGui::BeginDisabled(true);
@@ -232,7 +333,9 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Image& image)
 }
 
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Sampler& sampler)
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Sampler& sampler)
 {
   ShowGui("/samplers", root.Samplers.GetIndex(sampler), sampler);
   grapho::imgui::EnumCombo(
@@ -246,7 +349,9 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Sampler& sampler)
 }
 
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Texture& texture)
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Texture& texture)
 {
   ShowGui("/textures", root.Textures.GetIndex(texture), texture);
   SelectId("Sampler", &texture.Sampler, root.Samplers);
@@ -305,6 +410,7 @@ ShowGui(const gltfjson::format::Root& root,
 
 void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::Material& material)
 {
   ShowGui("/materials", root.Materials.GetIndex(material), material);
@@ -402,7 +508,9 @@ ShowGui(const gltfjson::format::Root& root,
 }
 
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Mesh& mesh)
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Mesh& mesh)
 {
   ShowGui("/meshes", root.Meshes.GetIndex(mesh), mesh);
   int i = 0;
@@ -425,7 +533,9 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Mesh& mesh)
 
 // skin/node/scene/animation
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Skin& skin)
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Skin& skin)
 {
   ShowGui("/skins", root.Skins.GetIndex(skin), skin);
   ImGui::BeginDisabled(true);
@@ -436,7 +546,9 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Skin& skin)
 }
 
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Node& node)
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Node& node)
 {
   ShowGui("/nodes", root.Nodes.GetIndex(node), node);
   // Id Camera;
@@ -469,7 +581,9 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Node& node)
 }
 
 void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::Scene& scene)
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::Scene& scene)
 {
   ShowGui("/scenes", root.Scenes.GetIndex(scene), scene);
   ListId("Nodes", scene.Nodes, root.Nodes);
@@ -477,6 +591,7 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Scene& scene)
 
 void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::Animation& animation)
 {
   ShowGui("/animations", root.Animations.GetIndex(animation), animation);
