@@ -2,13 +2,12 @@
 
 #include "app.h"
 #include "glr/gl3renderer.h"
-#include "scene_gui_material.h"
 #include "type_gui.h"
 #include "type_gui_imgui.h"
 #include <grapho/gl3/texture.h>
 #include <grapho/imgui/widgets.h>
 
-// TODO: LISt
+// TODO: ID LISt
 // * foreach
 // * remove
 // * add
@@ -34,6 +33,13 @@ SelectId(const char* label, gltfjson::format::Id* id, const T& values)
     *id = selected;
   } else {
     *id = std::nullopt;
+  }
+
+  if (*id) {
+    ImGui::SameLine();
+    if (ImGui::Button("x")) {
+      *id = std::nullopt;
+    }
   }
 }
 
@@ -316,12 +322,43 @@ void
 ShowGui(const gltfjson::format::Root& root, gltfjson::format::Skin& skin)
 {
   ShowGui("/skins", root.Skins.GetIndex(skin), skin);
+  ImGui::BeginDisabled(true);
+  SelectId("InverseBindMatrices", &skin.InverseBindMatrices, root.Accessors);
+  SelectId("Skeleton", &skin.Skeleton, root.Nodes);
+  // std::vector<uint32_t> Joints;
+  ImGui::EndDisabled();
 }
+
 void
 ShowGui(const gltfjson::format::Root& root, gltfjson::format::Node& node)
 {
   ShowGui("/nodes", root.Nodes.GetIndex(node), node);
+  // Id Camera;
+  // std::vector<uint32_t> Children;
+  SelectId("Skin", &node.Skin, root.Nodes);
+  ShowGuiOptional<std::array<float, 16>>(
+    node.Matrix, "Matrix", "Matrix +", [](auto& m) {
+      ImGui::InputFloat4("##m0", m.data());
+      ImGui::InputFloat4("##m1", m.data() + 4);
+      ImGui::InputFloat4("##m2", m.data() + 8);
+      ImGui::InputFloat4("##m3", m.data() + 12);
+    });
+  SelectId("Mesh", &node.Mesh, root.Meshes);
+  ShowGuiOptional<std::array<float, 4>>(
+    node.Rotation, "Rotation", "Rotaton +", [](auto& r) {
+      ImGui::InputFloat4("##rotation", r.data());
+    });
+  ShowGuiOptional<std::array<float, 3>>(
+    node.Scale, "Scale", "Scale +", [](auto& s) {
+      ImGui::InputFloat3("##scale", s.data());
+    });
+  ShowGuiOptional<std::array<float, 3>>(
+    node.Translation, "Translation", "Translation +", [](auto& t) {
+      ImGui::InputFloat3("##translation", t.data());
+    });
+  // std::vector<float> Weights;
 }
+
 void
 ShowGui(const gltfjson::format::Root& root, gltfjson::format::Scene& scene)
 {

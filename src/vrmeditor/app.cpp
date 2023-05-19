@@ -111,7 +111,7 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
       addDock, "T-Pose", m_runtime->m_table, m_env, m_settings, m_selection);
 
     ViewDock::Create(
-      addDock, "Animation", m_runtime, m_env, m_view, m_settings, m_selection);
+      addDock, "Runtime", m_runtime, m_env, m_view, m_settings, m_selection);
 
     VrmDock::CreateVrm(addDock, "vrm", m_runtime->m_table);
     ExportDock::Create(addDock, "export", m_runtime, indent);

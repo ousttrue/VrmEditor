@@ -37,7 +37,7 @@ void
 GltfJsonGui::SetGltf(gltfjson::format::Root& gltf)
 {
   m_splitter->Clear();
-  m_splitter->Push("asset");
+  m_splitter->Push("asset", nullptr, [&gltf]() { ::ShowGui(gltf.Asset); });
 
   // buffer/bufferView/accessor
   Push(m_splitter, "buffers", gltf, gltf.Buffers);
