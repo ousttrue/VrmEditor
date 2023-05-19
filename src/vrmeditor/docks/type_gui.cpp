@@ -8,6 +8,11 @@
 #include <grapho/gl3/texture.h>
 #include <grapho/imgui/widgets.h>
 
+// TODO: LISt
+// * foreach
+// * remove
+// * add
+
 template<typename T>
 // requires T::Name
 void
@@ -114,6 +119,21 @@ ShowGui(const gltfjson::format::Root& root,
         gltfjson::format::Accessor& accessor)
 {
   ShowGui("/accessors", root.Accessors.GetIndex(accessor), accessor);
+  ImGui::BeginDisabled(true);
+  SelectId("BufferView", &accessor.BufferView, root.BufferViews);
+  ImGui::InputScalar("ByteOffset", ImGuiDataType_U32, &accessor.ByteOffset);
+  grapho::imgui::EnumCombo("ComponentType",
+                           &accessor.ComponentType,
+                           gltfjson::format::ComponentTypesCombo);
+  ImGui::Checkbox("Normalized", &accessor.Normalized);
+  ImGui::InputScalar("Count", ImGuiDataType_U32, &accessor.Count);
+  grapho::imgui::EnumCombo(
+    "Type", &accessor.Type, gltfjson::format::TypesCombo);
+  // std::vector<float> Max;
+  // std::vector<float> Min;
+  ShowGuiOptional<gltfjson::format::Sparse>(
+    accessor.Sparse, "Sparse", "Sparse +", [](auto& sparse) {});
+  ImGui::EndDisabled();
 }
 
 // image/sampler/texture/material/mesh
@@ -121,6 +141,12 @@ void
 ShowGui(const gltfjson::format::Root& root, gltfjson::format::Image& image)
 {
   ShowGui("/images", root.Images.GetIndex(image), image);
+  ImGui::BeginDisabled(true);
+  ShowGui("Uri", image.Uri);
+  ShowGui("MimeType", image.MimeType);
+  std::u8string MimeType;
+  SelectId("BufferView", &image.BufferView, root.BufferViews);
+  ImGui::EndDisabled();
 }
 
 void
@@ -141,6 +167,8 @@ void
 ShowGui(const gltfjson::format::Root& root, gltfjson::format::Texture& texture)
 {
   ShowGui("/textures", root.Textures.GetIndex(texture), texture);
+  SelectId("Sampler", &texture.Sampler, root.Samplers);
+  SelectId("Source", &texture.Source, root.Images);
 }
 
 static void
@@ -232,19 +260,35 @@ ShowGui(const gltfjson::format::Root& root,
 
 static void
 ShowGui(const gltfjson::format::Root& root,
+        gltfjson::format::MeshPrimitiveAttributes& attribute)
+{
+  SelectId("COLOR_0", &attribute.COLOR_0, root.Accessors);
+  SelectId("JOINTS_0", &attribute.JOINTS_0, root.Accessors);
+  SelectId("NORMAL", &attribute.NORMAL, root.Accessors);
+  SelectId("POSITION", &attribute.POSITION, root.Accessors);
+  SelectId("TANGENT", &attribute.TANGENT, root.Accessors);
+  SelectId("TEXCOORD_0", &attribute.TEXCOORD_0, root.Accessors);
+  SelectId("TEXCOORD_1", &attribute.TEXCOORD_1, root.Accessors);
+  SelectId("TEXCOORD_2", &attribute.TEXCOORD_2, root.Accessors);
+  SelectId("TEXCOORD_3", &attribute.TEXCOORD_3, root.Accessors);
+  SelectId("WEIGHTS_0", &attribute.WEIGHTS_0, root.Accessors);
+}
+
+static void
+ShowGui(const gltfjson::format::Root& root,
         gltfjson::format::MeshPrimitive& prim)
 {
   ImGui::PushID(&prim);
-  // MeshPrimitiveAttributes Attributes;
-  // Id Indices;
-
-  // Id Material;
+  ImGui::BeginDisabled(true);
+  ShowGui(root, prim.Attributes);
+  SelectId("Indices", &prim.Indices, root.Accessors);
+  ImGui::EndDisabled();
   SelectId("Material", &prim.Material, root.Materials);
-
-  // MeshPrimitiveTopology Mode = MeshPrimitiveTopology::TRIANGLES;
-
+  ImGui::BeginDisabled(true);
+  grapho::imgui::EnumCombo(
+    "Mode", &prim.Mode, gltfjson::format::MeshPrimitiveTopologyCombo);
   // std::vector<MeshPrimitiveMorphTarget> Targets;
-
+  ImGui::EndDisabled();
   ImGui::PopID();
 }
 
@@ -252,8 +296,16 @@ void
 ShowGui(const gltfjson::format::Root& root, gltfjson::format::Mesh& mesh)
 {
   ShowGui("/meshes", root.Meshes.GetIndex(mesh), mesh);
+  int i = 0;
   for (auto& prim : mesh.Primitives) {
-    ShowGui(root, prim);
+    char buf[64];
+    snprintf(buf, sizeof(buf), "[%d]", i++);
+    ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+    if (ImGui::CollapsingHeader(buf)) {
+      ImGui::Indent();
+      ShowGui(root, prim);
+      ImGui::Unindent();
+    }
   }
 
   // TODO: morph weight
