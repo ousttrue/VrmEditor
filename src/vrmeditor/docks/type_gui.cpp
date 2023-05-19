@@ -6,11 +6,23 @@
 #include "type_gui_imgui.h"
 #include <grapho/gl3/texture.h>
 #include <grapho/imgui/widgets.h>
+#include <misc/cpp/imgui_stdlib.h>
+#include <sstream>
 
-// TODO: ID LISt
-// * foreach
-// * remove
-// * add
+class PrintfBuffer
+{
+  char m_buf[256];
+
+public:
+  const char* Printf(const char* fmt, ...)
+  {
+    va_list arg_ptr;
+    va_start(arg_ptr, fmt);
+    vsnprintf(m_buf, sizeof(m_buf), fmt, arg_ptr);
+    va_end(arg_ptr);
+    return m_buf;
+  }
+};
 
 template<typename T>
 // requires T::Name
@@ -20,11 +32,13 @@ SelectId(const char* label, gltfjson::format::Id* id, const T& values)
   uint32_t selected = *id ? *(*id) : -1;
   using TUPLE = std::tuple<uint32_t, std::string>;
   std::vector<TUPLE> combo;
+  PrintfBuffer buf;
   for (int i = 0; i < values.Size(); ++i) {
-    char buf[64];
-    snprintf(
-      buf, sizeof(buf), "[%d] %s", i, (const char*)values[i].Name.c_str());
-    combo.push_back({ i, buf });
+    combo.push_back({ i,
+                      buf.Printf("%s[%d] %s",
+                                 values.Name.c_str(),
+                                 i,
+                                 (const char*)values[i].Name.c_str()) });
   }
   std::span<const TUPLE> span(combo.data(), combo.size());
 
@@ -40,6 +54,68 @@ SelectId(const char* label, gltfjson::format::Id* id, const T& values)
     if (ImGui::Button("x")) {
       *id = std::nullopt;
     }
+  }
+}
+
+template<typename T>
+void
+ListId(const char* label, std::vector<uint32_t>& list, const T& values)
+{
+  ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  if (ImGui::CollapsingHeader(label)) {
+    ImGui::Indent();
+    std::stringstream ss;
+    uint32_t i = 0;
+    PrintfBuffer buf;
+    for (auto it = list.begin(); it != list.end(); ++i) {
+      ImGui::TextUnformatted(buf.Printf("%s[%d] %s",
+                                        values.Name.c_str(),
+                                        i,
+                                        (const char*)values[*it].Name.c_str()));
+      ImGui::SameLine();
+
+      if (ImGui::Button(buf.Printf("x##%d", i))) {
+        it = list.erase(it);
+      } else {
+        ++it;
+      }
+    }
+
+    std::optional<uint32_t> new_value;
+    SelectId("+", &new_value, values);
+    if (new_value) {
+      list.push_back(*new_value);
+    }
+    ImGui::Unindent();
+  }
+}
+
+template<typename T>
+static void
+ShowGuiVector(const char* label,
+              std::vector<T>& vector,
+              const std::function<void(const char*, T&)>& showGui)
+{
+  if (ImGui::CollapsingHeader(label)) {
+    ImGui::Indent();
+    ImGui::PushID(&vector);
+    PrintfBuffer buf;
+    int i = 0;
+    for (auto it = vector.begin(); it != vector.end(); ++i) {
+      showGui(buf.Printf("##value_%s_%d", label, i), *it);
+      ImGui::SameLine();
+      if (ImGui::Button(buf.Printf("x##%s_%d", label, i))) {
+        it = vector.erase(it);
+      } else {
+        ++it;
+      }
+    }
+
+    if (ImGui::Button(buf.Printf("+##%s_%d", label, i))) {
+      vector.push_back({});
+    }
+    ImGui::PopID();
+    ImGui::Unindent();
   }
 }
 
@@ -268,16 +344,29 @@ static void
 ShowGui(const gltfjson::format::Root& root,
         gltfjson::format::MeshPrimitiveAttributes& attribute)
 {
-  SelectId("COLOR_0", &attribute.COLOR_0, root.Accessors);
-  SelectId("JOINTS_0", &attribute.JOINTS_0, root.Accessors);
-  SelectId("NORMAL", &attribute.NORMAL, root.Accessors);
   SelectId("POSITION", &attribute.POSITION, root.Accessors);
-  SelectId("TANGENT", &attribute.TANGENT, root.Accessors);
+  SelectId("NORMAL", &attribute.NORMAL, root.Accessors);
   SelectId("TEXCOORD_0", &attribute.TEXCOORD_0, root.Accessors);
   SelectId("TEXCOORD_1", &attribute.TEXCOORD_1, root.Accessors);
   SelectId("TEXCOORD_2", &attribute.TEXCOORD_2, root.Accessors);
   SelectId("TEXCOORD_3", &attribute.TEXCOORD_3, root.Accessors);
+  SelectId("COLOR_0", &attribute.COLOR_0, root.Accessors);
+  SelectId("TANGENT", &attribute.TANGENT, root.Accessors);
+  SelectId("JOINTS_0", &attribute.JOINTS_0, root.Accessors);
   SelectId("WEIGHTS_0", &attribute.WEIGHTS_0, root.Accessors);
+}
+
+static void
+ShowGui(const char* label,
+        const gltfjson::format::Root& root,
+        gltfjson::format::MeshPrimitiveMorphTarget& target)
+{
+  if (ImGui::CollapsingHeader(label)) {
+    ImGui::PushID(&target);
+    SelectId("NORMAL", &target.NORMAL, root.Accessors);
+    SelectId("POSITION", &target.POSITION, root.Accessors);
+    ImGui::PopID();
+  }
 }
 
 static void
@@ -293,8 +382,22 @@ ShowGui(const gltfjson::format::Root& root,
   ImGui::BeginDisabled(true);
   grapho::imgui::EnumCombo(
     "Mode", &prim.Mode, gltfjson::format::MeshPrimitiveTopologyCombo);
-  // std::vector<MeshPrimitiveMorphTarget> Targets;
   ImGui::EndDisabled();
+
+  PrintfBuffer buf;
+  // ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  if (ImGui::CollapsingHeader(
+        buf.Printf("Targets(%zu)", prim.Targets.size()))) {
+    ImGui::Indent();
+    ImGui::BeginDisabled(true);
+    int i = 0;
+    for (auto& target : prim.Targets) {
+      ShowGui(buf.Printf("[%d]", i++), root, target);
+    }
+    ImGui::EndDisabled();
+    ImGui::Unindent();
+  }
+
   ImGui::PopID();
 }
 
@@ -303,18 +406,21 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Mesh& mesh)
 {
   ShowGui("/meshes", root.Meshes.GetIndex(mesh), mesh);
   int i = 0;
+
+  PrintfBuffer buf;
   for (auto& prim : mesh.Primitives) {
-    char buf[64];
-    snprintf(buf, sizeof(buf), "[%d]", i++);
+
     ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-    if (ImGui::CollapsingHeader(buf)) {
+    if (ImGui::CollapsingHeader(buf.Printf("Primitives.%d", i++))) {
       ImGui::Indent();
       ShowGui(root, prim);
       ImGui::Unindent();
     }
   }
 
-  // TODO: morph weight
+  ShowGuiVector<float>("Weights", mesh.Weights, [](const char* label, auto& v) {
+    ImGui::SliderFloat(label, &v, 0, 1);
+  });
 }
 
 // skin/node/scene/animation
@@ -325,7 +431,7 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Skin& skin)
   ImGui::BeginDisabled(true);
   SelectId("InverseBindMatrices", &skin.InverseBindMatrices, root.Accessors);
   SelectId("Skeleton", &skin.Skeleton, root.Nodes);
-  // std::vector<uint32_t> Joints;
+  ListId("Joints", skin.Joints, root.Nodes);
   ImGui::EndDisabled();
 }
 
@@ -334,7 +440,7 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Node& node)
 {
   ShowGui("/nodes", root.Nodes.GetIndex(node), node);
   // Id Camera;
-  // std::vector<uint32_t> Children;
+  ListId("Children", node.Children, root.Nodes);
   SelectId("Skin", &node.Skin, root.Nodes);
   ShowGuiOptional<std::array<float, 16>>(
     node.Matrix, "Matrix", "Matrix +", [](auto& m) {
@@ -356,14 +462,19 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::Node& node)
     node.Translation, "Translation", "Translation +", [](auto& t) {
       ImGui::InputFloat3("##translation", t.data());
     });
-  // std::vector<float> Weights;
+  ShowGuiVector<float>(
+    "Weights", node.Weights, [](const char* label, auto& value) {
+      ImGui::SliderFloat(label, &value, 0, 1);
+    });
 }
 
 void
 ShowGui(const gltfjson::format::Root& root, gltfjson::format::Scene& scene)
 {
   ShowGui("/scenes", root.Scenes.GetIndex(scene), scene);
+  ListId("Nodes", scene.Nodes, root.Nodes);
 }
+
 void
 ShowGui(const gltfjson::format::Root& root,
         gltfjson::format::Animation& animation)
