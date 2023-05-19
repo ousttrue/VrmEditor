@@ -41,7 +41,8 @@ App::App()
   m_ini = file.u8string();
   m_selection = std::make_shared<SceneNodeSelection>();
 
-  m_view = std::make_shared<grapho::OrbitView>();
+  m_staticView = std::make_shared<grapho::OrbitView>();
+  m_runtimeView = std::make_shared<grapho::OrbitView>();
   m_timeline = std::make_shared<libvrm::Timeline>();
   m_env = std::make_shared<glr::RenderingEnv>();
   m_settings = std::make_shared<glr::ViewSettings>();
@@ -107,11 +108,21 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
     HumanoidDock::Create(
       addDock, "humanoid-body", "humanoid-finger", m_runtime->m_table);
 
-    ViewDock::CreateTPose(
-      addDock, "T-Pose", m_runtime->m_table, m_env, m_settings, m_selection);
+    ViewDock::CreateTPose(addDock,
+                          "T-Pose",
+                          m_runtime->m_table,
+                          m_env,
+                          m_staticView,
+                          m_settings,
+                          m_selection);
 
-    ViewDock::Create(
-      addDock, "Runtime", m_runtime, m_env, m_view, m_settings, m_selection);
+    ViewDock::Create(addDock,
+                     "Runtime",
+                     m_runtime,
+                     m_env,
+                     m_runtimeView,
+                     m_settings,
+                     m_selection);
 
     VrmDock::CreateVrm(addDock, "vrm", m_runtime->m_table);
     ExportDock::Create(addDock, "export", m_runtime, indent);
@@ -253,7 +264,8 @@ App::LoadModel(const std::filesystem::path& path)
 
     // update view position
     auto bb = scene->m_table->GetBoundingBox();
-    m_view->Fit(bb.Min, bb.Max);
+    m_staticView->Fit(bb.Min, bb.Max);
+    m_runtimeView->Fit(bb.Min, bb.Max);
 
     Log(LogLevel::Info) << path;
 
@@ -320,7 +332,8 @@ App::Run()
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
   glr::CreateDock(addDock, "OpenGL resource");
-  ViewDock::CreateSetting(addDock, "view-settings", m_env, m_view, m_settings);
+  ViewDock::CreateSetting(
+    addDock, "view-settings", m_env, m_runtimeView, m_settings);
 
   PoseStream->CreateDock(addDock);
 
