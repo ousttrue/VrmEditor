@@ -46,9 +46,6 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
     }
   }
 
-  ptr->Mesh = node.Mesh;
-  ptr->Skin = node.Skin;
-
   return ptr;
 }
 
@@ -111,14 +108,14 @@ ParseAnimation(const std::shared_ptr<GltfRoot>& scene,
       } else if (path == gltfjson::format::PathTypes::Weights) {
         if (auto values = scene->m_bin.GetAccessorBytes<float>(scene->m_gltf,
                                                                output_index)) {
-          auto node = scene->m_nodes[node_index];
-          if (node->Mesh) {
+          auto& node = scene->m_gltf.Nodes[node_index];
+          if (node.Mesh) {
             // if (values->size() !=
             //     node->Mesh->m_morphTargets.size() * times->size()) {
             //   return std::unexpected{ "animation-weights: size not match" };
             // }
             ptr->AddWeights(
-              node_index, *times, *values, node->Name + "-weights");
+              node_index, *times, *values, node.Name + u8"-weights");
           } else {
             return std::unexpected{ "animation-weights: no node.mesh" };
           }

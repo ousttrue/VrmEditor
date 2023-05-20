@@ -158,9 +158,6 @@ struct Node
     }
   }
 
-  std::optional<uint32_t> Mesh;
-  std::optional<uint32_t> Skin;
-
   Node(std::string_view name);
   Node(std::u8string_view name)
     : Node(std::string_view{ (const char*)name.data(),

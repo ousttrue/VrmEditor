@@ -190,6 +190,16 @@ struct Animation
         .WeightsCount = static_cast<uint32_t>(values.size() / times.size()),
       });
   }
+  void AddWeights(uint32_t node_index,
+                  std::span<const float> times,
+                  std::span<const float> values,
+                  std::u8string_view name)
+  {
+    AddWeights(node_index,
+               times,
+               values,
+               std::string_view{ (const char*)name.data(), name.size() });
+  }
 };
 
 } // namespace gltf

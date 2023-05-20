@@ -412,39 +412,37 @@ ExportSkin(Context& c, const gltfjson::format::Skin& skin)
 }
 
 static void
-ExportNode(Context& c, const GltfRoot& scene, const std::shared_ptr<Node>& node)
+ExportNode(Context& c, const gltfjson::format::Node& node)
 {
   c.m_writer.object_open();
   c.m_writer.key("name");
-  c.m_writer.value(node->Name);
+  c.m_writer.value(node.Name);
   // TRS
-  if (node->InitialTransform.Translation.x != 0 ||
-      node->InitialTransform.Translation.y != 0 ||
-      node->InitialTransform.Translation.z != 0) {
-    c.m_writer.key("translation");
-    c.m_writer.array_open();
-    c.m_writer.value(node->InitialTransform.Translation.x);
-    c.m_writer.value(node->InitialTransform.Translation.y);
-    c.m_writer.value(node->InitialTransform.Translation.z);
-    c.m_writer.array_close();
-  }
-  if (node->Children.size()) {
+  // if (node->InitialTransform.Translation.x != 0 ||
+  //     node->InitialTransform.Translation.y != 0 ||
+  //     node->InitialTransform.Translation.z != 0) {
+  //   c.m_writer.key("translation");
+  //   c.m_writer.array_open();
+  //   c.m_writer.value(node->InitialTransform.Translation.x);
+  //   c.m_writer.value(node->InitialTransform.Translation.y);
+  //   c.m_writer.value(node->InitialTransform.Translation.z);
+  //   c.m_writer.array_close();
+  // }
+  if (node.Children.size()) {
     c.m_writer.key("children");
     c.m_writer.array_open();
-    for (auto& child : node->Children) {
-      if (auto i = scene.IndexOf(child)) {
-        c.m_writer.value(*i);
-      }
+    for (auto& child : node.Children) {
+      c.m_writer.value(child);
     }
     c.m_writer.array_close();
   }
-  if (node->Mesh) {
+  if (node.Mesh) {
     c.m_writer.key("mesh");
-    c.m_writer.value(*node->Mesh);
+    c.m_writer.value(*node.Mesh);
   }
-  if (node->Skin) {
+  if (node.Skin) {
     c.m_writer.key("skin");
-    c.m_writer.value(*node->Skin);
+    c.m_writer.value(*node.Skin);
   }
   c.m_writer.object_close();
 }
@@ -749,8 +747,8 @@ Exporter::Export(const GltfRoot& scene)
     m_writer.key("nodes");
     {
       m_writer.array_open();
-      for (auto& node : scene.m_nodes) {
-        ExportNode(c, scene, node);
+      for (auto& node : scene.m_gltf.Nodes) {
+        ExportNode(c, node);
       }
       m_writer.array_close();
     }

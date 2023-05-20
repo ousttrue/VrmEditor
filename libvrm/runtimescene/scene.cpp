@@ -395,9 +395,9 @@ RuntimeScene::Drawables()
     };
     for (auto& [k, v] :
          m_table->m_expressions->EvalMorphTargetMap(nodeToIndex)) {
-      auto& morph_node = m_table->m_nodes[k.NodeIndex];
-      if (morph_node->Mesh) {
-        if (auto instance = GetDeformedMesh(*morph_node->Mesh)) {
+      auto& morph_node = m_table->m_gltf.Nodes[k.NodeIndex];
+      if (morph_node.Mesh) {
+        if (auto instance = GetDeformedMesh(*morph_node.Mesh)) {
           instance->Weights[k.MorphIndex] = v;
         }
       }
@@ -405,22 +405,23 @@ RuntimeScene::Drawables()
   }
 
   // skinning
-  for (auto& node : m_table->m_nodes) {
-    if (node->Mesh) {
+  for (uint32_t i = 0; i < m_nodes.size(); ++i) {
+    auto& gltfNode = m_table->m_gltf.Nodes[i];
+    if (gltfNode.Mesh) {
       // auto mesh = m_table->m_meshes[*mesh_index];
 
       // mesh animation
       std::span<DirectX::XMFLOAT4X4> skinningMatrices;
 
       // skinning
-      if (node->Skin) {
-        auto skin = m_skins[*node->Skin];
+      if (gltfNode.Skin) {
+        auto skin = m_skins[*gltfNode.Skin];
         skin->CurrentMatrices.resize(skin->BindMatrices.size());
 
         auto rootInverse = DirectX::XMMatrixIdentity();
         if (auto root_index = skin->Root) {
           rootInverse = DirectX::XMMatrixInverse(
-            nullptr, GetRuntimeNode(node)->WorldMatrix());
+            nullptr, GetRuntimeNode(m_table->m_nodes[i])->WorldMatrix());
         }
 
         for (int i = 0; i < skin->Joints.size(); ++i) {
@@ -436,9 +437,9 @@ RuntimeScene::Drawables()
       }
 
       // apply morphtarget & skinning
-      if (node->Mesh) {
-        if (auto instance = GetDeformedMesh(*node->Mesh)) {
-          instance->applyMorphTargetAndSkinning(*m_meshes[*node->Mesh],
+      if (gltfNode.Mesh) {
+        if (auto instance = GetDeformedMesh(*gltfNode.Mesh)) {
+          instance->applyMorphTargetAndSkinning(*m_meshes[*gltfNode.Mesh],
                                                 skinningMatrices);
         }
       }
@@ -446,14 +447,16 @@ RuntimeScene::Drawables()
   }
 
   m_drawables.clear();
-  for (auto& node : m_table->m_nodes) {
-    if (node->Mesh) {
+  for (uint32_t i = 0; i < m_nodes.size(); ++i) {
+    auto& gltfNode = m_table->m_gltf.Nodes[i];
+    if (gltfNode.Mesh) {
       m_drawables.push_back({
-        .Mesh = *node->Mesh,
+        .Mesh = *gltfNode.Mesh,
       });
-      DirectX::XMStoreFloat4x4(&m_drawables.back().Matrix,
-                               GetRuntimeNode(node)->WorldMatrix());
-      auto instance = GetDeformedMesh(*node->Mesh);
+      DirectX::XMStoreFloat4x4(
+        &m_drawables.back().Matrix,
+        GetRuntimeNode(m_table->m_nodes[i])->WorldMatrix());
+      auto instance = GetDeformedMesh(*gltfNode.Mesh);
     }
   }
 
@@ -726,5 +729,4 @@ RuntimeScene::NodeConstraintProcess(
   //     break;
   // }
 }
-
 }

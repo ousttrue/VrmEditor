@@ -113,11 +113,11 @@ GltfRoot::GetBoundingBox() const
   for (auto& node : m_nodes) {
     bb.Extend(node->WorldInitialTransform.Translation);
     bb.Extend(node->WorldInitialTransform.Translation);
-    if (node->Mesh) {
-      // auto mesh_bb = node->Mesh->GetBoundingBox();
-      // bb.Extend(dmath::transform(mesh_bb.Min, node->WorldInitialMatrix()));
-      // bb.Extend(dmath::transform(mesh_bb.Max, node->WorldInitialMatrix()));
-    }
+    // if (node->Mesh) {
+    // auto mesh_bb = node->Mesh->GetBoundingBox();
+    // bb.Extend(dmath::transform(mesh_bb.Min, node->WorldInitialMatrix()));
+    // bb.Extend(dmath::transform(mesh_bb.Max, node->WorldInitialMatrix()));
+    // }
   }
   return bb;
 }
@@ -126,10 +126,12 @@ std::span<const DrawItem>
 GltfRoot::Drawables()
 {
   m_drawables.clear();
-  for (auto& node : m_nodes) {
-    if (node->Mesh) {
+  for (uint32_t i = 0; i < m_nodes.size(); ++i) {
+    auto node = m_nodes[i];
+    auto& gltfNode = m_gltf.Nodes[i];
+    if (gltfNode.Mesh) {
       m_drawables.push_back({
-        .Mesh = *node->Mesh,
+        .Mesh = *gltfNode.Mesh,
       });
       DirectX::XMStoreFloat4x4(&m_drawables.back().Matrix,
                                node->WorldInitialMatrix());
