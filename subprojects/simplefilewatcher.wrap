@@ -1,0 +1,9 @@
+[wrap-file]
+; directory = glfw-3.3.8
+source_url = https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/simplefilewatcher/source-archive.zip
+source_filename = simplefilewatcher.zip
+source_hash = 3b78f5b889bef776e7cdf21d4b308d8cb4dc93ced27135df43d4b9cc5aa5d12e
+patch_directory = simplefilewatcher
+
+[provide]
+simplefilewatcher = simplefilewatcher_dep

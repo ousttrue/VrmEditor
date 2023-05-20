@@ -17,6 +17,7 @@
 #include "humanpose/humanpose_stream.h"
 #include "luahost.h"
 #include "platform.h"
+#include "filewatcher.h"
 #include <ImGuizmo.h>
 #include <cuber/mesh.h>
 #include <fstream>
@@ -35,6 +36,8 @@ const auto WINDOW_TITLE = "VrmEditor";
 
 App::App()
 {
+  m_watcher = std::make_shared<FileWatcher>();
+
   m_logger = std::make_shared<ImLogger>();
   m_lua = std::make_shared<LuaEngine>();
   auto file = get_home() / ".vrmeditor.ini.lua";
@@ -344,6 +347,8 @@ App::Run()
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
+    m_watcher->Update();
+
     auto time = info->Time;
 
     if (lastTime) {
@@ -380,4 +385,10 @@ void
 App::ShowDock(std::string_view name, bool visible)
 {
   m_gui->SetDockVisible(name, visible);
+}
+
+void
+App::SetShaderDir(const std::filesystem::path& path)
+{
+  m_watcher->Watch(path);
 }

@@ -93,6 +93,9 @@ struct LuaEngineImpl
       { "load_pbr", MakeLuaFunc([](const std::filesystem::path& path) {
           App::Instance().LoadPbr(path);
         }) },
+      { "set_shaderpath", MakeLuaFunc([](const std::filesystem::path& path) {
+          App::Instance().SetShaderDir(path);
+        }) },
       { nullptr, nullptr },
     };
     luaL_register(m_lua, "vrmeditor", VrmEditorLuaModule);

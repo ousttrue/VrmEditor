@@ -30,6 +30,7 @@ directxmath_dep = dependency('directxmath', include_type: 'system')
 imnodes_dep = dependency('imnodes')
 asio_dep = dependency('asio')
 gltfjson_dep = dependency('gltfjson')
+simplefilewatcher_dep = dependency('simplefilewatcher')
 subdir('libvrm')
 
 if get_option('executables')

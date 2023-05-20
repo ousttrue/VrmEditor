@@ -4,6 +4,7 @@ srcs = [
     'app.cpp',
     'luahost.cpp',
     'assetdir.cpp',
+    'filewatcher.cpp',
     'glr/gl3renderer.cpp',
     'glr/cuber.cpp',
     'glr/scene_preview.cpp',
@@ -46,5 +47,6 @@ executable(
         iconfont_cpp_headers_dep,
         imnodes_dep,
         asio_dep,
+        simplefilewatcher_dep,
     ],
 )

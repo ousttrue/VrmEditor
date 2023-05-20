@@ -6,6 +6,8 @@
 #include <vrm/gltf.h>
 #include <vrm/humanbones.h>
 
+class FileWatcher;
+
 namespace libvrm {
 namespace bvh {
 struct Bvh;
@@ -50,6 +52,8 @@ class GltfJsonGui;
 
 class App
 {
+  std::shared_ptr<FileWatcher> m_watcher;
+
   std::filesystem::path m_ini;
   std::shared_ptr<Platform> m_platform;
   std::shared_ptr<Gui> m_gui;
@@ -106,4 +110,5 @@ public:
   void LoadLua(const std::filesystem::path& path);
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
   void ShowDock(std::string_view name, bool visible);
+  void SetShaderDir(const std::filesystem::path& path);
 };

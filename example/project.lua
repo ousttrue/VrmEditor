@@ -222,3 +222,58 @@ print(ok, alicia)
 local bvh = "../UniVRM/Assets/VRM10_Samples/VRM10Viewer/Motions/vrm10viewer_test_motion.txt"
 ok = vrmeditor.load_motion(bvh, 0)
 print(ok, bvh)
+
+--
+-- shader env
+--
+local self = string.sub(debug.getinfo(1).source, 2)
+self = string.gsub(self, "\\", "/")
+
+local function split(src, delimiter)
+  local result = {}
+  local i = 1
+  while true do
+    local found = string.find(src, delimiter, i)
+    if found then
+      local d = found - i
+      if d > 0 then
+        table.insert(result, string.sub(src, i, found - 1))
+      end
+      i = found + 1
+    else
+      break
+    end
+  end
+  local d = #src - i
+  if d > 0 then
+    table.insert(result, string.sub(src, i))
+  end
+
+  return result
+end
+
+local function concat(src, delimiter)
+  local dst = ""
+  for i, s in ipairs(src) do
+    if i > 1 then
+      dst = dst .. delimiter
+    end
+    dst = dst .. s
+  end
+  return dst
+end
+
+-- print(self)
+local splitted = split(self, "/")
+table.remove(splitted, #splitted)
+local here = concat(splitted, "/")
+-- print(here)
+
+vrmeditor.set_shaderpath(here .. "/shaders", {
+  pbr_vs = "pbr.vs",
+  pbr_fs = "pbr.fs",
+  unlit_vs = "unlit.vs",
+  unlit_fs = "unlit.fs",
+  mtoon_vs = "mtoon.vs",
+  mtoon_fs = "mtoon.fs",
+})
