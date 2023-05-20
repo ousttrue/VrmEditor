@@ -219,6 +219,11 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
   : m_table(table)
 {
   Reset();
+
+  for (uint32_t i = 0; i < m_table->m_gltf.Meshes.Size(); ++i) {
+    auto baseMesh = ParseMesh(m_table->m_gltf, m_table->m_bin, i);
+    m_meshes.push_back(*baseMesh);
+  }
 }
 
 void
@@ -266,10 +271,7 @@ RuntimeScene::GetDeformedMesh(uint32_t mesh)
     return found->second;
   }
 
-  auto baseMesh = ParseMesh(m_table->m_gltf, m_table->m_bin, mesh);
-  m_meshes.insert({ mesh, *baseMesh });
-
-  auto runtime = std::make_shared<DeformedMesh>(*baseMesh);
+  auto runtime = std::make_shared<DeformedMesh>(m_meshes[mesh]);
   m_meshMap.insert({ mesh, runtime });
   return runtime;
 }

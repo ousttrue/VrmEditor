@@ -1,26 +1,16 @@
 #pragma once
 #include "expression.h"
-#include "gizmo.h"
-#include "humanpose.h"
 #include "runtimescene/base_mesh.h"
 #include "scenetypes.h"
 #include "springbone.h"
 #include "springcollider.h"
 #include <DirectXMath.h>
-#include <chrono>
-#include <expected>
-#include <filesystem>
 #include <functional>
 #include <gltfjson/bin.h>
 #include <gltfjson/gltf.h>
-#include <list>
 #include <memory>
 #include <optional>
-#include <ostream>
 #include <span>
-#include <stdint.h>
-#include <string>
-#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -136,11 +126,6 @@ struct GltfRoot
   void Traverse(const EnterFunc& enter,
                 const LeaveFunc& leave,
                 const std::shared_ptr<Node>& node = nullptr);
-
-  std::string m_jsonpath;
-  // void TraverseJson(const EnterJson& enter,
-  //                   const LeaveJson& leave,
-  //                   nlohmann::json* j = nullptr);
 
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
 

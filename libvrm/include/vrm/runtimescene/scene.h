@@ -20,7 +20,7 @@ struct RuntimeScene
   std::shared_ptr<libvrm::gltf::GltfRoot> m_table;
   std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
-  std::unordered_map<uint32_t, std::shared_ptr<BaseMesh>> m_meshes;
+  std::vector<std::shared_ptr<BaseMesh>> m_meshes;
 
   std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
   {
