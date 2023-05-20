@@ -96,15 +96,15 @@ template<typename T>
 static void
 ShowGuiVector(const char* label,
               std::vector<T>& vector,
-              const std::function<void(const char*, T&)>& showGui)
+              const std::function<void(size_t i, T&)>& showGui)
 {
   if (ImGui::CollapsingHeader(label)) {
     ImGui::Indent();
     ImGui::PushID(&vector);
     PrintfBuffer buf;
-    int i = 0;
+    size_t i = 0;
     for (auto it = vector.begin(); it != vector.end(); ++i) {
-      showGui(buf.Printf("##value_%s_%d", label, i), *it);
+      showGui(i, *it);
       ImGui::SameLine();
       if (ImGui::Button(buf.Printf("x##%s_%d", label, i))) {
         it = vector.erase(it);
@@ -231,8 +231,21 @@ ShowGui(const gltfjson::format::Root& root,
   ImGui::InputScalar("Count", ImGuiDataType_U32, &accessor.Count);
   grapho::imgui::EnumCombo(
     "Type", &accessor.Type, gltfjson::format::TypesCombo);
-  // std::vector<float> Max;
-  // std::vector<float> Min;
+
+  ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  ShowGuiVector<float>("Max", accessor.Max, [](size_t i, auto& v) {
+    if (i) {
+      ImGui::SameLine();
+    }
+    ImGui::Text("%f", v);
+  });
+  ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  ShowGuiVector<float>("Min", accessor.Min, [](size_t i, auto& v) {
+    if (i) {
+      ImGui::SameLine();
+    }
+    ImGui::Text("%f", v);
+  });
   ShowGuiOptional<gltfjson::format::Sparse>(
     accessor.Sparse, "Sparse", "Sparse +", [](auto& sparse) {});
   ImGui::EndDisabled();
@@ -529,8 +542,8 @@ ShowGui(const gltfjson::format::Root& root,
     }
   }
 
-  ShowGuiVector<float>("Weights", mesh.Weights, [](const char* label, auto& v) {
-    ImGui::SliderFloat(label, &v, 0, 1);
+  ShowGuiVector<float>("Weights", mesh.Weights, [&buf](size_t i, auto& v) {
+    ImGui::SliderFloat(buf.Printf("##Weights_%zu", i), &v, 0, 1);
   });
 }
 
@@ -577,10 +590,11 @@ ShowGui(const gltfjson::format::Root& root,
     node.Translation, "Translation", "Translation +", [](auto& t) {
       ImGui::InputFloat3("##translation", t.data());
     });
-  ShowGuiVector<float>(
-    "Weights", node.Weights, [](const char* label, auto& value) {
-      ImGui::SliderFloat(label, &value, 0, 1);
-    });
+
+  PrintfBuffer buf;
+  ShowGuiVector<float>("Weights", node.Weights, [&buf](size_t i, auto& value) {
+    ImGui::SliderFloat(buf.Printf("##Weights_%zu", i), &value, 0, 1);
+  });
 }
 
 void
