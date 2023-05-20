@@ -3,16 +3,16 @@
 
 namespace runtimescene {
 
-struct RuntimeMesh
+struct DeformedMesh
 {
   // morph targets
-  std::vector<float> weights;
+  std::vector<float> Weights;
   // skinning
-  std::vector<libvrm::Vertex> m_updated;
+  std::vector<libvrm::Vertex> Vertices;
 
-  RuntimeMesh(const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
-    : weights(mesh->m_morphTargets.size())
-    , m_updated(mesh->m_vertices)
+  DeformedMesh(const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
+    : Weights(mesh->m_morphTargets.size())
+    , Vertices(mesh->m_vertices)
   {
   }
 
@@ -41,23 +41,23 @@ struct RuntimeMesh
     std::span<DirectX::XMFLOAT4X4> skinningMatrices)
   {
     // clear & apply morph target
-    m_updated.clear();
+    Vertices.clear();
     for (int i = 0; i < mesh.m_vertices.size(); ++i) {
       auto v = mesh.m_vertices[i];
-      for (int j = 0; j < weights.size(); ++j) {
+      for (int j = 0; j < Weights.size(); ++j) {
         auto& morphtarget = mesh.m_morphTargets[j];
-        if (weights[j]) {
-          v.Position += morphtarget->Vertices[i].position * weights[j];
+        if (Weights[j]) {
+          v.Position += morphtarget->Vertices[i].position * Weights[j];
         }
       }
-      m_updated.push_back(v);
+      Vertices.push_back(v);
     }
 
     // calc skinning
     if (skinningMatrices.size()) {
       for (int i = 0; i < mesh.m_vertices.size(); ++i) {
-        auto src = m_updated[i];
-        auto& dst = m_updated[i];
+        auto src = Vertices[i];
+        auto& dst = Vertices[i];
         dst.Position = { 0, 0, 0 };
         dst.Normal = { 0, 0, 0 };
         auto binding = mesh.m_bindings[i];

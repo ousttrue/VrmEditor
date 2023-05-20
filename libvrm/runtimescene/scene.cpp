@@ -1,5 +1,5 @@
 #include "vrm/runtimescene/scene.h"
-#include "vrm/runtimescene/mesh.h"
+#include "vrm/runtimescene/deformed_mesh.h"
 #include "vrm/runtimescene/node.h"
 #include "vrm/runtimescene/springcollision.h"
 #include <vrm/skin.h>
@@ -49,7 +49,7 @@ RuntimeScene::GetRuntimeNode(const std::shared_ptr<libvrm::gltf::Node>& node)
   return {};
 }
 
-std::shared_ptr<RuntimeMesh>
+std::shared_ptr<DeformedMesh>
 RuntimeScene::GetRuntimeMesh(const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
 {
   auto found = m_meshMap.find(mesh);
@@ -57,7 +57,7 @@ RuntimeScene::GetRuntimeMesh(const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
     return found->second;
   }
 
-  auto runtime = std::make_shared<RuntimeMesh>(mesh);
+  auto runtime = std::make_shared<DeformedMesh>(mesh);
   m_meshMap.insert({ mesh, runtime });
   return runtime;
 }
@@ -135,7 +135,7 @@ RuntimeScene::Drawables()
          m_table->m_expressions->EvalMorphTargetMap(nodeToIndex)) {
       auto& morph_node = m_table->m_nodes[k.NodeIndex];
       auto instance = GetRuntimeMesh(morph_node->Mesh);
-      instance->weights[k.MorphIndex] = v;
+      instance->Weights[k.MorphIndex] = v;
     }
   }
 

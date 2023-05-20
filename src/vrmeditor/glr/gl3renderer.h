@@ -20,7 +20,7 @@ class Texture;
 }
 
 namespace runtimescene {
-struct RuntimeMesh;
+struct DeformedMesh;
 }
 
 namespace gltfjson {
@@ -39,7 +39,7 @@ Render(RenderPass pass,
        const gltfjson::format::Root& root,
        const gltfjson::format::Bin& bin,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-       const runtimescene::RuntimeMesh& instance,
+       const runtimescene::DeformedMesh& instance,
        const DirectX::XMFLOAT4X4& m);
 
 // clear current render target

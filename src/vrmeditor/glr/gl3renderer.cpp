@@ -17,7 +17,7 @@
 #include <variant>
 #include <vrm/fileutil.h>
 #include <vrm/gltf.h>
-#include <vrm/runtimescene/mesh.h>
+#include <vrm/runtimescene/deformed_mesh.h>
 
 static auto vertex_shader_text = u8R"(#version 400
 uniform mat4 Model;
@@ -352,7 +352,7 @@ public:
               const gltfjson::format::Root& root,
               const gltfjson::format::Bin& bin,
               const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-              const runtimescene::RuntimeMesh& instance,
+              const runtimescene::DeformedMesh& instance,
               const DirectX::XMFLOAT4X4& m)
   {
     if (env.m_pbr) {
@@ -364,9 +364,9 @@ public:
 
     auto vao = GetOrCreate(mesh);
 
-    if (instance.m_updated.size()) {
-      vao->slots_[0]->Upload(instance.m_updated.size() * sizeof(libvrm::Vertex),
-                             instance.m_updated.data());
+    if (instance.Vertices.size()) {
+      vao->slots_[0]->Upload(instance.Vertices.size() * sizeof(libvrm::Vertex),
+                             instance.Vertices.data());
     }
 
     switch (pass) {
@@ -494,7 +494,7 @@ Render(RenderPass pass,
        const gltfjson::format::Root& root,
        const gltfjson::format::Bin& bin,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-       const runtimescene::RuntimeMesh& instance,
+       const runtimescene::DeformedMesh& instance,
        const DirectX::XMFLOAT4X4& m)
 {
   Gl3Renderer::Instance().Render(pass, env, root, bin, mesh, instance, m);

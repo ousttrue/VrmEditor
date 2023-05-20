@@ -8,12 +8,12 @@
 namespace runtimescene {
 
 struct RuntimeNode;
-struct RuntimeMesh;
+struct DeformedMesh;
 struct RuntimeSpringCollision;
 
 using RenderFunc =
   std::function<void(const std::shared_ptr<libvrm::gltf::Mesh>&,
-                     const RuntimeMesh&,
+                     const DeformedMesh&,
                      const float[16])>;
 
 struct RuntimeScene
@@ -39,7 +39,7 @@ struct RuntimeScene
   std::shared_ptr<libvrm::gltf::GltfRoot> m_lastScene;
 
   std::unordered_map<std::shared_ptr<libvrm::gltf::Mesh>,
-                     std::shared_ptr<RuntimeMesh>>
+                     std::shared_ptr<DeformedMesh>>
     m_meshMap;
   std::unordered_map<std::shared_ptr<libvrm::gltf::Node>,
                      std::shared_ptr<RuntimeNode>>
@@ -55,7 +55,7 @@ struct RuntimeScene
   RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table);
   void Reset();
 
-  std::shared_ptr<RuntimeMesh> GetRuntimeMesh(
+  std::shared_ptr<DeformedMesh> GetRuntimeMesh(
     const std::shared_ptr<libvrm::gltf::Mesh>& mesh);
   std::shared_ptr<RuntimeNode> GetRuntimeNode(
     const std::shared_ptr<libvrm::gltf::Node>& node);

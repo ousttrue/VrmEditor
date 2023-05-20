@@ -1,5 +1,5 @@
 #include "vrm/runtimescene/animation_update.h"
-#include "vrm/runtimescene/mesh.h"
+#include "vrm/runtimescene/deformed_mesh.h"
 #include "vrm/runtimescene/node.h"
 #include "vrm/runtimescene/scene.h"
 
@@ -31,7 +31,7 @@ AnimationUpdate(const libvrm::gltf::Animation& animation,
     auto node = nodes[k];
     auto values = v.GetValue(seconds, repeat);
     auto instance = runtime->GetRuntimeMesh(node->Mesh);
-    instance->weights.assign(values.begin(), values.end());
+    instance->Weights.assign(values.begin(), values.end());
   }
 }
 
