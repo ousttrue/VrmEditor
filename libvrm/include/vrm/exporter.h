@@ -1,7 +1,7 @@
 #pragma once
 #include "animation.h"
-#include "jsons.h"
 #include "gltfroot.h"
+#include "jsons.h"
 #include <gltfjson/bin_writer.h>
 #include <span>
 #include <stdint.h>
@@ -25,9 +25,8 @@ struct Exporter
   void Export(const GltfRoot& scene);
   void ExportAsset(const GltfRoot& scene);
   void ExportImage(const GltfRoot& scene, const std::shared_ptr<Image>& image);
-  void ExportTextureSampler(
-    const GltfRoot& scene,
-    const std::shared_ptr<gltfjson::format::Sampler>& sampler);
+  void ExportTextureSampler(const GltfRoot& scene,
+                            const gltfjson::format::Sampler& sampler);
   void ExportTexture(const GltfRoot& scene,
                      const std::shared_ptr<Texture>& texture);
   void ExportMaterial(const GltfRoot& scene,

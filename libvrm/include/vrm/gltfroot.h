@@ -79,7 +79,7 @@ struct GltfRoot
   gltfjson::format::Root m_gltf;
   gltfjson::format::Bin m_bin;
   std::string m_title = "scene";
-  std::vector<std::shared_ptr<gltfjson::format::Sampler>> m_samplers;
+  // std::vector<std::shared_ptr<gltfjson::format::Sampler>> m_samplers;
   std::vector<std::shared_ptr<Image>> m_images;
   std::vector<std::shared_ptr<Texture>> m_textures;
   std::vector<std::shared_ptr<Material>> m_materials;
@@ -113,7 +113,6 @@ struct GltfRoot
   void Clear()
   {
     m_type = {};
-    m_samplers.clear();
     m_images.clear();
     m_textures.clear();
     m_materials.clear();
@@ -134,12 +133,6 @@ struct GltfRoot
     m_expressions = {};
   }
 
-  std::optional<size_t> IndexOf(
-    const std::shared_ptr<gltfjson::format::Sampler>& sampler) const
-  {
-    return _IndexOf<std::shared_ptr<gltfjson::format::Sampler>>(m_samplers,
-                                                                sampler);
-  }
   std::optional<size_t> IndexOf(const std::shared_ptr<Image>& image) const
   {
     return _IndexOf<std::shared_ptr<Image>>(m_images, image);

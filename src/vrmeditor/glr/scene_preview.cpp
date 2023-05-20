@@ -62,7 +62,12 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
   for (auto [mesh, m] : m_scene->m_table->Drawables()) {
     auto meshInstance = m_scene->GetRuntimeMesh(mesh);
     if (m_settings->ShowMesh) {
-      glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, m);
+      glr::Render(RenderPass::Color,
+                  *m_env,
+                  m_scene->m_table->m_gltf,
+                  mesh,
+                  *meshInstance,
+                  m);
     }
   }
   if (m_settings->Skybox) {
@@ -71,7 +76,12 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
   for (auto [mesh, m] : m_scene->m_table->Drawables()) {
     auto meshInstance = m_scene->GetRuntimeMesh(mesh);
     if (m_settings->ShowShadow) {
-      glr::Render(RenderPass::ShadowMatrix, *m_env, mesh, *meshInstance, m);
+      glr::Render(RenderPass::ShadowMatrix,
+                  *m_env,
+                  m_scene->m_table->m_gltf,
+                  mesh,
+                  *meshInstance,
+                  m);
     }
   }
 
@@ -136,7 +146,12 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   for (auto [mesh, m] : m_scene->Drawables()) {
     auto meshInstance = m_scene->GetRuntimeMesh(mesh);
     if (m_settings->ShowMesh) {
-      glr::Render(RenderPass::Color, *m_env, mesh, *meshInstance, m);
+      glr::Render(RenderPass::Color,
+                  *m_env,
+                  m_scene->m_table->m_gltf,
+                  mesh,
+                  *meshInstance,
+                  m);
     }
   }
   if (m_settings->Skybox) {
@@ -146,7 +161,12 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   for (auto [mesh, m] : m_scene->Drawables()) {
     auto meshInstance = m_scene->GetRuntimeMesh(mesh);
     if (m_settings->ShowShadow) {
-      glr::Render(RenderPass::ShadowMatrix, *m_env, mesh, *meshInstance, m);
+      glr::Render(RenderPass::ShadowMatrix,
+                  *m_env,
+                  m_scene->m_table->m_gltf,
+                  mesh,
+                  *meshInstance,
+                  m);
     }
   }
 

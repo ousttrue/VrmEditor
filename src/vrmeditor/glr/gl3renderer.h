@@ -23,12 +23,19 @@ namespace runtimescene {
 struct RuntimeMesh;
 }
 
+namespace gltfjson {
+namespace format {
+struct Root;
+}
+}
+
 namespace glr {
 struct RenderingEnv;
 
 void
 Render(RenderPass pass,
        const RenderingEnv& camera,
+       const gltfjson::format::Root& root,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
        const runtimescene::RuntimeMesh& instance,
        const DirectX::XMFLOAT4X4& m);
@@ -46,7 +53,8 @@ void
 CreateDock(const AddDockFunc& addDock, std::string_view title);
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreate(const std::shared_ptr<libvrm::gltf::Texture>& texture,
+GetOrCreate(const gltfjson::format::Root& root,
+            const std::shared_ptr<libvrm::gltf::Texture>& texture,
             libvrm::gltf::ColorSpace colorspace);
 
 void

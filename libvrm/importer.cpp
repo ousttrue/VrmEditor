@@ -53,9 +53,7 @@ ParseTexture(const std::shared_ptr<GltfRoot>& scene,
   auto name = texture.Name;
   auto ptr = std::make_shared<gltf::Texture>();
   ptr->Source = scene->m_images[*texture.Source];
-  if (auto sampler = texture.Sampler) {
-    ptr->Sampler = scene->m_samplers[*sampler];
-  }
+  ptr->Sampler = texture.Sampler;
   return ptr;
 }
 
@@ -818,15 +816,6 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   //     scene->m_title = "vrm-1.0";
   //   }
   // }
-
-  {
-    auto& samplers = scene->m_gltf.Samplers;
-    for (int i = 0; i < samplers.Size(); ++i) {
-      auto sampler = std::make_shared<gltfjson::format::Sampler>();
-      *sampler = samplers[i];
-      scene->m_samplers.push_back(sampler);
-    }
-  }
 
   {
     auto& images = scene->m_gltf.Images;

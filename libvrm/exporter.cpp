@@ -101,11 +101,11 @@ Exporter::Export(const GltfRoot& scene)
   }
 
   // samplers
-  if (scene.m_samplers.size()) {
+  if (scene.m_gltf.Samplers.Size()) {
     m_writer.key("samplers");
     {
       m_writer.array_open();
-      for (auto& sampler : scene.m_samplers) {
+      for (auto& sampler : scene.m_gltf.Samplers) {
         ExportTextureSampler(scene, sampler);
       }
       m_writer.array_close();
@@ -292,9 +292,8 @@ Exporter::ExportImage(const GltfRoot& scene,
 //     "wrapT": 10497
 // }
 void
-Exporter::ExportTextureSampler(
-  const GltfRoot& scene,
-  const std::shared_ptr<gltfjson::format::Sampler>& sampler)
+Exporter::ExportTextureSampler(const GltfRoot& scene,
+                               const gltfjson::format::Sampler& sampler)
 {
   m_writer.object_open();
   m_writer.object_close();
@@ -311,8 +310,10 @@ Exporter::ExportTexture(const GltfRoot& scene,
   m_writer.object_open();
   m_writer.key("source");
   m_writer.value(*scene.IndexOf(texture->Source));
-  m_writer.key("sampler");
-  m_writer.value(*scene.IndexOf(texture->Sampler));
+  if (auto sampler = texture->Sampler) {
+    m_writer.key("sampler");
+    m_writer.value(*sampler);
+  }
   m_writer.object_close();
 }
 

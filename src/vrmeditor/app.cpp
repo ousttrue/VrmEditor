@@ -11,13 +11,13 @@
 #include "docks/scene_selection.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
+#include "filewatcher.h"
 #include "fs_util.h"
 #include "glr/gl3renderer.h"
 #include "glr/rendering_env.h"
 #include "humanpose/humanpose_stream.h"
 #include "luahost.h"
 #include "platform.h"
-#include "filewatcher.h"
 #include <ImGuizmo.h>
 #include <cuber/mesh.h>
 #include <fstream>
@@ -216,7 +216,7 @@ App::GetTexture(const gltfjson::format::Root& root,
                 libvrm::gltf::ColorSpace colorspace)
 {
   auto texture = m_runtime->m_table->m_textures[texture_index];
-  return glr::GetOrCreate(texture, colorspace);
+  return glr::GetOrCreate(m_runtime->m_table->m_gltf, texture, colorspace);
 }
 
 bool

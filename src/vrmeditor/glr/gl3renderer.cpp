@@ -154,6 +154,7 @@ public:
   void Release() { m_drawableMap.clear(); }
 
   std::shared_ptr<grapho::gl3::Texture> GetOrCreate(
+    const gltfjson::format::Root& root,
     const std::shared_ptr<libvrm::gltf::Texture>& src,
     libvrm::gltf::ColorSpace colorspace)
   {
@@ -179,15 +180,15 @@ public:
       src->Source->Pixels(),
     });
 
-    if (auto sampler = src->Sampler) {
-
+    if (src->Sampler) {
+      auto& sampler = root.Samplers[*src->Sampler];
       texture->Bind();
       glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)sampler->MagFilter);
+        GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)sampler.MagFilter);
       glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)sampler->MinFilter);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)sampler->WrapS);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)sampler->WrapT);
+        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)sampler.MinFilter);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)sampler.WrapS);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)sampler.WrapT);
       texture->Unbind();
     }
 
@@ -196,6 +197,7 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::PbrMaterial> GetOrCreate(
+    const gltfjson::format::Root& root,
     const std::shared_ptr<libvrm::gltf::Material>& src)
   {
     if (!src) {
@@ -209,25 +211,28 @@ public:
 
     std::shared_ptr<grapho::gl3::Texture> albedo;
     if (src->Pbr.BaseColorTexture) {
-      albedo =
-        GetOrCreate(src->Pbr.BaseColorTexture, libvrm::gltf::ColorSpace::sRGB);
+      albedo = GetOrCreate(
+        root, src->Pbr.BaseColorTexture, libvrm::gltf::ColorSpace::sRGB);
     }
     std::shared_ptr<grapho::gl3::Texture> normal;
     if (src->NormalTexture) {
       normal =
-        GetOrCreate(src->NormalTexture, libvrm::gltf::ColorSpace::Linear);
+        GetOrCreate(root, src->NormalTexture, libvrm::gltf::ColorSpace::Linear);
     }
     std::shared_ptr<grapho::gl3::Texture> metallic;
     std::shared_ptr<grapho::gl3::Texture> roughness;
     if (src->Pbr.MetallicRoughnessTexture) {
-      metallic = GetOrCreate(src->Pbr.MetallicRoughnessTexture,
+      metallic = GetOrCreate(root,
+                             src->Pbr.MetallicRoughnessTexture,
                              libvrm::gltf::ColorSpace::Linear);
-      roughness = GetOrCreate(src->Pbr.MetallicRoughnessTexture,
+      roughness = GetOrCreate(root,
+                              src->Pbr.MetallicRoughnessTexture,
                               libvrm::gltf::ColorSpace::Linear);
     }
     std::shared_ptr<grapho::gl3::Texture> ao;
     if (src->OcclusionTexture) {
-      ao = GetOrCreate(src->OcclusionTexture, libvrm::gltf::ColorSpace::Linear);
+      ao = GetOrCreate(
+        root, src->OcclusionTexture, libvrm::gltf::ColorSpace::Linear);
     }
 
     auto material =
@@ -289,6 +294,7 @@ public:
 
   void Render(RenderPass pass,
               const RenderingEnv& env,
+              const gltfjson::format::Root& root,
               const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
               const runtimescene::RuntimeMesh& instance,
               const DirectX::XMFLOAT4X4& m)
@@ -319,6 +325,7 @@ public:
                         env.ViewMatrix,
                         m,
                         env.CameraPosition,
+                        root,
                         vao,
                         primitive,
                         drawOffset);
@@ -347,11 +354,12 @@ public:
                      const DirectX::XMFLOAT4X4& view,
                      const DirectX::XMFLOAT4X4& model,
                      const DirectX::XMFLOAT3& cameraPos,
+                     const gltfjson::format::Root& root,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
                      const libvrm::gltf::Primitive& primitive,
                      uint32_t drawOffset)
   {
-    if (auto material = GetOrCreate(primitive.Material)) {
+    if (auto material = GetOrCreate(root, primitive.Material)) {
       // auto texture = m_white;
       // if (auto t = primitive.Material->ColorTexture) {
       //   texture = GetOrCreate(t);
@@ -414,11 +422,12 @@ public:
 void
 Render(RenderPass pass,
        const RenderingEnv& env,
+       const gltfjson::format::Root& root,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
        const runtimescene::RuntimeMesh& instance,
        const DirectX::XMFLOAT4X4& m)
 {
-  Gl3Renderer::Instance().Render(pass, env, mesh, instance, m);
+  Gl3Renderer::Instance().Render(pass, env, root, mesh, instance, m);
 }
 
 void
@@ -448,10 +457,11 @@ CreateDock(const AddDockFunc& addDock, std::string_view title)
 }
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreate(const std::shared_ptr<libvrm::gltf::Texture>& texture,
+GetOrCreate(const gltfjson::format::Root& root,
+            const std::shared_ptr<libvrm::gltf::Texture>& texture,
             libvrm::gltf::ColorSpace colorspace)
 {
-  return Gl3Renderer::Instance().GetOrCreate(texture, colorspace);
+  return Gl3Renderer::Instance().GetOrCreate(root, texture, colorspace);
 }
 
 void
