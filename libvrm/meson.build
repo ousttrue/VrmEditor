@@ -1,7 +1,5 @@
 libvrm_inc = include_directories('include')
 libvrm_deps = [
-    stb_dep,
-    # json_dep,
     directxmath_dep,
     grapho_dep,
     asio_dep,
@@ -23,7 +21,6 @@ libvrm_lib = static_library(
         'srht_sender.cpp',
         'importer.cpp',
         'springcollider.cpp',
-        'image.cpp',
         'runtimescene/scene.cpp',
         'runtimescene/animation_update.cpp',
         'runtimescene/springjoint.cpp',

@@ -210,15 +210,6 @@ App::WriteScene(const std::filesystem::path& path)
     .WriteTo(os);
 }
 
-std::shared_ptr<grapho::gl3::Texture>
-App::GetTexture(const gltfjson::format::Root& root,
-                uint32_t texture_index,
-                libvrm::gltf::ColorSpace colorspace)
-{
-  auto texture = m_runtime->m_table->m_textures[texture_index];
-  return glr::GetOrCreate(m_runtime->m_table->m_gltf, texture, colorspace);
-}
-
 bool
 App::LoadPath(const std::filesystem::path& path)
 {

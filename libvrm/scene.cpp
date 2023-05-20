@@ -1,12 +1,8 @@
-#include "vrm/gltfroot.h"
-#include "vrm/animation.h"
 #include "vrm/bvh.h"
 #include "vrm/dmath.h"
+#include "vrm/gltf.h"
+#include "vrm/gltfroot.h"
 #include "vrm/jsonpath.h"
-#include "vrm/material.h"
-#include "vrm/mesh.h"
-#include "vrm/node.h"
-#include "vrm/skin.h"
 #include "vrm/springbone.h"
 #include <DirectXMath.h>
 #include <array>
@@ -32,8 +28,8 @@ GltfRoot::~GltfRoot()
 
 void
 GltfRoot::Traverse(const EnterFunc& enter,
-                const LeaveFunc& leave,
-                const std::shared_ptr<gltf::Node>& node)
+                   const LeaveFunc& leave,
+                   const std::shared_ptr<gltf::Node>& node)
 {
   if (node) {
     if (enter(node)) {

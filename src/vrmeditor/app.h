@@ -96,12 +96,6 @@ public:
   int Run();
   bool WriteScene(const std::filesystem::path& path);
 
-  // runtime
-  std::shared_ptr<grapho::gl3::Texture> GetTexture(
-    const gltfjson::format::Root& root,
-    uint32_t texture_index,
-    libvrm::gltf::ColorSpace colorspace);
-
   // expose to lua
   const std::shared_ptr<Gui>& GetGui() const { return m_gui; }
   bool LoadPath(const std::filesystem::path& path);

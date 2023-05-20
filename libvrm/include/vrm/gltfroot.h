@@ -43,9 +43,6 @@ struct Material;
 
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;
-// using EnterJson =
-//   std::function<bool(nlohmann::json&, std::string_view jsonpath)>;
-// using LeaveJson = std::function<void()>;
 
 template<typename T>
 inline std::optional<size_t>
@@ -72,6 +69,11 @@ struct DrawItem
   DirectX::XMFLOAT4X4 Matrix;
 };
 
+class BufferManager
+{
+  std::vector<std::shared_ptr<Image>> m_images;
+};
+
 struct GltfRoot
 {
   ModelType m_type = ModelType::Gltf;
@@ -79,10 +81,6 @@ struct GltfRoot
   gltfjson::format::Root m_gltf;
   gltfjson::format::Bin m_bin;
   std::string m_title = "scene";
-  // std::vector<std::shared_ptr<gltfjson::format::Sampler>> m_samplers;
-  std::vector<std::shared_ptr<Image>> m_images;
-  std::vector<std::shared_ptr<Texture>> m_textures;
-  std::vector<std::shared_ptr<Material>> m_materials;
   std::vector<std::shared_ptr<Mesh>> m_meshes;
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;
@@ -113,9 +111,6 @@ struct GltfRoot
   void Clear()
   {
     m_type = {};
-    m_images.clear();
-    m_textures.clear();
-    m_materials.clear();
     m_meshes.clear();
     m_nodes.clear();
     m_roots.clear();
@@ -133,18 +128,6 @@ struct GltfRoot
     m_expressions = {};
   }
 
-  std::optional<size_t> IndexOf(const std::shared_ptr<Image>& image) const
-  {
-    return _IndexOf<std::shared_ptr<Image>>(m_images, image);
-  }
-  std::optional<size_t> IndexOf(const std::shared_ptr<Texture>& texture) const
-  {
-    return _IndexOf<std::shared_ptr<Texture>>(m_textures, texture);
-  }
-  std::optional<size_t> IndexOf(const std::shared_ptr<Material>& material) const
-  {
-    return _IndexOf<std::shared_ptr<Material>>(m_materials, material);
-  }
   std::optional<size_t> IndexOf(const std::shared_ptr<Mesh>& mesh) const
   {
     return _IndexOf<std::shared_ptr<Mesh>>(m_meshes, mesh);

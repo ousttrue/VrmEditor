@@ -359,14 +359,14 @@ ShowGui(const gltfjson::format::Root& root,
 }
 
 static void
-ShowGui(const gltfjson::format::Root& root, gltfjson::format::TextureInfo& info)
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::TextureInfo& info)
 {
   SelectId("Index", &info.Index, root.Textures);
-  if (info.Index) {
-    if (auto texture = App::Instance().GetTexture(
-          root, *info.Index, libvrm::gltf::ColorSpace::Linear)) {
-      ImGui::Image((ImTextureID)(int64_t)texture->Handle(), { 150, 150 });
-    }
+  if (auto texture = glr::GetOrCreateTexture(
+        root, bin, info.Index, libvrm::gltf::ColorSpace::Linear)) {
+    ImGui::Image((ImTextureID)(int64_t)texture->Handle(), { 150, 150 });
   } else {
     auto pos = ImGui::GetCursorPos();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -377,20 +377,23 @@ ShowGui(const gltfjson::format::Root& root, gltfjson::format::TextureInfo& info)
 
 static void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::NormalTextureInfo& info)
 {
-  ShowGui(root, *static_cast<gltfjson::format::TextureInfo*>(&info));
+  ShowGui(root, bin, *static_cast<gltfjson::format::TextureInfo*>(&info));
 }
 
 static void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::OcclusionTextureInfo& info)
 {
-  ShowGui(root, *static_cast<gltfjson::format::TextureInfo*>(&info));
+  ShowGui(root, bin, *static_cast<gltfjson::format::TextureInfo*>(&info));
 }
 
 static void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::PbrMetallicRoughness& pbr)
 {
   ImGui::ColorEdit4("BaseColorFactor", pbr.BaseColorFactor.data());
@@ -398,14 +401,14 @@ ShowGui(const gltfjson::format::Root& root,
     pbr.BaseColorTexture,
     "BaseColorTexture",
     "BaseColorTexture +",
-    [&root](auto& info) { ::ShowGui(root, info); });
+    [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
   ImGui::SliderFloat("MetallicFactor", &pbr.MetallicFactor, 0, 1);
   ImGui::SliderFloat("RoughnessFactor", &pbr.RoughnessFactor, 0, 1);
   ShowGuiOptional<gltfjson::format::TextureInfo>(
     pbr.MetallicRoughnessTexture,
     "MetallicRoughnessTexture",
     "MetallicRoughnessTexture +",
-    [&root](auto& info) { ::ShowGui(root, info); });
+    [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
 }
 
 void
@@ -419,25 +422,25 @@ ShowGui(const gltfjson::format::Root& root,
     material.PbrMetallicRoughness,
     "PbrMetallicRoughness",
     "PbrMetallicRoughness +",
-    [&root](auto& pbr) { ::ShowGui(root, pbr); });
+    [&root, &bin](auto& pbr) { ::ShowGui(root, bin, pbr); });
 
   ShowGuiOptional<gltfjson::format::NormalTextureInfo>(
     material.NormalTexture,
     "NormalTexture",
     "NormalTexture +",
-    [&root](auto& info) { ::ShowGui(root, info); });
+    [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
 
   ShowGuiOptional<gltfjson::format::OcclusionTextureInfo>(
     material.OcclusionTexture,
     "OcclusionTexture",
     "OcclusionTexture +",
-    [&root](auto& info) { ::ShowGui(root, info); });
+    [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
 
   ShowGuiOptional<gltfjson::format::TextureInfo>(
     material.EmissiveTexture,
     "EmissiveTexture",
     "EmissiveTexture +",
-    [&root](auto& info) { ::ShowGui(root, info); });
+    [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
 
   ImGui::ColorEdit3("EmissiveFactor", material.EmissiveFactor.data());
   grapho::imgui::EnumCombo(

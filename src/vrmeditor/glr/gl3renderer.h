@@ -4,7 +4,7 @@
 #include <cuber/mesh.h>
 #include <filesystem>
 #include <memory>
-#include <vrm/texture.h>
+#include <vrm/colorspace.h>
 
 namespace libvrm {
 namespace gltf {
@@ -26,6 +26,7 @@ struct RuntimeMesh;
 namespace gltfjson {
 namespace format {
 struct Root;
+struct Bin;
 }
 }
 
@@ -36,6 +37,7 @@ void
 Render(RenderPass pass,
        const RenderingEnv& camera,
        const gltfjson::format::Root& root,
+       const gltfjson::format::Bin& bin,
        const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
        const runtimescene::RuntimeMesh& instance,
        const DirectX::XMFLOAT4X4& m);
@@ -53,9 +55,10 @@ void
 CreateDock(const AddDockFunc& addDock, std::string_view title);
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreate(const gltfjson::format::Root& root,
-            const std::shared_ptr<libvrm::gltf::Texture>& texture,
-            libvrm::gltf::ColorSpace colorspace);
+GetOrCreateTexture(const gltfjson::format::Root& root,
+                   const gltfjson::format::Bin& bin,
+                   std::optional<uint32_t> texture,
+                   libvrm::gltf::ColorSpace colorspace);
 
 void
 RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data);

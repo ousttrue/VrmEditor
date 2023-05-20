@@ -2,6 +2,7 @@
 #include "scenetypes.h"
 #include <DirectXMath.h>
 #include <assert.h>
+#include <gltfjson/gltf.h>
 #include <memory>
 #include <span>
 #include <vector>
@@ -12,7 +13,7 @@ struct Material;
 struct Primitive
 {
   uint32_t DrawCount;
-  std::shared_ptr<Material> Material;
+  gltfjson::format::Id Material;
 };
 
 struct MorphVertex
@@ -122,7 +123,7 @@ struct Mesh
   template<typename T>
   void addSubmesh(uint32_t offset,
                   std::span<const T> values,
-                  std::shared_ptr<Material> material)
+                  std::optional<uint32_t> material)
   {
     m_indices.reserve(m_indices.size() + values.size());
     for (auto value : values) {

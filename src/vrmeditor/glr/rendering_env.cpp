@@ -1,11 +1,11 @@
 #include <GL/glew.h>
 
 #include "app.h"
+#include "image.h"
 #include "rendering_env.h"
 #include <grapho/gl3/pbr.h>
 #include <vrm/fileutil.h>
-#include <vrm/texture.h>
-#include <vrm/image.h>
+#include <vrm/gltf.h>
 
 namespace glr {
 
@@ -18,7 +18,7 @@ RenderingEnv::LoadPbr(const std::filesystem::path& path)
     return false;
   }
 
-  auto hdr = std::make_shared<libvrm::gltf::Image>("pbr");
+  auto hdr = std::make_shared<Image>("pbr");
   if (!hdr->LoadHdr(bytes)) {
     App::Instance().Log(LogLevel::Error) << "fail to load: " << path;
     return false;

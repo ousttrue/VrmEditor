@@ -15,106 +15,11 @@ u8_to_str(const std::u8string& src)
   return { (const char*)src.data(), (const char*)src.data() + src.size() };
 }
 
-static std::expected<std::shared_ptr<gltf::Image>, std::string>
-ParseImage(const std::shared_ptr<GltfRoot>& scene,
-           int i,
-           const gltfjson::format::Image& image)
-{
-  std::span<const uint8_t> bytes;
-  if (auto bufferView = image.BufferView) {
-    if (auto buffer_view =
-          scene->m_bin.GetBufferViewBytes(scene->m_gltf, *bufferView)) {
-      bytes = *buffer_view;
-    } else {
-      return std::unexpected{ buffer_view.error() };
-    }
-  } else if (image.Uri.size()) {
-    if (auto buffer_view = scene->m_bin.Dir->GetBuffer(image.Uri)) {
-      bytes = *buffer_view;
-    } else {
-      return std::unexpected{ buffer_view.error() };
-    }
-  } else {
-    return std::unexpected{ "not bufferView nor uri" };
-  }
-  auto name = image.Name;
-  auto ptr = std::make_shared<gltf::Image>(name);
-  if (!ptr->Load(bytes)) {
-    return std::unexpected{ "Image: fail to load" };
-  }
-  return ptr;
-}
-
-static std::expected<std::shared_ptr<gltf::Texture>, std::string>
-ParseTexture(const std::shared_ptr<GltfRoot>& scene,
-             int i,
-             const gltfjson::format::Texture& texture)
-{
-  auto name = texture.Name;
-  auto ptr = std::make_shared<gltf::Texture>();
-  ptr->Source = scene->m_images[*texture.Source];
-  ptr->Sampler = texture.Sampler;
-  return ptr;
-}
-
-static std::expected<std::shared_ptr<gltf::Material>, std::string>
-ParseMaterial(const std::shared_ptr<GltfRoot>& scene,
-              int i,
-              const gltfjson::format::Material& material)
-{
-  auto ptr = std::make_shared<gltf::Material>(material.Name);
-
-  // if (has(material, "extensions")) {
-  //   auto& extensions = material.at("extensions");
-  //   if (has(extensions, "KHR_materials_unlit")) {
-  //     ptr->Type = MaterialTypes::UnLit;
-  //   }
-  // }
-  if (auto pbr = material.PbrMetallicRoughness) {
-    if (auto texture = pbr->BaseColorTexture) {
-      int texture_index = *texture->Index;
-      ptr->Pbr.BaseColorTexture = scene->m_textures[texture_index];
-      ptr->Pbr.BaseColorTexture->ColorSpace = ColorSpace::sRGB;
-    }
-    ptr->Pbr.BaseColorFactor = pbr->BaseColorFactor;
-    ptr->Pbr.MetallicFactor = pbr->MetallicFactor;
-    ptr->Pbr.RoughnessFactor = pbr->RoughnessFactor;
-    if (auto texture = pbr->MetallicRoughnessTexture) {
-      int texture_index = *texture->Index;
-      ptr->Pbr.MetallicRoughnessTexture = scene->m_textures[texture_index];
-      ptr->Pbr.MetallicRoughnessTexture->ColorSpace = ColorSpace::Linear;
-    }
-  }
-  if (auto texture = material.NormalTexture) {
-    int texture_index = *texture->Index;
-    ptr->NormalTexture = scene->m_textures[texture_index];
-    ptr->NormalTexture->ColorSpace = ColorSpace::Linear;
-    ptr->NormalTextureScale = texture->Scale;
-  }
-  if (auto texture = material.OcclusionTexture) {
-    int texture_index = *texture->Index;
-    ptr->OcclusionTexture = scene->m_textures[texture_index];
-    ptr->OcclusionTexture->ColorSpace = ColorSpace::Linear;
-    ptr->OcclusionTextureStrength = texture->Strength;
-  }
-  if (auto texture = material.EmissiveTexture) {
-    int texture_index = *texture->Index;
-    ptr->EmissiveTexture = scene->m_textures[texture_index];
-    ptr->EmissiveTexture->ColorSpace = ColorSpace::sRGB;
-  }
-  ptr->EmissiveFactor = material.EmissiveFactor;
-  ptr->AlphaMode = material.AlphaMode;
-  ptr->AlphaCutoff = material.AlphaCutoff;
-  ptr->DoubleSided = material.DoubleSided;
-  return ptr;
-}
-
 static std::expected<bool, std::string>
 AddIndices(const std::shared_ptr<GltfRoot>& scene,
            int vertex_offset,
            gltf::Mesh* mesh,
-           const gltfjson::format::MeshPrimitive& prim,
-           const std::shared_ptr<gltf::Material>& material)
+           const gltfjson::format::MeshPrimitive& prim)
 {
   if (prim.Indices) {
     int accessor_index = *prim.Indices;
@@ -123,7 +28,7 @@ AddIndices(const std::shared_ptr<GltfRoot>& scene,
       case gltfjson::format::ComponentTypes::UNSIGNED_BYTE: {
         if (auto span = scene->m_bin.GetAccessorBytes<uint8_t>(
               scene->m_gltf, accessor_index)) {
-          mesh->addSubmesh(vertex_offset, *span, material);
+          mesh->addSubmesh(vertex_offset, *span, prim.Material);
           return true;
         } else {
           return std::unexpected{ span.error() };
@@ -132,7 +37,7 @@ AddIndices(const std::shared_ptr<GltfRoot>& scene,
       case gltfjson::format::ComponentTypes::UNSIGNED_SHORT: {
         if (auto span = scene->m_bin.GetAccessorBytes<uint16_t>(
               scene->m_gltf, accessor_index)) {
-          mesh->addSubmesh(vertex_offset, *span, material);
+          mesh->addSubmesh(vertex_offset, *span, prim.Material);
           return true;
         } else {
           return std::unexpected{ span.error() };
@@ -141,7 +46,7 @@ AddIndices(const std::shared_ptr<GltfRoot>& scene,
       case gltfjson::format::ComponentTypes::UNSIGNED_INT: {
         if (auto span = scene->m_bin.GetAccessorBytes<uint32_t>(
               scene->m_gltf, accessor_index)) {
-          mesh->addSubmesh(vertex_offset, *span, material);
+          mesh->addSubmesh(vertex_offset, *span, prim.Material);
           return true;
         } else {
           return std::unexpected{ span.error() };
@@ -157,7 +62,7 @@ AddIndices(const std::shared_ptr<GltfRoot>& scene,
     for (int i = 0; i < vertex_count; ++i) {
       indices.push_back(i);
     }
-    mesh->addSubmesh<uint32_t>(vertex_offset, indices, material);
+    mesh->addSubmesh<uint32_t>(vertex_offset, indices, prim.Material);
     return true;
   }
 }
@@ -171,17 +76,9 @@ ParseMesh(const std::shared_ptr<GltfRoot>& scene,
   ptr->Name = u8_to_str(mesh.Name);
   gltfjson::format::MeshPrimitiveAttributes lastAtributes = {};
   for (auto& prim : mesh.Primitives) {
-    std::shared_ptr<gltf::Material> material;
-    if (prim.Material) {
-      material = scene->m_materials[*prim.Material];
-    } else {
-      // default material
-      material = std::make_shared<gltf::Material>("default");
-    }
-
     if (prim.Attributes == lastAtributes) {
       // for vrm shared vertex buffer
-      if (auto expected = AddIndices(scene, 0, ptr.get(), prim, material)) {
+      if (auto expected = AddIndices(scene, 0, ptr.get(), prim)) {
         // OK
       } else {
         return std::unexpected{ expected.error() };
@@ -291,8 +188,7 @@ ParseMesh(const std::shared_ptr<GltfRoot>& scene,
       }
 
       // extend indices and add vertex offset
-      if (auto expected =
-            AddIndices(scene, offset, ptr.get(), prim, material)) {
+      if (auto expected = AddIndices(scene, offset, ptr.get(), prim)) {
         // OK
       } else {
         return std::unexpected{ expected.error() };
@@ -817,38 +713,16 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   //   }
   // }
 
-  {
-    auto& images = scene->m_gltf.Images;
-    for (int i = 0; i < images.Size(); ++i) {
-      if (auto image = ParseImage(scene, i, images[i])) {
-        scene->m_images.push_back(*image);
-      } else {
-        return std::unexpected{ image.error() };
-      }
-    }
-  }
-
-  {
-    auto& textures = scene->m_gltf.Textures;
-    for (int i = 0; i < textures.Size(); ++i) {
-      if (auto texture = ParseTexture(scene, i, textures[i])) {
-        scene->m_textures.push_back(*texture);
-      } else {
-        return std::unexpected{ texture.error() };
-      }
-    }
-  }
-
-  {
-    auto& materials = scene->m_gltf.Materials;
-    for (int i = 0; i < materials.Size(); ++i) {
-      if (auto material = ParseMaterial(scene, i, materials[i])) {
-        scene->m_materials.push_back(*material);
-      } else {
-        return std::unexpected{ material.error() };
-      }
-    }
-  }
+  // {
+  //   auto& images = scene->m_gltf.Images;
+  //   for (int i = 0; i < images.Size(); ++i) {
+  //     if (auto image = ParseImage(scene, i, images[i])) {
+  //       scene->m_images.push_back(*image);
+  //     } else {
+  //       return std::unexpected{ image.error() };
+  //     }
+  //   }
+  // }
 
   {
     auto& meshes = scene->m_gltf.Meshes;

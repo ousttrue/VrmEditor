@@ -33,7 +33,7 @@ ScenePreview::ScenePreview(
   const std::shared_ptr<ViewSettings>& settings,
   const std::shared_ptr<SceneNodeSelection>& selection,
   bool useTPose)
-  : m_scene(scene)
+  : m_animation(scene)
   , m_env(env)
   , m_settings(settings)
   , m_selection(selection)
@@ -59,12 +59,13 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  for (auto [mesh, m] : m_scene->m_table->Drawables()) {
-    auto meshInstance = m_scene->GetRuntimeMesh(mesh);
+  for (auto [mesh, m] : m_animation->m_table->Drawables()) {
+    auto meshInstance = m_animation->GetRuntimeMesh(mesh);
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Color,
                   *m_env,
-                  m_scene->m_table->m_gltf,
+                  m_animation->m_table->m_gltf,
+                  m_animation->m_table->m_bin,
                   mesh,
                   *meshInstance,
                   m);
@@ -73,12 +74,13 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
   if (m_settings->Skybox) {
     m_env->RenderSkybox();
   }
-  for (auto [mesh, m] : m_scene->m_table->Drawables()) {
-    auto meshInstance = m_scene->GetRuntimeMesh(mesh);
+  for (auto [mesh, m] : m_animation->m_table->Drawables()) {
+    auto meshInstance = m_animation->GetRuntimeMesh(mesh);
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix,
                   *m_env,
-                  m_scene->m_table->m_gltf,
+                  m_animation->m_table->m_gltf,
+                  m_animation->m_table->m_bin,
                   mesh,
                   *meshInstance,
                   m);
@@ -86,14 +88,14 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
   }
 
   if (m_settings->ShowLine) {
-    m_scene->DrawGizmo(m_gizmo.get());
+    m_animation->DrawGizmo(m_gizmo.get());
     glr::RenderLine(*m_env, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
 
   if (m_settings->ShowCuber) {
     m_cuber->Instances.clear();
-    for (auto m : m_scene->m_table->ShapeMatrices()) {
+    for (auto m : m_animation->m_table->ShapeMatrices()) {
       m_cuber->Instances.push_back({
         .Matrix = m,
       });
@@ -140,15 +142,16 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  m_scene->NextSpringDelta = m_settings->NextSpringDelta;
+  m_animation->NextSpringDelta = m_settings->NextSpringDelta;
   m_settings->NextSpringDelta = {};
 
-  for (auto [mesh, m] : m_scene->Drawables()) {
-    auto meshInstance = m_scene->GetRuntimeMesh(mesh);
+  for (auto [mesh, m] : m_animation->Drawables()) {
+    auto meshInstance = m_animation->GetRuntimeMesh(mesh);
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Color,
                   *m_env,
-                  m_scene->m_table->m_gltf,
+                  m_animation->m_table->m_gltf,
+                  m_animation->m_table->m_bin,
                   mesh,
                   *meshInstance,
                   m);
@@ -158,12 +161,13 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
     m_env->RenderSkybox();
   }
 
-  for (auto [mesh, m] : m_scene->Drawables()) {
-    auto meshInstance = m_scene->GetRuntimeMesh(mesh);
+  for (auto [mesh, m] : m_animation->Drawables()) {
+    auto meshInstance = m_animation->GetRuntimeMesh(mesh);
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix,
                   *m_env,
-                  m_scene->m_table->m_gltf,
+                  m_animation->m_table->m_gltf,
+                  m_animation->m_table->m_bin,
                   mesh,
                   *meshInstance,
                   m);
@@ -171,14 +175,14 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   }
 
   if (m_settings->ShowLine) {
-    m_scene->DrawGizmo(m_gizmo.get());
+    m_animation->DrawGizmo(m_gizmo.get());
     glr::RenderLine(*m_env, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
 
   if (m_settings->ShowCuber) {
     m_cuber->Instances.clear();
-    for (auto m : m_scene->ShapeMatrices()) {
+    for (auto m : m_animation->ShapeMatrices()) {
       m_cuber->Instances.push_back({
         .Matrix = m,
       });
@@ -189,7 +193,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   // manipulator
   if (auto init = m_selection->selected.lock()) {
     // TODO: conflict mouse event(left) with ImageButton
-    auto node = m_scene->GetRuntimeNode(init);
+    auto node = m_animation->GetRuntimeNode(init);
     DirectX::XMFLOAT4X4 m;
     DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
     ImGuizmo::GetContext().mAllowActiveHoverItem = true;

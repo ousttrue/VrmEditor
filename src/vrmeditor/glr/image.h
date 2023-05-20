@@ -5,8 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace libvrm {
-namespace gltf {
+namespace glr {
 
 enum class ImageType
 {
@@ -66,5 +65,4 @@ public:
   bool LoadHdr(std::span<const uint8_t> data);
 };
 
-}
 }

@@ -23,24 +23,25 @@ struct Exporter
   Exporter();
 
   void Export(const GltfRoot& scene);
-  void ExportAsset(const GltfRoot& scene);
-  void ExportImage(const GltfRoot& scene, const std::shared_ptr<Image>& image);
-  void ExportTextureSampler(const GltfRoot& scene,
-                            const gltfjson::format::Sampler& sampler);
-  void ExportTexture(const GltfRoot& scene,
-                     const std::shared_ptr<Texture>& texture);
-  void ExportMaterial(const GltfRoot& scene,
-                      const std::shared_ptr<Material>& material);
-  void ExportMesh(const GltfRoot& scene, const std::shared_ptr<Mesh>& mesh);
-  uint32_t ExportMeshPrimitive(const GltfRoot& scene,
-                               const std::shared_ptr<Mesh>& mesh,
-                               const Primitive& primitive,
-                               uint32_t index);
-  void ExportSkin(const GltfRoot& scene, const std::shared_ptr<Skin>& skin);
-  void ExportNode(const GltfRoot& scene, const std::shared_ptr<Node>& node);
-
-  void ExportBuffersViewsAccessors(const GltfRoot& scene);
-  void ExportAnimations(const GltfRoot& scene);
+  // void ExportAsset(const GltfRoot& scene);
+  // void ExportImage(const GltfRoot& scene, const gltfjson::format::Image& image);
+  // void ExportTextureSampler(const GltfRoot& scene,
+  //                           const gltfjson::format::Sampler& sampler);
+  // void ExportTexture(const GltfRoot& scene,
+  //                    const gltfjson::format::Texture& texture);
+  // void ExportMaterial(const GltfRoot& scene,
+  //                     const gltfjson::format::Material& material);
+  //
+  // void ExportMesh(const GltfRoot& scene, const std::shared_ptr<Mesh>& mesh);
+  // uint32_t ExportMeshPrimitive(const GltfRoot& scene,
+  //                              const std::shared_ptr<Mesh>& mesh,
+  //                              const Primitive& primitive,
+  //                              uint32_t index);
+  // void ExportSkin(const GltfRoot& scene, const std::shared_ptr<Skin>& skin);
+  // void ExportNode(const GltfRoot& scene, const std::shared_ptr<Node>& node);
+  //
+  // void ExportBuffersViewsAccessors(const GltfRoot& scene);
+  // void ExportAnimations(const GltfRoot& scene);
 };
 
 }

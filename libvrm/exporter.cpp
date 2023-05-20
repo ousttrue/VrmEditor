@@ -6,6 +6,12 @@
 #include <gltfjson/gltf.h>
 #include <gltfjson/gltf_types.h>
 
+struct Context
+{
+  libvrm::jsons::Writer& m_writer;
+  gltfjson::format::BinWriter& m_binWriter;
+};
+
 namespace gltfjson {
 namespace format {
 
@@ -78,211 +84,59 @@ Exporter::Exporter()
 {
 }
 
-void
-Exporter::Export(const GltfRoot& scene)
-{
-  m_writer.object_open();
-
-  m_writer.key("asset");
-  {
-    ExportAsset(scene);
-  }
-
-  // images
-  if (scene.m_images.size()) {
-    m_writer.key("images");
-    {
-      m_writer.array_open();
-      for (auto& image : scene.m_images) {
-        ExportImage(scene, image);
-      }
-      m_writer.array_close();
-    }
-  }
-
-  // samplers
-  if (scene.m_gltf.Samplers.Size()) {
-    m_writer.key("samplers");
-    {
-      m_writer.array_open();
-      for (auto& sampler : scene.m_gltf.Samplers) {
-        ExportTextureSampler(scene, sampler);
-      }
-      m_writer.array_close();
-    }
-  }
-
-  // textures
-  if (scene.m_textures.size()) {
-    m_writer.key("textures");
-    {
-      m_writer.array_open();
-      for (auto& texture : scene.m_textures) {
-        ExportTexture(scene, texture);
-      }
-      m_writer.array_close();
-    }
-  }
-
-  // materials
-  if (scene.m_materials.size()) {
-    m_writer.key("materials");
-    {
-      m_writer.array_open();
-      for (auto& material : scene.m_materials) {
-        ExportMaterial(scene, material);
-      }
-      m_writer.array_close();
-    }
-  }
-
-  // meshes
-  if (scene.m_meshes.size()) {
-    m_writer.key("meshes");
-    {
-      m_writer.array_open();
-      for (auto& mesh : scene.m_meshes) {
-        ExportMesh(scene, mesh);
-      }
-      m_writer.array_close();
-    }
-  }
-
-  // skins
-  if (scene.m_skins.size()) {
-    m_writer.key("skins");
-    {
-      m_writer.array_open();
-      for (auto& skin : scene.m_skins) {
-        ExportSkin(scene, skin);
-      }
-      m_writer.array_close();
-    }
-  }
-
-  // nodes
-  if (scene.m_nodes.size()) {
-    m_writer.key("nodes");
-    {
-      m_writer.array_open();
-      for (auto& node : scene.m_nodes) {
-        ExportNode(scene, node);
-      }
-      m_writer.array_close();
-    }
-    m_writer.key("scenes");
-    {
-      m_writer.array_open();
-      m_writer.object_open();
-      m_writer.key("nodes");
-      m_writer.array_open();
-      for (auto& root : scene.m_roots) {
-        m_writer.value(*scene.IndexOf(root));
-      }
-      m_writer.array_close();
-      m_writer.object_close();
-      m_writer.array_close();
-    }
-    m_writer.key("scene");
-    {
-      m_writer.value(0);
-    }
-  }
-
-  // update bin
-  ExportAnimations(scene);
-
-  // last
-  ExportBuffersViewsAccessors(scene);
-
-  //
-  // extensions
-  //
-  if (scene.m_vrma) {
-    m_writer.key("extensions");
-    m_writer.object_open();
-    {
-      m_writer.key("VRMC_vrm_animation");
-      m_writer.object_open();
-      {
-        m_writer.key("expressions");
-        m_writer.object_open();
-        {
-          m_writer.key("preset");
-          m_writer.object_open();
-          {
-            m_writer.key("aa");
-            m_writer.object_open();
-            {
-              m_writer.key("node");
-              m_writer.value(0);
-            }
-            m_writer.object_close();
-          }
-          m_writer.object_close();
-        }
-        m_writer.object_close();
-      }
-      m_writer.object_close();
-    }
-    m_writer.object_close();
-  }
-
-  m_writer.object_close();
-}
-
 // "asset": {
 //     "version": "2.0",
 //     "generator": "collada2gltf@f356b99aef8868f74877c7ca545f2cd206b9d3b7",
 //     "copyright": "2017 (c) Khronos Group"
 // }
-void
-Exporter::ExportAsset(const GltfRoot& scene)
+static void
+ExportAsset(Context& c, const GltfRoot& scene)
 {
-  m_writer.object_open();
+  c.m_writer.object_open();
 
-  m_writer.key("version");
-  m_writer.value("2.0");
+  c.m_writer.key("version");
+  c.m_writer.value("2.0");
 
-  m_writer.key("generator");
-  m_writer.value("VrmEditor");
+  c.m_writer.key("generator");
+  c.m_writer.value("VrmEditor");
 
-  m_writer.object_close();
+  c.m_writer.object_close();
 }
 
 // {
 //     "bufferView": 14,
 //     "mimeType": "image/jpeg"
 // }
-void
-Exporter::ExportImage(const GltfRoot& scene,
-                      const std::shared_ptr<Image>& image)
+static void
+ExportImage(Context& c,
+            const GltfRoot& scene,
+            const gltfjson::format::Image& image)
 {
-  m_writer.object_open();
-  m_writer.key("name");
-  m_writer.value(image->Name);
-  if (auto encoded = image->Encoded) {
-    switch (encoded->Type) {
-      case ImageType::Jpeg:
-        m_writer.key("mimeType");
-        m_writer.value("image/jpeg");
-        break;
-      case ImageType::Png:
-        m_writer.key("mimeType");
-        m_writer.value("image/png");
-        break;
-      default:
-        assert(false);
-        break;
-    }
-    auto index = m_binWriter.PushBufferView(encoded->Bytes);
-    m_writer.key("bufferView");
-    m_writer.value(index);
-  } else {
-    // encode to png ?
-    assert(false);
-  }
-  m_writer.object_close();
+  c.m_writer.object_open();
+  c.m_writer.key("name");
+  c.m_writer.value(image.Name);
+  // if (auto encoded = image->Encoded) {
+  //   switch (encoded->Type) {
+  //     case ImageType::Jpeg:
+  //       m_writer.key("mimeType");
+  //       m_writer.value("image/jpeg");
+  //       break;
+  //     case ImageType::Png:
+  //       m_writer.key("mimeType");
+  //       m_writer.value("image/png");
+  //       break;
+  //     default:
+  //       assert(false);
+  //       break;
+  //   }
+  //   auto index = m_binWriter.PushBufferView(encoded->Bytes);
+  //   m_writer.key("bufferView");
+  //   m_writer.value(index);
+  // } else {
+  //   // encode to png ?
+  //   assert(false);
+  // }
+  c.m_writer.object_close();
 }
 
 // {
@@ -291,30 +145,34 @@ Exporter::ExportImage(const GltfRoot& scene,
 //     "wrapS": 10497,
 //     "wrapT": 10497
 // }
-void
-Exporter::ExportTextureSampler(const GltfRoot& scene,
-                               const gltfjson::format::Sampler& sampler)
+static void
+ExportTextureSampler(Context& c,
+                     const GltfRoot& scene,
+                     const gltfjson::format::Sampler& sampler)
 {
-  m_writer.object_open();
-  m_writer.object_close();
+  c.m_writer.object_open();
+  c.m_writer.object_close();
 }
 
 // {
 //     "sampler": 0,
 //     "source": 2
 // }
-void
-Exporter::ExportTexture(const GltfRoot& scene,
-                        const std::shared_ptr<Texture>& texture)
+static void
+ExportTexture(Context& c,
+              const GltfRoot& scene,
+              const gltfjson::format::Texture& texture)
 {
-  m_writer.object_open();
-  m_writer.key("source");
-  m_writer.value(*scene.IndexOf(texture->Source));
-  if (auto sampler = texture->Sampler) {
-    m_writer.key("sampler");
-    m_writer.value(*sampler);
+  c.m_writer.object_open();
+  if (auto source = texture.Source) {
+    c.m_writer.key("source");
+    c.m_writer.value(*source);
   }
-  m_writer.object_close();
+  if (auto sampler = texture.Sampler) {
+    c.m_writer.key("sampler");
+    c.m_writer.value(*sampler);
+  }
+  c.m_writer.object_close();
 }
 
 // {
@@ -329,61 +187,29 @@ Exporter::ExportTexture(const GltfRoot& scene,
 //         "roughnessFactor": 0.0
 //     }
 // }
-void
-Exporter::ExportMaterial(const GltfRoot& scene,
-                         const std::shared_ptr<Material>& material)
+static void
+ExportMaterial(Context& c,
+               const GltfRoot& scene,
+               const gltfjson::format::Material& material)
 {
-  m_writer.object_open();
-  m_writer.key("name");
-  m_writer.value(material->Name);
-  m_writer.key("pbrMetallicRoughness");
+  c.m_writer.object_open();
+  c.m_writer.key("name");
+  c.m_writer.value(material.Name);
+  c.m_writer.key("pbrMetallicRoughness");
   {
-    m_writer.object_open();
+    c.m_writer.object_open();
     // if (material->ColorTexture) {
-    //   m_writer.key("baseColorTexture");
+    //   c.m_writer.key("baseColorTexture");
     //   {
-    //     m_writer.object_open();
-    //     m_writer.key("index");
-    //     m_writer.value(*scene.IndexOf(material->ColorTexture));
-    //     m_writer.object_close();
+    //     c.m_writer.object_open();
+    //     c.m_writer.key("index");
+    //     c.m_writer.value(*scene.IndexOf(material->ColorTexture));
+    //     c.m_writer.object_close();
     //   }
     // }
-    m_writer.object_close();
+    c.m_writer.object_close();
   }
-  m_writer.object_close();
-}
-
-// {
-//     "primitives": [
-//         {
-//             "attributes": {
-//                 "NORMAL": 23,
-//                 "POSITION": 22,
-//                 "TANGENT": 24,
-//                 "TEXCOORD_0": 25
-//             },
-//             "indices": 21,
-//             "material": 3,
-//             "mode": 4
-//         }
-//     ]
-// }
-void
-Exporter::ExportMesh(const GltfRoot& scene, const std::shared_ptr<Mesh>& mesh)
-{
-  m_writer.object_open();
-  if (mesh->Name.size()) {
-    m_writer.key("name");
-    m_writer.value(mesh->Name);
-  }
-  m_writer.key("primitives");
-  m_writer.array_open();
-  uint32_t index = 0;
-  for (auto& prim : mesh->m_primitives) {
-    index = ExportMeshPrimitive(scene, mesh, prim, index);
-  }
-  m_writer.array_close();
-  m_writer.object_close();
+  c.m_writer.object_close();
 }
 
 template<typename T, typename V, typename S>
@@ -419,17 +245,18 @@ PushVertices(std::vector<T>& indices,
 //
 // vertex buffer を submesh で分割する
 //
-uint32_t
-Exporter::ExportMeshPrimitive(const GltfRoot& scene,
-                              const std::shared_ptr<Mesh>& mesh,
-                              const Primitive& prim,
-                              uint32_t index)
+static uint32_t
+ExportMeshPrimitive(Context& c,
+                    const GltfRoot& scene,
+                    const std::shared_ptr<Mesh>& mesh,
+                    const Primitive& prim,
+                    uint32_t index)
 {
-  m_writer.object_open();
+  c.m_writer.object_open();
 
-  if (prim.Material) {
-    m_writer.key("material");
-    m_writer.value(*scene.IndexOf(prim.Material));
+  if (auto material = prim.Material) {
+    c.m_writer.key("material");
+    c.m_writer.value(*material);
   }
 
   std::vector<DirectX::XMFLOAT3> positions;
@@ -458,9 +285,9 @@ Exporter::ExportMeshPrimitive(const GltfRoot& scene,
                  push_vertex,
                  has_skinning,
                  push_skinning);
-    auto indices_index = m_binWriter.PushAccessor(indices);
-    m_writer.key("indices");
-    m_writer.value(indices_index);
+    auto indices_index = c.m_binWriter.PushAccessor(indices);
+    c.m_writer.key("indices");
+    c.m_writer.value(indices_index);
 
   } else if (mesh->m_vertices.size() < 65535) {
     std::vector<uint16_t> indices;
@@ -471,9 +298,9 @@ Exporter::ExportMeshPrimitive(const GltfRoot& scene,
                  push_vertex,
                  has_skinning,
                  push_skinning);
-    auto indices_index = m_binWriter.PushAccessor(indices);
-    m_writer.key("indices");
-    m_writer.value(indices_index);
+    auto indices_index = c.m_binWriter.PushAccessor(indices);
+    c.m_writer.key("indices");
+    c.m_writer.value(indices_index);
 
   } else {
     std::vector<uint32_t> indices;
@@ -484,44 +311,77 @@ Exporter::ExportMeshPrimitive(const GltfRoot& scene,
                  push_vertex,
                  has_skinning,
                  push_skinning);
-    auto indices_index = m_binWriter.PushAccessor(indices);
-    m_writer.key("indices");
-    m_writer.value(indices_index);
+    auto indices_index = c.m_binWriter.PushAccessor(indices);
+    c.m_writer.key("indices");
+    c.m_writer.value(indices_index);
   }
 
-  m_writer.key("attributes");
+  c.m_writer.key("attributes");
   {
-    m_writer.object_open();
+    c.m_writer.object_open();
     {
-      auto position_accessor_index = m_binWriter.PushAccessor(positions);
-      m_writer.key(gltfjson::format::VERTEX_POSITION);
-      m_writer.value(position_accessor_index);
+      auto position_accessor_index = c.m_binWriter.PushAccessor(positions);
+      c.m_writer.key(gltfjson::format::VERTEX_POSITION);
+      c.m_writer.value(position_accessor_index);
     }
     {
-      auto normal_accessor_index = m_binWriter.PushAccessor(normals);
-      m_writer.key(gltfjson::format::VERTEX_NORMAL);
-      m_writer.value(normal_accessor_index);
+      auto normal_accessor_index = c.m_binWriter.PushAccessor(normals);
+      c.m_writer.key(gltfjson::format::VERTEX_NORMAL);
+      c.m_writer.value(normal_accessor_index);
     }
     {
-      auto tex0_accessor_index = m_binWriter.PushAccessor(tex0);
-      m_writer.key(gltfjson::format::VERTEX_UV);
-      m_writer.value(tex0_accessor_index);
+      auto tex0_accessor_index = c.m_binWriter.PushAccessor(tex0);
+      c.m_writer.key(gltfjson::format::VERTEX_UV);
+      c.m_writer.value(tex0_accessor_index);
     }
     // skinning
     if (has_skinning) {
-      auto joint_accessor_index = m_binWriter.PushAccessor(joints);
-      m_writer.key(gltfjson::format::VERTEX_JOINT);
-      m_writer.value(joint_accessor_index);
-      auto weight_accessor_index = m_binWriter.PushAccessor(weights);
-      m_writer.key(gltfjson::format::VERTEX_WEIGHT);
-      m_writer.value(weight_accessor_index);
+      auto joint_accessor_index = c.m_binWriter.PushAccessor(joints);
+      c.m_writer.key(gltfjson::format::VERTEX_JOINT);
+      c.m_writer.value(joint_accessor_index);
+      auto weight_accessor_index = c.m_binWriter.PushAccessor(weights);
+      c.m_writer.key(gltfjson::format::VERTEX_WEIGHT);
+      c.m_writer.value(weight_accessor_index);
     }
-    m_writer.object_close();
+    c.m_writer.object_close();
   }
 
-  m_writer.object_close();
+  c.m_writer.object_close();
 
   return index;
+}
+
+// {
+//     "primitives": [
+//         {
+//             "attributes": {
+//                 "NORMAL": 23,
+//                 "POSITION": 22,
+//                 "TANGENT": 24,
+//                 "TEXCOORD_0": 25
+//             },
+//             "indices": 21,
+//             "material": 3,
+//             "mode": 4
+//         }
+//     ]
+// }
+static void
+ExportMesh(Context& c, const GltfRoot& scene, const std::shared_ptr<Mesh>& mesh)
+{
+  c.m_writer.object_open();
+  if (mesh->Name.size()) {
+    c.m_writer.key("name");
+    c.m_writer.value(mesh->Name);
+  }
+  c.m_writer.key("primitives");
+  c.m_writer.array_open();
+  uint32_t index = 0;
+  for (auto& prim : mesh->m_primitives) {
+    index = ExportMeshPrimitive(c, scene, mesh, prim, index);
+  }
+  c.m_writer.array_close();
+  c.m_writer.object_close();
 }
 
 // {
@@ -529,115 +389,115 @@ Exporter::ExportMeshPrimitive(const GltfRoot& scene,
 //     "joints": [ 1, 2 ],
 //     "skeleton": 1
 // }
-void
-Exporter::ExportSkin(const GltfRoot& scene, const std::shared_ptr<Skin>& skin)
+static void
+ExportSkin(Context& c, const GltfRoot& scene, const std::shared_ptr<Skin>& skin)
 {
-  m_writer.object_open();
-  m_writer.key("joints");
+  c.m_writer.object_open();
+  c.m_writer.key("joints");
   {
-    m_writer.array_open();
+    c.m_writer.array_open();
     for (auto joint : skin->Joints) {
-      m_writer.value(joint);
+      c.m_writer.value(joint);
     }
-    m_writer.array_close();
+    c.m_writer.array_close();
   }
   {
-    auto accessor_index = m_binWriter.PushAccessor(skin->BindMatrices);
-    m_writer.key("inverseBindMatrices");
-    m_writer.value(accessor_index);
+    auto accessor_index = c.m_binWriter.PushAccessor(skin->BindMatrices);
+    c.m_writer.key("inverseBindMatrices");
+    c.m_writer.value(accessor_index);
   }
-  m_writer.object_close();
+  c.m_writer.object_close();
 }
 
-void
-Exporter::ExportNode(const GltfRoot& scene, const std::shared_ptr<Node>& node)
+static void
+ExportNode(Context& c, const GltfRoot& scene, const std::shared_ptr<Node>& node)
 {
-  m_writer.object_open();
-  m_writer.key("name");
-  m_writer.value(node->Name);
+  c.m_writer.object_open();
+  c.m_writer.key("name");
+  c.m_writer.value(node->Name);
   // TRS
   if (node->InitialTransform.Translation.x != 0 ||
       node->InitialTransform.Translation.y != 0 ||
       node->InitialTransform.Translation.z != 0) {
-    m_writer.key("translation");
-    m_writer.array_open();
-    m_writer.value(node->InitialTransform.Translation.x);
-    m_writer.value(node->InitialTransform.Translation.y);
-    m_writer.value(node->InitialTransform.Translation.z);
-    m_writer.array_close();
+    c.m_writer.key("translation");
+    c.m_writer.array_open();
+    c.m_writer.value(node->InitialTransform.Translation.x);
+    c.m_writer.value(node->InitialTransform.Translation.y);
+    c.m_writer.value(node->InitialTransform.Translation.z);
+    c.m_writer.array_close();
   }
   if (node->Children.size()) {
-    m_writer.key("children");
-    m_writer.array_open();
+    c.m_writer.key("children");
+    c.m_writer.array_open();
     for (auto& child : node->Children) {
       if (auto i = scene.IndexOf(child)) {
-        m_writer.value(*i);
+        c.m_writer.value(*i);
       }
     }
-    m_writer.array_close();
+    c.m_writer.array_close();
   }
   if (node->Mesh) {
-    m_writer.key("mesh");
-    m_writer.value(*scene.IndexOf(node->Mesh));
+    c.m_writer.key("mesh");
+    c.m_writer.value(*scene.IndexOf(node->Mesh));
   }
   if (node->Skin) {
-    m_writer.key("skin");
-    m_writer.value(*scene.IndexOf(node->Skin));
+    c.m_writer.key("skin");
+    c.m_writer.value(*scene.IndexOf(node->Skin));
   }
-  m_writer.object_close();
+  c.m_writer.object_close();
 }
 
-void
-Exporter::ExportBuffersViewsAccessors(const GltfRoot& scene)
+static void
+ExportBuffersViewsAccessors(Context& c, const GltfRoot& scene)
 {
-  if (m_binWriter.Accessors.size()) {
-    m_writer.key("accessors");
+  if (c.m_binWriter.Accessors.size()) {
+    c.m_writer.key("accessors");
     {
-      m_writer.array_open();
-      for (auto& accessor : m_binWriter.Accessors) {
-        m_writer.object_open();
-        m_writer.key("bufferView");
-        m_writer.value(*accessor.BufferView);
-        m_writer.key("count");
-        m_writer.value(accessor.Count);
-        m_writer.key("byteOffset");
-        m_writer.value(0);
-        m_writer.key("type");
-        m_writer.value(gltfjson::format::type_str(accessor.Type));
-        m_writer.key("componentType");
-        m_writer.value((int)accessor.ComponentType);
-        m_writer.object_close();
+      c.m_writer.array_open();
+      for (auto& accessor : c.m_binWriter.Accessors) {
+        c.m_writer.object_open();
+        c.m_writer.key("bufferView");
+        c.m_writer.value(*accessor.BufferView);
+        c.m_writer.key("count");
+        c.m_writer.value(accessor.Count);
+        c.m_writer.key("byteOffset");
+        c.m_writer.value(0);
+        c.m_writer.key("type");
+        c.m_writer.value(gltfjson::format::type_str(accessor.Type));
+        c.m_writer.key("componentType");
+        c.m_writer.value((int)accessor.ComponentType);
+        c.m_writer.object_close();
       }
-      m_writer.array_close();
+      c.m_writer.array_close();
     }
   }
-  if (m_binWriter.BufferViews.size()) {
-    m_writer.key("bufferViews");
+  if (c.m_binWriter.BufferViews.size()) {
+    c.m_writer.key("bufferViews");
     {
-      m_writer.array_open();
-      for (auto& bufferView : m_binWriter.BufferViews) {
-        m_writer.object_open();
-        m_writer.key("buffer");
-        m_writer.value(0); // for glb
-        m_writer.key("byteOffset");
-        m_writer.value(bufferView.ByteOffset);
-        m_writer.key("byteLength");
-        m_writer.value(bufferView.ByteLength);
-        m_writer.object_close();
+      c.m_writer.array_open();
+      for (auto& bufferView : c.m_binWriter.BufferViews) {
+        c.m_writer.object_open();
+        c.m_writer.key("buffer");
+        c.m_writer.value(0); // for glb
+        c.m_writer.key("byteOffset");
+        c.m_writer.value(bufferView.ByteOffset);
+        c.m_writer.key("byteLength");
+        c.m_writer.value(bufferView.ByteLength);
+        c.m_writer.object_close();
       }
-      m_writer.array_close();
+      c.m_writer.array_close();
     }
 
-    m_writer.key("buffers");
+    c.m_writer.key("buffers");
     {
-      m_writer.array_open();
+      c.m_writer.array_open();
       {
-        m_writer.object_open();
-        m_writer.key("byteLength");
-        m_writer.value(m_binWriter.BufferPosition);
-        m_writer.object_close();
+        c.m_writer.object_open();
+        c.m_writer.key("byteLength");
+        c.m_writer.value(c.m_binWriter.BufferPosition);
+        c.m_writer.object_close();
       }
-      m_writer.array_close();
+      c.m_writer.array_close();
     }
   }
 }
@@ -729,19 +589,19 @@ struct AnimationExporter
   }
 };
 
-void
-Exporter::ExportAnimations(const GltfRoot& scene)
+static void
+ExportAnimations(Context& c, const GltfRoot& scene)
 {
   if (scene.m_animations.empty()) {
     return;
   }
 
-  m_writer.key("animations");
-  m_writer.array_open();
+  c.m_writer.key("animations");
+  c.m_writer.array_open();
 
   // perpare
   for (auto& animation : scene.m_animations) {
-    AnimationExporter animationExporter(m_binWriter);
+    AnimationExporter animationExporter(c.m_binWriter);
 
     for (auto& [k, v] : animation->m_translationMap) {
       animationExporter.ExportAnimationTranslation(k, v);
@@ -756,46 +616,201 @@ Exporter::ExportAnimations(const GltfRoot& scene)
       animationExporter.ExportAnimationWeights(k, v);
     }
 
+    c.m_writer.object_open();
+    {
+      c.m_writer.key("name");
+      c.m_writer.value(animation->m_name);
+
+      c.m_writer.key("samplers");
+      c.m_writer.array_open();
+      for (auto& sampler : animationExporter.AnimationSamplers) {
+        c.m_writer.object_open();
+        c.m_writer.key("input");
+        c.m_writer.value(sampler.Input);
+        c.m_writer.key("output");
+        c.m_writer.value(sampler.Output);
+        c.m_writer.key("interpolation");
+        c.m_writer.value(
+          AnimationInterpolationModeNames[(int)sampler.Interpolation]);
+        c.m_writer.object_close();
+      }
+      c.m_writer.array_close();
+
+      c.m_writer.key("channels");
+      c.m_writer.array_open();
+      for (auto& channel : animationExporter.AnimationChannels) {
+        c.m_writer.object_open();
+        c.m_writer.key("sampler");
+        c.m_writer.value(channel.Sampler);
+        c.m_writer.key("target");
+        c.m_writer.object_open();
+        c.m_writer.key("node");
+        c.m_writer.value(channel.Node);
+        c.m_writer.key("path");
+        c.m_writer.value(AnimationTargetNames[(int)channel.Target]);
+        c.m_writer.object_close();
+        c.m_writer.object_close();
+      }
+      c.m_writer.array_close();
+    }
+    c.m_writer.object_close();
+  }
+
+  c.m_writer.array_close();
+}
+
+void
+Exporter::Export(const GltfRoot& scene)
+{
+  m_writer.object_open();
+
+  Context c{ m_writer, m_binWriter };
+  m_writer.key("asset");
+  {
+    ExportAsset(c, scene);
+  }
+
+  // images
+  if (scene.m_gltf.Images.Size()) {
+    m_writer.key("images");
+    {
+      m_writer.array_open();
+      for (auto& image : scene.m_gltf.Images) {
+        ExportImage(c, scene, image);
+      }
+      m_writer.array_close();
+    }
+  }
+
+  // samplers
+  if (scene.m_gltf.Samplers.Size()) {
+    m_writer.key("samplers");
+    {
+      m_writer.array_open();
+      for (auto& sampler : scene.m_gltf.Samplers) {
+        ExportTextureSampler(c, scene, sampler);
+      }
+      m_writer.array_close();
+    }
+  }
+
+  // textures
+  if (scene.m_gltf.Textures.Size()) {
+    m_writer.key("textures");
+    {
+      m_writer.array_open();
+      for (auto& texture : scene.m_gltf.Textures) {
+        ExportTexture(c, scene, texture);
+      }
+      m_writer.array_close();
+    }
+  }
+
+  // materials
+  if (scene.m_gltf.Materials.Size()) {
+    m_writer.key("materials");
+    {
+      m_writer.array_open();
+      for (auto& material : scene.m_gltf.Materials) {
+        ExportMaterial(c, scene, material);
+      }
+      m_writer.array_close();
+    }
+  }
+
+  // meshes
+  if (scene.m_meshes.size()) {
+    m_writer.key("meshes");
+    {
+      m_writer.array_open();
+      for (auto& mesh : scene.m_meshes) {
+        ExportMesh(c, scene, mesh);
+      }
+      m_writer.array_close();
+    }
+  }
+
+  // skins
+  if (scene.m_skins.size()) {
+    m_writer.key("skins");
+    {
+      m_writer.array_open();
+      for (auto& skin : scene.m_skins) {
+        ExportSkin(c, scene, skin);
+      }
+      m_writer.array_close();
+    }
+  }
+
+  // nodes
+  if (scene.m_nodes.size()) {
+    m_writer.key("nodes");
+    {
+      m_writer.array_open();
+      for (auto& node : scene.m_nodes) {
+        ExportNode(c, scene, node);
+      }
+      m_writer.array_close();
+    }
+    m_writer.key("scenes");
+    {
+      m_writer.array_open();
+      m_writer.object_open();
+      m_writer.key("nodes");
+      m_writer.array_open();
+      for (auto& root : scene.m_roots) {
+        m_writer.value(*scene.IndexOf(root));
+      }
+      m_writer.array_close();
+      m_writer.object_close();
+      m_writer.array_close();
+    }
+    m_writer.key("scene");
+    {
+      m_writer.value(0);
+    }
+  }
+
+  // update bin
+  ExportAnimations(c, scene);
+
+  // last
+  ExportBuffersViewsAccessors(c, scene);
+
+  //
+  // extensions
+  //
+  if (scene.m_vrma) {
+    m_writer.key("extensions");
     m_writer.object_open();
     {
-      m_writer.key("name");
-      m_writer.value(animation->m_name);
-
-      m_writer.key("samplers");
-      m_writer.array_open();
-      for (auto& sampler : animationExporter.AnimationSamplers) {
+      m_writer.key("VRMC_vrm_animation");
+      m_writer.object_open();
+      {
+        m_writer.key("expressions");
         m_writer.object_open();
-        m_writer.key("input");
-        m_writer.value(sampler.Input);
-        m_writer.key("output");
-        m_writer.value(sampler.Output);
-        m_writer.key("interpolation");
-        m_writer.value(
-          AnimationInterpolationModeNames[(int)sampler.Interpolation]);
+        {
+          m_writer.key("preset");
+          m_writer.object_open();
+          {
+            m_writer.key("aa");
+            m_writer.object_open();
+            {
+              m_writer.key("node");
+              m_writer.value(0);
+            }
+            m_writer.object_close();
+          }
+          m_writer.object_close();
+        }
         m_writer.object_close();
       }
-      m_writer.array_close();
-
-      m_writer.key("channels");
-      m_writer.array_open();
-      for (auto& channel : animationExporter.AnimationChannels) {
-        m_writer.object_open();
-        m_writer.key("sampler");
-        m_writer.value(channel.Sampler);
-        m_writer.key("target");
-        m_writer.object_open();
-        m_writer.key("node");
-        m_writer.value(channel.Node);
-        m_writer.key("path");
-        m_writer.value(AnimationTargetNames[(int)channel.Target]);
-        m_writer.object_close();
-        m_writer.object_close();
-      }
-      m_writer.array_close();
+      m_writer.object_close();
     }
     m_writer.object_close();
   }
 
-  m_writer.array_close();
+  m_writer.object_close();
 }
+
 }

@@ -127,6 +127,10 @@ public:
     m_writer(str);
     m_writer("\"");
   }
+  void value(std::u8string_view str)
+  {
+    value(std::string_view((const char*)str.data(), str.size()));
+  }
 
   void value(const char* str) { value(std::string_view(str)); }
 
