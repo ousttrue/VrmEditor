@@ -1,6 +1,7 @@
 #include "vrm/exporter.h"
 #include "vrm/gltf.h"
 #include "vrm/jsons.h"
+#include "vrm/runtimescene/base_mesh.h"
 #include "vrm/scenetypes.h"
 #include <gltfjson/glb.h>
 #include <gltfjson/gltf.h>
@@ -17,7 +18,7 @@ namespace format {
 
 template<>
 inline Accessor
-CreateAccessor<libvrm::ushort4>()
+CreateAccessor<runtimescene::ushort4>()
 {
   return Accessor{
     .ComponentType = ComponentTypes::UNSIGNED_SHORT,
@@ -215,7 +216,7 @@ ExportMaterial(Context& c,
 template<typename T, typename V, typename S>
 inline void
 PushVertices(std::vector<T>& indices,
-             const std::shared_ptr<Mesh>& mesh,
+             const std::shared_ptr<runtimescene::BaseMesh>& mesh,
              uint32_t& index,
              uint32_t drawCount,
              const V& push_vertex,
@@ -247,9 +248,8 @@ PushVertices(std::vector<T>& indices,
 //
 static uint32_t
 ExportMeshPrimitive(Context& c,
-                    const GltfRoot& scene,
-                    const std::shared_ptr<Mesh>& mesh,
-                    const Primitive& prim,
+                    const std::shared_ptr<runtimescene::BaseMesh>& mesh,
+                    const runtimescene::Primitive& prim,
                     uint32_t index)
 {
   c.m_writer.object_open();
@@ -262,15 +262,17 @@ ExportMeshPrimitive(Context& c,
   std::vector<DirectX::XMFLOAT3> positions;
   std::vector<DirectX::XMFLOAT3> normals;
   std::vector<DirectX::XMFLOAT2> tex0;
-  auto push_vertex = [&positions, &normals, &tex0](const Vertex& v) {
-    positions.push_back(v.Position);
-    normals.push_back(v.Normal);
-    tex0.push_back(v.Uv);
-  };
+  auto push_vertex =
+    [&positions, &normals, &tex0](const runtimescene::Vertex& v) {
+      positions.push_back(v.Position);
+      normals.push_back(v.Normal);
+      tex0.push_back(v.Uv);
+    };
 
-  std::vector<ushort4> joints;
+  std::vector<runtimescene::ushort4> joints;
   std::vector<DirectX::XMFLOAT4> weights;
-  auto push_skinning = [&joints, &weights](const JointBinding& v) {
+  auto push_skinning = [&joints,
+                        &weights](const runtimescene::JointBinding& v) {
     joints.push_back(v.Joints);
     weights.push_back(v.Weights);
   };
@@ -367,19 +369,19 @@ ExportMeshPrimitive(Context& c,
 //     ]
 // }
 static void
-ExportMesh(Context& c, const GltfRoot& scene, const std::shared_ptr<Mesh>& mesh)
+ExportMesh(Context& c, const gltfjson::format::Mesh& mesh)
 {
   c.m_writer.object_open();
-  if (mesh->Name.size()) {
+  if (mesh.Name.size()) {
     c.m_writer.key("name");
-    c.m_writer.value(mesh->Name);
+    c.m_writer.value(mesh.Name);
   }
   c.m_writer.key("primitives");
   c.m_writer.array_open();
-  uint32_t index = 0;
-  for (auto& prim : mesh->m_primitives) {
-    index = ExportMeshPrimitive(c, scene, mesh, prim, index);
-  }
+  // uint32_t index = 0;
+  // for (auto& prim : mesh.Primitives) {
+  //   index = ExportMeshPrimitive(c, mesh, prim, index);
+  // }
   c.m_writer.array_close();
   c.m_writer.object_close();
 }
@@ -438,7 +440,7 @@ ExportNode(Context& c, const GltfRoot& scene, const std::shared_ptr<Node>& node)
   }
   if (node->Mesh) {
     c.m_writer.key("mesh");
-    c.m_writer.value(*scene.IndexOf(node->Mesh));
+    c.m_writer.value(*node->Mesh);
   }
   if (node->Skin) {
     c.m_writer.key("skin");
@@ -719,12 +721,12 @@ Exporter::Export(const GltfRoot& scene)
   }
 
   // meshes
-  if (scene.m_meshes.size()) {
+  if (scene.m_gltf.Meshes.Size()) {
     m_writer.key("meshes");
     {
       m_writer.array_open();
-      for (auto& mesh : scene.m_meshes) {
-        ExportMesh(c, scene, mesh);
+      for (auto& mesh : scene.m_gltf.Meshes) {
+        ExportMesh(c, mesh);
       }
       m_writer.array_close();
     }

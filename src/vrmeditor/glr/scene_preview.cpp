@@ -60,13 +60,13 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
   glr::ClearRendertarget(*m_env);
 
   for (auto [mesh, m] : m_animation->m_table->Drawables()) {
-    auto meshInstance = m_animation->GetRuntimeMesh(mesh);
+    auto meshInstance = m_animation->GetDeformedMesh(mesh);
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Color,
                   *m_env,
                   m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
-                  mesh,
+                  m_animation->m_meshes[mesh],
                   *meshInstance,
                   m);
     }
@@ -75,13 +75,13 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
     m_env->RenderSkybox();
   }
   for (auto [mesh, m] : m_animation->m_table->Drawables()) {
-    auto meshInstance = m_animation->GetRuntimeMesh(mesh);
+    auto meshInstance = m_animation->GetDeformedMesh(mesh);
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix,
                   *m_env,
                   m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
-                  mesh,
+                  m_animation->m_meshes[mesh],
                   *meshInstance,
                   m);
     }
@@ -146,13 +146,13 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   m_settings->NextSpringDelta = {};
 
   for (auto [mesh, m] : m_animation->Drawables()) {
-    auto meshInstance = m_animation->GetRuntimeMesh(mesh);
+    auto meshInstance = m_animation->GetDeformedMesh(mesh);
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Color,
                   *m_env,
                   m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
-                  mesh,
+                  m_animation->m_meshes[mesh],
                   *meshInstance,
                   m);
     }
@@ -162,13 +162,13 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   }
 
   for (auto [mesh, m] : m_animation->Drawables()) {
-    auto meshInstance = m_animation->GetRuntimeMesh(mesh);
+    auto meshInstance = m_animation->GetDeformedMesh(mesh);
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix,
                   *m_env,
                   m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
-                  mesh,
+                  m_animation->m_meshes[mesh],
                   *meshInstance,
                   m);
     }

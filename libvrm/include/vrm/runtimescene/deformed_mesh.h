@@ -1,5 +1,5 @@
 #pragma once
-#include <vrm/mesh.h>
+#include "base_mesh.h"
 
 namespace runtimescene {
 
@@ -8,9 +8,9 @@ struct DeformedMesh
   // morph targets
   std::vector<float> Weights;
   // skinning
-  std::vector<libvrm::Vertex> Vertices;
+  std::vector<Vertex> Vertices;
 
-  DeformedMesh(const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
+  DeformedMesh(const std::shared_ptr<BaseMesh>& mesh)
     : Weights(mesh->m_morphTargets.size())
     , Vertices(mesh->m_vertices)
   {
@@ -37,7 +37,7 @@ struct DeformedMesh
   }
 
   void applyMorphTargetAndSkinning(
-    const libvrm::gltf::Mesh& mesh,
+    const BaseMesh& mesh,
     std::span<DirectX::XMFLOAT4X4> skinningMatrices)
   {
     // clear & apply morph target

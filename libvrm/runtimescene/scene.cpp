@@ -6,6 +6,215 @@
 
 namespace runtimescene {
 
+static std::expected<bool, std::string>
+AddIndices(const gltfjson::format::Root& root,
+           const gltfjson::format::Bin& bin,
+           int vertex_offset,
+           BaseMesh* mesh,
+           const gltfjson::format::MeshPrimitive& prim)
+{
+  if (prim.Indices) {
+    int accessor_index = *prim.Indices;
+    auto accessor = root.Accessors[accessor_index];
+    switch (accessor.ComponentType) {
+      case gltfjson::format::ComponentTypes::UNSIGNED_BYTE: {
+        if (auto span = bin.GetAccessorBytes<uint8_t>(root, accessor_index)) {
+          mesh->addSubmesh(vertex_offset, *span, prim.Material);
+          return true;
+        } else {
+          return std::unexpected{ span.error() };
+        }
+      } break;
+      case gltfjson::format::ComponentTypes::UNSIGNED_SHORT: {
+        if (auto span = bin.GetAccessorBytes<uint16_t>(root, accessor_index)) {
+          mesh->addSubmesh(vertex_offset, *span, prim.Material);
+          return true;
+        } else {
+          return std::unexpected{ span.error() };
+        }
+      } break;
+      case gltfjson::format::ComponentTypes::UNSIGNED_INT: {
+        if (auto span = bin.GetAccessorBytes<uint32_t>(root, accessor_index)) {
+          mesh->addSubmesh(vertex_offset, *span, prim.Material);
+          return true;
+        } else {
+          return std::unexpected{ span.error() };
+        }
+      } break;
+      default:
+        return std::unexpected{ "invalid index type" };
+    }
+  } else {
+    std::vector<uint32_t> indices;
+    auto vertex_count = mesh->m_vertices.size();
+    indices.reserve(vertex_count);
+    for (int i = 0; i < vertex_count; ++i) {
+      indices.push_back(i);
+    }
+    mesh->addSubmesh<uint32_t>(vertex_offset, indices, prim.Material);
+    return true;
+  }
+}
+
+static std::expected<std::shared_ptr<BaseMesh>, std::string>
+ParseMesh(const gltfjson::format::Root& root,
+          const gltfjson::format::Bin& bin,
+          int meshIndex)
+{
+  auto& mesh = root.Meshes[meshIndex];
+  auto ptr = std::make_shared<BaseMesh>();
+  ptr->Name = { (const char*)mesh.Name.data(), mesh.Name.size() };
+  gltfjson::format::MeshPrimitiveAttributes lastAtributes = {};
+  for (auto& prim : mesh.Primitives) {
+    if (prim.Attributes == lastAtributes) {
+      // for vrm shared vertex buffer
+      if (auto expected = AddIndices(root, bin, 0, ptr.get(), prim)) {
+        // OK
+      } else {
+        return std::unexpected{ expected.error() };
+      }
+    } else {
+      // extend vertex buffer
+      std::span<const DirectX::XMFLOAT3> positions;
+      if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
+            root, *prim.Attributes.POSITION)) {
+        positions = *accessor;
+      } else {
+        return std::unexpected{ accessor.error() };
+      }
+      // if (scene->m_type == ModelType::Vrm0) {
+      // std::vector<DirectX::XMFLOAT3> copy;
+      //   copy.reserve(positions.size());
+      //   for (auto& p : positions) {
+      //     copy.push_back({ -p.x, p.y, -p.z });
+      //   }
+      //   positions = copy;
+      // }
+      auto offset = ptr->addPosition(positions);
+
+      if (prim.Attributes.NORMAL) {
+        if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
+              root, *prim.Attributes.NORMAL)) {
+          ptr->setNormal(offset, *accessor);
+        } else {
+          return std::unexpected{ accessor.error() };
+        }
+      }
+
+      if (prim.Attributes.TEXCOORD_0) {
+        if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT2>(
+              root, *prim.Attributes.TEXCOORD_0)) {
+          ptr->setUv(offset, *accessor);
+        } else {
+          return std::unexpected{ accessor.error() };
+        }
+      }
+
+      if (prim.Attributes.JOINTS_0 && prim.Attributes.WEIGHTS_0) {
+        // skinning
+        int joint_accessor = *prim.Attributes.JOINTS_0;
+        auto item_size = root.Accessors[joint_accessor].Stride();
+        switch (item_size) {
+          case 4:
+            if (auto accessor =
+                  bin.GetAccessorBytes<byte4>(root, joint_accessor)) {
+              if (auto accessor_w = bin.GetAccessorBytes<DirectX::XMFLOAT4>(
+                    root, *prim.Attributes.WEIGHTS_0)) {
+                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
+              } else {
+                return std::unexpected{ accessor_w.error() };
+              }
+            } else {
+              return std::unexpected{ accessor.error() };
+            }
+            break;
+
+          case 8:
+            if (auto accessor =
+                  bin.GetAccessorBytes<ushort4>(root, joint_accessor)) {
+              if (auto accessor_w = bin.GetAccessorBytes<DirectX::XMFLOAT4>(
+                    root, *prim.Attributes.WEIGHTS_0)) {
+                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
+              } else {
+                return std::unexpected{ accessor_w.error() };
+              }
+            } else {
+              return std::unexpected{ accessor.error() };
+            }
+            break;
+
+          default:
+            // not implemented
+            return std::unexpected{ "JOINTS_0 is not ushort4" };
+        }
+      }
+
+      // extend morph target
+      {
+        auto& targets = prim.Targets;
+        for (int i = 0; i < targets.size(); ++i) {
+          auto& target = targets.at(i);
+          auto morph = ptr->getOrCreateMorphTarget(i);
+          // std::cout << target << std::endl;
+          std::span<const DirectX::XMFLOAT3> positions;
+          if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
+                root, *target.POSITION)) {
+            positions = *accessor;
+          } else {
+            return std::unexpected{ accessor.error() };
+          }
+          // if (scene->m_type == ModelType::Vrm0) {
+          //   std::vector<DirectX::XMFLOAT3> copy;
+          //   copy.reserve(positions.size());
+          //   for (auto& p : positions) {
+          //     copy.push_back({ -p.x, p.y, -p.z });
+          //   }
+          //   positions = copy;
+          // }
+          /*auto morphOffset =*/morph->addPosition(positions);
+        }
+      }
+
+      // extend indices and add vertex offset
+      if (auto expected = AddIndices(root, bin, offset, ptr.get(), prim)) {
+        // OK
+      } else {
+        return std::unexpected{ expected.error() };
+      }
+    }
+
+    // find morph target name
+    // primitive.extras.targetNames
+    // if (has(prim, "extras")) {
+    //   auto& extras = prim.at("extras");
+    //   if (has(extras, "targetNames")) {
+    //     auto& names = extras.at("targetNames");
+    //     // std::cout << names << std::endl;
+    //     for (int i = 0; i < names.size(); ++i) {
+    //       ptr->getOrCreateMorphTarget(i)->Name = names[i];
+    //     }
+    //   }
+    // }
+
+    lastAtributes = prim.Attributes;
+  }
+
+  // find morph target name
+  // mesh.extras.targetNames
+  // if (has(mesh, "extras")) {
+  //   auto& extras = mesh.at("extras");
+  //   if (has(extras, "targetNames")) {
+  //     auto& names = extras.at("targetNames");
+  //     // std::cout << names << std::endl;
+  //     for (int i = 0; i < names.size(); ++i) {
+  //       ptr->getOrCreateMorphTarget(i)->Name = names[i];
+  //     }
+  //   }
+  // }
+
+  return ptr;
+}
+
 RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
   : m_table(table)
 {
@@ -50,14 +259,17 @@ RuntimeScene::GetRuntimeNode(const std::shared_ptr<libvrm::gltf::Node>& node)
 }
 
 std::shared_ptr<DeformedMesh>
-RuntimeScene::GetRuntimeMesh(const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
+RuntimeScene::GetDeformedMesh(uint32_t mesh)
 {
   auto found = m_meshMap.find(mesh);
   if (found != m_meshMap.end()) {
     return found->second;
   }
 
-  auto runtime = std::make_shared<DeformedMesh>(mesh);
+  auto baseMesh = ParseMesh(m_table->m_gltf, m_table->m_bin, mesh);
+  m_meshes.insert({ mesh, *baseMesh });
+
+  auto runtime = std::make_shared<DeformedMesh>(*baseMesh);
   m_meshMap.insert({ mesh, runtime });
   return runtime;
 }
@@ -134,8 +346,11 @@ RuntimeScene::Drawables()
     for (auto& [k, v] :
          m_table->m_expressions->EvalMorphTargetMap(nodeToIndex)) {
       auto& morph_node = m_table->m_nodes[k.NodeIndex];
-      auto instance = GetRuntimeMesh(morph_node->Mesh);
-      instance->Weights[k.MorphIndex] = v;
+      if (morph_node->Mesh) {
+        if (auto instance = GetDeformedMesh(*morph_node->Mesh)) {
+          instance->Weights[k.MorphIndex] = v;
+        }
+      }
     }
   }
 
@@ -170,8 +385,12 @@ RuntimeScene::Drawables()
       }
 
       // apply morphtarget & skinning
-      auto instance = GetRuntimeMesh(node->Mesh);
-      instance->applyMorphTargetAndSkinning(*node->Mesh, skinningMatrices);
+      if (node->Mesh) {
+        if (auto instance = GetDeformedMesh(*node->Mesh)) {
+          instance->applyMorphTargetAndSkinning(*m_meshes[*node->Mesh],
+                                                skinningMatrices);
+        }
+      }
     }
   }
 
@@ -179,11 +398,11 @@ RuntimeScene::Drawables()
   for (auto& node : m_table->m_nodes) {
     if (node->Mesh) {
       m_drawables.push_back({
-        .Mesh = node->Mesh,
+        .Mesh = *node->Mesh,
       });
       DirectX::XMStoreFloat4x4(&m_drawables.back().Matrix,
                                GetRuntimeNode(node)->WorldMatrix());
-      auto instance = GetRuntimeMesh(node->Mesh);
+      auto instance = GetDeformedMesh(*node->Mesh);
     }
   }
 

@@ -2,7 +2,7 @@
 #include "expression.h"
 #include "gizmo.h"
 #include "humanpose.h"
-#include "mesh.h"
+#include "runtimescene/base_mesh.h"
 #include "scenetypes.h"
 #include "springbone.h"
 #include "springcollider.h"
@@ -33,13 +33,9 @@ struct Animation;
 }
 
 namespace gltf {
-struct Mesh;
 struct Skin;
 struct Node;
 struct Animation;
-class Image;
-struct Texture;
-struct Material;
 
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;
@@ -65,13 +61,8 @@ enum class ModelType
 
 struct DrawItem
 {
-  std::shared_ptr<Mesh> Mesh;
+  uint32_t Mesh;
   DirectX::XMFLOAT4X4 Matrix;
-};
-
-class BufferManager
-{
-  std::vector<std::shared_ptr<Image>> m_images;
 };
 
 struct GltfRoot
@@ -81,7 +72,6 @@ struct GltfRoot
   gltfjson::format::Root m_gltf;
   gltfjson::format::Bin m_bin;
   std::string m_title = "scene";
-  std::vector<std::shared_ptr<Mesh>> m_meshes;
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;
   std::vector<std::shared_ptr<Skin>> m_skins;
@@ -111,7 +101,6 @@ struct GltfRoot
   void Clear()
   {
     m_type = {};
-    m_meshes.clear();
     m_nodes.clear();
     m_roots.clear();
     m_skins.clear();
@@ -128,10 +117,6 @@ struct GltfRoot
     m_expressions = {};
   }
 
-  std::optional<size_t> IndexOf(const std::shared_ptr<Mesh>& mesh) const
-  {
-    return _IndexOf<std::shared_ptr<Mesh>>(m_meshes, mesh);
-  }
   std::optional<size_t> IndexOf(const std::shared_ptr<Skin>& skin) const
   {
     return _IndexOf<std::shared_ptr<Skin>>(m_skins, skin);
@@ -159,7 +144,7 @@ struct GltfRoot
 
   std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
 
-  BoundingBox GetBoundingBox() const;
+  runtimescene::BoundingBox GetBoundingBox() const;
 
   void InitializeNodes()
   {

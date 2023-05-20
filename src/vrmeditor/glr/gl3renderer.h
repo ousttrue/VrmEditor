@@ -20,6 +20,7 @@ class Texture;
 }
 
 namespace runtimescene {
+struct BaseMesh;
 struct DeformedMesh;
 }
 
@@ -38,7 +39,7 @@ Render(RenderPass pass,
        const RenderingEnv& camera,
        const gltfjson::format::Root& root,
        const gltfjson::format::Bin& bin,
-       const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
+       const std::shared_ptr<runtimescene::BaseMesh>& mesh,
        const runtimescene::DeformedMesh& instance,
        const DirectX::XMFLOAT4X4& m);
 

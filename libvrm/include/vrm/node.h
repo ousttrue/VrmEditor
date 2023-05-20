@@ -14,12 +14,15 @@
 #include <string_view>
 #include <vector>
 
+namespace runtimescene {
+struct BaseMesh;
+}
+
 namespace libvrm {
 namespace gltf {
 
 struct Skin;
 struct Node;
-struct Mesh;
 
 struct EuclideanTransform
 {
@@ -165,14 +168,13 @@ struct Node
     }
   }
 
-  std::shared_ptr<Mesh> Mesh;
+  std::optional<uint32_t> Mesh;
   std::shared_ptr<Skin> Skin;
 
   Node(std::string_view name);
   Node(std::u8string_view name)
     : Node(std::string_view{ (const char*)name.data(),
-                             (const char*)name.data() + name.size()
-      })
+                             (const char*)name.data() + name.size() })
   {
   }
   Node(const Node&) = delete;

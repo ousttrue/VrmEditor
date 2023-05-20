@@ -15,218 +15,6 @@ u8_to_str(const std::u8string& src)
   return { (const char*)src.data(), (const char*)src.data() + src.size() };
 }
 
-static std::expected<bool, std::string>
-AddIndices(const std::shared_ptr<GltfRoot>& scene,
-           int vertex_offset,
-           gltf::Mesh* mesh,
-           const gltfjson::format::MeshPrimitive& prim)
-{
-  if (prim.Indices) {
-    int accessor_index = *prim.Indices;
-    auto accessor = scene->m_gltf.Accessors[accessor_index];
-    switch (accessor.ComponentType) {
-      case gltfjson::format::ComponentTypes::UNSIGNED_BYTE: {
-        if (auto span = scene->m_bin.GetAccessorBytes<uint8_t>(
-              scene->m_gltf, accessor_index)) {
-          mesh->addSubmesh(vertex_offset, *span, prim.Material);
-          return true;
-        } else {
-          return std::unexpected{ span.error() };
-        }
-      } break;
-      case gltfjson::format::ComponentTypes::UNSIGNED_SHORT: {
-        if (auto span = scene->m_bin.GetAccessorBytes<uint16_t>(
-              scene->m_gltf, accessor_index)) {
-          mesh->addSubmesh(vertex_offset, *span, prim.Material);
-          return true;
-        } else {
-          return std::unexpected{ span.error() };
-        }
-      } break;
-      case gltfjson::format::ComponentTypes::UNSIGNED_INT: {
-        if (auto span = scene->m_bin.GetAccessorBytes<uint32_t>(
-              scene->m_gltf, accessor_index)) {
-          mesh->addSubmesh(vertex_offset, *span, prim.Material);
-          return true;
-        } else {
-          return std::unexpected{ span.error() };
-        }
-      } break;
-      default:
-        return std::unexpected{ "invalid index type" };
-    }
-  } else {
-    std::vector<uint32_t> indices;
-    auto vertex_count = mesh->m_vertices.size();
-    indices.reserve(vertex_count);
-    for (int i = 0; i < vertex_count; ++i) {
-      indices.push_back(i);
-    }
-    mesh->addSubmesh<uint32_t>(vertex_offset, indices, prim.Material);
-    return true;
-  }
-}
-
-static std::expected<std::shared_ptr<gltf::Mesh>, std::string>
-ParseMesh(const std::shared_ptr<GltfRoot>& scene,
-          int i,
-          const gltfjson::format::Mesh& mesh)
-{
-  auto ptr = std::make_shared<gltf::Mesh>();
-  ptr->Name = u8_to_str(mesh.Name);
-  gltfjson::format::MeshPrimitiveAttributes lastAtributes = {};
-  for (auto& prim : mesh.Primitives) {
-    if (prim.Attributes == lastAtributes) {
-      // for vrm shared vertex buffer
-      if (auto expected = AddIndices(scene, 0, ptr.get(), prim)) {
-        // OK
-      } else {
-        return std::unexpected{ expected.error() };
-      }
-    } else {
-      // extend vertex buffer
-      std::span<const DirectX::XMFLOAT3> positions;
-      if (auto accessor = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT3>(
-            scene->m_gltf, *prim.Attributes.POSITION)) {
-        positions = *accessor;
-      } else {
-        return std::unexpected{ accessor.error() };
-      }
-      std::vector<DirectX::XMFLOAT3> copy;
-      if (scene->m_type == ModelType::Vrm0) {
-        copy.reserve(positions.size());
-        for (auto& p : positions) {
-          copy.push_back({ -p.x, p.y, -p.z });
-        }
-        positions = copy;
-      }
-      auto offset = ptr->addPosition(positions);
-
-      if (prim.Attributes.NORMAL) {
-        if (auto accessor = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT3>(
-              scene->m_gltf, *prim.Attributes.NORMAL)) {
-          ptr->setNormal(offset, *accessor);
-        } else {
-          return std::unexpected{ accessor.error() };
-        }
-      }
-
-      if (prim.Attributes.TEXCOORD_0) {
-        if (auto accessor = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT2>(
-              scene->m_gltf, *prim.Attributes.TEXCOORD_0)) {
-          ptr->setUv(offset, *accessor);
-        } else {
-          return std::unexpected{ accessor.error() };
-        }
-      }
-
-      if (prim.Attributes.JOINTS_0 && prim.Attributes.WEIGHTS_0) {
-        // skinning
-        int joint_accessor = *prim.Attributes.JOINTS_0;
-        auto item_size = scene->m_gltf.Accessors[joint_accessor].Stride();
-        switch (item_size) {
-          case 4:
-            if (auto accessor = scene->m_bin.GetAccessorBytes<byte4>(
-                  scene->m_gltf, joint_accessor)) {
-              if (auto accessor_w =
-                    scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4>(
-                      scene->m_gltf, *prim.Attributes.WEIGHTS_0)) {
-                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
-              } else {
-                return std::unexpected{ accessor_w.error() };
-              }
-            } else {
-              return std::unexpected{ accessor.error() };
-            }
-            break;
-
-          case 8:
-            if (auto accessor = scene->m_bin.GetAccessorBytes<ushort4>(
-                  scene->m_gltf, joint_accessor)) {
-              if (auto accessor_w =
-                    scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4>(
-                      scene->m_gltf, *prim.Attributes.WEIGHTS_0)) {
-                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
-              } else {
-                return std::unexpected{ accessor_w.error() };
-              }
-            } else {
-              return std::unexpected{ accessor.error() };
-            }
-            break;
-
-          default:
-            // not implemented
-            return std::unexpected{ "JOINTS_0 is not ushort4" };
-        }
-      }
-
-      // extend morph target
-      {
-        auto& targets = prim.Targets;
-        for (int i = 0; i < targets.size(); ++i) {
-          auto& target = targets.at(i);
-          auto morph = ptr->getOrCreateMorphTarget(i);
-          // std::cout << target << std::endl;
-          std::span<const DirectX::XMFLOAT3> positions;
-          if (auto accessor = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT3>(
-                scene->m_gltf, *target.POSITION)) {
-            positions = *accessor;
-          } else {
-            return std::unexpected{ accessor.error() };
-          }
-          std::vector<DirectX::XMFLOAT3> copy;
-          if (scene->m_type == ModelType::Vrm0) {
-            copy.reserve(positions.size());
-            for (auto& p : positions) {
-              copy.push_back({ -p.x, p.y, -p.z });
-            }
-            positions = copy;
-          }
-          /*auto morphOffset =*/morph->addPosition(positions);
-        }
-      }
-
-      // extend indices and add vertex offset
-      if (auto expected = AddIndices(scene, offset, ptr.get(), prim)) {
-        // OK
-      } else {
-        return std::unexpected{ expected.error() };
-      }
-    }
-
-    // find morph target name
-    // primitive.extras.targetNames
-    // if (has(prim, "extras")) {
-    //   auto& extras = prim.at("extras");
-    //   if (has(extras, "targetNames")) {
-    //     auto& names = extras.at("targetNames");
-    //     // std::cout << names << std::endl;
-    //     for (int i = 0; i < names.size(); ++i) {
-    //       ptr->getOrCreateMorphTarget(i)->Name = names[i];
-    //     }
-    //   }
-    // }
-
-    lastAtributes = prim.Attributes;
-  }
-
-  // find morph target name
-  // mesh.extras.targetNames
-  // if (has(mesh, "extras")) {
-  //   auto& extras = mesh.at("extras");
-  //   if (has(extras, "targetNames")) {
-  //     auto& names = extras.at("targetNames");
-  //     // std::cout << names << std::endl;
-  //     for (int i = 0; i < names.size(); ++i) {
-  //       ptr->getOrCreateMorphTarget(i)->Name = names[i];
-  //     }
-  //   }
-  // }
-
-  return ptr;
-}
-
 static std::expected<std::shared_ptr<gltf::Skin>, std::string>
 ParseSkin(const std::shared_ptr<GltfRoot>& scene,
           int i,
@@ -300,16 +88,12 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
     }
   }
 
-  if (node.Mesh) {
-    auto mesh_index = *node.Mesh;
-    auto mesh = scene->m_meshes[mesh_index];
-    ptr->Mesh = mesh;
+  ptr->Mesh = node.Mesh;
 
-    if (node.Skin) {
-      int skin_index = *node.Skin;
-      auto skin = scene->m_skins[skin_index];
-      ptr->Skin = skin;
-    }
+  if (node.Skin) {
+    int skin_index = *node.Skin;
+    auto skin = scene->m_skins[skin_index];
+    ptr->Skin = skin;
   }
 
   return ptr;
@@ -376,10 +160,10 @@ ParseAnimation(const std::shared_ptr<GltfRoot>& scene,
                                                                output_index)) {
           auto node = scene->m_nodes[node_index];
           if (node->Mesh) {
-            if (values->size() !=
-                node->Mesh->m_morphTargets.size() * times->size()) {
-              return std::unexpected{ "animation-weights: size not match" };
-            }
+            // if (values->size() !=
+            //     node->Mesh->m_morphTargets.size() * times->size()) {
+            //   return std::unexpected{ "animation-weights: size not match" };
+            // }
             ptr->AddWeights(
               node_index, *times, *values, node->Name + "-weights");
           } else {
@@ -712,28 +496,6 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   //     scene->m_title = "vrm-1.0";
   //   }
   // }
-
-  // {
-  //   auto& images = scene->m_gltf.Images;
-  //   for (int i = 0; i < images.Size(); ++i) {
-  //     if (auto image = ParseImage(scene, i, images[i])) {
-  //       scene->m_images.push_back(*image);
-  //     } else {
-  //       return std::unexpected{ image.error() };
-  //     }
-  //   }
-  // }
-
-  {
-    auto& meshes = scene->m_gltf.Meshes;
-    for (int i = 0; i < meshes.Size(); ++i) {
-      if (auto mesh = ParseMesh(scene, i, meshes[i])) {
-        scene->m_meshes.push_back(*mesh);
-      } else {
-        return std::unexpected{ mesh.error() };
-      }
-    }
-  }
 
   {
     auto skins = scene->m_gltf.Skins;

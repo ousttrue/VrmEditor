@@ -30,8 +30,11 @@ AnimationUpdate(const libvrm::gltf::Animation& animation,
   for (auto& [k, v] : animation.m_weightsMap) {
     auto node = nodes[k];
     auto values = v.GetValue(seconds, repeat);
-    auto instance = runtime->GetRuntimeMesh(node->Mesh);
-    instance->Weights.assign(values.begin(), values.end());
+    if (node->Mesh) {
+      if (auto instance = runtime->GetDeformedMesh(*node->Mesh)) {
+        instance->Weights.assign(values.begin(), values.end());
+      }
+    }
   }
 }
 

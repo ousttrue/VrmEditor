@@ -3,6 +3,7 @@
 #include "vrm/gltf.h"
 #include "vrm/gltfroot.h"
 #include "vrm/jsonpath.h"
+#include "vrm/runtimescene/base_mesh.h"
 #include "vrm/springbone.h"
 #include <DirectXMath.h>
 #include <array>
@@ -105,17 +106,17 @@ GltfRoot::GetBoneNode(vrm::HumanBones bone)
   return {};
 }
 
-BoundingBox
+runtimescene::BoundingBox
 GltfRoot::GetBoundingBox() const
 {
-  BoundingBox bb{};
+  runtimescene::BoundingBox bb{};
   for (auto& node : m_nodes) {
     bb.Extend(node->WorldInitialTransform.Translation);
     bb.Extend(node->WorldInitialTransform.Translation);
     if (node->Mesh) {
-      auto mesh_bb = node->Mesh->GetBoundingBox();
-      bb.Extend(dmath::transform(mesh_bb.Min, node->WorldInitialMatrix()));
-      bb.Extend(dmath::transform(mesh_bb.Max, node->WorldInitialMatrix()));
+      // auto mesh_bb = node->Mesh->GetBoundingBox();
+      // bb.Extend(dmath::transform(mesh_bb.Min, node->WorldInitialMatrix()));
+      // bb.Extend(dmath::transform(mesh_bb.Max, node->WorldInitialMatrix()));
     }
   }
   return bb;
@@ -128,7 +129,7 @@ GltfRoot::Drawables()
   for (auto& node : m_nodes) {
     if (node->Mesh) {
       m_drawables.push_back({
-        .Mesh = node->Mesh,
+        .Mesh = *node->Mesh,
       });
       DirectX::XMStoreFloat4x4(&m_drawables.back().Matrix,
                                node->WorldInitialMatrix());

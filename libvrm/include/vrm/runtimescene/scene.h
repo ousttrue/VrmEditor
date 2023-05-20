@@ -10,17 +10,17 @@ namespace runtimescene {
 struct RuntimeNode;
 struct DeformedMesh;
 struct RuntimeSpringCollision;
+struct BaseMesh;
 
-using RenderFunc =
-  std::function<void(const std::shared_ptr<libvrm::gltf::Mesh>&,
-                     const DeformedMesh&,
-                     const float[16])>;
+using RenderFunc = std::function<
+  void(const std::shared_ptr<BaseMesh>&, const DeformedMesh&, const float[16])>;
 
 struct RuntimeScene
 {
   std::shared_ptr<libvrm::gltf::GltfRoot> m_table;
   std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
+  std::unordered_map<uint32_t, std::shared_ptr<BaseMesh>> m_meshes;
 
   std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
   {
@@ -38,9 +38,7 @@ struct RuntimeScene
   libvrm::Time NextSpringDelta = libvrm::Time(0.0);
   std::shared_ptr<libvrm::gltf::GltfRoot> m_lastScene;
 
-  std::unordered_map<std::shared_ptr<libvrm::gltf::Mesh>,
-                     std::shared_ptr<DeformedMesh>>
-    m_meshMap;
+  std::unordered_map<uint32_t, std::shared_ptr<DeformedMesh>> m_meshMap;
   std::unordered_map<std::shared_ptr<libvrm::gltf::Node>,
                      std::shared_ptr<RuntimeNode>>
     m_nodeMap;
@@ -55,8 +53,7 @@ struct RuntimeScene
   RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table);
   void Reset();
 
-  std::shared_ptr<DeformedMesh> GetRuntimeMesh(
-    const std::shared_ptr<libvrm::gltf::Mesh>& mesh);
+  std::shared_ptr<DeformedMesh> GetDeformedMesh(uint32_t mesh);
   std::shared_ptr<RuntimeNode> GetRuntimeNode(
     const std::shared_ptr<libvrm::gltf::Node>& node);
 
@@ -65,9 +62,6 @@ struct RuntimeScene
   std::shared_ptr<RuntimeSpringCollision> GetRuntimeSpringCollision(
     const std::shared_ptr<libvrm::vrm::SpringBone>& springBone);
 
-  // void Render(const std::shared_ptr<libvrm::gltf::Scene>& scene,
-  //             const RenderFunc& render,
-  //             libvrm::IGizmoDrawer* gizmo);
   std::vector<libvrm::gltf::DrawItem> m_drawables;
   std::span<const libvrm::gltf::DrawItem> Drawables();
 
@@ -96,16 +90,5 @@ struct RuntimeScene
   void SyncHierarchy();
   void DrawGizmo(libvrm::IGizmoDrawer* gizmo);
 };
-
-// void SetInitialPose()
-// {
-//   for (auto& node : m_nodes) {
-//     node->Transform = node->InitialTransform;
-//   }
-//   for (auto& root : m_roots) {
-//     root->CalcWorldMatrix(true);
-//   }
-//   RaiseSceneUpdated();
-// }
 
 }

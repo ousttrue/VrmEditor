@@ -277,9 +277,10 @@ ShowGui(const gltfjson::format::Root& root,
       { { gltfjson::format::ComponentTypes::UNSIGNED_SHORT,
           gltfjson::format::Types::VEC4 },
         [](auto& root, auto& bin, auto& accessor) {
-          if (auto values = bin.template GetAccessorBytes<libvrm::ushort4>(
-                root, accessor)) {
-            ShowGuiAccessorInt4<libvrm::ushort4>(*values);
+          if (auto values =
+                bin.template GetAccessorBytes<runtimescene::ushort4>(
+                  root, accessor)) {
+            ShowGuiAccessorInt4<runtimescene::ushort4>(*values);
           }
         } },
       { { gltfjson::format::ComponentTypes::UNSIGNED_INT,

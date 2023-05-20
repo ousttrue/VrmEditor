@@ -1,5 +1,4 @@
 #pragma once
-#include "scenetypes.h"
 #include <DirectXMath.h>
 #include <assert.h>
 #include <gltfjson/gltf.h>
@@ -7,9 +6,32 @@
 #include <span>
 #include <vector>
 
-namespace libvrm::gltf {
+namespace runtimescene {
 
-struct Material;
+inline DirectX::XMFLOAT3&
+operator+=(DirectX::XMFLOAT3& lhs, const DirectX::XMFLOAT3& rhs)
+{
+  lhs.x += rhs.x;
+  lhs.y += rhs.y;
+  lhs.z += rhs.z;
+  return lhs;
+}
+inline DirectX::XMFLOAT3
+operator+(const DirectX::XMFLOAT3& lhs, const DirectX::XMFLOAT3& rhs)
+{
+  return { lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z };
+}
+inline DirectX::XMFLOAT3
+operator-(const DirectX::XMFLOAT3& lhs, const DirectX::XMFLOAT3& rhs)
+{
+  return { lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z };
+}
+inline DirectX::XMFLOAT3
+operator*(const DirectX::XMFLOAT3& lhs, float rhs)
+{
+  return { lhs.x * rhs, lhs.y * rhs, lhs.z * rhs };
+}
+
 struct Primitive
 {
   uint32_t DrawCount;
@@ -37,17 +59,71 @@ struct MorphTarget
   }
 };
 
-struct Mesh
+struct ushort4
+{
+  uint16_t X;
+  uint16_t Y;
+  uint16_t Z;
+  uint16_t W;
+};
+
+struct byte4
+{
+  uint8_t X;
+  uint8_t Y;
+  uint8_t Z;
+  uint8_t W;
+};
+
+struct BoundingBox
+{
+  DirectX::XMFLOAT3 Min{
+    std::numeric_limits<float>::infinity(),
+    std::numeric_limits<float>::infinity(),
+    std::numeric_limits<float>::infinity(),
+  };
+  DirectX::XMFLOAT3 Max{
+    -std::numeric_limits<float>::infinity(),
+    -std::numeric_limits<float>::infinity(),
+    -std::numeric_limits<float>::infinity(),
+  };
+
+  void Extend(const DirectX::XMFLOAT3& p)
+  {
+    Min.x = std::min(Min.x, p.x);
+    Min.y = std::min(Min.y, p.y);
+    Min.z = std::min(Min.z, p.z);
+    Max.x = std::max(Max.x, p.x);
+    Max.y = std::max(Max.y, p.y);
+    Max.z = std::max(Max.z, p.z);
+  }
+};
+
+struct Vertex
+{
+  DirectX::XMFLOAT3 Position;
+  DirectX::XMFLOAT3 Normal;
+  DirectX::XMFLOAT2 Uv;
+};
+static_assert(sizeof(Vertex) == 32, "sizeof(Vertex)");
+
+struct JointBinding
+{
+  ushort4 Joints;
+  DirectX::XMFLOAT4 Weights;
+};
+
+struct BaseMesh
 {
   uint32_t id;
   std::string Name;
-  Mesh()
+  BaseMesh()
   {
     static uint32_t s_id = 0;
     id = ++s_id;
   }
-  Mesh(const Mesh&) = delete;
-  Mesh& operator=(const Mesh&) = delete;
+  BaseMesh(const BaseMesh&) = delete;
+  BaseMesh& operator=(const BaseMesh&) = delete;
 
   std::vector<Vertex> m_vertices;
   std::vector<uint32_t> m_indices;
@@ -146,4 +222,4 @@ struct Mesh
   }
 };
 
-} // namespace gltf
+}

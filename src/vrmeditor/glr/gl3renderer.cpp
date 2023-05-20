@@ -117,8 +117,7 @@ ParseImage(const gltfjson::format::Root& root,
 class Gl3Renderer
 {
   // https://stackoverflow.com/questions/12875652/how-can-i-use-a-stdmap-with-stdweak-ptr-as-key
-  // using ImageWeakPtr = std::weak_ptr<libvrm::gltf::Image>;
-  using MeshWeakPtr = std::weak_ptr<libvrm::gltf::Mesh>;
+  using MeshWeakPtr = std::weak_ptr<runtimescene::BaseMesh>;
 
   std::map<uint32_t, std::shared_ptr<Image>> m_imageMap;
   std::map<uint32_t, std::shared_ptr<grapho::gl3::Texture>> m_srgbTextureMap;
@@ -297,7 +296,7 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::Vao> GetOrCreate(
-    const std::shared_ptr<libvrm::gltf::Mesh>& mesh)
+    const std::shared_ptr<runtimescene::BaseMesh>& mesh)
   {
     if (!mesh) {
       return {};
@@ -322,22 +321,22 @@ public:
         .Id = { 0, 0, "vPosition" },
         .Type = grapho::ValueType::Float,
         .Count = 3,
-        .Offset = offsetof(libvrm::Vertex, Position),
-        .Stride = sizeof(libvrm::Vertex),
+        .Offset = offsetof(runtimescene::Vertex, Position),
+        .Stride = sizeof(runtimescene::Vertex),
       },
       {
         .Id = { 1, 0, "vNormal" },
         .Type = grapho::ValueType::Float,
         .Count = 3,
-        .Offset = offsetof(libvrm::Vertex, Normal),
-        .Stride = sizeof(libvrm::Vertex),
+        .Offset = offsetof(runtimescene::Vertex, Normal),
+        .Stride = sizeof(runtimescene::Vertex),
       },
       {
         .Id = { 2, 0, "vUv" },
         .Type = grapho::ValueType::Float,
         .Count = 2,
-        .Offset = offsetof(libvrm::Vertex, Uv),
-        .Stride = sizeof(libvrm::Vertex),
+        .Offset = offsetof(runtimescene::Vertex, Uv),
+        .Stride = sizeof(runtimescene::Vertex),
       },
     };
     auto vao = grapho::gl3::Vao::Create(layouts, slots, ibo);
@@ -351,8 +350,8 @@ public:
               const RenderingEnv& env,
               const gltfjson::format::Root& root,
               const gltfjson::format::Bin& bin,
-              const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-              const runtimescene::DeformedMesh& instance,
+              const std::shared_ptr<runtimescene::BaseMesh>& mesh,
+              const runtimescene::DeformedMesh& deformed,
               const DirectX::XMFLOAT4X4& m)
   {
     if (env.m_pbr) {
@@ -364,9 +363,10 @@ public:
 
     auto vao = GetOrCreate(mesh);
 
-    if (instance.Vertices.size()) {
-      vao->slots_[0]->Upload(instance.Vertices.size() * sizeof(libvrm::Vertex),
-                             instance.Vertices.data());
+    if (deformed.Vertices.size()) {
+      vao->slots_[0]->Upload(deformed.Vertices.size() *
+                               sizeof(runtimescene::Vertex),
+                             deformed.Vertices.data());
     }
 
     switch (pass) {
@@ -425,7 +425,7 @@ public:
                      const gltfjson::format::Root& root,
                      const gltfjson::format::Bin& bin,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
-                     const libvrm::gltf::Primitive& primitive,
+                     const runtimescene::Primitive& primitive,
                      uint32_t drawOffset)
   {
     if (auto material = GetOrCreateMaterial(root, bin, primitive.Material)) {
@@ -493,11 +493,11 @@ Render(RenderPass pass,
        const RenderingEnv& env,
        const gltfjson::format::Root& root,
        const gltfjson::format::Bin& bin,
-       const std::shared_ptr<libvrm::gltf::Mesh>& mesh,
-       const runtimescene::DeformedMesh& instance,
+       const std::shared_ptr<runtimescene::BaseMesh>& mesh,
+       const runtimescene::DeformedMesh& deformed,
        const DirectX::XMFLOAT4X4& m)
 {
-  Gl3Renderer::Instance().Render(pass, env, root, bin, mesh, instance, m);
+  Gl3Renderer::Instance().Render(pass, env, root, bin, mesh, deformed, m);
 }
 
 void
