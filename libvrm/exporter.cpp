@@ -1,6 +1,7 @@
 #include "vrm/exporter.h"
 #include "vrm/gltf.h"
 #include "vrm/jsons.h"
+#include "vrm/runtimescene/animation.h"
 #include "vrm/runtimescene/base_mesh.h"
 #include "vrm/scenetypes.h"
 #include <gltfjson/glb.h>
@@ -502,6 +503,9 @@ ExportBuffersViewsAccessors(Context& c, const GltfRoot& scene)
   }
 }
 
+}
+
+namespace runtimescene {
 struct AnimationSampler
 {
   uint32_t Input;
@@ -588,76 +592,79 @@ struct AnimationExporter
     });
   }
 };
-
-static void
-ExportAnimations(Context& c, const GltfRoot& scene)
-{
-  if (scene.m_animations.empty()) {
-    return;
-  }
-
-  c.m_writer.key("animations");
-  c.m_writer.array_open();
-
-  // perpare
-  for (auto& animation : scene.m_animations) {
-    AnimationExporter animationExporter(c.m_binWriter);
-
-    for (auto& [k, v] : animation->m_translationMap) {
-      animationExporter.ExportAnimationTranslation(k, v);
-    }
-    for (auto& [k, v] : animation->m_rotationMap) {
-      animationExporter.ExportAnimationRotation(k, v);
-    }
-    for (auto& [k, v] : animation->m_scaleMap) {
-      animationExporter.ExportAnimationScale(k, v);
-    }
-    for (auto& [k, v] : animation->m_weightsMap) {
-      animationExporter.ExportAnimationWeights(k, v);
-    }
-
-    c.m_writer.object_open();
-    {
-      c.m_writer.key("name");
-      c.m_writer.value(animation->m_name);
-
-      c.m_writer.key("samplers");
-      c.m_writer.array_open();
-      for (auto& sampler : animationExporter.AnimationSamplers) {
-        c.m_writer.object_open();
-        c.m_writer.key("input");
-        c.m_writer.value(sampler.Input);
-        c.m_writer.key("output");
-        c.m_writer.value(sampler.Output);
-        c.m_writer.key("interpolation");
-        c.m_writer.value(
-          AnimationInterpolationModeNames[(int)sampler.Interpolation]);
-        c.m_writer.object_close();
-      }
-      c.m_writer.array_close();
-
-      c.m_writer.key("channels");
-      c.m_writer.array_open();
-      for (auto& channel : animationExporter.AnimationChannels) {
-        c.m_writer.object_open();
-        c.m_writer.key("sampler");
-        c.m_writer.value(channel.Sampler);
-        c.m_writer.key("target");
-        c.m_writer.object_open();
-        c.m_writer.key("node");
-        c.m_writer.value(channel.Node);
-        c.m_writer.key("path");
-        c.m_writer.value(AnimationTargetNames[(int)channel.Target]);
-        c.m_writer.object_close();
-        c.m_writer.object_close();
-      }
-      c.m_writer.array_close();
-    }
-    c.m_writer.object_close();
-  }
-
-  c.m_writer.array_close();
 }
+
+namespace libvrm::gltf {
+
+// static void
+// ExportAnimations(Context& c, const GltfRoot& scene)
+// {
+//   if (scene.m_animations.empty()) {
+//     return;
+//   }
+//
+//   c.m_writer.key("animations");
+//   c.m_writer.array_open();
+//
+//   // perpare
+//   for (auto& animation : scene.m_animations) {
+//     AnimationExporter animationExporter(c.m_binWriter);
+//
+//     for (auto& [k, v] : animation->m_translationMap) {
+//       animationExporter.ExportAnimationTranslation(k, v);
+//     }
+//     for (auto& [k, v] : animation->m_rotationMap) {
+//       animationExporter.ExportAnimationRotation(k, v);
+//     }
+//     for (auto& [k, v] : animation->m_scaleMap) {
+//       animationExporter.ExportAnimationScale(k, v);
+//     }
+//     for (auto& [k, v] : animation->m_weightsMap) {
+//       animationExporter.ExportAnimationWeights(k, v);
+//     }
+//
+//     c.m_writer.object_open();
+//     {
+//       c.m_writer.key("name");
+//       c.m_writer.value(animation->m_name);
+//
+//       c.m_writer.key("samplers");
+//       c.m_writer.array_open();
+//       for (auto& sampler : animationExporter.AnimationSamplers) {
+//         c.m_writer.object_open();
+//         c.m_writer.key("input");
+//         c.m_writer.value(sampler.Input);
+//         c.m_writer.key("output");
+//         c.m_writer.value(sampler.Output);
+//         c.m_writer.key("interpolation");
+//         c.m_writer.value(
+//           AnimationInterpolationModeNames[(int)sampler.Interpolation]);
+//         c.m_writer.object_close();
+//       }
+//       c.m_writer.array_close();
+//
+//       c.m_writer.key("channels");
+//       c.m_writer.array_open();
+//       for (auto& channel : animationExporter.AnimationChannels) {
+//         c.m_writer.object_open();
+//         c.m_writer.key("sampler");
+//         c.m_writer.value(channel.Sampler);
+//         c.m_writer.key("target");
+//         c.m_writer.object_open();
+//         c.m_writer.key("node");
+//         c.m_writer.value(channel.Node);
+//         c.m_writer.key("path");
+//         c.m_writer.value(AnimationTargetNames[(int)channel.Target]);
+//         c.m_writer.object_close();
+//         c.m_writer.object_close();
+//       }
+//       c.m_writer.array_close();
+//     }
+//     c.m_writer.object_close();
+//   }
+//
+//   c.m_writer.array_close();
+// }
 
 void
 Exporter::Export(const GltfRoot& scene)
@@ -772,7 +779,7 @@ Exporter::Export(const GltfRoot& scene)
   }
 
   // update bin
-  ExportAnimations(c, scene);
+  // ExportAnimations(c, scene);
 
   // last
   ExportBuffersViewsAccessors(c, scene);

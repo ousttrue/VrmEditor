@@ -6,7 +6,7 @@
 namespace runtimescene {
 
 void
-AnimationUpdate(const libvrm::gltf::Animation& animation,
+AnimationUpdate(const Animation& animation,
                 libvrm::Time time,
                 std::span<std::shared_ptr<libvrm::gltf::Node>> nodes,
                 const std::shared_ptr<RuntimeScene>& runtime,

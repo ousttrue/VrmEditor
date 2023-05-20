@@ -1,5 +1,5 @@
 #pragma once
-#include "animation.h"
+// #include "animation.h"
 #include "gltfroot.h"
 #include "jsons.h"
 #include <gltfjson/bin_writer.h>

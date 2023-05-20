@@ -1,4 +1,5 @@
 #include "vrm/runtimescene/scene.h"
+#include "vrm/runtimescene/animation.h"
 #include "vrm/runtimescene/deformed_mesh.h"
 #include "vrm/runtimescene/node.h"
 #include "vrm/runtimescene/skin.h"
@@ -255,6 +256,89 @@ ParseSkin(const gltfjson::format::Root& root,
   assert(ptr->Joints.size() == ptr->BindMatrices.size());
 
   ptr->Root = skin.Skeleton;
+  return ptr;
+}
+
+static std::expected<std::shared_ptr<Animation>, std::string>
+ParseAnimation(const gltfjson::format::Root& root,
+               const gltfjson::format::Bin& bin,
+               int i)
+{
+  auto& animation = root.Animations[i];
+  auto ptr = std::make_shared<Animation>(animation.Name);
+
+  // samplers
+  auto& samplers = animation.Samplers;
+
+  // channels
+  auto& channels = animation.Channels;
+  for (auto& channel : channels) {
+    int sampler_index = *channel.Sampler;
+    auto sampler = samplers[sampler_index];
+
+    auto target = channel.Target;
+    int node_index = *target.Node;
+    auto path = target.Path;
+
+    // time
+    int input_index = *sampler.Input;
+    if (auto times = bin.GetAccessorBytes<float>(root, input_index)) {
+      int output_index = *sampler.Output;
+      if (path == gltfjson::format::PathTypes::Translation) {
+        if (auto values =
+              bin.GetAccessorBytes<DirectX::XMFLOAT3>(root, output_index)) {
+          ptr->AddTranslation(node_index,
+                              *times,
+                              *values,
+                              root.Nodes[node_index].Name + u8"-translation");
+        } else {
+          return std::unexpected{ values.error() };
+        }
+      } else if (path == gltfjson::format::PathTypes::Rotation) {
+        if (auto values =
+              bin.GetAccessorBytes<DirectX::XMFLOAT4>(root, output_index)) {
+          ptr->AddRotation(node_index,
+                           *times,
+                           *values,
+                           root.Nodes[node_index].Name + u8"-rotation");
+        } else {
+          return std::unexpected{ values.error() };
+        }
+      } else if (path == gltfjson::format::PathTypes::Scale) {
+        if (auto values =
+              bin.GetAccessorBytes<DirectX::XMFLOAT3>(root, output_index)) {
+          ptr->AddScale(node_index,
+                        *times,
+                        *values,
+                        root.Nodes[node_index].Name + u8"-scale");
+        } else {
+          return std::unexpected{ values.error() };
+        }
+      } else if (path == gltfjson::format::PathTypes::Weights) {
+        if (auto values = bin.GetAccessorBytes<float>(root, output_index)) {
+          auto& node = root.Nodes[node_index];
+          if (node.Mesh) {
+            if (values->size() !=
+                root.Meshes[*node.Mesh].Primitives[0].Targets.size() *
+                  times->size()) {
+              return std::unexpected{ "animation-weights: size not match" };
+            }
+            ptr->AddWeights(
+              node_index, *times, *values, node.Name + u8"-weights");
+          } else {
+            return std::unexpected{ "animation-weights: no node.mesh" };
+          }
+        } else {
+          return std::unexpected{ values.error() };
+        }
+      } else {
+        return std::unexpected{ "animation path is not implemented: " };
+      }
+    } else {
+      return std::unexpected{ times.error() };
+    }
+  }
+
   return ptr;
 }
 

@@ -24,7 +24,6 @@
 #include <gltfjson/glb.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <vrm/animation.h>
 #include <vrm/exporter.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
@@ -239,7 +238,7 @@ App::LoadModel(const std::filesystem::path& path)
     auto scene = SetScene(*table);
     // bind time line
 
-    for (auto& animation : scene->m_table->m_animations) {
+    for (auto& animation : scene->m_animations) {
       auto track = m_timeline->AddTrack("gltf", animation->Duration());
       std::weak_ptr<runtimescene::RuntimeScene> weak = scene;
       track->Callbacks.push_back([animation, weak](auto time, bool repeat) {

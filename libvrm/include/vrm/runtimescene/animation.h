@@ -1,12 +1,12 @@
 #pragma once
 #include "node.h"
-#include "scenetypes.h"
-#include "timeline.h"
+// #include "scenetypes.h"
+#include "../timeline.h"
 #include <span>
 #include <unordered_map>
 #include <vector>
 
-namespace libvrm::gltf {
+namespace runtimescene {
 
 enum class AnimationTargets
 {
@@ -37,7 +37,7 @@ static const char* AnimationInterpolationModeNames[]{
 template<typename T>
 struct Curve
 {
-  std::string Name;
+  std::u8string Name;
   std::vector<float> Times;
   std::vector<T> Values;
   float MaxSeconds() const { return Times.empty() ? 0 : Times.back(); }
@@ -101,13 +101,13 @@ struct WeightsCurve
 
 struct Animation
 {
-  std::string m_name;
+  std::u8string m_name;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_translationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT4>> m_rotationMap;
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_scaleMap;
   std::unordered_map<uint32_t, WeightsCurve> m_weightsMap;
 
-  Time Duration() const
+  libvrm::Time Duration() const
   {
     float sec = 0;
     for (auto& [k, v] : m_translationMap) {
@@ -122,16 +122,11 @@ struct Animation
     for (auto& [k, v] : m_weightsMap) {
       sec = std::max(sec, v.MaxSeconds());
     }
-    return Time(sec);
+    return libvrm::Time(sec);
   }
 
-  Animation(std::string_view name)
-    : m_name(name)
-  {
-  }
   Animation(std::u8string_view name)
-    : Animation(std::string_view{ (const char*)name.data(),
-                                  (const char*)name.data() + name.size() })
+    : m_name(name)
   {
   }
   Animation(const Animation&) = delete;
@@ -140,7 +135,7 @@ struct Animation
   void AddTranslation(uint32_t node_index,
                       std::span<const float> times,
                       std::span<const DirectX::XMFLOAT3> values,
-                      std::string_view name)
+                      std::u8string_view name)
   {
     m_translationMap.emplace(node_index,
                              Curve<DirectX::XMFLOAT3>{
@@ -153,7 +148,7 @@ struct Animation
   void AddRotation(uint32_t node_index,
                    std::span<const float> times,
                    std::span<const DirectX::XMFLOAT4> values,
-                   std::string_view name)
+                   std::u8string_view name)
   {
     m_rotationMap.emplace(node_index,
                           Curve<DirectX::XMFLOAT4>{
@@ -166,7 +161,7 @@ struct Animation
   void AddScale(uint32_t node_index,
                 std::span<const float> times,
                 std::span<const DirectX::XMFLOAT3> values,
-                std::string_view name)
+                std::u8string_view name)
   {
     m_scaleMap.emplace(node_index,
                        Curve<DirectX::XMFLOAT3>{
@@ -179,7 +174,7 @@ struct Animation
   void AddWeights(uint32_t node_index,
                   std::span<const float> times,
                   std::span<const float> values,
-                  std::string_view name)
+                  std::u8string_view name)
   {
     m_weightsMap.emplace(
       node_index,
@@ -190,16 +185,6 @@ struct Animation
         .WeightsCount = static_cast<uint32_t>(values.size() / times.size()),
       });
   }
-  void AddWeights(uint32_t node_index,
-                  std::span<const float> times,
-                  std::span<const float> values,
-                  std::u8string_view name)
-  {
-    AddWeights(node_index,
-               times,
-               values,
-               std::string_view{ (const char*)name.data(), name.size() });
-  }
 };
 
-} // namespace gltf
+}

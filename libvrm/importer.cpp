@@ -49,90 +49,6 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
   return ptr;
 }
 
-static std::expected<std::shared_ptr<gltf::Animation>, std::string>
-ParseAnimation(const std::shared_ptr<GltfRoot>& scene,
-               int i,
-               const gltfjson::format::Animation& animation)
-{
-  auto ptr = std::make_shared<gltf::Animation>(animation.Name);
-
-  // samplers
-  auto& samplers = animation.Samplers;
-
-  // channels
-  auto& channels = animation.Channels;
-  for (auto& channel : channels) {
-    int sampler_index = *channel.Sampler;
-    auto sampler = samplers[sampler_index];
-
-    auto target = channel.Target;
-    int node_index = *target.Node;
-    auto path = target.Path;
-
-    // time
-    int input_index = *sampler.Input;
-    if (auto times =
-          scene->m_bin.GetAccessorBytes<float>(scene->m_gltf, input_index)) {
-      int output_index = *sampler.Output;
-      if (path == gltfjson::format::PathTypes::Translation) {
-        if (auto values = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT3>(
-              scene->m_gltf, output_index)) {
-          ptr->AddTranslation(node_index,
-                              *times,
-                              *values,
-                              scene->m_nodes[node_index]->Name +
-                                "-translation");
-        } else {
-          return std::unexpected{ values.error() };
-        }
-      } else if (path == gltfjson::format::PathTypes::Rotation) {
-        if (auto values = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4>(
-              scene->m_gltf, output_index)) {
-          ptr->AddRotation(node_index,
-                           *times,
-                           *values,
-                           scene->m_nodes[node_index]->Name + "-rotation");
-        } else {
-          return std::unexpected{ values.error() };
-        }
-      } else if (path == gltfjson::format::PathTypes::Scale) {
-        if (auto values = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT3>(
-              scene->m_gltf, output_index)) {
-          ptr->AddScale(node_index,
-                        *times,
-                        *values,
-                        scene->m_nodes[node_index]->Name + "-scale");
-        } else {
-          return std::unexpected{ values.error() };
-        }
-      } else if (path == gltfjson::format::PathTypes::Weights) {
-        if (auto values = scene->m_bin.GetAccessorBytes<float>(scene->m_gltf,
-                                                               output_index)) {
-          auto& node = scene->m_gltf.Nodes[node_index];
-          if (node.Mesh) {
-            // if (values->size() !=
-            //     node->Mesh->m_morphTargets.size() * times->size()) {
-            //   return std::unexpected{ "animation-weights: size not match" };
-            // }
-            ptr->AddWeights(
-              node_index, *times, *values, node.Name + u8"-weights");
-          } else {
-            return std::unexpected{ "animation-weights: no node.mesh" };
-          }
-        } else {
-          return std::unexpected{ values.error() };
-        }
-      } else {
-        return std::unexpected{ "animation path is not implemented: " };
-      }
-    } else {
-      return std::unexpected{ times.error() };
-    }
-  }
-
-  return ptr;
-}
-
 static std::expected<bool, std::string>
 ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
 {
@@ -477,17 +393,6 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
     return true;
   };
   scene->Traverse(enter, {});
-
-  {
-    auto& animations = scene->m_gltf.Animations;
-    for (int i = 0; i < animations.Size(); ++i) {
-      if (auto animation = ParseAnimation(scene, i, animations[i])) {
-        scene->m_animations.push_back(*animation);
-      } else {
-        return std::unexpected{ animation.error() };
-      }
-    }
-  }
 
   if (scene->m_type == ModelType::Vrm0) {
     if (auto vrm0 = ParseVrm0(scene)) {

@@ -143,12 +143,12 @@ Naming conventions for variables with a wider scope than local variables.
 
 ### namespace
 
-- `libvrm::vrm`
-- `libvrm::vrm::v0`
-- `libvrm::vrm::v1`
+- `libvrm` (Node hierarchy / BaseMesh)
+- `libvrm::vrm` (Humanoid, Expression, SpringBone, Constraint, LookAt)
 - `libvrm::vrma`
 - `libvrm::bvh`
-- `libvrm::gltf`
+- `libvrm::runtime` (NodeAnimation, MorphTarget, Skinning)
+- `libvrm::serialization` (Udp pose)
 
 ## icon
 

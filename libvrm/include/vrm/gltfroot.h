@@ -24,7 +24,6 @@ struct Animation;
 
 namespace gltf {
 struct Node;
-struct Animation;
 
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;
@@ -63,7 +62,6 @@ struct GltfRoot
   std::string m_title = "scene";
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;
-  std::vector<std::shared_ptr<Animation>> m_animations;
 
   // extensions
   std::shared_ptr<vrm::animation::Animation> m_vrma;
@@ -91,7 +89,6 @@ struct GltfRoot
     m_type = {};
     m_nodes.clear();
     m_roots.clear();
-    m_animations.clear();
 
     m_springColliders.clear();
     m_springColliderGroups.clear();

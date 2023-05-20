@@ -12,6 +12,7 @@ struct DeformedMesh;
 struct RuntimeSpringCollision;
 struct BaseMesh;
 struct Skin;
+struct Animation;
 
 using RenderFunc = std::function<
   void(const std::shared_ptr<BaseMesh>&, const DeformedMesh&, const float[16])>;
@@ -23,6 +24,7 @@ struct RuntimeScene
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
   std::vector<std::shared_ptr<BaseMesh>> m_meshes;
   std::vector<std::shared_ptr<Skin>> m_skins;
+  std::vector<std::shared_ptr<Animation>> m_animations;
 
   std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
   {
