@@ -392,21 +392,21 @@ ExportMesh(Context& c, const gltfjson::format::Mesh& mesh)
 //     "skeleton": 1
 // }
 static void
-ExportSkin(Context& c, const GltfRoot& scene, const std::shared_ptr<Skin>& skin)
+ExportSkin(Context& c, const gltfjson::format::Skin& skin)
 {
   c.m_writer.object_open();
   c.m_writer.key("joints");
   {
     c.m_writer.array_open();
-    for (auto joint : skin->Joints) {
+    for (auto joint : skin.Joints) {
       c.m_writer.value(joint);
     }
     c.m_writer.array_close();
   }
-  {
-    auto accessor_index = c.m_binWriter.PushAccessor(skin->BindMatrices);
+  if (skin.InverseBindMatrices) {
+    // auto accessor_index = c.m_binWriter.PushAccessor(skin->BindMatrices);
     c.m_writer.key("inverseBindMatrices");
-    c.m_writer.value(accessor_index);
+    c.m_writer.value(*skin.InverseBindMatrices);
   }
   c.m_writer.object_close();
 }
@@ -444,7 +444,7 @@ ExportNode(Context& c, const GltfRoot& scene, const std::shared_ptr<Node>& node)
   }
   if (node->Skin) {
     c.m_writer.key("skin");
-    c.m_writer.value(*scene.IndexOf(node->Skin));
+    c.m_writer.value(*node->Skin);
   }
   c.m_writer.object_close();
 }
@@ -733,12 +733,12 @@ Exporter::Export(const GltfRoot& scene)
   }
 
   // skins
-  if (scene.m_skins.size()) {
+  if (scene.m_gltf.Skins.Size()) {
     m_writer.key("skins");
     {
       m_writer.array_open();
-      for (auto& skin : scene.m_skins) {
-        ExportSkin(c, scene, skin);
+      for (auto& skin : scene.m_gltf.Skins) {
+        ExportSkin(c, skin);
       }
       m_writer.array_close();
     }

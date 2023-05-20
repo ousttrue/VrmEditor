@@ -9,48 +9,6 @@
 namespace libvrm {
 namespace gltf {
 
-static std::string
-u8_to_str(const std::u8string& src)
-{
-  return { (const char*)src.data(), (const char*)src.data() + src.size() };
-}
-
-static std::expected<std::shared_ptr<gltf::Skin>, std::string>
-ParseSkin(const std::shared_ptr<GltfRoot>& scene,
-          int i,
-          const gltfjson::format::Skin& skin)
-{
-  auto ptr = std::make_shared<gltf::Skin>();
-  ptr->Name = u8_to_str(skin.Name);
-  for (auto& joint : skin.Joints) {
-    ptr->Joints.push_back(joint);
-  }
-
-  std::span<const DirectX::XMFLOAT4X4> matrices;
-  if (auto accessor = scene->m_bin.GetAccessorBytes<DirectX::XMFLOAT4X4>(
-        scene->m_gltf, *skin.InverseBindMatrices)) {
-    matrices = *accessor;
-  } else {
-    return std::unexpected{ accessor.error() };
-  }
-  std::vector<DirectX::XMFLOAT4X4> copy;
-  if (scene->m_type == ModelType::Vrm0) {
-    copy.reserve(matrices.size());
-    for (auto& m : matrices) {
-      copy.push_back(m);
-      copy.back()._41 = -m._41;
-      copy.back()._43 = -m._43;
-    }
-    matrices = copy;
-  }
-  ptr->BindMatrices.assign(matrices.begin(), matrices.end());
-
-  assert(ptr->Joints.size() == ptr->BindMatrices.size());
-
-  ptr->Root = skin.Skeleton;
-  return ptr;
-}
-
 static std::expected<std::shared_ptr<gltf::Node>, std::string>
 ParseNode(const std::shared_ptr<GltfRoot>& scene,
           int i,
@@ -89,12 +47,7 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
   }
 
   ptr->Mesh = node.Mesh;
-
-  if (node.Skin) {
-    int skin_index = *node.Skin;
-    auto skin = scene->m_skins[skin_index];
-    ptr->Skin = skin;
-  }
+  ptr->Skin = node.Skin;
 
   return ptr;
 }
@@ -496,17 +449,6 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   //     scene->m_title = "vrm-1.0";
   //   }
   // }
-
-  {
-    auto skins = scene->m_gltf.Skins;
-    for (int i = 0; i < skins.Size(); ++i) {
-      if (auto skin = ParseSkin(scene, i, skins[i])) {
-        scene->m_skins.push_back(*skin);
-      } else {
-        return std::unexpected{ skin.error() };
-      }
-    }
-  }
 
   {
     auto nodes = scene->m_gltf.Nodes;

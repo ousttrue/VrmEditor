@@ -14,15 +14,8 @@
 #include <string_view>
 #include <vector>
 
-namespace runtimescene {
-struct BaseMesh;
-}
-
 namespace libvrm {
 namespace gltf {
-
-struct Skin;
-struct Node;
 
 struct EuclideanTransform
 {
@@ -80,7 +73,6 @@ struct Node
       InitialTransform.Matrix());
   }
   bool SetLocalInitialMatrix(const DirectX::XMMATRIX& local)
-  // bool Node::SetLocalMatrix(const DirectX::XMMATRIX& local)
   {
     DirectX::XMVECTOR s;
     DirectX::XMVECTOR r;
@@ -114,7 +106,6 @@ struct Node
     }
   }
   bool SetWorldInitialMatrix(const DirectX::XMMATRIX& world)
-  // bool Node::SetWorldMatrix(const DirectX::XMMATRIX& world)
   {
     DirectX::XMVECTOR s;
     DirectX::XMVECTOR r;
@@ -134,7 +125,6 @@ struct Node
   }
 
   void CalcWorldInitialMatrix(bool recursive = false)
-  // void Node::CalcWorldMatrix(bool recursive)
   {
     auto world = InitialMatrix() * ParentWorldInitialMatrix();
 
@@ -169,7 +159,7 @@ struct Node
   }
 
   std::optional<uint32_t> Mesh;
-  std::shared_ptr<Skin> Skin;
+  std::optional<uint32_t> Skin;
 
   Node(std::string_view name);
   Node(std::u8string_view name)
@@ -179,9 +169,6 @@ struct Node
   }
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
-
-  // void CalcInitialMatrix();
-  // void Print(int level = 0);
 
   DirectX::XMFLOAT4X4 ShapeMatrix;
   DirectX::XMFLOAT4 ShapeColor = { 1, 1, 1, 1 };

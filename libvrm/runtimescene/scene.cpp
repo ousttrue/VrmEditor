@@ -1,8 +1,8 @@
 #include "vrm/runtimescene/scene.h"
 #include "vrm/runtimescene/deformed_mesh.h"
 #include "vrm/runtimescene/node.h"
+#include "vrm/runtimescene/skin.h"
 #include "vrm/runtimescene/springcollision.h"
-#include <vrm/skin.h>
 
 namespace runtimescene {
 
@@ -54,6 +54,12 @@ AddIndices(const gltfjson::format::Root& root,
     mesh->addSubmesh<uint32_t>(vertex_offset, indices, prim.Material);
     return true;
   }
+}
+
+static std::string
+u8_to_str(const std::u8string& src)
+{
+  return { (const char*)src.data(), (const char*)src.data() + src.size() };
 }
 
 static std::expected<std::shared_ptr<BaseMesh>, std::string>
@@ -215,6 +221,43 @@ ParseMesh(const gltfjson::format::Root& root,
   return ptr;
 }
 
+static std::expected<std::shared_ptr<Skin>, std::string>
+ParseSkin(const gltfjson::format::Root& root,
+          const gltfjson::format::Bin& bin,
+          int i)
+{
+  auto skin = root.Skins[i];
+  auto ptr = std::make_shared<Skin>();
+  ptr->Name = u8_to_str(skin.Name);
+  for (auto& joint : skin.Joints) {
+    ptr->Joints.push_back(joint);
+  }
+
+  std::span<const DirectX::XMFLOAT4X4> matrices;
+  if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT4X4>(
+        root, *skin.InverseBindMatrices)) {
+    matrices = *accessor;
+  } else {
+    return std::unexpected{ accessor.error() };
+  }
+  std::vector<DirectX::XMFLOAT4X4> copy;
+  // if (scene->m_type == ModelType::Vrm0) {
+  //   copy.reserve(matrices.size());
+  //   for (auto& m : matrices) {
+  //     copy.push_back(m);
+  //     copy.back()._41 = -m._41;
+  //     copy.back()._43 = -m._43;
+  //   }
+  //   matrices = copy;
+  // }
+  ptr->BindMatrices.assign(matrices.begin(), matrices.end());
+
+  assert(ptr->Joints.size() == ptr->BindMatrices.size());
+
+  ptr->Root = skin.Skeleton;
+  return ptr;
+}
+
 RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
   : m_table(table)
 {
@@ -223,6 +266,11 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
   for (uint32_t i = 0; i < m_table->m_gltf.Meshes.Size(); ++i) {
     auto baseMesh = ParseMesh(m_table->m_gltf, m_table->m_bin, i);
     m_meshes.push_back(*baseMesh);
+  }
+
+  for (uint32_t i = 0; i < m_table->m_gltf.Skins.Size(); ++i) {
+    auto skin = ParseSkin(m_table->m_gltf, m_table->m_bin, i);
+    m_skins.push_back(*skin);
   }
 }
 
@@ -365,7 +413,8 @@ RuntimeScene::Drawables()
       std::span<DirectX::XMFLOAT4X4> skinningMatrices;
 
       // skinning
-      if (auto skin = node->Skin) {
+      if (node->Skin) {
+        auto skin = m_skins[*node->Skin];
         skin->CurrentMatrices.resize(skin->BindMatrices.size());
 
         auto rootInverse = DirectX::XMMatrixIdentity();

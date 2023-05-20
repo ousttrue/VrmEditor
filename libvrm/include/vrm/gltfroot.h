@@ -23,7 +23,6 @@ struct Animation;
 }
 
 namespace gltf {
-struct Skin;
 struct Node;
 struct Animation;
 
@@ -64,7 +63,6 @@ struct GltfRoot
   std::string m_title = "scene";
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;
-  std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
 
   // extensions
@@ -93,7 +91,6 @@ struct GltfRoot
     m_type = {};
     m_nodes.clear();
     m_roots.clear();
-    m_skins.clear();
     m_animations.clear();
 
     m_springColliders.clear();
@@ -107,10 +104,6 @@ struct GltfRoot
     m_expressions = {};
   }
 
-  std::optional<size_t> IndexOf(const std::shared_ptr<Skin>& skin) const
-  {
-    return _IndexOf<std::shared_ptr<Skin>>(m_skins, skin);
-  }
   std::optional<size_t> IndexOf(const std::shared_ptr<Node>& node) const
   {
     return _IndexOf<std::shared_ptr<Node>>(m_nodes, node);
