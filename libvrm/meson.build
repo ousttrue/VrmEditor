@@ -12,7 +12,6 @@ libvrm_lib = static_library(
         'vrm/gltfroot.cpp',
         'vrm/node.cpp',
         'vrm/image.cpp',
-        'vrm/exporter.cpp',
         'vrm/importer.cpp',
         'vrm/animation/runtime_scene.cpp',
         'vrm/animation/animation_update.cpp',

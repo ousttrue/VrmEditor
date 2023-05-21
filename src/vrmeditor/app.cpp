@@ -26,7 +26,6 @@
 #include <imgui.h>
 #include <vrm/animation/animation_update.h>
 #include <vrm/animation/timeline.h>
-#include <vrm/exporter.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
 #include <vrm/importer.h>
@@ -194,19 +193,20 @@ App::SaveState()
 bool
 App::WriteScene(const std::filesystem::path& path)
 {
-  libvrm::gltf::Exporter exporter;
-  exporter.Export(*m_runtime->m_table);
-
-  std::ofstream os(path, std::ios::binary);
-  if (!os) {
-    return false;
-  }
-
-  return gltfjson::Glb{
-    .JsonChunk = exporter.JsonChunk,
-    .BinChunk = exporter.BinChunk,
-  }
-    .WriteTo(os);
+  // libvrm::gltf::Exporter exporter;
+  // exporter.Export(*m_runtime->m_table);
+  //
+  // std::ofstream os(path, std::ios::binary);
+  // if (!os) {
+  //   return false;
+  // }
+  //
+  // return gltfjson::Glb{
+  //   .JsonChunk = exporter.JsonChunk,
+  //   .BinChunk = exporter.BinChunk,
+  // }
+  //   .WriteTo(os);
+  return false;
 }
 
 bool
