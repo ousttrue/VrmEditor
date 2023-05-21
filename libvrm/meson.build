@@ -4,6 +4,7 @@ libvrm_deps = [
     grapho_dep,
     asio_dep,
     gltfjson_dep,
+    stb_dep,
 ]
 libvrm_lib = static_library(
     'vrm',
@@ -11,6 +12,7 @@ libvrm_lib = static_library(
         'vrm/gltfroot.cpp',
         'vrm/jsonpath.cpp',
         'vrm/node.cpp',
+        'vrm/image.cpp',
         'vrm/exporter.cpp',
         'vrm/importer.cpp',
         'vrm/animation/runtime_scene.cpp',

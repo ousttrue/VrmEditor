@@ -1,6 +1,5 @@
 #include "gl3renderer.h"
 #include "app.h"
-#include "image.h"
 #include "rendering_env.h"
 #include <DirectXMath.h>
 #include <GL/glew.h>
@@ -15,9 +14,10 @@
 #include <map>
 #include <unordered_map>
 #include <variant>
+#include <vrm/deformed_mesh.h>
 #include <vrm/fileutil.h>
 #include <vrm/gltf.h>
-#include <vrm/deformed_mesh.h>
+#include <vrm/image.h>
 
 static auto vertex_shader_text = u8R"(#version 400
 uniform mat4 Model;
@@ -85,7 +85,7 @@ void main()
 
 namespace glr {
 
-static std::expected<std::shared_ptr<Image>, std::string>
+static std::expected<std::shared_ptr<libvrm::gltf::Image>, std::string>
 ParseImage(const gltfjson::format::Root& root,
            const gltfjson::format::Bin& bin,
            const gltfjson::format::Image& image)
@@ -107,7 +107,7 @@ ParseImage(const gltfjson::format::Root& root,
     return std::unexpected{ "not bufferView nor uri" };
   }
   auto name = image.Name;
-  auto ptr = std::make_shared<Image>(name);
+  auto ptr = std::make_shared<libvrm::gltf::Image>(name);
   if (!ptr->Load(bytes)) {
     return std::unexpected{ "Image: fail to load" };
   }
@@ -119,7 +119,7 @@ class Gl3Renderer
   // https://stackoverflow.com/questions/12875652/how-can-i-use-a-stdmap-with-stdweak-ptr-as-key
   using MeshWeakPtr = std::weak_ptr<runtimescene::BaseMesh>;
 
-  std::map<uint32_t, std::shared_ptr<Image>> m_imageMap;
+  std::map<uint32_t, std::shared_ptr<libvrm::gltf::Image>> m_imageMap;
   std::map<uint32_t, std::shared_ptr<grapho::gl3::Texture>> m_srgbTextureMap;
   std::map<uint32_t, std::shared_ptr<grapho::gl3::Texture>> m_linearTextureMap;
   std::map<uint32_t, std::shared_ptr<grapho::gl3::PbrMaterial>> m_materialMap;
@@ -168,7 +168,7 @@ public:
 
   void Release() { m_drawableMap.clear(); }
 
-  std::shared_ptr<Image> GetOrCreateImage(const gltfjson::format::Root& root,
+  std::shared_ptr<libvrm::gltf::Image> GetOrCreateImage(const gltfjson::format::Root& root,
                                           const gltfjson::format::Bin& bin,
                                           std::optional<uint32_t> id)
   {
