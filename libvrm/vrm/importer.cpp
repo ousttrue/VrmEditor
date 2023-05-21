@@ -1,10 +1,7 @@
 #include "vrm/importer.h"
 #include "vrm/gltf.h"
-#include <gltfjson/deserialize.h>
-#include <gltfjson/directory.h>
-#include <gltfjson/glb.h>
-#include <gltfjson/gltf.h>
-#include <gltfjson/json.h>
+
+#include <gltfjson.h>
 
 namespace libvrm {
 namespace gltf {

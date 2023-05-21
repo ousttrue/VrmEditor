@@ -2,7 +2,6 @@
 #include "animation/animation.h"
 #include "base_mesh.h"
 #include "gltf.h"
-#include "jsons.h"
 #include "scenetypes.h"
 #include <gltfjson/glb.h>
 #include <gltfjson/gltf.h>
@@ -10,7 +9,7 @@
 
 struct Context
 {
-  libvrm::jsons::Writer& m_writer;
+  gltfjson::Writer& m_writer;
   gltfjson::format::BinWriter& m_binWriter;
 };
 

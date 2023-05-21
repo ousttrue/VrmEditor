@@ -1,7 +1,7 @@
 #pragma once
 // #include "animation.h"
 #include "gltfroot.h"
-#include "jsons.h"
+#include <gltfjson/json_writer.h>
 #include <gltfjson/bin_writer.h>
 #include <span>
 #include <stdint.h>
@@ -15,7 +15,7 @@ struct Primitive;
 
 struct Exporter
 {
-  jsons::Writer m_writer;
+  gltfjson::Writer m_writer;
   gltfjson::format::BinWriter m_binWriter;
   std::vector<uint8_t> JsonChunk;
   std::vector<uint8_t> BinChunk;
