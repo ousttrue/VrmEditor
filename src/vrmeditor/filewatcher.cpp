@@ -4,8 +4,14 @@
 
 class UpdateListener : public FW::FileWatchListener
 {
+  OnFileUpdated m_callback;
+
 public:
-  UpdateListener() {}
+  UpdateListener(const OnFileUpdated& callback)
+    : m_callback(callback)
+  {
+  }
+
   void handleFileAction(FW::WatchID watchid,
                         const std::string& dir,
                         const std::string& filename,
@@ -13,16 +19,18 @@ public:
   {
     switch (action) {
       case FW::Actions::Add:
-        std::cout << "File (" << dir + "\\" + filename << ") Added! "
-                  << std::endl;
+        // std::cout << "File (" << dir + "\\" + filename << ") Added! "
+        //           << std::endl;
+        m_callback(std::filesystem::path(dir) / filename);
         break;
       case FW::Actions::Delete:
-        std::cout << "File (" << dir + "\\" + filename << ") Deleted! "
-                  << std::endl;
+        // std::cout << "File (" << dir + "\\" + filename << ") Deleted! "
+        //           << std::endl;
         break;
       case FW::Actions::Modified:
-        std::cout << "File (" << dir + "\\" + filename << ") Modified! "
-                  << std::endl;
+        // std::cout << "File (" << dir + "\\" + filename << ") Modified! "
+        //           << std::endl;
+        m_callback(std::filesystem::path(dir) / filename);
         break;
       default:
         std::cout << "Should never happen!" << std::endl;
@@ -35,6 +43,11 @@ struct FileWatcherImpl
   FW::FileWatcher m_watcher;
   UpdateListener m_listener;
 
+  FileWatcherImpl(const OnFileUpdated& callback)
+    : m_listener(callback)
+  {
+  }
+
   void Update() { m_watcher.update(); }
 
   void Watch(const std::filesystem::path& path)
@@ -43,8 +56,8 @@ struct FileWatcherImpl
   }
 };
 
-FileWatcher::FileWatcher()
-  : m_impl(new FileWatcherImpl)
+FileWatcher::FileWatcher(const OnFileUpdated& callback)
+  : m_impl(new FileWatcherImpl(callback))
 {
 }
 

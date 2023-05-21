@@ -32,6 +32,7 @@ struct Bin;
 }
 
 namespace glr {
+
 struct RenderingEnv;
 
 void
@@ -63,5 +64,14 @@ GetOrCreateTexture(const gltfjson::format::Root& root,
 
 void
 RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data);
+
+// for local shader
+void
+SetShaderDir(const std::filesystem::path& path);
+
+// for hot reload
+// use relative path. pbr.{vs,fs}, unlit.{vs,fs}, mtoon.{vs,fs}
+void
+UpdateShader(const std::filesystem::path& path);
 
 }

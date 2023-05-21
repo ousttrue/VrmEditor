@@ -1,6 +1,7 @@
 #include "gl3renderer.h"
 #include "app.h"
 #include "rendering_env.h"
+#include "shader_source.h"
 #include <DirectXMath.h>
 #include <GL/glew.h>
 #include <cuber/gl3/GlLineRenderer.h>
@@ -18,70 +19,6 @@
 #include <vrm/fileutil.h>
 #include <vrm/gltf.h>
 #include <vrm/image.h>
-
-static auto vertex_shader_text = u8R"(#version 400
-uniform mat4 Model;
-uniform mat4 View;
-uniform mat4 Projection;
-in vec3 vPosition;
-in vec3 vNormal;
-in vec2 vUv;
-out vec3 normal;
-out vec2 uv;
-void main()
-{
-  gl_Position = Projection * View * Model * vec4(vPosition, 1.0);
-  normal = vNormal;
-  uv = vUv;
-}
-)";
-
-static auto fragment_shader_text = u8R"(#version 400
-in vec3 normal;
-in vec2 uv;
-out vec4 FragColor;
-uniform vec4 color=vec4(1, 1, 1, 1);
-uniform float cutoff=1;
-uniform sampler2D colorTexture;
-void main()
-{
-  vec4 texel = color * texture(colorTexture, uv);
-  if(texel.a < cutoff)
-  {
-    discard;
-  }
-  FragColor = texel;
-};
-)";
-
-static auto shadow_vertex_text = u8R"(#version 400
-uniform mat4 Model;
-uniform mat4 View;
-uniform mat4 Projection;
-uniform mat4 Shadow;
-in vec3 vPosition;
-in vec3 vNormal;
-in vec2 vUv;
-out vec3 normal;
-out vec2 uv;
-void main()
-{
-  gl_Position = Projection * View * Shadow * Model * vec4(vPosition, 1.0);
-  normal = vNormal;
-  uv = vUv;
-}
-)";
-
-static auto shadow_fragment_text = u8R"(#version 400
-in vec3 normal;
-in vec2 uv;
-out vec4 FragColor;
-uniform sampler2D colorTexture;
-void main()
-{
-  FragColor = vec4(0, 0, 0, 0.7);
-};
-)";
 
 namespace glr {
 
@@ -132,6 +69,8 @@ class Gl3Renderer
   std::shared_ptr<grapho::gl3::Texture> m_white;
   std::shared_ptr<grapho::gl3::ShaderProgram> m_shadow;
 
+  ShaderSourceManager m_shaderSource;
+
   Gl3Renderer()
   {
     static uint8_t white[] = { 255, 255, 255, 255 };
@@ -142,19 +81,6 @@ class Gl3Renderer
       grapho::ColorSpace::sRGB,
       white,
     });
-
-    // if (auto program = grapho::gl3::ShaderProgram::Create(
-    //       vertex_shader_text, fragment_shader_text)) {
-    //   m_program = *program;
-    // } else {
-    //   App::Instance().Log(LogLevel::Error) << program.error();
-    // }
-    if (auto shadow = grapho::gl3::ShaderProgram::Create(
-          shadow_vertex_text, shadow_fragment_text)) {
-      m_shadow = *shadow;
-    } else {
-      App::Instance().Log(LogLevel::Error) << shadow.error();
-    }
   }
 
   ~Gl3Renderer() {}
@@ -168,9 +94,33 @@ public:
 
   void Release() { m_drawableMap.clear(); }
 
-  std::shared_ptr<libvrm::gltf::Image> GetOrCreateImage(const gltfjson::format::Root& root,
-                                          const gltfjson::format::Bin& bin,
-                                          std::optional<uint32_t> id)
+  // for local shader
+  void SetShaderDir(const std::filesystem::path& path)
+  {
+    m_shaderSource.SetShaderDir(path);
+    // clear cache
+    m_materialMap.clear();
+    m_shadow = {};
+  }
+
+  // for hot reload
+  // use relative path. pbr.{vs,fs}, unlit.{vs,fs}, mtoon.{vs,fs}
+  void UpdateShader(const std::filesystem::path& path)
+  {
+    auto str = path.string();
+    if (str.starts_with("pbr.")) {
+      // clear cache
+      m_materialMap.clear();
+    } else if (str.starts_with("shadow.")) {
+      m_shadow = {};
+    }
+    m_shaderSource.UpdateShader(path);
+  }
+
+  std::shared_ptr<libvrm::gltf::Image> GetOrCreateImage(
+    const gltfjson::format::Root& root,
+    const gltfjson::format::Bin& bin,
+    std::optional<uint32_t> id)
   {
     if (!id) {
       return {};
@@ -243,7 +193,7 @@ public:
     return texture;
   }
 
-  std::shared_ptr<grapho::gl3::PbrMaterial> GetOrCreateMaterial(
+  std::shared_ptr<grapho::gl3::PbrMaterial> GetOrCreatePbrMaterial(
     const gltfjson::format::Root& root,
     const gltfjson::format::Bin& bin,
     std::optional<uint32_t> id)
@@ -289,8 +239,10 @@ public:
         root, bin, occlusionTexture->Index, libvrm::gltf::ColorSpace::Linear);
     }
 
-    auto material =
-      grapho::gl3::PbrMaterial::Create(albedo, normal, metallic, roughness, ao);
+    auto vs = m_shaderSource.Get("pbr.vs");
+    auto fs = m_shaderSource.Get("pbr.fs");
+    auto material = grapho::gl3::PbrMaterial::Create(
+      albedo, normal, metallic, roughness, ao, vs, fs);
     m_materialMap.insert({ *id, material });
     return material;
   }
@@ -392,16 +344,27 @@ public:
       }
 
       case RenderPass::ShadowMatrix: {
-        m_shadow->Use();
-        m_shadow->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
-        m_shadow->Uniform("View")->SetMat4(env.ViewMatrix);
-        m_shadow->Uniform("Shadow")->SetMat4(env.ShadowMatrix);
-        m_shadow->Uniform("Model")->SetMat4(m);
-        uint32_t drawCount = 0;
-        for (auto& primitive : mesh->m_primitives) {
-          drawCount += primitive.DrawCount * 4;
+        if (!m_shadow) {
+          if (auto shadow = grapho::gl3::ShaderProgram::Create(
+                m_shaderSource.Get("shadow.vs"),
+                m_shaderSource.Get("shadow.fs"))) {
+            m_shadow = *shadow;
+          } else {
+            App::Instance().Log(LogLevel::Error) << shadow.error();
+          }
         }
-        vao->Draw(GL_TRIANGLES, drawCount, 0);
+        if (m_shadow) {
+          m_shadow->Use();
+          m_shadow->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
+          m_shadow->Uniform("View")->SetMat4(env.ViewMatrix);
+          m_shadow->Uniform("Shadow")->SetMat4(env.ShadowMatrix);
+          m_shadow->Uniform("Model")->SetMat4(m);
+          uint32_t drawCount = 0;
+          for (auto& primitive : mesh->m_primitives) {
+            drawCount += primitive.DrawCount * 4;
+          }
+          vao->Draw(GL_TRIANGLES, drawCount, 0);
+        }
         break;
       }
     }
@@ -428,7 +391,7 @@ public:
                      const runtimescene::Primitive& primitive,
                      uint32_t drawOffset)
   {
-    if (auto material = GetOrCreateMaterial(root, bin, primitive.Material)) {
+    if (auto material = GetOrCreatePbrMaterial(root, bin, primitive.Material)) {
       // auto texture = m_white;
       // if (auto t = primitive.Material->ColorTexture) {
       //   texture = GetOrCreate(t);
@@ -542,4 +505,20 @@ RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data)
   static cuber::gl3::GlLineRenderer s_liner;
   s_liner.Render(&camera.ProjectionMatrix._11, &camera.ViewMatrix._11, data);
 }
+
+// for local shader
+void
+SetShaderDir(const std::filesystem::path& path)
+{
+  Gl3Renderer::Instance().SetShaderDir(path);
+}
+
+// for hot reload
+// use relative path. pbr.{vs,fs}, unlit.{vs,fs}, mtoon.{vs,fs}
+void
+UpdateShader(const std::filesystem::path& path)
+{
+  Gl3Renderer::Instance().UpdateShader(path);
+}
+
 }

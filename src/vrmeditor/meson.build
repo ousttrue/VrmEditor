@@ -12,6 +12,7 @@ srcs = [
     'glr/line_gizmo.cpp',
     'glr/overlay.cpp',
     'glr/rendering_env.cpp',
+    'glr/shader_source.cpp',
     'docks/gui.cpp',
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',

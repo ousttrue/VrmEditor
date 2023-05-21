@@ -34,7 +34,8 @@ const auto WINDOW_TITLE = "VrmEditor";
 
 App::App()
 {
-  m_watcher = std::make_shared<FileWatcher>();
+  m_watcher = std::make_shared<FileWatcher>(
+    [=](const std::filesystem::path& path) { this->OnFileUpdated(path); });
 
   m_logger = std::make_shared<ImLogger>();
   m_lua = std::make_shared<LuaEngine>();
@@ -380,5 +381,32 @@ App::ShowDock(std::string_view name, bool visible)
 void
 App::SetShaderDir(const std::filesystem::path& path)
 {
+  m_shaderDir = path;
   m_watcher->Watch(path);
+  glr::SetShaderDir(path);
+}
+
+static std::optional<std::filesystem::path>
+getRelative(const std::filesystem::path& base,
+            const std::filesystem::path& target)
+{
+  std::filesystem::path last;
+  for (auto current = target.parent_path(); current != last;
+       current = current.parent_path()) {
+    if (current == base) {
+      return std::filesystem::path(
+        target.string().substr(base.string().size() + 1));
+      break;
+    }
+  }
+  return std::nullopt;
+}
+
+void
+App::OnFileUpdated(const std::filesystem::path& path)
+{
+  if (auto rel = getRelative(m_shaderDir, path)) {
+    Log(LogLevel::Info) << *rel << ": updated";
+    glr::UpdateShader(*rel);
+  }
 }

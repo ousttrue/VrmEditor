@@ -53,6 +53,7 @@ class GltfJsonGui;
 class App
 {
   std::shared_ptr<FileWatcher> m_watcher;
+  std::filesystem::path m_shaderDir;
 
   std::filesystem::path m_ini;
   std::shared_ptr<Platform> m_platform;
@@ -105,4 +106,5 @@ public:
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
   void ShowDock(std::string_view name, bool visible);
   void SetShaderDir(const std::filesystem::path& path);
+  void OnFileUpdated(const std::filesystem::path& path);
 };
