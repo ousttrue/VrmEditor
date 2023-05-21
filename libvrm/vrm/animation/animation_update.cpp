@@ -1,7 +1,7 @@
-#include "vrm/runtimescene/animation_update.h"
-#include "vrm/runtimescene/deformed_mesh.h"
-#include "vrm/runtimescene/node.h"
-#include "vrm/runtimescene/scene.h"
+#include "animation_update.h"
+#include "../deformed_mesh.h"
+#include "runtime_node.h"
+#include "runtime_scene.h"
 
 namespace runtimescene {
 

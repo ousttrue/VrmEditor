@@ -3,9 +3,9 @@
 #include <glr/scene_preview.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <vrm/runtimescene/scene.h>
+#include <vrm/animation/runtime_scene.h>
 #include <vrm/gltfroot.h>
-#include <vrm/srht_update.h>
+#include <vrm/network/srht_update.h>
 
 namespace humanpose {
 // constructor

@@ -7,8 +7,7 @@
 #include <math.h>
 #include <memory>
 #include <sstream>
-// #include <vrm/scene.h>
-#include <vrm/timeline.h>
+#include <vrm/animation/timeline.h>
 
 // cursor
 // start      end

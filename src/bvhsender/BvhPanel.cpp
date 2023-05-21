@@ -1,11 +1,11 @@
 #include "BvhPanel.h"
 #include <imgui.h>
 #include <thread>
-#include <vrm/bvhscene.h>
-#include <vrm/runtimescene/scene.h>
+#include <vrm/animation/runtime_scene.h>
+#include <vrm/animation/timeline.h>
+#include <vrm/bvh/bvhscene.h>
 #include <vrm/gltfroot.h>
-#include <vrm/srht_sender.h>
-#include <vrm/timeline.h>
+#include <vrm/network/srht_sender.h>
 
 #ifdef _WIN32
 #define _WIN32_WINNT 0x0601

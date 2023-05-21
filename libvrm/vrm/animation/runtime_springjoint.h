@@ -1,8 +1,8 @@
 #pragma once
+#include "spring_collider.h"
+#include "spring_joint.h"
 #include <DirectXMath.h>
 #include <vrm/scenetypes.h>
-#include <vrm/springcollider.h>
-#include <vrm/springjoint.h>
 
 namespace runtimescene {
 

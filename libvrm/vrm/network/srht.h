@@ -1,5 +1,5 @@
 #pragma once
-#include "humanbones.h"
+#include "../humanoid/humanbones.h"
 #include "quat_packer.h"
 #include <stdint.h>
 

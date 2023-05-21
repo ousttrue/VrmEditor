@@ -24,12 +24,12 @@
 #include <gltfjson/glb.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
+#include <vrm/animation/animation_update.h>
+#include <vrm/animation/timeline.h>
 #include <vrm/exporter.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
 #include <vrm/importer.h>
-#include <vrm/runtimescene/animation_update.h>
-#include <vrm/timeline.h>
 
 const auto WINDOW_TITLE = "VrmEditor";
 

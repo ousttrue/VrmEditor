@@ -1,6 +1,6 @@
 #pragma once
 #include "bvh.h"
-#include "humanbones.h"
+#include "../humanoid/humanbones.h"
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

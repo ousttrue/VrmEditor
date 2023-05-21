@@ -1,9 +1,9 @@
 #pragma once
-#include "springjoint.h"
+#include "../gltf.h"
+#include "../humanoid/humanpose.h"
+#include "spring_bone.h"
+#include "runtime_springjoint.h"
 #include <unordered_map>
-#include <vrm/gltf.h>
-#include <vrm/humanpose.h>
-#include <vrm/springbone.h>
 
 namespace runtimescene {
 

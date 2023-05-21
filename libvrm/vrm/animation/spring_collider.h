@@ -1,6 +1,6 @@
 #pragma once
-#include "gizmo.h"
-#include "node.h"
+#include "../gizmo.h"
+#include "../node.h"
 #include <DirectXMath.h>
 #include <memory>
 #include <optional>

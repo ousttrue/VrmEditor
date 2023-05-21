@@ -1,9 +1,9 @@
 #pragma once
-#include "expression.h"
-#include "runtimescene/base_mesh.h"
+#include "animation/expression.h"
+#include "animation/spring_bone.h"
+#include "animation/spring_collider.h"
+#include "base_mesh.h"
 #include "scenetypes.h"
-#include "springbone.h"
-#include "springcollider.h"
 #include <DirectXMath.h>
 #include <functional>
 #include <gltfjson/bin.h>

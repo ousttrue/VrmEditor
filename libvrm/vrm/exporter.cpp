@@ -1,9 +1,9 @@
-#include "vrm/exporter.h"
-#include "vrm/gltf.h"
-#include "vrm/jsons.h"
-#include "vrm/runtimescene/animation.h"
-#include "vrm/runtimescene/base_mesh.h"
-#include "vrm/scenetypes.h"
+#include "exporter.h"
+#include "animation/animation.h"
+#include "base_mesh.h"
+#include "gltf.h"
+#include "jsons.h"
+#include "scenetypes.h"
 #include <gltfjson/glb.h>
 #include <gltfjson/gltf.h>
 #include <gltfjson/gltf_types.h>

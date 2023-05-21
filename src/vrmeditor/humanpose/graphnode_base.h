@@ -5,8 +5,8 @@
 #include <string_view>
 #include <variant>
 #include <vector>
-#include <vrm/humanpose.h>
-#include <vrm/timeline.h>
+#include <vrm/animation/timeline.h>
+#include <vrm/humanoid/humanpose.h>
 
 namespace humanpose {
 enum PinDataTypes

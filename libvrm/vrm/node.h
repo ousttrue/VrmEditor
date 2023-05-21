@@ -1,6 +1,6 @@
 #pragma once
-#include "constraint.h"
-#include "humanbones.h"
+#include "animation/constraint.h"
+#include "humanoid/humanbones.h"
 #include "scenetypes.h"
 #include <DirectXMath.h>
 #include <assert.h>

@@ -2,7 +2,7 @@
 #include "docks/gui.h"
 #include "graphnode_base.h"
 #include <list>
-#include <vrm/humanbone_map.h>
+#include <vrm/bvh/humanbone_map.h>
 
 class Cuber;
 class UdpReceiver;

@@ -1,6 +1,6 @@
 #pragma once
-#include <vrm/springbone.h>
-#include <vrm/springcollider.h>
+#include "spring_bone.h"
+#include "spring_collider.h"
 
 namespace runtimescene {
 

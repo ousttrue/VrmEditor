@@ -1,5 +1,5 @@
 #include "platform.h"
-#include <vrm/timeline.h>
+#include <vrm/animation/timeline.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <stdexcept>

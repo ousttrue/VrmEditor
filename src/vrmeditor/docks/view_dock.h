@@ -2,7 +2,7 @@
 #include "glr/scene_preview.h"
 #include "gui.h"
 #include <imgui.h>
-#include <vrm/runtimescene/scene.h>
+#include <vrm/animation/runtime_scene.h>
 
 class ViewDock
 {

@@ -1,7 +1,7 @@
-#include "vrm/runtimescene/springJoint.h"
-#include "vrm/runtimescene/node.h"
-#include "vrm/runtimescene/scene.h"
-#include "vrm/runtimescene/springcollision.h"
+#include "runtime_springJoint.h"
+#include "runtime_node.h"
+#include "runtime_scene.h"
+#include "spring_collision.h"
 #include <vrm/dmath.h>
 
 namespace runtimescene {

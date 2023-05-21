@@ -1,7 +1,7 @@
-#include "vrm/srht_sender.h"
-#include "vrm/bvh.h"
-#include "vrm/node.h"
-#include "vrm/gltfroot.h"
+#include "srht_sender.h"
+#include "../animation/runtime_node.h"
+#include "../bvh/bvh.h"
+#include "../gltfroot.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <iostream>

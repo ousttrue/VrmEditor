@@ -5,7 +5,7 @@
 #include <functional>
 #include <span>
 #include <string_view>
-#include <vrm/bvh.h>
+#include <vrm/bvh/bvh.h>
 
 class BvhPanel
 {

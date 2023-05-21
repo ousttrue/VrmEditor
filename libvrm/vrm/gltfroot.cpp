@@ -1,10 +1,9 @@
-#include "vrm/bvh.h"
-#include "vrm/dmath.h"
-#include "vrm/gltf.h"
-#include "vrm/gltfroot.h"
-#include "vrm/jsonpath.h"
-#include "vrm/runtimescene/base_mesh.h"
-#include "vrm/springbone.h"
+#include "gltfroot.h"
+#include "animation/spring_bone.h"
+#include "base_mesh.h"
+#include "dmath.h"
+#include "gltf.h"
+#include "jsonpath.h"
 #include <DirectXMath.h>
 #include <array>
 #include <expected>

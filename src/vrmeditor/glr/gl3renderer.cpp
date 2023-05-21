@@ -17,7 +17,7 @@
 #include <variant>
 #include <vrm/fileutil.h>
 #include <vrm/gltf.h>
-#include <vrm/runtimescene/deformed_mesh.h>
+#include <vrm/deformed_mesh.h>
 
 static auto vertex_shader_text = u8R"(#version 400
 uniform mat4 Model;

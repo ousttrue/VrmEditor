@@ -7,10 +7,10 @@
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
+#include <vrm/animation/runtime_node.h>
+#include <vrm/animation/runtime_scene.h>
 #include <vrm/gizmo.h>
-#include <vrm/humanbones.h>
-#include <vrm/runtimescene/node.h>
-#include <vrm/runtimescene/scene.h>
+#include <vrm/humanoid/humanbones.h>
 
 namespace glr {
 

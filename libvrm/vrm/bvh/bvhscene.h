@@ -1,12 +1,12 @@
 #pragma once
-#include "vrm/bvh.h"
-#include "vrm/bvhframe.h"
-#include "vrm/humanbone_map.h"
-#include "vrm/node.h"
-#include "vrm/runtimescene/node.h"
-#include "vrm/runtimescene/scene.h"
-#include "vrm/gltfroot.h"
-#include "vrm/timeline.h"
+#include "../animation/runtime_node.h"
+#include "../animation/runtime_scene.h"
+#include "../animation/timeline.h"
+#include "../gltfroot.h"
+#include "../node.h"
+#include "bvh.h"
+#include "bvhframe.h"
+#include "humanbone_map.h"
 #include <memory>
 
 namespace libvrm {

@@ -1,3 +1,4 @@
+#include "bvh.h"
 #include <assert.h>
 #include <cctype>
 #include <charconv>
@@ -8,7 +9,6 @@
 #include <sstream>
 #include <stack>
 #include <stdlib.h>
-#include <vrm/bvh.h>
 #include <vrm/fileutil.h>
 
 template<typename T>

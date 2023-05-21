@@ -1,7 +1,7 @@
 #pragma once
 #include "graphnode_base.h"
-#include <vrm/bvh.h>
-#include <vrm/humanbone_map.h>
+#include <vrm/bvh/bvh.h>
+#include <vrm/bvh/humanbone_map.h>
 
 namespace glr {
 struct ScenePreview;

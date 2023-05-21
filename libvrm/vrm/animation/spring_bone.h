@@ -1,6 +1,6 @@
 #pragma once
-#include "springcollider.h"
-#include "springjoint.h"
+#include "spring_collider.h"
+#include "spring_joint.h"
 #include <memory>
 #include <vector>
 

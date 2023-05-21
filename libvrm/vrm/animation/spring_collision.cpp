@@ -1,4 +1,4 @@
-#include "vrm/runtimescene/springcollision.h"
+#include "spring_collision.h"
 
 namespace runtimescene {
 

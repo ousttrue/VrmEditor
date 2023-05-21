@@ -1,7 +1,6 @@
 #pragma once
-#include "node.h"
-// #include "scenetypes.h"
-#include "../timeline.h"
+#include "../node.h"
+#include "timeline.h"
 #include <span>
 #include <unordered_map>
 #include <vector>

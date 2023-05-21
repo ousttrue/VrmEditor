@@ -1,12 +1,12 @@
 #pragma once
+#include "../bvh/bvh.h"
+#include "srht.h"
 #include <chrono>
 #include <list>
 #include <memory>
 #include <mutex>
 #include <span>
 #include <vector>
-#include <vrm/bvh.h>
-#include <vrm/srht.h>
 
 #ifdef _WIN32
 #define _WIN32_WINNT 0x0601

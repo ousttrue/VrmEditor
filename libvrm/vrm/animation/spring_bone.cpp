@@ -1,7 +1,7 @@
-#include "vrm/springbone.h"
-#include "vrm/gizmo.h"
-#include "vrm/scenetypes.h"
-#include "vrm/springjoint.h"
+#include "spring_bone.h"
+#include "../gizmo.h"
+#include "../scenetypes.h"
+#include "spring_joint.h"
 #include <iostream>
 
 namespace libvrm::vrm {

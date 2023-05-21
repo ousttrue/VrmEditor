@@ -1,6 +1,6 @@
-#include "vrm/srht_update.h"
-#include "vrm/gltfroot.h"
-#include "vrm/srht.h"
+#include "srht_update.h"
+#include "../gltfroot.h"
+#include "srht.h"
 #include <algorithm>
 
 struct BinaryReader

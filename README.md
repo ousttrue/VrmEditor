@@ -141,7 +141,21 @@ Naming conventions for variables with a wider scope than local variables.
 - const, enum value: UPPER_SNAKE
 - enum class value: Pascal
 
-### namespace
+### folder / namespace
+
+#### core
+
+node(gltf) / mesh / skinning / deformed_mesh
+
+#### animation
+
+node(animation / pose) / animation / springbone / constraint
+
+#### humanoid
+
+udp / bvh
+
+#### namespace
 
 - `libvrm` (Node hierarchy / BaseMesh)
 - `libvrm::vrm` (Humanoid, Expression, SpringBone, Constraint, LookAt)

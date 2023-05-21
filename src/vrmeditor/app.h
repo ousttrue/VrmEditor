@@ -4,7 +4,7 @@
 #include <memory>
 #include <unordered_set>
 #include <vrm/gltf.h>
-#include <vrm/humanbones.h>
+#include <vrm/humanoid/humanbones.h>
 
 class FileWatcher;
 

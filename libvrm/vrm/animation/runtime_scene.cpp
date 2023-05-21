@@ -1,9 +1,9 @@
-#include "vrm/runtimescene/scene.h"
-#include "vrm/runtimescene/animation.h"
-#include "vrm/runtimescene/deformed_mesh.h"
-#include "vrm/runtimescene/node.h"
-#include "vrm/runtimescene/skin.h"
-#include "vrm/runtimescene/springcollision.h"
+#include "runtime_scene.h"
+#include "../deformed_mesh.h"
+#include "../skin.h"
+#include "animation.h"
+#include "runtime_node.h"
+#include "spring_collision.h"
 
 namespace runtimescene {
 

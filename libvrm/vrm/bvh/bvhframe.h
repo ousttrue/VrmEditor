@@ -1,10 +1,10 @@
 #pragma once
+#include "vrm/animation/timeline.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <ostream>
 #include <span>
 #include <string_view>
-#include "timeline.h"
 
 namespace libvrm::bvh {
 inline std::ostream&
