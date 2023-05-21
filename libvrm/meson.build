@@ -10,7 +10,6 @@ libvrm_lib = static_library(
     'vrm',
     [
         'vrm/gltfroot.cpp',
-        'vrm/jsonpath.cpp',
         'vrm/node.cpp',
         'vrm/image.cpp',
         'vrm/exporter.cpp',

@@ -3,7 +3,6 @@
 #include "base_mesh.h"
 #include "dmath.h"
 #include "gltf.h"
-#include "jsonpath.h"
 #include <DirectXMath.h>
 #include <array>
 #include <expected>
