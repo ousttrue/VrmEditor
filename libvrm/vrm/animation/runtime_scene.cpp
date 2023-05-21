@@ -489,7 +489,7 @@ RuntimeScene::Drawables()
   }
 
   // skinning
-  for (uint32_t i = 0; i < m_nodes.size(); ++i) {
+  for (uint32_t i = 0; i < m_table->m_gltf.Nodes.Size(); ++i) {
     auto& gltfNode = m_table->m_gltf.Nodes[i];
     if (gltfNode.Mesh) {
       // auto mesh = m_table->m_meshes[*mesh_index];
@@ -531,7 +531,7 @@ RuntimeScene::Drawables()
   }
 
   m_drawables.clear();
-  for (uint32_t i = 0; i < m_nodes.size(); ++i) {
+  for (uint32_t i = 0; i < m_table->m_gltf.Nodes.Size(); ++i) {
     auto& gltfNode = m_table->m_gltf.Nodes[i];
     if (gltfNode.Mesh) {
       m_drawables.push_back({
