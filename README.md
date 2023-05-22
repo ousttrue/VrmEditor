@@ -10,7 +10,7 @@ read, write, edit and animation test.
 | (mesh)                           | ✅   | ✅    | ---  |                      |
 | (draco)                          | 🟩   | ---   | ---  |                      |
 | (quantity)                       | 🟩   | ---   | ---  |                      |
-| (material)                       | 🟩   | 🟩    | 🟩   | WIP                  |
+| (material)                       | ✅   | 🟩    | ✅   |                      |
 | (material.ColorTexture)          | ✅   | ✅    | ---  |                      |
 | (material.mtoon-0.x)             | 🟩   | 🟩    | 🟩   |                      |
 | (material.mtoon-1.0)             | 🟩   | 🟩    | 🟩   |                      |
@@ -26,7 +26,7 @@ read, write, edit and animation test.
 | (lookat.expression)              | 🟩   | 🟩    | 🟩   |                      |
 | (springbone)                     | ✅   | 🟩    | 🟩   |                      |
 | (humanoid)                       | ✅   | 🟩    | 🟩   |                      |
-| (Y180 rotation)                  | ✅   | 🟩    | ---  | vrm-0.x face -Z      |
+| (Y180 rotation)                  | 🟩   | 🟩    | ---  | vrm-0.x face -Z      |
 | vrm-1.0                          |      |       |      |                      |
 | (expression.morphtarget)         | ✅   | 🟩    | 🟩   |                      |
 | (expression.material)            | 🟩   | 🟩    | 🟩   |                      |

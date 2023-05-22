@@ -4,6 +4,8 @@
 
 void
 ShowGui(std::list<gltfjson::format::Extension>& extensions);
+void
+ShowGui(std::list<gltfjson::format::Extra>& extras);
 
 void
 ShowGui(gltfjson::format::Asset& asset);
