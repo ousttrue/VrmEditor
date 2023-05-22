@@ -12,7 +12,6 @@
 #include <grapho/gl3/vao.h>
 #include <imgui.h>
 #include <iostream>
-#include <map>
 #include <unordered_map>
 #include <variant>
 #include <vrm/deformed_mesh.h>
@@ -53,18 +52,14 @@ ParseImage(const gltfjson::format::Root& root,
 
 class Gl3Renderer
 {
-  // https://stackoverflow.com/questions/12875652/how-can-i-use-a-stdmap-with-stdweak-ptr-as-key
-  using MeshWeakPtr = std::weak_ptr<runtimescene::BaseMesh>;
-
-  std::map<uint32_t, std::shared_ptr<libvrm::gltf::Image>> m_imageMap;
-  std::map<uint32_t, std::shared_ptr<grapho::gl3::Texture>> m_srgbTextureMap;
-  std::map<uint32_t, std::shared_ptr<grapho::gl3::Texture>> m_linearTextureMap;
-  std::map<uint32_t, std::shared_ptr<grapho::gl3::PbrMaterial>> m_materialMap;
-
-  std::map<MeshWeakPtr,
-           std::shared_ptr<grapho::gl3::Vao>,
-           std::owner_less<MeshWeakPtr>>
-    m_drawableMap;
+  std::unordered_map<uint32_t, std::shared_ptr<libvrm::gltf::Image>> m_imageMap;
+  std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
+    m_srgbTextureMap;
+  std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
+    m_linearTextureMap;
+  std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::PbrMaterial>>
+    m_materialMap;
+  std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
   std::shared_ptr<grapho::gl3::Texture> m_white;
   std::shared_ptr<grapho::gl3::ShaderProgram> m_shadow;
@@ -92,7 +87,14 @@ public:
     return s_instance;
   }
 
-  void Release() { m_drawableMap.clear(); }
+  void Release()
+  {
+    m_materialMap.clear();
+    m_srgbTextureMap.clear();
+    m_linearTextureMap.clear();
+    m_materialMap.clear();
+    m_drawableMap.clear();
+  }
 
   // for local shader
   void SetShaderDir(const std::filesystem::path& path)
@@ -239,22 +241,21 @@ public:
         root, bin, occlusionTexture->Index, libvrm::gltf::ColorSpace::Linear);
     }
 
-    auto vs = m_shaderSource.Get("pbr.vs");
-    auto fs = m_shaderSource.Get("pbr.fs");
+    auto vs = m_shaderSource.Get("pbr.vert");
+    auto fs = m_shaderSource.Get("pbr.frag");
     auto material = grapho::gl3::PbrMaterial::Create(
       albedo, normal, metallic, roughness, ao, vs, fs);
     m_materialMap.insert({ *id, material });
     return material;
   }
 
-  std::shared_ptr<grapho::gl3::Vao> GetOrCreate(
+  std::shared_ptr<grapho::gl3::Vao> GetOrCreateMesh(
+    uint32_t id,
     const std::shared_ptr<runtimescene::BaseMesh>& mesh)
   {
-    if (!mesh) {
-      return {};
-    }
+    assert(mesh);
 
-    auto found = m_drawableMap.find(mesh);
+    auto found = m_drawableMap.find(id);
     if (found != m_drawableMap.end()) {
       return found->second;
     }
@@ -293,7 +294,7 @@ public:
     };
     auto vao = grapho::gl3::Vao::Create(layouts, slots, ibo);
 
-    m_drawableMap.insert(std::make_pair(mesh, vao));
+    m_drawableMap.insert({ id, vao });
 
     return vao;
   }
@@ -302,6 +303,7 @@ public:
               const RenderingEnv& env,
               const gltfjson::format::Root& root,
               const gltfjson::format::Bin& bin,
+              uint32_t meshId,
               const std::shared_ptr<runtimescene::BaseMesh>& mesh,
               const runtimescene::DeformedMesh& deformed,
               const DirectX::XMFLOAT4X4& m)
@@ -313,7 +315,7 @@ public:
     glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);
 
-    auto vao = GetOrCreate(mesh);
+    auto vao = GetOrCreateMesh(meshId, mesh);
 
     if (deformed.Vertices.size()) {
       vao->slots_[0]->Upload(deformed.Vertices.size() *
@@ -346,8 +348,8 @@ public:
       case RenderPass::ShadowMatrix: {
         if (!m_shadow) {
           if (auto shadow = grapho::gl3::ShaderProgram::Create(
-                m_shaderSource.Get("shadow.vs"),
-                m_shaderSource.Get("shadow.fs"))) {
+                m_shaderSource.Get("shadow.vert"),
+                m_shaderSource.Get("shadow.frag"))) {
             m_shadow = *shadow;
           } else {
             App::Instance().Log(LogLevel::Error) << shadow.error();
@@ -434,15 +436,6 @@ public:
   void CreateDock(const AddDockFunc& addDock, std::string_view title)
   {
     addDock(grapho::imgui::Dock(title, [this]() {
-      for (auto it = m_drawableMap.begin(); it != m_drawableMap.end();) {
-        if (it->first.lock()) {
-          ++it;
-        } else {
-          // cleanup released
-          it = m_drawableMap.erase(it);
-        }
-      }
-
       ImGui::Text("srgb: %zd(textures)", m_srgbTextureMap.size());
       ImGui::Text("linear: %zd(textures)", m_linearTextureMap.size());
       ImGui::SameLine();
@@ -456,11 +449,13 @@ Render(RenderPass pass,
        const RenderingEnv& env,
        const gltfjson::format::Root& root,
        const gltfjson::format::Bin& bin,
+       uint32_t meshId,
        const std::shared_ptr<runtimescene::BaseMesh>& mesh,
        const runtimescene::DeformedMesh& deformed,
        const DirectX::XMFLOAT4X4& m)
 {
-  Gl3Renderer::Instance().Render(pass, env, root, bin, mesh, deformed, m);
+  Gl3Renderer::Instance().Render(
+    pass, env, root, bin, meshId, mesh, deformed, m);
 }
 
 void

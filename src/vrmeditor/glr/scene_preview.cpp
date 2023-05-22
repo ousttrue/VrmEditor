@@ -66,6 +66,7 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
                   *m_env,
                   m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
+                  mesh,
                   m_animation->m_meshes[mesh],
                   *meshInstance,
                   m);
@@ -81,6 +82,7 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
                   *m_env,
                   m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
+                  mesh,
                   m_animation->m_meshes[mesh],
                   *meshInstance,
                   m);
@@ -152,6 +154,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
                   *m_env,
                   m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
+                  mesh,
                   m_animation->m_meshes[mesh],
                   *meshInstance,
                   m);
@@ -168,6 +171,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
                   *m_env,
                   m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
+                  mesh,
                   m_animation->m_meshes[mesh],
                   *meshInstance,
                   m);
