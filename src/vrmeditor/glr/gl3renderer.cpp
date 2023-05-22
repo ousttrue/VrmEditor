@@ -50,6 +50,16 @@ ParseImage(const gltfjson::format::Root& root,
   return ptr;
 }
 
+struct Material
+{
+  // source
+
+  // error
+
+  std::shared_ptr<grapho::gl3::ShaderProgram> Unlit;
+  std::shared_ptr<grapho::gl3::PbrMaterial> Pbr;
+};
+
 class Gl3Renderer
 {
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::gltf::Image>> m_imageMap;
@@ -57,12 +67,12 @@ class Gl3Renderer
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_linearTextureMap;
-  std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::PbrMaterial>>
-    m_materialMap;
+  std::unordered_map<uint32_t, Material> m_materialMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
   std::shared_ptr<grapho::gl3::Texture> m_white;
   std::shared_ptr<grapho::gl3::ShaderProgram> m_shadow;
+  std::shared_ptr<grapho::gl3::ShaderProgram> m_error;
 
   ShaderSourceManager m_shaderSource;
 
@@ -196,10 +206,9 @@ public:
     return texture;
   }
 
-  std::shared_ptr<grapho::gl3::PbrMaterial> GetOrCreatePbrMaterial(
-    const gltfjson::format::Root& root,
-    const gltfjson::format::Bin& bin,
-    std::optional<uint32_t> id)
+  Material GetOrCreateMaterial(const gltfjson::format::Root& root,
+                               const gltfjson::format::Bin& bin,
+                               std::optional<uint32_t> id)
   {
     if (!id) {
       return {};
@@ -244,10 +253,16 @@ public:
 
     auto vs = m_shaderSource.Get("pbr.vert");
     auto fs = m_shaderSource.Get("pbr.frag");
-    auto material = grapho::gl3::PbrMaterial::Create(
-      albedo, normal, metallic, roughness, ao, vs, fs);
-    m_materialMap.insert({ *id, material });
-    return material;
+    if (auto material = grapho::gl3::PbrMaterial::Create(
+          albedo, normal, metallic, roughness, ao, vs, fs)) {
+      m_materialMap.insert({ *id, { .Pbr = *material } });
+      return { .Pbr = *material };
+    } else {
+      App::Instance().Log(LogLevel::Error) << "pbr: "<< material.error();
+    }
+
+    m_materialMap.insert({ *id, {} });
+    return {};
   }
 
   std::shared_ptr<grapho::gl3::Vao> GetOrCreateMesh(
@@ -394,16 +409,13 @@ public:
                      const runtimescene::Primitive& primitive,
                      uint32_t drawOffset)
   {
-    if (auto material = GetOrCreatePbrMaterial(root, bin, primitive.Material)) {
-      // auto texture = m_white;
-      // if (auto t = primitive.Material->ColorTexture) {
-      //   texture = GetOrCreate(t);
-      // }
-      material->Activate(projection,
-                         view,
-                         model,
-                         cameraPos,
-                         grapho::gl3::PbrEnv::UBO_LIGHTS_BINDING);
+    auto material = GetOrCreateMaterial(root, bin, primitive.Material);
+    if (auto pbr = material.Pbr) {
+      pbr->Activate(projection,
+                    view,
+                    model,
+                    cameraPos,
+                    grapho::gl3::PbrEnv::UBO_LIGHTS_BINDING);
 
       // state
       glEnable(GL_CULL_FACE);
@@ -428,8 +440,23 @@ public:
       //   primitive.Material->Pbr.BaseColorFactor);
 
       // texture->Activate(0);
+    } else if (auto unlit = material.Unlit) {
+
     } else {
-      // default
+      // error
+      if (!m_error) {
+        if (auto error = grapho::gl3::ShaderProgram::Create(
+              m_shaderSource.Get("error.vert"),
+              m_shaderSource.Get("error.frag"))) {
+          m_error = *error;
+        }
+      }
+      if (m_error) {
+        m_error->Use();
+        m_error->Uniform("Projection")->SetMat4(projection);
+        m_error->Uniform("View")->SetMat4(view);
+        m_error->Uniform("Model")->SetMat4(model);
+      }
     }
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
   }

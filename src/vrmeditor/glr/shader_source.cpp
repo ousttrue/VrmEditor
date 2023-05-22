@@ -3,8 +3,29 @@
 
 namespace glr {
 
+static auto error_vert = u8R"(#version 400
+uniform mat4 Model;
+uniform mat4 View;
+uniform mat4 Projection;
+in vec3 vPosition;
+void
+main()
+{
+  gl_Position = Projection * View * Model * vec4(vPosition, 1.0);
+}
+)";
+
+static auto error_frag = u8R"(#version 400
+out vec4 FragColor;
+void
+main()
+{
+  FragColor = vec4(1, 0, 1, 1);
+}
+)";
+
 // unlit.vert
-static auto vertex_shader_text = u8R"(#version 400
+static auto unlit_vert = u8R"(#version 400
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
@@ -22,7 +43,7 @@ void main()
 )";
 
 // unlit.frag
-static auto fragment_shader_text = u8R"(#version 400
+static auto unlit_frag = u8R"(#version 400
 in vec3 normal;
 in vec2 uv;
 out vec4 FragColor;
@@ -41,7 +62,7 @@ void main()
 )";
 
 // shadow.vert
-static auto shadow_vertex_text = u8R"(#version 400
+static auto shadow_vert = u8R"(#version 400
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
@@ -60,7 +81,7 @@ void main()
 )";
 
 // shadow.frag
-static auto shadow_fragment_text = u8R"(#version 400
+static auto shadow_frag = u8R"(#version 400
 in vec3 normal;
 in vec2 uv;
 out vec4 FragColor;
@@ -91,6 +112,14 @@ struct ShaderSourceManagerImpl
   std::filesystem::path m_dir;
   std::vector<ShaderSource> m_sources = {
     ShaderSource{
+      "error.vert",
+      error_vert,
+    },
+    ShaderSource{
+      "error.frag",
+      error_frag,
+    },
+    ShaderSource{
       "pbr.vert",
     },
     ShaderSource{
@@ -98,19 +127,19 @@ struct ShaderSourceManagerImpl
     },
     ShaderSource{
       "unlit.vert",
-      vertex_shader_text,
+      unlit_vert,
     },
     ShaderSource{
       "unlit.frag",
-      fragment_shader_text,
+      unlit_frag,
     },
     ShaderSource{
       "shadow.vert",
-      shadow_vertex_text,
+      shadow_vert,
     },
     ShaderSource{
       "shadow.frag",
-      shadow_fragment_text,
+      shadow_frag,
     },
   };
   void Update(const std::filesystem::path& path)
