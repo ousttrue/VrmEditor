@@ -51,7 +51,7 @@ ClearRendertarget(const RenderingEnv& camera);
 
 // release all resource
 void
-Shutdown();
+Release();
 
 // resource viewer
 void

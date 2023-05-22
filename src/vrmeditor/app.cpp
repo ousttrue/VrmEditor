@@ -86,6 +86,7 @@ App::~App() {}
 std::shared_ptr<runtimescene::RuntimeScene>
 App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
 {
+  glr::Release();
   m_runtime = std::make_shared<runtimescene::RuntimeScene>(table);
   m_timeline->Tracks.clear();
 

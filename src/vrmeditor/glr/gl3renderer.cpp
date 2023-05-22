@@ -89,6 +89,7 @@ public:
 
   void Release()
   {
+    m_imageMap.clear();
     m_materialMap.clear();
     m_srgbTextureMap.clear();
     m_linearTextureMap.clear();
@@ -473,7 +474,7 @@ ClearRendertarget(const RenderingEnv& env)
 }
 
 void
-Shutdown()
+Release()
 {
   Gl3Renderer::Instance().Release();
 }
