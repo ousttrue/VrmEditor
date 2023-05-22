@@ -13,4 +13,4 @@ main()
     discard;
   }
   FragColor = texel;
-};
+}

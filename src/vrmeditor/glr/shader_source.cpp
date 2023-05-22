@@ -3,7 +3,7 @@
 
 namespace glr {
 
-// unlit.vs
+// unlit.vert
 static auto vertex_shader_text = u8R"(#version 400
 uniform mat4 Model;
 uniform mat4 View;
@@ -21,7 +21,7 @@ void main()
 }
 )";
 
-// unlit.fs
+// unlit.frag
 static auto fragment_shader_text = u8R"(#version 400
 in vec3 normal;
 in vec2 uv;
@@ -40,7 +40,7 @@ void main()
 };
 )";
 
-// shadow.vs
+// shadow.vert
 static auto shadow_vertex_text = u8R"(#version 400
 uniform mat4 Model;
 uniform mat4 View;
@@ -59,7 +59,7 @@ void main()
 }
 )";
 
-// shadow.fs
+// shadow.frag
 static auto shadow_fragment_text = u8R"(#version 400
 in vec3 normal;
 in vec2 uv;
@@ -91,25 +91,25 @@ struct ShaderSourceManagerImpl
   std::filesystem::path m_dir;
   std::vector<ShaderSource> m_sources = {
     ShaderSource{
-      "pbr.vs",
+      "pbr.vert",
     },
     ShaderSource{
-      "pbr.fs",
+      "pbr.frag",
     },
     ShaderSource{
-      "unlit.vs",
+      "unlit.vert",
       vertex_shader_text,
     },
     ShaderSource{
-      "unlit.fs",
+      "unlit.frag",
       fragment_shader_text,
     },
     ShaderSource{
-      "shadow.vs",
+      "shadow.vert",
       shadow_vertex_text,
     },
     ShaderSource{
-      "shadow.fs",
+      "shadow.frag",
       shadow_fragment_text,
     },
   };
