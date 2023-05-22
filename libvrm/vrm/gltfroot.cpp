@@ -108,14 +108,29 @@ runtimescene::BoundingBox
 GltfRoot::GetBoundingBox() const
 {
   runtimescene::BoundingBox bb{};
-  for (auto& node : m_nodes) {
+  for (uint32_t i = 0; i < m_gltf.Nodes.Size(); ++i) {
+    auto& gltfNode = m_gltf.Nodes[i];
+    auto node = m_nodes[i];
     bb.Extend(node->WorldInitialTransform.Translation);
     bb.Extend(node->WorldInitialTransform.Translation);
-    // if (node->Mesh) {
-    // auto mesh_bb = node->Mesh->GetBoundingBox();
-    // bb.Extend(dmath::transform(mesh_bb.Min, node->WorldInitialMatrix()));
-    // bb.Extend(dmath::transform(mesh_bb.Max, node->WorldInitialMatrix()));
-    // }
+    if (gltfNode.Mesh) {
+      auto& mesh = m_gltf.Meshes[*gltfNode.Mesh];
+      for (auto& prim : mesh.Primitives) {
+        auto position_accessor_index = *prim.Attributes.POSITION;
+        auto& accessor = m_gltf.Accessors[position_accessor_index];
+
+        auto& min = accessor.Min;
+        auto& max = accessor.Max;
+        if (min.size() == 3 && max.size() == 3) {
+          runtimescene::BoundingBox mesh_bb = {
+            { min[0], min[1], min[2] },
+            { max[0], max[1], max[2] },
+          };
+          bb.Extend(dmath::transform(mesh_bb.Min, node->WorldInitialMatrix()));
+          bb.Extend(dmath::transform(mesh_bb.Max, node->WorldInitialMatrix()));
+        }
+      }
+    }
   }
   return bb;
 }

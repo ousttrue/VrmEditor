@@ -11,6 +11,22 @@
 #include <sstream>
 #include <unordered_map>
 
+// Helper to display a little (?) mark which shows a tooltip when hovered.
+// In your own code you may want to display an actual icon if you are using a
+// merged icon fonts (see docs/FONTS.md)
+static void
+HelpMarker(const char* desc)
+{
+  ImGui::TextDisabled("(?)");
+  if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) &&
+      ImGui::BeginTooltip()) {
+    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+    ImGui::TextUnformatted(desc);
+    ImGui::PopTextWrapPos();
+    ImGui::EndTooltip();
+  }
+}
+
 class PrintfBuffer
 {
   char m_buf[256];
@@ -436,6 +452,14 @@ ShowGui(const gltfjson::format::Root& root,
     [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
   ImGui::SliderFloat("MetallicFactor", &pbr.MetallicFactor, 0, 1);
   ImGui::SliderFloat("RoughnessFactor", &pbr.RoughnessFactor, 0, 1);
+
+  HelpMarker(
+    "The metallic-roughness texture. The metalness values are sampled from "
+    "the B channel. The roughness values are sampled from the G channel. "
+    "These values **MUST** be encoded with a linear transfer function. If "
+    "other channels are present (R or A), they **MUST** be ignored for "
+    "metallic-roughness calculations. When undefined, the texture **MUST** "
+    "be sampled as having `1.0` in G and B components.");
   ShowGuiOptional<gltfjson::format::TextureInfo>(
     pbr.MetallicRoughnessTexture,
     "MetallicRoughnessTexture",
@@ -462,6 +486,12 @@ ShowGui(const gltfjson::format::Root& root,
     "NormalTexture +",
     [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
 
+  HelpMarker("The occlusion texture. The occlusion values are linearly sampled "
+             "from the R channel. Higher values indicate areas that receive "
+             "full indirect lighting and lower values indicate no indirect "
+             "lighting. If other channels are present (GBA), they **MUST** be "
+             "ignored for occlusion calculations. When undefined, the material "
+             "does not have an occlusion texture.");
   ShowGuiOptional<gltfjson::format::OcclusionTextureInfo>(
     material.OcclusionTexture,
     "OcclusionTexture",
