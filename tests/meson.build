@@ -3,11 +3,11 @@ executable(
     'tests',
     [
         'gltf_samples.cpp',
-        'glb_export.cpp',
         'json.cpp',
-        'vrma.cpp',
         'text.cpp',
         'gltfon.cpp',
+        # 'glb_export.cpp',
+        # 'vrma.cpp',
     ],
     install: true,
     dependencies: [

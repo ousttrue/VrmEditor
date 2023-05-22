@@ -1,9 +1,8 @@
 #include <gltfjson/glb.h>
 #include <gtest/gtest.h>
-#include <vrm/animation.h>
 #include <vrm/exporter.h>
-#include <vrm/node.h>
 #include <vrm/gltfroot.h>
+#include <vrm/node.h>
 #include <vrm/vrma.h>
 
 TEST(VRMA, simple)
