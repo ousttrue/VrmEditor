@@ -170,6 +170,24 @@ ShowGui(const char* base,
 {
   ImGui::Text("%s/%d", base, index ? *index : -1);
   ShowGui("name", prop.Name);
+  if (prop.Extensions.size()) {
+    if (ImGui::CollapsingHeader("Extensions")) {
+      for (auto& extension : prop.Extensions) {
+        ImGui::Text("%s => %s",
+                    (const char*)extension.Name.c_str(),
+                    (const char*)extension.Value.c_str());
+      }
+    }
+  }
+  if (prop.Extras.size()) {
+    if (ImGui::CollapsingHeader("Extras")) {
+      for (auto& extra : prop.Extras) {
+        ImGui::Text("%s => %s",
+                    (const char*)extra.Name.c_str(),
+                    (const char*)extra.Value.c_str());
+      }
+    }
+  }
 }
 
 // buffer/bufferView/accessor

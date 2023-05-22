@@ -9,6 +9,7 @@
 #include <grapho/gl3/pbr.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/texture.h>
+#include <grapho/gl3/ubo.h>
 #include <grapho/gl3/vao.h>
 #include <imgui.h>
 #include <iostream>
@@ -20,6 +21,17 @@
 #include <vrm/image.h>
 
 namespace glr {
+
+static gltfjson::format::AlphaModes
+GetAlphaMode(const gltfjson::format::Root& root,
+             std::optional<uint32_t> material)
+{
+  if (material) {
+    return root.Materials[*material].AlphaMode;
+  } else {
+    return gltfjson::format::AlphaModes::Opaque;
+  }
+}
 
 static std::expected<std::shared_ptr<libvrm::gltf::Image>, std::string>
 ParseImage(const gltfjson::format::Root& root,
@@ -50,16 +62,6 @@ ParseImage(const gltfjson::format::Root& root,
   return ptr;
 }
 
-struct Material
-{
-  // source
-
-  // error
-
-  std::shared_ptr<grapho::gl3::ShaderProgram> Unlit;
-  std::shared_ptr<grapho::gl3::PbrMaterial> Pbr;
-};
-
 class Gl3Renderer
 {
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::gltf::Image>> m_imageMap;
@@ -67,7 +69,8 @@ class Gl3Renderer
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_linearTextureMap;
-  std::unordered_map<uint32_t, Material> m_materialMap;
+  std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Material>>
+    m_materialMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
   std::shared_ptr<grapho::gl3::Texture> m_white;
@@ -75,6 +78,11 @@ class Gl3Renderer
   std::shared_ptr<grapho::gl3::ShaderProgram> m_error;
 
   ShaderSourceManager m_shaderSource;
+
+  grapho::gl3::Material::EnvVars m_env = {};
+  std::shared_ptr<grapho::gl3::Ubo> m_envUbo;
+  grapho::gl3::Material::ModelVars m_model = {};
+  std::shared_ptr<grapho::gl3::Ubo> m_modelUbo;
 
   Gl3Renderer()
   {
@@ -86,6 +94,9 @@ class Gl3Renderer
       grapho::ColorSpace::sRGB,
       white,
     });
+
+    m_envUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::EnvVars>();
+    m_modelUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::ModelVars>();
   }
 
   ~Gl3Renderer() {}
@@ -206,9 +217,10 @@ public:
     return texture;
   }
 
-  Material GetOrCreateMaterial(const gltfjson::format::Root& root,
-                               const gltfjson::format::Bin& bin,
-                               std::optional<uint32_t> id)
+  std::shared_ptr<grapho::gl3::Material> GetOrCreateMaterial(
+    const gltfjson::format::Root& root,
+    const gltfjson::format::Bin& bin,
+    std::optional<uint32_t> id)
   {
     if (!id) {
       return {};
@@ -221,44 +233,79 @@ public:
 
     auto& src = root.Materials[*id];
 
-    std::shared_ptr<grapho::gl3::Texture> albedo;
-    std::shared_ptr<grapho::gl3::Texture> metallic;
-    std::shared_ptr<grapho::gl3::Texture> roughness;
-    if (auto pbr = src.PbrMetallicRoughness) {
-      if (auto baseColorTexture = pbr->BaseColorTexture) {
-        albedo = GetOrCreateTexture(
-          root, bin, baseColorTexture->Index, libvrm::gltf::ColorSpace::sRGB);
-      }
-      if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture) {
-        metallic = GetOrCreateTexture(root,
-                                      bin,
-                                      metallicRoughnessTexture->Index,
-                                      libvrm::gltf::ColorSpace::Linear);
-        roughness = GetOrCreateTexture(root,
-                                       bin,
-                                       metallicRoughnessTexture->Index,
-                                       libvrm::gltf::ColorSpace::Linear);
-      }
-    }
-    std::shared_ptr<grapho::gl3::Texture> normal;
-    if (auto normalTexture = src.NormalTexture) {
-      normal = GetOrCreateTexture(
-        root, bin, normalTexture->Index, libvrm::gltf::ColorSpace::Linear);
-    }
-    std::shared_ptr<grapho::gl3::Texture> ao;
-    if (auto occlusionTexture = src.OcclusionTexture) {
-      ao = GetOrCreateTexture(
-        root, bin, occlusionTexture->Index, libvrm::gltf::ColorSpace::Linear);
-    }
+    auto unlit =
+      std::find_if(src.Extensions.begin(), src.Extensions.end(), [](auto& ex) {
+        return ex.Name == u8"KHR_materials_unlit";
+      });
+    if (unlit != src.Extensions.end()) {
+      //
+      // unlit
+      //
+      if (auto shader = grapho::gl3::ShaderProgram::Create(
+            m_shaderSource.Get("unlit.vert"),
+            m_shaderSource.Get("unlit.frag"))) {
 
-    auto vs = m_shaderSource.Get("pbr.vert");
-    auto fs = m_shaderSource.Get("pbr.frag");
-    if (auto material = grapho::gl3::PbrMaterial::Create(
-          albedo, normal, metallic, roughness, ao, vs, fs)) {
-      m_materialMap.insert({ *id, { .Pbr = *material } });
-      return { .Pbr = *material };
+        auto material = std::make_shared<grapho::gl3::Material>();
+        material->Shader = *shader;
+        if (auto pbr = src.PbrMetallicRoughness) {
+          if (auto baseColorTexture = pbr->BaseColorTexture) {
+            if (auto texture =
+                  GetOrCreateTexture(root,
+                                     bin,
+                                     baseColorTexture->Index,
+                                     libvrm::gltf::ColorSpace::sRGB)) {
+              material->Textures.push_back({ 0, texture });
+            }
+          }
+        }
+        auto inserted = m_materialMap.insert({ *id, material });
+        return inserted.first->second;
+      } else {
+        App::Instance().Log(LogLevel::Error) << "unlit: " << shader.error();
+      }
     } else {
-      App::Instance().Log(LogLevel::Error) << "pbr: "<< material.error();
+      //
+      // PBR
+      //
+      std::shared_ptr<grapho::gl3::Texture> albedo;
+      std::shared_ptr<grapho::gl3::Texture> metallic;
+      std::shared_ptr<grapho::gl3::Texture> roughness;
+      if (auto pbr = src.PbrMetallicRoughness) {
+        if (auto baseColorTexture = pbr->BaseColorTexture) {
+          albedo = GetOrCreateTexture(
+            root, bin, baseColorTexture->Index, libvrm::gltf::ColorSpace::sRGB);
+        }
+        if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture) {
+          metallic = GetOrCreateTexture(root,
+                                        bin,
+                                        metallicRoughnessTexture->Index,
+                                        libvrm::gltf::ColorSpace::Linear);
+          roughness = GetOrCreateTexture(root,
+                                         bin,
+                                         metallicRoughnessTexture->Index,
+                                         libvrm::gltf::ColorSpace::Linear);
+        }
+      }
+      std::shared_ptr<grapho::gl3::Texture> normal;
+      if (auto normalTexture = src.NormalTexture) {
+        normal = GetOrCreateTexture(
+          root, bin, normalTexture->Index, libvrm::gltf::ColorSpace::Linear);
+      }
+      std::shared_ptr<grapho::gl3::Texture> ao;
+      if (auto occlusionTexture = src.OcclusionTexture) {
+        ao = GetOrCreateTexture(
+          root, bin, occlusionTexture->Index, libvrm::gltf::ColorSpace::Linear);
+      }
+
+      auto vs = m_shaderSource.Get("pbr.vert");
+      auto fs = m_shaderSource.Get("pbr.frag");
+      if (auto material = grapho::gl3::CreatePbrMaterial(
+            albedo, normal, metallic, roughness, ao, vs, fs)) {
+        auto inserted = m_materialMap.insert({ *id, *material });
+        return inserted.first->second;
+      } else {
+        App::Instance().Log(LogLevel::Error) << "pbr: " << material.error();
+      }
     }
 
     m_materialMap.insert({ *id, {} });
@@ -341,10 +388,18 @@ public:
 
     switch (pass) {
       case RenderPass::Color: {
-        // m_program->Use();
-        // m_program->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
-        // m_program->Uniform("View")->SetMat4(env.ViewMatrix);
-        // m_program->Uniform("Model")->SetMat4(m);
+        m_env.projection = env.ProjectionMatrix;
+        m_env.view = env.ViewMatrix;
+        m_env.camPos = {
+          env.CameraPosition.x,
+          env.CameraPosition.y,
+          env.CameraPosition.z,
+          1,
+        };
+        m_envUbo->Upload(m_env);
+        m_envUbo->SetBindingPoint(0);
+        m_model.model = m;
+        m_model.CalcNormalMatrix();
         uint32_t drawOffset = 0;
         for (auto& primitive : mesh->m_primitives) {
           DrawPrimitive(env.ProjectionMatrix,
@@ -388,17 +443,6 @@ public:
     }
   }
 
-  static gltfjson::format::AlphaModes GetAlphaMode(
-    const gltfjson::format::Root& root,
-    std::optional<uint32_t> material)
-  {
-    if (material) {
-      return root.Materials[*material].AlphaMode;
-    } else {
-      return gltfjson::format::AlphaModes::Opaque;
-    }
-  }
-
   void DrawPrimitive(const DirectX::XMFLOAT4X4& projection,
                      const DirectX::XMFLOAT4X4& view,
                      const DirectX::XMFLOAT4X4& model,
@@ -410,12 +454,17 @@ public:
                      uint32_t drawOffset)
   {
     auto material = GetOrCreateMaterial(root, bin, primitive.Material);
-    if (auto pbr = material.Pbr) {
-      pbr->Activate(projection,
-                    view,
-                    model,
-                    cameraPos,
-                    grapho::gl3::PbrEnv::UBO_LIGHTS_BINDING);
+    if (material) {
+      // update ubo
+      auto& gltfMaterial = root.Materials[*primitive.Material];
+      m_model.cutoff.x = gltfMaterial.AlphaCutoff;
+      if (auto pbr = gltfMaterial.PbrMetallicRoughness) {
+        m_model.color = *((DirectX::XMFLOAT4*)&pbr->BaseColorFactor);
+      }
+      m_modelUbo->Upload(m_model);
+      m_modelUbo->SetBindingPoint(1);
+
+      material->Activate();
 
       // state
       glEnable(GL_CULL_FACE);
@@ -440,8 +489,6 @@ public:
       //   primitive.Material->Pbr.BaseColorFactor);
 
       // texture->Activate(0);
-    } else if (auto unlit = material.Unlit) {
-
     } else {
       // error
       if (!m_error) {

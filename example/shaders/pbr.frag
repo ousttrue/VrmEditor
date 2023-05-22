@@ -1,30 +1,39 @@
-#version 330 core
-out vec4 FragColor;
-in vec2 TexCoords;
-in vec3 WorldPos;
-in vec3 Normal;
+#version 450
+layout(location = 0) in vec3 Normal;
+layout(location = 1) in vec2 TexCoords;
+layout(location = 2) in vec3 WorldPos;
+layout(location = 0) out vec4 FragColor;
 
-// material parameters
+// IBL 0-2
+uniform samplerCube irradianceMap;
+uniform samplerCube prefilterMap;
+uniform sampler2D brdfLUT;
+
+// material parameters 3-7
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 uniform sampler2D metallicMap;
 uniform sampler2D roughnessMap;
 uniform sampler2D aoMap;
 
-// IBL
-uniform samplerCube irradianceMap;
-uniform samplerCube prefilterMap;
-uniform sampler2D brdfLUT;
-
-// lights
-layout(std140) uniform Lights
+layout(binding = 0, std140) uniform EnvVars
 {
+  mat4 projection;
+  mat4 view;
   vec4 lightPositions[4];
   vec4 lightColors[4];
+  vec4 camPos;
 }
-lights;
+Env;
 
-uniform vec3 camPos;
+layout(binding = 1, std140) uniform ModelVars
+{
+  mat4 model;
+  vec4 color;
+  vec4 cutoff;
+  mat4 normalMatrix;
+}
+Model;
 
 const float PI = 3.14159265359;
 // ----------------------------------------------------------------------------
@@ -112,7 +121,7 @@ main()
 
   // input lighting data
   vec3 N = getNormalFromMap();
-  vec3 V = normalize(camPos - WorldPos);
+  vec3 V = normalize(vec3(Env.camPos) - WorldPos);
   vec3 R = reflect(-V, N);
 
   // calculate reflectance at normal incidence; if dia-electric (like plastic)
@@ -125,11 +134,11 @@ main()
   vec3 Lo = vec3(0.0);
   for (int i = 0; i < 4; ++i) {
     // calculate per-light radiance
-    vec3 L = normalize(lights.lightPositions[i].xyz - WorldPos);
+    vec3 L = normalize(Env.lightPositions[i].xyz - WorldPos);
     vec3 H = normalize(V + L);
-    float distance = length(lights.lightPositions[i].xyz - WorldPos);
+    float distance = length(Env.lightPositions[i].xyz - WorldPos);
     float attenuation = 1.0 / (distance * distance);
-    vec3 radiance = lights.lightColors[i].rgb * attenuation;
+    vec3 radiance = Env.lightColors[i].rgb * attenuation;
 
     // Cook-Torrance BRDF
     float NDF = DistributionGGX(N, H, roughness);
