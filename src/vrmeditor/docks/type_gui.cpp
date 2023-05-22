@@ -2,6 +2,7 @@
 
 #include "app.h"
 #include "glr/gl3renderer.h"
+#include "printfbuffer.h"
 #include "type_gui.h"
 #include "type_gui_accessor.h"
 #include "type_gui_imgui.h"
@@ -26,21 +27,6 @@ HelpMarker(const char* desc)
     ImGui::EndTooltip();
   }
 }
-
-class PrintfBuffer
-{
-  char m_buf[256];
-
-public:
-  const char* Printf(const char* fmt, ...)
-  {
-    va_list arg_ptr;
-    va_start(arg_ptr, fmt);
-    vsnprintf(m_buf, sizeof(m_buf), fmt, arg_ptr);
-    va_end(arg_ptr);
-    return m_buf;
-  }
-};
 
 template<typename T>
 // requires T::Name
@@ -218,8 +204,6 @@ ShowGui(const char* base,
 {
   ImGui::Text("%s/%d", base, index ? *index : -1);
   ShowGui("name", prop.Name);
-  ShowGui(prop.Extensions);
-  ShowGui(prop.Extras);
 }
 
 // buffer/bufferView/accessor

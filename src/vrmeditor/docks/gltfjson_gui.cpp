@@ -1,4 +1,5 @@
 #include "gltfjson_gui.h"
+#include "printfbuffer.h"
 #include "type_gui.h"
 #include <grapho/imgui/widgets.h>
 
@@ -20,17 +21,23 @@ Push(grapho::imgui::TreeSplitter* splitter,
      const gltfjson::format::Bin& bin,
      T& values)
 {
-  char buf[256];
-  snprintf(buf, sizeof(buf), "%s (%zd)", label, values.Size());
-  auto ui = splitter->Push(buf);
+  PrintfBuffer buf;
+  auto ui = splitter->Push(buf.Printf("%s (%zd)", label, values.Size()));
 
   for (uint32_t i = 0; i < values.Size(); ++i) {
-    snprintf(
-      buf, sizeof(buf), "%02d:%s", i, (const char*)values[i].Name.c_str());
-    auto callback = [i, &root, &bin, value = &values[i]]() {
-      ::ShowGui(root, bin, *value);
-    };
-    splitter->Push(buf, ui, callback);
+    auto& value = values[i];
+    auto callback = [&root, &bin, &value]() { ::ShowGui(root, bin, value); };
+
+    auto child = splitter->Push(
+      buf.Printf("%02d:%s", i, (const char*)values[i].Name.c_str()),
+      ui,
+      callback);
+    for (auto& extension : value.Extensions) {
+      splitter->Push(
+        buf.Printf("%s", extension.Name.data()), child, [&extension]() {
+          ImGui::TextUnformatted((const char*)extension.Value.data());
+        });
+    }
   }
 }
 
@@ -58,8 +65,14 @@ GltfJsonGui::SetGltf(gltfjson::format::Root& gltf,
   Push(m_splitter, "animations", gltf, bin, gltf.Animations);
 
   // extensions
-  m_splitter->Push(
+  auto extensions = m_splitter->Push(
     "extensions", nullptr, [&gltf]() { ::ShowGui(gltf.Extensions); });
+  for (auto& extension : gltf.Extensions) {
+    m_splitter->Push(
+      (const char*)extension.Name.c_str(), extensions, [&extension]() {
+        ImGui::TextUnformatted((const char*)extension.Value.c_str());
+      });
+  }
 }
 
 void
