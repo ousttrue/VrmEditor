@@ -58,6 +58,8 @@ GltfJsonGui::SetGltf(gltfjson::format::Root& gltf,
   Push(m_splitter, "animations", gltf, bin, gltf.Animations);
 
   // extensions
+  m_splitter->Push(
+    "extensions", nullptr, [&gltf]() { ::ShowGui(gltf.Extensions); });
 }
 
 void

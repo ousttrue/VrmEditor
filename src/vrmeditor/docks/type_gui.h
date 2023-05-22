@@ -2,9 +2,9 @@
 #include <gltfjson.h>
 #include <vrm/gltf.h>
 
-////////////////////////////////////////////////////////////
-// gltfjson
-////////////////////////////////////////////////////////////
+void
+ShowGui(std::list<gltfjson::format::Extension>& extensions);
+
 void
 ShowGui(gltfjson::format::Asset& asset);
 // buffer/bufferView/accessor

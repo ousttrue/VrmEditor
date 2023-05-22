@@ -179,6 +179,38 @@ ShowGui(gltfjson::format::Asset& asset)
   ShowGui("minversion", asset.MinVersion);
 }
 
+void
+ShowGui(std::list<gltfjson::format::Extension>& extensions)
+{
+  if (extensions.size()) {
+    if (ImGui::CollapsingHeader("Extensions")) {
+      ImGui::Indent();
+      for (auto& extension : extensions) {
+        ImGui::Text("%s => %s",
+                    (const char*)extension.Name.c_str(),
+                    (const char*)extension.Value.c_str());
+      }
+      ImGui::Unindent();
+    }
+  }
+}
+
+void
+ShowGui(std::list<gltfjson::format::Extra>& extras)
+{
+  if (extras.size()) {
+    if (ImGui::CollapsingHeader("Extras")) {
+      ImGui::Indent();
+      for (auto& extra : extras) {
+        ImGui::Text("%s => %s",
+                    (const char*)extra.Name.c_str(),
+                    (const char*)extra.Value.c_str());
+      }
+      ImGui::Unindent();
+    }
+  }
+}
+
 static void
 ShowGui(const char* base,
         std::optional<uint32_t> index,
@@ -186,24 +218,8 @@ ShowGui(const char* base,
 {
   ImGui::Text("%s/%d", base, index ? *index : -1);
   ShowGui("name", prop.Name);
-  if (prop.Extensions.size()) {
-    if (ImGui::CollapsingHeader("Extensions")) {
-      for (auto& extension : prop.Extensions) {
-        ImGui::Text("%s => %s",
-                    (const char*)extension.Name.c_str(),
-                    (const char*)extension.Value.c_str());
-      }
-    }
-  }
-  if (prop.Extras.size()) {
-    if (ImGui::CollapsingHeader("Extras")) {
-      for (auto& extra : prop.Extras) {
-        ImGui::Text("%s => %s",
-                    (const char*)extra.Name.c_str(),
-                    (const char*)extra.Value.c_str());
-      }
-    }
-  }
+  ShowGui(prop.Extensions);
+  ShowGui(prop.Extras);
 }
 
 // buffer/bufferView/accessor
