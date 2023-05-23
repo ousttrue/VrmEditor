@@ -340,6 +340,10 @@ App::Run()
             [gltfjson = m_gltfjson](const char* title, bool* p_open) {
               gltfjson->ShowGuiProperty(title, p_open);
             } });
+  addDock({ "gltf.selected.json",
+            [gltfjson = m_gltfjson](const char* title, bool* p_open) {
+              gltfjson->ShowGuiText(title, p_open);
+            } });
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {

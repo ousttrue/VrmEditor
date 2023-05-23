@@ -41,7 +41,8 @@ Push(grapho::imgui::TreeSplitter* splitter,
                                            i,
                                            (const char*)values[i].Name.c_str()),
                                 ui,
-                                callback);
+                                callback,
+                                [&value]() { ShowText(value._JsonText); });
 
     if (showChild) {
       showChild(root, bin, value, child);
@@ -49,15 +50,17 @@ Push(grapho::imgui::TreeSplitter* splitter,
 
     for (auto& extension : value.Extensions) {
       splitter->Push(
-        buf.Printf(" %s", extension.Name.data()), child, [&extension]() {
-          ImGui::TextUnformatted((const char*)extension.Value.data());
-        });
+        buf.Printf(" %s", extension.Name.data()),
+        child,
+        [&extension]() {},
+        [&extension]() { ShowText(extension.Value); });
     }
     for (auto& extra : value.Extras) {
       splitter->Push(
-        buf.Printf(" %s", extra.Name.data()), child, [&extra]() {
-          ImGui::TextUnformatted((const char*)extra.Value.data());
-        });
+        buf.Printf(" %s", extra.Name.data()),
+        child,
+        [&extra]() {},
+        [&extra]() { ShowText(extra.Value); });
     }
   }
 }
@@ -134,12 +137,11 @@ GltfJsonGui::SetGltf(gltfjson::format::Root& gltf,
       buf.Printf("extensions (%zu)", gltf.Extensions.size()), nullptr, []() {});
 
     for (auto& extension : gltf.Extensions) {
-      m_splitter->Push(buf.Printf(" %s", extension.Name.c_str()),
-                       extensions,
-                       [&extension]() {
-                         ImGui::TextUnformatted(
-                           (const char*)extension.Value.c_str());
-                       });
+      m_splitter->Push(
+        buf.Printf(" %s", extension.Name.c_str()),
+        extensions,
+        [&extension]() {},
+        [&extension]() { ShowText(extension.Value); });
     }
   }
   {
@@ -148,9 +150,10 @@ GltfJsonGui::SetGltf(gltfjson::format::Root& gltf,
 
     for (auto& extra : gltf.Extras) {
       m_splitter->Push(
-        buf.Printf(" %s", extra.Name.c_str()), extras, [&extra]() {
-          ImGui::TextUnformatted((const char*)extra.Value.c_str());
-        });
+        buf.Printf(" %s", extra.Name.c_str()),
+        extras,
+        [&extra]() {},
+        [&extra]() { ShowText(extra.Value); });
     }
   }
 }
@@ -187,6 +190,18 @@ GltfJsonGui::ShowGuiProperty(const char* title, bool* p_open)
   ImGui::PopStyleVar();
   if (is_open) {
     m_splitter->ShowSelected();
+  }
+  ImGui::End();
+}
+
+void
+GltfJsonGui::ShowGuiText(const char* title, bool* p_open)
+{
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+  auto is_open = ImGui::Begin(title, p_open);
+  ImGui::PopStyleVar();
+  if (is_open) {
+    m_splitter->ShowText();
   }
   ImGui::End();
 }

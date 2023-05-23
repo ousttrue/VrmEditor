@@ -12,6 +12,12 @@
 #include <sstream>
 #include <unordered_map>
 
+void
+ShowText(const std::u8string& text)
+{
+  ImGui::TextWrapped("%s", (const char*)text.data());
+}
+
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using a
 // merged icon fonts (see docs/FONTS.md)

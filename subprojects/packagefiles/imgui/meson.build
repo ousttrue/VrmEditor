@@ -2,7 +2,7 @@ project('imgui', 'cpp')
 
 glfw_dep = dependency('glfw3', default_options: ['default_library=static'])
 
-args = ['-DIMGUI_USE_WCHAR32=1']
+args = ['-DIMGUI_USE_WCHAR32=1', '-DImDrawIdx=unsigned int']
 imgui_inc = include_directories('.', 'backends')
 
 imgui_lib = static_library(

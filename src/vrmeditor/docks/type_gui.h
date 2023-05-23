@@ -1,5 +1,6 @@
 #pragma once
 #include <gltfjson.h>
+#include <string>
 #include <vrm/gltf.h>
 
 void
@@ -9,6 +10,10 @@ ShowGui(std::list<gltfjson::format::Extra>& extras);
 
 void
 ShowGui(gltfjson::format::Asset& asset);
+
+void
+ShowText(const std::u8string& text);
+
 // buffer/bufferView/accessor
 void
 ShowGui(const gltfjson::format::Root& root,

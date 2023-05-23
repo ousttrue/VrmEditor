@@ -20,4 +20,5 @@ public:
   void ShowGui(const char* title, bool* p_open);
   void ShowGuiSelector(const char* title, bool* p_open);
   void ShowGuiProperty(const char* title, bool* p_open);
+  void ShowGuiText(const char* title, bool* p_open);
 };
