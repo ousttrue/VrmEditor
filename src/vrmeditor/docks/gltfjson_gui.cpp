@@ -113,3 +113,27 @@ GltfJsonGui::ShowGui(const char* title, bool* p_open)
   }
   ImGui::End();
 }
+
+void
+GltfJsonGui::ShowGuiSelector(const char* title, bool* p_open)
+{
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+  auto is_open = ImGui::Begin(title, p_open);
+  ImGui::PopStyleVar();
+  if (is_open) {
+    m_splitter->ShowSelector();
+  }
+  ImGui::End();
+}
+
+void
+GltfJsonGui::ShowGuiProperty(const char* title, bool* p_open)
+{
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+  auto is_open = ImGui::Begin(title, p_open);
+  ImGui::PopStyleVar();
+  if (is_open) {
+    m_splitter->ShowSelected();
+  }
+  ImGui::End();
+}
