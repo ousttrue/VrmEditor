@@ -540,8 +540,9 @@ ShowGui(const char* label,
   }
 }
 
-static void
+void
 ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::MeshPrimitive& prim)
 {
   ImGui::PushID(&prim);
@@ -578,18 +579,18 @@ ShowGui(const gltfjson::format::Root& root,
         gltfjson::format::Mesh& mesh)
 {
   ShowGui("/meshes", root.Meshes.GetIndex(mesh), mesh);
-  int i = 0;
 
   PrintfBuffer buf;
-  for (auto& prim : mesh.Primitives) {
-
-    ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-    if (ImGui::CollapsingHeader(buf.Printf("Primitives.%d", i++))) {
-      ImGui::Indent();
-      ShowGui(root, prim);
-      ImGui::Unindent();
-    }
-  }
+  // int i = 0;
+  // for (auto& prim : mesh.Primitives) {
+  //
+  //   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  //   if (ImGui::CollapsingHeader(buf.Printf("Primitives.%d", i++))) {
+  //     ImGui::Indent();
+  //     ShowGui(root, prim);
+  //     ImGui::Unindent();
+  //   }
+  // }
 
   ShowGuiVector<float>("Weights", mesh.Weights, [&buf](size_t i, auto& v) {
     ImGui::SliderFloat(buf.Printf("##Weights_%zu", i), &v, 0, 1);

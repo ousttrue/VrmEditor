@@ -16,11 +16,16 @@ GltfJsonGui::~GltfJsonGui()
 
 template<typename T>
 static void
-Push(grapho::imgui::TreeSplitter* splitter,
-     const char* label,
-     const gltfjson::format::Root& root,
-     const gltfjson::format::Bin& bin,
-     gltfjson::format::PropertyList<T>& values)
+Push(
+  grapho::imgui::TreeSplitter* splitter,
+  const char* label,
+  const gltfjson::format::Root& root,
+  const gltfjson::format::Bin& bin,
+  gltfjson::format::PropertyList<T>& values,
+  const std::function<void(const gltfjson::format::Root& root,
+                           const gltfjson::format::Bin& bin,
+                           T&,
+                           grapho::imgui::TreeSplitter::UI*)>& showChild = {})
 {
   PrintfBuffer buf;
   auto ui = splitter->Push(buf.Printf("%s (%zd)", label, values.Size()));
@@ -35,6 +40,10 @@ Push(grapho::imgui::TreeSplitter* splitter,
                                            (const char*)values[i].Name.c_str()),
                                 ui,
                                 callback);
+
+    if (showChild) {
+      showChild(root, bin, value, child);
+    }
 
     for (auto& extension : value.Extensions) {
       splitter->Push(
@@ -67,7 +76,26 @@ GltfJsonGui::SetGltf(gltfjson::format::Root& gltf,
   Push(m_splitter, "󰉋 samplers", gltf, bin, gltf.Samplers);
   Push(m_splitter, "󰉋 textures", gltf, bin, gltf.Textures);
   Push(m_splitter, "󰉋 materials", gltf, bin, gltf.Materials);
-  Push(m_splitter, "󰉋 meshes", gltf, bin, gltf.Meshes);
+
+  std::function<void(const gltfjson::format::Root& root,
+                     const gltfjson::format::Bin& bin,
+                     gltfjson::format::Mesh&,
+                     grapho::imgui::TreeSplitter::UI*)>
+    meshCallback = [splitter =
+                      m_splitter](const gltfjson::format::Root& root,
+                                  const gltfjson::format::Bin& bin,
+                                  gltfjson::format::Mesh& value,
+                                  grapho::imgui::TreeSplitter::UI* child) {
+      PrintfBuffer buf;
+      int j = 0;
+      for (auto& prim : value.Primitives) {
+        splitter->Push(buf.Printf("primitive [%d] ", j++),
+                       child,
+                       [&root, &bin, &prim]() { ::ShowGui(root, bin, prim); });
+      }
+    };
+  Push(m_splitter, "󰉋 meshes", gltf, bin, gltf.Meshes, meshCallback);
+
   // skin/node/scene/animation
   Push(m_splitter, "󰉋 skins", gltf, bin, gltf.Skins);
   Push(m_splitter, "󰉋 nodes", gltf, bin, gltf.Nodes);
