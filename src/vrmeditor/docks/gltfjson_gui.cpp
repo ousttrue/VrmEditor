@@ -15,17 +15,19 @@ GltfJsonGui::~GltfJsonGui()
 }
 
 template<typename T>
+using ShowChild = std::function<void(const gltfjson::format::Root& root,
+                                     const gltfjson::format::Bin& bin,
+                                     T&,
+                                     grapho::imgui::TreeSplitter::UI*)>;
+
+template<typename T>
 static void
-Push(
-  grapho::imgui::TreeSplitter* splitter,
-  const char* label,
-  const gltfjson::format::Root& root,
-  const gltfjson::format::Bin& bin,
-  gltfjson::format::PropertyList<T>& values,
-  const std::function<void(const gltfjson::format::Root& root,
-                           const gltfjson::format::Bin& bin,
-                           T&,
-                           grapho::imgui::TreeSplitter::UI*)>& showChild = {})
+Push(grapho::imgui::TreeSplitter* splitter,
+     const char* label,
+     const gltfjson::format::Root& root,
+     const gltfjson::format::Bin& bin,
+     gltfjson::format::PropertyList<T>& values,
+     const ShowChild<T>& showChild = {})
 {
   PrintfBuffer buf;
   auto ui = splitter->Push(buf.Printf("%s (%zd)", label, values.Size()));
@@ -77,21 +79,44 @@ GltfJsonGui::SetGltf(gltfjson::format::Root& gltf,
   Push(m_splitter, "󰉋 textures", gltf, bin, gltf.Textures);
   Push(m_splitter, "󰉋 materials", gltf, bin, gltf.Materials);
 
-  std::function<void(const gltfjson::format::Root& root,
-                     const gltfjson::format::Bin& bin,
-                     gltfjson::format::Mesh&,
-                     grapho::imgui::TreeSplitter::UI*)>
-    meshCallback = [splitter =
-                      m_splitter](const gltfjson::format::Root& root,
-                                  const gltfjson::format::Bin& bin,
-                                  gltfjson::format::Mesh& value,
-                                  grapho::imgui::TreeSplitter::UI* child) {
+  ShowChild<gltfjson::format::Mesh> meshCallback =
+    [splitter = m_splitter](const gltfjson::format::Root& root,
+                            const gltfjson::format::Bin& bin,
+                            gltfjson::format::Mesh& value,
+                            grapho::imgui::TreeSplitter::UI* child) {
       PrintfBuffer buf;
       int j = 0;
       for (auto& prim : value.Primitives) {
-        splitter->Push(buf.Printf("primitive [%d] ", j++),
-                       child,
-                       [&root, &bin, &prim]() { ::ShowGui(root, bin, prim); });
+        auto primUi = splitter->Push(
+          buf.Printf("primitive [%d]", j++), child, [&root, &bin, &prim]() {
+            ::ShowGui(root, bin, prim);
+          });
+
+        int k = 0;
+        for (auto& target : prim.Targets) {
+          splitter->Push(
+            buf.Printf("target [%d]", k), primUi, [&root, &bin, &target]() {
+              ImGui::BeginDisabled(true);
+              ::ShowGui(root, bin, target);
+              ImGui::EndDisabled();
+            });
+          ++k;
+        }
+
+        for (auto& extension : prim.Extensions) {
+          splitter->Push(buf.Printf(" %s", extension.Name.data()),
+                         primUi,
+                         [&extension]() {
+                           ImGui::TextUnformatted(
+                             (const char*)extension.Value.data());
+                         });
+        }
+        for (auto& extra : prim.Extras) {
+          splitter->Push(
+            buf.Printf(" %s", extra.Name.data()), primUi, [&extra]() {
+              ImGui::TextUnformatted((const char*)extra.Value.data());
+            });
+        }
       }
     };
   Push(m_splitter, "󰉋 meshes", gltf, bin, gltf.Meshes, meshCallback);

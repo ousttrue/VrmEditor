@@ -527,17 +527,13 @@ ShowGui(const gltfjson::format::Root& root,
   SelectId("WEIGHTS_0", &attribute.WEIGHTS_0, root.Accessors);
 }
 
-static void
-ShowGui(const char* label,
-        const gltfjson::format::Root& root,
+void
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
         gltfjson::format::MeshPrimitiveMorphTarget& target)
 {
-  if (ImGui::CollapsingHeader(label)) {
-    ImGui::PushID(&target);
-    SelectId("NORMAL", &target.NORMAL, root.Accessors);
-    SelectId("POSITION", &target.POSITION, root.Accessors);
-    ImGui::PopID();
-  }
+  SelectId("NORMAL", &target.NORMAL, root.Accessors);
+  SelectId("POSITION", &target.POSITION, root.Accessors);
 }
 
 void
@@ -546,30 +542,19 @@ ShowGui(const gltfjson::format::Root& root,
         gltfjson::format::MeshPrimitive& prim)
 {
   ImGui::PushID(&prim);
-  ImGui::BeginDisabled(true);
-  ShowGui(root, prim.Attributes);
-  SelectId("Indices", &prim.Indices, root.Accessors);
-  ImGui::EndDisabled();
-  SelectId("Material", &prim.Material, root.Materials);
-  ImGui::BeginDisabled(true);
-  grapho::imgui::EnumCombo(
-    "Mode", &prim.Mode, gltfjson::format::MeshPrimitiveTopologyCombo);
-  ImGui::EndDisabled();
-
-  PrintfBuffer buf;
-  // ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-  if (ImGui::CollapsingHeader(
-        buf.Printf("Targets(%zu)", prim.Targets.size()))) {
-    ImGui::Indent();
+  {
     ImGui::BeginDisabled(true);
-    int i = 0;
-    for (auto& target : prim.Targets) {
-      ShowGui(buf.Printf("[%d]", i++), root, target);
-    }
+    ShowGui(root, prim.Attributes);
+    SelectId("Indices", &prim.Indices, root.Accessors);
     ImGui::EndDisabled();
-    ImGui::Unindent();
   }
-
+  SelectId("Material", &prim.Material, root.Materials);
+  {
+    ImGui::BeginDisabled(true);
+    grapho::imgui::EnumCombo(
+      "Mode", &prim.Mode, gltfjson::format::MeshPrimitiveTopologyCombo);
+    ImGui::EndDisabled();
+  }
   ImGui::PopID();
 }
 

@@ -47,6 +47,10 @@ void
 ShowGui(const gltfjson::format::Root& root,
         const gltfjson::format::Bin& bin,
         gltfjson::format::MeshPrimitive& prim);
+void
+ShowGui(const gltfjson::format::Root& root,
+        const gltfjson::format::Bin& bin,
+        gltfjson::format::MeshPrimitiveMorphTarget& target);
 // skin/node/scene/animation
 void
 ShowGui(const gltfjson::format::Root& root,
