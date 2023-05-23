@@ -23,30 +23,30 @@
 namespace glr {
 
 static gltfjson::format::AlphaModes
-GetAlphaMode(const gltfjson::format::Root& root,
+GetAlphaMode(const gltfjson::annotation::Root& root,
              std::optional<uint32_t> material)
 {
   if (material) {
-    return root.Materials[*material].AlphaMode;
+    return *root.Materials[*material].AlphaMode();
   } else {
     return gltfjson::format::AlphaModes::Opaque;
   }
 }
 
 static std::expected<std::shared_ptr<libvrm::gltf::Image>, std::string>
-ParseImage(const gltfjson::format::Root& root,
-           const gltfjson::format::Bin& bin,
-           const gltfjson::format::Image& image)
+ParseImage(const gltfjson::annotation::Root& root,
+           const gltfjson::annotation::Bin& bin,
+           const gltfjson::annotation::Image& image)
 {
   std::span<const uint8_t> bytes;
-  if (auto bufferView = image.BufferView) {
+  if (auto bufferView = image.BufferView()) {
     if (auto buffer_view = bin.GetBufferViewBytes(root, *bufferView)) {
       bytes = *buffer_view;
     } else {
       return std::unexpected{ buffer_view.error() };
     }
-  } else if (image.Uri.size()) {
-    if (auto buffer_view = bin.Dir->GetBuffer(image.Uri)) {
+  } else if (image.Uri().value_or(u8"").size()) {
+    if (auto buffer_view = bin.Dir->GetBuffer(*image.Uri())) {
       bytes = *buffer_view;
     } else {
       return std::unexpected{ buffer_view.error() };
@@ -54,7 +54,7 @@ ParseImage(const gltfjson::format::Root& root,
   } else {
     return std::unexpected{ "not bufferView nor uri" };
   }
-  auto name = image.Name;
+  auto name = image.Name().value_or(u8"");
   auto ptr = std::make_shared<libvrm::gltf::Image>(name);
   if (!ptr->Load(bytes)) {
     return std::unexpected{ "Image: fail to load" };
@@ -142,8 +142,8 @@ public:
   }
 
   std::shared_ptr<libvrm::gltf::Image> GetOrCreateImage(
-    const gltfjson::format::Root& root,
-    const gltfjson::format::Bin& bin,
+    const gltfjson::annotation::Root& root,
+    const gltfjson::annotation::Bin& bin,
     std::optional<uint32_t> id)
   {
     if (!id) {
@@ -165,8 +165,8 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::Texture> GetOrCreateTexture(
-    const gltfjson::format::Root& root,
-    const gltfjson::format::Bin& bin,
+    const gltfjson::annotation::Root& root,
+    const gltfjson::annotation::Bin& bin,
     std::optional<uint32_t> id,
     libvrm::gltf::ColorSpace colorspace)
   {
@@ -184,11 +184,12 @@ public:
     }
 
     auto& src = root.Textures[*id];
-    if (!src.Source) {
+    auto source = src.Source();
+    if (!source) {
       return {};
     }
 
-    auto image = GetOrCreateImage(root, bin, src.Source);
+    auto image = GetOrCreateImage(root, bin, *source);
 
     auto texture = grapho::gl3::Texture::Create({
       image->Width(),
@@ -199,15 +200,15 @@ public:
       image->Pixels(),
     });
 
-    if (src.Sampler) {
-      auto& sampler = root.Samplers[*src.Sampler];
+    if (auto samplerIndex = src.Sampler()) {
+      auto& sampler = root.Samplers[*samplerIndex];
       texture->Bind();
       glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)sampler.MagFilter);
+        GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)*sampler.MagFilter());
       glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)sampler.MinFilter);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)sampler.WrapS);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)sampler.WrapT);
+        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)*sampler.MinFilter());
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)*sampler.WrapS());
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)*sampler.WrapT());
       texture->Unbind();
     } else {
       // TODO: default sampler
@@ -218,8 +219,8 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::Material> GetOrCreateMaterial(
-    const gltfjson::format::Root& root,
-    const gltfjson::format::Bin& bin,
+    const gltfjson::annotation::Root& root,
+    const gltfjson::annotation::Bin& bin,
     std::optional<uint32_t> id)
   {
     if (!id) {
@@ -233,11 +234,13 @@ public:
 
     auto& src = root.Materials[*id];
 
-    auto unlit =
-      std::find_if(src.Extensions.begin(), src.Extensions.end(), [](auto& ex) {
-        return ex.Name == u8"KHR_materials_unlit";
-      });
-    if (unlit != src.Extensions.end()) {
+    // auto unlit =
+    //   std::find_if(src.Extensions.begin(), src.Extensions.end(), [](auto& ex)
+    //   {
+    //     return ex.Name == u8"KHR_materials_unlit";
+    //   });
+    // if (unlit != src.Extensions.end()) {
+    if (false) {
       //
       // unlit
       //
@@ -247,12 +250,12 @@ public:
 
         auto material = std::make_shared<grapho::gl3::Material>();
         material->Shader = *shader;
-        if (auto pbr = src.PbrMetallicRoughness) {
-          if (auto baseColorTexture = pbr->BaseColorTexture) {
+        if (auto pbr = src.PbrMetallicRoughness()) {
+          if (auto baseColorTexture = pbr->BaseColorTexture()) {
             if (auto texture =
                   GetOrCreateTexture(root,
                                      bin,
-                                     baseColorTexture->Index,
+                                     baseColorTexture->Index(),
                                      libvrm::gltf::ColorSpace::sRGB)) {
               material->Textures.push_back({ 0, texture });
             }
@@ -270,31 +273,35 @@ public:
       std::shared_ptr<grapho::gl3::Texture> albedo;
       std::shared_ptr<grapho::gl3::Texture> metallic;
       std::shared_ptr<grapho::gl3::Texture> roughness;
-      if (auto pbr = src.PbrMetallicRoughness) {
-        if (auto baseColorTexture = pbr->BaseColorTexture) {
-          albedo = GetOrCreateTexture(
-            root, bin, baseColorTexture->Index, libvrm::gltf::ColorSpace::sRGB);
+      if (auto pbr = src.PbrMetallicRoughness()) {
+        if (auto baseColorTexture = pbr->BaseColorTexture()) {
+          albedo = GetOrCreateTexture(root,
+                                      bin,
+                                      baseColorTexture->Index(),
+                                      libvrm::gltf::ColorSpace::sRGB);
         }
-        if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture) {
+        if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture()) {
           metallic = GetOrCreateTexture(root,
                                         bin,
-                                        metallicRoughnessTexture->Index,
+                                        metallicRoughnessTexture->Index(),
                                         libvrm::gltf::ColorSpace::Linear);
           roughness = GetOrCreateTexture(root,
                                          bin,
-                                         metallicRoughnessTexture->Index,
+                                         metallicRoughnessTexture->Index(),
                                          libvrm::gltf::ColorSpace::Linear);
         }
       }
       std::shared_ptr<grapho::gl3::Texture> normal;
-      if (auto normalTexture = src.NormalTexture) {
+      if (auto normalTexture = src.NormalTexture()) {
         normal = GetOrCreateTexture(
-          root, bin, normalTexture->Index, libvrm::gltf::ColorSpace::Linear);
+          root, bin, normalTexture->Index(), libvrm::gltf::ColorSpace::Linear);
       }
       std::shared_ptr<grapho::gl3::Texture> ao;
-      if (auto occlusionTexture = src.OcclusionTexture) {
-        ao = GetOrCreateTexture(
-          root, bin, occlusionTexture->Index, libvrm::gltf::ColorSpace::Linear);
+      if (auto occlusionTexture = src.OcclusionTexture()) {
+        ao = GetOrCreateTexture(root,
+                                bin,
+                                occlusionTexture->Index(),
+                                libvrm::gltf::ColorSpace::Linear);
       }
 
       auto vs = m_shaderSource.Get("pbr.vert");
@@ -364,8 +371,8 @@ public:
 
   void Render(RenderPass pass,
               const RenderingEnv& env,
-              const gltfjson::format::Root& root,
-              const gltfjson::format::Bin& bin,
+              const gltfjson::annotation::Root& root,
+              const gltfjson::annotation::Bin& bin,
               uint32_t meshId,
               const std::shared_ptr<runtimescene::BaseMesh>& mesh,
               const runtimescene::DeformedMesh& deformed,
@@ -447,8 +454,8 @@ public:
                      const DirectX::XMFLOAT4X4& view,
                      const DirectX::XMFLOAT4X4& model,
                      const DirectX::XMFLOAT3& cameraPos,
-                     const gltfjson::format::Root& root,
-                     const gltfjson::format::Bin& bin,
+                     const gltfjson::annotation::Root& root,
+                     const gltfjson::annotation::Bin& bin,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
                      const runtimescene::Primitive& primitive,
                      uint32_t drawOffset)
@@ -457,9 +464,9 @@ public:
     if (material) {
       // update ubo
       auto& gltfMaterial = root.Materials[*primitive.Material];
-      m_model.cutoff.x = gltfMaterial.AlphaCutoff;
-      if (auto pbr = gltfMaterial.PbrMetallicRoughness) {
-        m_model.color = *((DirectX::XMFLOAT4*)&pbr->BaseColorFactor);
+      m_model.cutoff.x = *gltfMaterial.AlphaCutoff();
+      if (auto pbr = gltfMaterial.PbrMetallicRoughness()) {
+        // m_model.color = *((DirectX::XMFLOAT4*)&pbr->BaseColorFactor());
       }
       m_modelUbo->Upload(m_model);
       m_modelUbo->SetBindingPoint(1);
@@ -522,8 +529,8 @@ public:
 void
 Render(RenderPass pass,
        const RenderingEnv& env,
-       const gltfjson::format::Root& root,
-       const gltfjson::format::Bin& bin,
+       const gltfjson::annotation::Root& root,
+       const gltfjson::annotation::Bin& bin,
        uint32_t meshId,
        const std::shared_ptr<runtimescene::BaseMesh>& mesh,
        const runtimescene::DeformedMesh& deformed,
@@ -560,8 +567,8 @@ CreateDock(const AddDockFunc& addDock, std::string_view title)
 }
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreateTexture(const gltfjson::format::Root& root,
-                   const gltfjson::format::Bin& bin,
+GetOrCreateTexture(const gltfjson::annotation::Root& root,
+                   const gltfjson::annotation::Bin& bin,
                    std::optional<uint32_t> texture,
                    libvrm::gltf::ColorSpace colorspace)
 {

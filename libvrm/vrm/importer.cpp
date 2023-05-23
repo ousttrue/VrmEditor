@@ -9,11 +9,12 @@ namespace gltf {
 static std::expected<std::shared_ptr<gltf::Node>, std::string>
 ParseNode(const std::shared_ptr<GltfRoot>& scene,
           int i,
-          const gltfjson::format::Node& node)
+          const gltfjson::annotation::Node& node)
 {
-  auto ptr = std::make_shared<gltf::Node>(node.Name);
+  std::u8string name = *node.Name();
+  auto ptr = std::make_shared<gltf::Node>(name);
 
-  if (auto matrix = node.Matrix) {
+  if (auto matrix = node.Matrix()) {
     // matrix
     auto m = *matrix;
     auto local = DirectX::XMFLOAT4X4{
@@ -25,7 +26,7 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
     ptr->SetLocalInitialMatrix(DirectX::XMLoadFloat4x4(&local));
   } else {
     // T
-    if (auto t = node.Translation) {
+    if (auto t = node.Translation()) {
       ptr->InitialTransform.Translation = { (*t)[0], (*t)[1], (*t)[2] };
     }
     if (scene->m_type == ModelType::Vrm0) {
@@ -34,11 +35,11 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
       ptr->InitialTransform.Translation = { -t.x, t.y, -t.z };
     }
     // R
-    if (auto r = node.Rotation) {
+    if (auto r = node.Rotation()) {
       ptr->InitialTransform.Rotation = { (*r)[0], (*r)[1], (*r)[2], (*r)[3] };
     }
     // S
-    if (auto s = node.Scale) {
+    if (auto s = node.Scale()) {
       ptr->InitialScale = { (*s)[0], (*s)[1], (*s)[2] };
     }
   }
@@ -361,7 +362,7 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   // }
 
   {
-    auto nodes = scene->m_gltf.Nodes;
+    auto& nodes = scene->m_gltf.Nodes;
     for (int i = 0; i < nodes.Size(); ++i) {
       if (auto node = ParseNode(scene, i, nodes[i])) {
         scene->m_nodes.push_back(*node);
@@ -416,9 +417,10 @@ Load(const std::shared_ptr<GltfRoot>& scene,
      std::span<const uint8_t> bin_chunk,
      const std::shared_ptr<gltfjson::Directory>& dir)
 {
-  gltfjson::Parser parser(json_chunk);
-  if (auto result = parser.Parse()) {
-    gltfjson::format::Deserialize(parser, scene->m_gltf);
+  gltfjson::tree::Parser parser(json_chunk);
+  if (auto result = parser.ParseExpected()) {
+    // scene->m_json = *result;
+    // gltfjson::::Deserialize(parser, scene->m_gltf);
     scene->m_bin = { dir, bin_chunk };
     if (!scene->m_bin.Dir) {
       scene->m_bin.Dir = std::make_shared<gltfjson::Directory>();

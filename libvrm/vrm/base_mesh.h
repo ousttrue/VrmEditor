@@ -116,7 +116,7 @@ struct JointBinding
 struct BaseMesh
 {
   uint32_t id;
-  std::string Name;
+  std::u8string Name;
   BaseMesh()
   {
     static uint32_t s_id = 0;

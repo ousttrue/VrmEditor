@@ -3,73 +3,73 @@
 #include <string>
 #include <vrm/gltf.h>
 
-void
-ShowGui(std::list<gltfjson::format::Extension>& extensions);
-void
-ShowGui(std::list<gltfjson::format::Extra>& extras);
+// void
+// ShowGui(std::list<gltfjson::annotation::Extension>& extensions);
+// void
+// ShowGui(std::list<gltfjson::annotation::Extra>& extras);
 
 void
-ShowGui(gltfjson::format::Asset& asset);
+ShowGui(gltfjson::annotation::Asset& asset);
 
 void
 ShowText(const std::u8string& text);
 
 // buffer/bufferView/accessor
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Buffer& buffer);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Buffer& buffer);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::BufferView& bufferView);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::BufferView& bufferView);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Accessor& accessor);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Accessor& accessor);
 // image/sampler/texture/material/mesh
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Image& image);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Image& image);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Sampler& sampler);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Sampler& sampler);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Texture& texture);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Texture& texture);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Material& material);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Material& material);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Mesh& mesh);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Mesh& mesh);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::MeshPrimitive& prim);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::MeshPrimitive& prim);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::MeshPrimitiveMorphTarget& target);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::MeshPrimitiveMorphTarget& target);
 // skin/node/scene/animation
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Skin& skin);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Skin& skin);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Node& node);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Node& node);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Scene& scene);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Scene& scene);
 void
-ShowGui(const gltfjson::format::Root& root,
-        const gltfjson::format::Bin& bin,
-        gltfjson::format::Animation& animation);
+ShowGui(const gltfjson::annotation::Root& root,
+        const gltfjson::annotation::Bin& bin,
+        gltfjson::annotation::Animation& animation);

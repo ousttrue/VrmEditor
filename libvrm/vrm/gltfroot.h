@@ -6,8 +6,7 @@
 #include "scenetypes.h"
 #include <DirectXMath.h>
 #include <functional>
-#include <gltfjson/bin.h>
-#include <gltfjson/gltf.h>
+#include <gltfjson.h>
 #include <memory>
 #include <optional>
 #include <span>
@@ -57,8 +56,8 @@ struct GltfRoot
 {
   ModelType m_type = ModelType::Gltf;
   std::vector<uint8_t> m_bytes;
-  gltfjson::format::Root m_gltf;
-  gltfjson::format::Bin m_bin;
+  gltfjson::annotation::Root m_gltf;
+  gltfjson::annotation::Bin m_bin;
   std::string m_title = "scene";
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;

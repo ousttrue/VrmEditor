@@ -113,15 +113,15 @@ GltfRoot::GetBoundingBox() const
     auto node = m_nodes[i];
     bb.Extend(node->WorldInitialTransform.Translation);
     bb.Extend(node->WorldInitialTransform.Translation);
-    if (gltfNode.Mesh) {
-      auto& mesh = m_gltf.Meshes[*gltfNode.Mesh];
+    if (gltfNode.Mesh()) {
+      auto mesh = m_gltf.Meshes[*gltfNode.Mesh()];
       for (auto& prim : mesh.Primitives) {
-        auto position_accessor_index = *prim.Attributes.POSITION;
+        auto position_accessor_index = *prim.Attributes()->POSITION();
         auto& accessor = m_gltf.Accessors[position_accessor_index];
 
         auto& min = accessor.Min;
         auto& max = accessor.Max;
-        if (min.size() == 3 && max.size() == 3) {
+        if (min.Size() == 3 && max.Size() == 3) {
           runtimescene::BoundingBox mesh_bb = {
             { min[0], min[1], min[2] },
             { max[0], max[1], max[2] },
@@ -142,9 +142,9 @@ GltfRoot::Drawables()
   for (uint32_t i = 0; i < m_nodes.size(); ++i) {
     auto node = m_nodes[i];
     auto& gltfNode = m_gltf.Nodes[i];
-    if (gltfNode.Mesh) {
+    if (auto mesh = gltfNode.Mesh()) {
       m_drawables.push_back({
-        .Mesh = *gltfNode.Mesh,
+        .Mesh = *mesh,
       });
       DirectX::XMStoreFloat4x4(&m_drawables.back().Matrix,
                                node->WorldInitialMatrix());

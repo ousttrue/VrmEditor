@@ -25,7 +25,7 @@ struct DeformedMesh;
 }
 
 namespace gltfjson {
-namespace format {
+namespace annotation {
 struct Root;
 struct Bin;
 }
@@ -38,8 +38,8 @@ struct RenderingEnv;
 void
 Render(RenderPass pass,
        const RenderingEnv& camera,
-       const gltfjson::format::Root& root,
-       const gltfjson::format::Bin& bin,
+       const gltfjson::annotation::Root& root,
+       const gltfjson::annotation::Bin& bin,
        uint32_t meshId,
        const std::shared_ptr<runtimescene::BaseMesh>& mesh,
        const runtimescene::DeformedMesh& instance,
@@ -58,8 +58,8 @@ void
 CreateDock(const AddDockFunc& addDock, std::string_view title);
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreateTexture(const gltfjson::format::Root& root,
-                   const gltfjson::format::Bin& bin,
+GetOrCreateTexture(const gltfjson::annotation::Root& root,
+                   const gltfjson::annotation::Bin& bin,
                    std::optional<uint32_t> texture,
                    libvrm::gltf::ColorSpace colorspace);
 
