@@ -56,7 +56,7 @@ GltfRoot::Traverse(const EnterFunc& enter,
 //     // root
 //     m_jsonpath = "/";
 //     auto size = m_jsonpath.size();
-//     // for (auto& kv : m_gltf.Json.items()) {
+//     // for (auto& kv : m_gltf->Json.items()) {
 //     //   m_jsonpath += kv.key();
 //     //   TraverseJson(enter, leave, &kv.value());
 //     //   m_jsonpath.resize(size);
@@ -108,26 +108,30 @@ runtimescene::BoundingBox
 GltfRoot::GetBoundingBox() const
 {
   runtimescene::BoundingBox bb{};
-  for (uint32_t i = 0; i < m_gltf.Nodes.Size(); ++i) {
-    auto& gltfNode = m_gltf.Nodes[i];
-    auto node = m_nodes[i];
-    bb.Extend(node->WorldInitialTransform.Translation);
-    bb.Extend(node->WorldInitialTransform.Translation);
-    if (gltfNode.Mesh()) {
-      auto mesh = m_gltf.Meshes[*gltfNode.Mesh()];
-      for (auto& prim : mesh.Primitives) {
-        auto position_accessor_index = *prim.Attributes()->POSITION();
-        auto& accessor = m_gltf.Accessors[position_accessor_index];
+  if (m_gltf) {
+    for (uint32_t i = 0; i < m_gltf->Nodes.size(); ++i) {
+      auto gltfNode = m_gltf->Nodes[i];
+      auto node = m_nodes[i];
+      bb.Extend(node->WorldInitialTransform.Translation);
+      bb.Extend(node->WorldInitialTransform.Translation);
+      if (gltfNode.Mesh()) {
+        auto mesh = m_gltf->Meshes[*gltfNode.Mesh()];
+        for (auto prim : mesh.Primitives) {
+          auto position_accessor_index = *prim.Attributes()->POSITION();
+          auto accessor = m_gltf->Accessors[position_accessor_index];
 
-        auto& min = accessor.Min;
-        auto& max = accessor.Max;
-        if (min.Size() == 3 && max.Size() == 3) {
-          runtimescene::BoundingBox mesh_bb = {
-            { min[0], min[1], min[2] },
-            { max[0], max[1], max[2] },
-          };
-          bb.Extend(dmath::transform(mesh_bb.Min, node->WorldInitialMatrix()));
-          bb.Extend(dmath::transform(mesh_bb.Max, node->WorldInitialMatrix()));
+          auto& min = accessor.Min;
+          auto& max = accessor.Max;
+          if (min.size() == 3 && max.size() == 3) {
+            runtimescene::BoundingBox mesh_bb = {
+              { min[0], min[1], min[2] },
+              { max[0], max[1], max[2] },
+            };
+            bb.Extend(
+              dmath::transform(mesh_bb.Min, node->WorldInitialMatrix()));
+            bb.Extend(
+              dmath::transform(mesh_bb.Max, node->WorldInitialMatrix()));
+          }
         }
       }
     }
@@ -141,7 +145,7 @@ GltfRoot::Drawables()
   m_drawables.clear();
   for (uint32_t i = 0; i < m_nodes.size(); ++i) {
     auto node = m_nodes[i];
-    auto& gltfNode = m_gltf.Nodes[i];
+    auto gltfNode = m_gltf->Nodes[i];
     if (auto mesh = gltfNode.Mesh()) {
       m_drawables.push_back({
         .Mesh = *mesh,

@@ -23,20 +23,21 @@
 namespace glr {
 
 static gltfjson::format::AlphaModes
-GetAlphaMode(const gltfjson::annotation::Root& root,
+GetAlphaMode(const gltfjson::typing::Root& root,
              std::optional<uint32_t> material)
 {
   if (material) {
-    return *root.Materials[*material].AlphaMode();
-  } else {
-    return gltfjson::format::AlphaModes::Opaque;
+    if (auto alphaMode = root.Materials[*material].AlphaMode()) {
+      return (gltfjson::format::AlphaModes)*alphaMode;
+    }
   }
+  return gltfjson::format::AlphaModes::Opaque;
 }
 
 static std::expected<std::shared_ptr<libvrm::gltf::Image>, std::string>
-ParseImage(const gltfjson::annotation::Root& root,
-           const gltfjson::annotation::Bin& bin,
-           const gltfjson::annotation::Image& image)
+ParseImage(const gltfjson::typing::Root& root,
+           const gltfjson::typing::Bin& bin,
+           const gltfjson::typing::Image& image)
 {
   std::span<const uint8_t> bytes;
   if (auto bufferView = image.BufferView()) {
@@ -45,8 +46,8 @@ ParseImage(const gltfjson::annotation::Root& root,
     } else {
       return std::unexpected{ buffer_view.error() };
     }
-  } else if (image.Uri().value_or(u8"").size()) {
-    if (auto buffer_view = bin.Dir->GetBuffer(*image.Uri())) {
+  } else if (image.Uri().size()) {
+    if (auto buffer_view = bin.Dir->GetBuffer(image.Uri())) {
       bytes = *buffer_view;
     } else {
       return std::unexpected{ buffer_view.error() };
@@ -54,7 +55,7 @@ ParseImage(const gltfjson::annotation::Root& root,
   } else {
     return std::unexpected{ "not bufferView nor uri" };
   }
-  auto name = image.Name().value_or(u8"");
+  auto name = image.Name();
   auto ptr = std::make_shared<libvrm::gltf::Image>(name);
   if (!ptr->Load(bytes)) {
     return std::unexpected{ "Image: fail to load" };
@@ -142,8 +143,8 @@ public:
   }
 
   std::shared_ptr<libvrm::gltf::Image> GetOrCreateImage(
-    const gltfjson::annotation::Root& root,
-    const gltfjson::annotation::Bin& bin,
+    const gltfjson::typing::Root& root,
+    const gltfjson::typing::Bin& bin,
     std::optional<uint32_t> id)
   {
     if (!id) {
@@ -165,8 +166,8 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::Texture> GetOrCreateTexture(
-    const gltfjson::annotation::Root& root,
-    const gltfjson::annotation::Bin& bin,
+    const gltfjson::typing::Root& root,
+    const gltfjson::typing::Bin& bin,
     std::optional<uint32_t> id,
     libvrm::gltf::ColorSpace colorspace)
   {
@@ -183,7 +184,7 @@ public:
       return found->second;
     }
 
-    auto& src = root.Textures[*id];
+    auto src = root.Textures[*id];
     auto source = src.Source();
     if (!source) {
       return {};
@@ -201,14 +202,28 @@ public:
     });
 
     if (auto samplerIndex = src.Sampler()) {
-      auto& sampler = root.Samplers[*samplerIndex];
+      auto sampler = root.Samplers[*samplerIndex];
       texture->Bind();
+      glTexParameteri(GL_TEXTURE_2D,
+                      GL_TEXTURE_MAG_FILTER,
+                      gltfjson::typing::value_or<int>(
+                        sampler.MagFilter(),
+                        (int)gltfjson::format::TextureMagFilter::LINEAR));
+      glTexParameteri(GL_TEXTURE_2D,
+                      GL_TEXTURE_MIN_FILTER,
+                      gltfjson::typing::value_or<int>(
+                        sampler.MinFilter(),
+                        (int)gltfjson::format::TextureMinFilter::LINEAR));
       glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)*sampler.MagFilter());
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_S,
+        gltfjson::typing::value_or<int>(
+          sampler.WrapS(), (int)gltfjson::format::TextureWrap::REPEAT));
       glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)*sampler.MinFilter());
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)*sampler.WrapS());
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)*sampler.WrapT());
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_T,
+        gltfjson::typing::value_or<int>(
+          sampler.WrapT(), (int)gltfjson::format::TextureWrap::REPEAT));
       texture->Unbind();
     } else {
       // TODO: default sampler
@@ -219,8 +234,8 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::Material> GetOrCreateMaterial(
-    const gltfjson::annotation::Root& root,
-    const gltfjson::annotation::Bin& bin,
+    const gltfjson::typing::Root& root,
+    const gltfjson::typing::Bin& bin,
     std::optional<uint32_t> id)
   {
     if (!id) {
@@ -232,10 +247,11 @@ public:
       return found->second;
     }
 
-    auto& src = root.Materials[*id];
+    auto src = root.Materials[*id];
 
     // auto unlit =
-    //   std::find_if(src.Extensions.begin(), src.Extensions.end(), [](auto& ex)
+    //   std::find_if(src.Extensions.begin(), src.Extensions.end(), [](auto&
+    //   ex)
     //   {
     //     return ex.Name == u8"KHR_materials_unlit";
     //   });
@@ -371,8 +387,8 @@ public:
 
   void Render(RenderPass pass,
               const RenderingEnv& env,
-              const gltfjson::annotation::Root& root,
-              const gltfjson::annotation::Bin& bin,
+              const gltfjson::typing::Root& root,
+              const gltfjson::typing::Bin& bin,
               uint32_t meshId,
               const std::shared_ptr<runtimescene::BaseMesh>& mesh,
               const runtimescene::DeformedMesh& deformed,
@@ -454,8 +470,8 @@ public:
                      const DirectX::XMFLOAT4X4& view,
                      const DirectX::XMFLOAT4X4& model,
                      const DirectX::XMFLOAT3& cameraPos,
-                     const gltfjson::annotation::Root& root,
-                     const gltfjson::annotation::Bin& bin,
+                     const gltfjson::typing::Root& root,
+                     const gltfjson::typing::Bin& bin,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
                      const runtimescene::Primitive& primitive,
                      uint32_t drawOffset)
@@ -463,8 +479,10 @@ public:
     auto material = GetOrCreateMaterial(root, bin, primitive.Material);
     if (material) {
       // update ubo
-      auto& gltfMaterial = root.Materials[*primitive.Material];
-      m_model.cutoff.x = *gltfMaterial.AlphaCutoff();
+      auto gltfMaterial = root.Materials[*primitive.Material];
+      if (auto cutoff = gltfMaterial.AlphaCutoff()) {
+        m_model.cutoff.x = *cutoff;
+      }
       if (auto pbr = gltfMaterial.PbrMetallicRoughness()) {
         // m_model.color = *((DirectX::XMFLOAT4*)&pbr->BaseColorFactor());
       }
@@ -529,8 +547,8 @@ public:
 void
 Render(RenderPass pass,
        const RenderingEnv& env,
-       const gltfjson::annotation::Root& root,
-       const gltfjson::annotation::Bin& bin,
+       const gltfjson::typing::Root& root,
+       const gltfjson::typing::Bin& bin,
        uint32_t meshId,
        const std::shared_ptr<runtimescene::BaseMesh>& mesh,
        const runtimescene::DeformedMesh& deformed,
@@ -567,8 +585,8 @@ CreateDock(const AddDockFunc& addDock, std::string_view title)
 }
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreateTexture(const gltfjson::annotation::Root& root,
-                   const gltfjson::annotation::Bin& bin,
+GetOrCreateTexture(const gltfjson::typing::Root& root,
+                   const gltfjson::typing::Bin& bin,
                    std::optional<uint32_t> texture,
                    libvrm::gltf::ColorSpace colorspace)
 {
@@ -597,5 +615,4 @@ UpdateShader(const std::filesystem::path& path)
 {
   Gl3Renderer::Instance().UpdateShader(path);
 }
-
 }

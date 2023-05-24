@@ -9,14 +9,13 @@ namespace gltf {
 static std::expected<std::shared_ptr<gltf::Node>, std::string>
 ParseNode(const std::shared_ptr<GltfRoot>& scene,
           int i,
-          const gltfjson::annotation::Node& node)
+          const gltfjson::typing::Node& node)
 {
-  std::u8string name = *node.Name();
-  auto ptr = std::make_shared<gltf::Node>(name);
+  auto ptr = std::make_shared<gltf::Node>(node.Name());
 
-  if (auto matrix = node.Matrix()) {
+  if (node.Matrix.size() == 16) {
     // matrix
-    auto m = *matrix;
+    auto& m = node.Matrix;
     auto local = DirectX::XMFLOAT4X4{
       m[0],  m[1],  m[2],  m[3],  //
       m[4],  m[5],  m[6],  m[7],  //
@@ -26,8 +25,9 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
     ptr->SetLocalInitialMatrix(DirectX::XMLoadFloat4x4(&local));
   } else {
     // T
-    if (auto t = node.Translation()) {
-      ptr->InitialTransform.Translation = { (*t)[0], (*t)[1], (*t)[2] };
+    if (node.Translation.size() == 3) {
+      auto& t = node.Translation;
+      ptr->InitialTransform.Translation = { t[0], t[1], t[2] };
     }
     if (scene->m_type == ModelType::Vrm0) {
       // rotate: Y180
@@ -35,12 +35,14 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
       ptr->InitialTransform.Translation = { -t.x, t.y, -t.z };
     }
     // R
-    if (auto r = node.Rotation()) {
-      ptr->InitialTransform.Rotation = { (*r)[0], (*r)[1], (*r)[2], (*r)[3] };
+    if (node.Rotation.size() == 4) {
+      auto& r = node.Rotation;
+      ptr->InitialTransform.Rotation = { r[0], r[1], r[2], r[3] };
     }
     // S
-    if (auto s = node.Scale()) {
-      ptr->InitialScale = { (*s)[0], (*s)[1], (*s)[2] };
+    if (node.Scale.size() == 3) {
+      auto& s = node.Scale;
+      ptr->InitialScale = { s[0], s[1], s[2] };
     }
   }
 
@@ -50,10 +52,10 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
 static std::expected<bool, std::string>
 ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
 {
-  // if (!has(scene->m_gltf.Json, "extensions")) {
+  // if (!has(scene->m_gltf->Json, "extensions")) {
   //   return std::unexpected{ "no extensions" };
   // }
-  // auto& extensions = scene->m_gltf.Json.at("extensions");
+  // auto& extensions = scene->m_gltf->Json.at("extensions");
   //
   // if (!has(extensions, "VRM")) {
   //   return std::unexpected{ "no extensions.VRM" };
@@ -184,10 +186,10 @@ ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
 static std::expected<bool, std::string>
 ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
 {
-  // if (!has(scene->m_gltf.Json, "extensions")) {
+  // if (!has(scene->m_gltf->Json, "extensions")) {
   //   return std::unexpected{ "no extensions" };
   // }
-  // auto& extensions = scene->m_gltf.Json.at("extensions");
+  // auto& extensions = scene->m_gltf->Json.at("extensions");
   //
   // if (!has(extensions, "VRMC_vrm")) {
   //   return std::unexpected{ "no extensions.VRMC_vrm" };
@@ -272,7 +274,7 @@ ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
   //   }
   // }
   //
-  // auto& nodes = scene->m_gltf.Json.at("nodes");
+  // auto& nodes = scene->m_gltf->Json.at("nodes");
   // for (size_t i = 0; i < nodes.size(); ++i) {
   //   auto& node = nodes[i];
   //   auto ptr = scene->m_nodes[i];
@@ -336,8 +338,8 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
 {
   scene->m_title = "glTF";
 
-  // if (has(scene->m_gltf.Json, "extensionsRequired")) {
-  //   for (auto& ex : scene->m_gltf.Json.at("extensionsRequired")) {
+  // if (has(scene->m_gltf->Json, "extensionsRequired")) {
+  //   for (auto& ex : scene->m_gltf->Json.at("extensionsRequired")) {
   //     if (ex == "KHR_draco_mesh_compression") {
   //       return std::unexpected{ "KHR_draco_mesh_compression" };
   //     }
@@ -347,8 +349,8 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   //   }
   // }
 
-  // if (has(scene->m_gltf.Json, "extensions")) {
-  //   auto& extensions = scene->m_gltf.Json.at("extensions");
+  // if (has(scene->m_gltf->Json, "extensions")) {
+  //   auto& extensions = scene->m_gltf->Json.at("extensions");
   //   if (has(extensions, "VRM")) {
   //     auto VRM = extensions.at("VRM");
   //     // TODO: meta
@@ -362,24 +364,24 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   // }
 
   {
-    auto& nodes = scene->m_gltf.Nodes;
-    for (int i = 0; i < nodes.Size(); ++i) {
+    auto& nodes = scene->m_gltf->Nodes;
+    for (int i = 0; i < nodes.size(); ++i) {
       if (auto node = ParseNode(scene, i, nodes[i])) {
         scene->m_nodes.push_back(*node);
       } else {
         return std::unexpected{ node.error() };
       }
     }
-    for (int i = 0; i < nodes.Size(); ++i) {
-      auto& node = nodes[i];
+    for (int i = 0; i < nodes.size(); ++i) {
+      auto node = nodes[i];
       for (auto child : node.Children) {
         gltf::Node::AddChild(scene->m_nodes[i], scene->m_nodes[child]);
       }
     }
   }
   {
-    auto _scene = scene->m_gltf.Scenes[0];
-    for (auto& node : _scene.Nodes) {
+    auto _scene = scene->m_gltf->Scenes[0];
+    for (auto node : _scene.Nodes) {
       scene->m_roots.push_back(scene->m_nodes[node]);
     }
   }
@@ -419,8 +421,8 @@ Load(const std::shared_ptr<GltfRoot>& scene,
 {
   gltfjson::tree::Parser parser(json_chunk);
   if (auto result = parser.ParseExpected()) {
-    // scene->m_json = *result;
-    // gltfjson::::Deserialize(parser, scene->m_gltf);
+    gltfjson::tree::Parser parser(json_chunk);
+    scene->m_gltf = std::make_shared<gltfjson::typing::Root>(parser.Parse());
     scene->m_bin = { dir, bin_chunk };
     if (!scene->m_bin.Dir) {
       scene->m_bin.Dir = std::make_shared<gltfjson::Directory>();

@@ -15,8 +15,8 @@ GltfJsonGui::~GltfJsonGui()
 }
 
 template<typename T>
-using ShowChild = std::function<void(const gltfjson::annotation::Root& root,
-                                     const gltfjson::annotation::Bin& bin,
+using ShowChild = std::function<void(const gltfjson::typing::Root& root,
+                                     const gltfjson::typing::Bin& bin,
                                      T&,
                                      grapho::imgui::TreeSplitter::UI*)>;
 
@@ -24,23 +24,23 @@ template<typename T>
 static void
 Push(grapho::imgui::TreeSplitter* splitter,
      const char* label,
-     const gltfjson::annotation::Root& root,
-     const gltfjson::annotation::Bin& bin,
-     gltfjson::annotation::Array<T>& values,
+     const gltfjson::typing::Root& root,
+     const gltfjson::typing::Bin& bin,
+     gltfjson::typing::JsonArrayBase<T>& values,
      const ShowChild<T>& showChild = {})
 {
   PrintfBuffer buf;
-  auto ui = splitter->Push(buf.Printf("%s (%zd)", label, values.Size()));
+  auto ui = splitter->Push(buf.Printf("%s (%zd)", label, values.size()));
 
-  for (uint32_t i = 0; i < values.Size(); ++i) {
-    auto& value = values[i];
+  for (uint32_t i = 0; i < values.size(); ++i) {
+    auto value = values[i];
     auto callback = [&root, &bin, &value]() { ::ShowGui(root, bin, value); };
 
     auto child = splitter->Push(
       buf.Printf("%s%02d:%s",
                  "??",
                  i,
-                 (const char*)values[i].Name().value_or(u8"").c_str()),
+                 (const char*)values[i].Name().c_str()),
       ui,
       callback);
 
@@ -66,8 +66,8 @@ Push(grapho::imgui::TreeSplitter* splitter,
 }
 
 void
-GltfJsonGui::SetGltf(gltfjson::annotation::Root& gltf,
-                     const gltfjson::annotation::Bin& bin)
+GltfJsonGui::SetGltf(gltfjson::typing::Root& gltf,
+                     const gltfjson::typing::Bin& bin)
 {
   m_splitter->Clear();
   // m_splitter->Push("asset", nullptr, [&gltf]() { ::ShowGui(*gltf.Asset());
@@ -83,21 +83,21 @@ GltfJsonGui::SetGltf(gltfjson::annotation::Root& gltf,
   Push(m_splitter, "󰉋 textures", gltf, bin, gltf.Textures);
   Push(m_splitter, "󰉋 materials", gltf, bin, gltf.Materials);
 
-  ShowChild<gltfjson::annotation::Mesh> meshCallback =
-    [splitter = m_splitter](const gltfjson::annotation::Root& root,
-                            const gltfjson::annotation::Bin& bin,
-                            gltfjson::annotation::Mesh& value,
+  ShowChild<gltfjson::typing::Mesh> meshCallback =
+    [splitter = m_splitter](const gltfjson::typing::Root& root,
+                            const gltfjson::typing::Bin& bin,
+                            gltfjson::typing::Mesh& value,
                             grapho::imgui::TreeSplitter::UI* child) {
       PrintfBuffer buf;
       int j = 0;
-      for (auto& prim : value.Primitives) {
+      for (auto prim : value.Primitives) {
         auto primUi = splitter->Push(
           buf.Printf("primitive [%d]", j++), child, [&root, &bin, &prim]() {
             ::ShowGui(root, bin, prim);
           });
 
         int k = 0;
-        for (auto& target : prim.Targets) {
+        for (auto target : prim.Targets) {
           splitter->Push(
             buf.Printf("target [%d]", k), primUi, [&root, &bin, &target]() {
               ImGui::BeginDisabled(true);

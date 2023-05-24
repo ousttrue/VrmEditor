@@ -64,7 +64,7 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Color,
                   *m_env,
-                  m_animation->m_table->m_gltf,
+                  *m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
                   mesh,
                   m_animation->m_meshes[mesh],
@@ -80,7 +80,7 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix,
                   *m_env,
-                  m_animation->m_table->m_gltf,
+                  *m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
                   mesh,
                   m_animation->m_meshes[mesh],
@@ -152,7 +152,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Color,
                   *m_env,
-                  m_animation->m_table->m_gltf,
+                  *m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
                   mesh,
                   m_animation->m_meshes[mesh],
@@ -169,7 +169,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix,
                   *m_env,
-                  m_animation->m_table->m_gltf,
+                  *m_animation->m_table->m_gltf,
                   m_animation->m_table->m_bin,
                   mesh,
                   m_animation->m_meshes[mesh],

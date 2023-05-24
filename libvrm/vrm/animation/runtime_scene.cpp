@@ -8,16 +8,16 @@
 namespace runtimescene {
 
 static std::expected<bool, std::string>
-AddIndices(const gltfjson::annotation::Root& root,
-           const gltfjson::annotation::Bin& bin,
+AddIndices(const gltfjson::typing::Root& root,
+           const gltfjson::typing::Bin& bin,
            int vertex_offset,
            BaseMesh* mesh,
-           const gltfjson::annotation::MeshPrimitive& prim)
+           const gltfjson::typing::MeshPrimitive& prim)
 {
   if (auto indices = prim.Indices()) {
     int accessor_index = *indices;
     auto accessor = root.Accessors[accessor_index];
-    switch (*accessor.ComponentType()) {
+    switch ((gltfjson::format::ComponentTypes)*accessor.ComponentType()) {
       case gltfjson::format::ComponentTypes::UNSIGNED_BYTE: {
         if (auto span = bin.GetAccessorBytes<uint8_t>(root, accessor_index)) {
           mesh->addSubmesh(vertex_offset, *span, prim.Material());
@@ -64,18 +64,17 @@ u8_to_str(const std::u8string& src)
 }
 
 static std::expected<std::shared_ptr<BaseMesh>, std::string>
-ParseMesh(const gltfjson::annotation::Root& root,
-          const gltfjson::annotation::Bin& bin,
+ParseMesh(const gltfjson::typing::Root& root,
+          const gltfjson::typing::Bin& bin,
           int meshIndex)
 {
-  auto& mesh = root.Meshes[meshIndex];
+  auto mesh = root.Meshes[meshIndex];
   auto ptr = std::make_shared<BaseMesh>();
-  std::u8string name = *mesh.Name();
-  ptr->Name = name;
-  gltfjson::annotation::MeshPrimitiveAttributes lastAtributes = {};
-  for (auto& prim : mesh.Primitives) {
-    // if (prim.Attributes == lastAtributes)
-    if (true) {
+  ptr->Name = mesh.Name();
+  std::optional<gltfjson::typing::MeshPrimitiveAttributes> lastAtributes;
+
+  for (auto prim : mesh.Primitives) {
+    if (prim.Attributes() == lastAtributes) {
       // for vrm shared vertex buffer
       if (auto expected = AddIndices(root, bin, 0, ptr.get(), prim)) {
         // OK
@@ -121,7 +120,7 @@ ParseMesh(const gltfjson::annotation::Root& root,
 
       auto joints0 = prim.Attributes()->JOINTS_0();
       auto weights0 = prim.Attributes()->WEIGHTS_0();
-      if (*joints0 && *weights0) {
+      if (joints0 && weights0) {
         // skinning
         int joint_accessor = *joints0;
         auto item_size = root.Accessors[joint_accessor].Stride();
@@ -163,8 +162,8 @@ ParseMesh(const gltfjson::annotation::Root& root,
       // extend morph target
       {
         auto& targets = prim.Targets;
-        for (int i = 0; i < targets.Size(); ++i) {
-          auto& target = targets[i];
+        for (int i = 0; i < targets.size(); ++i) {
+          auto target = targets[i];
           auto morph = ptr->getOrCreateMorphTarget(i);
           // std::cout << target << std::endl;
           std::span<const DirectX::XMFLOAT3> positions;
@@ -227,14 +226,14 @@ ParseMesh(const gltfjson::annotation::Root& root,
 }
 
 static std::expected<std::shared_ptr<Skin>, std::string>
-ParseSkin(const gltfjson::annotation::Root& root,
-          const gltfjson::annotation::Bin& bin,
+ParseSkin(const gltfjson::typing::Root& root,
+          const gltfjson::typing::Bin& bin,
           int i)
 {
   auto skin = root.Skins[i];
   auto ptr = std::make_shared<Skin>();
-  ptr->Name = u8_to_str(skin.Name().value_or(u8""));
-  for (auto& joint : skin.Joints) {
+  ptr->Name = u8_to_str(skin.Name());
+  for (auto joint : skin.Joints) {
     ptr->Joints.push_back(joint);
   }
 
@@ -264,25 +263,25 @@ ParseSkin(const gltfjson::annotation::Root& root,
 }
 
 static std::expected<std::shared_ptr<Animation>, std::string>
-ParseAnimation(const gltfjson::annotation::Root& root,
-               const gltfjson::annotation::Bin& bin,
+ParseAnimation(const gltfjson::typing::Root& root,
+               const gltfjson::typing::Bin& bin,
                int i)
 {
-  auto& animation = root.Animations[i];
-  auto ptr = std::make_shared<Animation>(animation.Name().value_or(u8""));
+  auto animation = root.Animations[i];
+  auto ptr = std::make_shared<Animation>(animation.Name());
 
   // samplers
   auto& samplers = animation.Samplers;
 
   // channels
   auto& channels = animation.Channels;
-  for (auto& channel : channels) {
+  for (auto channel : channels) {
     int sampler_index = *channel.Sampler();
     auto sampler = samplers[sampler_index];
 
     auto target = *channel.Target();
     int node_index = *target.Node();
-    auto path = *target.Path();
+    auto path = (gltfjson::format::PathTypes)*target.Path();
 
     // time
     int input_index = *sampler.Input();
@@ -294,8 +293,7 @@ ParseAnimation(const gltfjson::annotation::Root& root,
           ptr->AddTranslation(node_index,
                               *times,
                               *values,
-                              root.Nodes[node_index].Name().value_or(u8"") +
-                                u8"-translation");
+                              root.Nodes[node_index].Name() + u8"-translation");
         } else {
           return std::unexpected{ values.error() };
         }
@@ -305,8 +303,7 @@ ParseAnimation(const gltfjson::annotation::Root& root,
           ptr->AddRotation(node_index,
                            *times,
                            *values,
-                           root.Nodes[node_index].Name().value_or(u8"") +
-                             u8"-rotation");
+                           root.Nodes[node_index].Name() + u8"-rotation");
         } else {
           return std::unexpected{ values.error() };
         }
@@ -316,24 +313,21 @@ ParseAnimation(const gltfjson::annotation::Root& root,
           ptr->AddScale(node_index,
                         *times,
                         *values,
-                        root.Nodes[node_index].Name().value_or(u8"") +
-                          u8"-scale");
+                        root.Nodes[node_index].Name() + u8"-scale");
         } else {
           return std::unexpected{ values.error() };
         }
       } else if (path == gltfjson::format::PathTypes::Weights) {
         if (auto values = bin.GetAccessorBytes<float>(root, output_index)) {
-          auto& node = root.Nodes[node_index];
+          auto node = root.Nodes[node_index];
           if (auto mesh = node.Mesh()) {
             if (values->size() !=
-                root.Meshes[*mesh].Primitives[0].Targets.Size() *
+                root.Meshes[*mesh].Primitives[0].Targets.size() *
                   times->size()) {
               return std::unexpected{ "animation-weights: size not match" };
             }
-            ptr->AddWeights(node_index,
-                            *times,
-                            *values,
-                            node.Name().value_or(u8"") + u8"-weights");
+            ptr->AddWeights(
+              node_index, *times, *values, node.Name() + u8"-weights");
           } else {
             return std::unexpected{ "animation-weights: no node.mesh" };
           }
@@ -356,14 +350,16 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
 {
   Reset();
 
-  for (uint32_t i = 0; i < m_table->m_gltf.Meshes.Size(); ++i) {
-    auto baseMesh = ParseMesh(m_table->m_gltf, m_table->m_bin, i);
-    m_meshes.push_back(*baseMesh);
-  }
+  if (m_table->m_gltf) {
+    for (uint32_t i = 0; i < m_table->m_gltf->Meshes.size(); ++i) {
+      auto baseMesh = ParseMesh(*m_table->m_gltf, m_table->m_bin, i);
+      m_meshes.push_back(*baseMesh);
+    }
 
-  for (uint32_t i = 0; i < m_table->m_gltf.Skins.Size(); ++i) {
-    auto skin = ParseSkin(m_table->m_gltf, m_table->m_bin, i);
-    m_skins.push_back(*skin);
+    for (uint32_t i = 0; i < m_table->m_gltf->Skins.size(); ++i) {
+      auto skin = ParseSkin(*m_table->m_gltf, m_table->m_bin, i);
+      m_skins.push_back(*skin);
+    }
   }
 }
 
@@ -488,7 +484,7 @@ RuntimeScene::Drawables()
     };
     for (auto& [k, v] :
          m_table->m_expressions->EvalMorphTargetMap(nodeToIndex)) {
-      auto& morph_node = m_table->m_gltf.Nodes[k.NodeIndex];
+      auto morph_node = m_table->m_gltf->Nodes[k.NodeIndex];
       if (auto mesh = morph_node.Mesh()) {
         if (auto instance = GetDeformedMesh(*mesh)) {
           instance->Weights[k.MorphIndex] = v;
@@ -498,8 +494,8 @@ RuntimeScene::Drawables()
   }
 
   // skinning
-  for (uint32_t i = 0; i < m_table->m_gltf.Nodes.Size(); ++i) {
-    auto& gltfNode = m_table->m_gltf.Nodes[i];
+  for (uint32_t i = 0; i < m_table->m_gltf->Nodes.size(); ++i) {
+    auto gltfNode = m_table->m_gltf->Nodes[i];
     if (auto mesh = gltfNode.Mesh()) {
       // auto mesh = m_table->m_meshes[*mesh_index];
 
@@ -540,8 +536,8 @@ RuntimeScene::Drawables()
   }
 
   m_drawables.clear();
-  for (uint32_t i = 0; i < m_table->m_gltf.Nodes.Size(); ++i) {
-    auto& gltfNode = m_table->m_gltf.Nodes[i];
+  for (uint32_t i = 0; i < m_table->m_gltf->Nodes.size(); ++i) {
+    auto gltfNode = m_table->m_gltf->Nodes[i];
     if (auto mesh = gltfNode.Mesh()) {
       m_drawables.push_back({
         .Mesh = *mesh,
