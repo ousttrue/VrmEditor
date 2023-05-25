@@ -53,6 +53,10 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
 
   // 0
   ImGui::TableNextColumn();
+  if (m_inspector->ShouldOpen(jsonpath)) {
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+  }
+
   bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)item.get(),
                                      node_flags,
                                      "%s",

@@ -36,6 +36,11 @@ public:
     return jsonpath == m_selected;
   }
 
+  bool ShouldOpen(std::u8string_view jsonpath) const
+  {
+    return m_selected.starts_with(jsonpath);
+  }
+
   void Select(std::u8string_view jsonpath)
   {
     m_selected = jsonpath;
