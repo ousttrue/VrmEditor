@@ -1,7 +1,7 @@
 #include "vrm/importer.h"
 #include "vrm/gltf.h"
 
-#include <gltfjson.h>
+#include <gltfjson/json_tree_parser.h>
 
 namespace libvrm {
 namespace gltf {

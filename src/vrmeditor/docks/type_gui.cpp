@@ -263,9 +263,9 @@ ShowGui(const gltfjson::typing::Root& root,
   // ShowGui("/accessors", root.Accessors.GetIndex(accessor), accessor);
   ImGui::BeginDisabled(true);
   // SelectId("BufferView", &accessor.BufferView, root.BufferViews);
-  uint32_t value = *accessor.ByteOffset();
+  auto value = (uint32_t)*accessor.ByteOffset();
   if (ImGui::InputScalar("ByteOffset", ImGuiDataType_U32, &value)) {
-    *accessor.ByteOffset() = value;
+    *accessor.ByteOffset() = (float)value;
   }
 
   // grapho::imgui::EnumCombo("ComponentType",
@@ -435,9 +435,9 @@ ShowGui(const gltfjson::typing::Root& root,
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     draw_list->AddRect(pos, { pos.x + 150, pos.y + 150 }, ImColor());
   }
-  uint8_t value = *info.TexCoord();
+  auto value = (uint32_t)*info.TexCoord();
   if (ImGui::InputScalar("TexCoord", ImGuiDataType_U8, &value)) {
-    *info.TexCoord() = value;
+    *info.TexCoord() = (float)value;
   }
 }
 

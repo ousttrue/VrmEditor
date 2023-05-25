@@ -15,7 +15,7 @@ AddIndices(const gltfjson::typing::Root& root,
            const gltfjson::typing::MeshPrimitive& prim)
 {
   if (auto indices = prim.Indices()) {
-    int accessor_index = *indices;
+    auto accessor_index = (uint32_t)*indices;
     auto accessor = root.Accessors[accessor_index];
     switch ((gltfjson::format::ComponentTypes)*accessor.ComponentType()) {
       case gltfjson::format::ComponentTypes::UNSIGNED_BYTE: {
