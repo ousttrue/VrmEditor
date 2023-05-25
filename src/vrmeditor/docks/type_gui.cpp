@@ -321,29 +321,33 @@ ShowGuiVector(const char* label,
   }
 }
 
-template<typename T>
 static void
-ShowGuiOptional(std::optional<T>& optional,
-                const char* label,
-                const char* label_new,
-                const std::function<void(T&)> showGui)
+ShowGuiOptional(
+  const gltfjson::tree::NodePtr& parentNode,
+  const char8_t* key,
+  const std::function<void(const gltfjson::tree::NodePtr&)>& showGui)
 {
-  if (optional) {
+  if (!parentNode) {
+    return;
+  }
+
+  PrintfBuffer buf;
+  if (auto node = parentNode->Get(key)) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
     bool visible = true;
-    if (ImGui::CollapsingHeader(label, &visible)) {
-      ImGui::PushID(&optional);
+    if (ImGui::CollapsingHeader((const char*)key, &visible)) {
+      ImGui::PushID(node.get());
       ImGui::Indent();
-      showGui(*optional);
+      showGui(node);
       ImGui::Unindent();
       ImGui::PopID();
     }
     if (!visible) {
-      optional = std::nullopt;
+      parentNode->Remove(key);
     }
   } else {
-    if (ImGui::Button(label_new)) {
-      optional = T{};
+    if (ImGui::Button(buf.Printf("%s +", (const char*)key))) {
+      auto node = parentNode->Add(key, gltfjson::tree::ObjectValue{});
     }
   }
 }
@@ -416,6 +420,13 @@ public:
 };
 }
 
+static void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::Sparse sparse)
+{
+}
+
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
@@ -444,22 +455,25 @@ ShowGui(const gltfjson::typing::Root& root,
     { (const std::tuple<int, std::string>*)gltfjson::format::TypesCombo,
       std::size(gltfjson::format::TypesCombo) });
 
-  ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  // ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
   // ShowGuiVector<float>("Max", accessor.Max, [](size_t i, auto& v) {
   //   if (i) {
   //     ImGui::SameLine();
   //   }
   //   ImGui::Text("%f", v);
   // });
-  ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  // ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
   // ShowGuiVector<float>("Min", accessor.Min, [](size_t i, auto& v) {
   //   if (i) {
   //     ImGui::SameLine();
   //   }
   //   ImGui::Text("%f", v);
   // });
-  // ShowGuiOptional<gltfjson::annotation::Sparse>(
-  //   accessor.Sparse, "Sparse", "Sparse +", [](auto& sparse) {});
+
+  ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  ShowGuiOptional(accessor.m_json, u8"sparse", [](auto& node) {
+    // gltfjson::typing::Sparse
+  });
   ImGui::EndDisabled();
 
   using ShowAccessorTable =
@@ -596,7 +610,7 @@ ShowGui(const gltfjson::typing::Root& root,
 static void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::TextureInfo& info)
+        gltfjson::typing::TextureInfo info)
 {
   SelectId("Index", info.m_json, u8"index", root.Textures.m_json);
   if (auto texture = glr::GetOrCreateTexture(
@@ -616,7 +630,7 @@ ShowGui(const gltfjson::typing::Root& root,
 static void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::NormalTextureInfo& info)
+        gltfjson::typing::NormalTextureInfo info)
 {
   ShowGui(root, bin, *static_cast<gltfjson::typing::TextureInfo*>(&info));
 }
@@ -632,14 +646,12 @@ ShowGui(const gltfjson::typing::Root& root,
 static void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::PbrMetallicRoughness& pbr)
+        gltfjson::typing::PbrMetallicRoughness pbr)
 {
   // ImGui::ColorEdit4("BaseColorFactor", pbr.BaseColorFactor.data());
-  // ShowGuiOptional<gltfjson::annotation::TextureInfo>(
-  //   pbr.BaseColorTexture,
-  //   "BaseColorTexture",
-  //   "BaseColorTexture +",
-  //   [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
+  ShowGuiOptional(pbr.m_json, u8"baseColorTexture", [&root, &bin](auto& node) {
+    ::ShowGui(root, bin, gltfjson::typing::TextureInfo{ node });
+  });
   // ImGui::SliderFloat("MetallicFactor", &pbr.MetallicFactor, 0, 1);
   // ImGui::SliderFloat("RoughnessFactor", &pbr.RoughnessFactor, 0, 1);
 
@@ -650,11 +662,10 @@ ShowGui(const gltfjson::typing::Root& root,
     "other channels are present (R or A), they **MUST** be ignored for "
     "metallic-roughness calculations. When undefined, the texture **MUST** "
     "be sampled as having `1.0` in G and B components.");
-  // ShowGuiOptional<gltfjson::annotation::TextureInfo>(
-  //   pbr.MetallicRoughnessTexture,
-  //   "MetallicRoughnessTexture",
-  //   "MetallicRoughnessTexture +",
-  //   [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
+  ShowGuiOptional(
+    pbr.m_json, u8"metallicRoughnessTexture", [&root, &bin](auto node) {
+      ::ShowGui(root, bin, gltfjson::typing::TextureInfo{ node });
+    });
 }
 
 void
@@ -664,17 +675,14 @@ ShowGui(const gltfjson::typing::Root& root,
 {
   ShowGuiChildOfRoot(material);
 
-  // ShowGuiOptional<gltfjson::annotation::PbrMetallicRoughness>(
-  //   material.PbrMetallicRoughness,
-  //   "PbrMetallicRoughness",
-  //   "PbrMetallicRoughness +",
-  //   [&root, &bin](auto& pbr) { ::ShowGui(root, bin, pbr); });
-  //
-  // ShowGuiOptional<gltfjson::annotation::NormalTextureInfo>(
-  //   material.NormalTexture,
-  //   "NormalTexture",
-  //   "NormalTexture +",
-  //   [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
+  ShowGuiOptional(
+    material.m_json, u8"pbrMetallicRoughness", [&root, &bin](auto& pbr) {
+      ::ShowGui(root, bin, gltfjson::typing::PbrMetallicRoughness{ pbr });
+    });
+  ShowGuiOptional(
+    material.m_json, u8"normalTexture", [&root, &bin](auto& info) {
+      ::ShowGui(root, bin, gltfjson::typing::NormalTextureInfo{ info });
+    });
 
   HelpMarker("The occlusion texture. The occlusion values are linearly sampled "
              "from the R channel. Higher values indicate areas that receive "
@@ -682,24 +690,22 @@ ShowGui(const gltfjson::typing::Root& root,
              "lighting. If other channels are present (GBA), they **MUST** be "
              "ignored for occlusion calculations. When undefined, the material "
              "does not have an occlusion texture.");
-  // ShowGuiOptional<gltfjson::annotation::OcclusionTextureInfo>(
-  //   material.OcclusionTexture,
-  //   "OcclusionTexture",
-  //   "OcclusionTexture +",
-  //   [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
-  //
-  // ShowGuiOptional<gltfjson::annotation::TextureInfo>(
-  //   material.EmissiveTexture,
-  //   "EmissiveTexture",
-  //   "EmissiveTexture +",
-  //   [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
-  //
+  ShowGuiOptional(
+    material.m_json, u8"occlusionTexture", [&root, &bin](auto& info) {
+      ::ShowGui(root, bin, gltfjson::typing::OcclusionTextureInfo{ info });
+    });
+
+  ShowGuiOptional(
+    material.m_json, u8"emissiveTexture", [&root, &bin](auto& info) {
+      ::ShowGui(root, bin, gltfjson::typing::TextureInfo{ info });
+    });
+
   // ImGui::ColorEdit3("EmissiveFactor", material.EmissiveFactor.data());
   ShowGuiEnum<gltfjson::format::AlphaModes>("AlphaMode",
                                             material.m_json,
                                             u8"alphaMode",
                                             gltfjson::format::AlphaModesCombo);
-  // ImGui::SliderFloat("AlphaCutoff", &material.AlphaCutoff, 0, 1);
+  ImGui::SliderFloat("AlphaCutoff", material.AlphaCutoff(), 0, 1);
   ShowGuiBool("DoubleSided", material.m_json, u8"doubleSided");
 }
 
@@ -807,27 +813,27 @@ ShowGui(const gltfjson::typing::Root& root,
   // Id Camera;
   // ListId("Children", node.Children, root.Nodes);
   SelectId("Skin", node.m_json, u8"skin", root.Nodes.m_json);
-  // ShowGuiOptional<std::array<float, 16>>(
-  //   node.Matrix, "Matrix", "Matrix +", [](auto& m) {
-  //     ImGui::InputFloat4("##m0", m.data());
-  //     ImGui::InputFloat4("##m1", m.data() + 4);
-  //     ImGui::InputFloat4("##m2", m.data() + 8);
-  //     ImGui::InputFloat4("##m3", m.data() + 12);
-  //   });
-  // // SelectId("Mesh", &node.Mesh, root.Meshes);
-  // ShowGuiOptional<std::array<float, 4>>(
-  //   node.Rotation, "Rotation", "Rotaton +", [](auto& r) {
-  //     ImGui::InputFloat4("##rotation", r.data());
-  //   });
-  // ShowGuiOptional<std::array<float, 3>>(
-  //   node.Scale, "Scale", "Scale +", [](auto& s) {
-  //     ImGui::InputFloat3("##scale", s.data());
-  //   });
-  // ShowGuiOptional<std::array<float, 3>>(
-  //   node.Translation, "Translation", "Translation +", [](auto& t) {
-  //     ImGui::InputFloat3("##translation", t.data());
-  //   });
-  //
+  ShowGuiOptional(node.m_json, u8"matrix", [](auto& m) {
+    // // <std::array<float, 16>>
+    //       ImGui::InputFloat4("##m0", m.data());
+    //       ImGui::InputFloat4("##m1", m.data() + 4);
+    //       ImGui::InputFloat4("##m2", m.data() + 8);
+    //       ImGui::InputFloat4("##m3", m.data() + 12);
+  });
+  SelectId("Mesh", node.m_json, u8"mesh", root.Meshes.m_json);
+  ShowGuiOptional(node.m_json, u8"rotation", [](auto& r) {
+    // <std::array<float, 4>>
+    //       ImGui::InputFloat4("##rotation", r.data());
+  });
+  ShowGuiOptional(node.m_json, u8"scale", [](auto& s) {
+    // <std::array<float, 3>>
+    //   ImGui::InputFloat3("##scale", s.data());
+  });
+  ShowGuiOptional(node.m_json, u8"translation", [](auto& t) {
+    // <std::array<float, 3>>
+    //       ImGui::InputFloat3("##translation", t.data());
+  });
+
   // PrintfBuffer buf;
   // ShowGuiVector<float>("Weights", node.Weights, [&buf](size_t i, auto& value)
   // {
