@@ -47,7 +47,7 @@ LabelDefault(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
 
   // auto item = scene->m_gltf.Json.at(nlohmann::json::json_pointer(key));
   auto _name = path.Back();
-  std::string name{_name.begin(), _name.end()};
+  std::string name{ _name.begin(), _name.end() };
   if (auto object = item->Object()) {
     auto found = object->find(u8"name");
     if (found != object->end()) {
@@ -129,7 +129,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
   }
 
   bool node_open =
-    ImGui::TreeNodeEx((void*)(intptr_t)&item, node_flags, "%s", label.c_str());
+    ImGui::TreeNodeEx((void*)(intptr_t)item.get(), node_flags, "%s", label.c_str());
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     m_selected = jsonpath;
@@ -187,9 +187,7 @@ JsonGui::Show(float indent)
   ::Splitter(false, 5, &m_f, &s, 8, 8);
   if (ImGui::BeginChild("##split-first", { size.x, m_f })) {
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-    std::u8string jsonpath;
-    gltfjson::tree::TraverseJson(
-      enter, leave, m_scene->m_gltf->m_json, jsonpath);
+    gltfjson::tree::TraverseJson(enter, leave, m_scene->m_gltf->m_json);
     ImGui::PopStyleVar();
   }
   ImGui::EndChild();
