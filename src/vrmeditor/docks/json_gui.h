@@ -94,7 +94,6 @@ struct JsonGui
   }
 
   bool Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath);
-  void ShowSelected();
   std::optional<CreateGuiFunc> MatchGui(std::u8string_view jsonpath)
   {
     for (auto& f : m_guiFactories) {
@@ -107,5 +106,5 @@ struct JsonGui
   }
 
   void ShowSelector(float indent);
-  void ShowRight();
+  void ShowSelected();
 };

@@ -340,7 +340,7 @@ App::Run()
     [json = m_json, indent]() mutable { json->ShowSelector(indent); },
     true,
   });
-  addDock({ "inspector", [json = m_json]() mutable { json->ShowRight(); } });
+  addDock({ "inspector", [json = m_json]() mutable { json->ShowSelected(); } });
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {

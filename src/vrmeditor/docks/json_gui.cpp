@@ -281,7 +281,7 @@ JsonGui::ShowSelector(float indent)
 }
 
 void
-JsonGui::ShowRight()
+JsonGui::ShowSelected()
 {
   ImGui::TextUnformatted((const char*)m_selected.c_str());
   if (!m_cache) {
