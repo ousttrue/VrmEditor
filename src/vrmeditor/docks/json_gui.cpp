@@ -11,56 +11,137 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <ranges>
+#include <sstream>
 #include <string_view>
 
-static std::u8string
-LabelDefault(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
+static std::u8string_view
+GetIcon(const gltfjson::JsonPath& path)
 {
-  std::stringstream ss;
-  std::u8string key{ jsonpath.begin(), jsonpath.end() };
-  auto path = gltfjson::JsonPath(jsonpath);
   if (path.Size() == 2) {
     auto kind = path[1];
     if (kind == u8"extensions") {
-      ss << " ";
+      return u8" ";
     } else if (kind == u8"images" || kind == u8"textures" ||
                kind == u8"samplers") {
-      ss << " ";
+      return u8" ";
     } else if (kind == u8"bufferViews" || kind == u8"buffers") {
-      ss << " ";
+      return u8" ";
     } else if (kind == u8"accessors") {
-      ss << " ";
+      return u8" ";
     } else if (kind == u8"meshes" || kind == u8"skins") {
-      ss << "󰕣 ";
+      return u8"󰕣 ";
     } else if (kind == u8"materials") {
-      ss << " ";
+      return u8" ";
     } else if (kind == u8"nodes" || kind == u8"scenes" || kind == u8"scene") {
-      ss << "󰵉 ";
+      return u8"󰵉 ";
     } else if (kind == u8"animations") {
-      ss << " ";
+      return u8" ";
     } else if (kind == u8"asset") {
-      ss << " ";
+      return u8" ";
     } else if (kind == u8"extensionsUsed") {
-      ss << " ";
+      return u8" ";
     }
   }
 
-  // auto item = scene->m_gltf.Json.at(nlohmann::json::json_pointer(key));
-  auto _name = path.Back();
-  std::string name{ _name.begin(), _name.end() };
-  if (auto object = item->Object()) {
-    auto found = object->find(u8"name");
-    if (found != object->end()) {
-      // ss << name << ": " << found->second->U8String();
-    } else {
-      ss << name << ": object";
-    }
-  } else if (auto array = item->Array()) {
-    ss << name << ": [" << array->size() << "]";
+  return u8"";
+}
+
+// static std::u8string
+// LabelDefault(const gltfjson::tree::NodePtr& item, std::u8string_view
+// jsonpath)
+// {
+//   std::stringstream ss;
+//   // std::u8string key{ jsonpath.begin(), jsonpath.end() };
+//   auto path = gltfjson::JsonPath(jsonpath);
+//   // if (path.Size() == 2) {
+//   //   auto kind = path[1];
+//   //   if (kind == u8"extensions") {
+//   //     ss << " ";
+//   //   } else if (kind == u8"images" || kind == u8"textures" ||
+//   //              kind == u8"samplers") {
+//   //     ss << " ";
+//   //   } else if (kind == u8"bufferViews" || kind == u8"buffers") {
+//   //     ss << " ";
+//   //   } else if (kind == u8"accessors") {
+//   //     ss << " ";
+//   //   } else if (kind == u8"meshes" || kind == u8"skins") {
+//   //     ss << "󰕣 ";
+//   //   } else if (kind == u8"materials") {
+//   //     ss << " ";
+//   //   } else if (kind == u8"nodes" || kind == u8"scenes" || kind ==
+//   u8"scene") {
+//   //     ss << "󰵉 ";
+//   //   } else if (kind == u8"animations") {
+//   //     ss << " ";
+//   //   } else if (kind == u8"asset") {
+//   //     ss << " ";
+//   //   } else if (kind == u8"extensionsUsed") {
+//   //     ss << " ";
+//   //   }
+//   // }
+//
+//   // auto item = scene->m_gltf.Json.at(nlohmann::json::json_pointer(key));
+//   auto name = path.Back();
+//   // std::string name{ _name.begin(), _name.end() };
+//   if (auto object = item->Object()) {
+//     auto found = object->find(u8"name");
+//     if (found != object->end()) {
+//       ss << gltfjson::tree::from_u8(name) << ": "
+//          << gltfjson::tree::from_u8(found->second->U8String());
+//     } else {
+//       ss << gltfjson::tree::from_u8(name) << ": object";
+//     }
+//   } else if (auto array = item->Array()) {
+//     ss << gltfjson::tree::from_u8(name) << ": [" << array->size() << "]";
+//   } else {
+//     ss << gltfjson::tree::from_u8(name) << ": " << *item;
+//   }
+//   return (const char8_t*)ss.str().c_str();
+// }
+
+LabelCacheManager::LabelCacheManager()
+  : m_labelFactories({
+      //
+      // { "/images", LabelArray },
+    })
+{
+}
+
+static std::u8string_view
+GetLastName(std::u8string_view src)
+{
+  auto pos = src.rfind('/');
+  if (pos != std::string::npos) {
+    return src.substr(pos + 1);
   } else {
-    // ss << name << ": " << item.dump();
+    return src;
   }
-  return (const char8_t*)ss.str().c_str();
+}
+
+const LabelCache&
+LabelCacheManager::Get(const gltfjson::tree::NodePtr& item,
+                       std::u8string_view jsonpath)
+{
+  auto found = m_labelCache.find({ jsonpath.begin(), jsonpath.end() });
+  if (found != m_labelCache.end()) {
+    return found->second;
+  }
+
+  LabelCache label;
+  auto path = gltfjson::JsonPath(jsonpath);
+  auto icon = GetIcon(path);
+  label.Key += gltfjson::tree::from_u8(icon);
+  label.Key += gltfjson::tree::from_u8(GetLastName(jsonpath));
+  if (auto factory = MatchLabel(jsonpath)) {
+    label.Value = (*factory)(m_scene, jsonpath);
+  } else {
+    std::stringstream ss;
+    ss << *item;
+    label.Value = ss.str();
+  }
+  auto inserted =
+    m_labelCache.insert({ { jsonpath.begin(), jsonpath.end() }, label });
+  return inserted.first->second;
 }
 
 JsonGui::JsonGui()
@@ -90,11 +171,7 @@ JsonGui::JsonGui()
     // { "/extensions/VRMC_springBone/colliders", JsonGuiVrm1SpringColliders },
     //
   })
-  //
-  , m_labelFactories({
-      //
-      // { "/images", LabelArray },
-    })
+//
 {
 }
 
@@ -115,26 +192,25 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
     node_flags |= ImGuiTreeNodeFlags_Selected;
   }
 
-  std::u8string label = u8"not found";
-  auto found = m_labelCache.find({ jsonpath.begin(), jsonpath.end() });
-  if (found != m_labelCache.end()) {
-    label = found->second;
-  } else {
-    if (auto factory = MatchLabel(jsonpath)) {
-      label = (*factory)(m_scene, jsonpath);
-    } else {
-      label = LabelDefault(item, jsonpath);
-    }
-    m_labelCache.insert({ { jsonpath.begin(), jsonpath.end() }, label });
-  }
+  auto& label = m_label.Get(item, jsonpath);
 
-  bool node_open = ImGui::TreeNodeEx(
-    (void*)(intptr_t)item.get(), node_flags, "%s", label.c_str());
+  ImGui::TableNextRow();
+
+  // 0
+  ImGui::TableNextColumn();
+  bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)item.get(),
+                                     node_flags,
+                                     "%s",
+                                     (const char*)label.Key.c_str());
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     m_selected = jsonpath;
     m_cache = {};
   }
+
+  // 1
+  ImGui::TableNextColumn();
+  ImGui::TextUnformatted((const char*)label.Value.c_str());
 
   return node_open && !is_leaf;
 }
@@ -172,26 +248,6 @@ Splitter(bool split_vertically,
 }
 
 void
-JsonGui::Show(float indent)
-{
-  // auto size = ImGui::GetCurrentWindow()->Size;
-  auto size = ImGui::GetContentRegionAvail();
-  float s = size.y - m_f - 5;
-  // ImGui::Text("%f, %f: %f; %f", size.x, size.y, f, s);
-  ::Splitter(false, 5, &m_f, &s, 8, 8);
-
-  if (ImGui::BeginChild("##split-first", { size.x, m_f })) {
-    ShowSelector(indent);
-  }
-  ImGui::EndChild();
-
-  if (ImGui::BeginChild("##split-second", { size.x, s })) {
-    ShowRight();
-  }
-  ImGui::EndChild();
-}
-
-void
 JsonGui::ShowSelector(float indent)
 {
   auto enter = [this](const gltfjson::tree::NodePtr& item,
@@ -200,9 +256,28 @@ JsonGui::ShowSelector(float indent)
   };
   auto leave = []() { ImGui::TreePop(); };
 
-  ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-  gltfjson::tree::TraverseJson(enter, leave, m_scene->m_gltf->m_json);
-  ImGui::PopStyleVar();
+  static ImGuiTableFlags flags =
+    ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH |
+    ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg |
+    ImGuiTableFlags_NoBordersInBody;
+
+  if (ImGui::BeginTable("3ways", 2, flags)) {
+    // The first column will use the default _WidthStretch when ScrollX is Off
+    // and _WidthFixed when ScrollX is On
+    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
+    ImGui::TableSetupColumn(
+      "Value", ImGuiTableColumnFlags_WidthFixed, 20 * 12.0f);
+    ImGui::TableHeadersRow();
+
+    {
+      // tree
+      ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
+      gltfjson::tree::TraverseJson(enter, leave, m_scene->m_gltf->m_json);
+      ImGui::PopStyleVar();
+    }
+
+    ImGui::EndTable();
+  }
 }
 
 void
@@ -217,16 +292,4 @@ JsonGui::ShowRight()
     }
   }
   m_cache();
-}
-
-void
-JsonGui::Show(const char* title, bool* p_open, float indent)
-{
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-  auto is_open = ImGui::Begin(title, p_open);
-  ImGui::PopStyleVar();
-  if (is_open) {
-    Show(indent);
-  }
-  ImGui::End();
 }

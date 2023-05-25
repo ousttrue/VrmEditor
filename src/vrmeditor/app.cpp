@@ -335,9 +335,11 @@ App::Run()
   PoseStream->CreateDock(addDock);
 
   auto indent = m_gui->FontSize * 0.5f;
-  addDock({ "json", [json = m_json, indent]() mutable {
-             json->ShowSelector(indent);
-           } });
+  addDock({
+    "json",
+    [json = m_json, indent]() mutable { json->ShowSelector(indent); },
+    true,
+  });
   addDock({ "inspector", [json = m_json]() mutable { json->ShowRight(); } });
 
   std::optional<libvrm::Time> lastTime;

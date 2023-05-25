@@ -1,5 +1,6 @@
 #pragma once
 #include "gui.h"
+#include <gltfjson.h>
 #include <gltfjson/jsonpath.h>
 #include <sstream>
 #include <string>
@@ -23,9 +24,15 @@ struct JsonGuiFactory
   }
 };
 
-using CreateLabelFunc = std::function<std::u8string(
+using CreateLabelFunc = std::function<std::string(
   const std::shared_ptr<libvrm::gltf::GltfRoot>& scene,
   std::u8string_view jsonpath)>;
+
+struct LabelCache
+{
+  std::string Key;
+  std::string Value;
+};
 
 struct JsonLabelFactory
 {
@@ -38,41 +45,14 @@ struct JsonLabelFactory
   }
 };
 
-struct JsonGui
+class LabelCacheManager
 {
-  // splitter ?
-  float m_f = 300;
-
-  std::list<JsonGuiFactory> m_guiFactories;
-  std::list<JsonLabelFactory> m_labelFactories;
-
   std::shared_ptr<libvrm::gltf::GltfRoot> m_scene;
-  std::u8string m_selected;
-  ShowGui m_cache;
-  std::unordered_map<std::u8string, std::u8string> m_labelCache;
+  std::list<JsonLabelFactory> m_labelFactories;
+  std::unordered_map<std::u8string, LabelCache> m_labelCache;
 
-  JsonGui();
-
-  void SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& scene)
-  {
-    m_scene = scene;
-    m_cache = {};
-    m_labelCache.clear();
-  }
-
-  bool Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath);
-  void Show(float indent);
-  void ShowSelected();
-  std::optional<CreateGuiFunc> MatchGui(std::u8string_view jsonpath)
-  {
-    for (auto& f : m_guiFactories) {
-      if (f.Match(jsonpath)) {
-        return f.Factory;
-      }
-    }
-    // not found
-    return {};
-  }
+public:
+  LabelCacheManager();
   std::optional<CreateLabelFunc> MatchLabel(std::u8string_view jsonpath)
   {
     for (auto& f : m_labelFactories) {
@@ -84,7 +64,47 @@ struct JsonGui
     return {};
   }
 
-  void Show(const char* title, bool* p_open, float indent);
+  const LabelCache& Get(const gltfjson::tree::NodePtr& item,
+                        std::u8string_view jsonpath);
+
+  void SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& scene)
+  {
+    m_scene = scene;
+    m_labelCache.clear();
+  }
+};
+
+struct JsonGui
+{
+  std::shared_ptr<libvrm::gltf::GltfRoot> m_scene;
+  std::u8string m_selected;
+
+  std::list<JsonGuiFactory> m_guiFactories;
+  ShowGui m_cache;
+
+  LabelCacheManager m_label;
+
+  JsonGui();
+
+  void SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& scene)
+  {
+    m_scene = scene;
+    m_cache = {};
+    m_label.SetScene(scene);
+  }
+
+  bool Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath);
+  void ShowSelected();
+  std::optional<CreateGuiFunc> MatchGui(std::u8string_view jsonpath)
+  {
+    for (auto& f : m_guiFactories) {
+      if (f.Match(jsonpath)) {
+        return f.Factory;
+      }
+    }
+    // not found
+    return {};
+  }
 
   void ShowSelector(float indent);
   void ShowRight();
