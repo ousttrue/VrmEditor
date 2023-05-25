@@ -85,4 +85,7 @@ struct JsonGui
   }
 
   void Show(const char* title, bool* p_open, float indent);
+
+  void ShowSelector(float indent);
+  void ShowRight();
 };

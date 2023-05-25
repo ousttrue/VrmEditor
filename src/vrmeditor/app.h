@@ -71,7 +71,6 @@ class App
   std::shared_ptr<glr::ViewSettings> m_settings;
   std::shared_ptr<glr::RenderingEnv> m_env;
 
-  std::shared_ptr<GltfJsonGui> m_gltfjson;
   std::shared_ptr<JsonGui> m_json;
 
   App();

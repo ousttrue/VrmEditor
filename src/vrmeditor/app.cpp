@@ -79,7 +79,6 @@ App::App()
   // map.
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-  m_gltfjson = std::make_shared<GltfJsonGui>();
   m_json = std::make_shared<JsonGui>();
 }
 
@@ -107,9 +106,8 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
   };
   auto indent = m_gui->FontSize * 0.5f;
 
-  m_json->SetScene(table);
   {
-    m_gltfjson->SetGltf(*table->m_gltf, table->m_bin);
+    m_json->SetScene(table);
 
     HumanoidDock::Create(
       addDock, "humanoid-body", "humanoid-finger", m_runtime->m_table);
@@ -336,29 +334,11 @@ App::Run()
 
   PoseStream->CreateDock(addDock);
 
-  addDock({ "gltf", [gltfjson = m_gltfjson](const char* title, bool* p_open) {
-             gltfjson->ShowGuiSelector(title, p_open);
-           } });
-  addDock({ "gltf.selected",
-            [gltfjson = m_gltfjson](const char* title, bool* p_open) {
-              gltfjson->ShowGuiProperty(title, p_open);
-            } });
-  addDock({ "gltf.selected.json",
-            [gltfjson = m_gltfjson](const char* title, bool* p_open) {
-              gltfjson->ShowGuiText(title, p_open);
-            } });
-
   auto indent = m_gui->FontSize * 0.5f;
-  addDock(
-    { "json", [json = m_json, indent](const char* title, bool* p_open) mutable {
-       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-       auto is_open = ImGui::Begin(title, p_open);
-       ImGui::PopStyleVar();
-       if (is_open) {
-         json->Show(indent);
-       }
-       ImGui::End();
-     } });
+  addDock({ "json", [json = m_json, indent]() mutable {
+             json->ShowSelector(indent);
+           } });
+  addDock({ "inspector", [json = m_json]() mutable { json->ShowRight(); } });
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {

@@ -128,8 +128,8 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
     m_labelCache.insert({ { jsonpath.begin(), jsonpath.end() }, label });
   }
 
-  bool node_open =
-    ImGui::TreeNodeEx((void*)(intptr_t)item.get(), node_flags, "%s", label.c_str());
+  bool node_open = ImGui::TreeNodeEx(
+    (void*)(intptr_t)item.get(), node_flags, "%s", label.c_str());
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     m_selected = jsonpath;
@@ -174,39 +174,51 @@ Splitter(bool split_vertically,
 void
 JsonGui::Show(float indent)
 {
+  // auto size = ImGui::GetCurrentWindow()->Size;
+  auto size = ImGui::GetContentRegionAvail();
+  float s = size.y - m_f - 5;
+  // ImGui::Text("%f, %f: %f; %f", size.x, size.y, f, s);
+  ::Splitter(false, 5, &m_f, &s, 8, 8);
+
+  if (ImGui::BeginChild("##split-first", { size.x, m_f })) {
+    ShowSelector(indent);
+  }
+  ImGui::EndChild();
+
+  if (ImGui::BeginChild("##split-second", { size.x, s })) {
+    ShowRight();
+  }
+  ImGui::EndChild();
+}
+
+void
+JsonGui::ShowSelector(float indent)
+{
   auto enter = [this](const gltfjson::tree::NodePtr& item,
                       std::u8string_view jsonpath) {
     return Enter(item, jsonpath);
   };
   auto leave = []() { ImGui::TreePop(); };
 
-  // auto size = ImGui::GetCurrentWindow()->Size;
-  auto size = ImGui::GetContentRegionAvail();
-  float s = size.y - m_f - 5;
-  // ImGui::Text("%f, %f: %f; %f", size.x, size.y, f, s);
-  ::Splitter(false, 5, &m_f, &s, 8, 8);
-  if (ImGui::BeginChild("##split-first", { size.x, m_f })) {
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-    gltfjson::tree::TraverseJson(enter, leave, m_scene->m_gltf->m_json);
-    ImGui::PopStyleVar();
-  }
-  ImGui::EndChild();
-
-  if (ImGui::BeginChild("##split-second", { size.x, s })) {
-    ImGui::TextUnformatted((const char*)m_selected.c_str());
-    if (!m_cache) {
-      if (auto mached = MatchGui(m_selected)) {
-        m_cache = (*mached)(m_scene, m_selected);
-      } else {
-        m_cache = []() {};
-      }
-    }
-    m_cache();
-  }
-  ImGui::EndChild();
+  ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
+  gltfjson::tree::TraverseJson(enter, leave, m_scene->m_gltf->m_json);
+  ImGui::PopStyleVar();
 }
 
-// Dock("gltf-json"
+void
+JsonGui::ShowRight()
+{
+  ImGui::TextUnformatted((const char*)m_selected.c_str());
+  if (!m_cache) {
+    if (auto mached = MatchGui(m_selected)) {
+      m_cache = (*mached)(m_scene, m_selected);
+    } else {
+      m_cache = []() {};
+    }
+  }
+  m_cache();
+}
+
 void
 JsonGui::Show(const char* title, bool* p_open, float indent)
 {
