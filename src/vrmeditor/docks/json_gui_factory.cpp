@@ -4,7 +4,7 @@
 
 template<typename T>
 inline CreateGuiFunc
-GenGuiFunc()
+TypeFunc()
 {
   return [](auto jsonapath) {
     return [](const gltfjson::typing::Root& root,
@@ -18,16 +18,28 @@ GenGuiFunc()
 JsonGuiFactoryManager::JsonGuiFactoryManager()
   : //
   m_guiFactories({
-    //
+    // buffer/bufferView/accessor
+    { u8"/buffers/*", TypeFunc<gltfjson::typing::Buffer>() },
+    { u8"/bufferViews/*", TypeFunc<gltfjson::typing::BufferView>() },
+    { u8"/accessors/*", TypeFunc<gltfjson::typing::Accessor>() },
+    // image/sampelr/texture/material
+    { u8"/images/*", TypeFunc<gltfjson::typing::Image>() },
+    { u8"/sampelrs/*", TypeFunc<gltfjson::typing::Sampler>() },
+    { u8"/textures/*", TypeFunc<gltfjson::typing::Texture>() },
+    { u8"/materials/*", TypeFunc<gltfjson::typing::Material>() },
+    // mesh/skin
+    { u8"/meshes/*", TypeFunc<gltfjson::typing::Mesh>() },
+    { u8"/skins/*", TypeFunc<gltfjson::typing::Skin>() },
+    // node/scene/animation/camera
+    { u8"/nodes/*", TypeFunc<gltfjson::typing::Node>() },
+    { u8"/scenes/*", TypeFunc<gltfjson::typing::Scene>() },
+    { u8"/animations/*", TypeFunc<gltfjson::typing::Animation>() },
+    // { u8"/cameras/*", TypeFunc<gltfjson::typing::Camera>() },
+
     // { "/accessors", JsonGuiAccessorList },
-    {
-      u8"/accessors/*",
-      GenGuiFunc<gltfjson::typing::Accessor>(),
-    },
     // { "/images", JsonGuiImageList },
     // { "/materials", JsonGuiMaterialList },
     // { "/meshes", JsonGuiMeshList },
-    // { "/meshes/*", JsonGuiMesh },
     // { "/meshes/*/primitives/*/attributes/POSITION", JsonGuiAccessor },
     // { "/meshes/*/primitives/*/attributes/NORMAL", JsonGuiAccessor },
     // { "/meshes/*/primitives/*/attributes/TEXCOORD_0", JsonGuiAccessor },

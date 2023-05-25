@@ -12,10 +12,77 @@
 #include <sstream>
 #include <unordered_map>
 
-void
-ShowText(const std::u8string& text)
+struct InputTextCallback_UserData
 {
-  ImGui::TextWrapped("%s", (const char*)text.data());
+  std::u8string* Str;
+  ImGuiInputTextCallback ChainCallback;
+  void* ChainCallbackUserData;
+};
+
+static int
+InputTextCallback(ImGuiInputTextCallbackData* data)
+{
+  InputTextCallback_UserData* user_data =
+    (InputTextCallback_UserData*)data->UserData;
+  if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+    // Resize string callback
+    // If for some reason we refuse the new length (BufTextLen) and/or capacity
+    // (BufSize) we need to set them back to what we want.
+    std::u8string* str = user_data->Str;
+    IM_ASSERT(data->Buf == (const char*)str->c_str());
+    str->resize(data->BufTextLen);
+    data->Buf = (char*)str->c_str();
+  } else if (user_data->ChainCallback) {
+    // Forward to user callback, if any
+    data->UserData = user_data->ChainCallbackUserData;
+    return user_data->ChainCallback(data);
+  }
+  return 0;
+}
+
+bool
+InputU8Text(const char* label,
+            std::u8string* str,
+            ImGuiInputTextFlags flags = 0,
+            ImGuiInputTextCallback callback = nullptr,
+            void* user_data = nullptr)
+{
+  IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
+  flags |= ImGuiInputTextFlags_CallbackResize;
+
+  InputTextCallback_UserData cb_user_data;
+  cb_user_data.Str = str;
+  cb_user_data.ChainCallback = callback;
+  cb_user_data.ChainCallbackUserData = user_data;
+  return ImGui::InputText(label,
+                          (char*)str->c_str(),
+                          str->capacity() + 1,
+                          flags,
+                          InputTextCallback,
+                          &cb_user_data);
+}
+
+void
+ShowGuiString(const char* label, const gltfjson::tree::NodePtr& node)
+{
+  if (node) {
+    if (auto p = node->Ptr<std::u8string>()) {
+      InputU8Text(label, p);
+    }
+  }
+}
+
+void
+ShowGuiUInt32(const char* label, const gltfjson::tree::NodePtr& node)
+{
+  if (node) {
+    if (auto p = node->Ptr<float>()) {
+      auto value = (uint32_t)*p;
+      if (ImGui::InputScalar(label, ImGuiDataType_U32, &value)) {
+        *p = (float)value;
+      }
+    }
+  }
 }
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
@@ -204,12 +271,9 @@ ShowGui(gltfjson::typing::Asset asset)
 // }
 
 static void
-ShowGui(const char* base,
-        std::optional<uint32_t> index,
-        gltfjson::typing::ChildOfRootProperty& prop)
+ShowGuiChildOfRoot(gltfjson::typing::ChildOfRootProperty& prop)
 {
-  ImGui::Text("%s/%d", base, index ? *index : -1);
-  // ShowGui("name", prop.Name);
+  ShowGuiString("name", prop.m_json->Get(u8"name"));
 }
 
 // buffer/bufferView/accessor
@@ -233,9 +297,9 @@ ShowGui(const gltfjson::typing::Root& root,
   // ShowGui("/bufferViews", root.BufferViews.GetIndex(bufferView), bufferView);
   ImGui::BeginDisabled(true);
   // SelectId("Buffer", &bufferView.Buffer, root.Buffers);
-  ImGui::InputScalar("ByteOffset", ImGuiDataType_U32, bufferView.ByteOffset());
-  ImGui::InputScalar("ByteLength", ImGuiDataType_U32, bufferView.ByteLength());
-  ImGui::InputScalar("ByteStride", ImGuiDataType_U32, bufferView.ByteStride());
+  ShowGuiUInt32("ByteOffset", bufferView.m_json->Get(u8"byteOffset"));
+  ShowGuiUInt32("ByteLength", bufferView.m_json->Get(u8"byteLength"));
+  ShowGuiUInt32("ByteStride", bufferView.m_json->Get(u8"byteStride"));
   // grapho::imgui::EnumCombo(
   //   "Target", &bufferView.Target, gltfjson::annotation::TargetsCombo);
   ImGui::EndDisabled();
@@ -581,7 +645,7 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Mesh mesh)
 {
-  // ShowGui("/meshes", root.Meshes.GetIndex(mesh), mesh);
+  ShowGuiChildOfRoot(mesh);
 
   PrintfBuffer buf;
   // int i = 0;
