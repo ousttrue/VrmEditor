@@ -107,7 +107,7 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
   auto indent = m_gui->FontSize * 0.5f;
 
   {
-    m_json->SetScene(table);
+    m_json->SetScene(table->m_gltf->m_json);
 
     HumanoidDock::Create(
       addDock, "humanoid-body", "humanoid-finger", m_runtime->m_table);

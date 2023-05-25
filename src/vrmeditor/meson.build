@@ -19,6 +19,8 @@ srcs = [
     'docks/gltfjson_gui.cpp',
     'docks/type_gui.cpp',
     'docks/json_gui.cpp',
+    'docks/json_gui_factory.cpp',
+    'docks/json_gui_labelcache.cpp',
     'humanpose/humanpose_stream.cpp',
     'humanpose/udp_receiver.cpp',
     'humanpose/bvhnode.cpp',
