@@ -242,8 +242,6 @@ SelectId(const char* label,
   }
   std::span<const TUPLE> span(combo.data(), combo.size());
 
-  bool removed = false;
-
   grapho::imgui::GenericCombo<uint32_t>(label, &selected, span);
   if (selected >= 0 && selected < values->size()) {
     *id = (float)selected;
@@ -292,29 +290,43 @@ ListId(const char* label, std::vector<uint32_t>& list, const T& values)
   }
 }
 
-template<typename T>
 static void
-ShowGuiVector(const char* label,
-              std::vector<T>& vector,
-              const std::function<void(size_t i, T&)>& showGui)
+ShowGuiVector(
+  const char* label,
+  const gltfjson::tree::NodePtr& parentNode,
+  std::u8string_view key,
+  const std::function<void(size_t i, const gltfjson::tree::NodePtr&)>& showGui)
 {
+  if (!parentNode) {
+    return;
+  }
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, gltfjson::tree::ArrayValue{});
+  }
+  auto array = node->Array();
+  if (!array) {
+    node->Var = gltfjson::tree::ArrayValue{};
+    array = node->Array();
+  }
+
   if (ImGui::CollapsingHeader(label)) {
     ImGui::Indent();
-    ImGui::PushID(&vector);
+    ImGui::PushID(node.get());
     PrintfBuffer buf;
     size_t i = 0;
-    for (auto it = vector.begin(); it != vector.end(); ++i) {
+    for (auto it = array->begin(); it != array->end(); ++i) {
       showGui(i, *it);
       ImGui::SameLine();
       if (ImGui::Button(buf.Printf("x##%s_%d", label, i))) {
-        it = vector.erase(it);
+        it = array->erase(it);
       } else {
         ++it;
       }
     }
 
     if (ImGui::Button(buf.Printf("+##%s_%d", label, i))) {
-      vector.push_back({});
+      array->push_back({});
     }
     ImGui::PopID();
     ImGui::Unindent();
@@ -351,12 +363,6 @@ ShowGuiOptional(
     }
   }
 }
-
-// static void
-// ShowGui(const char* label, std::u8string& str)
-// {
-//   ImGui::InputText(label, &str);
-// }
 
 void
 ShowGui(const gltfjson::typing::Root& root,
@@ -420,13 +426,6 @@ public:
 };
 }
 
-static void
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Sparse sparse)
-{
-}
-
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
@@ -455,20 +454,21 @@ ShowGui(const gltfjson::typing::Root& root,
     { (const std::tuple<int, std::string>*)gltfjson::format::TypesCombo,
       std::size(gltfjson::format::TypesCombo) });
 
-  // ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-  // ShowGuiVector<float>("Max", accessor.Max, [](size_t i, auto& v) {
-  //   if (i) {
-  //     ImGui::SameLine();
-  //   }
-  //   ImGui::Text("%f", v);
-  // });
-  // ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-  // ShowGuiVector<float>("Min", accessor.Min, [](size_t i, auto& v) {
-  //   if (i) {
-  //     ImGui::SameLine();
-  //   }
-  //   ImGui::Text("%f", v);
-  // });
+  ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  ShowGuiVector("Max", accessor.m_json, u8"max", [](size_t i, auto& v) {
+    if (i) {
+      ImGui::SameLine();
+    }
+    ImGui::Text("%f", *v->template Ptr<float>());
+  });
+
+  ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+  ShowGuiVector("Min", accessor.m_json, u8"min", [](size_t i, auto& v) {
+    if (i) {
+      ImGui::SameLine();
+    }
+    ImGui::Text("%f", *v->template Ptr<float>());
+  });
 
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
   ShowGuiOptional(accessor.m_json, u8"sparse", [](auto& node) {
@@ -782,9 +782,10 @@ ShowGui(const gltfjson::typing::Root& root,
   //   }
   // }
 
-  // ShowGuiVector<float>("Weights", mesh.Weights, [&buf](size_t i, auto& v) {
-  //   ImGui::SliderFloat(buf.Printf("##Weights_%zu", i), &v, 0, 1);
-  // });
+  ShowGuiVector("Weights", mesh.m_json, u8"weights", [&buf](size_t i, auto& v) {
+    ImGui::SliderFloat(
+      buf.Printf("##Weights_%zu", i), v->template Ptr<float>(), 0, 1);
+  });
 }
 
 // skin/node/scene/animation
@@ -834,11 +835,12 @@ ShowGui(const gltfjson::typing::Root& root,
     //       ImGui::InputFloat3("##translation", t.data());
   });
 
-  // PrintfBuffer buf;
-  // ShowGuiVector<float>("Weights", node.Weights, [&buf](size_t i, auto& value)
-  // {
-  //   ImGui::SliderFloat(buf.Printf("##Weights_%zu", i), &value, 0, 1);
-  // });
+  PrintfBuffer buf;
+  ShowGuiVector(
+    "Weights", node.m_json, u8"weights", [&buf](size_t i, auto& value) {
+      ImGui::SliderFloat(
+        buf.Printf("##Weights_%zu", i), value->template Ptr<float>(), 0, 1);
+    });
 }
 
 void
