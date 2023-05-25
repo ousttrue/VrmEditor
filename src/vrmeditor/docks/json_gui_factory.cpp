@@ -20,17 +20,19 @@ TypeFunc()
 JsonGuiFactoryManager::JsonGuiFactoryManager()
   : //
   m_guiFactories({
+    { u8"/asset", TypeFunc<gltfjson::typing::Asset>() },
     // buffer/bufferView/accessor
     { u8"/buffers/*", TypeFunc<gltfjson::typing::Buffer>() },
     { u8"/bufferViews/*", TypeFunc<gltfjson::typing::BufferView>() },
     { u8"/accessors/*", TypeFunc<gltfjson::typing::Accessor>() },
     // image/sampelr/texture/material
     { u8"/images/*", TypeFunc<gltfjson::typing::Image>() },
-    { u8"/sampelrs/*", TypeFunc<gltfjson::typing::Sampler>() },
+    { u8"/samplers/*", TypeFunc<gltfjson::typing::Sampler>() },
     { u8"/textures/*", TypeFunc<gltfjson::typing::Texture>() },
     { u8"/materials/*", TypeFunc<gltfjson::typing::Material>() },
     // mesh/skin
     { u8"/meshes/*", TypeFunc<gltfjson::typing::Mesh>() },
+    { u8"/meshes/*/primitives/*", TypeFunc<gltfjson::typing::MeshPrimitive>() },
     { u8"/skins/*", TypeFunc<gltfjson::typing::Skin>() },
     // node/scene/animation/camera
     { u8"/nodes/*", TypeFunc<gltfjson::typing::Node>() },

@@ -9,7 +9,9 @@
 // ShowGui(std::list<gltfjson::annotation::Extra>& extras);
 
 void
-ShowGui(gltfjson::typing::Asset& asset);
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::Asset asset);
 
 void
 ShowText(const std::u8string& text);

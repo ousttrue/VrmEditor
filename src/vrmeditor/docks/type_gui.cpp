@@ -40,7 +40,7 @@ InputTextCallback(ImGuiInputTextCallbackData* data)
   return 0;
 }
 
-bool
+static bool
 InputU8Text(const char* label,
             std::u8string* str,
             ImGuiInputTextFlags flags = 0,
@@ -62,7 +62,7 @@ InputU8Text(const char* label,
                           &cb_user_data);
 }
 
-void
+static void
 ShowGuiString(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
               std::u8string_view key)
@@ -83,16 +83,110 @@ ShowGuiString(const char* label,
   InputU8Text(label, p);
 }
 
-void
-ShowGuiUInt32(const char* label, const gltfjson::tree::NodePtr& node)
+static void
+ShowGuiBool(const char* label,
+            const gltfjson::tree::NodePtr& parentNode,
+            std::u8string_view key)
 {
-  if (node) {
-    if (auto p = node->Ptr<float>()) {
-      auto value = (uint32_t)*p;
-      if (ImGui::InputScalar(label, ImGuiDataType_U32, &value)) {
-        *p = (float)value;
-      }
+  if (!parentNode) {
+    return;
+  }
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, u8"");
+  }
+
+  auto p = node->Ptr<bool>();
+  if (!p) {
+    node->Var = false;
+    p = node->Ptr<bool>();
+  }
+
+  ImGui::Checkbox(label, p);
+}
+
+static void
+ShowGuiUInt32(const char* label,
+              const gltfjson::tree::NodePtr& parentNode,
+              std::u8string_view key)
+{
+  if (!parentNode) {
+    return;
+  }
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, u8"");
+  }
+
+  auto p = node->Ptr<float>();
+  if (!p) {
+    node->Var = 0.0f;
+    p = node->Ptr<float>();
+  }
+
+  auto value = (uint32_t)*p;
+  if (ImGui::InputScalar(label, ImGuiDataType_U32, &value)) {
+    *p = (float)value;
+  }
+}
+
+template<typename T>
+static void
+ShowGuiEnum(const char* label,
+            const gltfjson::tree::NodePtr& parentNode,
+            std::u8string_view key,
+            std::span<const std::tuple<T, const char*>> combo)
+{
+  if (!parentNode) {
+    return;
+  }
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, u8"");
+  }
+
+  auto p = node->Ptr<float>();
+  if (!p) {
+    node->Var = 0.0f;
+    p = node->Ptr<float>();
+  }
+
+  auto value = (T)*p;
+  if (grapho::imgui::EnumCombo(label, &value, combo)) {
+    *p = (float)value;
+  }
+}
+
+static void
+ShowGuiStringEnum(const char* label,
+                  const gltfjson::tree::NodePtr& parentNode,
+                  std::u8string_view key,
+                  std::span<const std::tuple<int, std::string>> combo)
+{
+  if (!parentNode) {
+    return;
+  }
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, u8"");
+  }
+
+  auto p = node->Ptr<std::u8string>();
+  if (!p) {
+    node->Var = u8"";
+    p = node->Ptr<std::u8string>();
+  }
+
+  int i = 0;
+  for (; i < combo.size(); ++i) {
+    auto& str = std::get<1>(combo[i]);
+    if (*p == gltfjson::tree::to_u8(str)) {
+      break;
     }
+  }
+
+  if (grapho::imgui::GenericCombo(label, &i, combo)) {
+    *p = gltfjson::tree::to_u8(std::get<1>(combo[i]));
   }
 }
 
@@ -112,7 +206,6 @@ HelpMarker(const char* desc)
   }
 }
 
-// return removed
 void
 SelectId(const char* label,
          const gltfjson::tree::NodePtr& idParent,
@@ -255,52 +348,22 @@ ShowGuiOptional(std::optional<T>& optional,
   }
 }
 
-static void
-ShowGui(const char* label, std::u8string& str)
-{
-  ImGui::InputText(label, &str);
-}
+// static void
+// ShowGui(const char* label, std::u8string& str)
+// {
+//   ImGui::InputText(label, &str);
+// }
 
 void
-ShowGui(gltfjson::typing::Asset asset)
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::Asset asset)
 {
-  // ShowGui("copyright", asset.Copyright);
-  // ShowGui("generator", asset.Generator);
-  // ShowGui("version", asset.Version);
-  // ShowGui("minversion", asset.MinVersion);
+  ShowGuiString("copyright", asset.m_json, u8"copyright");
+  ShowGuiString("generator", asset.m_json, u8"generator");
+  ShowGuiString("version", asset.m_json, u8"version");
+  ShowGuiString("minversion", asset.m_json, u8"minVersion");
 }
-
-// void
-// ShowGui(std::list<gltfjson::annotation::Extension>& extensions)
-// {
-//   if (extensions.size()) {
-//     if (ImGui::CollapsingHeader("Extensions")) {
-//       ImGui::Indent();
-//       for (auto& extension : extensions) {
-//         ImGui::Text("%s => %s",
-//                     (const char*)extension.Name.c_str(),
-//                     (const char*)extension.Value.c_str());
-//       }
-//       ImGui::Unindent();
-//     }
-//   }
-// }
-//
-// void
-// ShowGui(std::list<gltfjson::annotation::Extra>& extras)
-// {
-//   if (extras.size()) {
-//     if (ImGui::CollapsingHeader("Extras")) {
-//       ImGui::Indent();
-//       for (auto& extra : extras) {
-//         ImGui::Text("%s => %s",
-//                     (const char*)extra.Name.c_str(),
-//                     (const char*)extra.Value.c_str());
-//       }
-//       ImGui::Unindent();
-//     }
-//   }
-// }
 
 static void
 ShowGuiChildOfRoot(gltfjson::typing::ChildOfRootProperty& prop)
@@ -314,9 +377,9 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Buffer buffer)
 {
-  // ShowGui("/buffers", root.Buffers.GetIndex(buffer), buffer);
+  ShowGuiChildOfRoot(buffer);
   ImGui::BeginDisabled(true);
-  // ShowGui("Uri", buffer.Uri);
+  ShowGuiString("Uri", buffer.m_json, u8"uri");
   ImGui::InputScalar("ByteLength", ImGuiDataType_U32, buffer.ByteLength());
   ImGui::EndDisabled();
 }
@@ -331,11 +394,11 @@ ShowGui(const gltfjson::typing::Root& root,
 
   SelectId(
     "Buffer", bufferView.m_json, u8"buffer", root.m_json->Get(u8"buffers"));
-  ShowGuiUInt32("ByteOffset", bufferView.m_json->Get(u8"byteOffset"));
-  ShowGuiUInt32("ByteLength", bufferView.m_json->Get(u8"byteLength"));
-  ShowGuiUInt32("ByteStride", bufferView.m_json->Get(u8"byteStride"));
-  // grapho::imgui::EnumCombo(
-  //   "Target", &bufferView.Target, gltfjson::annotation::TargetsCombo);
+  ShowGuiUInt32("ByteOffset", bufferView.m_json, u8"byteOffset");
+  ShowGuiUInt32("ByteLength", bufferView.m_json, u8"byteLength");
+  ShowGuiUInt32("ByteStride", bufferView.m_json, u8"byteStride");
+  ShowGuiEnum<gltfjson::format::Targets>(
+    "Target", bufferView.m_json, u8"target", gltfjson::format::TargetsCombo);
   ImGui::EndDisabled();
 }
 
@@ -358,21 +421,28 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Accessor accessor)
 {
-  // ShowGui("/accessors", root.Accessors.GetIndex(accessor), accessor);
+  ShowGuiChildOfRoot(accessor);
   ImGui::BeginDisabled(true);
-  // SelectId("BufferView", &accessor.BufferView, root.BufferViews);
+  SelectId(
+    "BufferView", accessor.m_json, u8"bufferView", root.BufferViews.m_json);
   auto value = (uint32_t)*accessor.ByteOffset();
   if (ImGui::InputScalar("ByteOffset", ImGuiDataType_U32, &value)) {
     *accessor.ByteOffset() = (float)value;
   }
 
-  // grapho::imgui::EnumCombo("ComponentType",
-  //                          &accessor.ComponentType,
-  //                          gltfjson::format::ComponentTypesCombo);
-  // ImGui::Checkbox("Normalized", &accessor.Normalized);
-  // ImGui::InputScalar("Count", ImGuiDataType_U32, &accessor.Count);
-  // grapho::imgui::EnumCombo(
-  //   "Type", &accessor.Type, gltfjson::annotation::TypesCombo);
+  ShowGuiEnum<gltfjson::format::ComponentTypes>(
+    "ComponentType",
+    accessor.m_json,
+    u8"componentType",
+    gltfjson::format::ComponentTypesCombo);
+  ShowGuiBool("Normalized", accessor.m_json, u8"normalized");
+  ShowGuiUInt32("Count", accessor.m_json, u8"count");
+  ShowGuiStringEnum(
+    "Type",
+    accessor.m_json,
+    u8"type",
+    { (const std::tuple<int, std::string>*)gltfjson::format::TypesCombo,
+      std::size(gltfjson::format::TypesCombo) });
 
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
   // ShowGuiVector<float>("Max", accessor.Max, [](size_t i, auto& v) {
@@ -482,12 +552,12 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Image image)
 {
-  // ShowGui("/images", root.Images.GetIndex(image), image);
+  ShowGuiChildOfRoot(image);
   ImGui::BeginDisabled(true);
-  // ShowGui("Uri", image.Uri);
-  // ShowGui("MimeType", image.MimeType);
+  ShowGuiString("Uri", image.m_json, u8"uri");
+  ShowGuiString("MimeType", image.m_json, u8"mimeType");
   std::u8string MimeType;
-  // SelectId("BufferView", &image.BufferView, root.BufferViews);
+  SelectId("BufferView", image.m_json, u8"bufferView", root.BufferViews.m_json);
   ImGui::EndDisabled();
 }
 
@@ -496,17 +566,21 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Sampler sampler)
 {
-  // ShowGui("/samplers", root.Samplers.GetIndex(sampler), sampler);
-  // grapho::imgui::EnumCombo("magFilter",
-  //                          &sampler.MagFilter,
-  //                          gltfjson::annotation::TextureMagFilterCombo);
-  // grapho::imgui::EnumCombo("minFilter",
-  //                          &sampler.MinFilter,
-  //                          gltfjson::annotation::TextureMinFilterCombo);
-  // grapho::imgui::EnumCombo(
-  //   "wrapS", &sampler.WrapS, gltfjson::annotation::TextureWrapCombo);
-  // grapho::imgui::EnumCombo(
-  //   "wrapT", &sampler.WrapT, gltfjson::annotation::TextureWrapCombo);
+  ShowGuiChildOfRoot(sampler);
+  ShowGuiEnum<gltfjson::format::TextureMagFilter>(
+    "magFilter",
+    sampler.m_json,
+    u8"magFilter",
+    gltfjson::format::TextureMagFilterCombo);
+  ShowGuiEnum<gltfjson::format::TextureMinFilter>(
+    "minFilter",
+    sampler.m_json,
+    u8"minFilter",
+    gltfjson::format::TextureMinFilterCombo);
+  ShowGuiEnum<gltfjson::format::TextureWrap>(
+    "wrapS", sampler.m_json, u8"wrapS", gltfjson::format::TextureWrapCombo);
+  ShowGuiEnum<gltfjson::format::TextureWrap>(
+    "wrapT", sampler.m_json, u8"wrapT", gltfjson::format::TextureWrapCombo);
 }
 
 void
@@ -514,9 +588,9 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Texture texture)
 {
-  // ShowGui("/textures", root.Textures.GetIndex(texture), texture);
-  // SelectId("Sampler", &texture.Sampler, root.Samplers);
-  // SelectId("Source", &texture.Source, root.Images);
+  ShowGuiChildOfRoot(texture);
+  SelectId("Sampler", texture.m_json, u8"sampler", root.Samplers.m_json);
+  SelectId("Source", texture.m_json, u8"source", root.Images.m_json);
 }
 
 static void
@@ -524,7 +598,7 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::TextureInfo& info)
 {
-  // SelectId("Index", &info.Index, root.Textures);
+  SelectId("Index", info.m_json, u8"index", root.Textures.m_json);
   if (auto texture = glr::GetOrCreateTexture(
         root, bin, *info.Index(), libvrm::gltf::ColorSpace::Linear)) {
     ImGui::Image((ImTextureID)(int64_t)texture->Handle(), { 150, 150 });
@@ -588,7 +662,7 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Material material)
 {
-  // ShowGui("/materials", root.Materials.GetIndex(material), material);
+  ShowGuiChildOfRoot(material);
 
   // ShowGuiOptional<gltfjson::annotation::PbrMetallicRoughness>(
   //   material.PbrMetallicRoughness,
@@ -621,26 +695,32 @@ ShowGui(const gltfjson::typing::Root& root,
   //   [&root, &bin](auto& info) { ::ShowGui(root, bin, info); });
   //
   // ImGui::ColorEdit3("EmissiveFactor", material.EmissiveFactor.data());
-  // grapho::imgui::EnumCombo(
-  //   "AlphaMode", &material.AlphaMode, gltfjson::annotation::AlphaModesCombo);
+  ShowGuiEnum<gltfjson::format::AlphaModes>("AlphaMode",
+                                            material.m_json,
+                                            u8"alphaMode",
+                                            gltfjson::format::AlphaModesCombo);
   // ImGui::SliderFloat("AlphaCutoff", &material.AlphaCutoff, 0, 1);
-  // ImGui::Checkbox("DoubleSided", &material.DoubleSided);
+  ShowGuiBool("DoubleSided", material.m_json, u8"doubleSided");
 }
 
 static void
 ShowGui(const gltfjson::typing::Root& root,
-        gltfjson::typing::MeshPrimitiveAttributes& attribute)
+        gltfjson::typing::MeshPrimitiveAttributes attribute)
 {
-  // SelectId("POSITION", &attribute.POSITION, root.Accessors);
-  // SelectId("NORMAL", &attribute.NORMAL, root.Accessors);
-  // SelectId("TEXCOORD_0", &attribute.TEXCOORD_0, root.Accessors);
-  // SelectId("TEXCOORD_1", &attribute.TEXCOORD_1, root.Accessors);
-  // SelectId("TEXCOORD_2", &attribute.TEXCOORD_2, root.Accessors);
-  // SelectId("TEXCOORD_3", &attribute.TEXCOORD_3, root.Accessors);
-  // SelectId("COLOR_0", &attribute.COLOR_0, root.Accessors);
-  // SelectId("TANGENT", &attribute.TANGENT, root.Accessors);
-  // SelectId("JOINTS_0", &attribute.JOINTS_0, root.Accessors);
-  // SelectId("WEIGHTS_0", &attribute.WEIGHTS_0, root.Accessors);
+  SelectId("POSITION", attribute.m_json, u8"POSITION", root.Accessors.m_json);
+  SelectId("NORMAL", attribute.m_json, u8"NORMAL", root.Accessors.m_json);
+  SelectId(
+    "TEXCOORD_0", attribute.m_json, u8"TEXCOORD_0", root.Accessors.m_json);
+  SelectId(
+    "TEXCOORD_1", attribute.m_json, u8"TEXCOORD_1", root.Accessors.m_json);
+  SelectId(
+    "TEXCOORD_2", attribute.m_json, u8"TEXCOORD_2", root.Accessors.m_json);
+  SelectId(
+    "TEXCOORD_3", attribute.m_json, u8"TEXCOORD_3", root.Accessors.m_json);
+  SelectId("COLOR_0", attribute.m_json, u8"COLOR_0", root.Accessors.m_json);
+  SelectId("TANGENT", attribute.m_json, u8"TANGENT", root.Accessors.m_json);
+  SelectId("JOINTS_0", attribute.m_json, u8"JOINTS_0", root.Accessors.m_json);
+  SelectId("WEIGHTS_0", attribute.m_json, u8"WEIGHTS_0", root.Accessors.m_json);
 }
 
 void
@@ -648,8 +728,8 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::MeshPrimitiveMorphTarget target)
 {
-  // SelectId("NORMAL", &target.NORMAL, root.Accessors);
-  // SelectId("POSITION", &target.POSITION, root.Accessors);
+  SelectId("POSITION", target.m_json, u8"POSITION", root.Accessors.m_json);
+  SelectId("NORMAL", target.m_json, u8"NORMAL", root.Accessors.m_json);
 }
 
 void
@@ -660,15 +740,18 @@ ShowGui(const gltfjson::typing::Root& root,
   ImGui::PushID(&prim);
   {
     ImGui::BeginDisabled(true);
-    // ShowGui(root, prim.Attributes);
-    // SelectId("Indices", &prim.Indices, root.Accessors);
+    ShowGui(root, *prim.Attributes());
+    SelectId("Indices", prim.m_json, u8"indices", root.Accessors.m_json);
     ImGui::EndDisabled();
   }
-  // SelectId("Material", &prim.Material, root.Materials);
+  SelectId("Material", prim.m_json, u8"material", root.Materials.m_json);
   {
     ImGui::BeginDisabled(true);
-    // grapho::imgui::EnumCombo(
-    //   "Mode", &prim.Mode, gltfjson::typing::MeshPrimitiveTopologyCombo);
+    ShowGuiEnum<gltfjson::format::MeshPrimitiveTopology>(
+      "Mode",
+      prim.m_json,
+      u8"mode",
+      gltfjson::format::MeshPrimitiveTopologyCombo);
     ImGui::EndDisabled();
   }
   ImGui::PopID();
@@ -704,10 +787,13 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Skin skin)
 {
-  // ShowGui("/skins", root.Skins.GetIndex(skin), skin);
+  ShowGuiChildOfRoot(skin);
   ImGui::BeginDisabled(true);
-  // SelectId("InverseBindMatrices", &skin.InverseBindMatrices, root.Accessors);
-  // SelectId("Skeleton", &skin.Skeleton, root.Nodes);
+  SelectId("InverseBindMatrices",
+           skin.m_json,
+           u8"inverseBindMatrices",
+           root.Accessors.m_json);
+  SelectId("Skeleton", skin.m_json, u8"skeleton", root.Nodes.m_json);
   // ListId("Joints", skin.Joints, root.Nodes);
   ImGui::EndDisabled();
 }
@@ -717,10 +803,10 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Node node)
 {
-  // ShowGui("/nodes", root.Nodes.GetIndex(node), node);
+  ShowGuiChildOfRoot(node);
   // Id Camera;
   // ListId("Children", node.Children, root.Nodes);
-  // SelectId("Skin", &node.Skin, root.Nodes);
+  SelectId("Skin", node.m_json, u8"skin", root.Nodes.m_json);
   // ShowGuiOptional<std::array<float, 16>>(
   //   node.Matrix, "Matrix", "Matrix +", [](auto& m) {
   //     ImGui::InputFloat4("##m0", m.data());
@@ -754,7 +840,7 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Scene scene)
 {
-  // ShowGui("/scenes", root.Scenes.GetIndex(scene), scene);
+  ShowGuiChildOfRoot(scene);
   // ListId("Nodes", scene.Nodes, root.Nodes);
 }
 
@@ -763,5 +849,5 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Animation animation)
 {
-  // ShowGui("/animations", root.Animations.GetIndex(animation), animation);
+  ShowGuiChildOfRoot(animation);
 }
