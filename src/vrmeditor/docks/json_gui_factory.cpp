@@ -10,7 +10,9 @@ TypeFunc()
     return [](const gltfjson::typing::Root& root,
               const gltfjson::typing::Bin& bin,
               const gltfjson::tree::NodePtr& node) {
+      ImGui::PushID(node.get());
       ::ShowGui(root, bin, T{ node });
+      ImGui::PopID();
     };
   };
 }

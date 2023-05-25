@@ -63,13 +63,24 @@ InputU8Text(const char* label,
 }
 
 void
-ShowGuiString(const char* label, const gltfjson::tree::NodePtr& node)
+ShowGuiString(const char* label,
+              const gltfjson::tree::NodePtr& parentNode,
+              std::u8string_view key)
 {
-  if (node) {
-    if (auto p = node->Ptr<std::u8string>()) {
-      InputU8Text(label, p);
-    }
+  if (!parentNode) {
+    return;
   }
+
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, u8"");
+  }
+  auto p = node->Ptr<std::u8string>();
+  if (!p) {
+    node->Var = u8"";
+    p = node->Ptr<std::u8string>();
+  }
+  InputU8Text(label, p);
 }
 
 void
@@ -101,38 +112,59 @@ HelpMarker(const char* desc)
   }
 }
 
-// template<typename T>
-// // requires T::Name
-// void
-// SelectId(const char* label, gltfjson::annotation::Id* id, const T& values)
-// {
-//   uint32_t selected = *id ? *(*id) : -1;
-//   using TUPLE = std::tuple<uint32_t, std::string>;
-//   std::vector<TUPLE> combo;
-//   PrintfBuffer buf;
-//   for (int i = 0; i < values.Size(); ++i) {
-//     combo.push_back({ i,
-//                       buf.Printf("%s[%d] %s",
-//                                  values.Name.c_str(),
-//                                  i,
-//                                  (const char*)values[i].Name.c_str()) });
-//   }
-//   std::span<const TUPLE> span(combo.data(), combo.size());
-//
-//   grapho::imgui::GenericCombo<uint32_t>(label, &selected, span);
-//   if (selected >= 0 && selected < values.Size()) {
-//     *id = selected;
-//   } else {
-//     *id = std::nullopt;
-//   }
-//
-//   if (*id) {
-//     ImGui::SameLine();
-//     if (ImGui::Button("x")) {
-//       *id = std::nullopt;
-//     }
-//   }
-// }
+// return removed
+void
+SelectId(const char* label,
+         const gltfjson::tree::NodePtr& idParent,
+         const char8_t* key,
+         const gltfjson::tree::NodePtr& arrayNode)
+{
+  if (!arrayNode) {
+    return;
+  }
+  auto values = arrayNode->Array();
+  if (!values) {
+    return;
+  }
+  if (!idParent) {
+    return;
+  }
+
+  float* id = nullptr;
+  auto idNode = idParent->Get(key);
+  if (idNode) {
+    id = idNode->Ptr<float>();
+  }
+
+  auto selected = (uint32_t)(id ? *id : -1);
+  using TUPLE = std::tuple<uint32_t, std::string>;
+  std::vector<TUPLE> combo;
+  PrintfBuffer buf;
+  for (int i = 0; i < values->size(); ++i) {
+    auto item = (*values)[i];
+    combo.push_back(
+      { i,
+        buf.Printf(
+          "%s[%d] %s", label, i, (const char*)item->U8String().c_str()) });
+  }
+  std::span<const TUPLE> span(combo.data(), combo.size());
+
+  bool removed = false;
+
+  grapho::imgui::GenericCombo<uint32_t>(label, &selected, span);
+  if (selected >= 0 && selected < values->size()) {
+    *id = (float)selected;
+  } else {
+    idParent->Remove(key);
+  }
+
+  if (id) {
+    ImGui::SameLine();
+    if (ImGui::Button("x")) {
+      idParent->Remove(key);
+    }
+  }
+}
 
 template<typename T>
 void
@@ -273,7 +305,7 @@ ShowGui(gltfjson::typing::Asset asset)
 static void
 ShowGuiChildOfRoot(gltfjson::typing::ChildOfRootProperty& prop)
 {
-  ShowGuiString("name", prop.m_json->Get(u8"name"));
+  ShowGuiString("name", prop.m_json, u8"name");
 }
 
 // buffer/bufferView/accessor
@@ -294,9 +326,11 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::BufferView bufferView)
 {
-  // ShowGui("/bufferViews", root.BufferViews.GetIndex(bufferView), bufferView);
+  ShowGuiChildOfRoot(bufferView);
   ImGui::BeginDisabled(true);
-  // SelectId("Buffer", &bufferView.Buffer, root.Buffers);
+
+  SelectId(
+    "Buffer", bufferView.m_json, u8"buffer", root.m_json->Get(u8"buffers"));
   ShowGuiUInt32("ByteOffset", bufferView.m_json->Get(u8"byteOffset"));
   ShowGuiUInt32("ByteLength", bufferView.m_json->Get(u8"byteLength"));
   ShowGuiUInt32("ByteStride", bufferView.m_json->Get(u8"byteStride"));
