@@ -23,9 +23,9 @@ JsonGui::JsonGui()
 }
 
 void
-JsonGui::SetScene(const gltfjson::tree::NodePtr& gltf)
+JsonGui::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& root)
 {
-  m_gltf = gltf;
+  m_root = root;
   m_label->Clear();
   m_inspector->Clear();
 }
@@ -94,7 +94,7 @@ JsonGui::ShowSelector(float indent)
     {
       // tree
       ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-      gltfjson::tree::TraverseJson(enter, leave, m_gltf);
+      gltfjson::tree::TraverseJson(enter, leave, m_root->m_gltf->m_json);
       ImGui::PopStyleVar();
     }
 
@@ -105,5 +105,5 @@ JsonGui::ShowSelector(float indent)
 void
 JsonGui::ShowSelected()
 {
-  m_inspector->ShowGui(m_gltf);
+  m_inspector->ShowGui(*m_root->m_gltf, m_root->m_bin);
 }

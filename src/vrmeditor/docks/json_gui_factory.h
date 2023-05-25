@@ -4,10 +4,11 @@
 #include <gltfjson/jsonpath.h>
 #include <list>
 
-using ShowGui = std::function<void()>;
+using ShowGuiFunc = std::function<void(const gltfjson::typing::Root& root,
+                                       const gltfjson::typing::Bin& bin,
+                                       const gltfjson::tree::NodePtr&)>;
 
-using CreateGuiFunc = std::function<ShowGui(const gltfjson::tree::NodePtr& gltf,
-                                            std::u8string_view jsonpath)>;
+using CreateGuiFunc = std::function<ShowGuiFunc(std::u8string_view jsonpath)>;
 struct JsonGuiFactory
 {
   std::u8string m_match;
@@ -23,7 +24,7 @@ class JsonGuiFactoryManager
 {
   std::u8string m_selected;
   std::list<JsonGuiFactory> m_guiFactories;
-  ShowGui m_cache;
+  ShowGuiFunc m_cache;
 
 public:
   JsonGuiFactoryManager();
@@ -52,5 +53,6 @@ public:
     return {};
   }
 
-  void ShowGui(const gltfjson::tree::NodePtr& gltf);
+  void ShowGui(const gltfjson::typing::Root& root,
+               const gltfjson::typing::Bin& bin);
 };

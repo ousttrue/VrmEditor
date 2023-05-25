@@ -163,7 +163,7 @@ ShowGui(const char* label, std::u8string& str)
 }
 
 void
-ShowGui(gltfjson::typing::Asset& asset)
+ShowGui(gltfjson::typing::Asset asset)
 {
   // ShowGui("copyright", asset.Copyright);
   // ShowGui("generator", asset.Generator);
@@ -216,7 +216,7 @@ ShowGui(const char* base,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Buffer& buffer)
+        gltfjson::typing::Buffer buffer)
 {
   // ShowGui("/buffers", root.Buffers.GetIndex(buffer), buffer);
   ImGui::BeginDisabled(true);
@@ -228,7 +228,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::BufferView& bufferView)
+        gltfjson::typing::BufferView bufferView)
 {
   // ShowGui("/bufferViews", root.BufferViews.GetIndex(bufferView), bufferView);
   ImGui::BeginDisabled(true);
@@ -258,7 +258,7 @@ public:
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Accessor& accessor)
+        gltfjson::typing::Accessor accessor)
 {
   // ShowGui("/accessors", root.Accessors.GetIndex(accessor), accessor);
   ImGui::BeginDisabled(true);
@@ -382,7 +382,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Image& image)
+        gltfjson::typing::Image image)
 {
   // ShowGui("/images", root.Images.GetIndex(image), image);
   ImGui::BeginDisabled(true);
@@ -396,7 +396,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Sampler& sampler)
+        gltfjson::typing::Sampler sampler)
 {
   // ShowGui("/samplers", root.Samplers.GetIndex(sampler), sampler);
   // grapho::imgui::EnumCombo("magFilter",
@@ -414,7 +414,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Texture& texture)
+        gltfjson::typing::Texture texture)
 {
   // ShowGui("/textures", root.Textures.GetIndex(texture), texture);
   // SelectId("Sampler", &texture.Sampler, root.Samplers);
@@ -488,7 +488,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Material& material)
+        gltfjson::typing::Material material)
 {
   // ShowGui("/materials", root.Materials.GetIndex(material), material);
 
@@ -548,7 +548,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::MeshPrimitiveMorphTarget& target)
+        gltfjson::typing::MeshPrimitiveMorphTarget target)
 {
   // SelectId("NORMAL", &target.NORMAL, root.Accessors);
   // SelectId("POSITION", &target.POSITION, root.Accessors);
@@ -557,7 +557,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::MeshPrimitive& prim)
+        gltfjson::typing::MeshPrimitive prim)
 {
   ImGui::PushID(&prim);
   {
@@ -579,7 +579,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Mesh& mesh)
+        gltfjson::typing::Mesh mesh)
 {
   // ShowGui("/meshes", root.Meshes.GetIndex(mesh), mesh);
 
@@ -604,7 +604,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Skin& skin)
+        gltfjson::typing::Skin skin)
 {
   // ShowGui("/skins", root.Skins.GetIndex(skin), skin);
   ImGui::BeginDisabled(true);
@@ -617,7 +617,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Node& node)
+        gltfjson::typing::Node node)
 {
   // ShowGui("/nodes", root.Nodes.GetIndex(node), node);
   // Id Camera;
@@ -654,7 +654,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Scene& scene)
+        gltfjson::typing::Scene scene)
 {
   // ShowGui("/scenes", root.Scenes.GetIndex(scene), scene);
   // ListId("Nodes", scene.Nodes, root.Nodes);
@@ -663,7 +663,7 @@ ShowGui(const gltfjson::typing::Root& root,
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Animation& animation)
+        gltfjson::typing::Animation animation)
 {
   // ShowGui("/animations", root.Animations.GetIndex(animation), animation);
 }
