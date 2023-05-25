@@ -93,7 +93,7 @@ ShowGuiBool(const char* label,
   }
   auto node = parentNode->Get(key);
   if (!node) {
-    node = parentNode->Add(key, u8"");
+    node = parentNode->Add(key, false);
   }
 
   auto p = node->Ptr<bool>();
@@ -115,7 +115,7 @@ ShowGuiUInt32(const char* label,
   }
   auto node = parentNode->Get(key);
   if (!node) {
-    node = parentNode->Add(key, u8"");
+    node = parentNode->Add(key, 0.0f);
   }
 
   auto p = node->Ptr<float>();
@@ -142,7 +142,7 @@ ShowGuiEnum(const char* label,
   }
   auto node = parentNode->Get(key);
   if (!node) {
-    node = parentNode->Add(key, u8"");
+    node = parentNode->Add(key, 0.0f);
   }
 
   auto p = node->Ptr<float>();
@@ -187,6 +187,82 @@ ShowGuiStringEnum(const char* label,
 
   if (grapho::imgui::GenericCombo(label, &i, combo)) {
     *p = gltfjson::tree::to_u8(std::get<1>(combo[i]));
+  }
+}
+
+template<size_t N>
+static std::array<float, N>
+FillArray(const gltfjson::tree::NodePtr& node)
+{
+  std::array<float, N> values;
+  auto array = node->Array();
+  if (!array) {
+    node->Var = gltfjson::tree::ArrayValue{};
+    array = node->Array();
+  }
+  for (int i = 0; i < N; ++i) {
+    if (i < array->size()) {
+      if (auto child = (*array)[i]) {
+        if (auto n = child->Ptr<float>()) {
+          values[i] = *n;
+          continue;
+        }
+
+        child->Var = 0.0f;
+        values[i] = 0;
+      } else {
+        auto new_child = std::make_shared<gltfjson::tree::Node>();
+        new_child->Var = 0.0f;
+        values[i] = 0;
+        array->push_back(new_child);
+      }
+    }
+  }
+  return values;
+}
+
+static void
+ShowGuiColor4(const char* label,
+              const gltfjson::tree::NodePtr& parentNode,
+              std::u8string_view key)
+{
+  if (!parentNode) {
+    return;
+  }
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, gltfjson::tree::ArrayValue{});
+  }
+
+  auto values = FillArray<4>(node);
+  if (ImGui::ColorEdit4(label, &values[0])) {
+    node->Set(values);
+  }
+}
+
+static void
+ShowGuiFloat3(const char* label, const gltfjson::tree::NodePtr& node)
+{
+  if (!node) {
+    return;
+  }
+
+  auto values = FillArray<3>(node);
+  if (ImGui::InputFloat3(label, &values[0])) {
+    node->Set(values);
+  }
+}
+
+static void
+ShowGuiFloat4(const char* label, const gltfjson::tree::NodePtr& node)
+{
+  if (!node) {
+    return;
+  }
+
+  auto values = FillArray<4>(node);
+  if (ImGui::InputFloat4(label, &values[0])) {
+    node->Set(values);
   }
 }
 
@@ -472,6 +548,7 @@ ShowGui(const gltfjson::typing::Root& root,
 
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
   ShowGuiOptional(accessor.m_json, u8"sparse", [](auto& node) {
+    // TODO:
     // gltfjson::typing::Sparse
   });
   ImGui::EndDisabled();
@@ -638,7 +715,7 @@ ShowGui(const gltfjson::typing::Root& root,
 static void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
-        gltfjson::typing::OcclusionTextureInfo& info)
+        gltfjson::typing::OcclusionTextureInfo info)
 {
   ShowGui(root, bin, *static_cast<gltfjson::typing::TextureInfo*>(&info));
 }
@@ -648,12 +725,12 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::PbrMetallicRoughness pbr)
 {
-  // ImGui::ColorEdit4("BaseColorFactor", pbr.BaseColorFactor.data());
+  ShowGuiColor4("BaseColorFactor", pbr.m_json, u8"baseColorFactor");
   ShowGuiOptional(pbr.m_json, u8"baseColorTexture", [&root, &bin](auto& node) {
     ::ShowGui(root, bin, gltfjson::typing::TextureInfo{ node });
   });
-  // ImGui::SliderFloat("MetallicFactor", &pbr.MetallicFactor, 0, 1);
-  // ImGui::SliderFloat("RoughnessFactor", &pbr.RoughnessFactor, 0, 1);
+  ImGui::SliderFloat("MetallicFactor", pbr.MetallicFactor(), 0, 1);
+  ImGui::SliderFloat("RoughnessFactor", pbr.RoughnessFactor(), 0, 1);
 
   HelpMarker(
     "The metallic-roughness texture. The metalness values are sampled from "
@@ -771,16 +848,6 @@ ShowGui(const gltfjson::typing::Root& root,
   ShowGuiChildOfRoot(mesh);
 
   PrintfBuffer buf;
-  // int i = 0;
-  // for (auto& prim : mesh.Primitives) {
-  //
-  //   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-  //   if (ImGui::CollapsingHeader(buf.Printf("Primitives.%d", i++))) {
-  //     ImGui::Indent();
-  //     ShowGui(root, prim);
-  //     ImGui::Unindent();
-  //   }
-  // }
 
   ShowGuiVector("Weights", mesh.m_json, u8"weights", [&buf](size_t i, auto& v) {
     ImGui::SliderFloat(
@@ -815,24 +882,20 @@ ShowGui(const gltfjson::typing::Root& root,
   // ListId("Children", node.Children, root.Nodes);
   SelectId("Skin", node.m_json, u8"skin", root.Nodes.m_json);
   ShowGuiOptional(node.m_json, u8"matrix", [](auto& m) {
-    // // <std::array<float, 16>>
-    //       ImGui::InputFloat4("##m0", m.data());
-    //       ImGui::InputFloat4("##m1", m.data() + 4);
-    //       ImGui::InputFloat4("##m2", m.data() + 8);
-    //       ImGui::InputFloat4("##m3", m.data() + 12);
+    auto values = FillArray<16>(m);
+    ImGui::InputFloat4("##m0", values.data());
+    ImGui::InputFloat4("##m1", values.data() + 4);
+    ImGui::InputFloat4("##m2", values.data() + 8);
+    ImGui::InputFloat4("##m3", values.data() + 12);
+    m->Set(values);
   });
   SelectId("Mesh", node.m_json, u8"mesh", root.Meshes.m_json);
-  ShowGuiOptional(node.m_json, u8"rotation", [](auto& r) {
-    // <std::array<float, 4>>
-    //       ImGui::InputFloat4("##rotation", r.data());
-  });
-  ShowGuiOptional(node.m_json, u8"scale", [](auto& s) {
-    // <std::array<float, 3>>
-    //   ImGui::InputFloat3("##scale", s.data());
-  });
+  ShowGuiOptional(
+    node.m_json, u8"rotation", [](auto& r) { ShowGuiFloat4("##rotation", r); });
+  ShowGuiOptional(
+    node.m_json, u8"scale", [](auto& s) { ShowGuiFloat3("##scale", s); });
   ShowGuiOptional(node.m_json, u8"translation", [](auto& t) {
-    // <std::array<float, 3>>
-    //       ImGui::InputFloat3("##translation", t.data());
+    ShowGuiFloat3("##translation", t);
   });
 
   PrintfBuffer buf;
