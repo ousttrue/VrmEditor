@@ -19,7 +19,6 @@ LabelDefault(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
   std::stringstream ss;
   std::u8string key{ jsonpath.begin(), jsonpath.end() };
   auto path = gltfjson::JsonPath(jsonpath);
-  auto name = path.Back();
   if (path.Size() == 2) {
     auto kind = path[1];
     if (kind == u8"extensions") {
@@ -47,15 +46,17 @@ LabelDefault(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
   }
 
   // auto item = scene->m_gltf.Json.at(nlohmann::json::json_pointer(key));
+  auto _name = path.Back();
+  std::string name{_name.begin(), _name.end()};
   if (auto object = item->Object()) {
     auto found = object->find(u8"name");
     if (found != object->end()) {
       // ss << name << ": " << found->second->U8String();
     } else {
-      ss << (const char*)name.data() << ": object";
+      ss << name << ": object";
     }
   } else if (auto array = item->Array()) {
-    ss << (const char*)name.data() << ": [" << array->size() << "]";
+    ss << name << ": [" << array->size() << "]";
   } else {
     // ss << name << ": " << item.dump();
   }

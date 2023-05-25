@@ -8,6 +8,7 @@
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
+#include "docks/json_gui.h"
 #include "docks/scene_selection.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
@@ -79,6 +80,7 @@ App::App()
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
   m_gltfjson = std::make_shared<GltfJsonGui>();
+  m_json = std::make_shared<JsonGui>();
 }
 
 App::~App() {}
@@ -105,6 +107,7 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
   };
   auto indent = m_gui->FontSize * 0.5f;
 
+  m_json->SetScene(table);
   {
     m_gltfjson->SetGltf(*table->m_gltf, table->m_bin);
 
@@ -344,6 +347,18 @@ App::Run()
             [gltfjson = m_gltfjson](const char* title, bool* p_open) {
               gltfjson->ShowGuiText(title, p_open);
             } });
+
+  auto indent = m_gui->FontSize * 0.5f;
+  addDock(
+    { "json", [json = m_json, indent](const char* title, bool* p_open) mutable {
+       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+       auto is_open = ImGui::Begin(title, p_open);
+       ImGui::PopStyleVar();
+       if (is_open) {
+         json->Show(indent);
+       }
+       ImGui::End();
+     } });
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
