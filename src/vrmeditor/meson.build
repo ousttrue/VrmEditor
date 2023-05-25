@@ -18,6 +18,7 @@ srcs = [
     'docks/export_dock.cpp',
     'docks/gltfjson_gui.cpp',
     'docks/type_gui.cpp',
+    'docks/json_gui.cpp',
     'humanpose/humanpose_stream.cpp',
     'humanpose/udp_receiver.cpp',
     'humanpose/bvhnode.cpp',

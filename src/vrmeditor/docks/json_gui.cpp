@@ -1,0 +1,221 @@
+#include "json_gui.h"
+// #include "json_gui_accessor.h"
+// #include "json_gui_images.h"
+// #include "json_gui_material.h"
+// #include "json_gui_mesh.h"
+// #include "json_gui_node.h"
+// #include "json_gui_skin.h"
+// #include "json_gui_vrm0.h"
+// #include "json_gui_vrm1.h"
+#include <charconv>
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <ranges>
+#include <string_view>
+
+static std::u8string
+LabelDefault(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
+{
+  std::stringstream ss;
+  std::u8string key{ jsonpath.begin(), jsonpath.end() };
+  auto path = gltfjson::JsonPath(jsonpath);
+  auto name = path.Back();
+  if (path.Size() == 2) {
+    auto kind = path[1];
+    if (kind == u8"extensions") {
+      ss << " ";
+    } else if (kind == u8"images" || kind == u8"textures" ||
+               kind == u8"samplers") {
+      ss << " ";
+    } else if (kind == u8"bufferViews" || kind == u8"buffers") {
+      ss << " ";
+    } else if (kind == u8"accessors") {
+      ss << " ";
+    } else if (kind == u8"meshes" || kind == u8"skins") {
+      ss << "󰕣 ";
+    } else if (kind == u8"materials") {
+      ss << " ";
+    } else if (kind == u8"nodes" || kind == u8"scenes" || kind == u8"scene") {
+      ss << "󰵉 ";
+    } else if (kind == u8"animations") {
+      ss << " ";
+    } else if (kind == u8"asset") {
+      ss << " ";
+    } else if (kind == u8"extensionsUsed") {
+      ss << " ";
+    }
+  }
+
+  // auto item = scene->m_gltf.Json.at(nlohmann::json::json_pointer(key));
+  if (auto object = item->Object()) {
+    auto found = object->find(u8"name");
+    if (found != object->end()) {
+      // ss << name << ": " << found->second->U8String();
+    } else {
+      ss << (const char*)name.data() << ": object";
+    }
+  } else if (auto array = item->Array()) {
+    ss << (const char*)name.data() << ": [" << array->size() << "]";
+  } else {
+    // ss << name << ": " << item.dump();
+  }
+  return (const char8_t*)ss.str().c_str();
+}
+
+JsonGui::JsonGui()
+  : //
+  m_guiFactories({
+    //
+    // { "/accessors", JsonGuiAccessorList },
+    // { "/accessors/*", JsonGuiAccessor },
+    // { "/images", JsonGuiImageList },
+    // { "/materials", JsonGuiMaterialList },
+    // { "/meshes", JsonGuiMeshList },
+    // { "/meshes/*", JsonGuiMesh },
+    // { "/meshes/*/primitives/*/attributes/POSITION", JsonGuiAccessor },
+    // { "/meshes/*/primitives/*/attributes/NORMAL", JsonGuiAccessor },
+    // { "/meshes/*/primitives/*/attributes/TEXCOORD_0", JsonGuiAccessor },
+    // { "/meshes/*/primitives/*/attributes/JOINTS_0", JsonGuiAccessor },
+    // { "/meshes/*/primitives/*/attributes/WEIGHTS_0", JsonGuiAccessor },
+    // { "/skins", JsonGuiSkinList },
+    // { "/skins/*/inverseBindMatrices", JsonGuiAccessor },
+    // { "/nodes", JsonGuiNodeList },
+    // { "/extensions/VRM/secondaryAnimation/colliderGroups/*/colliders",
+    //   JsonGuiVrm0ColliderList },
+    // { "/extensions/VRM/secondaryAnimation/boneGroups", JsonGuiVrm0SpringList
+    // },
+    // { "/extensions/VRMC_springBone/springs/*/joints", JsonGuiVrm1SpringJoints
+    // },
+    // { "/extensions/VRMC_springBone/colliders", JsonGuiVrm1SpringColliders },
+    //
+  })
+  //
+  , m_labelFactories({
+      //
+      // { "/images", LabelArray },
+    })
+{
+}
+
+bool
+JsonGui::Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
+{
+  static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow |
+                                         ImGuiTreeNodeFlags_OpenOnDoubleClick |
+                                         ImGuiTreeNodeFlags_SpanAvailWidth;
+  ImGuiTreeNodeFlags node_flags = base_flags;
+  auto is_leaf = !item->Object() && !item->Array();
+  if (is_leaf) {
+    node_flags |=
+      ImGuiTreeNodeFlags_Leaf |
+      ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+  }
+  if (jsonpath == m_selected) {
+    node_flags |= ImGuiTreeNodeFlags_Selected;
+  }
+
+  std::u8string label = u8"not found";
+  auto found = m_labelCache.find({ jsonpath.begin(), jsonpath.end() });
+  if (found != m_labelCache.end()) {
+    label = found->second;
+  } else {
+    if (auto factory = MatchLabel(jsonpath)) {
+      label = (*factory)(m_scene, jsonpath);
+    } else {
+      label = LabelDefault(item, jsonpath);
+    }
+    m_labelCache.insert({ { jsonpath.begin(), jsonpath.end() }, label });
+  }
+
+  bool node_open =
+    ImGui::TreeNodeEx((void*)(intptr_t)&item, node_flags, "%s", label.c_str());
+
+  if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+    m_selected = jsonpath;
+    m_cache = {};
+  }
+
+  return node_open && !is_leaf;
+}
+
+// https://github.com/ocornut/imgui/issues/319
+static bool
+Splitter(bool split_vertically,
+         float thickness,
+         float* size1,
+         float* size2,
+         float min_size1,
+         float min_size2,
+         float splitter_long_axis_size = -1.0f)
+{
+  using namespace ImGui;
+  ImGuiContext& g = *GImGui;
+  ImGuiWindow* window = g.CurrentWindow;
+  ImGuiID id = window->GetID("##Splitter");
+  ImRect bb;
+  bb.Min = window->DC.CursorPos +
+           (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
+  bb.Max = bb.Min + CalcItemSize(split_vertically
+                                   ? ImVec2(thickness, splitter_long_axis_size)
+                                   : ImVec2(splitter_long_axis_size, thickness),
+                                 0.0f,
+                                 0.0f);
+  return SplitterBehavior(bb,
+                          id,
+                          split_vertically ? ImGuiAxis_X : ImGuiAxis_Y,
+                          size1,
+                          size2,
+                          min_size1,
+                          min_size2,
+                          0.0f);
+}
+
+void
+JsonGui::Show(float indent)
+{
+  auto enter = [this](const gltfjson::tree::NodePtr& item,
+                      std::u8string_view jsonpath) {
+    return Enter(item, jsonpath);
+  };
+  auto leave = []() { ImGui::TreePop(); };
+
+  // auto size = ImGui::GetCurrentWindow()->Size;
+  auto size = ImGui::GetContentRegionAvail();
+  float s = size.y - m_f - 5;
+  // ImGui::Text("%f, %f: %f; %f", size.x, size.y, f, s);
+  ::Splitter(false, 5, &m_f, &s, 8, 8);
+  if (ImGui::BeginChild("##split-first", { size.x, m_f })) {
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
+    std::u8string jsonpath;
+    gltfjson::tree::TraverseJson(
+      enter, leave, m_scene->m_gltf->m_json, jsonpath);
+    ImGui::PopStyleVar();
+  }
+  ImGui::EndChild();
+
+  if (ImGui::BeginChild("##split-second", { size.x, s })) {
+    ImGui::TextUnformatted((const char*)m_selected.c_str());
+    if (!m_cache) {
+      if (auto mached = MatchGui(m_selected)) {
+        m_cache = (*mached)(m_scene, m_selected);
+      } else {
+        m_cache = []() {};
+      }
+    }
+    m_cache();
+  }
+  ImGui::EndChild();
+}
+
+// Dock("gltf-json"
+void
+JsonGui::Show(const char* title, bool* p_open, float indent)
+{
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+  auto is_open = ImGui::Begin(title, p_open);
+  ImGui::PopStyleVar();
+  if (is_open) {
+    Show(indent);
+  }
+  ImGui::End();
+}
