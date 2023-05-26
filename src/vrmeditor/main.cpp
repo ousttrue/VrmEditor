@@ -15,9 +15,9 @@ main(int argc, char** argv)
 // #endif
 {
 
-// #ifdef _WIN32
-//   RedirectIOToConsole();
-// #endif
+  // #ifdef _WIN32
+  //   RedirectIOToConsole();
+  // #endif
 
   auto& app = App::Instance();
 
@@ -30,8 +30,11 @@ main(int argc, char** argv)
   if (argc > 1) {
     std::string_view arg = argv[1];
     if (arg.ends_with(".lua")) {
+      // prooject mode
+      app.ProjectMode();
       app.LoadLua(argv[1]);
     } else {
+      // viewermode
       app.LoadModel(argv[1]);
     }
   }

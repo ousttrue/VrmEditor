@@ -45,7 +45,6 @@ Gui::Gui(const void* window, const char* glsl_version)
   // io.ConfigViewportsNoTaskBarIcon = true;
 
   // Setup Dear ImGui style
-  // ImGui::StyleColorsDark();
   ImGui::StyleColorsLight();
 
   // When viewports are enabled we tweak WindowRounding/WindowBg so platform
@@ -129,6 +128,12 @@ Gui::~Gui()
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_Shutdown();
   ImGui_ImplOpenGL3_Shutdown();
+}
+
+void
+Gui::DarkMode()
+{
+  ImGui::StyleColorsDark();
 }
 
 void

@@ -86,6 +86,8 @@ public:
     return s_instance;
   }
 
+  void ProjectMode();
+
   std::shared_ptr<runtimescene::RuntimeScene> SetScene(
     const std::shared_ptr<libvrm::gltf::GltfRoot>& scene);
   LogStream Log(LogLevel level);

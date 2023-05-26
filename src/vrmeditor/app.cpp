@@ -85,6 +85,12 @@ App::App()
 
 App::~App() {}
 
+void
+App::ProjectMode()
+{
+  m_gui->DarkMode();
+}
+
 std::shared_ptr<runtimescene::RuntimeScene>
 App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
 {

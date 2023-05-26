@@ -47,6 +47,8 @@ public:
   Gui(const void* window, const char* glsl_version);
   ~Gui();
 
+  void DarkMode();
+
   void AddDock(const grapho::imgui::Dock& dock)
   {
     bool visible = true;
