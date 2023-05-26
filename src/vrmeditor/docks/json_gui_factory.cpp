@@ -71,6 +71,7 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
     //   JsonGuiVrm0ColliderList },
 
     { u8"/extensions/VRM", TypeFunc<gltfjson::typing::vrm0::VRM>() },
+    { u8"/extensions/VRM/meta", TypeFunc<gltfjson::typing::vrm0::Meta>() },
     { u8"/extensions/VRM/secondaryAnimation/boneGroups",
       JsonGuiVrm0SpringList },
 
