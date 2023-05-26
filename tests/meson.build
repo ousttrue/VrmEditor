@@ -2,11 +2,7 @@ gtest_main_dep = dependency('gtest_main')
 executable(
     'tests',
     [
-        'gltf_samples.cpp',
-        'json.cpp',
         'text.cpp',
-        # 'glb_export.cpp',
-        # 'vrma.cpp',
     ],
     install: true,
     dependencies: [
