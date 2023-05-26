@@ -1,5 +1,6 @@
 #pragma once
 #include "printfbuffer.h"
+#include <array>
 #include <gltfjson.h>
 #include <grapho/gl3/texture.h>
 #include <grapho/imgui/widgets.h>
@@ -18,6 +19,14 @@ void
 ShowGuiUInt32(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
               std::u8string_view key);
+
+void
+ShowGuiSliderFloat(const char* label,
+                   const gltfjson::tree::NodePtr& parentNode,
+                   std::u8string_view key,
+                   float min,
+                   float max,
+                   float defalutValue);
 
 template<typename T>
 inline void
@@ -54,7 +63,8 @@ ShowGuiStringEnum(const char* label,
 
 template<size_t N>
 static std::array<float, N>
-FillArray(const gltfjson::tree::NodePtr& node)
+FillArray(const gltfjson::tree::NodePtr& node,
+          const std::array<float, N>& defautColor)
 {
   std::array<float, N> values;
   auto array = node->Array();
@@ -67,32 +77,46 @@ FillArray(const gltfjson::tree::NodePtr& node)
       if (auto child = (*array)[i]) {
         if (auto n = child->Ptr<float>()) {
           values[i] = *n;
-          continue;
+        } else {
+          child->Var = defautColor[i];
+          values[i] = defautColor[i];
         }
-
-        child->Var = 0.0f;
-        values[i] = 0;
       } else {
-        auto new_child = std::make_shared<gltfjson::tree::Node>();
-        new_child->Var = 0.0f;
-        values[i] = 0;
-        array->push_back(new_child);
+        assert(false);
       }
+    } else {
+      auto new_child = std::make_shared<gltfjson::tree::Node>();
+      new_child->Var = defautColor[i];
+      values[i] = defautColor[i];
+      array->push_back(new_child);
     }
   }
   return values;
 }
 
+// emissive
+void
+ShowGuiColor3(const char* label,
+              const gltfjson::tree::NodePtr& parentNode,
+              std::u8string_view key,
+              const std::array<float, 3>& defaultColor);
+
+// baseColor
 void
 ShowGuiColor4(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
-              std::u8string_view key);
+              std::u8string_view key,
+              const std::array<float, 4>& defaultColor);
 
 void
-ShowGuiFloat3(const char* label, const gltfjson::tree::NodePtr& node);
+ShowGuiFloat3(const char* label,
+              const gltfjson::tree::NodePtr& node,
+              const std::array<float, 3>& defaultValue);
 
 void
-ShowGuiFloat4(const char* label, const gltfjson::tree::NodePtr& node);
+ShowGuiFloat4(const char* label,
+              const gltfjson::tree::NodePtr& node,
+              const std::array<float, 4>& defaultValue);
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using a
@@ -140,14 +164,19 @@ ListId(const char* label, std::vector<uint32_t>& list, const T& values)
 }
 
 void
-ShowGuiVector(
-  const char* label,
-  const gltfjson::tree::NodePtr& parentNode,
-  std::u8string_view key,
-  const std::function<void(size_t i, const gltfjson::tree::NodePtr&)>& showGui);
+ShowGuiVectorFloat(const char* label,
+                   const gltfjson::tree::NodePtr& parentNode,
+                   std::u8string_view key,
+                   const std::function<void(size_t i, float* p)>& showGui);
 
 void
 ShowGuiOptional(
   const gltfjson::tree::NodePtr& parentNode,
   const char8_t* key,
   const std::function<void(const gltfjson::tree::NodePtr&)>& showGui);
+
+void
+ShowGuiTexturePreview(const gltfjson::typing::Root& root,
+                      const gltfjson::typing::Bin& bin,
+                      const gltfjson::tree::NodePtr& parentNode,
+                      const char8_t* key);

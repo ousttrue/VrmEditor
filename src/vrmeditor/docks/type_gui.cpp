@@ -98,19 +98,19 @@ ShowGui(const gltfjson::typing::Root& root,
       std::size(gltfjson::format::TypesCombo) });
 
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-  ShowGuiVector("Max", accessor.m_json, u8"max", [](size_t i, auto& v) {
+  ShowGuiVectorFloat("Max", accessor.m_json, u8"max", [](size_t i, float* p) {
     if (i) {
       ImGui::SameLine();
     }
-    ImGui::Text("%f", *v->template Ptr<float>());
+    ImGui::Text("%f", p);
   });
 
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-  ShowGuiVector("Min", accessor.m_json, u8"min", [](size_t i, auto& v) {
+  ShowGuiVectorFloat("Min", accessor.m_json, u8"min", [](size_t i, float* p) {
     if (i) {
       ImGui::SameLine();
     }
-    ImGui::Text("%f", *v->template Ptr<float>());
+    ImGui::Text("%f", p);
   });
 
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
@@ -257,14 +257,8 @@ ShowGui(const gltfjson::typing::Root& root,
         gltfjson::typing::TextureInfo info)
 {
   SelectId("Index", info.m_json, u8"index", root.Textures.m_json);
-  if (auto texture = glr::GetOrCreateTexture(
-        root, bin, *info.Index(), libvrm::gltf::ColorSpace::Linear)) {
-    ImGui::Image((ImTextureID)(int64_t)texture->Handle(), { 150, 150 });
-  } else {
-    auto pos = ImGui::GetCursorPos();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddRect(pos, { pos.x + 150, pos.y + 150 }, ImColor());
-  }
+
+  ShowGuiTexturePreview(root, bin, info.m_json, u8"index");
 
   ShowGuiUInt32("TexCoord", info.m_json, u8"texCoord");
 }
@@ -290,12 +284,15 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::PbrMetallicRoughness pbr)
 {
-  ShowGuiColor4("BaseColorFactor", pbr.m_json, u8"baseColorFactor");
+  ShowGuiColor4(
+    "BaseColorFactor", pbr.m_json, u8"baseColorFactor", { 1, 1, 1, 1 });
   ShowGuiOptional(pbr.m_json, u8"baseColorTexture", [&root, &bin](auto& node) {
     ::ShowGui(root, bin, gltfjson::typing::TextureInfo{ node });
   });
-  ImGui::SliderFloat("MetallicFactor", pbr.MetallicFactor(), 0, 1);
-  ImGui::SliderFloat("RoughnessFactor", pbr.RoughnessFactor(), 0, 1);
+  ShowGuiSliderFloat(
+    "MetallicFactor", pbr.m_json, u8"metallicFactor", 0, 1, 1.0f);
+  ShowGuiSliderFloat(
+    "RoughnessFactor", pbr.m_json, u8"roughnessFactor", 0, 1, 1.0f);
 
   HelpMarker(
     "The metallic-roughness texture. The metalness values are sampled from "
@@ -342,12 +339,14 @@ ShowGui(const gltfjson::typing::Root& root,
       ::ShowGui(root, bin, gltfjson::typing::TextureInfo{ info });
     });
 
-  // ImGui::ColorEdit3("EmissiveFactor", material.EmissiveFactor.data());
+  ShowGuiColor3(
+    "EmissiveFactor", material.m_json, u8"emissiveFactor", { 0, 0, 0 });
   ShowGuiEnum<gltfjson::format::AlphaModes>("AlphaMode",
                                             material.m_json,
                                             u8"alphaMode",
                                             gltfjson::format::AlphaModesCombo);
-  ImGui::SliderFloat("AlphaCutoff", material.AlphaCutoff(), 0, 1);
+  ShowGuiSliderFloat(
+    "AlphaCutoff", material.m_json, u8"alphaCutoff", 0, 1, 0.5f);
   ShowGuiBool("DoubleSided", material.m_json, u8"doubleSided");
 }
 
@@ -414,10 +413,10 @@ ShowGui(const gltfjson::typing::Root& root,
 
   PrintfBuffer buf;
 
-  ShowGuiVector("Weights", mesh.m_json, u8"weights", [&buf](size_t i, auto& v) {
-    ImGui::SliderFloat(
-      buf.Printf("##Weights_%zu", i), v->template Ptr<float>(), 0, 1);
-  });
+  ShowGuiVectorFloat(
+    "Weights", mesh.m_json, u8"weights", [&buf](size_t i, float* p) {
+      ImGui::SliderFloat(buf.Printf("##Weights_%zu", i), p, 0, 1);
+    });
 }
 
 // skin/node/scene/animation
@@ -447,7 +446,29 @@ ShowGui(const gltfjson::typing::Root& root,
   // ListId("Children", node.Children, root.Nodes);
   SelectId("Skin", node.m_json, u8"skin", root.Nodes.m_json);
   ShowGuiOptional(node.m_json, u8"matrix", [](auto& m) {
-    auto values = FillArray<16>(m);
+    auto values = FillArray<16>(m,
+                                {
+                                  //
+                                  1,
+                                  0,
+                                  0,
+                                  0,
+                                  //
+                                  0,
+                                  1,
+                                  0,
+                                  0,
+                                  //
+                                  0,
+                                  0,
+                                  1,
+                                  0,
+                                  //
+                                  0,
+                                  0,
+                                  0,
+                                  1,
+                                });
     ImGui::InputFloat4("##m0", values.data());
     ImGui::InputFloat4("##m1", values.data() + 4);
     ImGui::InputFloat4("##m2", values.data() + 8);
@@ -455,19 +476,20 @@ ShowGui(const gltfjson::typing::Root& root,
     m->Set(values);
   });
   SelectId("Mesh", node.m_json, u8"mesh", root.Meshes.m_json);
-  ShowGuiOptional(
-    node.m_json, u8"rotation", [](auto& r) { ShowGuiFloat4("##rotation", r); });
-  ShowGuiOptional(
-    node.m_json, u8"scale", [](auto& s) { ShowGuiFloat3("##scale", s); });
+  ShowGuiOptional(node.m_json, u8"rotation", [](auto& r) {
+    ShowGuiFloat4("##rotation", r, std::array<float, 4>{ 1, 0, 0, 0 });
+  });
+  ShowGuiOptional(node.m_json, u8"scale", [](auto& s) {
+    ShowGuiFloat3("##scale", s, std::array<float, 3>{ 1, 1, 1 });
+  });
   ShowGuiOptional(node.m_json, u8"translation", [](auto& t) {
-    ShowGuiFloat3("##translation", t);
+    ShowGuiFloat3("##translation", t, std::array<float, 3>{ 0, 0, 0 });
   });
 
   PrintfBuffer buf;
-  ShowGuiVector(
-    "Weights", node.m_json, u8"weights", [&buf](size_t i, auto& value) {
-      ImGui::SliderFloat(
-        buf.Printf("##Weights_%zu", i), value->template Ptr<float>(), 0, 1);
+  ShowGuiVectorFloat(
+    "Weights", node.m_json, u8"weights", [&buf](size_t i, float* p) {
+      ImGui::SliderFloat(buf.Printf("##Weights_%zu", i), p, 0, 1);
     });
 }
 

@@ -2,6 +2,7 @@
 
 #include "im_widgets.h"
 #include <array>
+#include <glr/gl3renderer.h>
 
 struct InputTextCallback_UserData
 {
@@ -122,6 +123,31 @@ ShowGuiUInt32(const char* label,
 }
 
 void
+ShowGuiSliderFloat(const char* label,
+                   const gltfjson::tree::NodePtr& parentNode,
+                   std::u8string_view key,
+                   float min,
+                   float max,
+                   float defaultValue)
+{
+  if (!parentNode) {
+    return;
+  }
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, defaultValue);
+  }
+
+  auto p = node->Ptr<float>();
+  if (!p) {
+    node->Var = defaultValue;
+    p = node->Ptr<float>();
+  }
+
+  ImGui::SliderFloat(label, p, min, max);
+}
+
+void
 ShowGuiStringEnum(const char* label,
                   const gltfjson::tree::NodePtr& parentNode,
                   std::u8string_view key,
@@ -155,9 +181,10 @@ ShowGuiStringEnum(const char* label,
 }
 
 void
-ShowGuiColor4(const char* label,
+ShowGuiColor3(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
-              std::u8string_view key)
+              std::u8string_view key,
+              const std::array<float, 3>& defaultColor)
 {
   if (!parentNode) {
     return;
@@ -167,33 +194,57 @@ ShowGuiColor4(const char* label,
     node = parentNode->Add(key, gltfjson::tree::ArrayValue{});
   }
 
-  auto values = FillArray<4>(node);
+  auto values = FillArray<3>(node, defaultColor);
   if (ImGui::ColorEdit4(label, &values[0])) {
     node->Set(values);
   }
 }
 
 void
-ShowGuiFloat3(const char* label, const gltfjson::tree::NodePtr& node)
+ShowGuiColor4(const char* label,
+              const gltfjson::tree::NodePtr& parentNode,
+              std::u8string_view key,
+              const std::array<float, 4>& defaultColor)
+{
+  if (!parentNode) {
+    return;
+  }
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, gltfjson::tree::ArrayValue{});
+  }
+
+  auto values = FillArray<4>(node, defaultColor);
+  if (ImGui::ColorEdit4(label, &values[0])) {
+    node->Set(values);
+  }
+}
+
+void
+ShowGuiFloat3(const char* label,
+              const gltfjson::tree::NodePtr& node,
+              const std::array<float, 3>& defaultValue)
 {
   if (!node) {
     return;
   }
 
-  auto values = FillArray<3>(node);
+  auto values = FillArray<3>(node, defaultValue);
   if (ImGui::InputFloat3(label, &values[0])) {
     node->Set(values);
   }
 }
 
 void
-ShowGuiFloat4(const char* label, const gltfjson::tree::NodePtr& node)
+ShowGuiFloat4(const char* label,
+              const gltfjson::tree::NodePtr& node,
+              const std::array<float, 4>& defaultValue)
 {
   if (!node) {
     return;
   }
 
-  auto values = FillArray<4>(node);
+  auto values = FillArray<4>(node, defaultValue);
   if (ImGui::InputFloat4(label, &values[0])) {
     node->Set(values);
   }
@@ -253,7 +304,11 @@ SelectId(const char* label,
 
   grapho::imgui::GenericCombo<uint32_t>(label, &selected, span);
   if (selected >= 0 && selected < values->size()) {
-    *id = (float)selected;
+    if (id) {
+      *id = (float)selected;
+    } else {
+      idParent->Add(key, (float)selected);
+    }
   } else {
     idParent->Remove(key);
   }
@@ -267,11 +322,10 @@ SelectId(const char* label,
 }
 
 void
-ShowGuiVector(
-  const char* label,
-  const gltfjson::tree::NodePtr& parentNode,
-  std::u8string_view key,
-  const std::function<void(size_t i, const gltfjson::tree::NodePtr&)>& showGui)
+ShowGuiVectorFloat(const char* label,
+                   const gltfjson::tree::NodePtr& parentNode,
+                   std::u8string_view key,
+                   const std::function<void(size_t i, float* p)>& showGui)
 {
   if (!parentNode) {
     return;
@@ -292,7 +346,12 @@ ShowGuiVector(
     PrintfBuffer buf;
     size_t i = 0;
     for (auto it = array->begin(); it != array->end(); ++i) {
-      showGui(i, *it);
+      auto p = (*it)->Ptr<float>();
+      if (!p) {
+        (*it)->Var = 0.0f;
+        p = (*it)->Ptr<float>();
+      }
+      showGui(i, p);
       ImGui::SameLine();
       if (ImGui::Button(buf.Printf("x##%s_%d", label, i))) {
         it = array->erase(it);
@@ -338,4 +397,30 @@ ShowGuiOptional(
       auto node = parentNode->Add(key, gltfjson::tree::ObjectValue{});
     }
   }
+}
+
+void
+ShowGuiTexturePreview(const gltfjson::typing::Root& root,
+                      const gltfjson::typing::Bin& bin,
+                      const gltfjson::tree::NodePtr& parentNode,
+                      const char8_t* key)
+{
+  if (!parentNode) {
+    return;
+  }
+
+  auto node = parentNode->Get(key);
+  if (node) {
+    if (auto p = node->Ptr<float>()) {
+      if (auto texture = glr::GetOrCreateTexture(
+            root, bin, (uint32_t)*p, libvrm::gltf::ColorSpace::Linear)) {
+        ImGui::Image((ImTextureID)(int64_t)texture->Handle(), { 150, 150 });
+        return;
+      }
+    }
+  }
+
+  auto pos = ImGui::GetCursorPos();
+  ImDrawList* draw_list = ImGui::GetWindowDrawList();
+  draw_list->AddRect(pos, { pos.x + 150, pos.y + 150 }, ImColor());
 }
