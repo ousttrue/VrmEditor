@@ -80,6 +80,10 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       TypeFunc<gltfjson::typing::vrm0::BlendShapeGroup>() },
     { u8"/extensions/VRM/secondaryAnimation/boneGroups",
       JsonGuiVrm0SpringList },
+    { u8"/extensions/VRM/secondaryAnimation/boneGroups/*",
+      TypeFunc<gltfjson::typing::vrm0::Spring>() },
+    { u8"/extensions/VRM/secondaryAnimation/colliderGroups/*",
+      TypeFunc<gltfjson::typing::vrm0::ColliderGroup>() },
 
     // },
     // { "/extensions/VRMC_springBone/springs/*/joints",

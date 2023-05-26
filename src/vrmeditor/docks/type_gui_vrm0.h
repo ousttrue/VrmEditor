@@ -27,3 +27,13 @@ void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::BlendShapeGroup blendShapeGroup);
+
+void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::vrm0::Spring spring);
+
+void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::vrm0::ColliderGroup colliderGroup);

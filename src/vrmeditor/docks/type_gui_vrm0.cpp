@@ -65,3 +65,32 @@ ShowGui(const gltfjson::typing::Root& root,
   // const auto IsBinary() const { return m_ptr<bool, u8"isBinary">(); }
 }
 
+void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::vrm0::Spring spring)
+{
+  ShowGuiString("Comment", spring.m_json, u8"comment");
+  // auto Stifness() const { return m_ptr<float, u8"stiffiness">(); }
+  // auto GravityPower() const { return m_ptr<float, u8"gravityPower">(); }
+  // auto GravityDir() const
+  // {
+  //   return m_ptr<gltfjson::tree::ObjectValue, u8"gravityDir">();
+  // }
+  // auto DragForce() const { return m_ptr<float, u8"dragForce">(); }
+  // auto Center() const { return m_id<u8"center">(); }
+  // auto HitRadius() const { return m_ptr<float, u8"hitRadius">(); }
+  // auto Bones() const { return m_ptr<gltfjson::tree::ArrayValue, u8"bones">();
+  // } auto ColliderGroups() const
+  // {
+  //   return m_ptr<gltfjson::tree::ArrayValue, u8"colliderGroups">();
+  // }
+}
+
+void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::vrm0::ColliderGroup colliderGroup)
+{
+  SelectId("Node", colliderGroup.m_json, u8"node", root.Nodes.m_json);
+}
