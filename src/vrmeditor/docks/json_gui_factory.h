@@ -1,14 +1,8 @@
 #pragma once
-#include <functional>
-#include <gltfjson.h>
+#include "showgui.h"
 #include <gltfjson/jsonpath.h>
 #include <list>
 
-using ShowGuiFunc = std::function<void(const gltfjson::typing::Root& root,
-                                       const gltfjson::typing::Bin& bin,
-                                       const gltfjson::tree::NodePtr&)>;
-
-using CreateGuiFunc = std::function<ShowGuiFunc(std::u8string_view jsonpath)>;
 struct JsonGuiFactory
 {
   std::u8string m_match;

@@ -1,6 +1,14 @@
 #include "json_gui_factory.h"
+#include "json_gui_accessor.h"
 #include "type_gui.h"
 #include <imgui.h>
+// #include "json_gui_images.h"
+// #include "json_gui_material.h"
+// #include "json_gui_mesh.h"
+// #include "json_gui_node.h"
+// #include "json_gui_skin.h"
+// #include "json_gui_vrm0.h"
+// #include "json_gui_vrm1.h"
 
 template<typename T>
 inline CreateGuiFunc
@@ -40,7 +48,7 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
     { u8"/animations/*", TypeFunc<gltfjson::typing::Animation>() },
     // { u8"/cameras/*", TypeFunc<gltfjson::typing::Camera>() },
 
-    // { "/accessors", JsonGuiAccessorList },
+    { u8"/accessors", &JsonGuiAccessorList },
     // { "/images", JsonGuiImageList },
     // { "/materials", JsonGuiMaterialList },
     // { "/meshes", JsonGuiMeshList },
