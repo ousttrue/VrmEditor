@@ -494,8 +494,14 @@ public:
       if (auto cutoff = gltfMaterial.AlphaCutoff()) {
         m_model.cutoff.x = *cutoff;
       }
+      m_model.color = { 1, 1, 1, 1 };
       if (auto pbr = gltfMaterial.PbrMetallicRoughness()) {
-        // m_model.color = *((DirectX::XMFLOAT4*)&pbr->BaseColorFactor());
+        if (pbr->BaseColorFactor.size() == 4) {
+          m_model.color.x = pbr->BaseColorFactor[0];
+          m_model.color.y = pbr->BaseColorFactor[1];
+          m_model.color.z = pbr->BaseColorFactor[2];
+          m_model.color.w = pbr->BaseColorFactor[3];
+        }
       }
       m_modelUbo->Upload(m_model);
       m_modelUbo->SetBindingPoint(1);
