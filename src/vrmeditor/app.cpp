@@ -22,6 +22,7 @@
 #include <ImGuizmo.h>
 #include <cuber/mesh.h>
 #include <fstream>
+#include <gltfjson.h>
 #include <gltfjson/glb.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
@@ -196,20 +197,25 @@ App::SaveState()
 bool
 App::WriteScene(const std::filesystem::path& path)
 {
-  // libvrm::gltf::Exporter exporter;
-  // exporter.Export(*m_runtime->m_table);
-  //
-  // std::ofstream os(path, std::ios::binary);
-  // if (!os) {
-  //   return false;
-  // }
-  //
-  // return gltfjson::Glb{
-  //   .JsonChunk = exporter.JsonChunk,
-  //   .BinChunk = exporter.BinChunk,
-  // }
-  //   .WriteTo(os);
-  return false;
+  std::stringstream ss;
+  gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+    ss.write(src.data(), src.size());
+  };
+  gltfjson::tree::Exporter exporter{ write };
+  exporter.Export(m_runtime->m_table->m_gltf->m_json);
+  auto str = ss.str();
+
+  std::ofstream os(path, std::ios::binary);
+  if (!os) {
+    return false;
+  }
+
+  return gltfjson::Glb{
+    .JsonChunk = { (const uint8_t*)str.data(), str.size() },
+    .BinChunk = m_runtime->m_table->m_bin.Bytes,
+  }
+    .WriteTo(os);
+  return true;
 }
 
 bool
