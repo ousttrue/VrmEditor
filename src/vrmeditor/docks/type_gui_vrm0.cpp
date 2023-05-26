@@ -51,3 +51,17 @@ ShowGui(const gltfjson::typing::Root& root,
   // LookAt
   ShowGuiString("LookAtType", firstPerson.m_json, u8"lookAtType");
 }
+
+void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::vrm0::BlendShapeGroup blendShapeGroup)
+{
+  ShowGuiString("Name", blendShapeGroup.m_json, u8"name");
+  // const auto Name() const { return m_string<u8"name">(); }
+  // const auto Preset() const { return m_string<u8"presetName">(); }
+  // JsonArray<MorphBind, u8"binds"> MorphBinds;
+  // JsonArray<MaterialBind, u8"materialValues"> MaterialBinds;
+  // const auto IsBinary() const { return m_ptr<bool, u8"isBinary">(); }
+}
+

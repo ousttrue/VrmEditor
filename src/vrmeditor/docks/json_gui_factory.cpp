@@ -76,6 +76,8 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       TypeFunc<gltfjson::typing::vrm0::Humanoid>() },
     { u8"/extensions/VRM/firstPerson",
       TypeFunc<gltfjson::typing::vrm0::FirstPerson>() },
+    { u8"/extensions/VRM/blendShapeMaster/blendShapeGroups/*",
+      TypeFunc<gltfjson::typing::vrm0::BlendShapeGroup>() },
     { u8"/extensions/VRM/secondaryAnimation/boneGroups",
       JsonGuiVrm0SpringList },
 

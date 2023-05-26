@@ -22,3 +22,8 @@ void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::FirstPerson firstPerson);
+
+void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::vrm0::BlendShapeGroup blendShapeGroup);
