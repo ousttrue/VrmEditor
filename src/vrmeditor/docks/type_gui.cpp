@@ -35,7 +35,7 @@ ShowGui(const gltfjson::typing::Root& root,
   ShowGuiChildOfRoot(buffer);
   ImGui::BeginDisabled(true);
   ShowGuiString("Uri", buffer.m_json, u8"uri");
-  ImGui::InputScalar("ByteLength", ImGuiDataType_U32, buffer.ByteLength());
+  ShowGuiUInt32("ByteLength", buffer.m_json, u8"byteLength");
   ImGui::EndDisabled();
 }
 
@@ -80,10 +80,8 @@ ShowGui(const gltfjson::typing::Root& root,
   ImGui::BeginDisabled(true);
   SelectId(
     "BufferView", accessor.m_json, u8"bufferView", root.BufferViews.m_json);
-  auto value = (uint32_t)*accessor.ByteOffset();
-  if (ImGui::InputScalar("ByteOffset", ImGuiDataType_U32, &value)) {
-    *accessor.ByteOffset() = (float)value;
-  }
+
+  ShowGuiUInt32("ByteOffset", accessor.m_json, u8"byteOffset");
 
   ShowGuiEnum<gltfjson::format::ComponentTypes>(
     "ComponentType",
@@ -267,10 +265,8 @@ ShowGui(const gltfjson::typing::Root& root,
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     draw_list->AddRect(pos, { pos.x + 150, pos.y + 150 }, ImColor());
   }
-  auto value = (uint32_t)*info.TexCoord();
-  if (ImGui::InputScalar("TexCoord", ImGuiDataType_U8, &value)) {
-    *info.TexCoord() = (float)value;
-  }
+
+  ShowGuiUInt32("TexCoord", info.m_json, u8"texCoord");
 }
 
 static void
