@@ -32,8 +32,17 @@ public:
 
   bool ShouldOpen(std::u8string_view jsonpath) const
   {
-    return jsonpath.size() < m_selected.size() &&
-           m_selected.starts_with(jsonpath);
+    if (jsonpath.size() == 1) {
+      // "/"
+      return true;
+    }
+
+    if (m_selected.starts_with(jsonpath)) {
+      if (m_selected[jsonpath.size()] == u8'/') {
+        return true;
+      }
+    }
+    return false;
   }
 
   void Select(std::u8string_view jsonpath)

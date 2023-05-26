@@ -84,6 +84,8 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       TypeFunc<gltfjson::typing::vrm0::Spring>() },
     { u8"/extensions/VRM/secondaryAnimation/colliderGroups/*",
       TypeFunc<gltfjson::typing::vrm0::ColliderGroup>() },
+    { u8"/extensions/VRM/materialProperties/*",
+      TypeFunc<gltfjson::typing::vrm0::Material>() },
 
     // },
     // { "/extensions/VRMC_springBone/springs/*/joints",

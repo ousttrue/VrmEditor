@@ -94,3 +94,34 @@ ShowGui(const gltfjson::typing::Root& root,
 {
   SelectId("Node", colliderGroup.m_json, u8"node", root.Nodes.m_json);
 }
+
+
+void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::vrm0::Material material)
+{
+  ShowGuiString("Name", material.m_json, u8"name");
+  ShowGuiString("Shader", material.m_json, u8"shader");
+  // auto RenderQueue() const { return m_ptr<float, u8"renderQueue">(); }
+  // auto FloatProperties() const
+  // {
+  //   return m_ptr<gltfjson::tree::ObjectValue, u8"floatProperties">();
+  // }
+  // auto vectorProperties() const
+  // {
+  //   return m_ptr<gltfjson::tree::ObjectValue, u8"vectorProperties">();
+  // }
+  // auto textureProperties() const
+  // {
+  //   return m_ptr<gltfjson::tree::ObjectValue, u8"textureProperties">();
+  // }
+  // auto keywordMap() const
+  // {
+  //   return m_ptr<gltfjson::tree::ObjectValue, u8"keywordMap">();
+  // }
+  // auto tagMap() const
+  // {
+  //   return m_ptr<gltfjson::tree::ObjectValue, u8"tagMap">();
+  // }
+}
