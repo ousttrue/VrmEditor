@@ -72,6 +72,8 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
 
     { u8"/extensions/VRM", TypeFunc<gltfjson::typing::vrm0::VRM>() },
     { u8"/extensions/VRM/meta", TypeFunc<gltfjson::typing::vrm0::Meta>() },
+    { u8"/extensions/VRM/humanoid",
+      TypeFunc<gltfjson::typing::vrm0::Humanoid>() },
     { u8"/extensions/VRM/secondaryAnimation/boneGroups",
       JsonGuiVrm0SpringList },
 

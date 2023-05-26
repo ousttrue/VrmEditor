@@ -30,3 +30,12 @@ ShowGui(const gltfjson::typing::Root& root,
   ShowGuiString("OtherPermissionUrl", meta.m_json, u8"otherPermissionUrl");
   ShowGuiString("License", meta.m_json, u8"licenseName");
 }
+
+void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::vrm0::Humanoid humanoid)
+{
+}
+
+
