@@ -5,7 +5,6 @@ executable(
         'gltf_samples.cpp',
         'json.cpp',
         'text.cpp',
-        'gltfon.cpp',
         # 'glb_export.cpp',
         # 'vrma.cpp',
     ],
