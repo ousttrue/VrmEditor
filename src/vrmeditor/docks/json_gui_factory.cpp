@@ -1,13 +1,14 @@
 #include "json_gui_factory.h"
 #include "json_gui_accessor.h"
 #include "type_gui.h"
+#include "type_gui_vrm0.h"
 #include <imgui.h>
 // #include "json_gui_images.h"
 // #include "json_gui_material.h"
 // #include "json_gui_mesh.h"
 // #include "json_gui_node.h"
 // #include "json_gui_skin.h"
-// #include "json_gui_vrm0.h"
+#include "json_gui_vrm0.h"
 // #include "json_gui_vrm1.h"
 
 template<typename T>
@@ -68,8 +69,11 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
     // { "/nodes", JsonGuiNodeList },
     // { "/extensions/VRM/secondaryAnimation/colliderGroups/*/colliders",
     //   JsonGuiVrm0ColliderList },
-    // { "/extensions/VRM/secondaryAnimation/boneGroups",
-    // JsonGuiVrm0SpringList
+
+    { u8"/extensions/VRM", TypeFunc<gltfjson::typing::vrm0::VRM>() },
+    { u8"/extensions/VRM/secondaryAnimation/boneGroups",
+      JsonGuiVrm0SpringList },
+
     // },
     // { "/extensions/VRMC_springBone/springs/*/joints",
     // JsonGuiVrm1SpringJoints

@@ -3,11 +3,6 @@
 #include <string>
 #include <vrm/gltf.h>
 
-// void
-// ShowGui(std::list<gltfjson::annotation::Extension>& extensions);
-// void
-// ShowGui(std::list<gltfjson::annotation::Extra>& extras);
-
 void
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
