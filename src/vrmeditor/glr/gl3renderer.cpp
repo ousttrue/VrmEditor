@@ -138,6 +138,8 @@ public:
     if (str.starts_with("pbr.")) {
       // clear cache
       m_materialMap.clear();
+    } else if (str.starts_with("unlit.")) {
+      m_materialMap.clear();
     } else if (str.starts_with("shadow.")) {
       m_shadow = {};
     }
@@ -251,21 +253,28 @@ public:
 
     auto src = root.Materials[*id];
 
-    // auto unlit =
-    //   std::find_if(src.Extensions.begin(), src.Extensions.end(), [](auto&
-    //   ex)
-    //   {
-    //     return ex.Name == u8"KHR_materials_unlit";
-    //   });
-    // if (unlit != src.Extensions.end()) {
-    if (false) {
+    auto extensions = src.Extensions();
+
+    gltfjson::tree::NodePtr unlit;
+    if (extensions) {
+      unlit = extensions->Get(u8"KHR_materials_unlit");
+    }
+
+    if (unlit) {
       //
       // unlit
       //
-      if (auto shader = grapho::gl3::ShaderProgram::Create(
-            m_shaderSource.Get("unlit.vert"),
-            m_shaderSource.Get("unlit.frag"))) {
-
+      std::vector<std::u8string_view> vs;
+      std::vector<std::u8string_view> fs;
+      vs.push_back(u8"#version 450\n");
+      fs.push_back(u8"#version 450\n");
+      if (GetAlphaMode(root, id) == gltfjson::format::AlphaModes::Mask) {
+        vs.push_back(u8"#define MODE_MASK\n");
+        fs.push_back(u8"#define MODE_MASK\n");
+      }
+      vs.push_back(m_shaderSource.Get("unlit.vert"));
+      fs.push_back(m_shaderSource.Get("unlit.frag"));
+      if (auto shader = grapho::gl3::ShaderProgram::Create(vs, fs)) {
         auto material = std::make_shared<grapho::gl3::Material>();
         material->Shader = *shader;
         if (auto pbr = src.PbrMetallicRoughness()) {

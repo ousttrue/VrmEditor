@@ -269,11 +269,4 @@ table.remove(splitted, #splitted)
 local here = concat(splitted, "/")
 -- print(here)
 
-vrmeditor.set_shaderpath(here .. "/shaders", {
-  pbr_vs = "pbr.vs",
-  pbr_fs = "pbr.fs",
-  unlit_vs = "unlit.vs",
-  unlit_fs = "unlit.fs",
-  mtoon_vs = "mtoon.vs",
-  mtoon_fs = "mtoon.fs",
-})
+vrmeditor.set_shaderpath(here .. "/shaders")
