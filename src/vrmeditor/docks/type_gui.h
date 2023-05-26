@@ -3,70 +3,70 @@
 #include <string>
 #include <vrm/gltf.h>
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Asset asset);
 
-void
+bool
 ShowText(const std::u8string& text);
 
 // buffer/bufferView/accessor
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Buffer buffer);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::BufferView bufferView);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Accessor accessor);
 // image/sampler/texture/material/mesh
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Image image);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Sampler sampler);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Texture texture);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Material material);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Mesh mesh);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::MeshPrimitive prim);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::MeshPrimitiveMorphTarget target);
 // skin/node/scene/animation
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Skin skin);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Node node);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Scene scene);
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Animation animation);

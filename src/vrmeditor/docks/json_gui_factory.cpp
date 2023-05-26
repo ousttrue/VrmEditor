@@ -10,6 +10,7 @@
 // #include "json_gui_skin.h"
 #include "json_gui_vrm0.h"
 // #include "json_gui_vrm1.h"
+#include <glr/gl3renderer.h>
 
 template<typename T>
 inline CreateGuiFunc
@@ -20,8 +21,9 @@ TypeFunc()
               const gltfjson::typing::Bin& bin,
               const gltfjson::tree::NodePtr& node) {
       ImGui::PushID(node.get());
-      ::ShowGui(root, bin, T{ node });
+      auto updated = ::ShowGui(root, bin, T{ node });
       ImGui::PopID();
+      return updated;
     };
   };
 }
@@ -107,11 +109,23 @@ JsonGuiFactoryManager::ShowGui(const gltfjson::typing::Root& root,
     if (auto mached = MatchGui(m_selected)) {
       m_cache = (*mached)(m_selected);
     } else {
-      m_cache = [](auto& root, auto& bin, auto& node) {};
+      m_cache = [](auto& root, auto& bin, auto& node) { return false; };
     }
   }
   auto node = gltfjson::tree::FindJsonPath(root.m_json, m_selected);
   if (node) {
-    m_cache(root, bin, node);
+    if (m_cache(root, bin, node)) {
+      OnUpdated(m_selected);
+    }
+  }
+}
+
+void
+JsonGuiFactoryManager::OnUpdated(std::u8string_view jsonpath)
+{
+  gltfjson::JsonPath path(jsonpath);
+  auto [childOfRoot, i] = path.GetChildOfRootIndex();
+  if (childOfRoot==u8"materials") {
+    glr::ReleaseMaterial(i);
   }
 }

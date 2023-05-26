@@ -64,4 +64,6 @@ public:
 
   void ShowGui(const gltfjson::typing::Root& root,
                const gltfjson::typing::Bin& bin);
+
+  void OnUpdated(std::u8string_view jsonpath);
 };

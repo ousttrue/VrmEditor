@@ -119,6 +119,8 @@ public:
     m_drawableMap.clear();
   }
 
+  void ReleaseMaterial(int i) { m_materialMap.erase(i); }
+
   // for local shader
   void SetShaderDir(const std::filesystem::path& path)
   {
@@ -576,6 +578,12 @@ void
 Release()
 {
   Gl3Renderer::Instance().Release();
+}
+
+void
+ReleaseMaterial(int i)
+{
+  Gl3Renderer::Instance().ReleaseMaterial(i);
 }
 
 void

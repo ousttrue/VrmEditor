@@ -246,6 +246,7 @@ JsonGuiAccessorReference(std::u8string_view jsonpath)
         JsonGuiAccessorMat4(root, bin, node);
       }
     }
+    return false;
   };
 }
 
@@ -374,5 +375,6 @@ JsonGuiAccessorList(std::u8string_view jsonpath)
       }
       ImGui::EndTable();
     }
+    return false;
   };
 }

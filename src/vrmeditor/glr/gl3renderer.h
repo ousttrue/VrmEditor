@@ -53,6 +53,10 @@ ClearRendertarget(const RenderingEnv& camera);
 void
 Release();
 
+void
+ReleaseMaterial(int i);
+
+
 // resource viewer
 void
 CreateDock(const AddDockFunc& addDock, std::string_view title);

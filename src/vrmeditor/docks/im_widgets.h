@@ -5,62 +5,6 @@
 #include <grapho/gl3/texture.h>
 #include <grapho/imgui/widgets.h>
 
-void
-ShowGuiString(const char* label,
-              const gltfjson::tree::NodePtr& parentNode,
-              std::u8string_view key);
-
-void
-ShowGuiBool(const char* label,
-            const gltfjson::tree::NodePtr& parentNode,
-            std::u8string_view key);
-
-void
-ShowGuiUInt32(const char* label,
-              const gltfjson::tree::NodePtr& parentNode,
-              std::u8string_view key);
-
-void
-ShowGuiSliderFloat(const char* label,
-                   const gltfjson::tree::NodePtr& parentNode,
-                   std::u8string_view key,
-                   float min,
-                   float max,
-                   float defalutValue);
-
-template<typename T>
-inline void
-ShowGuiEnum(const char* label,
-            const gltfjson::tree::NodePtr& parentNode,
-            std::u8string_view key,
-            std::span<const std::tuple<T, const char*>> combo)
-{
-  if (!parentNode) {
-    return;
-  }
-  auto node = parentNode->Get(key);
-  if (!node) {
-    node = parentNode->Add(key, 0.0f);
-  }
-
-  auto p = node->Ptr<float>();
-  if (!p) {
-    node->Var = 0.0f;
-    p = node->Ptr<float>();
-  }
-
-  auto value = (T)*p;
-  if (grapho::imgui::EnumCombo(label, &value, combo)) {
-    *p = (float)value;
-  }
-}
-
-void
-ShowGuiStringEnum(const char* label,
-                  const gltfjson::tree::NodePtr& parentNode,
-                  std::u8string_view key,
-                  std::span<const std::tuple<int, std::string>> combo);
-
 template<size_t N>
 static std::array<float, N>
 FillArray(const gltfjson::tree::NodePtr& node,
@@ -94,26 +38,85 @@ FillArray(const gltfjson::tree::NodePtr& node,
   return values;
 }
 
+bool
+ShowGuiString(const char* label,
+              const gltfjson::tree::NodePtr& parentNode,
+              std::u8string_view key);
+
+bool
+ShowGuiBool(const char* label,
+            const gltfjson::tree::NodePtr& parentNode,
+            std::u8string_view key);
+
+bool
+ShowGuiUInt32(const char* label,
+              const gltfjson::tree::NodePtr& parentNode,
+              std::u8string_view key);
+
+bool
+ShowGuiSliderFloat(const char* label,
+                   const gltfjson::tree::NodePtr& parentNode,
+                   std::u8string_view key,
+                   float min,
+                   float max,
+                   float defalutValue);
+
+template<typename T>
+inline bool
+ShowGuiEnum(const char* label,
+            const gltfjson::tree::NodePtr& parentNode,
+            std::u8string_view key,
+            std::span<const std::tuple<T, const char*>> combo)
+{
+  if (!parentNode) {
+    return false;
+  }
+  auto node = parentNode->Get(key);
+  if (!node) {
+    node = parentNode->Add(key, 0.0f);
+  }
+
+  auto p = node->Ptr<float>();
+  if (!p) {
+    node->Var = 0.0f;
+    p = node->Ptr<float>();
+  }
+
+  auto value = (T)*p;
+  if (grapho::imgui::EnumCombo(label, &value, combo)) {
+    *p = (float)value;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool
+ShowGuiStringEnum(const char* label,
+                  const gltfjson::tree::NodePtr& parentNode,
+                  std::u8string_view key,
+                  std::span<const std::tuple<int, std::string>> combo);
+
 // emissive
-void
+bool
 ShowGuiColor3(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
               std::u8string_view key,
               const std::array<float, 3>& defaultColor);
 
 // baseColor
-void
+bool
 ShowGuiColor4(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
               std::u8string_view key,
               const std::array<float, 4>& defaultColor);
 
-void
+bool
 ShowGuiFloat3(const char* label,
               const gltfjson::tree::NodePtr& node,
               const std::array<float, 3>& defaultValue);
 
-void
+bool
 ShowGuiFloat4(const char* label,
               const gltfjson::tree::NodePtr& node,
               const std::array<float, 4>& defaultValue);
@@ -124,14 +127,14 @@ ShowGuiFloat4(const char* label,
 void
 HelpMarker(const char* desc);
 
-void
+bool
 SelectId(const char* label,
          const gltfjson::tree::NodePtr& idParent,
          const char8_t* key,
          const gltfjson::tree::NodePtr& arrayNode);
 
 template<typename T>
-void
+bool
 ListId(const char* label, std::vector<uint32_t>& list, const T& values)
 {
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
@@ -161,19 +164,20 @@ ListId(const char* label, std::vector<uint32_t>& list, const T& values)
     }
     ImGui::Unindent();
   }
+  return false;
 }
 
-void
+bool
 ShowGuiVectorFloat(const char* label,
                    const gltfjson::tree::NodePtr& parentNode,
                    std::u8string_view key,
-                   const std::function<void(size_t i, float* p)>& showGui);
+                   const std::function<bool(size_t i, float* p)>& showGui);
 
-void
+bool
 ShowGuiOptional(
   const gltfjson::tree::NodePtr& parentNode,
   const char8_t* key,
-  const std::function<void(const gltfjson::tree::NodePtr&)>& showGui);
+  const std::function<bool(const gltfjson::tree::NodePtr&)>& showGui);
 
 void
 ShowGuiTexturePreview(const gltfjson::typing::Root& root,

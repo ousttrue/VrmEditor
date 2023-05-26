@@ -3,42 +3,42 @@
 #include <string>
 #include <vrm/gltf.h>
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::VRM vrm);
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::Meta meta);
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::Humanoid humanoid);
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::FirstPerson firstPerson);
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::BlendShapeGroup blendShapeGroup);
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::Spring spring);
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::ColliderGroup colliderGroup);
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::Material material);

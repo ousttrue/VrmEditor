@@ -3,16 +3,17 @@
 #include "im_widgets.h"
 #include "type_gui_vrm0.h"
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::VRM vrm)
 {
   ShowGuiString("ExpoertVersion", vrm.m_json, u8"expoertVersion");
   ShowGuiString("SpecVersion", vrm.m_json, u8"specVersion");
+  return false;
 }
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::Meta meta)
@@ -29,16 +30,18 @@ ShowGui(const gltfjson::typing::Root& root,
   ShowGuiString("CommercialUsage", meta.m_json, u8"commercialUssageName");
   ShowGuiString("OtherPermissionUrl", meta.m_json, u8"otherPermissionUrl");
   ShowGuiString("License", meta.m_json, u8"licenseName");
+  return false;
 }
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::Humanoid humanoid)
 {
+  return false;
 }
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::FirstPerson firstPerson)
@@ -50,9 +53,10 @@ ShowGui(const gltfjson::typing::Root& root,
            root.Nodes.m_json);
   // LookAt
   ShowGuiString("LookAtType", firstPerson.m_json, u8"lookAtType");
+  return false;
 }
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::BlendShapeGroup blendShapeGroup)
@@ -63,9 +67,10 @@ ShowGui(const gltfjson::typing::Root& root,
   // JsonArray<MorphBind, u8"binds"> MorphBinds;
   // JsonArray<MaterialBind, u8"materialValues"> MaterialBinds;
   // const auto IsBinary() const { return m_ptr<bool, u8"isBinary">(); }
+  return false;
 }
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::Spring spring)
@@ -85,18 +90,20 @@ ShowGui(const gltfjson::typing::Root& root,
   // {
   //   return m_ptr<gltfjson::tree::ArrayValue, u8"colliderGroups">();
   // }
+  return false;
 }
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::ColliderGroup colliderGroup)
 {
   SelectId("Node", colliderGroup.m_json, u8"node", root.Nodes.m_json);
+  return false;
 }
 
 
-void
+bool
 ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::vrm0::Material material)
@@ -124,4 +131,5 @@ ShowGui(const gltfjson::typing::Root& root,
   // {
   //   return m_ptr<gltfjson::tree::ObjectValue, u8"tagMap">();
   // }
+  return false;
 }
