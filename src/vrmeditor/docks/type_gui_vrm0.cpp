@@ -38,4 +38,16 @@ ShowGui(const gltfjson::typing::Root& root,
 {
 }
 
-
+void
+ShowGui(const gltfjson::typing::Root& root,
+        const gltfjson::typing::Bin& bin,
+        gltfjson::typing::vrm0::FirstPerson firstPerson)
+{
+  // FirstPerson
+  SelectId("FirstPersonBone",
+           firstPerson.m_json,
+           u8"firstPersonBone",
+           root.Nodes.m_json);
+  // LookAt
+  ShowGuiString("LookAtType", firstPerson.m_json, u8"lookAtType");
+}
