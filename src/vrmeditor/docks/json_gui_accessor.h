@@ -2,7 +2,252 @@
 #include "json_gui_table.h"
 #include "showgui.h"
 #include <array>
+#include <gltfjson.h>
+#include <gltfjson/bin.h>
+#include <gltfjson/jsonpath.h>
+#include <optional>
 #include <string>
+#include <vrm/base_mesh.h>
+
+static std::optional<int>
+GetIndex(std::u8string_view jsonpath)
+{
+  if (auto i = gltfjson::JsonPath(jsonpath).GetLastInt()) {
+    return *i;
+  } else {
+    return std::nullopt;
+  }
+}
+
+static void
+JsonGuiAccessorUShort4(const gltfjson::typing::Root& root,
+                       const gltfjson::typing::Bin& bin,
+                       const gltfjson::tree::NodePtr& node)
+{
+  if (auto items = bin.GetAccessorBytes<runtimescene::ushort4>(
+        root, (int)*node->Ptr<float>())) {
+    ImGui::Text("ushort4[%zu]", items->size());
+    std::array<const char*, 5> cols = {
+      "index", "x", "y", "z", "w",
+    };
+    if (JsonGuiTable("##accessor_values", cols)) {
+      ImGuiListClipper clipper;
+      clipper.Begin(items->size());
+      while (clipper.Step()) {
+        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+          auto& value = (*items)[i];
+          ImGui::TableNextRow();
+          ImGui::TableSetColumnIndex(0);
+          ImGui::Text("%d", i);
+          ImGui::TableSetColumnIndex(1);
+          ImGui::Text("%u", value.X);
+          ImGui::TableSetColumnIndex(2);
+          ImGui::Text("%u", value.Y);
+          ImGui::TableSetColumnIndex(3);
+          ImGui::Text("%u", value.Z);
+          ImGui::TableSetColumnIndex(4);
+          ImGui::Text("%u", value.W);
+        }
+      }
+      ImGui::EndTable();
+    }
+  }
+}
+
+static void
+JsonGuiAccessorVec2(const gltfjson::typing::Root& root,
+                    const gltfjson::typing::Bin& bin,
+                    const gltfjson::tree::NodePtr& node)
+{
+  if (auto items = bin.GetAccessorBytes<DirectX::XMFLOAT2>(
+        root, (int)*node->Ptr<float>())) {
+    ImGui::Text("float2[%zu]", items->size());
+    std::array<const char*, 3> cols = {
+      "index",
+      "x",
+      "y",
+    };
+    if (JsonGuiTable("##accessor_values", cols)) {
+      ImGuiListClipper clipper;
+      clipper.Begin(items->size());
+      while (clipper.Step()) {
+        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+          auto& value = (*items)[i];
+          ImGui::TableNextRow();
+          ImGui::TableSetColumnIndex(0);
+          ImGui::Text("%d", i);
+          ImGui::TableSetColumnIndex(1);
+          ImGui::Text("%f", value.x);
+          ImGui::TableSetColumnIndex(2);
+          ImGui::Text("%f", value.y);
+        }
+      }
+      ImGui::EndTable();
+    }
+  }
+}
+
+static void
+JsonGuiAccessorVec3(const gltfjson::typing::Root& root,
+                    const gltfjson::typing::Bin& bin,
+                    const gltfjson::tree::NodePtr& node)
+{
+  if (auto items = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
+        root, (int)*node->Ptr<float>())) {
+    ImGui::Text("float3[%zu]", items->size());
+    std::array<const char*, 4> cols = {
+      "index",
+      "x",
+      "y",
+      "z",
+    };
+    if (JsonGuiTable("##accessor_values", cols)) {
+      ImGuiListClipper clipper;
+      clipper.Begin(items->size());
+      while (clipper.Step()) {
+        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+          auto& value = (*items)[i];
+          ImGui::TableNextRow();
+          ImGui::TableSetColumnIndex(0);
+          ImGui::Text("%d", i);
+          ImGui::TableSetColumnIndex(1);
+          ImGui::Text("%f", value.x);
+          ImGui::TableSetColumnIndex(2);
+          ImGui::Text("%f", value.y);
+          ImGui::TableSetColumnIndex(3);
+          ImGui::Text("%f", value.z);
+        }
+      }
+      ImGui::EndTable();
+    }
+  }
+}
+
+static void
+JsonGuiAccessorVec4(const gltfjson::typing::Root& root,
+                    const gltfjson::typing::Bin& bin,
+                    const gltfjson::tree::NodePtr& node)
+{
+  if (auto items = bin.GetAccessorBytes<DirectX::XMFLOAT4>(
+        root, (int)*node->Ptr<float>())) {
+    ImGui::Text("float4[%zu]", items->size());
+    std::array<const char*, 5> cols = {
+      "index", "x", "y", "z", "w",
+    };
+    if (JsonGuiTable("##accessor_values", cols)) {
+      ImGuiListClipper clipper;
+      clipper.Begin(items->size());
+      while (clipper.Step()) {
+        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+          auto& value = (*items)[i];
+          ImGui::TableNextRow();
+          ImGui::TableSetColumnIndex(0);
+          ImGui::Text("%d", i);
+          ImGui::TableSetColumnIndex(1);
+          ImGui::Text("%f", value.x);
+          ImGui::TableSetColumnIndex(2);
+          ImGui::Text("%f", value.y);
+          ImGui::TableSetColumnIndex(3);
+          ImGui::Text("%f", value.z);
+          ImGui::TableSetColumnIndex(4);
+          ImGui::Text("%f", value.w);
+        }
+      }
+      ImGui::EndTable();
+    }
+  }
+}
+
+static void
+JsonGuiAccessorMat4(const gltfjson::typing::Root& root,
+                    const gltfjson::typing::Bin& bin,
+                    const gltfjson::tree::NodePtr& node)
+{
+  if (auto items = bin.GetAccessorBytes<DirectX::XMFLOAT4X4>(
+        root, (int)*node->Ptr<float>())) {
+    ImGui::Text("mat4[%zu]", items->size());
+    std::array<const char*, 1 + 16> cols = {
+      "index", "_11", "_12", "_13", "_14", "_21", "_22", "_23", "_24",
+      "_31",   "_32", "_33", "_34", "_41", "_42", "_43", "_44",
+    };
+    if (JsonGuiTable("##accessor_values", cols)) {
+      ImGuiListClipper clipper;
+      clipper.Begin(items->size());
+      while (clipper.Step()) {
+        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+          auto& value = (*items)[i];
+          ImGui::TableNextRow();
+          ImGui::TableSetColumnIndex(0);
+          ImGui::Text("%d", i);
+          ImGui::TableSetColumnIndex(1);
+          ImGui::Text("%f", value._11);
+          ImGui::TableSetColumnIndex(2);
+          ImGui::Text("%f", value._12);
+          ImGui::TableSetColumnIndex(3);
+          ImGui::Text("%f", value._13);
+          ImGui::TableSetColumnIndex(4);
+          ImGui::Text("%f", value._14);
+          ImGui::TableSetColumnIndex(5);
+          ImGui::Text("%f", value._21);
+          ImGui::TableSetColumnIndex(6);
+          ImGui::Text("%f", value._22);
+          ImGui::TableSetColumnIndex(7);
+          ImGui::Text("%f", value._23);
+          ImGui::TableSetColumnIndex(8);
+          ImGui::Text("%f", value._24);
+          ImGui::TableSetColumnIndex(9);
+          ImGui::Text("%f", value._31);
+          ImGui::TableSetColumnIndex(10);
+          ImGui::Text("%f", value._32);
+          ImGui::TableSetColumnIndex(11);
+          ImGui::Text("%f", value._33);
+          ImGui::TableSetColumnIndex(12);
+          ImGui::Text("%f", value._34);
+          ImGui::TableSetColumnIndex(13);
+          ImGui::Text("%f", value._41);
+          ImGui::TableSetColumnIndex(14);
+          ImGui::Text("%f", value._42);
+          ImGui::TableSetColumnIndex(15);
+          ImGui::Text("%f", value._43);
+          ImGui::TableSetColumnIndex(16);
+          ImGui::Text("%f", value._44);
+        }
+      }
+      ImGui::EndTable();
+    }
+  }
+}
+
+ShowGuiFunc
+JsonGuiAccessorReference(std::u8string_view jsonpath)
+{
+  return [](const gltfjson::typing::Root& root,
+            const gltfjson::typing::Bin& bin,
+            const gltfjson::tree::NodePtr& node) {
+    auto accessor_index = (int)*node->Ptr<float>();
+    auto accessor = root.Accessors[accessor_index];
+    auto component_type =
+      (gltfjson::format::ComponentTypes)*accessor.ComponentType();
+    auto type = accessor.Type();
+    if (component_type == gltfjson::format::ComponentTypes::UNSIGNED_SHORT) {
+      // ushort
+      if (type == u8"VEC4") {
+        JsonGuiAccessorUShort4(root, bin, node);
+      }
+    } else if (component_type == gltfjson::format::ComponentTypes::FLOAT) {
+      // float
+      if (type == u8"VEC2") {
+        JsonGuiAccessorVec2(root, bin, node);
+      } else if (type == u8"VEC3") {
+        JsonGuiAccessorVec3(root, bin, node);
+      } else if (type == u8"VEC4") {
+        JsonGuiAccessorVec4(root, bin, node);
+      } else if (type == u8"MAT4") {
+        JsonGuiAccessorMat4(root, bin, node);
+      }
+    }
+  };
+}
 
 struct AccessorItem
 {
