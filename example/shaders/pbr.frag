@@ -43,7 +43,11 @@ const float PI = 3.14159265359;
 vec3
 getNormalFromMap()
 {
+#ifdef HAS_NORMAL_TEXTURE
   vec3 tangentNormal = texture(normalMap, TexCoords).xyz * 2.0 - 1.0;
+#else
+  vec3 tangentNormal = vec3(0, 0, 1);
+#endif
 
   vec3 Q1 = dFdx(WorldPos);
   vec3 Q2 = dFdy(WorldPos);
@@ -113,9 +117,25 @@ void
 main()
 {
   // material properties
-  vec3 albedo = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
-  float metallic = texture(metallicMap, TexCoords).r;
-  float roughness = texture(roughnessMap, TexCoords).r;
+#ifdef HAS_ALBEDO_TEXTURE
+  vec3 albedo = texture(albedoMap, TexCoords).rgb;
+#else
+  vec3 albedo = vec3(1, 1, 1);
+#endif
+  albedo *= Model.color.rgb;
+
+#ifdef HAS_METALLIC_TEXTURE
+  float metallic = texture(metallicMap, TexCoords).b;
+#else
+  float metallic = 1.0;
+#endif
+
+#ifdef HAS_ROUGHNESS_TEXTURE
+  float roughness = texture(roughnessMap, TexCoords).g;
+#else
+  float roughness = 1.0;
+#endif
+
 #ifdef HAS_AO_TEXTURE
   float ao = texture(aoMap, TexCoords).r;
 #else

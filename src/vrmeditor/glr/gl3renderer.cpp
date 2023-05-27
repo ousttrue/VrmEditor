@@ -334,9 +334,20 @@ public:
       std::vector<std::u8string_view> fs;
       vs.push_back(u8"#version 450\n");
       fs.push_back(u8"#version 450\n");
-      if(ao)
-      {
+      if (albedo) {
+        fs.push_back(u8"#define HAS_ALBEDO_TEXTURE\n");
+      }
+      if (metallic) {
+        fs.push_back(u8"#define HAS_METALLIC_TEXTURE\n");
+      }
+      if (roughness) {
+        fs.push_back(u8"#define HAS_ROUGHNESS_TEXTURE\n");
+      }
+      if (ao) {
         fs.push_back(u8"#define HAS_AO_TEXTURE\n");
+      }
+      if (normal) {
+        fs.push_back(u8"#define HAS_NORMAL_TEXTURE\n");
       }
       vs.push_back(m_shaderSource.Get("pbr.vert"));
       fs.push_back(m_shaderSource.Get("pbr.frag"));

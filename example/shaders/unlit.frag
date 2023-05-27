@@ -26,12 +26,15 @@ Model;
 void
 main()
 {
-  vec4 texel = Model.color * texture(colorTexture, uv);
+  vec4 color = Model.color * texture(colorTexture, uv);
 #ifdef MODE_MASK
-  if (texel.a < Model.cutoff.x) {
+  if (color.a < Model.cutoff.x) {
     discard;
   }
 #endif
-  FragColor = texel;
+  // gamma correct
+  color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
+
+  FragColor = color;
   // FragColor = vec4(normal, 1);
 }
