@@ -1,4 +1,7 @@
 #include "shader_source.h"
+#include <ranges>
+#include <span>
+#include <string_view>
 #include <vrm/fileutil.h>
 
 namespace glr {
@@ -92,6 +95,43 @@ void main()
 };
 )";
 
+std::optional<std::filesystem::path>
+get_include_path(std::u8string_view line)
+{
+  if (!line.starts_with(u8"#include ")) {
+    return {};
+  }
+  auto tmp = line.substr(9);
+  auto open = tmp.find(u8'"');
+  if (open == std::string::npos) {
+    return {};
+  }
+  tmp = tmp.substr(open + 1);
+  auto close = tmp.find(u8'"');
+  if (close == std::string::npos) {
+    return {};
+  }
+  return tmp.substr(0, close);
+}
+
+static std::u8string
+ExpandInclude(std::u8string_view src, const std::filesystem::path& dir)
+{
+  std::u8string dst;
+  for (auto sv : src | std::views::split(u8'\n')) {
+    std::u8string_view line{ sv };
+    if (auto path = get_include_path(line)) {
+      auto include = libvrm::fileutil::ReadAllBytes(dir / *path);
+      dst +=
+        std::u8string_view{ (const char8_t*)include.data(), include.size() };
+    } else {
+      dst += line;
+    }
+    dst.push_back('\n');
+  }
+  return dst;
+}
+
 struct ShaderSource
 {
   std::filesystem::path Path;
@@ -102,7 +142,9 @@ struct ShaderSource
     auto path = dir / Path;
     if (std::filesystem::is_regular_file(path)) {
       auto bytes = libvrm::fileutil::ReadAllBytes(path);
-      Source = { bytes.begin(), bytes.end() };
+
+      Source =
+        ExpandInclude({ (const char8_t*)bytes.data(), bytes.size() }, dir);
     }
   }
 };
