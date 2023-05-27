@@ -30,8 +30,10 @@ public:
   {
     gltfjson::JsonPath path(jsonpath);
     if (path.Size() == 3) {
-      if (path[1] == u8"textures") {
-        return true;
+      for (auto& name : gltfjson::format::ChildOfRootProperties) {
+        if (path[1] == name) {
+          return true;
+        }
       }
     }
 

@@ -126,29 +126,28 @@ ShowGuiUInt32(const char* label,
   }
 }
 
-bool
+std::optional<float>
 ShowGuiSliderFloat(const char* label,
-                   const gltfjson::tree::NodePtr& parentNode,
-                   std::u8string_view key,
+                   const gltfjson::tree::NodePtr& node,
                    float min,
                    float max,
                    float defaultValue)
 {
-  if (!parentNode) {
-    return false;
-  }
-  auto node = parentNode->Get(key);
-  if (!node) {
-    node = parentNode->Add(key, defaultValue);
-  }
-
-  auto p = node->Ptr<float>();
-  if (!p) {
-    node->Var = defaultValue;
-    p = node->Ptr<float>();
+  float value = defaultValue;
+  if (node) {
+    if (auto p = node->Ptr<float>()) {
+      value = *p;
+    }
   }
 
-  return ImGui::SliderFloat(label, p, min, max);
+  if (ImGui::SliderFloat(label, &value, min, max)) {
+    if (node) {
+      node->Var = value;
+    }
+    return value;
+  } else {
+    return std::nullopt;
+  }
 }
 
 bool
@@ -309,10 +308,11 @@ SelectId(const char* label,
   PrintfBuffer buf;
   for (int i = 0; i < values->size(); ++i) {
     auto item = (*values)[i];
+    const gltfjson::tree::NodePtr name = item->Get(u8"name");
     combo.push_back(
       { i,
         buf.Printf(
-          "%s[%d] %s", label, i, (const char*)item->U8String().c_str()) });
+          "[%d] %s", i, (name ? (const char*)name->U8String().c_str() : "")) });
   }
   std::span<const TUPLE> span(combo.data(), combo.size());
 

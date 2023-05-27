@@ -1,4 +1,3 @@
-#version 450
 layout(location = 0) in vec3 Normal;
 layout(location = 1) in vec2 TexCoords;
 layout(location = 2) in vec3 WorldPos;
@@ -117,7 +116,11 @@ main()
   vec3 albedo = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
   float metallic = texture(metallicMap, TexCoords).r;
   float roughness = texture(roughnessMap, TexCoords).r;
+#ifdef HAS_AO_TEXTURE
   float ao = texture(aoMap, TexCoords).r;
+#else
+  float ao = 1.0;
+#endif
 
   // input lighting data
   vec3 N = getNormalFromMap();

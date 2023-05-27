@@ -34,7 +34,10 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       { u8"/samplers/*", TypeFunc<gltfjson::typing::Sampler>() },
       { u8"/textures/*", TypeFunc<gltfjson::typing::Texture>() },
       { u8"/textures/*/sampler", SelectSampler },
+      { u8"/textures/*/source", SelectTexture },
       { u8"/materials/*", TypeFunc<gltfjson::typing::Material>() },
+      { u8"/materials/*/alphaCutoff",
+        FloatSlider{ .Min = 0, .Max = 1, .Default = 0.5f } },
       // mesh/skin
       { u8"/meshes/*", TypeFunc<gltfjson::typing::Mesh>() },
       { u8"/meshes/*/primitives/*",

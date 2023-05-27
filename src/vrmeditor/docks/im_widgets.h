@@ -40,19 +40,22 @@ FillArray(const gltfjson::tree::NodePtr& node,
 template<typename T>
 bool
 ParentKey(const char* label,
-          const gltfjson::tree::NodePtr& idParent,
-          const char8_t* key,
+          const gltfjson::tree::NodePtr& parentNode,
+          const std::u8string_view key,
           const T& showGui)
 {
-  if (!idParent) {
+  if (!parentNode) {
     return false;
   }
 
-  auto node = idParent->Get(key);
+  auto node = parentNode->Get(key);
+
   auto updated = showGui(label, node);
   if (updated) {
-    if (!node) {
-      idParent->Add(key, *updated);
+    if (node) {
+      node->Var = *updated;
+    } else {
+      parentNode->Add(key, *updated);
     }
   }
 
@@ -74,13 +77,26 @@ ShowGuiUInt32(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
               std::u8string_view key);
 
-bool
+std::optional<float>
+ShowGuiSliderFloat(const char* label,
+                   const gltfjson::tree::NodePtr& node,
+                   float min,
+                   float max,
+                   float defalutValue);
+
+inline bool
 ShowGuiSliderFloat(const char* label,
                    const gltfjson::tree::NodePtr& parentNode,
                    std::u8string_view key,
                    float min,
                    float max,
-                   float defalutValue);
+                   float defalutValue)
+{
+  return ParentKey(
+    label, parentNode, key, [min, max, defalutValue](auto label, auto node) {
+      return ShowGuiSliderFloat(label, node, min, max, defalutValue);
+    });
+}
 
 template<typename T>
 inline bool
@@ -156,7 +172,7 @@ SelectId(const char* label,
 inline bool
 SelectId(const char* label,
          const gltfjson::tree::NodePtr& idParent,
-         const char8_t* key,
+         std::u8string_view key,
          const gltfjson::tree::NodePtr& arrayNode)
 {
   return ParentKey(label, idParent, key, [arrayNode](auto label, auto node) {

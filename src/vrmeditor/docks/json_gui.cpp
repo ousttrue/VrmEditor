@@ -41,7 +41,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
                                          ImGuiTreeNodeFlags_OpenOnDoubleClick |
                                          ImGuiTreeNodeFlags_SpanAvailWidth;
   ImGuiTreeNodeFlags node_flags = base_flags;
-  auto is_leaf = !item->Object() && !item->Array();
+  auto is_leaf = item->Size() == 0;
   if (is_leaf) {
     node_flags |=
       ImGuiTreeNodeFlags_Leaf |

@@ -269,7 +269,6 @@ public:
       vs.push_back(u8"#version 450\n");
       fs.push_back(u8"#version 450\n");
       if (GetAlphaMode(root, id) == gltfjson::format::AlphaModes::Mask) {
-        vs.push_back(u8"#define MODE_MASK\n");
         fs.push_back(u8"#define MODE_MASK\n");
       }
       vs.push_back(m_shaderSource.Get("unlit.vert"));
@@ -331,8 +330,16 @@ public:
                                 libvrm::gltf::ColorSpace::Linear);
       }
 
-      auto vs = m_shaderSource.Get("pbr.vert");
-      auto fs = m_shaderSource.Get("pbr.frag");
+      std::vector<std::u8string_view> vs;
+      std::vector<std::u8string_view> fs;
+      vs.push_back(u8"#version 450\n");
+      fs.push_back(u8"#version 450\n");
+      if(ao)
+      {
+        fs.push_back(u8"#define HAS_AO_TEXTURE\n");
+      }
+      vs.push_back(m_shaderSource.Get("pbr.vert"));
+      fs.push_back(m_shaderSource.Get("pbr.frag"));
       if (auto material = grapho::gl3::CreatePbrMaterial(
             albedo, normal, metallic, roughness, ao, vs, fs)) {
         auto inserted = m_materialMap.insert({ *id, *material });
