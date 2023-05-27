@@ -256,10 +256,17 @@ ShowGui(const gltfjson::typing::Root& root,
         const gltfjson::typing::Bin& bin,
         gltfjson::typing::Texture texture)
 {
-  ShowGuiChildOfRoot(texture);
-  SelectId("Sampler", texture.m_json, u8"sampler", root.Samplers.m_json);
-  SelectId("Source", texture.m_json, u8"source", root.Images.m_json);
-  return false;
+  bool updated = false;
+  if (ShowGuiChildOfRoot(texture)) {
+    updated = true;
+  }
+  if (SelectId("Sampler", texture.m_json, u8"sampler", root.Samplers.m_json)) {
+    updated = true;
+  }
+  if (SelectId("Source", texture.m_json, u8"source", root.Images.m_json)) {
+    updated = true;
+  }
+  return updated;
 }
 
 static bool

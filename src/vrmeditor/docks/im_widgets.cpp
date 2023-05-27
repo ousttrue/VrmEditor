@@ -3,6 +3,7 @@
 #include "im_widgets.h"
 #include <array>
 #include <glr/gl3renderer.h>
+#include <grapho/gl3/texture.h>
 
 struct InputTextCallback_UserData
 {
@@ -284,10 +285,9 @@ HelpMarker(const char* desc)
   }
 }
 
-bool
+std::optional<uint32_t>
 SelectId(const char* label,
-         const gltfjson::tree::NodePtr& idParent,
-         const char8_t* key,
+         const gltfjson::tree::NodePtr& node,
          const gltfjson::tree::NodePtr& arrayNode)
 {
   if (!arrayNode) {
@@ -297,14 +297,10 @@ SelectId(const char* label,
   if (!values) {
     return false;
   }
-  if (!idParent) {
-    return false;
-  }
 
   float* id = nullptr;
-  auto idNode = idParent->Get(key);
-  if (idNode) {
-    id = idNode->Ptr<float>();
+  if (node) {
+    id = node->Ptr<float>();
   }
 
   auto selected = (uint32_t)(id ? *id : -1);
@@ -321,25 +317,35 @@ SelectId(const char* label,
   std::span<const TUPLE> span(combo.data(), combo.size());
 
   bool updated = grapho::imgui::GenericCombo<uint32_t>(label, &selected, span);
-  if (selected >= 0 && selected < values->size()) {
-    if (id) {
-      *id = (float)selected;
-    } else {
-      idParent->Add(key, (float)selected);
+  if (updated) {
+    if (node) {
+      node->Var = (float)selected;
     }
+    return selected;
   } else {
-    idParent->Remove(key);
+    return std::nullopt;
   }
-
-  if (id) {
-    ImGui::SameLine();
-    if (ImGui::Button("x")) {
-      idParent->Remove(key);
-      updated = true;
-    }
-  }
-  return updated;
 }
+
+// bool
+// SelectId(const char* label,
+//          const gltfjson::tree::NodePtr& idParent,
+//          const char8_t* key,
+//          const gltfjson::tree::NodePtr& arrayNode)
+// {
+//   if (!idParent) {
+//     return false;
+//   }
+//
+//   auto node = idParent->Get(key);
+//   auto selected = SelectId(label, node, arrayNode);
+//   if (selected) {
+//     if (!node) {
+//       idParent->Add(key, (float)*selected);
+//     }
+//   }
+//   return selected ? true : false;
+// }
 
 bool
 ShowGuiVectorFloat(const char* label,

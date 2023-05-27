@@ -2,6 +2,7 @@
 #include "json_gui_factory.h"
 #include "json_gui_labelcache.h"
 #include <charconv>
+#include <glr/gl3renderer.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <ranges>
@@ -12,6 +13,17 @@ JsonGui::JsonGui()
   : m_label(new LabelCacheManager)
   , m_inspector(new JsonGuiFactoryManager)
 {
+
+  m_inspector->OnUpdated([](auto jsonpath) {
+    gltfjson::JsonPath path(jsonpath);
+    auto [childOfRoot, i] = path.GetChildOfRootIndex();
+    if (childOfRoot == u8"materials") {
+      glr::ReleaseMaterial(i);
+    }
+  });
+
+  m_inspector->OnUpdated(std::bind(
+    &LabelCacheManager::ClearCache, m_label.get(), std::placeholders::_1));
 }
 
 void

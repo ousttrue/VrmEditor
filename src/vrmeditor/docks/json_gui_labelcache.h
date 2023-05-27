@@ -7,47 +7,57 @@
 #include <string>
 #include <unordered_map>
 
-using CreateLabelFunc =
-  std::function<std::string(const gltfjson::tree::NodePtr& json,
-                            std::u8string_view jsonpath)>;
-
 struct LabelCache
 {
   std::string Key;
   std::string Value;
 };
 
-struct JsonLabelFactory
-{
-  std::u8string m_match;
-  CreateLabelFunc Factory;
-
-  bool Match(std::u8string_view jsonpath)
-  {
-    return gltfjson::JsonPath(m_match).Match(jsonpath);
-  }
-};
-
 class LabelCacheManager
 {
-  std::list<JsonLabelFactory> m_labelFactories;
   std::unordered_map<std::u8string, LabelCache> m_labelCache;
+  gltfjson::JsonPathMap<std::u8string> m_iconMap;
 
 public:
   LabelCacheManager();
-  std::optional<CreateLabelFunc> MatchLabel(std::u8string_view jsonpath)
-  {
-    for (auto& f : m_labelFactories) {
-      if (f.Match(jsonpath)) {
-        return f.Factory;
-      }
-    }
-    // not found
-    return {};
-  }
 
   const LabelCache& Get(const gltfjson::tree::NodePtr& item,
                         std::u8string_view jsonpath);
 
   void Clear() { m_labelCache.clear(); }
+
+  static bool IsChildOfRoot(std::u8string_view jsonpath)
+  {
+    gltfjson::JsonPath path(jsonpath);
+    if (path.Size() == 3) {
+      if (path[1] == u8"textures") {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  void ClearCache(std::u8string_view jsonpath)
+  {
+    if (IsChildOfRoot(jsonpath)) {
+      for (auto it = m_labelCache.begin(); it != m_labelCache.end();) {
+        if (it->first.starts_with(jsonpath)) {
+          // clear all descendants
+          it = m_labelCache.erase(it);
+        } else {
+          ++it;
+        }
+      }
+    } else {
+      for (auto it = m_labelCache.begin(); it != m_labelCache.end();) {
+        gltfjson::JsonPath path(it->first);
+        if (path.Match(jsonpath)) {
+          it = m_labelCache.erase(it);
+        } else {
+          ++it;
+        }
+      }
+    }
+  }
 };

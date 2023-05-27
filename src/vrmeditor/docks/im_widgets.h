@@ -2,7 +2,6 @@
 #include "printfbuffer.h"
 #include <array>
 #include <gltfjson.h>
-#include <grapho/gl3/texture.h>
 #include <grapho/imgui/widgets.h>
 
 template<size_t N>
@@ -36,6 +35,28 @@ FillArray(const gltfjson::tree::NodePtr& node,
     }
   }
   return values;
+}
+
+template<typename T>
+bool
+ParentKey(const char* label,
+          const gltfjson::tree::NodePtr& idParent,
+          const char8_t* key,
+          const T& showGui)
+{
+  if (!idParent) {
+    return false;
+  }
+
+  auto node = idParent->Get(key);
+  auto updated = showGui(label, node);
+  if (updated) {
+    if (!node) {
+      idParent->Add(key, *updated);
+    }
+  }
+
+  return updated ? true : false;
 }
 
 bool
@@ -127,11 +148,23 @@ ShowGuiFloat4(const char* label,
 void
 HelpMarker(const char* desc);
 
-bool
+std::optional<uint32_t>
+SelectId(const char* label,
+         const gltfjson::tree::NodePtr& node,
+         const gltfjson::tree::NodePtr& arrayNode);
+
+inline bool
 SelectId(const char* label,
          const gltfjson::tree::NodePtr& idParent,
          const char8_t* key,
-         const gltfjson::tree::NodePtr& arrayNode);
+         const gltfjson::tree::NodePtr& arrayNode)
+{
+  return ParentKey(label, idParent, key, [arrayNode](auto label, auto node) {
+    return SelectId(label, node, arrayNode).transform([](auto x) {
+      return (float)x;
+    });
+  });
+}
 
 template<typename T>
 bool
