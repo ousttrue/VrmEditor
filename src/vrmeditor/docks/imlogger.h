@@ -1,5 +1,6 @@
 #pragma once
 #include "gui.h"
+#include "gui_table.h"
 #include <functional>
 #include <imgui.h>
 #include <ostream>
@@ -48,7 +49,8 @@ public:
                      std::string_view title,
                      const std::shared_ptr<ImLogger>& logger)
   {
-    addDock(grapho::imgui::Dock(title, [logger]() { logger->Draw(); }));
+    addDock(grapho::imgui::Dock(
+      title, [logger]() { logger->Draw(); }, true));
   }
 
   void Clear()
@@ -120,87 +122,62 @@ public:
       if (copy)
         ImGui::LogToClipboard();
 
-      ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-      for (auto& log : Logs) {
-        switch (log.Level) {
-          case LogLevel::Debug:
-            ImGui::PushStyleColor(ImGuiCol_Text, { 0.4f, 0.4f, 0.4f, 1 });
-            break;
-          case LogLevel::Info:
-            ImGui::PushStyleColor(ImGuiCol_Text, { 0, 0, 0, 1 });
-            break;
-          case LogLevel::Wran:
-            ImGui::PushStyleColor(ImGuiCol_Text, { 0.8f, 0.4f, 0.2f, 1 });
-            break;
-          case LogLevel::Error:
-            ImGui::PushStyleColor(ImGuiCol_Text, { 0.4f, 0, 0, 1 });
-            break;
+      std::array<const char*, 2> cols = {
+        "level",
+        "message",
+      };
+      if (GuiTable("##log_table", cols)) {
+        ImGuiListClipper clipper;
+        clipper.Begin(Logs.size());
+        while (clipper.Step()) {
+          for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+            auto& log = Logs[i];
+            ImGui::TableNextRow();
+            // 0
+
+            ImGui::TableSetColumnIndex(0);
+            switch (log.Level) {
+              case LogLevel::Debug:
+                // gray
+                ImGui::TableSetBgColor(
+                  ImGuiTableBgTarget_CellBg,
+                  ImGui::GetColorU32({ 0.2f, 0.2f, 0.2f, 1 }));
+                ImGui::TextUnformatted("DEBUG");
+                break;
+              case LogLevel::Info:
+                // green
+                ImGui::TableSetBgColor(
+                  ImGuiTableBgTarget_CellBg,
+                  ImGui::GetColorU32({ 0.2f, 0.5f, 0.2f, 1 }));
+                ImGui::TextUnformatted("INFO");
+                break;
+              case LogLevel::Wran:
+                // orange
+                ImGui::TableSetBgColor(
+                  ImGuiTableBgTarget_CellBg,
+                  ImGui::GetColorU32({ 0.5f, 0.4f, 0.2f, 1 }));
+                ImGui::TextUnformatted("WARN");
+                break;
+              case LogLevel::Error:
+                // red
+                ImGui::TableSetBgColor(
+                  ImGuiTableBgTarget_CellBg,
+                  ImGui::GetColorU32({ 0.5f, 0.2f, 0.2f, 1 }));
+                ImGui::TextUnformatted("ERROR");
+                break;
+            }
+            // 1
+            ImGui::TableSetColumnIndex(1);
+            ImGui::TextUnformatted(log.Message.data(),
+                                   log.Message.data() + log.Message.size());
+          }
         }
-        ImGui::TextUnformatted(log.Message.data(),
-                               log.Message.data() + log.Message.size());
-        ImGui::PopStyleColor();
+        ImGui::EndTable();
       }
 
-      // const char* buf = Buf.begin();
-      // const char* buf_end = Buf.end();
-      // if (Filter.IsActive()) {
-      //   // In this example we don't use the clipper when Filter is enabled.
-      //   // This is because we don't have random access to the result of our
-      //   // filter. A real application processing logs with ten of thousands
-      //   of
-      //   // entries may want to store the result of search/filter.. especially
-      //   if
-      //   // the filtering function is not trivial (e.g. reg-exp).
-      //   for (int line_no = 0; line_no < LineOffsets.Size; line_no++) {
-      //     const char* line_start = buf + LineOffsets[line_no];
-      //     const char* line_end = (line_no + 1 < LineOffsets.Size)
-      //                              ? (buf + LineOffsets[line_no + 1] - 1)
-      //                              : buf_end;
-      //     if (Filter.PassFilter(line_start, line_end))
-      //       ImGui::TextUnformatted(line_start, line_end);
-      //   }
-      // } else {
-      //   // The simplest and easy way to display the entire buffer:
-      //   //   ImGui::TextUnformatted(buf_begin, buf_end);
-      //   // And it'll just work. TextUnformatted() has specialization for
-      //   large
-      //   // blob of text and will fast-forward to skip non-visible lines. Here
-      //   we
-      //   // instead demonstrate using the clipper to only process lines that
-      //   are
-      //   // within the visible area.
-      //   // If you have tens of thousands of items and their processing cost
-      //   is
-      //   // non-negligible, coarse clipping them on your side is recommended.
-      //   // Using ImGuiListClipper requires
-      //   // - A) random access into your data
-      //   // - B) items all being the  same height,
-      //   // both of which we can handle since we have an array pointing to the
-      //   // beginning of each line of text. When using the filter (in the
-      //   block
-      //   // of code above) we don't have random access into the data to
-      //   display
-      //   // anymore, which is why we don't use the clipper. Storing or
-      //   skimming
-      //   // through the search result would make it possible (and would be
-      //   // recommended if you want to search through tens of thousands of
-      //   // entries).
-      //   ImGuiListClipper clipper;
-      //   clipper.Begin(LineOffsets.Size);
-      //   while (clipper.Step()) {
-      //     for (int line_no = clipper.DisplayStart; line_no <
-      //     clipper.DisplayEnd;
-      //          line_no++) {
-      //       const char* line_start = buf + LineOffsets[line_no];
-      //       const char* line_end = (line_no + 1 < LineOffsets.Size)
-      //                                ? (buf + LineOffsets[line_no + 1] - 1)
-      //                                : buf_end;
-      //       ImGui::TextUnformatted(line_start, line_end);
-      //     }
-      //   }
-      //   clipper.End();
+      // // ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+      // for (auto& log : Logs) {
       // }
-      ImGui::PopStyleVar();
 
       // Keep up at the bottom of the scroll region if we were already at the
       // bottom at the beginning of the frame. Using a scrollbar or mouse-wheel

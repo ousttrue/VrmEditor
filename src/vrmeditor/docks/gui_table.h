@@ -1,12 +1,13 @@
 #pragma once
 #include "showgui.h"
+#include <array>
 #include <functional>
 #include <imgui.h>
 #include <string>
 #include <vector>
 
 inline bool
-JsonGuiTable(const char* title, std::span<const char*> cols)
+GuiTable(const char* title, std::span<const char*> cols)
 {
   static ImGuiTableFlags flags =
     ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg |
@@ -44,7 +45,7 @@ TableToShowGui(const char* name,
     for (auto& col : cols) {
       headers.push_back(col.Header.c_str());
     }
-    if (JsonGuiTable(name, headers)) {
+    if (GuiTable(name, headers)) {
       for (size_t y = 0; y < values.size(); ++y) {
         ImGui::TableNextRow();
         int x = 0;

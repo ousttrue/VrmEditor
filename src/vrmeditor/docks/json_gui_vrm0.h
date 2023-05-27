@@ -1,6 +1,6 @@
 #pragma once
 #include "json_gui.h"
-#include "json_gui_table.h"
+#include "gui_table.h"
 #include "showgui.h"
 
 // inline ShowGuiFunc
@@ -13,7 +13,7 @@
 //   // return [colliders]() {
 //   //   std::array<const char*, 3> cols = { "index", "offet", "radius" };
 //   //   std::string no_name;
-//   //   if (JsonGuiTable("##colliders", cols)) {
+//   //   if (GuiTable("##colliders", cols)) {
 //   //     for (int i = 0; i < colliders.size(); ++i) {
 //   //       auto& collider = colliders[i];
 //   //       ImGui::TableNextRow();
@@ -51,7 +51,7 @@ JsonGuiVrm0SpringList(std::u8string_view jsonpath)
     std::string no_name;
 
     if (auto springs = node->Array()) {
-      if (JsonGuiTable("##springs", cols)) {
+      if (GuiTable("##springs", cols)) {
         for (int i = 0; i < springs->size(); ++i) {
           auto& spring = (*springs)[i];
           ImGui::TableNextRow();

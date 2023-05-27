@@ -1,5 +1,5 @@
 #pragma once
-#include "json_gui_table.h"
+#include "gui_table.h"
 #include "showgui.h"
 #include <array>
 #include <gltfjson.h>
@@ -30,7 +30,7 @@ JsonGuiAccessorUShort4(const gltfjson::typing::Root& root,
     std::array<const char*, 5> cols = {
       "index", "x", "y", "z", "w",
     };
-    if (JsonGuiTable("##accessor_values", cols)) {
+    if (GuiTable("##accessor_values", cols)) {
       ImGuiListClipper clipper;
       clipper.Begin(items->size());
       while (clipper.Step()) {
@@ -67,7 +67,7 @@ JsonGuiAccessorVec2(const gltfjson::typing::Root& root,
       "x",
       "y",
     };
-    if (JsonGuiTable("##accessor_values", cols)) {
+    if (GuiTable("##accessor_values", cols)) {
       ImGuiListClipper clipper;
       clipper.Begin(items->size());
       while (clipper.Step()) {
@@ -101,7 +101,7 @@ JsonGuiAccessorVec3(const gltfjson::typing::Root& root,
       "y",
       "z",
     };
-    if (JsonGuiTable("##accessor_values", cols)) {
+    if (GuiTable("##accessor_values", cols)) {
       ImGuiListClipper clipper;
       clipper.Begin(items->size());
       while (clipper.Step()) {
@@ -134,7 +134,7 @@ JsonGuiAccessorVec4(const gltfjson::typing::Root& root,
     std::array<const char*, 5> cols = {
       "index", "x", "y", "z", "w",
     };
-    if (JsonGuiTable("##accessor_values", cols)) {
+    if (GuiTable("##accessor_values", cols)) {
       ImGuiListClipper clipper;
       clipper.Begin(items->size());
       while (clipper.Step()) {
@@ -170,7 +170,7 @@ JsonGuiAccessorMat4(const gltfjson::typing::Root& root,
       "index", "_11", "_12", "_13", "_14", "_21", "_22", "_23", "_24",
       "_31",   "_32", "_33", "_34", "_41", "_42", "_43", "_44",
     };
-    if (JsonGuiTable("##accessor_values", cols)) {
+    if (GuiTable("##accessor_values", cols)) {
       ImGuiListClipper clipper;
       clipper.Begin(items->size());
       while (clipper.Step()) {
@@ -357,7 +357,7 @@ JsonGuiAccessorList(std::u8string_view jsonpath)
       "size",
       "ref",
     };
-    if (JsonGuiTable("##accessors", cols)) {
+    if (GuiTable("##accessors", cols)) {
       for (int i = 0; i < items.size(); ++i) {
         auto& item = items[i];
         ImGui::TableNextRow();
