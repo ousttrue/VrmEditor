@@ -16,4 +16,3 @@ layout(binding = 1, std140) uniform ModelVars
   mat4 normalMatrix;
 }
 Model;
-

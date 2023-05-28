@@ -424,7 +424,6 @@ void
 App::OnFileUpdated(const std::filesystem::path& path)
 {
   if (auto rel = getRelative(m_shaderDir, path)) {
-    Log(LogLevel::Info) << *rel << ": updated";
     glr::UpdateShader(*rel);
   }
 }

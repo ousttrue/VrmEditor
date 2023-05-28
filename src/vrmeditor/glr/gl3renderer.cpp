@@ -134,16 +134,17 @@ public:
   // use relative path. pbr.{vs,fs}, unlit.{vs,fs}, mtoon.{vs,fs}
   void UpdateShader(const std::filesystem::path& path)
   {
-    auto str = path.string();
-    if (str.starts_with("pbr.")) {
-      // clear cache
-      m_materialMap.clear();
-    } else if (str.starts_with("unlit.")) {
-      m_materialMap.clear();
-    } else if (str.starts_with("shadow.")) {
-      m_shadow = {};
+    auto list = m_shaderSource.UpdateShader(path);
+    for (auto& updated : list) {
+      if (updated.string().starts_with("pbr.")) {
+        // clear cache
+        m_materialMap.clear();
+      } else if (updated.string().starts_with("unlit.")) {
+        m_materialMap.clear();
+      } else if (updated.string().starts_with("shadow.")) {
+        m_shadow = {};
+      }
     }
-    m_shaderSource.UpdateShader(path);
   }
 
   std::shared_ptr<libvrm::gltf::Image> GetOrCreateImage(

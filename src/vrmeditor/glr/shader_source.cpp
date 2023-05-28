@@ -1,4 +1,5 @@
 #include "shader_source.h"
+#include "app.h"
 #include <ranges>
 #include <span>
 #include <string_view>
@@ -114,28 +115,61 @@ get_include_path(std::u8string_view line)
   return tmp.substr(0, close);
 }
 
-static std::u8string
-ExpandInclude(std::u8string_view src, const std::filesystem::path& dir)
+struct IncludeExpander
 {
-  std::u8string dst;
-  for (auto sv : src | std::views::split(u8'\n')) {
-    std::u8string_view line{ sv };
-    if (auto path = get_include_path(line)) {
-      auto include = libvrm::fileutil::ReadAllBytes(dir / *path);
-      dst +=
-        std::u8string_view{ (const char8_t*)include.data(), include.size() };
-    } else {
-      dst += line;
+  std::filesystem::path Dir;
+  std::vector<std::filesystem::path> IncludeFiles;
+
+  std::u8string ExpandIncludeRecursive(const std::filesystem::path& base,
+                                       const std::filesystem::path& include)
+  {
+    auto path = base / include;
+    auto found = std::find(IncludeFiles.begin(), IncludeFiles.end(), path);
+    if (found != IncludeFiles.end()) {
+      // ERROR
+      return u8"circular include !";
     }
-    dst.push_back('\n');
+    IncludeFiles.push_back(path);
+    auto bytes = libvrm::fileutil::ReadAllBytes(path);
+    std::u8string_view source{ (const char8_t*)bytes.data(), bytes.size() };
+
+    std::u8string dst;
+    for (auto sv : source | std::views::split(u8'\n')) {
+      std::u8string_view line{ sv };
+      if (auto line_include = get_include_path(line)) {
+        auto include =
+          ExpandIncludeRecursive(path.parent_path(), *line_include);
+        dst += include;
+      } else {
+        dst += line;
+      }
+      dst.push_back('\n');
+    }
+    return dst;
   }
-  return dst;
-}
+
+  std::u8string ExpandInclude(std::u8string root_source)
+  {
+    std::u8string dst;
+    for (auto sv : root_source | std::views::split(u8'\n')) {
+      std::u8string_view line{ sv };
+      if (auto path = get_include_path(line)) {
+        auto include = ExpandIncludeRecursive(Dir, *path);
+        dst += include;
+      } else {
+        dst += line;
+      }
+      dst.push_back('\n');
+    }
+    return dst;
+  }
+};
 
 struct ShaderSource
 {
   std::filesystem::path Path;
   std::u8string Source;
+  std::vector<std::filesystem::path> Includes;
 
   void Reload(const std::filesystem::path& dir)
   {
@@ -143,8 +177,14 @@ struct ShaderSource
     if (std::filesystem::is_regular_file(path)) {
       auto bytes = libvrm::fileutil::ReadAllBytes(path);
 
+      IncludeExpander expander{ dir };
+
       Source =
-        ExpandInclude({ (const char8_t*)bytes.data(), bytes.size() }, dir);
+        expander.ExpandInclude({ (const char8_t*)bytes.data(), bytes.size() });
+
+      for (auto& include : expander.IncludeFiles) {
+        Includes.push_back(include.lexically_relative(dir));
+      }
     }
   }
 };
@@ -184,13 +224,27 @@ struct ShaderSourceManagerImpl
       shadow_frag,
     },
   };
-  void Update(const std::filesystem::path& path)
+  std::vector<std::filesystem::path> Update(const std::filesystem::path& path)
   {
+    std::vector<std::filesystem::path> list;
     for (auto& source : m_sources) {
       if (source.Path == path) {
+        App::Instance().Log(LogLevel::Info) << source.Path << ": updated";
         source.Source.clear();
+        list.push_back(source.Path);
+      } else {
+        for (auto& include : source.Includes) {
+          if (include == path) {
+            App::Instance().Log(LogLevel::Info)
+              << path << " include from " << source.Path << ": updated";
+            source.Source.clear();
+            list.push_back(source.Path);
+            break;
+          }
+        }
       }
     }
+    return list;
   }
   std::u8string_view Get(const std::filesystem::path& path)
   {
@@ -229,10 +283,10 @@ ShaderSourceManager::SetShaderDir(const std::filesystem::path& path)
   m_impl->m_dir = path;
 }
 
-void
+std::vector<std::filesystem::path>
 ShaderSourceManager::UpdateShader(const std::filesystem::path& path)
 {
-  m_impl->Update(path);
+  return m_impl->Update(path);
 }
 
 }
