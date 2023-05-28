@@ -92,11 +92,18 @@ deserialize ^|
 - glfw3
 - glew
 - DirectXMath
-- nlohmann-json
 - lua-jit
 - stb
 - IconFontCppHeaders
 - googletest
+- asio
+- simplefilewatcher
+
+### external
+
+- cuber
+- gltfjson
+- grapho
 
 ## build
 

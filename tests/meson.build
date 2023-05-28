@@ -9,7 +9,6 @@ executable(
         gtest_main_dep,
         libvrm_dep,
         gltfjson_dep,
-        json_dep,
     ],
     cpp_args: ['-D_CRT_SECURE_NO_WARNINGS'],
 )
