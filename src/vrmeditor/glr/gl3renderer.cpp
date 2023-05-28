@@ -238,6 +238,125 @@ public:
     return texture;
   }
 
+  std::shared_ptr<grapho::gl3::Material> CreateMaterialMToon0(
+    const gltfjson::typing::Root& root,
+    const gltfjson::typing::Bin& bin,
+    const gltfjson::tree::NodePtr& mtoon)
+  {
+    return {};
+  }
+
+  std::shared_ptr<grapho::gl3::Material> CreateMaterialMToon1(
+    const gltfjson::typing::Root& root,
+    const gltfjson::typing::Bin& bin,
+    const gltfjson::typing::Material& src
+
+  )
+  {
+    return {};
+  }
+
+  std::shared_ptr<grapho::gl3::Material> CreateMaterialUnlit(
+    const gltfjson::typing::Root& root,
+    const gltfjson::typing::Bin& bin,
+    std::optional<uint32_t> id,
+    const gltfjson::typing::Material& src)
+  {
+    std::vector<std::u8string_view> vs;
+    std::vector<std::u8string_view> fs;
+    vs.push_back(u8"#version 450\n");
+    fs.push_back(u8"#version 450\n");
+    if (GetAlphaMode(root, id) == gltfjson::format::AlphaModes::Mask) {
+      fs.push_back(u8"#define MODE_MASK\n");
+    }
+    vs.push_back(m_shaderSource.Get("unlit.vert"));
+    fs.push_back(m_shaderSource.Get("unlit.frag"));
+    if (auto shader = grapho::gl3::ShaderProgram::Create(vs, fs)) {
+      auto material = std::make_shared<grapho::gl3::Material>();
+      material->Shader = *shader;
+      if (auto pbr = src.PbrMetallicRoughness()) {
+        if (auto baseColorTexture = pbr->BaseColorTexture()) {
+          if (auto texture =
+                GetOrCreateTexture(root,
+                                   bin,
+                                   baseColorTexture->Index(),
+                                   libvrm::gltf::ColorSpace::sRGB)) {
+            material->Textures.push_back({ 0, texture });
+          }
+        }
+      }
+      return material;
+    }
+
+    return {};
+  }
+
+  std::shared_ptr<grapho::gl3::Material> CreateMaterialPbr(
+    const gltfjson::typing::Root& root,
+    const gltfjson::typing::Bin& bin,
+    const gltfjson::typing::Material& src)
+  {
+    std::shared_ptr<grapho::gl3::Texture> albedo;
+    std::shared_ptr<grapho::gl3::Texture> metallic;
+    std::shared_ptr<grapho::gl3::Texture> roughness;
+    if (auto pbr = src.PbrMetallicRoughness()) {
+      if (auto baseColorTexture = pbr->BaseColorTexture()) {
+        albedo = GetOrCreateTexture(
+          root, bin, baseColorTexture->Index(), libvrm::gltf::ColorSpace::sRGB);
+      }
+      if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture()) {
+        metallic = GetOrCreateTexture(root,
+                                      bin,
+                                      metallicRoughnessTexture->Index(),
+                                      libvrm::gltf::ColorSpace::Linear);
+        roughness = GetOrCreateTexture(root,
+                                       bin,
+                                       metallicRoughnessTexture->Index(),
+                                       libvrm::gltf::ColorSpace::Linear);
+      }
+    }
+    std::shared_ptr<grapho::gl3::Texture> normal;
+    if (auto normalTexture = src.NormalTexture()) {
+      normal = GetOrCreateTexture(
+        root, bin, normalTexture->Index(), libvrm::gltf::ColorSpace::Linear);
+    }
+    std::shared_ptr<grapho::gl3::Texture> ao;
+    if (auto occlusionTexture = src.OcclusionTexture()) {
+      ao = GetOrCreateTexture(
+        root, bin, occlusionTexture->Index(), libvrm::gltf::ColorSpace::Linear);
+    }
+
+    std::vector<std::u8string_view> vs;
+    std::vector<std::u8string_view> fs;
+    vs.push_back(u8"#version 450\n");
+    fs.push_back(u8"#version 450\n");
+    if (albedo) {
+      fs.push_back(u8"#define HAS_ALBEDO_TEXTURE\n");
+    }
+    if (metallic) {
+      fs.push_back(u8"#define HAS_METALLIC_TEXTURE\n");
+    }
+    if (roughness) {
+      fs.push_back(u8"#define HAS_ROUGHNESS_TEXTURE\n");
+    }
+    if (ao) {
+      fs.push_back(u8"#define HAS_AO_TEXTURE\n");
+    }
+    if (normal) {
+      fs.push_back(u8"#define HAS_NORMAL_TEXTURE\n");
+    }
+    vs.push_back(m_shaderSource.Get("pbr.vert"));
+    fs.push_back(m_shaderSource.Get("pbr.frag"));
+    if (auto material = grapho::gl3::CreatePbrMaterial(
+          albedo, normal, metallic, roughness, ao, vs, fs)) {
+      return *material;
+    } else {
+      App::Instance().Log(LogLevel::Error)
+        << "CreatePbrMaterial: " << material.error();
+      return nullptr;
+    }
+  }
+
   std::shared_ptr<grapho::gl3::Material> GetOrCreateMaterial(
     const gltfjson::typing::Root& root,
     const gltfjson::typing::Bin& bin,
@@ -261,108 +380,47 @@ public:
       unlit = extensions->Get(u8"KHR_materials_unlit");
     }
 
-    if (unlit) {
-      //
-      // unlit
-      //
-      std::vector<std::u8string_view> vs;
-      std::vector<std::u8string_view> fs;
-      vs.push_back(u8"#version 450\n");
-      fs.push_back(u8"#version 450\n");
-      if (GetAlphaMode(root, id) == gltfjson::format::AlphaModes::Mask) {
-        fs.push_back(u8"#define MODE_MASK\n");
-      }
-      vs.push_back(m_shaderSource.Get("unlit.vert"));
-      fs.push_back(m_shaderSource.Get("unlit.frag"));
-      if (auto shader = grapho::gl3::ShaderProgram::Create(vs, fs)) {
-        auto material = std::make_shared<grapho::gl3::Material>();
-        material->Shader = *shader;
-        if (auto pbr = src.PbrMetallicRoughness()) {
-          if (auto baseColorTexture = pbr->BaseColorTexture()) {
-            if (auto texture =
-                  GetOrCreateTexture(root,
-                                     bin,
-                                     baseColorTexture->Index(),
-                                     libvrm::gltf::ColorSpace::sRGB)) {
-              material->Textures.push_back({ 0, texture });
+    gltfjson::tree::NodePtr mtoon1;
+    if (extensions) {
+      mtoon1 = extensions->Get(u8"VRMC_materials_mtoon");
+    }
+
+    gltfjson::tree::NodePtr mtoon0;
+    if (auto root_extensins = root.Extensions()) {
+      if (auto VRM = root_extensins->Get(u8"VRM")) {
+        if (auto props = VRM->Get(u8"materialProperties")) {
+          if (auto array = props->Array()) {
+            if (*id < array->size()) {
+              auto mtoonMaterial = (*array)[*id];
+              if (auto shader = mtoonMaterial->Get(u8"shader")) {
+                if (shader->U8String() == u8"VRM/MToon") {
+                  mtoon0 = mtoonMaterial;
+                }
+              }
             }
           }
         }
-        auto inserted = m_materialMap.insert({ *id, material });
-        return inserted.first->second;
-      } else {
-        App::Instance().Log(LogLevel::Error) << "unlit: " << shader.error();
-      }
-    } else {
-      //
-      // PBR
-      //
-      std::shared_ptr<grapho::gl3::Texture> albedo;
-      std::shared_ptr<grapho::gl3::Texture> metallic;
-      std::shared_ptr<grapho::gl3::Texture> roughness;
-      if (auto pbr = src.PbrMetallicRoughness()) {
-        if (auto baseColorTexture = pbr->BaseColorTexture()) {
-          albedo = GetOrCreateTexture(root,
-                                      bin,
-                                      baseColorTexture->Index(),
-                                      libvrm::gltf::ColorSpace::sRGB);
-        }
-        if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture()) {
-          metallic = GetOrCreateTexture(root,
-                                        bin,
-                                        metallicRoughnessTexture->Index(),
-                                        libvrm::gltf::ColorSpace::Linear);
-          roughness = GetOrCreateTexture(root,
-                                         bin,
-                                         metallicRoughnessTexture->Index(),
-                                         libvrm::gltf::ColorSpace::Linear);
-        }
-      }
-      std::shared_ptr<grapho::gl3::Texture> normal;
-      if (auto normalTexture = src.NormalTexture()) {
-        normal = GetOrCreateTexture(
-          root, bin, normalTexture->Index(), libvrm::gltf::ColorSpace::Linear);
-      }
-      std::shared_ptr<grapho::gl3::Texture> ao;
-      if (auto occlusionTexture = src.OcclusionTexture()) {
-        ao = GetOrCreateTexture(root,
-                                bin,
-                                occlusionTexture->Index(),
-                                libvrm::gltf::ColorSpace::Linear);
-      }
-
-      std::vector<std::u8string_view> vs;
-      std::vector<std::u8string_view> fs;
-      vs.push_back(u8"#version 450\n");
-      fs.push_back(u8"#version 450\n");
-      if (albedo) {
-        fs.push_back(u8"#define HAS_ALBEDO_TEXTURE\n");
-      }
-      if (metallic) {
-        fs.push_back(u8"#define HAS_METALLIC_TEXTURE\n");
-      }
-      if (roughness) {
-        fs.push_back(u8"#define HAS_ROUGHNESS_TEXTURE\n");
-      }
-      if (ao) {
-        fs.push_back(u8"#define HAS_AO_TEXTURE\n");
-      }
-      if (normal) {
-        fs.push_back(u8"#define HAS_NORMAL_TEXTURE\n");
-      }
-      vs.push_back(m_shaderSource.Get("pbr.vert"));
-      fs.push_back(m_shaderSource.Get("pbr.frag"));
-      if (auto material = grapho::gl3::CreatePbrMaterial(
-            albedo, normal, metallic, roughness, ao, vs, fs)) {
-        auto inserted = m_materialMap.insert({ *id, *material });
-        return inserted.first->second;
-      } else {
-        App::Instance().Log(LogLevel::Error) << "pbr: " << material.error();
       }
     }
 
-    m_materialMap.insert({ *id, {} });
-    return {};
+    std::shared_ptr<grapho::gl3::Material> material;
+    if (mtoon1) {
+      material = CreateMaterialMToon1(root, bin, src);
+    } else if (mtoon0) {
+      material = CreateMaterialMToon0(root, bin, mtoon0);
+    } else if (unlit) {
+      material = CreateMaterialUnlit(root, bin, id, src);
+    } else {
+      material = CreateMaterialPbr(root, bin, src);
+    }
+
+    if (material) {
+      auto inserted = m_materialMap.insert({ *id, material });
+      return inserted.first->second;
+    } else {
+      m_materialMap.insert({ *id, {} });
+      return {};
+    }
   }
 
   std::shared_ptr<grapho::gl3::Vao> GetOrCreateMesh(

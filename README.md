@@ -98,6 +98,7 @@ deserialize ^|
 - googletest
 - asio
 - simplefilewatcher
+- three-vrm(mtoon shader)
 
 ### external
 
