@@ -56,7 +56,6 @@ Release();
 void
 ReleaseMaterial(int i);
 
-
 // resource viewer
 void
 CreateDock(const AddDockFunc& addDock, std::string_view title);
@@ -78,5 +77,9 @@ SetShaderDir(const std::filesystem::path& path);
 // use relative path. pbr.{vs,fs}, unlit.{vs,fs}, mtoon.{vs,fs}
 void
 UpdateShader(const std::filesystem::path& path);
+
+// for threejs shaderchunk
+void
+SetShaderChunkDir(const std::filesystem::path& path);
 
 }

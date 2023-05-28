@@ -110,4 +110,5 @@ public:
   void ShowDock(std::string_view name, bool visible);
   void SetShaderDir(const std::filesystem::path& path);
   void OnFileUpdated(const std::filesystem::path& path);
+  void SetShaderChunkDir(const std::filesystem::path& path);
 };

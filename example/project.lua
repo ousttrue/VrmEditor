@@ -270,3 +270,4 @@ local here = concat(splitted, "/")
 -- print(here)
 
 vrmeditor.set_shaderpath(here .. "/shaders")
+vrmeditor.set_shader_chunk_path(here .. "/threejs_shader_chunks")

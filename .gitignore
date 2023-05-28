@@ -28,3 +28,7 @@ imgui.ini
 *~
 out.vrma
 tmp.*
+
+debug.vert
+debug.frag
+

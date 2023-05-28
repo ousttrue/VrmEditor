@@ -404,6 +404,12 @@ App::SetShaderDir(const std::filesystem::path& path)
   glr::SetShaderDir(path);
 }
 
+void
+App::SetShaderChunkDir(const std::filesystem::path& path)
+{
+  glr::SetShaderChunkDir(path);
+}
+
 static std::optional<std::filesystem::path>
 getRelative(const std::filesystem::path& base,
             const std::filesystem::path& target)

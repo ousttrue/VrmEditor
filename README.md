@@ -98,7 +98,10 @@ deserialize ^|
 - googletest
 - asio
 - simplefilewatcher
+
+### mtoon shader
 - three-vrm(mtoon shader)
+- three-js(r150 required)
 
 ### external
 

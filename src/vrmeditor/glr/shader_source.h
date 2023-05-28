@@ -15,6 +15,7 @@ public:
   ~ShaderSourceManager();
   std::u8string_view Get(const std::filesystem::path& path) const;
   void SetShaderDir(const std::filesystem::path& path);
+  void SetShaderChunkDir(const std::filesystem::path& path);
   std::vector<std::filesystem::path> UpdateShader(
     const std::filesystem::path& path);
 };
