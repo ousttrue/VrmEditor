@@ -3,7 +3,9 @@
 #include "app.h"
 #include "gl3renderer.h"
 
-#include "material_learn_opengl_pbr.h"
+#include "material_error.h"
+#include "material_pbr_learn_opengl.h"
+#include "material_shadow.h"
 #include "material_three_vrm.h"
 #include "material_unlit.h"
 
@@ -69,10 +71,17 @@ class Gl3Renderer
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
   std::shared_ptr<grapho::gl3::Texture> m_white;
-  std::shared_ptr<grapho::gl3::ShaderProgram> m_shadow;
-  std::shared_ptr<grapho::gl3::ShaderProgram> m_error;
+  std::shared_ptr<grapho::gl3::Material> m_shadow;
+  std::shared_ptr<grapho::gl3::Material> m_error;
 
   std::shared_ptr<ShaderSourceManager> m_shaderSource;
+  using MaterialFunc = std::function<
+    std::expected<std::shared_ptr<grapho::gl3::Material>, std::string>(
+      const std::shared_ptr<ShaderSourceManager>& shaderSource,
+      const gltfjson::typing::Root& root,
+      const gltfjson::typing::Bin& bin,
+      std::optional<uint32_t> materialId)>;
+  std::unordered_map<ShaderTypes, MaterialFunc> m_materialFactory;
 
   grapho::gl3::Material::EnvVars m_env = {};
   std::shared_ptr<grapho::gl3::Ubo> m_envUbo;
@@ -80,6 +89,7 @@ class Gl3Renderer
   std::shared_ptr<grapho::gl3::Ubo> m_modelUbo;
 
   Gl3Renderer()
+    : m_shaderSource(new ShaderSourceManager)
   {
     static uint8_t white[] = { 255, 255, 255, 255 };
     m_white = grapho::gl3::Texture::Create({
@@ -93,19 +103,31 @@ class Gl3Renderer
     m_envUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::EnvVars>();
     m_modelUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::ModelVars>();
 
-    m_shaderSource = std::make_shared<ShaderSourceManager>();
-    m_shaderSource->Register(ShaderTypes::Error,
-                             { "error.vert", "error.frag" });
-    m_shaderSource->Register(ShaderTypes::Pbr,
-                             { "khronos/primitive.vert", "khronos/pbr.frag" });
-    m_shaderSource->Register(ShaderTypes::Unlit,
-                             { "khronos/primitive.vert", "khronos/pbr.frag" });
-    m_shaderSource->Register(ShaderTypes::MToon1,
-                             { "mtoon.vert", "mtoon.frag" });
-    m_shaderSource->Register(ShaderTypes::MToon0,
-                             { "mtoon.vert", "mtoon.frag" });
-    m_shaderSource->Register(ShaderTypes::Shadow,
-                             { "shadow.vert", "shadow.frag" });
+    m_materialFactory.insert({ ShaderTypes::Error, MaterialFactory_Error });
+    m_materialFactory.insert({ ShaderTypes::Shadow, MaterialFactory_Shadow });
+
+    m_materialFactory.insert(
+      { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
+    m_materialFactory.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit });
+    m_materialFactory.insert({ ShaderTypes::MToon0, MaterialFactory_MToon0 });
+  }
+
+  std::shared_ptr<grapho::gl3::Material> CreateMaterial(
+    ShaderTypes type,
+    const gltfjson::typing::Root& root,
+    const gltfjson::typing::Bin& bin,
+    std::optional<uint32_t> materialId)
+  {
+    auto found = m_materialFactory.find(type);
+    if (found == m_materialFactory.end()) {
+      return {};
+    }
+    if (auto material = found->second(m_shaderSource, root, bin, materialId)) {
+      return *material;
+    } else {
+      App::Instance().Log(LogLevel::Error) << material.error();
+      return {};
+    }
   }
 
   ~Gl3Renderer() {}
@@ -319,14 +341,11 @@ public:
     if (mtoon1) {
       material = CreateMaterialMToon1(root, bin, src);
     } else if (mtoon0) {
-      material = CreateMaterialMToon0(m_shaderSource, root, bin, mtoon0);
-    }
-    // else if (unlit) {
-    //   material = CreateMaterialUnlit(root, bin, id, src);
-    // }
-    else {
-      material =
-        CreateMaterialPbr(m_shaderSource, root, bin, src, unlit != nullptr);
+      material = CreateMaterial(ShaderTypes::MToon0, root, bin, id);
+    } else if (unlit) {
+      material = CreateMaterial(ShaderTypes::Unlit, root, bin, id);
+    } else {
+      material = CreateMaterial(ShaderTypes::Pbr, root, bin, id);
     }
 
     if (material) {
@@ -444,20 +463,15 @@ public:
 
       case RenderPass::ShadowMatrix: {
         if (!m_shadow) {
-          auto expanded = m_shaderSource->Get(ShaderTypes::Shadow);
-          if (auto shadow = grapho::gl3::ShaderProgram::Create(expanded.Vert,
-                                                               expanded.Frag)) {
-            m_shadow = *shadow;
-          } else {
-            App::Instance().Log(LogLevel::Error) << shadow.error();
-          }
+          m_shadow = CreateMaterial(ShaderTypes::Shadow, root, bin, {});
         }
         if (m_shadow) {
-          m_shadow->Use();
-          m_shadow->Uniform("Projection")->SetMat4(env.ProjectionMatrix);
-          m_shadow->Uniform("View")->SetMat4(env.ViewMatrix);
-          m_shadow->Uniform("Shadow")->SetMat4(env.ShadowMatrix);
-          m_shadow->Uniform("Model")->SetMat4(m);
+          m_shadow->Shader->Use();
+          m_shadow->Shader->Uniform("Projection")
+            ->SetMat4(env.ProjectionMatrix);
+          m_shadow->Shader->Uniform("View")->SetMat4(env.ViewMatrix);
+          m_shadow->Shader->Uniform("Shadow")->SetMat4(env.ShadowMatrix);
+          m_shadow->Shader->Uniform("Model")->SetMat4(m);
           uint32_t drawCount = 0;
           for (auto& primitive : mesh->m_primitives) {
             drawCount += primitive.DrawCount * 4;
@@ -526,17 +540,14 @@ public:
     } else {
       // error
       if (!m_error) {
-        auto expanded = m_shaderSource->Get(ShaderTypes::Error);
-        if (auto error = grapho::gl3::ShaderProgram::Create(expanded.Vert,
-                                                            expanded.Frag)) {
-          m_error = *error;
-        }
+        m_error =
+          CreateMaterial(ShaderTypes::Error, root, bin, primitive.Material);
       }
       if (m_error) {
-        m_error->Use();
-        m_error->Uniform("Projection")->SetMat4(projection);
-        m_error->Uniform("View")->SetMat4(view);
-        m_error->Uniform("Model")->SetMat4(model);
+        m_error->Shader->Use();
+        m_error->Shader->Uniform("Projection")->SetMat4(projection);
+        m_error->Shader->Uniform("View")->SetMat4(view);
+        m_error->Shader->Uniform("Model")->SetMat4(model);
       }
     }
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
@@ -637,5 +648,4 @@ UpdateShader(const std::filesystem::path& path)
 {
   Gl3Renderer::Instance().UpdateShader(path);
 }
-
 }

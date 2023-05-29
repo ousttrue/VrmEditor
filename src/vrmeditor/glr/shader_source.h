@@ -17,16 +17,14 @@ enum class ShaderTypes
   Shadow,
 };
 
-struct ShaderFileName
+struct ShaderSource
 {
-  std::string Vert;
-  std::string Frag;
-};
+  std::filesystem::path Path;
+  std::u8string Source;
+  std::vector<std::filesystem::path> Includes;
 
-struct ShaderExpanded
-{
-  std::u8string_view Vert;
-  std::u8string_view Frag;
+  void Reload(const std::filesystem::path& dir,
+              const std::filesystem::path& chunkDir);
 };
 
 // manage shader source for hot reload
@@ -37,10 +35,11 @@ class ShaderSourceManager
 public:
   ShaderSourceManager();
   ~ShaderSourceManager();
-  void Register(ShaderTypes type, const ShaderFileName& files);
-  ShaderExpanded Get(ShaderTypes type) const;
   void SetShaderDir(const std::filesystem::path& path);
   void SetShaderChunkDir(const std::filesystem::path& path);
+  std::shared_ptr<ShaderSource> Get(const std::string& filename);
+  void RegisterShaderType(const std::shared_ptr<ShaderSource>& source,
+                          ShaderTypes type);
   std::vector<ShaderTypes> UpdateShader(const std::filesystem::path& path);
 };
 

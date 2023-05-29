@@ -252,78 +252,67 @@ struct IncludeExpander
   }
 };
 
-struct ShaderSource
+void
+ShaderSource::Reload(const std::filesystem::path& dir,
+                     const std::filesystem::path& chunkDir)
 {
-  std::filesystem::path Path;
-  std::u8string Source;
-  std::vector<std::filesystem::path> Includes;
+  auto path = dir / Path;
+  if (std::filesystem::is_regular_file(path)) {
+    IncludeExpander expander{ chunkDir };
 
-  void Reload(const std::filesystem::path& dir,
-              const std::filesystem::path& chunkDir)
-  {
-    auto path = dir / Path;
-    if (std::filesystem::is_regular_file(path)) {
-      IncludeExpander expander{ chunkDir };
-
-      Source = expander.ExpandInclude(path);
+    Source = expander.ExpandInclude(path);
 
 #ifndef NDEBUG
-      std::string debug((const char*)Source.data(), Source.size());
+    std::string debug((const char*)Source.data(), Source.size());
 #endif
 
-      for (auto& include : expander.IncludeFiles) {
-        Includes.push_back(include.lexically_relative(dir));
-      }
+    for (auto& include : expander.IncludeFiles) {
+      Includes.push_back(include.lexically_relative(dir));
     }
   }
-};
+}
 
 struct ShaderSourceManagerImpl
 {
   std::filesystem::path m_dir;
   std::filesystem::path m_chunkDir;
-  // std::vector<ShaderSource> m_sources;
-  std::unordered_map<ShaderTypes, std::tuple<ShaderSource, ShaderSource>>
-    m_sourceMap;
+  std::vector<std::shared_ptr<ShaderSource>> m_sourceList;
+  std::unordered_map<std::shared_ptr<ShaderSource>, ShaderTypes>
+    m_sourceTypeMap;
 
-  void Register(ShaderTypes type, const ShaderFileName& name)
+  void RegisterShaderType(const std::shared_ptr<ShaderSource>& source,
+                          ShaderTypes type)
   {
-    m_sourceMap[type] = { { name.Vert }, { name.Frag } };
+    m_sourceTypeMap.insert({ source, type });
   }
 
   std::vector<ShaderTypes> Update(const std::filesystem::path& path)
   {
     std::vector<ShaderTypes> list;
-    for (auto& kv : m_sourceMap) {
-      auto& [vs, fs] = kv.second;
-      bool updated = false;
-      if (Update(vs, list, path)) {
-        updated = true;
-      }
-      if (Update(fs, list, path)) {
-        updated = true;
-      }
-      if (updated) {
-        list.push_back(kv.first);
+    for (auto& source : m_sourceList) {
+      if (Update(source, path)) {
+        auto found = m_sourceTypeMap.find(source);
+        if (found != m_sourceTypeMap.end()) {
+          list.push_back(found->second);
+        }
       }
     }
     return list;
   }
 
-  bool Update(ShaderSource& source,
-              std::vector<ShaderTypes>& list,
+  bool Update(const std::shared_ptr<ShaderSource>& source,
               const std::filesystem::path& path)
   {
-    if (source.Path == path) {
-      App::Instance().Log(LogLevel::Info) << source.Path << ": updated";
-      source.Source.clear();
+    if (source->Path == path) {
+      App::Instance().Log(LogLevel::Info) << source->Path << ": updated";
+      source->Source.clear();
       return true;
     } else {
-      for (auto& include : source.Includes) {
+      for (auto& include : source->Includes) {
         if (include == path) {
           App::Instance().Log(LogLevel::Info)
-            << path << " include from " << source.Path << ": updated";
-          source.Source.clear();
+            << path << " include from " << source->Path << ": updated";
+          source->Source.clear();
           return true;
         }
       }
@@ -331,24 +320,26 @@ struct ShaderSourceManagerImpl
     return false;
   }
 
-  ShaderExpanded Get(ShaderTypes type)
+  std::shared_ptr<ShaderSource> Get(const std::string& name)
   {
-    auto found = m_sourceMap.find(type);
-    if (found == m_sourceMap.end()) {
-      return {};
+    std::shared_ptr<ShaderSource> source;
+    for (auto& s : m_sourceList) {
+      if (source->Path == name) {
+        source = s;
+        break;
+      }
     }
 
-    auto& [vs, fs] = found->second;
+    if (!source) {
+      source = std::make_shared<ShaderSource>();
+      source->Path = name;
+    }
 
     if (!m_dir.empty() && std::filesystem::exists(m_dir)) {
-      vs.Reload(m_dir, m_chunkDir);
-      fs.Reload(m_dir, m_chunkDir);
+      source->Reload(m_dir, m_chunkDir);
     }
 
-    return {
-      vs.Source,
-      fs.Source,
-    };
+    return source;
   }
 };
 
@@ -363,18 +354,6 @@ ShaderSourceManager::~ShaderSourceManager()
 }
 
 void
-ShaderSourceManager::Register(ShaderTypes type, const ShaderFileName& name)
-{
-  m_impl->Register(type, name);
-}
-
-ShaderExpanded
-ShaderSourceManager::Get(ShaderTypes type) const
-{
-  return m_impl->Get(type);
-}
-
-void
 ShaderSourceManager::SetShaderDir(const std::filesystem::path& path)
 {
   m_impl->m_dir = path;
@@ -384,6 +363,20 @@ void
 ShaderSourceManager::SetShaderChunkDir(const std::filesystem::path& path)
 {
   m_impl->m_chunkDir = path;
+}
+
+std::shared_ptr<ShaderSource>
+ShaderSourceManager::Get(const std::string& filename)
+{
+  return m_impl->Get(filename);
+}
+
+void
+ShaderSourceManager::RegisterShaderType(
+  const std::shared_ptr<ShaderSource>& source,
+  ShaderTypes type)
+{
+  m_impl->RegisterShaderType(source, type);
 }
 
 std::vector<ShaderTypes>

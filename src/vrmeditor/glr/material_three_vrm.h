@@ -7,12 +7,13 @@
 
 namespace glr {
 
-std::shared_ptr<grapho::gl3::Material>
-CreateMaterialMToon0(const std::shared_ptr<ShaderSourceManager> shaderSource,
-                     const gltfjson::typing::Root& root,
-                     const gltfjson::typing::Bin& bin,
-                     const gltfjson::tree::NodePtr& mtoon)
+inline std::expected<std::shared_ptr<grapho::gl3::Material>, std::string>
+MaterialFactory_MToon0(const std::shared_ptr<ShaderSourceManager>& shaderSource,
+                       const gltfjson::typing::Root& root,
+                       const gltfjson::typing::Bin& bin,
+                       std::optional<uint32_t> materialId)
 {
+  // const gltfjson::tree::NodePtr& mtoon
   std::vector<std::u8string_view> vs;
   std::vector<std::u8string_view> fs;
   vs.push_back(u8"#version 300 es\n");
@@ -177,9 +178,13 @@ attribute vec2 uv;
 uniform mat4 viewMatrix;
 uniform vec3 cameraPosition;
     )");
-  auto expanded = shaderSource->Get(ShaderTypes::MToon0);
-  vs.push_back(expanded.Vert);
-  fs.push_back(expanded.Frag);
+  auto vs_src = shaderSource->Get("mtoon.vert");
+  shaderSource->RegisterShaderType(vs_src, ShaderTypes::MToon0);
+  vs.push_back(vs_src->Source);
+  auto fs_src = shaderSource->Get("mtoon.frag");
+  shaderSource->RegisterShaderType(fs_src, ShaderTypes::MToon0);
+  fs.push_back(fs_src->Source);
+  shaderSource->RegisterShaderType(vs_src, ShaderTypes::MToon0);
   if (auto shader = grapho::gl3::ShaderProgram::Create(vs, fs)) {
     auto material = std::make_shared<grapho::gl3::Material>();
     material->Shader = *shader;
@@ -196,14 +201,8 @@ uniform vec3 cameraPosition;
     // }
     return material;
   } else {
-    // App::Instance().Log(LogLevel::Error)
-    //   << "[VS]" << gltfjson::tree::from_u8(vs.back());
-    // App::Instance().Log(LogLevel::Error)
-    //   << "[FS]" << gltfjson::tree::from_u8(fs.back());
-    App::Instance().Log(LogLevel::Error) << shader.error();
+    return std::unexpected{ shader.error() };
   }
-
-  return {};
 }
 
 }

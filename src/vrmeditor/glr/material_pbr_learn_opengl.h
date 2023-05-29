@@ -8,13 +8,17 @@
 
 namespace glr {
 
-inline std::shared_ptr<grapho::gl3::Material>
-CreateMaterialPbr(const std::shared_ptr<ShaderSourceManager>& shaderSource,
-                  const gltfjson::typing::Root& root,
-                  const gltfjson::typing::Bin& bin,
-                  const gltfjson::typing::Material& src,
-                  bool isUnlit)
+inline std::expected<std::shared_ptr<grapho::gl3::Material>, std::string>
+MaterialFactory_Pbr_LearnOpenGL(
+  const std::shared_ptr<ShaderSourceManager>& shaderSource,
+  const gltfjson::typing::Root& root,
+  const gltfjson::typing::Bin& bin,
+  std::optional<uint32_t> materialId)
 {
+  if (!materialId) {
+    return {};
+  }
+  auto src = root.Materials[*materialId];
   std::shared_ptr<grapho::gl3::Texture> albedo;
   std::shared_ptr<grapho::gl3::Texture> metallic;
   std::shared_ptr<grapho::gl3::Texture> roughness;
@@ -43,8 +47,8 @@ CreateMaterialPbr(const std::shared_ptr<ShaderSourceManager>& shaderSource,
 
   std::vector<std::u8string_view> vs;
   std::vector<std::u8string_view> fs;
-  vs.push_back(u8"#version 300 es\n");
-  fs.push_back(u8"#version 300 es\n");
+  vs.push_back(u8"#version 450\n");
+  fs.push_back(u8"#version 450\n");
   if (albedo) {
     fs.push_back(u8"#define HAS_ALBEDO_TEXTURE\n");
   }
@@ -60,18 +64,17 @@ CreateMaterialPbr(const std::shared_ptr<ShaderSourceManager>& shaderSource,
   if (normal) {
     fs.push_back(u8"#define HAS_NORMAL_TEXTURE\n");
   }
-  auto expanded = shaderSource->Get(ShaderTypes::Pbr);
-  vs.push_back(expanded.Vert);
-  fs.push_back(expanded.Frag);
-  if (auto material = grapho::gl3::CreatePbrMaterial(
-        albedo, normal, metallic, roughness, ao, vs, fs)) {
-    return *material;
-  } else {
-    App::Instance().Log(LogLevel::Error)
-      << "CreatePbrMaterial: " << material.error();
-  }
 
-  return nullptr;
+  auto vs_src = shaderSource->Get("pbr.vert");
+  shaderSource->RegisterShaderType(vs_src, ShaderTypes::Pbr);
+  vs.push_back(vs_src->Source);
+
+  auto fs_src = shaderSource->Get("pbr.frag");
+  shaderSource->RegisterShaderType(fs_src, ShaderTypes::Pbr);
+  fs.push_back(fs_src->Source);
+
+  return grapho::gl3::CreatePbrMaterial(
+    albedo, normal, metallic, roughness, ao, vs, fs);
 }
 
 }
