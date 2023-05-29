@@ -449,7 +449,7 @@ ShowGuiTexturePreview(const gltfjson::typing::Root& root,
   if (node) {
     if (auto p = node->Ptr<float>()) {
       if (auto texture = glr::GetOrCreateTexture(
-            root, bin, (uint32_t)*p, libvrm::gltf::ColorSpace::Linear)) {
+            root, bin, (uint32_t)*p, glr::ColorSpace::Linear)) {
         ImGui::Image((ImTextureID)(int64_t)texture->Handle(), { 150, 150 });
         return;
       }

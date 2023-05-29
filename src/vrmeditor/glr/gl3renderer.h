@@ -1,10 +1,10 @@
 #pragma once
+#include "colorspace.h"
 #include "docks/gui.h"
 #include "renderpass.h"
 #include <cuber/mesh.h>
 #include <filesystem>
 #include <memory>
-#include <vrm/colorspace.h>
 
 namespace libvrm {
 namespace gltf {
@@ -62,7 +62,7 @@ std::shared_ptr<grapho::gl3::Texture>
 GetOrCreateTexture(const gltfjson::typing::Root& root,
                    const gltfjson::typing::Bin& bin,
                    std::optional<uint32_t> texture,
-                   libvrm::gltf::ColorSpace colorspace);
+                   glr::ColorSpace colorspace);
 
 void
 RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data);

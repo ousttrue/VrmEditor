@@ -1,8 +1,7 @@
 #pragma once
 #include <tuple>
 
-namespace libvrm {
-namespace gltf {
+namespace glr {
 
 enum class ColorSpace
 {
@@ -14,5 +13,4 @@ inline std::tuple<ColorSpace, const char*> ColorSpaceCombo[] = {
   { ColorSpace::Linear, "Linear" },
 };
 
-}
 }
