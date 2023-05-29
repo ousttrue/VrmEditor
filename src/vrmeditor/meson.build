@@ -14,6 +14,7 @@ srcs = [
     'glr/rendering_env.cpp',
     'glr/shader_source.cpp',
     'docks/gui.cpp',
+    'docks/imlogger.cpp',
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',
     'docks/gltfjson_gui.cpp',
