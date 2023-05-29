@@ -4,6 +4,7 @@
 #include "gl3renderer.h"
 
 #include "material_error.h"
+#include "material_pbr_khronos.h"
 #include "material_pbr_learn_opengl.h"
 #include "material_shadow.h"
 #include "material_three_vrm.h"
@@ -105,9 +106,9 @@ class Gl3Renderer
 
     m_materialFactory.insert({ ShaderTypes::Error, MaterialFactory_Error });
     m_materialFactory.insert({ ShaderTypes::Shadow, MaterialFactory_Shadow });
-
-    m_materialFactory.insert(
-      { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
+    // m_materialFactory.insert(
+    //   { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
+    m_materialFactory.insert({ ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos });
     m_materialFactory.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit });
     m_materialFactory.insert({ ShaderTypes::MToon0, MaterialFactory_MToon0 });
   }
