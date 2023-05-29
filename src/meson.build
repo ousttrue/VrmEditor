@@ -1,3 +1,4 @@
 subdir('vrmeditor')
-subdir('bvhsender')
-
+if get_option('bvhsender')
+    subdir('bvhsender')
+endif

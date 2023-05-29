@@ -2,8 +2,11 @@
 #include "fs_util.h"
 #include <iostream>
 
-// #ifdef _WIN32
-// #include "windows_helper.h"
+#ifdef _WIN32
+#include "windows_helper.h"
+#else
+#endif
+
 // int WINAPI
 // WinMain(HINSTANCE hInstance,
 //         HINSTANCE hPrevInstance,
@@ -14,12 +17,16 @@ int
 main(int argc, char** argv)
 // #endif
 {
-
   // #ifdef _WIN32
   //   RedirectIOToConsole();
   // #endif
 
   auto& app = App::Instance();
+
+  auto exe = GetExe();
+  auto base = exe.parent_path().parent_path();
+  app.SetShaderDir(base / "shaders");
+  app.SetShaderChunkDir(base / "threejs_shader_chunks");
 
   // load user ~/.vrmeditor.lua
   auto user_conf = get_home() / ".vrmeditor.lua";

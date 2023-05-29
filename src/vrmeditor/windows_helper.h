@@ -4,7 +4,8 @@
 #endif
 #include <Windows.h>
 #include <fcntl.h> // _O_TEXT
-#include <io.h>    // _open_osfhandle
+#include <filesystem>
+#include <io.h> // _open_osfhandle
 #include <iostream>
 #include <string>
 
@@ -61,4 +62,12 @@ RedirectIOToConsole()
   std::cerr.clear();
   std::wcin.clear();
   std::cin.clear();
+}
+
+inline std::filesystem::path
+GetExe()
+{
+  char szModulePath[MAX_PATH];
+  GetModuleFileNameA(NULL, szModulePath, std::size(szModulePath));
+  return szModulePath;
 }

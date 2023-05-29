@@ -57,3 +57,16 @@ executable(
         stb_dep,
     ],
 )
+
+install_subdir(
+    'shaders',
+    install_dir: 'shaders',
+    install_tag: 'runtime',
+    strip_directory: true,
+)
+install_subdir(
+    'threejs_shader_chunks',
+    install_dir: 'threejs_shader_chunks',
+    install_tag: 'runtime',
+    strip_directory: true,
+)

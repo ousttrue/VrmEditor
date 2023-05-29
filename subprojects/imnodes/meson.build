@@ -18,4 +18,6 @@ imnodes_dep = declare_dependency(
 )
 meson.override_dependency('imnodes', imnodes_dep)
 
-subdir('example')
+if get_option('example')
+    subdir('example')
+endif
