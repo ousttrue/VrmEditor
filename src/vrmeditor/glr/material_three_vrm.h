@@ -1,4 +1,5 @@
 #pragma once
+#include "material_factory.h"
 #include "shader_source.h"
 #include <gltfjson.h>
 #include <grapho/gl3/material.h>
@@ -7,7 +8,7 @@
 
 namespace glr {
 
-inline std::expected<std::shared_ptr<grapho::gl3::Material>, std::string>
+inline std::expected<MaterialWithUpdater, std::string>
 MaterialFactory_MToon0(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                        const gltfjson::typing::Root& root,
                        const gltfjson::typing::Bin& bin,
@@ -199,7 +200,10 @@ uniform vec3 cameraPosition;
     //     }
     //   }
     // }
-    return material;
+    return MaterialWithUpdater{
+      material,
+      [](auto& env, auto& model, auto& shadow) {},
+    };
   } else {
     return std::unexpected{ shader.error() };
   }

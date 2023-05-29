@@ -1,6 +1,7 @@
 #pragma once
 #include "app.h"
 #include "gl3renderer.h"
+#include "material_factory.h"
 #include "shader_source.h"
 #include <gltfjson.h>
 #include <grapho/gl3/material.h>
@@ -8,7 +9,7 @@
 
 namespace glr {
 
-inline std::expected<std::shared_ptr<grapho::gl3::Material>, std::string>
+inline std::expected<MaterialWithUpdater, std::string>
 MaterialFactory_Pbr_LearnOpenGL(
   const std::shared_ptr<ShaderSourceManager>& shaderSource,
   const gltfjson::typing::Root& root,
@@ -16,7 +17,7 @@ MaterialFactory_Pbr_LearnOpenGL(
   std::optional<uint32_t> materialId)
 {
   if (!materialId) {
-    return {};
+    return std::unexpected{ "no material id" };
   }
   auto src = root.Materials[*materialId];
   std::shared_ptr<grapho::gl3::Texture> albedo;
@@ -73,8 +74,8 @@ MaterialFactory_Pbr_LearnOpenGL(
   shaderSource->RegisterShaderType(fs_src, ShaderTypes::Pbr);
   fs.push_back(fs_src->Source);
 
-  return grapho::gl3::CreatePbrMaterial(
-    albedo, normal, metallic, roughness, ao, vs, fs);
+  return MaterialWithUpdater::Create(grapho::gl3::CreatePbrMaterial(
+    albedo, normal, metallic, roughness, ao, vs, fs));
 }
 
 }

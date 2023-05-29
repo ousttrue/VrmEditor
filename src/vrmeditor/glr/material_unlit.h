@@ -1,11 +1,12 @@
 #pragma once
+#include "material_factory.h"
 #include "shader_source.h"
 #include <gltfjson.h>
 #include <grapho/gl3/material.h>
 
 namespace glr {
 
-inline std::expected<std::shared_ptr<grapho::gl3::Material>, std::string>
+inline std::expected<MaterialWithUpdater, std::string>
 MaterialFactory_Unlit(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                       const gltfjson::typing::Root& root,
                       const gltfjson::typing::Bin& bin,
@@ -43,7 +44,7 @@ MaterialFactory_Unlit(const std::shared_ptr<ShaderSourceManager>& shaderSource,
         }
       }
     }
-    return material;
+    return MaterialWithUpdater{ material };
   } else {
     App::Instance().Log(LogLevel::Error) << shader.error();
     return std::unexpected{ shader.error() };
