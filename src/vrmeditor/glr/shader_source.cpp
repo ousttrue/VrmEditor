@@ -324,7 +324,7 @@ struct ShaderSourceManagerImpl
   {
     std::shared_ptr<ShaderSource> source;
     for (auto& s : m_sourceList) {
-      if (source->Path == name) {
+      if (s->Path == name) {
         source = s;
         break;
       }
@@ -332,6 +332,7 @@ struct ShaderSourceManagerImpl
 
     if (!source) {
       source = std::make_shared<ShaderSource>();
+      m_sourceList.push_back(source);
       source->Path = name;
     }
 
