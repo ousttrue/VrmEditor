@@ -145,59 +145,73 @@ get_chunk_path(std::u8string_view line)
   if (close == std::string::npos) {
     return {};
   }
-  std::u8string chunk{ tmp.data(), close };
-  return chunk + u8".glsl.js";
+  return tmp.substr(0, close);
 }
 
 struct IncludeExpander
 {
-  std::filesystem::path Dir;
   std::filesystem::path ChunkDir;
   std::vector<std::filesystem::path> IncludeFiles;
 
   std::u8string GetOrExpandLine(const std::filesystem::path& base,
                                 std::u8string_view line)
   {
-    if (auto path = get_include_path(line)) {
-      auto include = ExpandIncludeRecursive(base, *path);
-      return include;
-    } else if (auto path = get_chunk_path(line)) {
-      auto chunk = ExpandIncludeRecursive(ChunkDir, *path);
-      if (chunk.empty()) {
-        App::Instance().Log(LogLevel::Wran)
-          << "chunk: " << path->string() << " not found ?";
+    auto path = get_include_path(line);
+    if (!path) {
+      path = get_chunk_path(line);
+    }
+    if (path) {
+      if (auto include = ExpandIncludeRecursive(base, *path)) {
+        auto chunk = *include;
+
+        // for threejs_shader_chunks
+        const std::u8string EXPORT_DEFAULT = u8"export default /* glsl */`\n";
+        if (chunk.starts_with(EXPORT_DEFAULT)) {
+          chunk = chunk.substr(EXPORT_DEFAULT.size());
+        }
+        if (chunk.ends_with(u8"`;\n")) {
+          chunk.pop_back();
+          chunk.pop_back();
+          chunk.pop_back();
+        }
+
+#ifndef NDEBUG
+        std::string debug((const char*)chunk.data(), chunk.size());
+        std::string debug_end = debug.substr(debug.size() - 10);
+#endif
+        return chunk;
+      } else {
+        App::Instance().Log(LogLevel::Wran) << include.error();
         return {};
       }
-      const std::u8string EXPORT_DEFAULT = u8"export default /* glsl */`\n";
-      if (chunk.starts_with(EXPORT_DEFAULT)) {
-        chunk = chunk.substr(EXPORT_DEFAULT.size());
-      }
-
-      if (chunk.ends_with(u8"`;\n")) {
-        chunk.pop_back();
-        chunk.pop_back();
-        chunk.pop_back();
-      }
-#ifndef NDEBUG
-      std::string debug((const char*)chunk.data(), chunk.size());
-      std::string debug_end = debug.substr(debug.size() - 10);
-#endif
-      return chunk;
     } else {
       return { line.begin(), line.end() };
     }
   }
 
-  std::u8string ExpandIncludeRecursive(const std::filesystem::path& base,
-                                       const std::filesystem::path& include)
+  std::expected<std::u8string, std::string> ExpandIncludeRecursive(
+    const std::filesystem::path& base,
+    const std::filesystem::path& include)
   {
     auto path = base / include;
+    auto chunk = ChunkDir / (include.string() + ".glsl.js");
+    if (std::filesystem::exists(path)) {
+      return Expand(path);
+    } else if (std::filesystem::exists(chunk)) {
+      return Expand(chunk);
+    } else {
+      return std::unexpected{ "file not found: " + path.string() };
+    }
+  }
+
+  std::expected<std::u8string, std::string> Expand(
+    const std::filesystem::path& path)
+  {
     auto found = std::find(IncludeFiles.begin(), IncludeFiles.end(), path);
     if (found != IncludeFiles.end()) {
       // ERROR
-      return u8"circular include !";
+      return std::unexpected{ "circular include !" };
     }
-
     IncludeFiles.push_back(path);
     auto bytes = libvrm::fileutil::ReadAllBytes(path);
     std::u8string_view source{ (const char8_t*)bytes.data(), bytes.size() };
@@ -217,8 +231,12 @@ struct IncludeExpander
     return dst;
   }
 
-  std::u8string ExpandInclude(std::u8string root_source)
+  std::u8string ExpandInclude(const std::filesystem::path& path)
   {
+    auto bytes = libvrm::fileutil::ReadAllBytes(path);
+    std::u8string_view root_source{ (const char8_t*)bytes.data(),
+                                    bytes.size() };
+
     std::u8string dst;
     for (auto sv : root_source | std::views::split(u8'\n')) {
       std::u8string_view line{ sv };
@@ -226,7 +244,7 @@ struct IncludeExpander
         line = line.substr(0, line.size() - 1);
       }
       if (line.size()) {
-        dst += GetOrExpandLine(Dir, line);
+        dst += GetOrExpandLine(path.parent_path(), line);
         dst.push_back('\n');
       }
     }
@@ -245,12 +263,9 @@ struct ShaderSource
   {
     auto path = dir / Path;
     if (std::filesystem::is_regular_file(path)) {
-      auto bytes = libvrm::fileutil::ReadAllBytes(path);
+      IncludeExpander expander{ chunkDir };
 
-      IncludeExpander expander{ dir, chunkDir };
-
-      Source =
-        expander.ExpandInclude({ (const char8_t*)bytes.data(), bytes.size() });
+      Source = expander.ExpandInclude(path);
 
 #ifndef NDEBUG
       std::string debug((const char*)Source.data(), Source.size());
@@ -267,80 +282,73 @@ struct ShaderSourceManagerImpl
 {
   std::filesystem::path m_dir;
   std::filesystem::path m_chunkDir;
-  std::vector<ShaderSource> m_sources = {
-    ShaderSource{
-      "error.vert",
-      error_vert,
-    },
-    ShaderSource{
-      "error.frag",
-      error_frag,
-    },
-    ShaderSource{
-      "pbr.vert",
-    },
-    ShaderSource{
-      "pbr.frag",
-    },
-    ShaderSource{
-      "unlit.vert",
-      unlit_vert,
-    },
-    ShaderSource{
-      "unlit.frag",
-      unlit_frag,
-    },
-    ShaderSource{
-      "shadow.vert",
-      shadow_vert,
-    },
-    ShaderSource{
-      "shadow.frag",
-      shadow_frag,
-    },
-    ShaderSource{
-      "mtoon.vert",
-      shadow_vert,
-    },
-    ShaderSource{
-      "mtoon.frag",
-      shadow_frag,
-    },
-  };
-  std::vector<std::filesystem::path> Update(const std::filesystem::path& path)
+  // std::vector<ShaderSource> m_sources;
+  std::unordered_map<ShaderTypes, std::tuple<ShaderSource, ShaderSource>>
+    m_sourceMap;
+
+  void Register(ShaderTypes type, const ShaderFileName& name)
   {
-    std::vector<std::filesystem::path> list;
-    for (auto& source : m_sources) {
-      if (source.Path == path) {
-        App::Instance().Log(LogLevel::Info) << source.Path << ": updated";
-        source.Source.clear();
-        list.push_back(source.Path);
-      } else {
-        for (auto& include : source.Includes) {
-          if (include == path) {
-            App::Instance().Log(LogLevel::Info)
-              << path << " include from " << source.Path << ": updated";
-            source.Source.clear();
-            list.push_back(source.Path);
-            break;
-          }
-        }
+    m_sourceMap[type] = { { name.Vert }, { name.Frag } };
+  }
+
+  std::vector<ShaderTypes> Update(const std::filesystem::path& path)
+  {
+    std::vector<ShaderTypes> list;
+    for (auto& kv : m_sourceMap) {
+      auto& [vs, fs] = kv.second;
+      bool updated = false;
+      if (Update(vs, list, path)) {
+        updated = true;
+      }
+      if (Update(fs, list, path)) {
+        updated = true;
+      }
+      if (updated) {
+        list.push_back(kv.first);
       }
     }
     return list;
   }
-  std::u8string_view Get(const std::filesystem::path& path)
-  {
-    for (auto& source : m_sources) {
-      if (source.Path == path) {
-        if (!m_dir.empty() && std::filesystem::exists(m_dir)) {
-          source.Reload(m_dir, m_chunkDir);
-        }
 
-        return source.Source;
+  bool Update(ShaderSource& source,
+              std::vector<ShaderTypes>& list,
+              const std::filesystem::path& path)
+  {
+    if (source.Path == path) {
+      App::Instance().Log(LogLevel::Info) << source.Path << ": updated";
+      source.Source.clear();
+      return true;
+    } else {
+      for (auto& include : source.Includes) {
+        if (include == path) {
+          App::Instance().Log(LogLevel::Info)
+            << path << " include from " << source.Path << ": updated";
+          source.Source.clear();
+          return true;
+        }
       }
     }
-    return {};
+    return false;
+  }
+
+  ShaderExpanded Get(ShaderTypes type)
+  {
+    auto found = m_sourceMap.find(type);
+    if (found == m_sourceMap.end()) {
+      return {};
+    }
+
+    auto& [vs, fs] = found->second;
+
+    if (!m_dir.empty() && std::filesystem::exists(m_dir)) {
+      vs.Reload(m_dir, m_chunkDir);
+      fs.Reload(m_dir, m_chunkDir);
+    }
+
+    return {
+      vs.Source,
+      fs.Source,
+    };
   }
 };
 
@@ -354,10 +362,16 @@ ShaderSourceManager::~ShaderSourceManager()
   delete m_impl;
 }
 
-std::u8string_view
-ShaderSourceManager::Get(const std::filesystem::path& path) const
+void
+ShaderSourceManager::Register(ShaderTypes type, const ShaderFileName& name)
 {
-  return m_impl->Get(path);
+  m_impl->Register(type, name);
+}
+
+ShaderExpanded
+ShaderSourceManager::Get(ShaderTypes type) const
+{
+  return m_impl->Get(type);
 }
 
 void
@@ -372,7 +386,7 @@ ShaderSourceManager::SetShaderChunkDir(const std::filesystem::path& path)
   m_impl->m_chunkDir = path;
 }
 
-std::vector<std::filesystem::path>
+std::vector<ShaderTypes>
 ShaderSourceManager::UpdateShader(const std::filesystem::path& path)
 {
   return m_impl->Update(path);

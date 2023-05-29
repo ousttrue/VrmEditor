@@ -98,6 +98,18 @@ class Gl3Renderer
 
     m_envUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::EnvVars>();
     m_modelUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::ModelVars>();
+
+    m_shaderSource.Register(ShaderTypes::Error, { "error.vert", "error.frag" });
+    m_shaderSource.Register(ShaderTypes::Pbr,
+                            { "khronos/primitive.vert", "khronos/pbr.frag" });
+    m_shaderSource.Register(ShaderTypes::Unlit,
+                            { "khronos/primitive.vert", "khronos/pbr.frag" });
+    m_shaderSource.Register(ShaderTypes::MToon1,
+                            { "mtoon.vert", "mtoon.frag" });
+    m_shaderSource.Register(ShaderTypes::MToon0,
+                            { "mtoon.vert", "mtoon.frag" });
+    m_shaderSource.Register(ShaderTypes::Shadow,
+                            { "shadow.vert", "shadow.frag" });
   }
 
   ~Gl3Renderer() {}
@@ -140,14 +152,22 @@ public:
   void UpdateShader(const std::filesystem::path& path)
   {
     auto list = m_shaderSource.UpdateShader(path);
-    for (auto& updated : list) {
-      if (updated.string().starts_with("pbr.")) {
-        // clear cache
-        m_materialMap.clear();
-      } else if (updated.string().starts_with("unlit.")) {
-        m_materialMap.clear();
-      } else if (updated.string().starts_with("shadow.")) {
-        m_shadow = {};
+    for (auto type : list) {
+      switch (type) {
+        case ShaderTypes::Pbr:
+        case ShaderTypes::Unlit:
+        case ShaderTypes::MToon0:
+        case ShaderTypes::MToon1:
+          // clear
+          m_materialMap.clear();
+          break;
+        case ShaderTypes::Shadow:
+          m_shadow = {};
+          break;
+
+        case ShaderTypes::Error:
+          m_error = {};
+          break;
       }
     }
   }
@@ -412,8 +432,9 @@ attribute vec2 uv;
 uniform mat4 viewMatrix;
 uniform vec3 cameraPosition;
     )");
-    vs.push_back(m_shaderSource.Get("mtoon.vert"));
-    fs.push_back(m_shaderSource.Get("mtoon.frag"));
+    auto expanded = m_shaderSource.Get(ShaderTypes::MToon0);
+    vs.push_back(expanded.Vert);
+    fs.push_back(expanded.Frag);
     if (auto shader = grapho::gl3::ShaderProgram::Create(vs, fs)) {
       auto material = std::make_shared<grapho::gl3::Material>();
       material->Shader = *shader;
@@ -464,8 +485,10 @@ uniform vec3 cameraPosition;
     if (GetAlphaMode(root, id) == gltfjson::format::AlphaModes::Mask) {
       fs.push_back(u8"#define MODE_MASK\n");
     }
-    vs.push_back(m_shaderSource.Get("unlit.vert"));
-    fs.push_back(m_shaderSource.Get("unlit.frag"));
+
+    auto expanded = m_shaderSource.Get(ShaderTypes::Unlit);
+    vs.push_back(expanded.Vert);
+    fs.push_back(expanded.Frag);
     if (auto shader = grapho::gl3::ShaderProgram::Create(vs, fs)) {
       auto material = std::make_shared<grapho::gl3::Material>();
       material->Shader = *shader;
@@ -491,7 +514,8 @@ uniform vec3 cameraPosition;
   std::shared_ptr<grapho::gl3::Material> CreateMaterialPbr(
     const gltfjson::typing::Root& root,
     const gltfjson::typing::Bin& bin,
-    const gltfjson::typing::Material& src)
+    const gltfjson::typing::Material& src,
+    bool isUnlit)
   {
     std::shared_ptr<grapho::gl3::Texture> albedo;
     std::shared_ptr<grapho::gl3::Texture> metallic;
@@ -525,8 +549,8 @@ uniform vec3 cameraPosition;
 
     std::vector<std::u8string_view> vs;
     std::vector<std::u8string_view> fs;
-    vs.push_back(u8"#version 450\n");
-    fs.push_back(u8"#version 450\n");
+    vs.push_back(u8"#version 300 es\n");
+    fs.push_back(u8"#version 300 es\n");
     if (albedo) {
       fs.push_back(u8"#define HAS_ALBEDO_TEXTURE\n");
     }
@@ -542,16 +566,18 @@ uniform vec3 cameraPosition;
     if (normal) {
       fs.push_back(u8"#define HAS_NORMAL_TEXTURE\n");
     }
-    vs.push_back(m_shaderSource.Get("pbr.vert"));
-    fs.push_back(m_shaderSource.Get("pbr.frag"));
+    auto expanded = m_shaderSource.Get(ShaderTypes::Pbr);
+    vs.push_back(expanded.Vert);
+    fs.push_back(expanded.Frag);
     if (auto material = grapho::gl3::CreatePbrMaterial(
           albedo, normal, metallic, roughness, ao, vs, fs)) {
       return *material;
     } else {
       App::Instance().Log(LogLevel::Error)
         << "CreatePbrMaterial: " << material.error();
-      return nullptr;
     }
+
+    return nullptr;
   }
 
   std::shared_ptr<grapho::gl3::Material> GetOrCreateMaterial(
@@ -605,10 +631,12 @@ uniform vec3 cameraPosition;
       material = CreateMaterialMToon1(root, bin, src);
     } else if (mtoon0) {
       material = CreateMaterialMToon0(root, bin, mtoon0);
-    } else if (unlit) {
-      material = CreateMaterialUnlit(root, bin, id, src);
-    } else {
-      material = CreateMaterialPbr(root, bin, src);
+    }
+    // else if (unlit) {
+    //   material = CreateMaterialUnlit(root, bin, id, src);
+    // }
+    else {
+      material = CreateMaterialPbr(root, bin, src, unlit != nullptr);
     }
 
     if (material) {
@@ -726,9 +754,9 @@ uniform vec3 cameraPosition;
 
       case RenderPass::ShadowMatrix: {
         if (!m_shadow) {
-          if (auto shadow = grapho::gl3::ShaderProgram::Create(
-                m_shaderSource.Get("shadow.vert"),
-                m_shaderSource.Get("shadow.frag"))) {
+          auto expanded = m_shaderSource.Get(ShaderTypes::Shadow);
+          if (auto shadow = grapho::gl3::ShaderProgram::Create(expanded.Vert,
+                                                               expanded.Frag)) {
             m_shadow = *shadow;
           } else {
             App::Instance().Log(LogLevel::Error) << shadow.error();
@@ -808,9 +836,9 @@ uniform vec3 cameraPosition;
     } else {
       // error
       if (!m_error) {
-        if (auto error = grapho::gl3::ShaderProgram::Create(
-              m_shaderSource.Get("error.vert"),
-              m_shaderSource.Get("error.frag"))) {
+        auto expanded = m_shaderSource.Get(ShaderTypes::Error);
+        if (auto error = grapho::gl3::ShaderProgram::Create(expanded.Vert,
+                                                            expanded.Frag)) {
           m_error = *error;
         }
       }
@@ -919,4 +947,5 @@ UpdateShader(const std::filesystem::path& path)
 {
   Gl3Renderer::Instance().UpdateShader(path);
 }
+
 }

@@ -18,12 +18,10 @@ namespace gl3 {
 class Texture;
 }
 }
-
 namespace runtimescene {
 struct BaseMesh;
 struct DeformedMesh;
 }
-
 namespace gltfjson {
 namespace typing {
 struct Root;
