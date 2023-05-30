@@ -340,7 +340,7 @@ App::Run()
 
   ImTimeline::Create(addDock, "timeline", m_timeline);
   ImLogger::Create(addDock, "logger", m_logger);
-  glr::CreateDock(addDock, "OpenGL resource");
+  glr::CreateDock(addDock);
   ViewDock::CreateSetting(
     addDock, "view-settings", m_env, m_runtimeView, m_settings);
 

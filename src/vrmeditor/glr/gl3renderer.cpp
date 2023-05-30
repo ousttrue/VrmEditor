@@ -1,14 +1,15 @@
 #include <GL/glew.h>
 
 #include "app.h"
+#include "docks/printfbuffer.h"
 #include "gl3renderer.h"
 #include "material_error.h"
 #include "material_factory.h"
-#include "material_pbr_khronos.h"
-#include "material_pbr_learn_opengl.h"
-#include "material_shadow.h"
-#include "material_three_vrm.h"
-#include "material_unlit.h"
+// #include "material_pbr_khronos.h"
+// #include "material_pbr_learn_opengl.h"
+// #include "material_shadow.h"
+// #include "material_three_vrm.h"
+// #include "material_unlit.h"
 #include "rendering_env.h"
 #include "shader_source.h"
 #include <DirectXMath.h>
@@ -66,20 +67,20 @@ class Gl3Renderer
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_linearTextureMap;
-  std::vector<MaterialWithUpdater> m_materialMap;
+  std::vector<std::optional<MaterialFactory>> m_materialMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
   std::shared_ptr<grapho::gl3::Texture> m_white;
-  MaterialWithUpdater m_shadow;
-  MaterialWithUpdater m_error;
+  MaterialFactory m_shadow;
+  MaterialFactory m_error;
 
   std::shared_ptr<ShaderSourceManager> m_shaderSource;
-  std::unordered_map<ShaderTypes, MaterialFactoryFunc> m_materialFactory;
+  std::unordered_map<ShaderTypes, MaterialFactoryFunc> m_materialFactoryMap;
 
   grapho::gl3::Material::EnvVars m_env = {};
   std::shared_ptr<grapho::gl3::Ubo> m_envUbo;
-  grapho::gl3::Material::NodeVars m_model = {};
-  std::shared_ptr<grapho::gl3::Ubo> m_modelUbo;
+  grapho::gl3::Material::DrawVars m_draw = {};
+  std::shared_ptr<grapho::gl3::Ubo> m_drawUbo;
 
   Gl3Renderer()
     : m_shaderSource(new ShaderSourceManager)
@@ -94,36 +95,32 @@ class Gl3Renderer
     });
 
     m_envUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::EnvVars>();
-    m_modelUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::NodeVars>();
+    m_drawUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::DrawVars>();
 
-    m_materialFactory.insert({ ShaderTypes::Error, MaterialFactory_Error });
-    m_materialFactory.insert({ ShaderTypes::Shadow, MaterialFactory_Shadow });
+    m_materialFactoryMap.insert({ ShaderTypes::Error, MaterialFactory_Error });
+    // m_materialFactory.insert({ ShaderTypes::Shadow, MaterialFactory_Shadow()
+    // });
+    // // m_materialFactory.insert(
+    // //   { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
     // m_materialFactory.insert(
-    //   { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
-    m_materialFactory.insert({ ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos });
-    m_materialFactory.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit });
-    m_materialFactory.insert({ ShaderTypes::MToon0, MaterialFactory_MToon0 });
-    m_materialFactory.insert({ ShaderTypes::MToon1, MaterialFactory_MToon0 });
+    //   { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos() });
+    // m_materialFactory.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit()
+    // }); m_materialFactory.insert({ ShaderTypes::MToon0,
+    // MaterialFactory_MToon0() }); m_materialFactory.insert({
+    // ShaderTypes::MToon1, MaterialFactory_MToon0() });
   }
 
-  std::optional<MaterialWithUpdater> CreateMaterial(
+  std::optional<MaterialFactory> CreateMaterial(
     ShaderTypes type,
     const gltfjson::typing::Root& root,
     const gltfjson::typing::Bin& bin,
     std::optional<uint32_t> materialId)
   {
-    auto found = m_materialFactory.find(type);
-    if (found == m_materialFactory.end()) {
-      return {};
+    auto found = m_materialFactoryMap.find(type);
+    if (found == m_materialFactoryMap.end()) {
+      return std::nullopt;
     }
-    auto material_withupdater =
-      (found->second)(m_shaderSource, root, bin, materialId);
-    if (material_withupdater) {
-      return *material_withupdater;
-    } else {
-      App::Instance().Log(LogLevel::Error) << material_withupdater.error();
-      return {};
-    }
+    return (found->second)(root, bin, materialId);
   }
 
   ~Gl3Renderer() {}
@@ -280,7 +277,7 @@ public:
     return texture;
   }
 
-  std::optional<MaterialWithUpdater> GetOrCreateMaterial(
+  std::optional<MaterialFactory> GetOrCreateMaterial(
     const gltfjson::typing::Root& root,
     const gltfjson::typing::Bin& bin,
     std::optional<uint32_t> id)
@@ -290,9 +287,8 @@ public:
     }
 
     if (*id < m_materialMap.size()) {
-      auto found = m_materialMap[*id];
-      if (found.Material) {
-        return found;
+      if (auto found = m_materialMap[*id]) {
+        return *found;
       }
     }
 
@@ -328,7 +324,7 @@ public:
       }
     }
 
-    std::optional<MaterialWithUpdater> material;
+    std::optional<MaterialFactory> material;
     if (mtoon1) {
       material = CreateMaterial(ShaderTypes::MToon1, root, bin, id);
     } else if (mtoon0) {
@@ -436,8 +432,8 @@ public:
         };
         m_envUbo->Upload(m_env);
         m_envUbo->SetBindingPoint(0);
-        m_model.model = m;
-        m_model.CalcNormalMatrix();
+        m_draw.model = m;
+        m_draw.CalcNormalMatrix();
         uint32_t drawOffset = 0;
         for (auto& primitive : mesh->m_primitives) {
           DrawPrimitive(env.ProjectionMatrix,
@@ -461,15 +457,12 @@ public:
             m_shadow = *shadow;
           }
         }
-        if (auto shadow = m_shadow.Material) {
-          shadow->Activate();
-          m_shadow.Update(m_env, m_model, env.ShadowMatrix);
-          uint32_t drawCount = 0;
-          for (auto& primitive : mesh->m_primitives) {
-            drawCount += primitive.DrawCount * 4;
-          }
-          vao->Draw(GL_TRIANGLES, drawCount, 0);
+        m_shadow.Activate(m_shaderSource, m_env, m_draw, env.ShadowMatrix);
+        uint32_t drawCount = 0;
+        for (auto& primitive : mesh->m_primitives) {
+          drawCount += primitive.DrawCount * 4;
         }
+        vao->Draw(GL_TRIANGLES, drawCount, 0);
         break;
       }
     }
@@ -485,26 +478,26 @@ public:
                      const runtimescene::Primitive& primitive,
                      uint32_t drawOffset)
   {
-    auto material_updater = GetOrCreateMaterial(root, bin, primitive.Material);
-    if (material_updater) {
+    auto material_factory = GetOrCreateMaterial(root, bin, primitive.Material);
+    if (material_factory) {
       // update ubo
       auto gltfMaterial = root.Materials[*primitive.Material];
       if (auto cutoff = gltfMaterial.AlphaCutoff()) {
-        m_model.cutoff.x = *cutoff;
+        m_draw.cutoff.x = *cutoff;
       }
-      m_model.color = { 1, 1, 1, 1 };
+      m_draw.color = { 1, 1, 1, 1 };
       if (auto pbr = gltfMaterial.PbrMetallicRoughness()) {
         if (pbr->BaseColorFactor.size() == 4) {
-          m_model.color.x = pbr->BaseColorFactor[0];
-          m_model.color.y = pbr->BaseColorFactor[1];
-          m_model.color.z = pbr->BaseColorFactor[2];
-          m_model.color.w = pbr->BaseColorFactor[3];
+          m_draw.color.x = pbr->BaseColorFactor[0];
+          m_draw.color.y = pbr->BaseColorFactor[1];
+          m_draw.color.z = pbr->BaseColorFactor[2];
+          m_draw.color.w = pbr->BaseColorFactor[3];
         }
       }
-      m_modelUbo->Upload(m_model);
-      m_modelUbo->SetBindingPoint(1);
+      m_drawUbo->Upload(m_draw);
+      m_drawUbo->SetBindingPoint(1);
 
-      material_updater->Material->Activate();
+      material_factory->Activate(m_shaderSource, m_env, m_draw);
 
       // state
       glEnable(GL_CULL_FACE);
@@ -537,23 +530,28 @@ public:
           m_error = *error;
         }
       }
-      if (auto error = m_error.Material) {
-        error->Activate();
-        m_error.Update(m_env, m_model);
-      }
+      m_error.Activate(m_shaderSource, m_env, m_draw);
     }
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
   }
 
-  void CreateDock(const AddDockFunc& addDock, std::string_view title)
+  uint32_t m_selected = 0;
+
+  void ShowSelector()
   {
-    addDock(grapho::imgui::Dock(title, [this]() {
-      ImGui::Text("srgb: %zd(textures)", m_srgbTextureMap.size());
-      ImGui::Text("linear: %zd(textures)", m_linearTextureMap.size());
-      ImGui::SameLine();
-      ImGui::Text("%zd(meshes)", m_drawableMap.size());
-    }));
+    // ImGui::Text("srgb: %zd(textures)", m_srgbTextureMap.size());
+    // ImGui::Text("linear: %zd(textures)", m_linearTextureMap.size());
+    // ImGui::SameLine();
+    // ImGui::Text("%zd(meshes)", m_drawableMap.size());
+    for (uint32_t i = 0; i < m_materialMap.size(); ++i) {
+      PrintfBuffer buf;
+      if (ImGui::Selectable(buf.Printf("%d", i), i == m_selected)) {
+        m_selected = i;
+      }
+    }
   }
+
+  void ShowSelected() { ImGui::Text("%d", m_selected); }
 };
 
 void
@@ -597,9 +595,17 @@ ReleaseMaterial(int i)
 }
 
 void
-CreateDock(const AddDockFunc& addDock, std::string_view title)
+CreateDock(const AddDockFunc& addDock)
 {
-  Gl3Renderer::Instance().CreateDock(addDock, title);
+  addDock(grapho::imgui::Dock("renderer selector", []() {
+    //
+    Gl3Renderer::Instance().ShowSelector();
+  }));
+
+  addDock(grapho::imgui::Dock("renderer selected", []() {
+    //
+    Gl3Renderer::Instance().ShowSelected();
+  }));
 }
 
 std::shared_ptr<grapho::gl3::Texture>

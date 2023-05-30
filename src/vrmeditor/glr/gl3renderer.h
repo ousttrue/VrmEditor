@@ -56,7 +56,7 @@ ReleaseMaterial(int i);
 
 // resource viewer
 void
-CreateDock(const AddDockFunc& addDock, std::string_view title);
+CreateDock(const AddDockFunc& addDock);
 
 std::shared_ptr<grapho::gl3::Texture>
 GetOrCreateTexture(const gltfjson::typing::Root& root,
