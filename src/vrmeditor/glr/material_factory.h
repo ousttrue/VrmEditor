@@ -103,6 +103,7 @@ struct MaterialFactory
     Compiled;
   std::shared_ptr<grapho::gl3::Material> Material;
   UpdateShaderFunc Updater;
+  std::list<grapho::gl3::TextureSlot> Textures;
 
   void Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                 const grapho::gl3::Material::EnvVars& env,
@@ -117,6 +118,7 @@ struct MaterialFactory
       Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
       if (Compiled) {
         Material->Shader = *Compiled;
+        Material->Textures = Textures;
       }
     }
     if (Material && Material->Shader) {

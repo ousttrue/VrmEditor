@@ -25,20 +25,20 @@ MaterialFactory_Unlit(const gltfjson::typing::Root& root,
     factory.FS.Macros.push_back({ u8"MODE_MASK" });
   }
 
-  return factory;
+  if (id) {
+    auto src = root.Materials[*id];
+    if (auto pbr = src.PbrMetallicRoughness()) {
+      if (auto baseColorTexture = pbr->BaseColorTexture()) {
+        if (auto texture = GetOrCreateTexture(
+              root, bin, baseColorTexture->Index(), ColorSpace::sRGB)) {
+          factory.Textures.push_back({ 0, texture });
+        }
+      }
+    }
+  }
 
-  // if (auto shader = grapho::gl3::ShaderProgram::Create(vs, fs)) {
-  //   auto material = std::make_shared<grapho::gl3::Material>();
-  //   material->Shader = *shader;
-  //   if (auto pbr = src.PbrMetallicRoughness()) {
-  //     if (auto baseColorTexture = pbr->BaseColorTexture()) {
-  //       if (auto texture = GetOrCreateTexture(
-  //             root, bin, baseColorTexture->Index(), ColorSpace::sRGB)) {
-  //         material->Textures.push_back({ 0, texture });
-  //       }
-  //     }
-  //   }
-  //   return MaterialWithUpdater{ material };
+  return factory;
+  // return MaterialWithUpdater{ material };
   // } else {
   //   App::Instance().Log(LogLevel::Error) << shader.error();
   //   return std::unexpected{ shader.error() };
