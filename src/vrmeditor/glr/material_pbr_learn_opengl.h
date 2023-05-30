@@ -1,81 +1,104 @@
 #pragma once
-#include "app.h"
-#include "gl3renderer.h"
 #include "material_factory.h"
-#include "shader_source.h"
-#include <gltfjson.h>
-#include <grapho/gl3/material.h>
-#include <grapho/gl3/pbr.h>
 
 namespace glr {
 
-inline std::expected<MaterialWithUpdater, std::string>
-MaterialFactory_Pbr_LearnOpenGL(
-  const std::shared_ptr<ShaderSourceManager>& shaderSource,
-  const gltfjson::typing::Root& root,
-  const gltfjson::typing::Bin& bin,
-  std::optional<uint32_t> materialId)
+inline std::shared_ptr<MaterialFactory>
+MaterialFactory_Pbr_LearnOpenGL(const gltfjson::typing::Root& root,
+                                const gltfjson::typing::Bin& bin,
+                                std::optional<uint32_t> materialId)
 {
-  if (!materialId) {
-    return std::unexpected{ "no material id" };
-  }
-  auto src = root.Materials[*materialId];
+  auto ptr = std::make_shared<MaterialFactory>();
+  *ptr = MaterialFactory{
+    .Type = ShaderTypes::Pbr,
+    .VS = {
+      .SourceName ="pbr.vert",
+      .Version = u8"#version 450",
+    },
+    .FS = {
+      .SourceName ="pbr.frag",
+      .Version = u8"#version 450",
+    },
+    .Updater = [](auto &shader, auto &env, auto &draw, auto &shadow)
+    {
+      if (auto var = shader->Uniform("irradianceMap")) {
+        var->SetInt(0);
+      }
+      if (auto var = shader->Uniform("prefilterMap")) {
+        var->SetInt(1);
+      }
+      if (auto var = shader->Uniform("brdfLUT")) {
+        var->SetInt(2);
+      }
+      if (auto var = shader->Uniform("albedoMap")) {
+        var->SetInt(3);
+      }
+      if (auto var = shader->Uniform("normalMap")) {
+        var->SetInt(4);
+      }
+      if (auto var = shader->Uniform("metallicMap")) {
+        var->SetInt(5);
+      };
+      if (auto var = shader->Uniform("roughnessMap")) {
+        var->SetInt(6);
+      }
+      if (auto var = shader->Uniform("aoMap")) {
+        var->SetInt(7);
+      }
+    },
+  };
+
   std::shared_ptr<grapho::gl3::Texture> albedo;
   std::shared_ptr<grapho::gl3::Texture> metallic;
   std::shared_ptr<grapho::gl3::Texture> roughness;
-  if (auto pbr = src.PbrMetallicRoughness()) {
-    if (auto baseColorTexture = pbr->BaseColorTexture()) {
-      albedo = GetOrCreateTexture(
-        root, bin, baseColorTexture->Index(), ColorSpace::sRGB);
-    }
-    if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture()) {
-      metallic = GetOrCreateTexture(
-        root, bin, metallicRoughnessTexture->Index(), ColorSpace::Linear);
-      roughness = GetOrCreateTexture(
-        root, bin, metallicRoughnessTexture->Index(), ColorSpace::Linear);
-    }
-  }
-  std::shared_ptr<grapho::gl3::Texture> normal;
-  if (auto normalTexture = src.NormalTexture()) {
-    normal =
-      GetOrCreateTexture(root, bin, normalTexture->Index(), ColorSpace::Linear);
-  }
   std::shared_ptr<grapho::gl3::Texture> ao;
-  if (auto occlusionTexture = src.OcclusionTexture()) {
-    ao = GetOrCreateTexture(
-      root, bin, occlusionTexture->Index(), ColorSpace::Linear);
+  std::shared_ptr<grapho::gl3::Texture> normal;
+  if (materialId) {
+    auto src = root.Materials[*materialId];
+    if (auto pbr = src.PbrMetallicRoughness()) {
+      if (auto baseColorTexture = pbr->BaseColorTexture()) {
+        albedo = GetOrCreateTexture(
+          root, bin, baseColorTexture->Index(), ColorSpace::sRGB);
+      }
+      if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture()) {
+        metallic = GetOrCreateTexture(
+          root, bin, metallicRoughnessTexture->Index(), ColorSpace::Linear);
+        roughness = GetOrCreateTexture(
+          root, bin, metallicRoughnessTexture->Index(), ColorSpace::Linear);
+      }
+    }
+    if (auto normalTexture = src.NormalTexture()) {
+      normal = GetOrCreateTexture(
+        root, bin, normalTexture->Index(), ColorSpace::Linear);
+    }
+    if (auto occlusionTexture = src.OcclusionTexture()) {
+      ao = GetOrCreateTexture(
+        root, bin, occlusionTexture->Index(), ColorSpace::Linear);
+    }
   }
 
-  std::vector<std::u8string_view> vs;
-  std::vector<std::u8string_view> fs;
-  vs.push_back(u8"#version 450\n");
-  fs.push_back(u8"#version 450\n");
   if (albedo) {
-    fs.push_back(u8"#define HAS_ALBEDO_TEXTURE\n");
-  }
-  if (metallic) {
-    fs.push_back(u8"#define HAS_METALLIC_TEXTURE\n");
-  }
-  if (roughness) {
-    fs.push_back(u8"#define HAS_ROUGHNESS_TEXTURE\n");
-  }
-  if (ao) {
-    fs.push_back(u8"#define HAS_AO_TEXTURE\n");
+    ptr->FS.Macros.push_back({ u8"HAS_ALBEDO_TEXTURE" });
+    ptr->Textures.push_back({ 3, albedo });
   }
   if (normal) {
-    fs.push_back(u8"#define HAS_NORMAL_TEXTURE\n");
+    ptr->FS.Macros.push_back({ u8"HAS_NORMAL_TEXTURE" });
+    ptr->Textures.push_back({ 4, normal });
+  }
+  if (metallic) {
+    ptr->FS.Macros.push_back({ u8"HAS_METALLIC_TEXTURE" });
+    ptr->Textures.push_back({ 5, metallic });
+  }
+  if (roughness) {
+    ptr->FS.Macros.push_back({ u8"HAS_ROUGHNESS_TEXTURE" });
+    ptr->Textures.push_back({ 6, roughness });
+  }
+  if (ao) {
+    ptr->FS.Macros.push_back({ u8"HAS_AO_TEXTURE" });
+    ptr->Textures.push_back({ 7, ao });
   }
 
-  auto vs_src = shaderSource->Get("pbr.vert");
-  shaderSource->RegisterShaderType(vs_src, ShaderTypes::Pbr);
-  vs.push_back(vs_src->Source);
-
-  auto fs_src = shaderSource->Get("pbr.frag");
-  shaderSource->RegisterShaderType(fs_src, ShaderTypes::Pbr);
-  fs.push_back(fs_src->Source);
-
-  return MaterialWithUpdater::Create(grapho::gl3::CreatePbrMaterial(
-    albedo, normal, metallic, roughness, ao, vs, fs));
+  return ptr;
 }
 
 }

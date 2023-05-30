@@ -69,28 +69,29 @@ struct ShaderFactory
   std::u8string Version;
   std::vector<ShaderDefinition> Macros;
   std::u8string SourceExpanded;
+  std::u8string FullSource;
 
   std::u8string Expand(ShaderTypes type,
                        const std::shared_ptr<ShaderSourceManager>& shaderSource)
   {
-    std::u8string dst;
+    FullSource.clear();
 
     auto src = shaderSource->Get(SourceName);
     shaderSource->RegisterShaderType(src, type);
     SourceExpanded = src->Source;
 
-    dst += Version;
-    dst.push_back('\n');
-
-    dst += SourceExpanded;
-    dst.push_back('\n');
+    FullSource += Version;
+    FullSource.push_back('\n');
 
     for (auto m : Macros) {
-      dst += m.Str();
-      dst.push_back('\n');
+      FullSource += m.Str();
+      FullSource.push_back('\n');
     }
 
-    return dst;
+    FullSource += SourceExpanded;
+    FullSource.push_back('\n');
+
+    return FullSource;
   }
 };
 
@@ -122,16 +123,17 @@ struct MaterialFactory
       }
     }
     if (Material && Material->Shader) {
-      Material->Activate();
       if (Updater) {
+        Material->Shader->Use();
         Updater(Material->Shader, env, model, shadow);
       }
+      Material->Activate();
     }
   }
 };
 
-using MaterialFactoryFunc =
-  std::function<MaterialFactory(const gltfjson::typing::Root& root,
-                                const gltfjson::typing::Bin& bin,
-                                std::optional<uint32_t> materialId)>;
+using MaterialFactoryFunc = std::function<std::shared_ptr<MaterialFactory>(
+  const gltfjson::typing::Root& root,
+  const gltfjson::typing::Bin& bin,
+  std::optional<uint32_t> materialId)>;
 }

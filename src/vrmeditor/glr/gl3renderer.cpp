@@ -6,7 +6,7 @@
 #include "material_error.h"
 #include "material_factory.h"
 // #include "material_pbr_khronos.h"
-// #include "material_pbr_learn_opengl.h"
+#include "material_pbr_learn_opengl.h"
 #include "material_shadow.h"
 // #include "material_three_vrm.h"
 #include "material_unlit.h"
@@ -100,8 +100,8 @@ class Gl3Renderer
     m_materialFactoryMap.insert({ ShaderTypes::Error, MaterialFactory_Error });
     m_materialFactoryMap.insert(
       { ShaderTypes::Shadow, MaterialFactory_Shadow });
-    // // m_materialFactory.insert(
-    // //   { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
+    m_materialFactoryMap.insert(
+      { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
     // m_materialFactory.insert(
     //   { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos() });
     m_materialFactoryMap.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit });
@@ -112,7 +112,7 @@ class Gl3Renderer
     //  ShaderTypes::MToon1, MaterialFactory_MToon0() });
   }
 
-  std::optional<MaterialFactory> CreateMaterial(
+  std::shared_ptr<MaterialFactory> CreateMaterial(
     ShaderTypes type,
     const gltfjson::typing::Root& root,
     const gltfjson::typing::Bin& bin,
@@ -120,7 +120,7 @@ class Gl3Renderer
   {
     auto found = m_materialFactoryMap.find(type);
     if (found == m_materialFactoryMap.end()) {
-      return std::nullopt;
+      return {};
     }
     return (found->second)(root, bin, materialId);
   }
@@ -326,7 +326,7 @@ public:
       }
     }
 
-    std::optional<MaterialFactory> material;
+    std::shared_ptr<MaterialFactory> material;
     if (mtoon1) {
       material = CreateMaterial(ShaderTypes::MToon1, root, bin, id);
     } else if (mtoon0) {
@@ -340,12 +340,8 @@ public:
     while (*id >= m_materialMap.size()) {
       m_materialMap.push_back({});
     }
-    auto ptr = std::make_shared<MaterialFactory>();
-    m_materialMap[*id] = ptr;
-    if (material) {
-      *ptr = *material;
-    }
-    return ptr;
+    m_materialMap[*id] = material;
+    return material;
   }
 
   std::shared_ptr<grapho::gl3::Vao> GetOrCreateMesh(
@@ -576,9 +572,9 @@ public:
       }
 
       ImGui::TextWrapped("vs: %s",
-                         (const char*)material->VS.SourceExpanded.c_str());
+                         (const char*)material->VS.FullSource.c_str());
       ImGui::TextWrapped("fs: %s",
-                         (const char*)material->FS.SourceExpanded.c_str());
+                         (const char*)material->FS.FullSource.c_str());
 
       if (material->Compiled) {
 

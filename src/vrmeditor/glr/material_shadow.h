@@ -3,12 +3,13 @@
 
 namespace glr {
 
-inline MaterialFactory
+inline std::shared_ptr<MaterialFactory>
 MaterialFactory_Shadow(const gltfjson::typing::Root& root,
                        const gltfjson::typing::Bin& bin,
                        std::optional<uint32_t>)
 {
-  return MaterialFactory{
+  auto ptr = std::make_shared<MaterialFactory>();
+  *ptr=MaterialFactory{
     .Type = ShaderTypes::Shadow,
     .VS = {
       "shadow.vert",
@@ -23,6 +24,7 @@ MaterialFactory_Shadow(const gltfjson::typing::Root& root,
         shader->Uniform("Model")->SetMat4(node.model);
       },
   };
+  return ptr;
 }
 
 }

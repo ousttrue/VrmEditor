@@ -3,12 +3,13 @@
 
 namespace glr {
 
-inline MaterialFactory
+inline std::shared_ptr<MaterialFactory>
 MaterialFactory_Unlit(const gltfjson::typing::Root& root,
                       const gltfjson::typing::Bin& bin,
                       std::optional<uint32_t> id)
 {
-  MaterialFactory factory{
+  auto ptr = std::make_shared<MaterialFactory>();
+  *ptr = MaterialFactory{
     .Type =ShaderTypes::Unlit,
     .VS = {
       .SourceName = "unlit.vert",
@@ -22,7 +23,7 @@ MaterialFactory_Unlit(const gltfjson::typing::Root& root,
 
   if (gltfjson::typing::GetAlphaMode(root, id) ==
       gltfjson::format::AlphaModes::Mask) {
-    factory.FS.Macros.push_back({ u8"MODE_MASK" });
+    ptr->FS.Macros.push_back({ u8"MODE_MASK" });
   }
 
   if (id) {
@@ -31,18 +32,13 @@ MaterialFactory_Unlit(const gltfjson::typing::Root& root,
       if (auto baseColorTexture = pbr->BaseColorTexture()) {
         if (auto texture = GetOrCreateTexture(
               root, bin, baseColorTexture->Index(), ColorSpace::sRGB)) {
-          factory.Textures.push_back({ 0, texture });
+          ptr->Textures.push_back({ 0, texture });
         }
       }
     }
   }
 
-  return factory;
-  // return MaterialWithUpdater{ material };
-  // } else {
-  //   App::Instance().Log(LogLevel::Error) << shader.error();
-  //   return std::unexpected{ shader.error() };
-  // }
+  return ptr;
 }
 
 }
