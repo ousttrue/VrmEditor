@@ -8,6 +8,7 @@
 #include "material_pbr_khronos.h"
 #include "material_pbr_learn_opengl.h"
 #include "material_shadow.h"
+#include <TextEditor.h>
 // #include "material_three_vrm.h"
 #include "material_unlit.h"
 #include "rendering_env.h"
@@ -62,6 +63,8 @@ ParseImage(const gltfjson::typing::Root& root,
 
 class Gl3Renderer
 {
+  TextEditor m_vsEditor;
+  TextEditor m_fsEditor;
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::gltf::Image>> m_imageMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_srgbTextureMap;
@@ -81,6 +84,8 @@ class Gl3Renderer
   std::shared_ptr<grapho::gl3::Ubo> m_envUbo;
   grapho::gl3::Material::DrawVars m_draw = {};
   std::shared_ptr<grapho::gl3::Ubo> m_drawUbo;
+
+  uint32_t m_selected = 0;
 
   Gl3Renderer()
     : m_shaderSource(new ShaderSourceManager)
@@ -102,7 +107,8 @@ class Gl3Renderer
       { ShaderTypes::Shadow, MaterialFactory_Shadow });
     // m_materialFactoryMap.insert(
     //   { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
-    m_materialFactoryMap.insert({ ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos });
+    m_materialFactoryMap.insert(
+      { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos });
     m_materialFactoryMap.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit });
     m_materialFactoryMap.insert({ ShaderTypes::MToon1, MaterialFactory_Unlit });
     m_materialFactoryMap.insert({ ShaderTypes::MToon0, MaterialFactory_Unlit });
@@ -140,6 +146,8 @@ public:
     m_srgbTextureMap.clear();
     m_linearTextureMap.clear();
     m_drawableMap.clear();
+    m_vsEditor.SetText("");
+    m_fsEditor.SetText("");
   }
 
   void ReleaseMaterial(uint32_t i)
@@ -532,7 +540,19 @@ public:
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
   }
 
-  uint32_t m_selected = 0;
+  void Select(uint32_t i)
+  {
+    if (i == m_selected) {
+      return;
+    }
+    m_selected = i;
+    if (auto material = m_materialMap[m_selected]) {
+      m_vsEditor.SetText("");
+      m_vsEditor.SetReadOnly(true);
+      m_fsEditor.SetText("");
+      m_fsEditor.SetReadOnly(true);
+    }
+  }
 
   void ShowSelector()
   {
@@ -543,7 +563,7 @@ public:
     for (uint32_t i = 0; i < m_materialMap.size(); ++i) {
       PrintfBuffer buf;
       if (ImGui::Selectable(buf.Printf("%d", i), i == m_selected)) {
-        m_selected = i;
+        Select(i);
       }
     }
   }
@@ -574,14 +594,24 @@ public:
       ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
       if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
         if (ImGui::BeginTabItem("VS")) {
-          // ImGui::InputTextMultiline();
-          ImGui::TextWrapped("%s",
-                             (const char*)material->VS.FullSource.c_str());
+          // ImGui::TextWrapped("%s",
+          //                    (const char*)material->VS.FullSource.c_str());
+          auto s = m_vsEditor.GetText();
+          if (m_vsEditor.GetText() == "\n") {
+            m_vsEditor.SetText((const char*)material->VS.FullSource.c_str());
+            m_vsEditor.SetReadOnly(true);
+          }
+          m_vsEditor.Render(material->VS.SourceName.c_str());
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("FS")) {
-          ImGui::TextWrapped("%s",
-                             (const char*)material->FS.FullSource.c_str());
+          // ImGui::TextWrapped("%s",
+          //                    (const char*)material->FS.FullSource.c_str());
+          if (m_fsEditor.GetText() == "\n") {
+            m_fsEditor.SetText((const char*)material->FS.FullSource.c_str());
+            m_fsEditor.SetReadOnly(true);
+          }
+          m_fsEditor.Render(material->FS.SourceName.c_str());
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Error")) {

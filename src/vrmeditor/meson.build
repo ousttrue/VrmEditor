@@ -56,6 +56,7 @@ executable(
         asio_dep,
         simplefilewatcher_dep,
         stb_dep,
+        imgui_colortextedit_dep,
     ],
 )
 

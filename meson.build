@@ -27,6 +27,7 @@ imgui_filedialog_dep = subproject(
 iconfont_cpp_headers_dep = dependency('iconfont_cpp_headers')
 directxmath_dep = dependency('directxmath', include_type: 'system')
 imnodes_dep = dependency('imnodes')
+imgui_colortextedit_dep = dependency('ImGuiColorTextEdit')
 asio_dep = dependency('asio')
 gltfjson_dep = dependency('gltfjson')
 simplefilewatcher_dep = dependency('simplefilewatcher')
