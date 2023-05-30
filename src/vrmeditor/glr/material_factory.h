@@ -20,7 +20,7 @@ using UpdateShaderFunc =
 struct ShaderDefinition
 {
   std::u8string Name;
-  std::variant<std::monostate, bool, int, float> Value;
+  std::variant<std::monostate, bool, int, float, std::u8string> Value;
 
   std::u8string Str() const
   {
@@ -45,15 +45,21 @@ struct ShaderDefinition
         auto str = m_ss.str();
         return { (const char8_t*)str.data(), str.size() };
       }
-      std::u8string operator()(int n)
+      std::u8string operator()(int value)
       {
-        m_ss << "#define " << Name << " " << n;
+        m_ss << "#define " << Name << " " << value;
         auto str = m_ss.str();
         return { (const char8_t*)str.data(), str.size() };
       }
-      std::u8string operator()(float n)
+      std::u8string operator()(float value)
       {
-        m_ss << "#define " << Name << " " << n;
+        m_ss << "#define " << Name << " " << value;
+        auto str = m_ss.str();
+        return { (const char8_t*)str.data(), str.size() };
+      }
+      std::u8string operator()(const std::u8string& value)
+      {
+        m_ss << "#define " << Name << " " << gltfjson::tree::from_u8(value);
         auto str = m_ss.str();
         return { (const char8_t*)str.data(), str.size() };
       }
