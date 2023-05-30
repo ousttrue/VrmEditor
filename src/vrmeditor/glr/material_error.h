@@ -1,8 +1,5 @@
 #pragma once
 #include "material_factory.h"
-#include "shader_source.h"
-#include <gltfjson.h>
-#include <grapho/gl3/material.h>
 
 namespace glr {
 
@@ -19,8 +16,7 @@ MaterialFactory_Error(const gltfjson::typing::Root& root,
     .FS = {
       .SourceName= "error.frag",
     },
-    .Updater = [](const std::shared_ptr<grapho::gl3::ShaderProgram> &shader,
-        const grapho::gl3::Material::EnvVars& env, auto& model, auto& shadow) {
+    .Updater = []( auto &shader, auto& env, auto& model, auto& shadow) {
         shader->Uniform("Projection")->SetMat4(env.projection);
         shader->Uniform("View")->SetMat4(env.view);
         shader->Uniform("Model")->SetMat4(model.model);

@@ -7,7 +7,7 @@
 #include "material_factory.h"
 // #include "material_pbr_khronos.h"
 // #include "material_pbr_learn_opengl.h"
-// #include "material_shadow.h"
+#include "material_shadow.h"
 // #include "material_three_vrm.h"
 // #include "material_unlit.h"
 #include "rendering_env.h"
@@ -98,8 +98,8 @@ class Gl3Renderer
     m_drawUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::DrawVars>();
 
     m_materialFactoryMap.insert({ ShaderTypes::Error, MaterialFactory_Error });
-    // m_materialFactory.insert({ ShaderTypes::Shadow, MaterialFactory_Shadow()
-    // });
+    m_materialFactoryMap.insert(
+      { ShaderTypes::Shadow, MaterialFactory_Shadow });
     // // m_materialFactory.insert(
     // //   { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
     // m_materialFactory.insert(

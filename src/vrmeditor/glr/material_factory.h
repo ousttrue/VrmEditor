@@ -24,8 +24,8 @@ struct ShaderDefinition
 
 struct ShaderFactory
 {
-  std::u8string Version;
   std::string SourceName;
+  std::u8string Version;
   std::vector<ShaderDefinition> Macros;
   std::u8string MergedSource;
 };
