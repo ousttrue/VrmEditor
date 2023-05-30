@@ -62,15 +62,29 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
             { u8"DEBUG_ANISOTROPIC_DIRECTION", 32 },
           },
           .Selected = { u8"DEBUG", 0 },
-        }
+        },
+        {
+          .Values = {
+            { u8"ALPHAMODE_OPAQUE", 0 },
+            { u8"ALPHAMODE_MASK", 1 },
+            { u8"ALPHAMODE_BLEND", 2 },
+          },
+          .Selected = {u8"ALPHAMODE", 0},
+        },
       },
     },
     .Updater = [](auto &shader, auto &env, auto &draw, auto &shadow)
     {
+      shader->SetUniform("u_BaseColorFactor",draw.color);
+      shader->SetUniform("u_MetallicFactor",1.0f);
+      shader->SetUniform("u_RoughnessFactor",1.0f);
+      shader->SetUniform("u_Exposure",1.0f);
+
       shader->SetUniform("u_ModelMatrix",draw.model);
       shader->SetUniform("u_ViewProjectionMatrix",env.viewprojection());
       shader->SetUniform("u_EmissiveFactor",DirectX::XMFLOAT3{1,1,1});
       shader->SetUniform("u_NormalMatrix",draw.normalMatrix);
+      shader->SetUniform("u_Camera",env.camPos);
 
       shader->SetUniform("u_LambertianEnvSampler",0);
       shader->SetUniform("u_GGXEnvSampler",1);
@@ -127,16 +141,12 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
     }
   }
 
-  ptr->FS.Macros.push_back({ u8"ALPHAMODE_OPAQUE", 0 });
-  ptr->FS.Macros.push_back({ u8"ALPHAMODE_MASK", 1 });
-  ptr->FS.Macros.push_back({ u8"ALPHAMODE_BLEND", 2 });
-  ptr->FS.Macros.push_back({ u8"ALPHAMODE", u8"ALPHAMODE_OPAQUE" });
   ptr->FS.Macros.push_back({ u8"MATERIAL_METALLICROUGHNESS", 1 });
   ptr->FS.Macros.push_back({ u8"HAS_NORMAL_VEC3", 1 });
   ptr->FS.Macros.push_back({ u8"HAS_POSITION_VEC3", 1 });
   ptr->FS.Macros.push_back({ u8"HAS_TEXCOORD_0_VEC2", 1 });
   ptr->FS.Macros.push_back({ u8"USE_PUNCTUAL", 1 });
-  ptr->FS.Macros.push_back({ u8"LIGHT_COUNT", 0 });
+  ptr->FS.Macros.push_back({ u8"LIGHT_COUNT", 1 });
   // "USE_IBL 1"
 
   if (normal) {

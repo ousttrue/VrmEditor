@@ -641,7 +641,8 @@ public:
             std::string{ (const char*)kv.Name.data(), kv.Name.size() } });
       }
       int value = std::get<int>(e.Selected.Value);
-      if (grapho::imgui::GenericCombo<int>("DEBUG", &value, combo)) {
+      if (grapho::imgui::GenericCombo<int>(
+            (const char*)e.Selected.Name.c_str(), &value, combo)) {
         e.Selected.Value = value;
         updated = true;
       }
