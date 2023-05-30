@@ -21,6 +21,7 @@
 !/subprojects/ImFileDialog
 !/subprojects/imnodes
 !/subprojects/minijson_writer
+!/subprojects/ImGuiColorTextEdit
 /builddir/
 /prefix/
 
