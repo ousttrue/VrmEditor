@@ -444,6 +444,10 @@ RuntimeScene::GetRuntimeSpringCollision(
 std::span<const libvrm::gltf::DrawItem>
 RuntimeScene::Drawables()
 {
+  if (!m_table->m_gltf) {
+    return {};
+  }
+
   // update order
   // 1. ヒューマノイドボーンを解決
   // 2. 頭の位置が決まるのでLookAtを解決

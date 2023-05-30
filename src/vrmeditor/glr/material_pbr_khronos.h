@@ -23,7 +23,47 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
     },
     .FS={
       .SourceName = "khronos/pbr.frag",
-      .Version=u8"#version 300 es"
+      .Version=u8"#version 300 es",
+      .Enums = {
+        {
+          .Values = {
+            { u8"DEBUG_NONE", 0 },
+            { u8"DEBUG_NORMAL_SHADING", 1 },
+            { u8"DEBUG_NORMAL_TEXTURE", 2 },
+            { u8"DEBUG_NORMAL_GEOMETRY", 3 },
+            { u8"DEBUG_TANGENT", 4 },
+            { u8"DEBUG_BITANGENT", 5 },
+            { u8"DEBUG_ALPHA", 6 },
+            { u8"DEBUG_UV_0", 7 },
+            { u8"DEBUG_UV_1", 8 },
+            { u8"DEBUG_OCCLUSION", 9 },
+            { u8"DEBUG_EMISSIVE", 10 },
+            { u8"DEBUG_METALLIC_ROUGHNESS", 11 },
+            { u8"DEBUG_BASE_COLOR", 12 },
+            { u8"DEBUG_ROUGHNESS", 13 },
+            { u8"DEBUG_METALLIC", 14 },
+            { u8"DEBUG_CLEARCOAT", 15 },
+            { u8"DEBUG_CLEARCOAT_FACTOR", 16 },
+            { u8"DEBUG_CLEARCOAT_ROUGHNESS", 17 },
+            { u8"DEBUG_CLEARCOAT_NORMAL", 18 },
+            { u8"DEBUG_SHEEN", 19 },
+            { u8"DEBUG_SHEEN_COLOR", 20 },
+            { u8"DEBUG_SHEEN_ROUGHNESS", 21 },
+            { u8"DEBUG_SPECULAR", 22 },
+            { u8"DEBUG_SPECULAR_FACTOR", 23 },
+            { u8"DEBUG_SPECULAR_COLOR", 24 },
+            { u8"DEBUG_TRANSMISSION_VOLUME", 25 },
+            { u8"DEBUG_TRANSMISSION_FACTOR", 26 },
+            { u8"DEBUG_VOLUME_THICKNESS", 27 },
+            { u8"DEBUG_IRIDESCENCE", 28 },
+            { u8"DEBUG_IRIDESCENCE_FACTOR", 29 },
+            { u8"DEBUG_IRIDESCENCE_THICKNESS", 30 },
+            { u8"DEBUG_ANISOTROPIC_STRENGTH", 31 },
+            { u8"DEBUG_ANISOTROPIC_DIRECTION", 32 },
+          },
+          .Selected = { u8"DEBUG", 0 },
+        }
+      },
     },
     .Updater = [](auto &shader, auto &env, auto &draw, auto &shadow)
     {
@@ -98,41 +138,6 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
   ptr->FS.Macros.push_back({ u8"USE_PUNCTUAL", 1 });
   ptr->FS.Macros.push_back({ u8"LIGHT_COUNT", 0 });
   // "USE_IBL 1"
-
-  ptr->FS.Macros.push_back({ u8"DEBUG_NONE", 0 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_NORMAL_SHADING", 1 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_NORMAL_TEXTURE", 2 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_NORMAL_GEOMETRY", 3 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_TANGENT", 4 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_BITANGENT", 5 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_ALPHA", 6 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_UV_0", 7 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_UV_1", 8 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_OCCLUSION", 9 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_EMISSIVE", 10 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_METALLIC_ROUGHNESS", 11 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_BASE_COLOR", 12 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_ROUGHNESS", 13 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_METALLIC", 14 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_CLEARCOAT", 15 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_CLEARCOAT_FACTOR", 16 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_CLEARCOAT_ROUGHNESS", 17 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_CLEARCOAT_NORMAL", 18 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_SHEEN", 19 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_SHEEN_COLOR", 20 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_SHEEN_ROUGHNESS", 21 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_SPECULAR", 22 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_SPECULAR_FACTOR", 23 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_SPECULAR_COLOR", 24 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_TRANSMISSION_VOLUME", 25 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_TRANSMISSION_FACTOR", 26 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_VOLUME_THICKNESS", 27 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_IRIDESCENCE", 28 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_IRIDESCENCE_FACTOR", 29 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_IRIDESCENCE_THICKNESS", 30 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_ANISOTROPIC_STRENGTH", 31 });
-  ptr->FS.Macros.push_back({ u8"DEBUG_ANISOTROPIC_DIRECTION", 32 });
-  ptr->FS.Macros.push_back({ u8"DEBUG", 0 });
 
   if (normal) {
     ptr->FS.Macros.push_back({ u8"HAS_NORMAL_MAP", 1 });

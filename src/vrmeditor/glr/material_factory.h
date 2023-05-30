@@ -68,11 +68,31 @@ struct ShaderDefinition
   }
 };
 
+struct ShaderEnum
+{
+  struct KeyValue
+  {
+    std::u8string Name;
+    int Value;
+
+    std::u8string Str() const
+    {
+      std::stringstream ss;
+      ss << "#define " << gltfjson::tree::from_u8(Name) << " " << Value;
+      auto str = ss.str();
+      return { (const char8_t*)str.data(), str.size() };
+    }
+  };
+  std::vector<KeyValue> Values;
+  ShaderDefinition Selected;
+};
+
 struct ShaderFactory
 {
   std::string SourceName;
   std::u8string Version;
   std::u8string Precision;
+  std::vector<ShaderEnum> Enums;
   std::vector<ShaderDefinition> Macros;
   std::vector<std::u8string> Codes;
   std::u8string SourceExpanded;
@@ -99,12 +119,21 @@ struct ShaderFactory
       FullSource.push_back('\n');
     }
 
-    for (auto c : Codes) {
+    for (auto& c : Codes) {
       FullSource += c;
       FullSource.push_back('\n');
     }
 
-    for (auto m : Macros) {
+    for (auto& e : Enums) {
+      for (auto& kv : e.Values) {
+        FullSource += kv.Str();
+        FullSource.push_back('\n');
+      }
+      FullSource += e.Selected.Str();
+      FullSource.push_back('\n');
+    }
+
+    for (auto& m : Macros) {
       FullSource += m.Str();
       FullSource.push_back('\n');
     }

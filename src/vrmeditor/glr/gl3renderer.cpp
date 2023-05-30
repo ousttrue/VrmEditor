@@ -21,6 +21,7 @@
 #include <grapho/gl3/texture.h>
 #include <grapho/gl3/ubo.h>
 #include <grapho/gl3/vao.h>
+#include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <iostream>
 #include <unordered_map>
@@ -572,8 +573,8 @@ public:
       return;
     }
 
-    if (auto material = m_materialMap[m_selected]) {
-      switch (material->Type) {
+    if (auto factory = m_materialMap[m_selected]) {
+      switch (factory->Type) {
         case ShaderTypes::Pbr:
           ImGui::TextUnformatted("pbr");
           break;
@@ -591,33 +592,30 @@ public:
       ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
       if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
         if (ImGui::BeginTabItem("VS")) {
-          ImGui::TextUnformatted(material->VS.SourceName.c_str());
-          // ImGui::TextWrapped("%s",
-          //                    (const char*)material->VS.FullSource.c_str());
-          auto s = m_vsEditor.GetText();
-          if (m_vsEditor.GetText() == "\n") {
-            m_vsEditor.SetText((const char*)material->VS.FullSource.c_str());
-            m_vsEditor.SetReadOnly(true);
+          if (ShowShader(factory->VS, m_vsEditor)) {
+            // factory->Compiled = {};
+            factory->Material = {};
+            // factory->VS.Expand(factory->Type, m_shaderSource);
+            // m_vsEditor.SetText((const char*)factory->VS.FullSource.c_str());
+            m_vsEditor.SetText("");
           }
-          m_vsEditor.Render(material->VS.SourceName.c_str());
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("FS")) {
-          ImGui::TextUnformatted(material->FS.SourceName.c_str());
-          // ImGui::TextWrapped("%s",
-          //                    (const char*)material->FS.FullSource.c_str());
-          if (m_fsEditor.GetText() == "\n") {
-            m_fsEditor.SetText((const char*)material->FS.FullSource.c_str());
-            m_fsEditor.SetReadOnly(true);
+          if (ShowShader(factory->FS, m_fsEditor)) {
+            // factory->Compiled = {};
+            factory->Material = {};
+            // factory->FS.Expand(factory->Type, m_shaderSource);
+            // m_fsEditor.SetText((const char*)factory->FS.FullSource.c_str());
+            m_fsEditor.SetText("");
           }
-          m_fsEditor.Render(material->FS.SourceName.c_str());
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Error")) {
-          if (material->Compiled) {
+          if (factory->Material) {
 
           } else {
-            ImGui::TextWrapped("error: %s", material->Compiled.error().c_str());
+            ImGui::TextWrapped("error: %s", factory->Compiled.error().c_str());
           }
           ImGui::EndTabItem();
         }
@@ -627,6 +625,35 @@ public:
     } else {
       ImGui::TextUnformatted("nullopt");
     }
+  }
+
+  static bool ShowShader(ShaderFactory& s, TextEditor& editor)
+  {
+    bool updated = false;
+    ImGui::TextUnformatted(s.SourceName.c_str());
+
+    std::vector<std::tuple<int, std::string>> combo;
+    for (auto& e : s.Enums) {
+      combo.clear();
+      for (auto& kv : e.Values) {
+        combo.push_back(
+          { kv.Value,
+            std::string{ (const char*)kv.Name.data(), kv.Name.size() } });
+      }
+      int value = std::get<int>(e.Selected.Value);
+      if (grapho::imgui::GenericCombo<int>("DEBUG", &value, combo)) {
+        e.Selected.Value = value;
+        updated = true;
+      }
+    }
+
+    if (editor.GetText() == "\n") {
+      editor.SetText((const char*)s.FullSource.c_str());
+      editor.SetReadOnly(true);
+    }
+    editor.Render(s.SourceName.c_str());
+
+    return updated;
   }
 };
 
