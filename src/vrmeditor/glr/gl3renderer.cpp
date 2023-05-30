@@ -9,7 +9,7 @@
 // #include "material_pbr_learn_opengl.h"
 #include "material_shadow.h"
 // #include "material_three_vrm.h"
-// #include "material_unlit.h"
+#include "material_unlit.h"
 #include "rendering_env.h"
 #include "shader_source.h"
 #include <DirectXMath.h>
@@ -67,7 +67,7 @@ class Gl3Renderer
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_linearTextureMap;
-  std::vector<std::optional<MaterialFactory>> m_materialMap;
+  std::vector<std::shared_ptr<MaterialFactory>> m_materialMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
   std::shared_ptr<grapho::gl3::Texture> m_white;
@@ -104,10 +104,12 @@ class Gl3Renderer
     // //   { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
     // m_materialFactory.insert(
     //   { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos() });
-    // m_materialFactory.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit()
-    // }); m_materialFactory.insert({ ShaderTypes::MToon0,
-    // MaterialFactory_MToon0() }); m_materialFactory.insert({
-    // ShaderTypes::MToon1, MaterialFactory_MToon0() });
+    m_materialFactoryMap.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit });
+    m_materialFactoryMap.insert({ ShaderTypes::MToon1, MaterialFactory_Unlit });
+    m_materialFactoryMap.insert({ ShaderTypes::MToon0, MaterialFactory_Unlit });
+    // m_materialFactory.insert({ ShaderTypes::MToon0,
+    //  MaterialFactory_MToon0() }); m_materialFactory.insert({
+    //  ShaderTypes::MToon1, MaterialFactory_MToon0() });
   }
 
   std::optional<MaterialFactory> CreateMaterial(
@@ -277,7 +279,7 @@ public:
     return texture;
   }
 
-  std::optional<MaterialFactory> GetOrCreateMaterial(
+  std::shared_ptr<MaterialFactory> GetOrCreateMaterial(
     const gltfjson::typing::Root& root,
     const gltfjson::typing::Bin& bin,
     std::optional<uint32_t> id)
@@ -288,7 +290,7 @@ public:
 
     if (*id < m_materialMap.size()) {
       if (auto found = m_materialMap[*id]) {
-        return *found;
+        return found;
       }
     }
 
@@ -338,12 +340,12 @@ public:
     while (*id >= m_materialMap.size()) {
       m_materialMap.push_back({});
     }
+    auto ptr = std::make_shared<MaterialFactory>();
+    m_materialMap[*id] = ptr;
     if (material) {
-      m_materialMap[*id] = *material;
-    } else {
-      m_materialMap[*id] = {};
+      *ptr = *material;
     }
-    return m_materialMap[*id];
+    return ptr;
   }
 
   std::shared_ptr<grapho::gl3::Vao> GetOrCreateMesh(
@@ -551,7 +553,42 @@ public:
     }
   }
 
-  void ShowSelected() { ImGui::Text("%d", m_selected); }
+  void ShowSelected()
+  {
+    ImGui::Text("%d", m_selected);
+    if (m_selected >= m_materialMap.size()) {
+      return;
+    }
+    if (auto material = m_materialMap[m_selected]) {
+      switch (material->Type) {
+        case ShaderTypes::Pbr:
+          ImGui::TextUnformatted("pbr");
+          break;
+        case ShaderTypes::Unlit:
+          ImGui::TextUnformatted("unlit");
+          break;
+        case ShaderTypes::MToon0:
+          ImGui::TextUnformatted("mtoon0");
+          break;
+        case ShaderTypes::MToon1:
+          ImGui::TextUnformatted("mtoon1");
+          break;
+      }
+
+      ImGui::TextWrapped("vs: %s",
+                         (const char*)material->VS.SourceExpanded.c_str());
+      ImGui::TextWrapped("fs: %s",
+                         (const char*)material->FS.SourceExpanded.c_str());
+
+      if (material->Compiled) {
+
+      } else {
+        ImGui::TextWrapped("error: %s", material->Compiled.error().c_str());
+      }
+    } else {
+      ImGui::TextUnformatted("nullopt");
+    }
+  }
 };
 
 void
