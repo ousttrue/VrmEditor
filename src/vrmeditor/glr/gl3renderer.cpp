@@ -5,7 +5,7 @@
 #include "gl3renderer.h"
 #include "material_error.h"
 #include "material_factory.h"
-// #include "material_pbr_khronos.h"
+#include "material_pbr_khronos.h"
 #include "material_pbr_learn_opengl.h"
 #include "material_shadow.h"
 // #include "material_three_vrm.h"
@@ -100,10 +100,9 @@ class Gl3Renderer
     m_materialFactoryMap.insert({ ShaderTypes::Error, MaterialFactory_Error });
     m_materialFactoryMap.insert(
       { ShaderTypes::Shadow, MaterialFactory_Shadow });
-    m_materialFactoryMap.insert(
-      { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
-    // m_materialFactory.insert(
-    //   { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos() });
+    // m_materialFactoryMap.insert(
+    //   { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
+    m_materialFactoryMap.insert({ ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos });
     m_materialFactoryMap.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit });
     m_materialFactoryMap.insert({ ShaderTypes::MToon1, MaterialFactory_Unlit });
     m_materialFactoryMap.insert({ ShaderTypes::MToon0, MaterialFactory_Unlit });
@@ -555,6 +554,7 @@ public:
     if (m_selected >= m_materialMap.size()) {
       return;
     }
+
     if (auto material = m_materialMap[m_selected]) {
       switch (material->Type) {
         case ShaderTypes::Pbr:
@@ -571,16 +571,30 @@ public:
           break;
       }
 
-      ImGui::TextWrapped("vs: %s",
-                         (const char*)material->VS.FullSource.c_str());
-      ImGui::TextWrapped("fs: %s",
-                         (const char*)material->FS.FullSource.c_str());
+      ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+      if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
+        if (ImGui::BeginTabItem("VS")) {
+          // ImGui::InputTextMultiline();
+          ImGui::TextWrapped("%s",
+                             (const char*)material->VS.FullSource.c_str());
+          ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("FS")) {
+          ImGui::TextWrapped("%s",
+                             (const char*)material->FS.FullSource.c_str());
+          ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Error")) {
+          if (material->Compiled) {
 
-      if (material->Compiled) {
-
-      } else {
-        ImGui::TextWrapped("error: %s", material->Compiled.error().c_str());
+          } else {
+            ImGui::TextWrapped("error: %s", material->Compiled.error().c_str());
+          }
+          ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
       }
+
     } else {
       ImGui::TextUnformatted("nullopt");
     }
