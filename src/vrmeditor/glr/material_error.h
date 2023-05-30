@@ -18,9 +18,9 @@ MaterialFactory_Error(const gltfjson::typing::Root& root,
       .SourceName= "error.frag",
     },
     .Updater = []( auto &shader, auto& env, auto& model, auto& shadow) {
-        shader->Uniform("Projection")->SetMat4(env.projection);
-        shader->Uniform("View")->SetMat4(env.view);
-        shader->Uniform("Model")->SetMat4(model.model);
+        shader->SetUniform("Projection",env.projection);
+        shader->SetUniform("View",env.view);
+        shader->SetUniform("Model",model.model);
       },
   };
   return ptr;

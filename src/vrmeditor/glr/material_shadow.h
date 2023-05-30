@@ -18,10 +18,10 @@ MaterialFactory_Shadow(const gltfjson::typing::Root& root,
       "shadow.frag",
     },
     .Updater=[](auto &shader, auto& env, auto& node, auto& shadow) {
-        shader->Uniform("Projection")->SetMat4(env.projection);
-        shader->Uniform("View")->SetMat4(env.view);
-        shader->Uniform("Shadow")->SetMat4(shadow);
-        shader->Uniform("Model")->SetMat4(node.model);
+        shader->SetUniform("Projection",env.projection);
+        shader->SetUniform("View",env.view);
+        shader->SetUniform("Shadow",shadow);
+        shader->SetUniform("Model",node.model);
       },
   };
   return ptr;

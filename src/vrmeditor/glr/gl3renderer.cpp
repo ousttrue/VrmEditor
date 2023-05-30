@@ -8,12 +8,12 @@
 #include "material_pbr_khronos.h"
 #include "material_pbr_learn_opengl.h"
 #include "material_shadow.h"
-#include <TextEditor.h>
-// #include "material_three_vrm.h"
+#include "material_three_vrm.h"
 #include "material_unlit.h"
 #include "rendering_env.h"
 #include "shader_source.h"
 #include <DirectXMath.h>
+#include <TextEditor.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <cuber/mesh.h>
 #include <grapho/gl3/pbr.h>
@@ -110,11 +110,8 @@ class Gl3Renderer
     m_materialFactoryMap.insert(
       { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos });
     m_materialFactoryMap.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit });
-    m_materialFactoryMap.insert({ ShaderTypes::MToon1, MaterialFactory_Unlit });
-    m_materialFactoryMap.insert({ ShaderTypes::MToon0, MaterialFactory_Unlit });
-    // m_materialFactory.insert({ ShaderTypes::MToon0,
-    //  MaterialFactory_MToon0() }); m_materialFactory.insert({
-    //  ShaderTypes::MToon1, MaterialFactory_MToon0() });
+    m_materialFactoryMap.insert({ ShaderTypes::MToon1, MaterialFactory_MToon });
+    m_materialFactoryMap.insert({ ShaderTypes::MToon0, MaterialFactory_MToon });
   }
 
   std::shared_ptr<MaterialFactory> CreateMaterial(
@@ -594,6 +591,7 @@ public:
       ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
       if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
         if (ImGui::BeginTabItem("VS")) {
+          ImGui::TextUnformatted(material->VS.SourceName.c_str());
           // ImGui::TextWrapped("%s",
           //                    (const char*)material->VS.FullSource.c_str());
           auto s = m_vsEditor.GetText();
@@ -605,6 +603,7 @@ public:
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("FS")) {
+          ImGui::TextUnformatted(material->FS.SourceName.c_str());
           // ImGui::TextWrapped("%s",
           //                    (const char*)material->FS.FullSource.c_str());
           if (m_fsEditor.GetText() == "\n") {

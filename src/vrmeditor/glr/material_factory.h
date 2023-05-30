@@ -36,7 +36,6 @@ struct ShaderDefinition
       }
       std::u8string operator()(bool b)
       {
-        m_ss << "#define " << Name;
         if (b) {
           m_ss << "#define " << Name << " true";
         } else {
@@ -73,7 +72,9 @@ struct ShaderFactory
 {
   std::string SourceName;
   std::u8string Version;
+  std::u8string Precision;
   std::vector<ShaderDefinition> Macros;
+  std::vector<std::u8string> Codes;
   std::u8string SourceExpanded;
   std::u8string FullSource;
 
@@ -88,6 +89,20 @@ struct ShaderFactory
 
     FullSource += Version;
     FullSource.push_back('\n');
+
+    if (Precision.size()) {
+      FullSource += u8"precision ";
+      FullSource += Precision;
+      if (FullSource.back() != ';') {
+        FullSource.push_back(';');
+      }
+      FullSource.push_back('\n');
+    }
+
+    for (auto c : Codes) {
+      FullSource += c;
+      FullSource.push_back('\n');
+    }
 
     for (auto m : Macros) {
       FullSource += m.Str();

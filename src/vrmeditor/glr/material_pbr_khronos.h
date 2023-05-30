@@ -27,47 +27,22 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
     },
     .Updater = [](auto &shader, auto &env, auto &draw, auto &shadow)
     {
-      shader->Uniform("u_ModelMatrix")->SetMat4(draw.model);
-      shader->Uniform("u_ViewProjectionMatrix")->SetMat4(env.viewprojection());
-      shader->Uniform("u_EmissiveFactor")->SetFloat3(DirectX::XMFLOAT3{1,1,1});
-      // shader->Uniform("u_NormalMatrix")->SetMat4(draw.normalMatrix);
+      shader->SetUniform("u_ModelMatrix",draw.model);
+      shader->SetUniform("u_ViewProjectionMatrix",env.viewprojection());
+      shader->SetUniform("u_EmissiveFactor",DirectX::XMFLOAT3{1,1,1});
+      shader->SetUniform("u_NormalMatrix",draw.normalMatrix);
 
-      if (auto var = shader->Uniform("u_LambertianEnvSampler")) {
-        //cube
-        var->SetInt(0);
-      }
-      if (auto var = shader->Uniform("u_GGXEnvSampler")) {
-        //cube
-        var->SetInt(1);
-      }
-      if (auto var = shader->Uniform("u_GGXLUT")) {
-        var->SetInt(2);
-      }
-      if (auto var = shader->Uniform("u_CharlieEnvSampler")) {
-        //cube
-        var->SetInt(3);
-      }
-      if (auto var = shader->Uniform("u_CharlieLUT")) {
-        var->SetInt(4);
-      }
-      if (auto var = shader->Uniform("u_SheenELUT")) {
-        var->SetInt(5);
-      };
-      if (auto var = shader->Uniform("u_NormalSampler")) {
-        var->SetInt(6);
-      }
-      if (auto var = shader->Uniform("u_EmissiveSampler")) {
-        var->SetInt(7);
-      }
-      if (auto var = shader->Uniform("u_OcclusionSampler")) {
-        var->SetInt(8);
-      }
-       if (auto var = shader->Uniform("u_BaseColorSampler")) {
-        var->SetInt(9);
-      }
-       if (auto var = shader->Uniform("u_MetallicRoughnessSampler")) {
-        var->SetInt(10);
-      }
+      shader->SetUniform("u_LambertianEnvSampler",0);
+      shader->SetUniform("u_GGXEnvSampler",1);
+      shader->SetUniform("u_GGXLUT",2);
+      shader->SetUniform("u_CharlieEnvSampler",3);
+      shader->SetUniform("u_CharlieLUT",4);
+      shader->SetUniform("u_SheenELUT",5);
+      shader->SetUniform("u_NormalSampler",6);
+      shader->SetUniform("u_EmissiveSampler",7);
+      shader->SetUniform("u_OcclusionSampler",8);
+      shader->SetUniform("u_BaseColorSampler",9);
+      shader->SetUniform("u_MetallicRoughnessSampler",10);
      },
   };
 
@@ -157,7 +132,7 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
   ptr->FS.Macros.push_back({ u8"DEBUG_IRIDESCENCE_THICKNESS", 30 });
   ptr->FS.Macros.push_back({ u8"DEBUG_ANISOTROPIC_STRENGTH", 31 });
   ptr->FS.Macros.push_back({ u8"DEBUG_ANISOTROPIC_DIRECTION", 32 });
-  ptr->FS.Macros.push_back({ u8"DEBUG", 1 });
+  ptr->FS.Macros.push_back({ u8"DEBUG", 0 });
 
   if (normal) {
     ptr->FS.Macros.push_back({ u8"HAS_NORMAL_MAP", 1 });
