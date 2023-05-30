@@ -186,8 +186,9 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
         shader->SetUniform("viewMatrix",env.view);
         shader->SetUniform("cameraPosition",env.camPos);
         shader->SetUniform("modelMatrix",draw.model);
-        shader->SetUniform("normalMatrix",draw.normalMatrix);
+        shader->SetUniform("normalMatrix",draw.normalMatrix3());
         shader->SetUniform("modelViewMatrix",mult(draw.model, env.view));
+        shader->SetUniform("uvTransform",env.uvTransform());
     },
   };
 
@@ -208,6 +209,15 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
   ptr->VS.Macros.push_back({ u8"THREE_VRM_THREE_REVISION", 150 });
   ptr->VS.Macros.push_back({ u8"NUM_SPOT_LIGHT_COORDS", 4 });
   ptr->VS.Macros.push_back({ u8"NUM_CLIPPING_PLANES", 0 });
+  ptr->VS.Codes.push_back(VS_CODE);
+
+  ptr->VS.Macros.push_back({ u8"MTOON_USE_UV" });
+  ptr->FS.Macros.push_back({ u8"MTOON_USE_UV" });
+
+  ptr->FS.Macros.push_back({ u8"DEBUG_LITSHADERATE" });
+  // ptr->FS.Macros.push_back({ u8"DEBUG_UV" });
+  // ptr->FS.Macros.push_back({ u8"DEBUG_NORMAL" });
+
   ptr->FS.Macros.push_back({ u8"THREE_VRM_THREE_REVISION", 150 });
   ptr->FS.Macros.push_back({ u8"NUM_SPOT_LIGHT_COORDS", 4 });
   ptr->FS.Macros.push_back({ u8"NUM_DIR_LIGHTS", 0 });
@@ -220,7 +230,8 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
   ptr->FS.Macros.push_back({ u8"UNION_CLIPPING_PLANES", 0 });
   ptr->FS.Macros.push_back({ u8"isOrthographic", false });
   ptr->FS.Codes.push_back(FS_CODE);
-  ptr->VS.Codes.push_back(VS_CODE);
+
+  ptr->FS.Macros.push_back({ u8"USE_MAP" });
 
   return ptr;
 }

@@ -99,9 +99,12 @@ deserialize ^|
 - asio
 - simplefilewatcher
 
-### mtoon shader
-- three-vrm(mtoon shader)
-- three-js(r150 required)
+### shaders
+
+- PBR: https://github.com/JoeyDeVries/LearnOpenGL/tree/master/src/6.pbr/2.2.2.ibl_specular_textured
+- PBR: https://github.com/KhronosGroup/glTF-Sample-Viewer
+- MToon: https://github.com/pixiv/three-vrm
+  - PBR: https://github.com/mrdoob/three.js/tree/r150 (r150 required)
 
 ### external
 

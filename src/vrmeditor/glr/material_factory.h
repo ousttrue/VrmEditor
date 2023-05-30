@@ -119,11 +119,6 @@ struct ShaderFactory
       FullSource.push_back('\n');
     }
 
-    for (auto& c : Codes) {
-      FullSource += c;
-      FullSource.push_back('\n');
-    }
-
     for (auto& e : Enums) {
       for (auto& kv : e.Values) {
         FullSource += kv.Str();
@@ -135,6 +130,11 @@ struct ShaderFactory
 
     for (auto& m : Macros) {
       FullSource += m.Str();
+      FullSource.push_back('\n');
+    }
+
+    for (auto& c : Codes) {
+      FullSource += c;
       FullSource.push_back('\n');
     }
 
