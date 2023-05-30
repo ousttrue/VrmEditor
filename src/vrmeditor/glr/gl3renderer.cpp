@@ -66,7 +66,7 @@ class Gl3Renderer
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_linearTextureMap;
-  std::unordered_map<uint32_t, MaterialWithUpdater> m_materialMap;
+  std::vector<MaterialWithUpdater> m_materialMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
   std::shared_ptr<grapho::gl3::Texture> m_white;
@@ -103,6 +103,7 @@ class Gl3Renderer
     m_materialFactory.insert({ ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos });
     m_materialFactory.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit });
     m_materialFactory.insert({ ShaderTypes::MToon0, MaterialFactory_MToon0 });
+    m_materialFactory.insert({ ShaderTypes::MToon1, MaterialFactory_MToon0 });
   }
 
   std::optional<MaterialWithUpdater> CreateMaterial(
@@ -140,11 +141,15 @@ public:
     m_materialMap.clear();
     m_srgbTextureMap.clear();
     m_linearTextureMap.clear();
-    m_materialMap.clear();
     m_drawableMap.clear();
   }
 
-  void ReleaseMaterial(int i) { m_materialMap.erase(i); }
+  void ReleaseMaterial(uint32_t i)
+  {
+    if (i < m_materialMap.size()) {
+      m_materialMap[i] = {};
+    }
+  }
 
   // for local shader
   void SetShaderDir(const std::filesystem::path& path)
@@ -275,17 +280,6 @@ public:
     return texture;
   }
 
-  std::shared_ptr<grapho::gl3::Material> CreateMaterialMToon1(
-    const gltfjson::typing::Root& root,
-    const gltfjson::typing::Bin& bin,
-    const gltfjson::typing::Material& src
-
-  )
-  {
-    App::Instance().Log(LogLevel::Error) << "vrm1 not implemented";
-    return {};
-  }
-
   std::optional<MaterialWithUpdater> GetOrCreateMaterial(
     const gltfjson::typing::Root& root,
     const gltfjson::typing::Bin& bin,
@@ -295,9 +289,11 @@ public:
       return {};
     }
 
-    auto found = m_materialMap.find(*id);
-    if (found != m_materialMap.end()) {
-      return found->second;
+    if (*id < m_materialMap.size()) {
+      auto found = m_materialMap[*id];
+      if (found.Material) {
+        return found;
+      }
     }
 
     auto src = root.Materials[*id];
@@ -333,10 +329,9 @@ public:
     }
 
     std::optional<MaterialWithUpdater> material;
-    // if (mtoon1) {
-    //   material = CreateMaterialMToon1(root, bin, src);
-    // } else
-    if (mtoon0) {
+    if (mtoon1) {
+      material = CreateMaterial(ShaderTypes::MToon1, root, bin, id);
+    } else if (mtoon0) {
       material = CreateMaterial(ShaderTypes::MToon0, root, bin, id);
     } else if (unlit) {
       material = CreateMaterial(ShaderTypes::Unlit, root, bin, id);
@@ -344,13 +339,15 @@ public:
       material = CreateMaterial(ShaderTypes::Pbr, root, bin, id);
     }
 
-    if (material) {
-      auto inserted = m_materialMap.insert({ *id, *material });
-      return inserted.first->second;
-    } else {
-      m_materialMap.insert({ *id, {} });
-      return {};
+    while (*id >= m_materialMap.size()) {
+      m_materialMap.push_back({});
     }
+    if (material) {
+      m_materialMap[*id] = *material;
+    } else {
+      m_materialMap[*id] = {};
+    }
+    return m_materialMap[*id];
   }
 
   std::shared_ptr<grapho::gl3::Vao> GetOrCreateMesh(
