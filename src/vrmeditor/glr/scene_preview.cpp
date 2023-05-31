@@ -234,6 +234,9 @@ ScenePreview::ShowScreenRect(const char* title,
                              float w,
                              float h)
 {
+  if (w <= 0 || h <= 0) {
+    return;
+  }
   auto sc = ImGui::GetCursorScreenPos();
   m_rt->ShowFbo(x, y, w, h, color);
   // top, right pivot

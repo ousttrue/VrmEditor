@@ -55,6 +55,9 @@ RenderTarget::Clear(int width, int height, const float color[4])
 void
 RenderTarget::ShowFbo(float x, float y, float w, float h, const float color[4])
 {
+  if (w <= 0 || h <= 0) {
+    return;
+  }
   ImGuizmo::SetDrawlist();
   ImGuizmo::SetRect(x, y, w, h);
 
