@@ -73,30 +73,30 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
         },
       },
     },
-    .Updater = [](auto &shader, auto &env, auto &draw, auto &shadow)
+    .UniformBinds
     {
-      shader->SetUniform("u_BaseColorFactor",draw.color);
-      shader->SetUniform("u_MetallicFactor",1.0f);
-      shader->SetUniform("u_RoughnessFactor",1.0f);
-      shader->SetUniform("u_Exposure",1.0f);
+      {"u_BaseColorFactor",[](auto &w, auto &l){ return l.MaterialRGBA(); }},
+      {"u_MetallicFactor",GetFloat(1.0f)},
+      {"u_RoughnessFactor",GetFloat(1.0f)},
+      {"u_Exposure",GetFloat(1.0f)},
 
-      shader->SetUniform("u_ModelMatrix",draw.model);
-      shader->SetUniform("u_ViewProjectionMatrix",env.viewprojection());
-      shader->SetUniform("u_EmissiveFactor",DirectX::XMFLOAT3{1,1,1});
-      shader->SetUniform("u_NormalMatrix",draw.normalMatrix);
-      shader->SetUniform("u_Camera",env.camPos);
+      {"u_ModelMatrix",[](auto &w, auto &l){ return l.ModelMatrix();}},
+      {"u_ViewProjectionMatrix",[](auto &w, auto &l){ return w.ViewProjectionMatrix();}},
+      {"u_EmissiveFactor",[](auto &w, auto &l){ return DirectX::XMFLOAT3{1,1,1};}},
+      {"u_NormalMatrix",[](auto &w, auto &l){ return l.NormalMatrix4();}},
+      {"u_Camera",[](auto &w, auto &l){return w.CameraPosition();}},
 
-      shader->SetUniform("u_LambertianEnvSampler",0);
-      shader->SetUniform("u_GGXEnvSampler",1);
-      shader->SetUniform("u_GGXLUT",2);
-      shader->SetUniform("u_CharlieEnvSampler",3);
-      shader->SetUniform("u_CharlieLUT",4);
-      shader->SetUniform("u_SheenELUT",5);
-      shader->SetUniform("u_NormalSampler",6);
-      shader->SetUniform("u_EmissiveSampler",7);
-      shader->SetUniform("u_OcclusionSampler",8);
-      shader->SetUniform("u_BaseColorSampler",9);
-      shader->SetUniform("u_MetallicRoughnessSampler",10);
+      {"u_LambertianEnvSampler",GetInt(0)},
+      {"u_GGXEnvSampler",GetInt(1)},
+      {"u_GGXLUT",GetInt(2)},
+      {"u_CharlieEnvSampler",GetInt(3)},
+      {"u_CharlieLUT",GetInt(4)},
+      {"u_SheenELUT",GetInt(5)},
+      {"u_NormalSampler",GetInt(6)},
+      {"u_EmissiveSampler",GetInt(7)},
+      {"u_OcclusionSampler",GetInt(8)},
+      {"u_BaseColorSampler",GetInt(9)},
+      {"u_MetallicRoughnessSampler",GetInt(10)},
      },
   };
 

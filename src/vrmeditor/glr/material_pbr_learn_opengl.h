@@ -19,32 +19,16 @@ MaterialFactory_Pbr_LearnOpenGL(const gltfjson::typing::Root& root,
       .SourceName ="pbr.frag",
       .Version = u8"#version 450",
     },
-    .Updater = [](auto &shader, auto &env, auto &draw, auto &shadow)
+    .UniformBinds=
     {
-      if (auto var = shader->Uniform("irradianceMap")) {
-        var->SetInt(0);
-      }
-      if (auto var = shader->Uniform("prefilterMap")) {
-        var->SetInt(1);
-      }
-      if (auto var = shader->Uniform("brdfLUT")) {
-        var->SetInt(2);
-      }
-      if (auto var = shader->Uniform("albedoMap")) {
-        var->SetInt(3);
-      }
-      if (auto var = shader->Uniform("normalMap")) {
-        var->SetInt(4);
-      }
-      if (auto var = shader->Uniform("metallicMap")) {
-        var->SetInt(5);
-      };
-      if (auto var = shader->Uniform("roughnessMap")) {
-        var->SetInt(6);
-      }
-      if (auto var = shader->Uniform("aoMap")) {
-        var->SetInt(7);
-      }
+      {"irradianceMap", GetInt(0)},
+      {"prefilterMap", GetInt(1)},
+      {"brdfLUT",GetInt(2)},
+      {"albedoMap",GetInt(3)},
+      {"normalMap",GetInt(4)},
+      {"metallicMap",GetInt(5)},
+      {"roughnessMap",GetInt(6)},
+      {"aoMap",GetInt(7)},
     },
   };
 

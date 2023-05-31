@@ -26,11 +26,11 @@
 #include <vrm/image.h>
 
 #include "material_error.h"
+#include "material_pbr_khronos.h"
+#include "material_pbr_learn_opengl.h"
 #include "material_shadow.h"
-// #include "material_pbr_khronos.h"
-// #include "material_pbr_learn_opengl.h"
-// #include "material_three_vrm.h"
-// #include "material_unlit.h"
+#include "material_three_vrm.h"
+#include "material_unlit.h"
 
 namespace glr {
 
@@ -83,6 +83,11 @@ class Gl3Renderer
   std::unordered_map<ShaderTypes, MaterialFactoryFunc> m_materialFactoryMap{
     { ShaderTypes::Error, MaterialFactory_Error },
     { ShaderTypes::Shadow, MaterialFactory_Shadow },
+    // { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL },
+    { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos },
+    { ShaderTypes::Unlit, MaterialFactory_Unlit },
+    { ShaderTypes::MToon1, MaterialFactory_MToon },
+    { ShaderTypes::MToon0, MaterialFactory_MToon },
   };
 
   grapho::gl3::Material::EnvVars m_env = {};
@@ -106,15 +111,6 @@ class Gl3Renderer
 
     m_envUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::EnvVars>();
     m_drawUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::DrawVars>();
-
-    // // m_materialFactoryMap.insert(
-    // //   { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL });
-    // m_materialFactoryMap.insert(
-    //   { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos });
-    // m_materialFactoryMap.insert({ ShaderTypes::Unlit, MaterialFactory_Unlit
-    // }); m_materialFactoryMap.insert({ ShaderTypes::MToon1,
-    // MaterialFactory_MToon }); m_materialFactoryMap.insert({
-    // ShaderTypes::MToon0, MaterialFactory_MToon });
   }
 
   std::shared_ptr<MaterialFactory> CreateMaterial(
@@ -437,14 +433,13 @@ public:
     m_envUbo->SetBindingPoint(0);
     m_draw.model = m;
     m_draw.CalcNormalMatrix();
-    WorldInfo world(env);
-    LocalInfo local(m);
+    WorldInfo world{ env };
 
     switch (pass) {
       case RenderPass::Color: {
         uint32_t drawOffset = 0;
         for (auto& primitive : mesh->m_primitives) {
-          DrawPrimitive(world, local, root, bin, vao, primitive, drawOffset);
+          DrawPrimitive(world, root, bin, vao, primitive, drawOffset);
           drawOffset += primitive.DrawCount * 4;
         }
         break;
@@ -457,7 +452,7 @@ public:
             m_shadow = *shadow;
           }
         }
-        m_shadow.Activate(m_shaderSource, world, local);
+        m_shadow.Activate(m_shaderSource, world, LocalInfo{ m_draw });
         uint32_t drawCount = 0;
         for (auto& primitive : mesh->m_primitives) {
           drawCount += primitive.DrawCount * 4;
@@ -469,7 +464,6 @@ public:
   }
 
   void DrawPrimitive(const WorldInfo& world,
-                     const LocalInfo& local,
                      const gltfjson::typing::Root& root,
                      const gltfjson::typing::Bin& bin,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
@@ -495,6 +489,7 @@ public:
       m_drawUbo->Upload(m_draw);
       m_drawUbo->SetBindingPoint(1);
 
+      LocalInfo local{ m_draw };
       material_factory->Activate(m_shaderSource, world, local);
 
       // state
@@ -528,7 +523,7 @@ public:
           m_error = *error;
         }
       }
-      m_error.Activate(m_shaderSource, world, local);
+      m_error.Activate(m_shaderSource, world, LocalInfo(m_draw));
     }
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
   }

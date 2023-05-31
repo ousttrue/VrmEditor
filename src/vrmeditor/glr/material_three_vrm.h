@@ -180,15 +180,15 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
       .Version =u8"#version 300 es", 
       .Precision = u8"mediump float",
     },
-    .Updater=[](auto &shader, auto &env, auto &draw, auto &shadow)
+    .UniformBinds
     {
-        shader->SetUniform("projectionMatrix",env.projection);
-        shader->SetUniform("viewMatrix",env.view);
-        shader->SetUniform("cameraPosition",env.camPos);
-        shader->SetUniform("modelMatrix",draw.model);
-        shader->SetUniform("normalMatrix",draw.normalMatrix3());
-        shader->SetUniform("modelViewMatrix",mult(draw.model, env.view));
-        shader->SetUniform("uvTransform",env.uvTransform());
+      {"projectionMatrix",[](auto &w,auto &l){return w.ProjectionMatrix();}},
+      {"viewMatrix",[](auto &w,auto &l){return w.ViewMatrix();}},
+      {"cameraPosition",[](auto &w,auto &l){return w.CameraPosition();}},
+      {"modelMatrix",[](auto &w,auto &l){return l.ModelMatrix();}},
+      {"normalMatrix",[](auto &w,auto &l){return l.NormalMatrix3();}},
+      {"modelViewMatrix",[](auto &w,auto &l){return mult(l.ModelMatrix(), w.ViewMatrix());}},
+      {"uvTransform",[](auto &w,auto &l){return l.UvTransformMatrix();}},
     },
   };
 

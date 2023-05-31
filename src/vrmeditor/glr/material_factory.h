@@ -15,17 +15,33 @@ namespace glr {
 struct WorldInfo
 {
   const RenderingEnv& m_env;
+
   DirectX::XMFLOAT4X4 ProjectionMatrix() const
   {
     return m_env.ProjectionMatrix;
   }
   DirectX::XMFLOAT4X4 ViewMatrix() const { return m_env.ViewMatrix; }
+  DirectX::XMFLOAT4X4 ViewProjectionMatrix() const
+  {
+    DirectX::XMFLOAT4X4 m;
+    DirectX::XMStoreFloat4x4(
+      &m,
+      DirectX::XMLoadFloat4x4(&m_env.ViewMatrix) *
+        DirectX::XMLoadFloat4x4(&m_env.ProjectionMatrix));
+    return m;
+  }
   DirectX::XMFLOAT4X4 ShadowMatrix() const { return m_env.ShadowMatrix; }
+  DirectX::XMFLOAT3 CameraPosition() const { return m_env.CameraPosition; }
 };
 struct LocalInfo
 {
-  const DirectX::XMFLOAT4X4& m_model;
-  DirectX::XMFLOAT4X4 ModelMatrix() const { return m_model; }
+  const grapho::gl3::Material::DrawVars& m_draw;
+
+  DirectX::XMFLOAT4X4 ModelMatrix() const { return m_draw.model; }
+  DirectX::XMFLOAT4X4 NormalMatrix4() const { return m_draw.normalMatrix; }
+  DirectX::XMFLOAT3X3 NormalMatrix3() const { return m_draw.normalMatrix3(); }
+  DirectX::XMFLOAT4 MaterialRGBA() const { return m_draw.color; }
+  DirectX::XMFLOAT3X3 UvTransformMatrix() const { return m_draw.uvTransform(); }
 };
 
 using UpdateShaderFunc =
@@ -163,6 +179,17 @@ struct ShaderFactory
 
 template<typename T>
 using GetterFunc = std::function<T(const WorldInfo&, const LocalInfo&)>;
+
+GetterFunc<int>
+GetInt(int value)
+{
+  return [value](auto, auto) { return value; };
+}
+GetterFunc<float>
+GetFloat(float value)
+{
+  return [value](auto, auto) { return value; };
+}
 
 struct UniformBind
 {
