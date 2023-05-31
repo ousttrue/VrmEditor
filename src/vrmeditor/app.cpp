@@ -14,6 +14,7 @@
 #include "docks/vrm_dock.h"
 #include "filewatcher.h"
 #include "fs_util.h"
+#include "glr/error_check.h"
 #include "glr/gl3renderer.h"
 #include "glr/rendering_env.h"
 #include "humanpose/humanpose_stream.h"
@@ -57,6 +58,7 @@ App::App()
   if (!window) {
     throw std::runtime_error("createWindow");
   }
+  GL_ErrorClear("CreateWindow");
 
   Log(LogLevel::Info) << "GL_VERSION: " << glGetString(GL_VERSION);
   Log(LogLevel::Info) << "GL_VENDOR: " << glGetString(GL_VENDOR);
@@ -331,6 +333,8 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 int
 App::Run()
 {
+  GL_ErrorClear("CreateWindow");
+
   // must after App::App
   m_lua->DoFile(m_ini);
 
@@ -356,6 +360,8 @@ App::Run()
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
+    ERROR_CHECK;
+
     m_watcher->Update();
 
     auto time = info->Time;

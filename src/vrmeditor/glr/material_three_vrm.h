@@ -174,11 +174,37 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
     .VS={
       .SourceName = "mtoon.vert",
       .Version = u8"#version 300 es",
+      .Codes{ VS_CODE },
+      .Macros = {
+        { u8"THREE_VRM_THREE_REVISION", 150 },
+        { u8"NUM_SPOT_LIGHT_COORDS", 4 },
+        { u8"NUM_CLIPPING_PLANES", 0 },
+        { u8"MTOON_USE_UV" },
+      },
     },
     .FS={
       .SourceName = "mtoon.frag",
       .Version =u8"#version 300 es", 
       .Precision = u8"mediump float",
+      .Codes{ FS_CODE },
+      .Macros = {
+        // { u8"DEBUG_LITSHADERATE" },
+        // { u8"DEBUG_UV" },
+        // { u8"DEBUG_NORMAL" },
+        { u8"USE_MAP" },
+        { u8"MTOON_USE_UV" },
+        { u8"THREE_VRM_THREE_REVISION", 150 },
+        { u8"NUM_SPOT_LIGHT_COORDS", 4 },
+        { u8"NUM_DIR_LIGHTS", 2 },
+        { u8"NUM_POINT_LIGHTS", 0 },
+        { u8"NUM_SPOT_LIGHTS", 0 },
+        { u8"NUM_RECT_AREA_LIGHTS", 0 },
+        { u8"NUM_HEMI_LIGHTS", 0 },
+        { u8"NUM_SPOT_LIGHT_MAPS", 0 },
+        { u8"NUM_CLIPPING_PLANES", 0 },
+        { u8"UNION_CLIPPING_PLANES", 0 },
+        { u8"isOrthographic", false },
+      },
     },
     .UniformBinds
     {
@@ -189,6 +215,12 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
       {"normalMatrix",[](auto &w,auto &l){return l.NormalMatrix3();}},
       {"modelViewMatrix",[](auto &w,auto &l){return mult(l.ModelMatrix(), w.ViewMatrix());}},
       {"uvTransform",[](auto &w,auto &l){return l.UvTransformMatrix();}},
+      {"map",GetInt(0)},
+      {"opacity",GetFloat(1)},
+      {"litFactor",[](auto, auto){return DirectX::XMFLOAT3{1,1,1};}},
+
+      {"directionalLights[0].direction", [](auto, auto){ return DirectX::XMFLOAT3(3,3,3);}},
+      {"directionalLights[0].color", [](auto, auto){ return DirectX::XMFLOAT3(1,1,1);}},
     },
   };
 
@@ -203,35 +235,33 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
         }
       }
     }
+
+    if (auto root_extensins = root.Extensions()) {
+      if (auto VRM = root_extensins->Get(u8"VRM")) {
+        if (auto props = VRM->Get(u8"materialProperties")) {
+          if (auto array = props->Array()) {
+            if (*materialId < array->size()) {
+              auto mtoonMaterial = (*array)[*materialId];
+              if (auto textures = mtoonMaterial->Get(u8"textureProperties")) {
+                if (auto obj = textures->Object()) {
+                  for (auto kv : *obj) {
+                    if (kv.first == u8"_MainTex") {
+                      if (auto pValue = kv.second->Ptr<float>()) {
+                        if (auto texture = GetOrCreateTexture(
+                              root, bin, (uint32_t)*pValue, ColorSpace::sRGB)) {
+                          ptr->Textures.push_back({ 0, texture });
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
-
-  // const gltfjson::tree::NodePtr& mtoon
-  ptr->VS.Macros.push_back({ u8"THREE_VRM_THREE_REVISION", 150 });
-  ptr->VS.Macros.push_back({ u8"NUM_SPOT_LIGHT_COORDS", 4 });
-  ptr->VS.Macros.push_back({ u8"NUM_CLIPPING_PLANES", 0 });
-  ptr->VS.Codes.push_back(VS_CODE);
-
-  ptr->VS.Macros.push_back({ u8"MTOON_USE_UV" });
-  ptr->FS.Macros.push_back({ u8"MTOON_USE_UV" });
-
-  ptr->FS.Macros.push_back({ u8"DEBUG_LITSHADERATE" });
-  // ptr->FS.Macros.push_back({ u8"DEBUG_UV" });
-  // ptr->FS.Macros.push_back({ u8"DEBUG_NORMAL" });
-
-  ptr->FS.Macros.push_back({ u8"THREE_VRM_THREE_REVISION", 150 });
-  ptr->FS.Macros.push_back({ u8"NUM_SPOT_LIGHT_COORDS", 4 });
-  ptr->FS.Macros.push_back({ u8"NUM_DIR_LIGHTS", 0 });
-  ptr->FS.Macros.push_back({ u8"NUM_POINT_LIGHTS", 0 });
-  ptr->FS.Macros.push_back({ u8"NUM_SPOT_LIGHTS", 0 });
-  ptr->FS.Macros.push_back({ u8"NUM_RECT_AREA_LIGHTS", 0 });
-  ptr->FS.Macros.push_back({ u8"NUM_HEMI_LIGHTS", 0 });
-  ptr->FS.Macros.push_back({ u8"NUM_SPOT_LIGHT_MAPS", 0 });
-  ptr->FS.Macros.push_back({ u8"NUM_CLIPPING_PLANES", 0 });
-  ptr->FS.Macros.push_back({ u8"UNION_CLIPPING_PLANES", 0 });
-  ptr->FS.Macros.push_back({ u8"isOrthographic", false });
-  ptr->FS.Codes.push_back(FS_CODE);
-
-  ptr->FS.Macros.push_back({ u8"USE_MAP" });
 
   return ptr;
 }

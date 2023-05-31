@@ -87,7 +87,7 @@ float getSpotAttenuation( const in float coneCosine, const in float penumbraCosi
 
 #if NUM_DIR_LIGHTS > 0
 
-	struct DirectionalLight {
+	uniform struct DirectionalLight {
 		vec3 direction;
 		vec3 color;
 	};

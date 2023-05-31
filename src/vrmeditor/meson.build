@@ -13,6 +13,7 @@ srcs = [
     'glr/overlay.cpp',
     'glr/rendering_env.cpp',
     'glr/shader_source.cpp',
+    'glr/error_check.cpp',
     'docks/gui.cpp',
     'docks/imlogger.cpp',
     'docks/vrm_dock.cpp',

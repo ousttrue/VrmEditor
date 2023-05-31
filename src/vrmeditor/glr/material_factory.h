@@ -1,4 +1,6 @@
 #pragma once
+#include "app.h"
+#include "error_check.h"
 #include "rendering_env.h"
 #include "shader_source.h"
 #include <DirectXMath.h>
@@ -125,8 +127,8 @@ struct ShaderFactory
   std::u8string Version;
   std::u8string Precision;
   std::vector<ShaderEnum> Enums;
-  std::vector<ShaderDefinition> Macros;
   std::vector<std::u8string> Codes;
+  std::vector<ShaderDefinition> Macros;
   std::u8string SourceExpanded;
   std::u8string FullSource;
 
@@ -230,16 +232,23 @@ struct MaterialFactory
         Material->Textures = Textures;
       }
     }
+    ERROR_CHECK;
     if (Material && Material->Shader) {
+      // Material->Shader->Use();
       Material->Activate();
+      GL_ErrorClear("UBO");
       for (auto& bind : UniformBinds) {
+        // GL_ErrorCheck("before %s", bind.Name.c_str());
         std::visit(
           [shader = Material->Shader, &bind, &world, &local](
             const auto& getter) {
             //
+            ERROR_CHECK;
             shader->SetUniform(bind.Name, getter(world, local));
+            ERROR_CHECK;
           },
           bind.Getter);
+        // GL_ErrorCheck("after %s", bind.Name.c_str());
       }
     }
   }

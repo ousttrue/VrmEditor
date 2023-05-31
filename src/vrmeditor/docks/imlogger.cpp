@@ -52,7 +52,8 @@ void
 ImLogger::End()
 {
   std::string str;
-  m_ss >> std::quoted(str);
+  // m_ss >> std::quoted(str);
+  str = m_ss.str();
   m_ss.str("");
   if (str.size()) {
 
