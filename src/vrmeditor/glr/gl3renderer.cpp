@@ -90,9 +90,9 @@ class Gl3Renderer
     { ShaderTypes::MToon0, MaterialFactory_MToon },
   };
 
-  grapho::gl3::Material::EnvVars m_env = {};
+  grapho::gl3::Material::WorldVars m_env = {};
   std::shared_ptr<grapho::gl3::Ubo> m_envUbo;
-  grapho::gl3::Material::DrawVars m_draw = {};
+  grapho::gl3::Material::LocalVars m_draw = {};
   std::shared_ptr<grapho::gl3::Ubo> m_drawUbo;
 
   uint32_t m_selected = 0;
@@ -109,8 +109,8 @@ class Gl3Renderer
       white,
     });
 
-    m_envUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::EnvVars>();
-    m_drawUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::DrawVars>();
+    m_envUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::WorldVars>();
+    m_drawUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::LocalVars>();
   }
 
   std::shared_ptr<MaterialFactory> CreateMaterial(
@@ -406,8 +406,6 @@ public:
               const runtimescene::DeformedMesh& deformed,
               const DirectX::XMFLOAT4X4& m)
   {
-    ERROR_CHECK;
-
     if (env.m_pbr) {
       env.m_pbr->Activate();
     }
@@ -422,7 +420,6 @@ public:
                                sizeof(runtimescene::Vertex),
                              deformed.Vertices.data());
     }
-    ERROR_CHECK;
 
     m_env.projection = env.ProjectionMatrix;
     m_env.view = env.ViewMatrix;
@@ -438,7 +435,6 @@ public:
     m_draw.CalcNormalMatrix();
     WorldInfo world{ env };
 
-    ERROR_CHECK;
     switch (pass) {
       case RenderPass::Color: {
         uint32_t drawOffset = 0;
@@ -465,7 +461,6 @@ public:
         break;
       }
     }
-    ERROR_CHECK;
   }
 
   void DrawPrimitive(const WorldInfo& world,
@@ -475,7 +470,6 @@ public:
                      const runtimescene::Primitive& primitive,
                      uint32_t drawOffset)
   {
-    ERROR_CHECK;
     auto material_factory = GetOrCreateMaterial(root, bin, primitive.Material);
     if (material_factory) {
       // update ubo
@@ -492,21 +486,17 @@ public:
           m_draw.color.w = pbr->BaseColorFactor[3];
         }
       }
-      ERROR_CHECK;
       m_drawUbo->Upload(m_draw);
       m_drawUbo->SetBindingPoint(1);
 
       LocalInfo local{ m_draw };
-      ERROR_CHECK;
       material_factory->Activate(m_shaderSource, world, local);
-      ERROR_CHECK;
 
       // state
       glEnable(GL_CULL_FACE);
       glFrontFace(GL_CCW);
       // glCullFace(GL_BGR);
       glEnable(GL_DEPTH_TEST);
-      ERROR_CHECK;
 
       switch (auto alphaMode = GetAlphaMode(root, primitive.Material)) {
         case gltfjson::format::AlphaModes::Opaque:
@@ -523,7 +513,6 @@ public:
       // m_program->Uniform("cutoff")->SetFloat(primitive.Material->AlphaCutoff);
       // m_program->Uniform("color")->SetFloat4(
       //   primitive.Material->Pbr.BaseColorFactor);
-      ERROR_CHECK;
 
       // texture->Activate(0);
     } else {
@@ -533,13 +522,10 @@ public:
               ShaderTypes::Error, root, bin, primitive.Material)) {
           m_error = *error;
         }
-        ERROR_CHECK;
       }
       m_error.Activate(m_shaderSource, world, LocalInfo(m_draw));
-      ERROR_CHECK;
     }
 
-    ERROR_CHECK;
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
     ERROR_CHECK;
   }

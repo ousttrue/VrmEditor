@@ -88,16 +88,33 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
     },
     .UniformBinds
     {
-      {"u_BaseColorFactor",[](auto &w, auto &l){ return l.MaterialRGBA(); }},
+      {"u_BaseColorFactor",[](auto &w, auto &l){ return l.ColorRGBA(); }},
       {"u_MetallicFactor",GetFloat(1.0f)},
       {"u_RoughnessFactor",GetFloat(1.0f)},
       {"u_Exposure",GetFloat(1.0f)},
 
       {"u_ModelMatrix",[](auto &w, auto &l){ return l.ModelMatrix();}},
       {"u_ViewProjectionMatrix",[](auto &w, auto &l){ return w.ViewProjectionMatrix();}},
-      {"u_EmissiveFactor",[](auto &w, auto &l){ return DirectX::XMFLOAT3{1,1,1};}},
+      {"u_EmissiveFactor",[](auto &w, auto &l){ return l.EmissiveRGB();}},
       {"u_NormalMatrix",[](auto &w, auto &l){ return l.NormalMatrix4();}},
       {"u_Camera",[](auto &w, auto &l){return w.CameraPosition();}},
+
+      {"u_Lights[0].color", [](auto &w,auto){
+        auto &c=w.m_env.LightColor; 
+        return DirectX::XMFLOAT3{c.x,c.y,c.z};
+      }},
+      {"u_Lights[0].intensity", (GetterFunc<float>)[](const WorldInfo &w, const LocalInfo &){
+        auto &c=w.m_env.LightColor; 
+        return c.w;
+      }},
+      {"u_Lights[0].direction", [](auto &w,auto){
+        auto &p=w.m_env.LightPosition; 
+        return DirectX::XMFLOAT3{-p.x,-p.y,-p.z};
+      }},
+      {"u_Lights[0].position", [](auto &w,auto){
+        auto &p=w.m_env.LightPosition; 
+        return DirectX::XMFLOAT3{p.x,p.y,p.z};
+      }},
 
       {"u_LambertianEnvSampler",GetInt(0)},
       {"u_GGXEnvSampler",GetInt(1)},

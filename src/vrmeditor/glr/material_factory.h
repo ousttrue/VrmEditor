@@ -37,13 +37,14 @@ struct WorldInfo
 };
 struct LocalInfo
 {
-  const grapho::gl3::Material::DrawVars& m_draw;
+  const grapho::gl3::Material::LocalVars& m_local;
 
-  DirectX::XMFLOAT4X4 ModelMatrix() const { return m_draw.model; }
-  DirectX::XMFLOAT4X4 NormalMatrix4() const { return m_draw.normalMatrix; }
-  DirectX::XMFLOAT3X3 NormalMatrix3() const { return m_draw.normalMatrix3(); }
-  DirectX::XMFLOAT4 MaterialRGBA() const { return m_draw.color; }
-  DirectX::XMFLOAT3X3 UvTransformMatrix() const { return m_draw.uvTransform(); }
+  DirectX::XMFLOAT4X4 ModelMatrix() const { return m_local.model; }
+  DirectX::XMFLOAT4X4 NormalMatrix4() const { return m_local.normalMatrix; }
+  DirectX::XMFLOAT3X3 NormalMatrix3() const { return m_local.normalMatrix3(); }
+  DirectX::XMFLOAT4 ColorRGBA() const { return m_local.color; }
+  DirectX::XMFLOAT3 EmissiveRGB() const { return m_local.emissiveColor; }
+  DirectX::XMFLOAT3X3 UvTransformMatrix() const { return m_local.uvTransform(); }
 };
 
 using UpdateShaderFunc =

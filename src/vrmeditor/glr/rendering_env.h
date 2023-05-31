@@ -22,6 +22,7 @@ struct RenderingEnv
   void RenderSkybox();
 
   // w == 0 ? directional : point
+  DirectX::XMFLOAT4 LightColor = { 1, 1, 1, 1 };
   DirectX::XMFLOAT4 LightPosition = { 2, 2, 2, 0 };
   DirectX::XMFLOAT4X4 ShadowMatrix;
 
