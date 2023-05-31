@@ -9,7 +9,8 @@ MaterialFactory_Error(const gltfjson::typing::Root& root,
                       std::optional<uint32_t>)
 {
   auto ptr = std::make_shared<MaterialFactory>();
-  *ptr=MaterialFactory{
+  *ptr = MaterialFactory
+  {
     .Type = ShaderTypes::Error,
     .VS = {
       .SourceName = "error.vert",
@@ -17,13 +18,15 @@ MaterialFactory_Error(const gltfjson::typing::Root& root,
     .FS = {
       .SourceName= "error.frag",
     },
-    .Updater = []( auto &shader, auto& env, auto& model, auto& shadow) {
-        shader->SetUniform("Projection",env.projection);
-        shader->SetUniform("View",env.view);
-        shader->SetUniform("Model",model.model);
-      },
+    .UniformBinds = {
+      {"Projection",
+        [](auto &world, auto &local){ return world.ProjectionMatrix();}},
+      {"View",
+        [](auto &world, auto &local){ return world.ViewMatrix();}},
+      {"Model",
+        [](auto &world, auto &local){ return local.ModelMatrix();}},
+    },
   };
   return ptr;
 }
-
 }

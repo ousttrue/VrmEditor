@@ -17,12 +17,13 @@ MaterialFactory_Shadow(const gltfjson::typing::Root& root,
     .FS = {
       "shadow.frag",
     },
-    .Updater=[](auto &shader, auto& env, auto& node, auto& shadow) {
-        shader->SetUniform("Projection",env.projection);
-        shader->SetUniform("View",env.view);
-        shader->SetUniform("Shadow",shadow);
-        shader->SetUniform("Model",node.model);
-      },
+    .UniformBinds={
+      {"Projection",
+        [](auto &world, auto &local){return world.ProjectionMatrix();}},
+      { "View",[](auto &world, auto &local){return world.ViewMatrix();}},
+      {"Shadow",[](auto &world, auto &local){return world.ShadowMatrix();}},
+      {"Model",[](auto &world, auto &local){return local.ModelMatrix();}},
+    },
   };
   return ptr;
 }

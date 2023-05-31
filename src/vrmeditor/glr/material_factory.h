@@ -1,4 +1,5 @@
 #pragma once
+#include "rendering_env.h"
 #include "shader_source.h"
 #include <DirectXMath.h>
 #include <expected>
@@ -11,11 +12,26 @@
 
 namespace glr {
 
+struct WorldInfo
+{
+  const RenderingEnv& m_env;
+  DirectX::XMFLOAT4X4 ProjectionMatrix() const
+  {
+    return m_env.ProjectionMatrix;
+  }
+  DirectX::XMFLOAT4X4 ViewMatrix() const { return m_env.ViewMatrix; }
+  DirectX::XMFLOAT4X4 ShadowMatrix() const { return m_env.ShadowMatrix; }
+};
+struct LocalInfo
+{
+  const DirectX::XMFLOAT4X4& m_model;
+  DirectX::XMFLOAT4X4 ModelMatrix() const { return m_model; }
+};
+
 using UpdateShaderFunc =
   std::function<void(const std::shared_ptr<grapho::gl3::ShaderProgram>& shader,
-                     const grapho::gl3::Material::EnvVars&,
-                     const grapho::gl3::Material::DrawVars&,
-                     const DirectX::XMFLOAT4X4& shadow)>;
+                     const WorldInfo&,
+                     const LocalInfo&)>;
 
 struct ShaderDefinition
 {
@@ -145,6 +161,21 @@ struct ShaderFactory
   }
 };
 
+template<typename T>
+using GetterFunc = std::function<T(const WorldInfo&, const LocalInfo&)>;
+
+struct UniformBind
+{
+  std::string Name;
+  std::variant<GetterFunc<int>,
+               GetterFunc<float>,
+               GetterFunc<DirectX::XMFLOAT3>,
+               GetterFunc<DirectX::XMFLOAT4>,
+               GetterFunc<DirectX::XMFLOAT3X3>,
+               GetterFunc<DirectX::XMFLOAT4X4>>
+    Getter;
+};
+
 struct MaterialFactory
 {
   ShaderTypes Type;
@@ -153,13 +184,13 @@ struct MaterialFactory
   std::expected<std::shared_ptr<grapho::gl3::ShaderProgram>, std::string>
     Compiled;
   std::shared_ptr<grapho::gl3::Material> Material;
-  UpdateShaderFunc Updater;
   std::list<grapho::gl3::TextureSlot> Textures;
+  // UpdateShaderFunc Updater;
+  std::list<UniformBind> UniformBinds;
 
   void Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
-                const grapho::gl3::Material::EnvVars& env,
-                const grapho::gl3::Material::DrawVars& model,
-                const DirectX::XMFLOAT4X4& shadow = {})
+                const WorldInfo& world,
+                const LocalInfo& local)
   {
     if (!Material) {
       Material = std::make_shared<grapho::gl3::Material>();
@@ -173,11 +204,16 @@ struct MaterialFactory
       }
     }
     if (Material && Material->Shader) {
-      if (Updater) {
-        Material->Shader->Use();
-        Updater(Material->Shader, env, model, shadow);
-      }
       Material->Activate();
+      for (auto& bind : UniformBinds) {
+        std::visit(
+          [shader = Material->Shader, &bind, &world, &local](
+            const auto& getter) {
+            //
+            shader->SetUniform(bind.Name, getter(world, local));
+          },
+          bind.Getter);
+      }
     }
   }
 };
