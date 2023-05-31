@@ -215,9 +215,12 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
       {"normalMatrix",[](auto &w,auto &l){return l.NormalMatrix3();}},
       {"modelViewMatrix",[](auto &w,auto &l){return mult(l.ModelMatrix(), w.ViewMatrix());}},
       {"uvTransform",[](auto &w,auto &l){return l.UvTransformMatrix();}},
+      {"mapUvTransform",[](auto &w,auto &l){return l.UvTransformMatrix();}},
       {"map",GetInt(0)},
       {"opacity",GetFloat(1)},
       {"litFactor",[](auto, auto){return DirectX::XMFLOAT3{1,1,1};}},
+      {"ambientLightColor",[](auto, auto){return DirectX::XMFLOAT3{1,1,1};}},
+      {"shadeColorFactor",[](auto, auto){return DirectX::XMFLOAT3{0,0,0};}},
 
       {"directionalLights[0].direction", [](auto, auto){ return DirectX::XMFLOAT3(3,3,3);}},
       {"directionalLights[0].color", [](auto, auto){ return DirectX::XMFLOAT3(1,1,1);}},
@@ -247,8 +250,11 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
                   for (auto kv : *obj) {
                     if (kv.first == u8"_MainTex") {
                       if (auto pValue = kv.second->Ptr<float>()) {
-                        if (auto texture = GetOrCreateTexture(
-                              root, bin, (uint32_t)*pValue, ColorSpace::sRGB)) {
+                        if (auto texture =
+                              GetOrCreateTexture(root,
+                                                 bin,
+                                                 (uint32_t)*pValue,
+                                                 ColorSpace::Linear)) {
                           ptr->Textures.push_back({ 0, texture });
                         }
                       }

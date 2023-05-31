@@ -20,6 +20,11 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
     .VS={
       .SourceName = "khronos/primitive.vert",
       .Version=u8"#version 300 es",
+      .Macros{
+        { u8"HAS_NORMAL_VEC3", 1 },
+        { u8"HAS_POSITION_VEC3", 1 },
+        { u8"HAS_TEXCOORD_0_VEC2", 1 },
+      },
     },
     .FS={
       .SourceName = "khronos/pbr.frag",
@@ -72,6 +77,14 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
           .Selected = {u8"ALPHAMODE", 0},
         },
       },
+      .Macros = {
+        { u8"MATERIAL_METALLICROUGHNESS", 1 },
+        { u8"HAS_NORMAL_VEC3", 1 },
+        { u8"HAS_POSITION_VEC3", 1 },
+        { u8"HAS_TEXCOORD_0_VEC2", 1 },
+        { u8"USE_PUNCTUAL", 1 },
+        { u8"LIGHT_COUNT", 1 },
+      },
     },
     .UniformBinds
     {
@@ -100,16 +113,6 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
      },
   };
 
-  //
-  // vs
-  //
-  ptr->VS.Macros.push_back({ u8"HAS_NORMAL_VEC3", 1 });
-  ptr->VS.Macros.push_back({ u8"HAS_POSITION_VEC3", 1 });
-  ptr->VS.Macros.push_back({ u8"HAS_TEXCOORD_0_VEC2", 1 });
-
-  //
-  // fs
-  //
   std::shared_ptr<grapho::gl3::Texture> albedo;
   std::shared_ptr<grapho::gl3::Texture> metallic_roughness;
   std::shared_ptr<grapho::gl3::Texture> normal;
@@ -140,14 +143,6 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
         root, bin, emissiveTexture->Index(), ColorSpace::sRGB);
     }
   }
-
-  ptr->FS.Macros.push_back({ u8"MATERIAL_METALLICROUGHNESS", 1 });
-  ptr->FS.Macros.push_back({ u8"HAS_NORMAL_VEC3", 1 });
-  ptr->FS.Macros.push_back({ u8"HAS_POSITION_VEC3", 1 });
-  ptr->FS.Macros.push_back({ u8"HAS_TEXCOORD_0_VEC2", 1 });
-  ptr->FS.Macros.push_back({ u8"USE_PUNCTUAL", 1 });
-  ptr->FS.Macros.push_back({ u8"LIGHT_COUNT", 1 });
-  // "USE_IBL 1"
 
   if (normal) {
     ptr->FS.Macros.push_back({ u8"HAS_NORMAL_MAP", 1 });
