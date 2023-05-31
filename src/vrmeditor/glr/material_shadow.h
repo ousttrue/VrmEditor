@@ -19,10 +19,10 @@ MaterialFactory_Shadow(const gltfjson::typing::Root& root,
     },
     .UniformBinds={
       {"Projection",
-        [](auto &world, auto &local){return world.ProjectionMatrix();}},
-      { "View",[](auto &world, auto &local){return world.ViewMatrix();}},
-      {"Shadow",[](auto &world, auto &local){return world.ShadowMatrix();}},
-      {"Model",[](auto &world, auto &local){return local.ModelMatrix();}},
+        [](auto &world, auto &local, auto){return world.ProjectionMatrix();}},
+      { "View",[](auto &world, auto &local, auto){return world.ViewMatrix();}},
+      {"Shadow",[](auto &world, auto &local, auto){return world.ShadowMatrix();}},
+      {"Model",[](auto &world, auto &local, auto){return local.ModelMatrix();}},
     },
   };
   return ptr;

@@ -452,7 +452,7 @@ public:
             m_shadow = *shadow;
           }
         }
-        m_shadow.Activate(m_shaderSource, world, LocalInfo{ m_draw });
+        m_shadow.Activate(m_shaderSource, world, LocalInfo{ m_draw }, {});
         uint32_t drawCount = 0;
         for (auto& primitive : mesh->m_primitives) {
           drawCount += primitive.DrawCount * 4;
@@ -490,7 +490,7 @@ public:
       m_drawUbo->SetBindingPoint(1);
 
       LocalInfo local{ m_draw };
-      material_factory->Activate(m_shaderSource, world, local);
+      material_factory->Activate(m_shaderSource, world, local, gltfMaterial.m_json);
 
       // state
       glEnable(GL_CULL_FACE);
@@ -523,7 +523,7 @@ public:
           m_error = *error;
         }
       }
-      m_error.Activate(m_shaderSource, world, LocalInfo(m_draw));
+      m_error.Activate(m_shaderSource, world, LocalInfo(m_draw), {});
     }
 
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);

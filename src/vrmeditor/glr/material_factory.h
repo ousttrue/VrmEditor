@@ -44,7 +44,10 @@ struct LocalInfo
   DirectX::XMFLOAT3X3 NormalMatrix3() const { return m_local.normalMatrix3(); }
   DirectX::XMFLOAT4 ColorRGBA() const { return m_local.color; }
   DirectX::XMFLOAT3 EmissiveRGB() const { return m_local.emissiveColor; }
-  DirectX::XMFLOAT3X3 UvTransformMatrix() const { return m_local.uvTransform(); }
+  DirectX::XMFLOAT3X3 UvTransformMatrix() const
+  {
+    return m_local.uvTransform();
+  }
 };
 
 using UpdateShaderFunc =
@@ -181,17 +184,19 @@ struct ShaderFactory
 };
 
 template<typename T>
-using GetterFunc = std::function<T(const WorldInfo&, const LocalInfo&)>;
+using GetterFunc = std::function<T(const WorldInfo&,
+                                   const LocalInfo&,
+                                   const gltfjson::tree::NodePtr& material)>;
 
 GetterFunc<int>
 GetInt(int value)
 {
-  return [value](auto, auto) { return value; };
+  return [value](auto, auto, auto) { return value; };
 }
 GetterFunc<float>
 GetFloat(float value)
 {
-  return [value](auto, auto) { return value; };
+  return [value](auto, auto, auto) { return value; };
 }
 
 struct UniformBind
@@ -215,12 +220,12 @@ struct MaterialFactory
     Compiled;
   std::shared_ptr<grapho::gl3::Material> Material;
   std::list<grapho::gl3::TextureSlot> Textures;
-  // UpdateShaderFunc Updater;
   std::list<UniformBind> UniformBinds;
 
   void Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                 const WorldInfo& world,
-                const LocalInfo& local)
+                const LocalInfo& local,
+                const gltfjson::tree::NodePtr& material)
   {
     if (!Material) {
       Material = std::make_shared<grapho::gl3::Material>();
@@ -233,7 +238,6 @@ struct MaterialFactory
         Material->Textures = Textures;
       }
     }
-    ERROR_CHECK;
     if (Material && Material->Shader) {
       // Material->Shader->Use();
       Material->Activate();
@@ -241,12 +245,10 @@ struct MaterialFactory
       for (auto& bind : UniformBinds) {
         // GL_ErrorCheck("before %s", bind.Name.c_str());
         std::visit(
-          [shader = Material->Shader, &bind, &world, &local](
+          [shader = Material->Shader, &bind, &world, &local, &material](
             const auto& getter) {
             //
-            ERROR_CHECK;
-            shader->SetUniform(bind.Name, getter(world, local));
-            ERROR_CHECK;
+            shader->SetUniform(bind.Name, getter(world, local, material));
           },
           bind.Getter);
         // GL_ErrorCheck("after %s", bind.Name.c_str());

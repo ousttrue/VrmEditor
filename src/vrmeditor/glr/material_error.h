@@ -20,11 +20,11 @@ MaterialFactory_Error(const gltfjson::typing::Root& root,
     },
     .UniformBinds = {
       {"Projection",
-        [](auto &world, auto &local){ return world.ProjectionMatrix();}},
+        [](auto &world, auto &local, auto){ return world.ProjectionMatrix();}},
       {"View",
-        [](auto &world, auto &local){ return world.ViewMatrix();}},
+        [](auto &world, auto &local, auto){ return world.ViewMatrix();}},
       {"Model",
-        [](auto &world, auto &local){ return local.ModelMatrix();}},
+        [](auto &world, auto &local, auto){ return local.ModelMatrix();}},
     },
   };
   return ptr;
