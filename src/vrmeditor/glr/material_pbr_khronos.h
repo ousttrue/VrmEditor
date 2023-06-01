@@ -85,7 +85,7 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
         { u8"LIGHT_COUNT", 1 },
       },
     },
-    .UniformBinds
+    .UniformGetterMap
     {
       {"u_BaseColorFactor",[](auto &w, auto &l, auto){ return l.ColorRGBA(); }},
       {"u_MetallicFactor",GetFloat(1.0f)},

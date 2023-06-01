@@ -8,6 +8,7 @@
 #include <functional>
 #include <gltfjson.h>
 #include <grapho/gl3/shader.h>
+#include <grapho/gl3/shader_type_name.h>
 #include <grapho/gl3/texture.h>
 #include <grapho/vars.h>
 #include <optional>
@@ -201,17 +202,24 @@ GetFloat(float value)
   return [value](auto, auto, auto) { return value; };
 }
 
-struct UniformBind
-{
-  std::string Name;
-  std::variant<GetterFunc<int>,
-               GetterFunc<float>,
-               GetterFunc<DirectX::XMFLOAT3>,
-               GetterFunc<DirectX::XMFLOAT4>,
-               GetterFunc<DirectX::XMFLOAT3X3>,
-               GetterFunc<DirectX::XMFLOAT4X4>>
-    Getter;
-};
+using IntGetter = GetterFunc<int>;
+using FloatGetter = GetterFunc<float>;
+using Vec3Getter = GetterFunc<DirectX::XMFLOAT3>;
+using Vec4Getter = GetterFunc<DirectX::XMFLOAT4>;
+using Mat3Getter = GetterFunc<DirectX::XMFLOAT3X3>;
+using Mat4Getter = GetterFunc<DirectX::XMFLOAT4X4>;
+
+using GetterVariant = std::variant<IntGetter,
+                                   FloatGetter,
+                                   Vec3Getter,
+                                   Vec4Getter,
+                                   Mat3Getter,
+                                   Mat4Getter>;
+
+using BindFunc = std::function<void(const WorldInfo&,
+
+                                    const LocalInfo&,
+                                    const gltfjson::tree::NodePtr& material)>;
 
 struct MaterialFactory
 {
@@ -221,7 +229,9 @@ struct MaterialFactory
   std::expected<std::shared_ptr<grapho::gl3::ShaderProgram>, std::string>
     Compiled = std::unexpected{ "init" };
   std::list<grapho::gl3::TextureSlot> Textures;
-  std::list<UniformBind> UniformBinds;
+
+  std::unordered_map<std::string, GetterVariant> UniformGetterMap;
+  std::vector<std::optional<GetterVariant>> UniformGetters;
 
   void Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                 const WorldInfo& world,
@@ -232,6 +242,20 @@ struct MaterialFactory
       auto vs = VS.Expand(Type, shaderSource);
       auto fs = FS.Expand(Type, shaderSource);
       Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
+
+      // match binding
+      if (Compiled) {
+        auto shader = *Compiled;
+        UniformGetters.clear();
+        for (auto& u : shader->Uniforms) {
+          auto found = UniformGetterMap.find(u.Name);
+          if (found != UniformGetterMap.end()) {
+            UniformGetters.push_back(found->second);
+          } else {
+            UniformGetters.push_back({});
+          }
+        }
+      }
     }
     if (Compiled) {
       auto shader = *Compiled;
@@ -239,14 +263,26 @@ struct MaterialFactory
       for (auto& texture : Textures) {
         texture.Activate();
       }
-      GL_ErrorClear("UBO");
-      for (auto& bind : UniformBinds) {
-        std::visit(
-          [&shader, &bind, &world, &local, &material](const auto& getter) {
-            //
-            shader->SetUniform(bind.Name, getter(world, local, material));
-          },
-          bind.Getter);
+      for (size_t i = 0; i < shader->Uniforms.size(); ++i) {
+        auto& u = shader->Uniforms[i];
+        if (u.Location != -1) {
+          auto& g = UniformGetters[i];
+          if (g) {
+#ifndef NDEBUG
+            std::string type_name = grapho::gl3::ShaderTypeName(u.Type);
+            auto debug = shader->Uniform(u.Name);
+            assert(debug->Location == u.Location);
+#endif
+            GL_ErrorCheck("before");
+            std::visit(
+              [&u, &world, &local, &material](const auto& getter) {
+                //
+                u.Set(getter(world, local, material));
+              },
+              *g);
+            GL_ErrorClear("after");
+          }
+        }
       }
     }
   }

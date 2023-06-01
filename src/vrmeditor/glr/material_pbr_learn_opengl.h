@@ -19,7 +19,7 @@ MaterialFactory_Pbr_LearnOpenGL(const gltfjson::typing::Root& root,
       .SourceName ="pbr.frag",
       .Version = u8"#version 450",
     },
-    .UniformBinds=
+    .UniformGetterMap=
     {
       {"irradianceMap", GetInt(0)},
       {"prefilterMap", GetInt(1)},

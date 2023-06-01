@@ -18,7 +18,7 @@ MaterialFactory_Error(const gltfjson::typing::Root& root,
     .FS = {
       .SourceName= "error.frag",
     },
-    .UniformBinds = {
+    .UniformGetterMap = {
       {"Projection",
         [](auto &world, auto &local, auto){ return world.ProjectionMatrix();}},
       {"View",

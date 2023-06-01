@@ -17,7 +17,7 @@ MaterialFactory_Shadow(const gltfjson::typing::Root& root,
     .FS = {
       "shadow.frag",
     },
-    .UniformBinds={
+    .UniformGetterMap={
       {"Projection",
         [](auto &world, auto &local, auto){return world.ProjectionMatrix();}},
       { "View",[](auto &world, auto &local, auto){return world.ViewMatrix();}},

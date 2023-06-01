@@ -205,7 +205,7 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
         { u8"isOrthographic", false },
       },
     },
-    .UniformBinds
+    .UniformGetterMap
     {
       {"projectionMatrix",[](auto &w,auto &l, auto){return w.ProjectionMatrix();}},
       {"viewMatrix",[](auto &w,auto &l, auto){return w.ViewMatrix();}},

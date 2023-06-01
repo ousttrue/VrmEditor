@@ -16,6 +16,7 @@
 #include <grapho/gl3/texture.h>
 #include <grapho/gl3/ubo.h>
 #include <grapho/gl3/vao.h>
+#include <grapho/imgui/csscolor.h>
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <iostream>
@@ -604,19 +605,33 @@ public:
             auto shader = *compiled;
 
             ImGui::TextUnformatted("uniform variables");
-            std::array<const char*, 4> cols = {
-              "location", "type", "name", "binding"
+            std::array<const char*, 5> cols = {
+              "index", "location", "type", "name", "binding"
             };
             if (grapho::imgui::BeginTableColumns("uniforms", cols)) {
               for (int i = 0; i < shader->Uniforms.size(); ++i) {
                 ImGui::TableNextRow();
-                auto& var = shader->Uniforms[i];
+                auto& u = shader->Uniforms[i];
+                if (u.Location == -1) {
+                  ImGui::BeginDisabled(true);
+                  ImGui::PushStyleColor(ImGuiCol_Text, grapho::imgui::gray);
+                }
                 ImGui::TableSetColumnIndex(0);
                 ImGui::Text("%d", i);
                 ImGui::TableSetColumnIndex(1);
-                ImGui::TextUnformatted(grapho::gl3::ShaderTypeName(var.Type));
+                ImGui::Text("%d", u.Location);
                 ImGui::TableSetColumnIndex(2);
-                ImGui::TextUnformatted(var.Name.c_str());
+                ImGui::TextUnformatted(grapho::gl3::ShaderTypeName(u.Type));
+                ImGui::TableSetColumnIndex(3);
+                ImGui::TextUnformatted(u.Name.c_str());
+                if (factory->UniformGetters[i]) {
+                  ImGui::TableSetColumnIndex(4);
+                  ImGui::TextUnformatted("OK");
+                }
+                if (u.Location == -1) {
+                  ImGui::PopStyleColor();
+                  ImGui::EndDisabled();
+                }
               }
               ImGui::EndTable();
             }

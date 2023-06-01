@@ -1,5 +1,4 @@
 #include "vrm_dock.h"
-#include "csscolor.h"
 #include <imgui.h>
 
 struct SliderColor
