@@ -602,12 +602,23 @@ public:
         if (ImGui::BeginTabItem("Shader")) {
           if (auto compiled = factory->Compiled) {
             auto shader = *compiled;
-            for (int i = 0; i < shader->Uniforms.size(); ++i) {
-              auto& var = shader->Uniforms[i];
-              ImGui::Text("#%d %s %s",
-                          i,
-                          grapho::gl3::ShaderTypeName(var.Type),
-                          var.Name.c_str());
+
+            ImGui::TextUnformatted("uniform variables");
+            std::array<const char*, 4> cols = {
+              "location", "type", "name", "binding"
+            };
+            if (grapho::imgui::BeginTableColumns("uniforms", cols)) {
+              for (int i = 0; i < shader->Uniforms.size(); ++i) {
+                ImGui::TableNextRow();
+                auto& var = shader->Uniforms[i];
+                ImGui::TableSetColumnIndex(0);
+                ImGui::Text("%d", i);
+                ImGui::TableSetColumnIndex(1);
+                ImGui::TextUnformatted(grapho::gl3::ShaderTypeName(var.Type));
+                ImGui::TableSetColumnIndex(2);
+                ImGui::TextUnformatted(var.Name.c_str());
+              }
+              ImGui::EndTable();
             }
           } else {
             if (ImGui::CollapsingHeader("Error")) {
