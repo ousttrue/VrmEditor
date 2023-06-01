@@ -219,7 +219,7 @@ struct MaterialFactory
   ShaderFactory VS;
   ShaderFactory FS;
   std::expected<std::shared_ptr<grapho::gl3::ShaderProgram>, std::string>
-    Compiled;
+    Compiled = std::unexpected{ "init" };
   std::list<grapho::gl3::TextureSlot> Textures;
   std::list<UniformBind> UniformBinds;
 

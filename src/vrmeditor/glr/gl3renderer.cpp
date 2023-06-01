@@ -586,20 +586,14 @@ public:
       if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
         if (ImGui::BeginTabItem("VS")) {
           if (ShowShader(factory->VS, m_vsEditor)) {
-            // factory->Compiled = {};
             factory->Compiled = std::unexpected{ "clear" };
-            // factory->VS.Expand(factory->Type, m_shaderSource);
-            // m_vsEditor.SetText((const char*)factory->VS.FullSource.c_str());
             m_vsEditor.SetText("");
           }
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("FS")) {
           if (ShowShader(factory->FS, m_fsEditor)) {
-            // factory->Compiled = {};
             factory->Compiled = std::unexpected{ "clear" };
-            // factory->FS.Expand(factory->Type, m_shaderSource);
-            // m_fsEditor.SetText((const char*)factory->FS.FullSource.c_str());
             m_fsEditor.SetText("");
           }
           ImGui::EndTabItem();
