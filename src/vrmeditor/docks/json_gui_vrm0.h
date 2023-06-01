@@ -1,7 +1,7 @@
 #pragma once
 #include "json_gui.h"
-#include "gui_table.h"
 #include "showgui.h"
+#include <grapho/imgui/widgets.h>
 
 // inline ShowGuiFunc
 // JsonGuiVrm0ColliderList(const std::shared_ptr<libvrm::gltf::Scene>& scene,
@@ -13,7 +13,7 @@
 //   // return [colliders]() {
 //   //   std::array<const char*, 3> cols = { "index", "offet", "radius" };
 //   //   std::string no_name;
-//   //   if (GuiTable("##colliders", cols)) {
+//   //   if (grapho::imgui::BeginTableColumns("##colliders", cols)) {
 //   //     for (int i = 0; i < colliders.size(); ++i) {
 //   //       auto& collider = colliders[i];
 //   //       ImGui::TableNextRow();
@@ -51,7 +51,7 @@ JsonGuiVrm0SpringList(std::u8string_view jsonpath)
     std::string no_name;
 
     if (auto springs = node->Array()) {
-      if (GuiTable("##springs", cols)) {
+      if (grapho::imgui::BeginTableColumns("##springs", cols)) {
         for (int i = 0; i < springs->size(); ++i) {
           auto& spring = (*springs)[i];
           ImGui::TableNextRow();

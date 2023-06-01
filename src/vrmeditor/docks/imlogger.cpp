@@ -1,7 +1,7 @@
 #include "imlogger.h"
-#include "gui_table.h"
 #include "windows_helper.h"
 #include <array>
+#include <grapho/imgui/widgets.h>
 
 ImLogger::ImLogger()
 {
@@ -113,7 +113,7 @@ ImLogger::Draw()
       "level",
       "message",
     };
-    if (GuiTable("##log_table", cols)) {
+    if (grapho::imgui::BeginTableColumns("##log_table", cols)) {
       ImGuiListClipper clipper;
       clipper.Begin(Logs.size());
       while (clipper.Step()) {

@@ -12,6 +12,7 @@
 #include <cuber/mesh.h>
 #include <grapho/gl3/pbr.h>
 #include <grapho/gl3/shader.h>
+#include <grapho/gl3/shader_type_name.h>
 #include <grapho/gl3/texture.h>
 #include <grapho/gl3/ubo.h>
 #include <grapho/gl3/vao.h>
@@ -598,11 +599,21 @@ public:
           }
           ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("Error")) {
-          if (factory->Compiled) {
-
+        if (ImGui::BeginTabItem("Shader")) {
+          if (auto compiled = factory->Compiled) {
+            auto shader = *compiled;
+            for (int i = 0; i < shader->Uniforms.size(); ++i) {
+              auto& var = shader->Uniforms[i];
+              ImGui::Text("#%d %s %s",
+                          i,
+                          grapho::gl3::ShaderTypeName(var.Type),
+                          var.Name.c_str());
+            }
           } else {
-            ImGui::TextWrapped("error: %s", factory->Compiled.error().c_str());
+            if (ImGui::CollapsingHeader("Error")) {
+              ImGui::TextWrapped("error: %s",
+                                 factory->Compiled.error().c_str());
+            }
           }
           ImGui::EndTabItem();
         }
