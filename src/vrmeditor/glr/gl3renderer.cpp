@@ -90,10 +90,10 @@ class Gl3Renderer
     { ShaderTypes::MToon0, MaterialFactory_MToon },
   };
 
-  grapho::gl3::Material::WorldVars m_env = {};
-  std::shared_ptr<grapho::gl3::Ubo> m_envUbo;
-  grapho::gl3::Material::LocalVars m_draw = {};
-  std::shared_ptr<grapho::gl3::Ubo> m_drawUbo;
+  grapho::WorldVars m_world = {};
+  std::shared_ptr<grapho::gl3::Ubo> m_worldUbo;
+  grapho::LocalVars m_local = {};
+  std::shared_ptr<grapho::gl3::Ubo> m_localUbo;
 
   uint32_t m_selected = 0;
 
@@ -109,8 +109,8 @@ class Gl3Renderer
       white,
     });
 
-    m_envUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::WorldVars>();
-    m_drawUbo = grapho::gl3::Ubo::Create<grapho::gl3::Material::LocalVars>();
+    m_worldUbo = grapho::gl3::Ubo::Create<grapho::WorldVars>();
+    m_localUbo = grapho::gl3::Ubo::Create<grapho::LocalVars>();
   }
 
   std::shared_ptr<MaterialFactory> CreateMaterial(
@@ -421,18 +421,18 @@ public:
                              deformed.Vertices.data());
     }
 
-    m_env.projection = env.ProjectionMatrix;
-    m_env.view = env.ViewMatrix;
-    m_env.camPos = {
+    m_world.projection = env.ProjectionMatrix;
+    m_world.view = env.ViewMatrix;
+    m_world.camPos = {
       env.CameraPosition.x,
       env.CameraPosition.y,
       env.CameraPosition.z,
       1,
     };
-    m_envUbo->Upload(m_env);
-    m_envUbo->SetBindingPoint(0);
-    m_draw.model = m;
-    m_draw.CalcNormalMatrix();
+    m_worldUbo->Upload(m_world);
+    m_worldUbo->SetBindingPoint(0);
+    m_local.model = m;
+    m_local.CalcNormalMatrix();
     WorldInfo world{ env };
 
     switch (pass) {
@@ -446,13 +446,13 @@ public:
       }
 
       case RenderPass::ShadowMatrix: {
-        if (!m_shadow.Material) {
+        if (!m_shadow.Compiled) {
           if (auto shadow =
                 CreateMaterial(ShaderTypes::Shadow, root, bin, {})) {
             m_shadow = *shadow;
           }
         }
-        m_shadow.Activate(m_shaderSource, world, LocalInfo{ m_draw }, {});
+        m_shadow.Activate(m_shaderSource, world, LocalInfo{ m_local }, {});
         uint32_t drawCount = 0;
         for (auto& primitive : mesh->m_primitives) {
           drawCount += primitive.DrawCount * 4;
@@ -475,22 +475,23 @@ public:
       // update ubo
       auto gltfMaterial = root.Materials[*primitive.Material];
       if (auto cutoff = gltfMaterial.AlphaCutoff()) {
-        m_draw.cutoff.x = *cutoff;
+        m_local.cutoff.x = *cutoff;
       }
-      m_draw.color = { 1, 1, 1, 1 };
+      m_local.color = { 1, 1, 1, 1 };
       if (auto pbr = gltfMaterial.PbrMetallicRoughness()) {
         if (pbr->BaseColorFactor.size() == 4) {
-          m_draw.color.x = pbr->BaseColorFactor[0];
-          m_draw.color.y = pbr->BaseColorFactor[1];
-          m_draw.color.z = pbr->BaseColorFactor[2];
-          m_draw.color.w = pbr->BaseColorFactor[3];
+          m_local.color.x = pbr->BaseColorFactor[0];
+          m_local.color.y = pbr->BaseColorFactor[1];
+          m_local.color.z = pbr->BaseColorFactor[2];
+          m_local.color.w = pbr->BaseColorFactor[3];
         }
       }
-      m_drawUbo->Upload(m_draw);
-      m_drawUbo->SetBindingPoint(1);
+      m_localUbo->Upload(m_local);
+      m_localUbo->SetBindingPoint(1);
 
-      LocalInfo local{ m_draw };
-      material_factory->Activate(m_shaderSource, world, local, gltfMaterial.m_json);
+      LocalInfo local{ m_local };
+      material_factory->Activate(
+        m_shaderSource, world, local, gltfMaterial.m_json);
 
       // state
       glEnable(GL_CULL_FACE);
@@ -517,13 +518,13 @@ public:
       // texture->Activate(0);
     } else {
       // error
-      if (!m_error.Material) {
+      if (!m_error.Compiled) {
         if (auto error = CreateMaterial(
               ShaderTypes::Error, root, bin, primitive.Material)) {
           m_error = *error;
         }
       }
-      m_error.Activate(m_shaderSource, world, LocalInfo(m_draw), {});
+      m_error.Activate(m_shaderSource, world, LocalInfo(m_local), {});
     }
 
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
@@ -586,7 +587,7 @@ public:
         if (ImGui::BeginTabItem("VS")) {
           if (ShowShader(factory->VS, m_vsEditor)) {
             // factory->Compiled = {};
-            factory->Material = {};
+            factory->Compiled = std::unexpected{ "clear" };
             // factory->VS.Expand(factory->Type, m_shaderSource);
             // m_vsEditor.SetText((const char*)factory->VS.FullSource.c_str());
             m_vsEditor.SetText("");
@@ -596,7 +597,7 @@ public:
         if (ImGui::BeginTabItem("FS")) {
           if (ShowShader(factory->FS, m_fsEditor)) {
             // factory->Compiled = {};
-            factory->Material = {};
+            factory->Compiled = std::unexpected{ "clear" };
             // factory->FS.Expand(factory->Type, m_shaderSource);
             // m_fsEditor.SetText((const char*)factory->FS.FullSource.c_str());
             m_fsEditor.SetText("");
@@ -604,7 +605,7 @@ public:
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Error")) {
-          if (factory->Material) {
+          if (factory->Compiled) {
 
           } else {
             ImGui::TextWrapped("error: %s", factory->Compiled.error().c_str());

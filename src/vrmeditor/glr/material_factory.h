@@ -7,7 +7,9 @@
 #include <expected>
 #include <functional>
 #include <gltfjson.h>
-#include <grapho/gl3/material.h>
+#include <grapho/gl3/shader.h>
+#include <grapho/gl3/texture.h>
+#include <grapho/vars.h>
 #include <optional>
 #include <sstream>
 #include <variant>
@@ -37,7 +39,7 @@ struct WorldInfo
 };
 struct LocalInfo
 {
-  const grapho::gl3::Material::LocalVars& m_local;
+  const grapho::LocalVars& m_local;
 
   DirectX::XMFLOAT4X4 ModelMatrix() const { return m_local.model; }
   DirectX::XMFLOAT4X4 NormalMatrix4() const { return m_local.normalMatrix; }
@@ -218,7 +220,6 @@ struct MaterialFactory
   ShaderFactory FS;
   std::expected<std::shared_ptr<grapho::gl3::ShaderProgram>, std::string>
     Compiled;
-  std::shared_ptr<grapho::gl3::Material> Material;
   std::list<grapho::gl3::TextureSlot> Textures;
   std::list<UniformBind> UniformBinds;
 
@@ -227,31 +228,25 @@ struct MaterialFactory
                 const LocalInfo& local,
                 const gltfjson::tree::NodePtr& material)
   {
-    if (!Material) {
-      Material = std::make_shared<grapho::gl3::Material>();
-
+    if (!Compiled) {
       auto vs = VS.Expand(Type, shaderSource);
       auto fs = FS.Expand(Type, shaderSource);
       Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
-      if (Compiled) {
-        Material->Shader = *Compiled;
-        Material->Textures = Textures;
-      }
     }
-    if (Material && Material->Shader) {
-      // Material->Shader->Use();
-      Material->Activate();
+    if (Compiled) {
+      auto shader = *Compiled;
+      shader->Use();
+      for (auto& texture : Textures) {
+        texture.Activate();
+      }
       GL_ErrorClear("UBO");
       for (auto& bind : UniformBinds) {
-        // GL_ErrorCheck("before %s", bind.Name.c_str());
         std::visit(
-          [shader = Material->Shader, &bind, &world, &local, &material](
-            const auto& getter) {
+          [&shader, &bind, &world, &local, &material](const auto& getter) {
             //
             shader->SetUniform(bind.Name, getter(world, local, material));
           },
           bind.Getter);
-        // GL_ErrorCheck("after %s", bind.Name.c_str());
       }
     }
   }

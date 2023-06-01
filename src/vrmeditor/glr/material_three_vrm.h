@@ -2,7 +2,6 @@
 #include "material_factory.h"
 #include "shader_source.h"
 #include <gltfjson.h>
-#include <grapho/gl3/material.h>
 #include <string_view>
 #include <vector>
 
