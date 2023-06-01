@@ -20,6 +20,7 @@
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <iostream>
+#include <misc/cpp/imgui_stdlib.h>
 #include <unordered_map>
 #include <variant>
 #include <vrm/deformed_mesh.h>
@@ -587,14 +588,14 @@ public:
       ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
       if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
         if (ImGui::BeginTabItem("VS")) {
-          if (ShowShader(factory->VS, m_vsEditor)) {
+          if (ShowShader(*factory, factory->VS, m_vsEditor)) {
             factory->Compiled = std::unexpected{ "clear" };
             m_vsEditor.SetText("");
           }
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("FS")) {
-          if (ShowShader(factory->FS, m_fsEditor)) {
+          if (ShowShader(*factory, factory->FS, m_fsEditor)) {
             factory->Compiled = std::unexpected{ "clear" };
             m_fsEditor.SetText("");
           }
@@ -651,7 +652,9 @@ public:
     }
   }
 
-  static bool ShowShader(ShaderFactory& s, TextEditor& editor)
+  static bool ShowShader(MaterialFactory& f,
+                         ShaderFactory& s,
+                         TextEditor& editor)
   {
     bool updated = false;
     ImGui::TextUnformatted(s.SourceName.c_str());
@@ -669,6 +672,43 @@ public:
             (const char*)e.Selected.Name.c_str(), &value, combo)) {
         e.Selected.Value = value;
         updated = true;
+      }
+    }
+    for (auto& m : s.Macros) {
+      struct Visitor
+      {
+        ShaderDefinition& Def;
+
+        bool operator()(std::monostate)
+        {
+          return ImGui::Checkbox((const char*)Def.Name.c_str(), &Def.Checked);
+        }
+        bool operator()(bool& value)
+        {
+          return ImGui::Checkbox((const char*)Def.Name.c_str(), &value);
+        }
+        bool operator()(int& value)
+        {
+          return ImGui::InputInt((const char*)Def.Name.c_str(), &value);
+        }
+        bool operator()(float& value)
+        {
+          return ImGui::InputFloat((const char*)Def.Name.c_str(), &value);
+        }
+        bool operator()(std::u8string& src)
+        {
+          std::string value((const char*)src.data(), src.size());
+          if (ImGui::InputText((const char*)Def.Name.c_str(), &value)) {
+            src.assign((const char*)value.data(),
+                       (const char*)value.data() + value.size());
+            return true;
+          }
+          return false;
+        }
+      };
+
+      if (std::visit(Visitor{ m }, m.Value)) {
+        f.Compiled = std::unexpected{ "clear" };
       }
     }
 

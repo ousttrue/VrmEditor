@@ -62,50 +62,55 @@ struct ShaderDefinition
 {
   std::u8string Name;
   std::variant<std::monostate, bool, int, float, std::u8string> Value;
+  bool Checked = true;
+};
 
-  std::u8string Str() const
+struct ShaderDefinitionToStorVisitor
+{
+  ShaderDefinition& Def;
+
+  std::string_view Name() const
   {
-    struct Visitor
-    {
-      std::string_view Name;
-      std::stringstream m_ss;
-      std::u8string operator()(std::monostate)
-      {
-        m_ss << "#define " << Name;
-        auto str = m_ss.str();
-        return { (const char8_t*)str.data(), str.size() };
-      }
-      std::u8string operator()(bool b)
-      {
-        if (b) {
-          m_ss << "#define " << Name << " true";
-        } else {
-          m_ss << "#define " << Name << " false";
-        }
-        auto str = m_ss.str();
-        return { (const char8_t*)str.data(), str.size() };
-      }
-      std::u8string operator()(int value)
-      {
-        m_ss << "#define " << Name << " " << value;
-        auto str = m_ss.str();
-        return { (const char8_t*)str.data(), str.size() };
-      }
-      std::u8string operator()(float value)
-      {
-        m_ss << "#define " << Name << " " << value;
-        auto str = m_ss.str();
-        return { (const char8_t*)str.data(), str.size() };
-      }
-      std::u8string operator()(const std::u8string& value)
-      {
-        m_ss << "#define " << Name << " " << gltfjson::tree::from_u8(value);
-        auto str = m_ss.str();
-        return { (const char8_t*)str.data(), str.size() };
-      }
-    };
+    return { (const char*)Def.Name.data(), Def.Name.size() };
+  }
 
-    return std::visit(Visitor{ gltfjson::tree::from_u8(Name) }, Value);
+  std::stringstream m_ss;
+  std::u8string operator()(std::monostate)
+  {
+    std::string str;
+    if (Def.Checked) {
+      m_ss << "#define " << Name();
+      str = m_ss.str();
+    }
+    return { (const char8_t*)str.data(), str.size() };
+  }
+  std::u8string operator()(bool b)
+  {
+    if (b) {
+      m_ss << "#define " << Name() << " true";
+    } else {
+      m_ss << "#define " << Name() << " false";
+    }
+    auto str = m_ss.str();
+    return { (const char8_t*)str.data(), str.size() };
+  }
+  std::u8string operator()(int value)
+  {
+    m_ss << "#define " << Name() << " " << value;
+    auto str = m_ss.str();
+    return { (const char8_t*)str.data(), str.size() };
+  }
+  std::u8string operator()(float value)
+  {
+    m_ss << "#define " << Name() << " " << value;
+    auto str = m_ss.str();
+    return { (const char8_t*)str.data(), str.size() };
+  }
+  std::u8string operator()(const std::u8string& value)
+  {
+    m_ss << "#define " << Name() << " " << gltfjson::tree::from_u8(value);
+    auto str = m_ss.str();
+    return { (const char8_t*)str.data(), str.size() };
   }
 };
 
@@ -165,12 +170,13 @@ struct ShaderFactory
         FullSource += kv.Str();
         FullSource.push_back('\n');
       }
-      FullSource += e.Selected.Str();
+      FullSource +=
+        std::visit(ShaderDefinitionToStorVisitor{ e.Selected }, e.Selected.Value);
       FullSource.push_back('\n');
     }
 
     for (auto& m : Macros) {
-      FullSource += m.Str();
+      FullSource += std::visit(ShaderDefinitionToStorVisitor{ m }, m.Value);
       FullSource.push_back('\n');
     }
 
