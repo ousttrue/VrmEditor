@@ -562,7 +562,7 @@ public:
     }
   }
 
-  void ShowSelected()
+  void ShowSelectedShaderSource()
   {
     ImGui::Text("%d", m_selected);
     if (m_selected >= m_materialMap.size()) {
@@ -601,54 +601,63 @@ public:
           }
           ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("Shader")) {
-          if (auto compiled = factory->Compiled) {
-            auto shader = *compiled;
 
-            ImGui::TextUnformatted("uniform variables");
-            std::array<const char*, 5> cols = {
-              "index", "location", "type", "name", "binding"
-            };
-            if (grapho::imgui::BeginTableColumns("uniforms", cols)) {
-              for (int i = 0; i < shader->Uniforms.size(); ++i) {
-                ImGui::TableNextRow();
-                auto& u = shader->Uniforms[i];
-                if (u.Location == -1) {
-                  ImGui::BeginDisabled(true);
-                  ImGui::PushStyleColor(ImGuiCol_Text, grapho::imgui::gray);
-                }
-                ImGui::TableSetColumnIndex(0);
-                ImGui::Text("%d", i);
-                ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%d", u.Location);
-                ImGui::TableSetColumnIndex(2);
-                ImGui::TextUnformatted(grapho::gl3::ShaderTypeName(u.Type));
-                ImGui::TableSetColumnIndex(3);
-                ImGui::TextUnformatted(u.Name.c_str());
-                if (factory->UniformGetters[i]) {
-                  ImGui::TableSetColumnIndex(4);
-                  ImGui::TextUnformatted("OK");
-                }
-                if (u.Location == -1) {
-                  ImGui::PopStyleColor();
-                  ImGui::EndDisabled();
-                }
-              }
-              ImGui::EndTable();
-            }
-          } else {
-            if (ImGui::CollapsingHeader("Error")) {
-              ImGui::TextWrapped("error: %s",
-                                 factory->Compiled.error().c_str());
-            }
-          }
-          ImGui::EndTabItem();
-        }
         ImGui::EndTabBar();
       }
 
     } else {
       ImGui::TextUnformatted("nullopt");
+    }
+  }
+
+  void ShowSelectedShaderVariables()
+  {
+    ImGui::Text("%d", m_selected);
+    if (m_selected >= m_materialMap.size()) {
+      return;
+    }
+
+    if (auto factory = m_materialMap[m_selected]) {
+
+      if (auto compiled = factory->Compiled) {
+        auto shader = *compiled;
+
+        ImGui::TextUnformatted("uniform variables");
+        std::array<const char*, 5> cols = {
+          "index", "location", "type", "name", "binding"
+        };
+        if (grapho::imgui::BeginTableColumns("uniforms", cols)) {
+          for (int i = 0; i < shader->Uniforms.size(); ++i) {
+            ImGui::TableNextRow();
+            auto& u = shader->Uniforms[i];
+            if (u.Location == -1) {
+              ImGui::BeginDisabled(true);
+              ImGui::PushStyleColor(ImGuiCol_Text, grapho::imgui::gray);
+            }
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("%d", i);
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%d", u.Location);
+            ImGui::TableSetColumnIndex(2);
+            ImGui::TextUnformatted(grapho::gl3::ShaderTypeName(u.Type));
+            ImGui::TableSetColumnIndex(3);
+            ImGui::TextUnformatted(u.Name.c_str());
+            if (factory->UniformGetters[i]) {
+              ImGui::TableSetColumnIndex(4);
+              ImGui::TextUnformatted("OK");
+            }
+            if (u.Location == -1) {
+              ImGui::PopStyleColor();
+              ImGui::EndDisabled();
+            }
+          }
+          ImGui::EndTable();
+        }
+      } else {
+        if (ImGui::CollapsingHeader("Error")) {
+          ImGui::TextWrapped("error: %s", factory->Compiled.error().c_str());
+        }
+      }
     }
   }
 
@@ -765,14 +774,19 @@ ReleaseMaterial(int i)
 void
 CreateDock(const AddDockFunc& addDock)
 {
-  addDock(grapho::imgui::Dock("renderer selector", []() {
+  addDock(grapho::imgui::Dock("GL selector", []() {
     //
     Gl3Renderer::Instance().ShowSelector();
   }));
 
-  addDock(grapho::imgui::Dock("renderer selected", []() {
+  addDock(grapho::imgui::Dock("GL selected shader source", []() {
     //
-    Gl3Renderer::Instance().ShowSelected();
+    Gl3Renderer::Instance().ShowSelectedShaderSource();
+  }));
+
+  addDock(grapho::imgui::Dock("GL selected shader variables", []() {
+    //
+    Gl3Renderer::Instance().ShowSelectedShaderVariables();
   }));
 }
 
