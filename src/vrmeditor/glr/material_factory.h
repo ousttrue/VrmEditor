@@ -3,8 +3,8 @@
 #include "shader_factory.h"
 #include "shader_source.h"
 #include <expected>
+#include <grapho/gl3/glsl_type_name.h>
 #include <grapho/gl3/shader.h>
-#include <grapho/gl3/shader_type_name.h>
 #include <grapho/gl3/texture.h>
 #include <list>
 #include <optional>

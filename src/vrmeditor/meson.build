@@ -6,6 +6,7 @@ srcs = [
     'assetdir.cpp',
     'filewatcher.cpp',
     'glr/gl3renderer.cpp',
+    'glr/gl3renderer_gui.cpp',
     'glr/cuber.cpp',
     'glr/scene_preview.cpp',
     'glr/rendertarget.cpp',
