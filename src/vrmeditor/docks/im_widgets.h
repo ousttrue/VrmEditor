@@ -132,7 +132,7 @@ bool
 ShowGuiStringEnum(const char* label,
                   const gltfjson::tree::NodePtr& parentNode,
                   std::u8string_view key,
-                  std::span<const std::tuple<int, std::string>> combo);
+                  std::span<const char*> items);
 
 // emissive
 bool

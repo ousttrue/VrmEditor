@@ -5,6 +5,7 @@
 #include "im_widgets.h"
 #include "type_gui.h"
 #include "type_gui_accessor.h"
+#include <array>
 #include <misc/cpp/imgui_stdlib.h>
 #include <sstream>
 #include <unordered_map>
@@ -94,12 +95,14 @@ ShowGui(const gltfjson::typing::Root& root,
     gltfjson::format::ComponentTypesCombo);
   ShowGuiBool("Normalized", accessor.m_json, u8"normalized");
   ShowGuiUInt32("Count", accessor.m_json, u8"count");
-  ShowGuiStringEnum(
-    "Type",
-    accessor.m_json,
-    u8"type",
-    { (const std::tuple<int, std::string>*)gltfjson::format::TypesCombo,
-      std::size(gltfjson::format::TypesCombo) });
+
+  std::array<const char*, 7> TypesCombo = {
+    "SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4",
+  };
+  if(ShowGuiStringEnum("Type", accessor.m_json, u8"type", TypesCombo))
+  {
+
+  }
 
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
   ShowGuiVectorFloat("Max", accessor.m_json, u8"max", [](size_t i, float* p) {
@@ -396,11 +399,14 @@ ShowGui(const gltfjson::typing::Root& root,
         "EmissiveFactor", material.m_json, u8"emissiveFactor", { 0, 0, 0 })) {
     updated = true;
   }
-  if (ShowGuiEnum<gltfjson::format::AlphaModes>(
-        "AlphaMode",
-        material.m_json,
-        u8"alphaMode",
-        gltfjson::format::AlphaModesCombo)) {
+
+  std::array<const char*, 3> AlphaModesCombo = {
+    "OPAQUE",
+    "MASK",
+    "BLEND",
+  };
+  if (ShowGuiStringEnum(
+        "AlphaMode", material.m_json, u8"alphaMode", AlphaModesCombo)) {
     updated = true;
   }
 

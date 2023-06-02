@@ -22,7 +22,7 @@ struct MaterialFactory
   ShaderFactory VS;
   ShaderFactory FS;
   std::expected<std::shared_ptr<grapho::gl3::ShaderProgram>, std::string>
-    Compiled = std::unexpected{""};
+    Compiled = std::unexpected{ "" };
   std::list<grapho::gl3::TextureSlot> Textures;
 
   std::unordered_map<std::string, UniformVar> UniformVarMap;
@@ -34,24 +34,12 @@ struct MaterialFactory
                 const gltfjson::tree::NodePtr& material)
   {
     if (!Compiled) {
-      // execute mcaro
       auto error = Compiled.error();
       if (error.empty()) {
-        for (auto& g : VS.MacroGroups) {
-          for (auto& m : g.second) {
-            std::visit([&world, &local, &material](
-                         auto& var) { var.Update(world, local, material); },
-                       m.Value);
-          }
-        }
-        for (auto& g : FS.MacroGroups) {
-          for (auto& m : g.second) {
-            std::visit([&world, &local, &material](
-                         auto& var) { var.Update(world, local, material); },
-                       m.Value);
-          }
-        }
+        // execute mcaro
+        VS.Update(world, local, material);
         auto vs = VS.Expand(Type, shaderSource);
+        FS.Update(world, local, material);
         auto fs = FS.Expand(Type, shaderSource);
         Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
 

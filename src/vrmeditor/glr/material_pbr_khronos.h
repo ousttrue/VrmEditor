@@ -76,7 +76,21 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
             { u8"ALPHAMODE_MASK", 1 },
             { u8"ALPHAMODE_BLEND", 2 },
           },
-          .Selected = {u8"ALPHAMODE", ConstInt(0) },
+          .Selected = {u8"ALPHAMODE", IntVar{[](auto, auto, auto &json){
+            gltfjson::typing::Material m(json);
+            auto mode = m.AlphaMode();
+            if(mode == u8"MASK")
+            {
+              return 1;
+            }
+            else if(mode == u8"BLEND")
+            {
+              return 2;
+            }
+            else{
+              return 0;
+            }
+          }}},
         },
       },
       .MacroGroups{
@@ -187,6 +201,17 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
       { "u_NormalSampler", ConstInt(6) }, { "u_EmissiveSampler", ConstInt(7) },
       { "u_OcclusionSampler", ConstInt(8) }, { "u_BaseColorSampler", ConstInt(9) },
       { "u_MetallicRoughnessSampler", ConstInt(10) },
+
+      { "u_AlphaCutoff", FloatVar{[](auto, auto, auto &json){
+        gltfjson::typing::Material m(json);
+        if(auto p = m.AlphaCutoff())
+        {
+          return *p;
+        }
+        else{
+          return 0.5f;
+        }
+      }}},
     },
   };
 

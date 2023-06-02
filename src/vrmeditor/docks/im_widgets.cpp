@@ -154,7 +154,7 @@ bool
 ShowGuiStringEnum(const char* label,
                   const gltfjson::tree::NodePtr& parentNode,
                   std::u8string_view key,
-                  std::span<const std::tuple<int, std::string>> combo)
+                  std::span<const char*> items)
 {
   if (!parentNode) {
     return false;
@@ -171,14 +171,20 @@ ShowGuiStringEnum(const char* label,
   }
 
   int i = 0;
-  for (; i < combo.size(); ++i) {
-    auto& str = std::get<1>(combo[i]);
+  for (; i < items.size(); ++i) {
+    auto str = items[i];
     if (*p == gltfjson::tree::to_u8(str)) {
       break;
     }
   }
 
-  if (grapho::imgui::GenericCombo(label, &i, combo)) {
+  std::vector<std::tuple<int, std::string>> combo;
+  int j = 0;
+  for (auto l : items) {
+    combo.push_back({ j++, l });
+  }
+
+  if (grapho::imgui::GenericCombo<int>(label, &i, combo)) {
     *p = gltfjson::tree::to_u8(std::get<1>(combo[i]));
     return true;
   } else {
