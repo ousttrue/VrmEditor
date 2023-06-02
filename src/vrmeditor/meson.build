@@ -15,6 +15,7 @@ srcs = [
     'glr/shader_source.cpp',
     'glr/error_check.cpp',
     'glr/material_three_vrm.cpp',
+    'glr/material_pbr_khronos.cpp',
     'docks/gui.cpp',
     'docks/imlogger.cpp',
     'docks/vrm_dock.cpp',
