@@ -19,16 +19,16 @@ MaterialFactory_Pbr_LearnOpenGL(const gltfjson::typing::Root& root,
       .SourceName ="pbr.frag",
       .Version = u8"#version 450",
     },
-    .UniformGetterMap=
+    .UniformVarMap=
     {
-      {"irradianceMap", GetInt(0)},
-      {"prefilterMap", GetInt(1)},
-      {"brdfLUT",GetInt(2)},
-      {"albedoMap",GetInt(3)},
-      {"normalMap",GetInt(4)},
-      {"metallicMap",GetInt(5)},
-      {"roughnessMap",GetInt(6)},
-      {"aoMap",GetInt(7)},
+      {"irradianceMap", ConstInt(0)},
+      {"prefilterMap", ConstInt(1)},
+      {"brdfLUT",ConstInt(2)},
+      {"albedoMap",ConstInt(3)},
+      {"normalMap",ConstInt(4)},
+      {"metallicMap",ConstInt(5)},
+      {"roughnessMap",ConstInt(6)},
+      {"aoMap",ConstInt(7)},
     },
   };
 

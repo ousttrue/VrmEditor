@@ -642,7 +642,7 @@ public:
             ImGui::TextUnformatted(grapho::gl3::ShaderTypeName(u.Type));
             ImGui::TableSetColumnIndex(3);
             ImGui::TextUnformatted(u.Name.c_str());
-            if (factory->UniformGetters[i]) {
+            if (factory->UniformVars[i]) {
               ImGui::TableSetColumnIndex(4);
               ImGui::TextUnformatted("OK");
             }
@@ -676,40 +676,52 @@ public:
           { kv.Value,
             std::string{ (const char*)kv.Name.data(), kv.Name.size() } });
       }
-      int value = std::get<int>(e.Selected.Value);
+      auto& var = std::get<IntVar>(e.Selected.Value);
+      auto value = var.LastValue;
       if (grapho::imgui::GenericCombo<int>(
             (const char*)e.Selected.Name.c_str(), &value, combo)) {
-        e.Selected.Value = value;
+        var.LastValue = value;
         updated = true;
       }
     }
     for (auto& m : s.Macros) {
       struct Visitor
       {
-        ShaderDefinition& Def;
+        ShaderMacro& Def;
 
-        bool operator()(std::monostate)
+        bool operator()(OptVar& var)
         {
-          return ImGui::Checkbox((const char*)Def.Name.c_str(), &Def.Checked);
+          bool value = var.LastValue ? true : false;
+          if (ImGui::Checkbox((const char*)Def.Name.c_str(), &value)) {
+            if (value) {
+              var.LastValue = std::monostate{};
+            } else {
+              var.LastValue = std::nullopt;
+            }
+            return true;
+          } else {
+            return false;
+          }
         }
-        bool operator()(bool& value)
+        bool operator()(BoolVar& var)
         {
-          return ImGui::Checkbox((const char*)Def.Name.c_str(), &value);
+          return ImGui::Checkbox((const char*)Def.Name.c_str(), &var.LastValue);
         }
-        bool operator()(int& value)
+        bool operator()(IntVar& var)
         {
-          return ImGui::InputInt((const char*)Def.Name.c_str(), &value);
+          return ImGui::InputInt((const char*)Def.Name.c_str(), &var.LastValue);
         }
-        bool operator()(float& value)
+        bool operator()(FloatVar& var)
         {
-          return ImGui::InputFloat((const char*)Def.Name.c_str(), &value);
+          return ImGui::InputFloat((const char*)Def.Name.c_str(),
+                                   &var.LastValue);
         }
-        bool operator()(std::u8string& src)
+        bool operator()(StringVar& var)
         {
-          std::string value((const char*)src.data(), src.size());
-          if (ImGui::InputText((const char*)Def.Name.c_str(), &value)) {
-            src.assign((const char*)value.data(),
-                       (const char*)value.data() + value.size());
+          // std::string value((const char*)src.data(), src.size());
+          if (ImGui::InputText((const char*)Def.Name.c_str(), &var.LastValue)) {
+            // src.assign((const char*)value.data(),
+            //            (const char*)value.data() + value.size());
             return true;
           }
           return false;

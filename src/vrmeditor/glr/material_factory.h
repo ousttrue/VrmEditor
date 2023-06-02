@@ -38,6 +38,7 @@ struct WorldInfo
   DirectX::XMFLOAT4X4 ShadowMatrix() const { return m_env.ShadowMatrix; }
   DirectX::XMFLOAT3 CameraPosition() const { return m_env.CameraPosition; }
 };
+
 struct LocalInfo
 {
   const grapho::LocalVars& m_local;
@@ -53,64 +54,103 @@ struct LocalInfo
   }
 };
 
+template<typename T>
+struct Variable
+{
+  using GetterFunc = std::function<T(const WorldInfo&,
+                                     const LocalInfo&,
+                                     const gltfjson::tree::NodePtr& material)>;
+  GetterFunc Getter;
+  T LastValue;
+
+  T Update(const WorldInfo& w,
+           const LocalInfo& l,
+           const gltfjson::tree::NodePtr& material)
+  {
+    LastValue = Getter(w, l, material);
+    return LastValue;
+  }
+};
+
+using OptVar = Variable<std::optional<std::monostate>>;
+using BoolVar = Variable<bool>;
+using IntVar = Variable<int>;
+using FloatVar = Variable<float>;
+using StringVar = Variable<std::string>;
+using Vec3Var = Variable<DirectX::XMFLOAT3>;
+using Vec4Var = Variable<DirectX::XMFLOAT4>;
+using Mat3Var = Variable<DirectX::XMFLOAT3X3>;
+using Mat4Var = Variable<DirectX::XMFLOAT4X4>;
+
+auto
+ConstInt(int value)
+{
+  return IntVar{ [value](auto, auto, auto) { return value; }, value };
+}
+auto
+ConstFloat(float value)
+{
+  return FloatVar{ [value](auto, auto, auto) { return value; }, value };
+}
+auto
+ConstBool(bool value)
+{
+  return BoolVar{ [value](auto, auto, auto) { return value; }, value };
+}
+
 using UpdateShaderFunc =
   std::function<void(const std::shared_ptr<grapho::gl3::ShaderProgram>& shader,
                      const WorldInfo&,
                      const LocalInfo&)>;
 
-struct ShaderDefinition
+struct VarToStrVisitor
 {
-  std::u8string Name;
-  std::variant<std::monostate, bool, int, float, std::u8string> Value;
-  bool Checked = true;
-};
-
-struct ShaderDefinitionToStorVisitor
-{
-  ShaderDefinition& Def;
-
-  std::string_view Name() const
-  {
-    return { (const char*)Def.Name.data(), Def.Name.size() };
-  }
+  std::string& m_name;
 
   std::stringstream m_ss;
-  std::u8string operator()(std::monostate)
+  std::string operator()(const OptVar& var)
   {
-    std::string str;
-    if (Def.Checked) {
-      m_ss << "#define " << Name();
-      str = m_ss.str();
+    if (var.LastValue) {
+      m_ss << "#define " << m_name;
     }
-    return { (const char8_t*)str.data(), str.size() };
+    return m_ss.str();
   }
-  std::u8string operator()(bool b)
+  std::string operator()(const BoolVar& var)
   {
-    if (b) {
-      m_ss << "#define " << Name() << " true";
+    if (var.LastValue) {
+      m_ss << "#define " << m_name << " true";
     } else {
-      m_ss << "#define " << Name() << " false";
+      m_ss << "#define " << m_name << " false";
     }
-    auto str = m_ss.str();
-    return { (const char8_t*)str.data(), str.size() };
+    return m_ss.str();
   }
-  std::u8string operator()(int value)
+  std::string operator()(const IntVar& var)
   {
-    m_ss << "#define " << Name() << " " << value;
-    auto str = m_ss.str();
-    return { (const char8_t*)str.data(), str.size() };
+    m_ss << "#define " << m_name << " " << var.LastValue;
+    return m_ss.str();
   }
-  std::u8string operator()(float value)
+  std::string operator()(const FloatVar& var)
   {
-    m_ss << "#define " << Name() << " " << value;
-    auto str = m_ss.str();
-    return { (const char8_t*)str.data(), str.size() };
+    m_ss << "#define " << m_name << " " << var.LastValue;
+    return m_ss.str();
   }
-  std::u8string operator()(const std::u8string& value)
+  std::string operator()(const StringVar& var)
   {
-    m_ss << "#define " << Name() << " " << gltfjson::tree::from_u8(value);
-    auto str = m_ss.str();
-    return { (const char8_t*)str.data(), str.size() };
+    m_ss << "#define " << m_name << " " << var.LastValue;
+    return m_ss.str();
+  }
+};
+
+struct ShaderMacro
+{
+  std::u8string Name;
+  std::variant<OptVar, BoolVar, IntVar, FloatVar, StringVar> Value =
+    OptVar{ [](auto, auto, auto) { return std::monostate{}; } };
+  std::u8string Str() const
+  {
+    std::string name((const char*)Name.data(), Name.size());
+    auto dst = std::visit(VarToStrVisitor{ name }, Value);
+    return { (const char8_t*)dst.data(), dst.size() };
   }
 };
 
@@ -130,7 +170,7 @@ struct ShaderEnum
     }
   };
   std::vector<KeyValue> Values;
-  ShaderDefinition Selected;
+  ShaderMacro Selected;
 };
 
 struct ShaderFactory
@@ -140,7 +180,7 @@ struct ShaderFactory
   std::u8string Precision;
   std::vector<ShaderEnum> Enums;
   std::vector<std::u8string> Codes;
-  std::vector<ShaderDefinition> Macros;
+  std::vector<ShaderMacro> Macros;
   std::u8string SourceExpanded;
   std::u8string FullSource;
 
@@ -170,13 +210,12 @@ struct ShaderFactory
         FullSource += kv.Str();
         FullSource.push_back('\n');
       }
-      FullSource +=
-        std::visit(ShaderDefinitionToStorVisitor{ e.Selected }, e.Selected.Value);
+      FullSource += e.Selected.Str();
       FullSource.push_back('\n');
     }
 
     for (auto& m : Macros) {
-      FullSource += std::visit(ShaderDefinitionToStorVisitor{ m }, m.Value);
+      FullSource += m.Str();
       FullSource.push_back('\n');
     }
 
@@ -192,35 +231,8 @@ struct ShaderFactory
   }
 };
 
-template<typename T>
-using GetterFunc = std::function<T(const WorldInfo&,
-                                   const LocalInfo&,
-                                   const gltfjson::tree::NodePtr& material)>;
-
-GetterFunc<int>
-GetInt(int value)
-{
-  return [value](auto, auto, auto) { return value; };
-}
-GetterFunc<float>
-GetFloat(float value)
-{
-  return [value](auto, auto, auto) { return value; };
-}
-
-using IntGetter = GetterFunc<int>;
-using FloatGetter = GetterFunc<float>;
-using Vec3Getter = GetterFunc<DirectX::XMFLOAT3>;
-using Vec4Getter = GetterFunc<DirectX::XMFLOAT4>;
-using Mat3Getter = GetterFunc<DirectX::XMFLOAT3X3>;
-using Mat4Getter = GetterFunc<DirectX::XMFLOAT4X4>;
-
-using GetterVariant = std::variant<IntGetter,
-                                   FloatGetter,
-                                   Vec3Getter,
-                                   Vec4Getter,
-                                   Mat3Getter,
-                                   Mat4Getter>;
+using UniformVar =
+  std::variant<IntVar, FloatVar, Vec3Var, Vec4Var, Mat3Var, Mat4Var>;
 
 using BindFunc = std::function<void(const WorldInfo&,
 
@@ -236,8 +248,8 @@ struct MaterialFactory
     Compiled = std::unexpected{ "init" };
   std::list<grapho::gl3::TextureSlot> Textures;
 
-  std::unordered_map<std::string, GetterVariant> UniformGetterMap;
-  std::vector<std::optional<GetterVariant>> UniformGetters;
+  std::unordered_map<std::string, UniformVar> UniformVarMap;
+  std::vector<std::optional<UniformVar>> UniformVars;
 
   void Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                 const WorldInfo& world,
@@ -245,6 +257,17 @@ struct MaterialFactory
                 const gltfjson::tree::NodePtr& material)
   {
     if (!Compiled) {
+      // execute mcaro
+      for (auto& m : VS.Macros) {
+        std::visit([&world, &local, &material](
+                     auto& var) { var.Update(world, local, material); },
+                   m.Value);
+      }
+      for (auto& m : FS.Macros) {
+        std::visit([&world, &local, &material](
+                     auto& var) { var.Update(world, local, material); },
+                   m.Value);
+      }
       auto vs = VS.Expand(Type, shaderSource);
       auto fs = FS.Expand(Type, shaderSource);
       Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
@@ -252,13 +275,16 @@ struct MaterialFactory
       // match binding
       if (Compiled) {
         auto shader = *Compiled;
-        UniformGetters.clear();
+        UniformVars.clear();
         for (auto& u : shader->Uniforms) {
-          auto found = UniformGetterMap.find(u.Name);
-          if (found != UniformGetterMap.end()) {
-            UniformGetters.push_back(found->second);
+          auto found = UniformVarMap.find(u.Name);
+          if (found != UniformVarMap.end()) {
+            std::visit([&world, &local, &material](
+                         auto& var) { var.Update(world, local, material); },
+                       found->second);
+            UniformVars.push_back(found->second);
           } else {
-            UniformGetters.push_back({});
+            UniformVars.push_back({});
           }
         }
       }
@@ -272,8 +298,8 @@ struct MaterialFactory
       for (size_t i = 0; i < shader->Uniforms.size(); ++i) {
         auto& u = shader->Uniforms[i];
         if (u.Location != -1) {
-          auto& g = UniformGetters[i];
-          if (g) {
+          auto& v = UniformVars[i];
+          if (v) {
 #ifndef NDEBUG
             std::string type_name = grapho::gl3::ShaderTypeName(u.Type);
             auto debug = shader->Uniform(u.Name);
@@ -281,11 +307,11 @@ struct MaterialFactory
 #endif
             GL_ErrorCheck("before");
             std::visit(
-              [&u, &world, &local, &material](const auto& getter) {
+              [&u, &world, &local, &material](const auto& var) {
                 //
-                u.Set(getter(world, local, material));
+                u.Set(var.Getter(world, local, material));
               },
-              *g);
+              *v);
             GL_ErrorClear("after");
           }
         }

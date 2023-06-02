@@ -70,7 +70,9 @@
             "request": "launch",
             "program": "${workspaceFolder}/scripts/glsl_macro_print.py",
             "args": [
-                "src/vrmeditor/shaders/khronos/pbr.frag",
+                // "src/vrmeditor/shaders/khronos/pbr.frag",
+                "src/vrmeditor/shaders/mtoon.frag",
+                "src/vrmeditor/threejs_shader_chunks",
             ],
             "console": "integratedTerminal",
             "justMyCode": true

@@ -18,13 +18,13 @@ MaterialFactory_Error(const gltfjson::typing::Root& root,
     .FS = {
       .SourceName= "error.frag",
     },
-    .UniformGetterMap = {
+    .UniformVarMap = {
       {"Projection",
-        [](auto &world, auto &local, auto){ return world.ProjectionMatrix();}},
+        Mat4Var{[](auto &world, auto &local, auto){ return world.ProjectionMatrix();}}},
       {"View",
-        [](auto &world, auto &local, auto){ return world.ViewMatrix();}},
+        Mat4Var{[](auto &world, auto &local, auto){ return world.ViewMatrix();}}},
       {"Model",
-        [](auto &world, auto &local, auto){ return local.ModelMatrix();}},
+        Mat4Var{[](auto &world, auto &local, auto){ return local.ModelMatrix();}}},
     },
   };
   return ptr;

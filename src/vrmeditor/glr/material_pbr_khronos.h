@@ -53,8 +53,9 @@ namespace glr {
 // material_info.glsl: #ifdef HAS_CLEARCOAT_NORMAL_MAP
 // material_info.glsl: #if defined(MATERIAL_SPECULARGLOSSINESS)
 // material_info.glsl: #elif defined(MATERIAL_METALLICROUGHNESS)
-// material_info.glsl: #if defined(MATERIAL_SPECULARGLOSSINESS) && defined(HAS_DIFFUSE_MAP)        
-// material_info.glsl: #elif defined(MATERIAL_METALLICROUGHNESS) && defined(HAS_BASE_COLOR_MAP)    
+// material_info.glsl: #if defined(MATERIAL_SPECULARGLOSSINESS) &&
+// defined(HAS_DIFFUSE_MAP) material_info.glsl: #elif
+// defined(MATERIAL_METALLICROUGHNESS) && defined(HAS_BASE_COLOR_MAP)
 // material_info.glsl: #ifdef HAS_SPECULAR_GLOSSINESS_MAP
 // material_info.glsl: #ifdef HAS_METALLIC_ROUGHNESS_MAP
 // material_info.glsl: #ifdef HAS_SHEEN_COLOR_MAP
@@ -122,9 +123,9 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
       .SourceName = "khronos/primitive.vert",
       .Version=u8"#version 300 es",
       .Macros{
-        { u8"HAS_NORMAL_VEC3", 1 },
-        { u8"HAS_POSITION_VEC3", 1 },
-        { u8"HAS_TEXCOORD_0_VEC2", 1 },
+        { u8"HAS_NORMAL_VEC3", ConstInt(1) },
+        { u8"HAS_POSITION_VEC3", ConstInt(1) },
+        { u8"HAS_TEXCOORD_0_VEC2", ConstInt(1) },
       },
     },
     .FS={
@@ -167,7 +168,7 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
             { u8"DEBUG_ANISOTROPIC_STRENGTH", 31 },
             { u8"DEBUG_ANISOTROPIC_DIRECTION", 32 },
           },
-          .Selected = { u8"DEBUG", 0 },
+          .Selected = { u8"DEBUG", ConstInt(0) },
         },
         {
           .Values = {
@@ -175,60 +176,59 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
             { u8"ALPHAMODE_MASK", 1 },
             { u8"ALPHAMODE_BLEND", 2 },
           },
-          .Selected = {u8"ALPHAMODE", 0},
+          .Selected = {u8"ALPHAMODE", ConstInt(0) },
         },
       },
       .Macros = {
-        { u8"MATERIAL_METALLICROUGHNESS", 1 },
-        { u8"HAS_NORMAL_VEC3", 1 },
-        { u8"HAS_POSITION_VEC3", 1 },
-        { u8"HAS_TEXCOORD_0_VEC2", 1 },
-        { u8"USE_PUNCTUAL", 1 },
-        { u8"LIGHT_COUNT", 1 },
+        { u8"MATERIAL_METALLICROUGHNESS", ConstInt(1) },
+        { u8"HAS_NORMAL_VEC3", ConstInt(1) },
+        { u8"HAS_POSITION_VEC3", ConstInt(1) },
+        { u8"HAS_TEXCOORD_0_VEC2", ConstInt(1) },
+        { u8"USE_PUNCTUAL", ConstInt(1) },
+        { u8"LIGHT_COUNT", ConstInt(1) },
       },
     },
-    .UniformGetterMap
+    .UniformVarMap
     {
-      {"u_BaseColorFactor",[](auto &w, auto &l, auto){ return l.ColorRGBA(); }},
-      {"u_MetallicFactor",GetFloat(1.0f)},
-      {"u_RoughnessFactor",GetFloat(1.0f)},
-      {"u_Exposure",GetFloat(1.0f)},
+      {"u_BaseColorFactor",Vec4Var{[](auto &w, auto &l, auto){ return l.ColorRGBA(); }}},
+      {"u_MetallicFactor",ConstFloat(1.0f)},
+      {"u_RoughnessFactor",ConstFloat(1.0f)},
+      {"u_Exposure",ConstFloat(1.0f)},
 
-      {"u_ModelMatrix",[](auto &w, auto &l, auto){ return l.ModelMatrix();}},
-      {"u_ViewProjectionMatrix",[](auto &w, auto &l, auto){ return w.ViewProjectionMatrix();}},
-      {"u_EmissiveFactor",[](auto &w, auto &l, auto){ return l.EmissiveRGB();}},
-      {"u_NormalMatrix",[](auto &w, auto &l, auto){ return l.NormalMatrix4();}},
-      {"u_Camera",[](auto &w, auto &l, auto){return w.CameraPosition();}},
+      {"u_ModelMatrix",Mat4Var{[](auto &w, auto &l, auto){ return l.ModelMatrix();}}},
+      {"u_ViewProjectionMatrix",Mat4Var{[](auto &w, auto &l, auto){ return w.ViewProjectionMatrix();}}},
+      {"u_EmissiveFactor",Vec3Var{[](auto &w, auto &l, auto){ return l.EmissiveRGB();}}},
+      {"u_NormalMatrix",Mat4Var{[](auto &w, auto &l, auto){ return l.NormalMatrix4();}}},
+      {"u_Camera",Vec3Var{[](auto &w, auto &l, auto){return w.CameraPosition();}}},
 
-      {"u_Lights[0].color", [](auto &w,auto, auto){
+      {"u_Lights[0].color", Vec3Var{[](auto &w,auto, auto){
         auto &c=w.m_env.LightColor; 
         return DirectX::XMFLOAT3{c.x,c.y,c.z};
-      }},
-      {"u_Lights[0].intensity", (GetterFunc<float>)[](const WorldInfo &w, const LocalInfo &, auto){
-        auto &c=w.m_env.LightColor; 
+      }}},
+      {"u_Lights[0].intensity", FloatVar{[](const WorldInfo &w, const LocalInfo &, auto){
+        auto &c=w.m_env.LightColor;
         return c.w;
-      }},
-      {"u_Lights[0].direction", [](auto &w,auto, auto){
-        auto &p=w.m_env.LightPosition; 
-        return DirectX::XMFLOAT3{-p.x,-p.y,-p.z};
-      }},
-      {"u_Lights[0].position", [](auto &w,auto, auto){
-        auto &p=w.m_env.LightPosition; 
-        return DirectX::XMFLOAT3{p.x,p.y,p.z};
-      }},
+      }}},
 
-      {"u_LambertianEnvSampler",GetInt(0)},
-      {"u_GGXEnvSampler",GetInt(1)},
-      {"u_GGXLUT",GetInt(2)},
-      {"u_CharlieEnvSampler",GetInt(3)},
-      {"u_CharlieLUT",GetInt(4)},
-      {"u_SheenELUT",GetInt(5)},
-      {"u_NormalSampler",GetInt(6)},
-      {"u_EmissiveSampler",GetInt(7)},
-      {"u_OcclusionSampler",GetInt(8)},
-      {"u_BaseColorSampler",GetInt(9)},
-      {"u_MetallicRoughnessSampler",GetInt(10)},
-     },
+
+      { "u_Lights[0].direction",
+        Vec3Var{[](auto& w, auto, auto) {
+          auto& p = w.m_env.LightPosition;
+          return DirectX::XMFLOAT3{ -p.x, -p.y, -p.z };
+        }} },
+      { "u_Lights[0].position",
+        Vec3Var{[](auto& w, auto, auto) {
+          auto& p = w.m_env.LightPosition;
+          return DirectX::XMFLOAT3{ p.x, p.y, p.z };
+        }} },
+
+      { "u_LambertianEnvSampler", ConstInt(0) }, { "u_GGXEnvSampler", ConstInt(1) },
+      { "u_GGXLUT", ConstInt(2) }, { "u_CharlieEnvSampler", ConstInt(3) },
+      { "u_CharlieLUT", ConstInt(4) }, { "u_SheenELUT", ConstInt(5) },
+      { "u_NormalSampler", ConstInt(6) }, { "u_EmissiveSampler", ConstInt(7) },
+      { "u_OcclusionSampler", ConstInt(8) }, { "u_BaseColorSampler", ConstInt(9) },
+      { "u_MetallicRoughnessSampler", ConstInt(10) },
+    },
   };
 
   std::shared_ptr<grapho::gl3::Texture> albedo;
@@ -263,28 +263,27 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
   }
 
   if (normal) {
-    ptr->FS.Macros.push_back({ u8"HAS_NORMAL_MAP", 1 });
+    ptr->FS.Macros.push_back({ u8"HAS_NORMAL_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 6, normal });
   }
   if (emissive) {
-    ptr->FS.Macros.push_back({ u8"HAS_EMISSIVE_MAP", 1 });
+    ptr->FS.Macros.push_back({ u8"HAS_EMISSIVE_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 7, emissive });
   }
   if (ao) {
-    ptr->FS.Macros.push_back({ u8"HAS_OCCLUSION_MAP", 1 });
+    ptr->FS.Macros.push_back({ u8"HAS_OCCLUSION_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 8, ao });
   }
 
   if (albedo) {
-    ptr->FS.Macros.push_back({ u8"HAS_BASE_COLOR_MAP", 1 });
+    ptr->FS.Macros.push_back({ u8"HAS_BASE_COLOR_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 9, albedo });
   }
   if (metallic_roughness) {
-    ptr->FS.Macros.push_back({ u8"HAS_METALLIC_ROUGHNESS_MAP", 1 });
+    ptr->FS.Macros.push_back({ u8"HAS_METALLIC_ROUGHNESS_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 10, metallic_roughness });
   }
 
   return ptr;
 }
-
 }

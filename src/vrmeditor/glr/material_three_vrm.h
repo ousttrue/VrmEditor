@@ -175,54 +175,81 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
       .Version = u8"#version 300 es",
       .Codes{ VS_CODE },
       .Macros = {
-        { u8"THREE_VRM_THREE_REVISION", 150 },
-        { u8"NUM_SPOT_LIGHT_COORDS", 4 },
-        { u8"NUM_CLIPPING_PLANES", 0 },
+        { u8"THREE_VRM_THREE_REVISION", ConstInt(150) },
+        { u8"NUM_SPOT_LIGHT_COORDS", ConstInt(4) },
+        { u8"NUM_CLIPPING_PLANES", ConstInt(0) },
         { u8"MTOON_USE_UV" },
       },
     },
     .FS={
       .SourceName = "mtoon.frag",
-      .Version =u8"#version 300 es", 
+      .Version =u8"#version 300 es",
       .Precision = u8"mediump float",
       .Codes{ FS_CODE },
       .Macros = {
         // { u8"DEBUG_LITSHADERATE" },
         // { u8"DEBUG_UV" },
         // { u8"DEBUG_NORMAL" },
+        // { u8"USE_SHADEMULTIPLYTEXTURE"},
+        // { u8"USE_SHADINGSHIFTTEXTURE"},
+        // { u8"USE_RIMMULTIPLYTEXTURE"},
+        // { u8"USE_MATCAPTEXTURE"},
+        // { u8"USE_UVANIMATIONMASKTEXTURE"},
+// color_pars_fragment: #if defined( USE_COLOR_ALPHA )
+// color_pars_fragment: #elif defined( USE_COLOR )
+// alphatest_pars_fragment: #ifdef USE_ALPHATEST
+// aomap_pars_fragment: #ifdef USE_AOMAP
+// emissivemap_pars_fragment: #ifdef USE_EMISSIVEMAP
+// lights_pars_begin: #if defined ( LEGACY_LIGHTS )
+// lights_pars_begin: #if NUM_DIR_LIGHTS > 0
+// lights_pars_begin: #if NUM_POINT_LIGHTS > 0
+// lights_pars_begin: #if NUM_SPOT_LIGHTS > 0
+// lights_pars_begin: #if NUM_RECT_AREA_LIGHTS > 0
+// lights_pars_begin: #if NUM_HEMI_LIGHTS > 0
+// normal_pars_fragment: #ifdef USE_TANGENT
+// mtoon.frag: #ifdef USE_NORMALMAP
+// mtoon.frag: #ifdef OBJECTSPACE_NORMALMAP
+// mtoon.frag: #ifdef DOUBLE_SIDED
+// mtoon.frag: #ifdef OUTLINE
+// mtoon.frag: #ifdef FLIP_SIDED
+// lights_fragment_maps: #ifdef USE_LIGHTMAP
+// lights_fragment_maps: #if defined( USE_ENVMAP ) && defined( STANDARD ) && defined( ENVMAP_TYPE_CUBE_UV )
+// lights_fragment_maps: #if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )
+// aomap_fragment: #if defined( USE_ENVMAP ) && defined( STANDARD )
+// mtoon.frag: #if defined( OUTLINE )
         { u8"USE_MAP" },
         { u8"MTOON_USE_UV" },
-        { u8"THREE_VRM_THREE_REVISION", 150 },
-        { u8"NUM_SPOT_LIGHT_COORDS", 4 },
-        { u8"NUM_DIR_LIGHTS", 2 },
-        { u8"NUM_POINT_LIGHTS", 0 },
-        { u8"NUM_SPOT_LIGHTS", 0 },
-        { u8"NUM_RECT_AREA_LIGHTS", 0 },
-        { u8"NUM_HEMI_LIGHTS", 0 },
-        { u8"NUM_SPOT_LIGHT_MAPS", 0 },
-        { u8"NUM_CLIPPING_PLANES", 0 },
-        { u8"UNION_CLIPPING_PLANES", 0 },
-        { u8"isOrthographic", false },
+        { u8"THREE_VRM_THREE_REVISION", ConstInt(150) },
+        { u8"NUM_SPOT_LIGHT_COORDS", ConstInt(4) },
+        { u8"NUM_DIR_LIGHTS", ConstInt(2) },
+        { u8"NUM_POINT_LIGHTS", ConstInt(0) },
+        { u8"NUM_SPOT_LIGHTS", ConstInt(0) },
+        { u8"NUM_RECT_AREA_LIGHTS", ConstInt(0) },
+        { u8"NUM_HEMI_LIGHTS", ConstInt(0) },
+        { u8"NUM_SPOT_LIGHT_MAPS", ConstInt(0) },
+        { u8"NUM_CLIPPING_PLANES", ConstInt(0) },
+        { u8"UNION_CLIPPING_PLANES", ConstInt(0) },
+        { u8"isOrthographic", ConstBool(false) },
       },
     },
-    .UniformGetterMap
+    .UniformVarMap
     {
-      {"projectionMatrix",[](auto &w,auto &l, auto){return w.ProjectionMatrix();}},
-      {"viewMatrix",[](auto &w,auto &l, auto){return w.ViewMatrix();}},
-      {"cameraPosition",[](auto &w,auto &l, auto){return w.CameraPosition();}},
-      {"modelMatrix",[](auto &w,auto &l, auto){return l.ModelMatrix();}},
-      {"normalMatrix",[](auto &w,auto &l, auto){return l.NormalMatrix3();}},
-      {"modelViewMatrix",[](auto &w,auto &l, auto){return mult(l.ModelMatrix(), w.ViewMatrix());}},
-      {"uvTransform",[](auto &w,auto &l, auto){return l.UvTransformMatrix();}},
-      {"mapUvTransform",[](auto &w,auto &l, auto){return l.UvTransformMatrix();}},
-      {"map",GetInt(0)},
-      {"opacity",GetFloat(1)},
-      {"litFactor",[](auto, auto, auto){return DirectX::XMFLOAT3{1,1,1};}},
-      {"ambientLightColor",[](auto, auto, auto){return DirectX::XMFLOAT3{1,1,1};}},
-      {"shadeColorFactor",[](auto, auto, auto){return DirectX::XMFLOAT3{0,0,0};}},
+      {"projectionMatrix",Mat4Var{[](auto &w,auto &l, auto){return w.ProjectionMatrix();}}},
+      {"viewMatrix",Mat4Var{[](auto &w,auto &l, auto){return w.ViewMatrix();}}},
+      {"cameraPosition",Vec3Var{[](auto &w,auto &l, auto){return w.CameraPosition();}}},
+      {"modelMatrix",Mat4Var{[](auto &w,auto &l, auto){return l.ModelMatrix();}}},
+      {"normalMatrix",Mat3Var{[](auto &w,auto &l, auto){return l.NormalMatrix3();}}},
+      {"modelViewMatrix",Mat4Var{[](auto &w,auto &l, auto){return mult(l.ModelMatrix(), w.ViewMatrix());}}},
+      {"uvTransform",Mat3Var{[](auto &w,auto &l, auto){return l.UvTransformMatrix();}}},
+      {"mapUvTransform",Mat3Var{[](auto &w,auto &l, auto){return l.UvTransformMatrix();}}},
+      {"map",ConstInt(0)},
+      {"opacity",ConstFloat(1)},
+      {"litFactor",Vec3Var{[](auto, auto, auto){return DirectX::XMFLOAT3{1,1,1};}}},
+      {"ambientLightColor",Vec3Var{[](auto, auto, auto){return DirectX::XMFLOAT3{1,1,1};}}},
+      {"shadeColorFactor",Vec3Var{[](auto, auto, auto){return DirectX::XMFLOAT3{0,0,0};}}},
 
-      {"directionalLights[0].direction", [](auto, auto, auto){ return DirectX::XMFLOAT3(3,3,3);}},
-      {"directionalLights[0].color", [](auto, auto, auto){ return DirectX::XMFLOAT3(1,1,1);}},
+      {"directionalLights[0].direction", Vec3Var{[](auto, auto, auto){ return DirectX::XMFLOAT3(3,3,3);}}},
+      {"directionalLights[0].color", Vec3Var{[](auto, auto, auto){ return DirectX::XMFLOAT3(1,1,1);}}},
     },
   };
 

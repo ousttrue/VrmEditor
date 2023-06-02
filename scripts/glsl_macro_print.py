@@ -17,9 +17,15 @@ class Printer:
         if not self.root:
             self.root = path.parent
 
-        # base_dir = path.parent
-        # print(path)
-        for l in path.read_text().splitlines():
+        if path.exists():
+            lines = path.read_text().splitlines()
+        elif self.chunk_root:
+            chunk_path = pathlib.Path(self.chunk_root / (path.name + ".glsl.js"))
+            lines = chunk_path.read_text().splitlines()[1:-1]
+        else:
+            assert False
+
+        for l in lines:
             l = l.strip()
             if len(l) == 0:
                 continue
@@ -58,5 +64,5 @@ if __name__ == "__main__":
         print(f"usage: {sys.argv[0]} GLSL_FILE")
         sys.exit()
 
-    p = Printer(None)
+    p = Printer(pathlib.Path(sys.argv[2]) if len(sys.argv) >= 3 else None)
     p.process(pathlib.Path(sys.argv[1]))
