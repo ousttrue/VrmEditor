@@ -498,10 +498,24 @@ public:
       m_localUbo->SetBindingPoint(1);
 
       LocalInfo local{ m_local };
-      material_factory->Activate(
-        m_shaderSource, world, local, gltfMaterial.m_json);
 
-      glEnable(GL_DEPTH_TEST);
+      gltfjson::tree::NodePtr vrm0Material;
+      if (vrm0Materials) {
+        auto p = (*vrm0Materials)[*primitive.Material];
+        if (auto name = p->Get(u8"shader")) {
+          if (name->U8String() == u8"VRM/MToon") {
+            vrm0Material = p;
+          }
+        }
+      }
+
+      if (vrm0Material) {
+        // VRM0+MToon
+        material_factory->Activate(m_shaderSource, world, local, vrm0Material);
+      } else {
+        material_factory->Activate(
+          m_shaderSource, world, local, gltfMaterial.m_json);
+      }
 
     } else {
       // error

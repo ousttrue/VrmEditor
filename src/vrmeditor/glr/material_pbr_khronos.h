@@ -172,9 +172,9 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
           }}},
           {u8"HAS_CLEARCOAT_NORMAL_MAP", Disable()},
           {u8"HAS_DIFFUSE_MAP", Disable()},
-          {u8"HAS_BASE_COLOR_MAP", Disable()},
+
           {u8"HAS_SPECULAR_GLOSSINESS_MAP", Disable()},
-          {u8"HAS_METALLIC_ROUGHNESS_MAP", Disable()},
+
           {u8"HAS_SHEEN_COLOR_MAP", Disable()},
           {u8"HAS_SHEEN_ROUGHNESS_MAP", Disable()},
           {u8"HAS_SPECULAR_MAP", Disable()},
@@ -187,6 +187,30 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
           {u8"HAS_CLEARCOAT_ROUGHNESS_MAP", Disable()},
           {u8"MATERIAL_IOR", Disable()},
           {u8"USE_IBL", Disable()},
+
+          {u8"HAS_BASE_COLOR_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
+            gltfjson::typing::Material m(json);
+            if(auto pbr = m.PbrMetallicRoughness())
+            {
+              if(pbr->BaseColorTexture())
+              {
+              return std::monostate{};
+              }
+            }
+            return std::nullopt;
+          }}},
+
+          {u8"HAS_METALLIC_ROUGHNESS_MAP", OptVar{[](auto,auto,auto &json)->std::optional<std::monostate>{
+            gltfjson::typing::Material m(json);
+            if(auto pbr = m.PbrMetallicRoughness())
+            {
+              if(pbr->MetallicRoughnessTexture())
+              {
+              return std::monostate{};
+              }
+            }
+            return std::nullopt;
+          }}},
 
           {u8"HAS_EMISSIVE_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
             gltfjson::typing::Material m(json);
@@ -361,18 +385,14 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
   if (ao) {
     ptr->Textures.push_back({ 8, ao });
   }
-
   if (albedo) {
-    ptr->FS.MacroGroups["Texture"].push_back(
-      { u8"HAS_BASE_COLOR_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 9, albedo });
   }
   if (metallic_roughness) {
-    ptr->FS.MacroGroups["Texture"].push_back(
-      { u8"HAS_METALLIC_ROUGHNESS_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 10, metallic_roughness });
   }
 
   return ptr;
 }
-}
+
+} // namespace

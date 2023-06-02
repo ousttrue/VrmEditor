@@ -2,6 +2,7 @@
 #include "material_factory.h"
 #include "shader_source.h"
 #include <gltfjson.h>
+#include <gltfjson/vrm0_typing.h>
 #include <string_view>
 #include <vector>
 
@@ -190,7 +191,14 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
       .Codes{ FS_CODE },
       .MacroGroups{
         {"LIGHTING", {
-          { u8"USE_MAP" },
+          { u8"USE_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{ 
+            gltfjson::typing::Vrm0Material m(json);
+            if(auto p=m.MainTexture())
+            {
+              return std::monostate{};
+            }
+            return std::nullopt;
+          }}},
           { u8"MTOON_USE_UV" },
           { u8"THREE_VRM_THREE_REVISION", ConstInt(150) },
           { u8"NUM_SPOT_LIGHT_COORDS", ConstInt(4) },
