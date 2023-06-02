@@ -28,6 +28,11 @@ struct MaterialFactory
   std::unordered_map<std::string, UniformVar> UniformVarMap;
   std::vector<std::optional<UniformVar>> UniformVars;
 
+  std::function<void(const WorldInfo& world,
+                     const LocalInfo& local,
+                     const gltfjson::tree::NodePtr& material)>
+    UpdateState;
+
   void Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                 const WorldInfo& world,
                 const LocalInfo& local,
@@ -62,6 +67,10 @@ struct MaterialFactory
       }
     }
     if (Compiled) {
+      if (UpdateState) {
+        UpdateState(world, local, material);
+      }
+
       auto shader = *Compiled;
       shader->Use();
       for (auto& texture : Textures) {

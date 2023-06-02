@@ -3,10 +3,36 @@
 #include "gl3renderer.h"
 #include "material_factory.h"
 #include "shader_source.h"
+#include <DirectXMath.h>
 #include <gltfjson.h>
 #include <grapho/gl3/pbr.h>
 
 namespace glr {
+
+inline DirectX::XMFLOAT3
+Vec3(const gltfjson::tree::NodePtr& json, const DirectX::XMFLOAT3& defaultValue)
+{
+  if (json) {
+    if (auto a = json->Array()) {
+      if (a->size() == 3) {
+        if (auto a0 = (*a)[0]) {
+          if (auto p0 = a0->Ptr<float>()) {
+            if (auto a1 = (*a)[1]) {
+              if (auto p1 = a1->Ptr<float>()) {
+                if (auto a2 = (*a)[2]) {
+                  if (auto p2 = a2->Ptr<float>()) {
+                    return { *p0, *p1, *p2 };
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return defaultValue;
+}
 
 inline std::shared_ptr<MaterialFactory>
 MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
@@ -135,7 +161,15 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
           {u8"HAS_IRIDESCENCETHICKNESS_UV_TRANSFORM", Disable()},
         }},
         {"Material", {
-          {u8"HAS_NORMAL_MAP", Disable()},
+          {u8"HAS_NORMAL_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
+            gltfjson::typing::Material m(json);
+            if (auto info = m.NormalTexture()) {
+              return std::monostate{};
+            }
+            else{
+              return std::nullopt;
+            }
+          }}},
           {u8"HAS_CLEARCOAT_NORMAL_MAP", Disable()},
           {u8"HAS_DIFFUSE_MAP", Disable()},
           {u8"HAS_BASE_COLOR_MAP", Disable()},
@@ -153,10 +187,35 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
           {u8"HAS_CLEARCOAT_ROUGHNESS_MAP", Disable()},
           {u8"MATERIAL_IOR", Disable()},
           {u8"USE_IBL", Disable()},
+
+          {u8"HAS_EMISSIVE_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
+            gltfjson::typing::Material m(json);
+            if (auto info = m.EmissiveTexture()) {
+              return std::monostate{};
+            }
+            return std::nullopt;
+          }}},
           {u8"MATERIAL_EMISSIVE_STRENGTH", Disable()},
-          {u8"HAS_EMISSIVE_MAP", Disable()},
-          {u8"HAS_OCCLUSION_MAP", Disable()},
-          {u8"MATERIAL_UNLIT", Disable()},
+
+          {u8"HAS_OCCLUSION_MAP", OptVar{[](auto,auto,auto &json)->std::optional<std::monostate>{
+            gltfjson::typing::Material m(json);
+            if (auto info = m.OcclusionTexture()) {
+              return std::monostate{};
+            }
+            return std::nullopt;
+          }}},
+
+          {u8"MATERIAL_UNLIT", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
+            if(auto extensions = json->Get(u8"extensions"))
+            {
+              if(auto unlit = extensions->Get(u8"KHR_materials_unlit"))
+              {
+                return std::monostate{};
+              }
+            }
+            return std::nullopt;
+          }}},
+
           {u8"LINEAR_OUTPUT", Disable()},
         }},
       },
@@ -170,7 +229,15 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
 
       {"u_ModelMatrix",Mat4Var{[](auto &w, auto &l, auto){ return l.ModelMatrix();}}},
       {"u_ViewProjectionMatrix",Mat4Var{[](auto &w, auto &l, auto){ return w.ViewProjectionMatrix();}}},
-      {"u_EmissiveFactor",Vec3Var{[](auto &w, auto &l, auto){ return l.EmissiveRGB();}}},
+
+      {"u_EmissiveFactor",Vec3Var{[](auto &w, auto &l, auto &json){ 
+        if(auto e = json->Get(u8"emissiveFactor"))
+        {
+          return Vec3(e, {0, 0, 0});
+        }
+        return DirectX::XMFLOAT3{0, 0, 0};
+      }}},
+
       {"u_NormalMatrix",Mat4Var{[](auto &w, auto &l, auto){ return l.NormalMatrix4();}}},
       {"u_Camera",Vec3Var{[](auto &w, auto &l, auto){return w.CameraPosition();}}},
 
@@ -202,6 +269,17 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
       { "u_OcclusionSampler", ConstInt(8) }, { "u_BaseColorSampler", ConstInt(9) },
       { "u_MetallicRoughnessSampler", ConstInt(10) },
 
+      { "u_NormalScale", FloatVar{[](auto, auto, auto &json){
+        gltfjson::typing::Material m(json);
+        if (auto normalTexture = m.NormalTexture()) {
+          if(auto p = normalTexture->Scale())
+          {
+            return *p;
+          }
+        }
+        return 1.0f;
+      }}},
+
       { "u_AlphaCutoff", FloatVar{[](auto, auto, auto &json){
         gltfjson::typing::Material m(json);
         if(auto p = m.AlphaCutoff())
@@ -213,7 +291,35 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
         }
       }}},
     },
-  };
+    .UpdateState = [](auto, auto, auto &json)
+    {
+      gltfjson::typing::Material m(json);
+      auto mode = m.AlphaMode();
+      if(mode == u8"MASK")
+      {
+        glDisable(GL_BLEND);
+      }
+      else if(mode == u8"BLEND")
+      {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      }
+      else{
+        // OPAQUE
+        glDisable(GL_BLEND);
+      }
+
+      bool *ds;
+      if((ds = m.DoubleSided()) && *ds)
+      {
+        glDisable(GL_CULL_FACE);
+        glFrontFace(GL_CCW);
+      }
+      else{
+        glEnable(GL_CULL_FACE);
+      }
+   },
+};
 
   std::shared_ptr<grapho::gl3::Texture> albedo;
   std::shared_ptr<grapho::gl3::Texture> metallic_roughness;
@@ -247,18 +353,12 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
   }
 
   if (normal) {
-    ptr->FS.MacroGroups["Texture"].push_back(
-      { u8"HAS_NORMAL_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 6, normal });
   }
   if (emissive) {
-    ptr->FS.MacroGroups["Texture"].push_back(
-      { u8"HAS_EMISSIVE_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 7, emissive });
   }
   if (ao) {
-    ptr->FS.MacroGroups["Texture"].push_back(
-      { u8"HAS_OCCLUSION_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 8, ao });
   }
 

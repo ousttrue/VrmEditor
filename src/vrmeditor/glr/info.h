@@ -30,6 +30,7 @@ struct WorldInfo
 struct LocalInfo
 {
   const grapho::LocalVars& m_local;
+  bool HasVertexColor = false;
 
   DirectX::XMFLOAT4X4 ModelMatrix() const { return m_local.model; }
   DirectX::XMFLOAT4X4 NormalMatrix4() const { return m_local.normalMatrix; }

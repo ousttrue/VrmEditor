@@ -88,7 +88,8 @@ class Gl3Renderer
     { ShaderTypes::Shadow, MaterialFactory_Shadow },
     // { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL },
     { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos },
-    { ShaderTypes::Unlit, MaterialFactory_Unlit },
+    { ShaderTypes::Unlit, MaterialFactory_Pbr_Khronos },
+    // { ShaderTypes::Unlit, MaterialFactory_Unlit },
     { ShaderTypes::MToon1, MaterialFactory_MToon },
     { ShaderTypes::MToon0, MaterialFactory_MToon },
   };
@@ -496,29 +497,8 @@ public:
       material_factory->Activate(
         m_shaderSource, world, local, gltfMaterial.m_json);
 
-      // state
-      glEnable(GL_CULL_FACE);
-      glFrontFace(GL_CCW);
-      // glCullFace(GL_BGR);
       glEnable(GL_DEPTH_TEST);
 
-      switch (auto alphaMode = GetAlphaMode(root, primitive.Material)) {
-        case gltfjson::format::AlphaModes::Opaque:
-          glDisable(GL_BLEND);
-          break;
-        case gltfjson::format::AlphaModes::Mask:
-          glDisable(GL_BLEND);
-          break;
-        case gltfjson::format::AlphaModes::Blend:
-          glEnable(GL_BLEND);
-          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-          break;
-      }
-      // m_program->Uniform("cutoff")->SetFloat(primitive.Material->AlphaCutoff);
-      // m_program->Uniform("color")->SetFloat4(
-      //   primitive.Material->Pbr.BaseColorFactor);
-
-      // texture->Activate(0);
     } else {
       // error
       if (!m_error.Compiled) {
