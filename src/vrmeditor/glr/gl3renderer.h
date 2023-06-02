@@ -4,6 +4,7 @@
 #include "renderpass.h"
 #include <cuber/mesh.h>
 #include <filesystem>
+#include <gltfjson.h>
 #include <memory>
 
 namespace libvrm {
@@ -22,12 +23,6 @@ namespace runtimescene {
 struct BaseMesh;
 struct DeformedMesh;
 }
-namespace gltfjson {
-namespace typing {
-struct Root;
-struct Bin;
-}
-}
 
 namespace glr {
 
@@ -38,6 +33,7 @@ Render(RenderPass pass,
        const RenderingEnv& camera,
        const gltfjson::typing::Root& root,
        const gltfjson::typing::Bin& bin,
+       const gltfjson::tree::ArrayValue* vrm0Materials,
        uint32_t meshId,
        const std::shared_ptr<runtimescene::BaseMesh>& mesh,
        const runtimescene::DeformedMesh& instance,

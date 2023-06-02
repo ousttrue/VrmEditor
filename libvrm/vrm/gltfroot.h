@@ -27,18 +27,6 @@ struct Node;
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
 using LeaveFunc = std::function<void()>;
 
-template<typename T>
-inline std::optional<size_t>
-_IndexOf(std::span<const T> values, const T& target)
-{
-  for (size_t i = 0; i < values.size(); ++i) {
-    if (values[i] == target) {
-      return i;
-    }
-  }
-  return {};
-}
-
 enum class ModelType
 {
   Gltf,
@@ -67,6 +55,7 @@ struct GltfRoot
   std::shared_ptr<vrm::Expressions> m_expressions;
 
   // spring
+  gltfjson::tree::NodePtr m_vrm0Materials;
   std::vector<std::shared_ptr<vrm::SpringCollider>> m_springColliders;
   std::vector<std::shared_ptr<vrm::SpringColliderGroup>> m_springColliderGroups;
   std::vector<std::shared_ptr<vrm::SpringBone>> m_springBones;
@@ -100,9 +89,9 @@ struct GltfRoot
     m_expressions = {};
   }
 
-  std::optional<size_t> IndexOf(const std::shared_ptr<Node>& node) const
+  gltfjson::tree::ArrayValue* Vrm0Materials() const
   {
-    return _IndexOf<std::shared_ptr<Node>>(m_nodes, node);
+    return m_vrm0Materials->Array();
   }
 
   void RaiseSceneUpdated()

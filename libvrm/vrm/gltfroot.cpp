@@ -47,50 +47,6 @@ GltfRoot::Traverse(const EnterFunc& enter,
   }
 }
 
-// void
-// Scene::TraverseJson(const EnterJson& enter,
-//                     const LeaveJson& leave,
-//                     nlohmann::json* item)
-// {
-//   if (!item) {
-//     // root
-//     m_jsonpath = "/";
-//     auto size = m_jsonpath.size();
-//     // for (auto& kv : m_gltf->Json.items()) {
-//     //   m_jsonpath += kv.key();
-//     //   TraverseJson(enter, leave, &kv.value());
-//     //   m_jsonpath.resize(size);
-//     // }
-//     return;
-//   }
-//
-//   if (enter(*item, m_jsonpath)) {
-//     if (item->is_object()) {
-//       auto size = m_jsonpath.size();
-//       for (auto& kv : item->items()) {
-//         m_jsonpath.push_back(DELIMITER);
-//         m_jsonpath += kv.key();
-//         TraverseJson(enter, leave, &kv.value());
-//         m_jsonpath.resize(size);
-//       }
-//     } else if (item->is_array()) {
-//       auto size = m_jsonpath.size();
-//       for (int i = 0; i < item->size(); ++i) {
-//         std::stringstream ss;
-//         ss << i;
-//         auto str = ss.str();
-//         m_jsonpath.push_back(DELIMITER);
-//         m_jsonpath += str;
-//         TraverseJson(enter, leave, &(*item)[i]);
-//         m_jsonpath.resize(size);
-//       }
-//     }
-//     if (leave) {
-//       leave();
-//     }
-//   }
-// }
-
 std::shared_ptr<gltf::Node>
 GltfRoot::GetBoneNode(vrm::HumanBones bone)
 {

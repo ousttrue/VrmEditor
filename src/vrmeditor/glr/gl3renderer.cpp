@@ -406,6 +406,7 @@ public:
               const RenderingEnv& env,
               const gltfjson::typing::Root& root,
               const gltfjson::typing::Bin& bin,
+              const gltfjson::tree::ArrayValue* vrm0Materials,
               uint32_t meshId,
               const std::shared_ptr<runtimescene::BaseMesh>& mesh,
               const runtimescene::DeformedMesh& deformed,
@@ -444,7 +445,8 @@ public:
       case RenderPass::Color: {
         uint32_t drawOffset = 0;
         for (auto& primitive : mesh->m_primitives) {
-          DrawPrimitive(world, root, bin, vao, primitive, drawOffset);
+          DrawPrimitive(
+            world, root, bin, vrm0Materials, vao, primitive, drawOffset);
           drawOffset += primitive.DrawCount * 4;
         }
         break;
@@ -471,6 +473,7 @@ public:
   void DrawPrimitive(const WorldInfo& world,
                      const gltfjson::typing::Root& root,
                      const gltfjson::typing::Bin& bin,
+                     const gltfjson::tree::ArrayValue* vrm0Materials,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
                      const runtimescene::Primitive& primitive,
                      uint32_t drawOffset)
@@ -531,10 +534,6 @@ public:
 
   void ShowSelector()
   {
-    // ImGui::Text("srgb: %zd(textures)", m_srgbTextureMap.size());
-    // ImGui::Text("linear: %zd(textures)", m_linearTextureMap.size());
-    // ImGui::SameLine();
-    // ImGui::Text("%zd(meshes)", m_drawableMap.size());
     for (uint32_t i = 0; i < m_materialMap.size(); ++i) {
       PrintfBuffer buf;
       if (ImGui::Selectable(buf.Printf("%d", i), i == m_selected)) {
@@ -575,13 +574,14 @@ Render(RenderPass pass,
        const RenderingEnv& env,
        const gltfjson::typing::Root& root,
        const gltfjson::typing::Bin& bin,
+       const gltfjson::tree::ArrayValue* vrm0Materials,
        uint32_t meshId,
        const std::shared_ptr<runtimescene::BaseMesh>& mesh,
        const runtimescene::DeformedMesh& deformed,
        const DirectX::XMFLOAT4X4& m)
 {
   Gl3Renderer::Instance().Render(
-    pass, env, root, bin, meshId, mesh, deformed, m);
+    pass, env, root, bin, vrm0Materials, meshId, mesh, deformed, m);
 }
 
 void

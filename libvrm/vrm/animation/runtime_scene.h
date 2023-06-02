@@ -1,11 +1,23 @@
 #pragma once
 #include "../gltf.h"
 #include "../humanoid/humanpose.h"
-#include "spring_bone.h"
 #include "runtime_springjoint.h"
+#include "spring_bone.h"
 #include <unordered_map>
 
 namespace runtimescene {
+
+template<typename T>
+inline std::optional<size_t>
+_IndexOf(std::span<const T> values, const T& target)
+{
+  for (size_t i = 0; i < values.size(); ++i) {
+    if (values[i] == target) {
+      return i;
+    }
+  }
+  return {};
+}
 
 struct RuntimeNode;
 struct DeformedMesh;
@@ -28,7 +40,7 @@ struct RuntimeScene
 
   std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
   {
-    return libvrm::gltf::_IndexOf<std::shared_ptr<RuntimeNode>>(m_nodes, node);
+    return _IndexOf<std::shared_ptr<RuntimeNode>>(m_nodes, node);
   }
 
   std::list<std::function<void(const RuntimeScene& scene)>> m_sceneUpdated;

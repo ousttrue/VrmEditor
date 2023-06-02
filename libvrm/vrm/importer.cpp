@@ -349,19 +349,17 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   //   }
   // }
 
-  // if (has(scene->m_gltf->Json, "extensions")) {
-  //   auto& extensions = scene->m_gltf->Json.at("extensions");
-  //   if (has(extensions, "VRM")) {
-  //     auto VRM = extensions.at("VRM");
-  //     // TODO: meta
-  //     scene->m_type = ModelType::Vrm0;
-  //     scene->m_title = "vrm-0.x";
-  //   }
-  //   if (has(extensions, "VRMC_vrm")) {
-  //     scene->m_type = ModelType::Vrm1;
-  //     scene->m_title = "vrm-1.0";
-  //   }
-  // }
+  if (auto extensions = scene->m_gltf->Extensions()) {
+    if (auto VRM = extensions->Get(u8"VRM")) {
+      scene->m_type = ModelType::Vrm0;
+      scene->m_title = "vrm-0.x";
+      scene->m_vrm0Materials = VRM->Get(u8"materialProperties");
+    }
+    if (extensions->Get(u8"VRMC_vrm")) {
+      scene->m_type = ModelType::Vrm1;
+      scene->m_title = "vrm-1.0";
+    }
+  }
 
   {
     auto& nodes = scene->m_gltf->Nodes;
