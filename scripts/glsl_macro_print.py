@@ -13,7 +13,7 @@ class Printer:
         self.root = None
         self.used = set()
 
-    def process(self, path: pathlib.Path):
+    def process(self, path: pathlib.Path, indent=""):
         if not self.root:
             self.root = path.parent
 
@@ -41,13 +41,13 @@ class Printer:
                 # print(l)
                 m = INCLUDE_QUOTE.match(l)
                 if m:
-                    print(f"{path.relative_to(self.root)} => {m.group(1)}")
-                    self.process(path.parent / m.group(1))
+                    print(f"{indent}{path.relative_to(self.root)} => {m.group(1)}")
+                    self.process(path.parent / m.group(1), indent + "  ")
                     continue
                 m = INCLUDE_LESS_THAN.match(l)
                 if m:
-                    print(f"{path.relative_to(self.root)} => {m.group(1)}")
-                    self.process(path.parent / m.group(1))
+                    print(f"{indent}{path.relative_to(self.root)} => {m.group(1)}")
+                    self.process(path.parent / m.group(1), indent + "  ")
                     continue
 
                 assert False
@@ -55,7 +55,7 @@ class Printer:
                 if l in self.used:
                     pass
                 else:
-                    print(f"{path.relative_to(self.root)}: #{l}")
+                    print(f"{indent}{path.relative_to(self.root)}: #{l}")
                     self.used.add(l)
 
 
