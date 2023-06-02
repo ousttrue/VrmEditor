@@ -22,7 +22,7 @@ struct MaterialFactory
   ShaderFactory VS;
   ShaderFactory FS;
   std::expected<std::shared_ptr<grapho::gl3::ShaderProgram>, std::string>
-    Compiled = std::unexpected{ "init" };
+    Compiled = std::unexpected{""};
   std::list<grapho::gl3::TextureSlot> Textures;
 
   std::unordered_map<std::string, UniformVar> UniformVarMap;
@@ -35,37 +35,40 @@ struct MaterialFactory
   {
     if (!Compiled) {
       // execute mcaro
-      for (auto& g : VS.MacroGroups) {
-        for (auto& m : g.second) {
-          std::visit([&world, &local, &material](
-                       auto& var) { var.Update(world, local, material); },
-                     m.Value);
-        }
-      }
-      for (auto& g : FS.MacroGroups) {
-        for (auto& m : g.second) {
-          std::visit([&world, &local, &material](
-                       auto& var) { var.Update(world, local, material); },
-                     m.Value);
-        }
-      }
-      auto vs = VS.Expand(Type, shaderSource);
-      auto fs = FS.Expand(Type, shaderSource);
-      Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
-
-      // match binding
-      if (Compiled) {
-        auto shader = *Compiled;
-        UniformVars.clear();
-        for (auto& u : shader->Uniforms) {
-          auto found = UniformVarMap.find(u.Name);
-          if (found != UniformVarMap.end()) {
+      auto error = Compiled.error();
+      if (error.empty()) {
+        for (auto& g : VS.MacroGroups) {
+          for (auto& m : g.second) {
             std::visit([&world, &local, &material](
                          auto& var) { var.Update(world, local, material); },
-                       found->second);
-            UniformVars.push_back(found->second);
-          } else {
-            UniformVars.push_back({});
+                       m.Value);
+          }
+        }
+        for (auto& g : FS.MacroGroups) {
+          for (auto& m : g.second) {
+            std::visit([&world, &local, &material](
+                         auto& var) { var.Update(world, local, material); },
+                       m.Value);
+          }
+        }
+        auto vs = VS.Expand(Type, shaderSource);
+        auto fs = FS.Expand(Type, shaderSource);
+        Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
+
+        // match binding
+        if (Compiled) {
+          auto shader = *Compiled;
+          UniformVars.clear();
+          for (auto& u : shader->Uniforms) {
+            auto found = UniformVarMap.find(u.Name);
+            if (found != UniformVarMap.end()) {
+              std::visit([&world, &local, &material](
+                           auto& var) { var.Update(world, local, material); },
+                         found->second);
+              UniformVars.push_back(found->second);
+            } else {
+              UniformVars.push_back({});
+            }
           }
         }
       }

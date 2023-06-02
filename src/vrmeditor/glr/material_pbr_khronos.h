@@ -8,116 +8,14 @@
 
 namespace glr {
 
-// pbr.frag => tonemapping.glsl
-// tonemapping.glsl: #ifdef TONEMAP_ACES_NARKOWICZ
-// tonemapping.glsl: #ifdef TONEMAP_ACES_HILL
-// tonemapping.glsl: #ifdef TONEMAP_ACES_HILL_EXPOSURE_BOOST
-// pbr.frag => textures.glsl
-// textures.glsl: #ifdef HAS_NORMAL_UV_TRANSFORM
-// textures.glsl: #ifdef HAS_EMISSIVE_UV_TRANSFORM
-// textures.glsl: #ifdef HAS_OCCLUSION_UV_TRANSFORM
-// textures.glsl: #ifdef MATERIAL_METALLICROUGHNESS
-// textures.glsl: #ifdef HAS_BASECOLOR_UV_TRANSFORM
-// textures.glsl: #ifdef HAS_METALLICROUGHNESS_UV_TRANSFORM
-// textures.glsl: #ifdef MATERIAL_SPECULARGLOSSINESS
-// textures.glsl: #ifdef HAS_SPECULARGLOSSINESS_UV_TRANSFORM
-// textures.glsl: #ifdef HAS_DIFFUSE_UV_TRANSFORM
-// textures.glsl: #ifdef MATERIAL_CLEARCOAT
-// textures.glsl: #ifdef HAS_CLEARCOAT_UV_TRANSFORM
-// textures.glsl: #ifdef HAS_CLEARCOATROUGHNESS_UV_TRANSFORM
-// textures.glsl: #ifdef HAS_CLEARCOATNORMAL_UV_TRANSFORM
-// textures.glsl: #ifdef MATERIAL_SHEEN
-// textures.glsl: #ifdef HAS_SHEENCOLOR_UV_TRANSFORM
-// textures.glsl: #ifdef HAS_SHEENROUGHNESS_UV_TRANSFORM
-// textures.glsl: #ifdef MATERIAL_SPECULAR
-// textures.glsl: #ifdef HAS_SPECULAR_UV_TRANSFORM
-// textures.glsl: #ifdef HAS_SPECULARCOLOR_UV_TRANSFORM
-// textures.glsl: #ifdef MATERIAL_TRANSMISSION
-// textures.glsl: #ifdef HAS_TRANSMISSION_UV_TRANSFORM
-// textures.glsl: #ifdef MATERIAL_VOLUME
-// textures.glsl: #ifdef HAS_THICKNESS_UV_TRANSFORM
-// textures.glsl: #ifdef MATERIAL_IRIDESCENCE
-// textures.glsl: #ifdef HAS_IRIDESCENCE_UV_TRANSFORM
-// textures.glsl: #ifdef HAS_IRIDESCENCETHICKNESS_UV_TRANSFORM
-// pbr.frag => functions.glsl
-// functions.glsl: #ifdef HAS_NORMAL_VEC3
-// functions.glsl: #ifdef HAS_TANGENT_VEC4
-// functions.glsl: #ifdef HAS_COLOR_0_VEC3
-// functions.glsl: #ifdef HAS_COLOR_0_VEC4
-// pbr.frag => brdf.glsl
-// pbr.frag => punctual.glsl
-// punctual.glsl: #ifdef USE_PUNCTUAL
-// pbr.frag => ibl.glsl
-// pbr.frag => material_info.glsl
-// material_info.glsl: #ifdef HAS_NORMAL_MAP
-// material_info.glsl: #ifdef HAS_CLEARCOAT_NORMAL_MAP
-// material_info.glsl: #if defined(MATERIAL_SPECULARGLOSSINESS)
-// material_info.glsl: #elif defined(MATERIAL_METALLICROUGHNESS)
-// material_info.glsl: #if defined(MATERIAL_SPECULARGLOSSINESS) &&
-// defined(HAS_DIFFUSE_MAP) material_info.glsl: #elif
-// defined(MATERIAL_METALLICROUGHNESS) && defined(HAS_BASE_COLOR_MAP)
-// material_info.glsl: #ifdef HAS_SPECULAR_GLOSSINESS_MAP
-// material_info.glsl: #ifdef HAS_METALLIC_ROUGHNESS_MAP
-// material_info.glsl: #ifdef HAS_SHEEN_COLOR_MAP
-// material_info.glsl: #ifdef HAS_SHEEN_ROUGHNESS_MAP
-// material_info.glsl: #ifdef HAS_SPECULAR_MAP
-// material_info.glsl: #ifdef HAS_SPECULAR_COLOR_MAP
-// material_info.glsl: #ifdef HAS_TRANSMISSION_MAP
-// material_info.glsl: #ifdef HAS_THICKNESS_MAP
-// material_info.glsl: #ifdef HAS_IRIDESCENCE_MAP
-// material_info.glsl: #ifdef HAS_IRIDESCENCE_THICKNESS_MAP
-// material_info.glsl: #ifdef HAS_CLEARCOAT_MAP
-// material_info.glsl: #ifdef HAS_CLEARCOAT_ROUGHNESS_MAP
-// material_info.glsl: #ifdef MATERIAL_IOR
-// pbr.frag => iridescence.glsl
-// pbr.frag: #if ALPHAMODE == ALPHAMODE_OPAQUE
-// pbr.frag: #if DEBUG == DEBUG_METALLIC_ROUGHNESS
-// pbr.frag: #ifdef USE_IBL
-// pbr.frag: #if defined(MATERIAL_TRANSMISSION) && defined(USE_IBL)
-// pbr.frag: #ifdef MATERIAL_EMISSIVE_STRENGTH
-// pbr.frag: #ifdef HAS_EMISSIVE_MAP
-// pbr.frag: #ifdef HAS_OCCLUSION_MAP
-// pbr.frag: #ifdef MATERIAL_UNLIT
-// pbr.frag: #if DEBUG == DEBUG_NONE
-// pbr.frag: #if ALPHAMODE == ALPHAMODE_MASK
-// pbr.frag: #ifdef LINEAR_OUTPUT
-// pbr.frag: #if DEBUG == DEBUG_UV_0 && defined(HAS_TEXCOORD_0_VEC2)
-// pbr.frag: #if DEBUG == DEBUG_UV_1 && defined(HAS_TEXCOORD_1_VEC2)
-// pbr.frag: #if DEBUG == DEBUG_NORMAL_TEXTURE && defined(HAS_NORMAL_MAP)
-// pbr.frag: #if DEBUG == DEBUG_NORMAL_SHADING
-// pbr.frag: #if DEBUG == DEBUG_NORMAL_GEOMETRY
-// pbr.frag: #if DEBUG == DEBUG_TANGENT
-// pbr.frag: #if DEBUG == DEBUG_BITANGENT
-// pbr.frag: #if DEBUG == DEBUG_ALPHA
-// pbr.frag: #if DEBUG == DEBUG_OCCLUSION && defined(HAS_OCCLUSION_MAP)
-// pbr.frag: #if DEBUG == DEBUG_EMISSIVE
-// pbr.frag: #if DEBUG == DEBUG_METALLIC
-// pbr.frag: #if DEBUG == DEBUG_ROUGHNESS
-// pbr.frag: #if DEBUG == DEBUG_BASE_COLOR
-// pbr.frag: #if DEBUG == DEBUG_CLEARCOAT
-// pbr.frag: #if DEBUG == DEBUG_CLEARCOAT_FACTOR
-// pbr.frag: #if DEBUG == DEBUG_CLEARCOAT_ROUGHNESS
-// pbr.frag: #if DEBUG == DEBUG_CLEARCOAT_NORMAL
-// pbr.frag: #if DEBUG == DEBUG_SHEEN
-// pbr.frag: #if DEBUG == DEBUG_SHEEN_COLOR
-// pbr.frag: #if DEBUG == DEBUG_SHEEN_ROUGHNESS
-// pbr.frag: #if DEBUG == DEBUG_SPECULAR
-// pbr.frag: #if DEBUG == DEBUG_SPECULAR_FACTOR
-// pbr.frag: #if DEBUG == DEBUG_SPECULAR_COLOR
-// pbr.frag: #if DEBUG == DEBUG_TRANSMISSION_VOLUME
-// pbr.frag: #if DEBUG == DEBUG_TRANSMISSION_FACTOR
-// pbr.frag: #if DEBUG == DEBUG_VOLUME_THICKNESS
-// pbr.frag: #if DEBUG == DEBUG_IRIDESCENCE
-// pbr.frag: #if DEBUG == DEBUG_IRIDESCENCE_FACTOR
-// pbr.frag: #if DEBUG == DEBUG_IRIDESCENCE_THICKNESS
-
 inline std::shared_ptr<MaterialFactory>
 MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
                             const gltfjson::typing::Bin& bin,
                             std::optional<uint32_t> materialId)
 {
   auto ptr = std::make_shared<MaterialFactory>();
-  *ptr = MaterialFactory{
+  *ptr = MaterialFactory
+  {
     .Type = ShaderTypes::Pbr,
     .VS={
       .SourceName = "khronos/primitive.vert",
@@ -182,15 +80,70 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
         },
       },
       .MacroGroups{
-        {"VERTEX", {
-          { u8"HAS_NORMAL_VEC3", ConstInt(1) },
-          { u8"HAS_POSITION_VEC3", ConstInt(1) },
-          { u8"HAS_TEXCOORD_0_VEC2", ConstInt(1) },
+        {"VertexAttribute", {
+          {u8"HAS_POSITION_VEC3"},
+          {u8"HAS_TEXCOORD_0_VEC2"},
+          {u8"HAS_NORMAL_VEC3"},
+          {u8"HAS_TANGENT_VEC4", Disable()},
+          {u8"HAS_COLOR_0_VEC3", Disable()},
+          {u8"HAS_COLOR_0_VEC4", Disable()},
         }},
         {"LIGHTING", {
-          { u8"MATERIAL_METALLICROUGHNESS", ConstInt(1) },
-          { u8"USE_PUNCTUAL", ConstInt(1) },
+          { u8"USE_PUNCTUAL" },
           { u8"LIGHT_COUNT", ConstInt(1) },
+        }},
+        {"Texture",{
+          {u8"HAS_NORMAL_UV_TRANSFORM", Disable()},
+          {u8"HAS_EMISSIVE_UV_TRANSFORM", Disable()},
+          {u8"HAS_OCCLUSION_UV_TRANSFORM", Disable()},
+          {u8"MATERIAL_METALLICROUGHNESS"},
+          {u8"HAS_BASECOLOR_UV_TRANSFORM", Disable()},
+          {u8"HAS_METALLICROUGHNESS_UV_TRANSFORM", Disable()},
+          {u8"MATERIAL_SPECULARGLOSSINESS", Disable()},
+          {u8"HAS_SPECULARGLOSSINESS_UV_TRANSFORM", Disable()},
+          {u8"HAS_DIFFUSE_UV_TRANSFORM", Disable()},
+          {u8"MATERIAL_CLEARCOAT", Disable()},
+          {u8"HAS_CLEARCOAT_UV_TRANSFORM", Disable()},
+          {u8"HAS_CLEARCOATROUGHNESS_UV_TRANSFORM", Disable()},
+          {u8"HAS_CLEARCOATNORMAL_UV_TRANSFORM", Disable()},
+          {u8"MATERIAL_SHEEN", Disable()},
+          {u8"HAS_SHEENCOLOR_UV_TRANSFORM", Disable()},
+          {u8"HAS_SHEENROUGHNESS_UV_TRANSFORM", Disable()},
+          {u8"MATERIAL_SPECULAR", Disable()},
+          {u8"HAS_SPECULAR_UV_TRANSFORM", Disable()},
+          {u8"HAS_SPECULARCOLOR_UV_TRANSFORM", Disable()},
+          {u8"MATERIAL_TRANSMISSION", Disable()},
+          {u8"HAS_TRANSMISSION_UV_TRANSFORM", Disable()},
+          {u8"MATERIAL_VOLUME", Disable()},
+          {u8"HAS_THICKNESS_UV_TRANSFORM", Disable()},
+          {u8"MATERIAL_IRIDESCENCE", Disable()},
+          {u8"HAS_IRIDESCENCE_UV_TRANSFORM", Disable()},
+          {u8"HAS_IRIDESCENCETHICKNESS_UV_TRANSFORM", Disable()},
+        }},
+        {"Material", {
+          {u8"HAS_NORMAL_MAP", Disable()},
+          {u8"HAS_CLEARCOAT_NORMAL_MAP", Disable()},
+          {u8"HAS_DIFFUSE_MAP", Disable()},
+          {u8"HAS_BASE_COLOR_MAP", Disable()},
+          {u8"HAS_SPECULAR_GLOSSINESS_MAP", Disable()},
+          {u8"HAS_METALLIC_ROUGHNESS_MAP", Disable()},
+          {u8"HAS_SHEEN_COLOR_MAP", Disable()},
+          {u8"HAS_SHEEN_ROUGHNESS_MAP", Disable()},
+          {u8"HAS_SPECULAR_MAP", Disable()},
+          {u8"HAS_SPECULAR_COLOR_MAP", Disable()},
+          {u8"HAS_TRANSMISSION_MAP", Disable()},
+          {u8"HAS_THICKNESS_MAP", Disable()},
+          {u8"HAS_IRIDESCENCE_MAP", Disable()},
+          {u8"HAS_IRIDESCENCE_THICKNESS_MAP", Disable()},
+          {u8"HAS_CLEARCOAT_MAP", Disable()},
+          {u8"HAS_CLEARCOAT_ROUGHNESS_MAP", Disable()},
+          {u8"MATERIAL_IOR", Disable()},
+          {u8"USE_IBL", Disable()},
+          {u8"MATERIAL_EMISSIVE_STRENGTH", Disable()},
+          {u8"HAS_EMISSIVE_MAP", Disable()},
+          {u8"HAS_OCCLUSION_MAP", Disable()},
+          {u8"MATERIAL_UNLIT", Disable()},
+          {u8"LINEAR_OUTPUT", Disable()},
         }},
       },
     },

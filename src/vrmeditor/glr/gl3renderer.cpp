@@ -589,14 +589,14 @@ public:
       if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
         if (ImGui::BeginTabItem("VS")) {
           if (ShowShader(*factory, factory->VS, m_vsEditor)) {
-            factory->Compiled = std::unexpected{ "clear" };
+            factory->Compiled = std::unexpected{ "" };
             m_vsEditor.SetText("");
           }
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("FS")) {
           if (ShowShader(*factory, factory->FS, m_fsEditor)) {
-            factory->Compiled = std::unexpected{ "clear" };
+            factory->Compiled = std::unexpected{ "" };
             m_fsEditor.SetText("");
           }
           ImGui::EndTabItem();
@@ -654,8 +654,12 @@ public:
           ImGui::EndTable();
         }
       } else {
-        if (ImGui::CollapsingHeader("Error")) {
-          ImGui::TextWrapped("error: %s", factory->Compiled.error().c_str());
+        auto error = factory->Compiled.error();
+        if (error.size()) {
+          ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+          if (ImGui::CollapsingHeader("Error")) {
+            ImGui::TextWrapped("error: %s", error.c_str());
+          }
         }
       }
     }
@@ -754,7 +758,10 @@ public:
       editor.SetText((const char*)s.FullSource.c_str());
       editor.SetReadOnly(true);
     }
-    editor.Render(s.SourceName.c_str());
+
+    if (ImGui::CollapsingHeader(s.SourceName.c_str())) {
+      editor.Render(s.SourceName.c_str());
+    }
 
     return updated;
   }

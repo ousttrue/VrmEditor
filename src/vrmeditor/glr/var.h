@@ -48,17 +48,22 @@ using Mat4Var = Variable<DirectX::XMFLOAT4X4>;
 inline auto
 ConstInt(int value)
 {
-  return IntVar{ [value](auto, auto, auto) { return value; }, value };
+  return IntVar{ [value](auto, auto, auto) { return value; } };
 }
 inline auto
 ConstFloat(float value)
 {
-  return FloatVar{ [value](auto, auto, auto) { return value; }, value };
+  return FloatVar{ [value](auto, auto, auto) { return value; } };
 }
 inline auto
 ConstBool(bool value)
 {
-  return BoolVar{ [value](auto, auto, auto) { return value; }, value };
+  return BoolVar{ [value](auto, auto, auto) { return value; } };
+}
+inline auto
+Disable()
+{
+  return OptVar{ [](auto, auto, auto) { return std::nullopt; } };
 }
 
 struct VarToStrVisitor
