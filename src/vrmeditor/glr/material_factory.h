@@ -61,15 +61,26 @@ struct Variable
                                      const LocalInfo&,
                                      const gltfjson::tree::NodePtr& material)>;
   GetterFunc Getter;
-  T LastValue;
-
+  mutable T LastValue;
   T Update(const WorldInfo& w,
            const LocalInfo& l,
-           const gltfjson::tree::NodePtr& material)
+           const gltfjson::tree::NodePtr& material) const
   {
-    LastValue = Getter(w, l, material);
+    if (GuiOverride) {
+      LastValue = *GuiOverride;
+    } else {
+      LastValue = Getter(w, l, material);
+    }
     return LastValue;
   }
+
+  void Override(T value)
+  {
+    GuiOverride = value;
+    LastValue = value;
+  }
+
+  std::optional<T> GuiOverride;
 };
 
 using OptVar = Variable<std::optional<std::monostate>>;
@@ -309,7 +320,7 @@ struct MaterialFactory
             std::visit(
               [&u, &world, &local, &material](const auto& var) {
                 //
-                u.Set(var.Getter(world, local, material));
+                u.Set(var.Update(world, local, material));
               },
               *v);
             GL_ErrorClear("after");

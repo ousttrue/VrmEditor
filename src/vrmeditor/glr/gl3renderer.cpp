@@ -680,7 +680,7 @@ public:
       auto value = var.LastValue;
       if (grapho::imgui::GenericCombo<int>(
             (const char*)e.Selected.Name.c_str(), &value, combo)) {
-        var.LastValue = value;
+        var.Override(value);
         updated = true;
       }
     }
@@ -694,9 +694,9 @@ public:
           bool value = var.LastValue ? true : false;
           if (ImGui::Checkbox((const char*)Def.Name.c_str(), &value)) {
             if (value) {
-              var.LastValue = std::monostate{};
+              var.Override(std::monostate{});
             } else {
-              var.LastValue = std::nullopt;
+              var.Override(std::nullopt);
             }
             return true;
           } else {
@@ -705,23 +705,33 @@ public:
         }
         bool operator()(BoolVar& var)
         {
-          return ImGui::Checkbox((const char*)Def.Name.c_str(), &var.LastValue);
+          if (ImGui::Checkbox((const char*)Def.Name.c_str(), &var.LastValue)) {
+            var.Override(var.LastValue);
+            return true;
+          }
+          return false;
         }
         bool operator()(IntVar& var)
         {
-          return ImGui::InputInt((const char*)Def.Name.c_str(), &var.LastValue);
+          if (ImGui::InputInt((const char*)Def.Name.c_str(), &var.LastValue)) {
+            var.Override(var.LastValue);
+            return true;
+          }
+          return false;
         }
         bool operator()(FloatVar& var)
         {
-          return ImGui::InputFloat((const char*)Def.Name.c_str(),
-                                   &var.LastValue);
+          if (ImGui::InputFloat((const char*)Def.Name.c_str(),
+                                &var.LastValue)) {
+            var.Override(var.LastValue);
+            return true;
+          }
+          return false;
         }
         bool operator()(StringVar& var)
         {
-          // std::string value((const char*)src.data(), src.size());
           if (ImGui::InputText((const char*)Def.Name.c_str(), &var.LastValue)) {
-            // src.assign((const char*)value.data(),
-            //            (const char*)value.data() + value.size());
+            var.Override(var.LastValue);
             return true;
           }
           return false;
@@ -729,7 +739,7 @@ public:
       };
 
       if (std::visit(Visitor{ m }, m.Value)) {
-        f.Compiled = std::unexpected{ "clear" };
+        updated = true;
       }
     }
 
