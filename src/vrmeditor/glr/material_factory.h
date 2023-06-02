@@ -1,8 +1,10 @@
 #pragma once
 #include "error_check.h"
+#include "gl3renderer.h"
 #include "shader_factory.h"
 #include "shader_source.h"
 #include <expected>
+#include <grapho/gl3/cubemap.h>
 #include <grapho/gl3/glsl_type_name.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/texture.h>
@@ -16,6 +18,17 @@ namespace glr {
 using UniformVar =
   std::variant<IntVar, FloatVar, Vec3Var, Vec4Var, Mat3Var, Mat4Var>;
 
+struct EnvTextureBind
+{
+  uint32_t Slot;
+  EnvTextureTypes Type;
+};
+struct EnvCubemapBind
+{
+  uint32_t Slot;
+  EnvCubemapTypes Type;
+};
+
 struct MaterialFactory
 {
   ShaderTypes Type;
@@ -24,7 +37,8 @@ struct MaterialFactory
   std::expected<std::shared_ptr<grapho::gl3::ShaderProgram>, std::string>
     Compiled = std::unexpected{ "" };
   std::list<grapho::gl3::TextureSlot> Textures;
-
+  std::list<EnvCubemapBind> EnvCubemaps;
+  std::list<EnvTextureBind> EnvTextures;
   std::unordered_map<std::string, UniformVar> UniformVarMap;
   std::vector<std::optional<UniformVar>> UniformVars;
 
@@ -73,9 +87,7 @@ struct MaterialFactory
 
       auto shader = *Compiled;
       shader->Use();
-      for (auto& texture : Textures) {
-        texture.Activate();
-      }
+
       for (size_t i = 0; i < shader->Uniforms.size(); ++i) {
         auto& u = shader->Uniforms[i];
         if (u.Location != -1) {
@@ -95,6 +107,20 @@ struct MaterialFactory
               *v);
             GL_ErrorClear("after");
           }
+        }
+      }
+
+      for (auto& texture : Textures) {
+        texture.Activate();
+      }
+      for (auto& bind : EnvTextures) {
+        if (auto texture = glr::GetEnvTexture(bind.Type)) {
+          texture->Activate(bind.Slot);
+        }
+      }
+      for (auto& bind : EnvCubemaps) {
+        if (auto cubemap = glr::GetEnvCubemap(bind.Type)) {
+          cubemap->Activate(bind.Slot);
         }
       }
     }

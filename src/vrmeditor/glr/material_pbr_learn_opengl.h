@@ -19,6 +19,13 @@ MaterialFactory_Pbr_LearnOpenGL(const gltfjson::typing::Root& root,
       .SourceName ="pbr.frag",
       .Version = u8"#version 450",
     },
+    .EnvCubemaps{
+      {0, EnvCubemapTypes::LOGL_IrradianceMap},
+      {1, EnvCubemapTypes::LOGL_PrefilterMap},
+    },
+    .EnvTextures{
+      {2, EnvTextureTypes::LOGL_BrdfLUT},
+    },
     .UniformVarMap=
     {
       {"irradianceMap", ConstInt(0)},

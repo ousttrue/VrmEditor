@@ -91,7 +91,10 @@ struct GltfRoot
 
   gltfjson::tree::ArrayValue* Vrm0Materials() const
   {
-    return m_vrm0Materials->Array();
+    if (m_vrm0Materials) {
+      return m_vrm0Materials->Array();
+    }
+    return nullptr;
   }
 
   void RaiseSceneUpdated()

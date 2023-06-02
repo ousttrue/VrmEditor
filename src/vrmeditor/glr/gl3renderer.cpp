@@ -412,31 +412,17 @@ public:
               const runtimescene::DeformedMesh& deformed,
               const DirectX::XMFLOAT4X4& m)
   {
-    if (env.m_pbr) {
-      env.m_pbr->Activate();
-    }
-
     glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);
 
     auto vao = GetOrCreateMesh(meshId, mesh);
-
+    // upload vertices. CPU skinning and morpht target.
     if (deformed.Vertices.size()) {
       vao->slots_[0]->Upload(deformed.Vertices.size() *
                                sizeof(runtimescene::Vertex),
                              deformed.Vertices.data());
     }
 
-    m_world.projection = env.ProjectionMatrix;
-    m_world.view = env.ViewMatrix;
-    m_world.camPos = {
-      env.CameraPosition.x,
-      env.CameraPosition.y,
-      env.CameraPosition.z,
-      1,
-    };
-    m_worldUbo->Upload(m_world);
-    m_worldUbo->SetBindingPoint(0);
     m_local.model = m;
     m_local.CalcNormalMatrix();
     WorldInfo world{ env };
@@ -478,28 +464,9 @@ public:
                      const runtimescene::Primitive& primitive,
                      uint32_t drawOffset)
   {
-    auto material_factory = GetOrCreateMaterial(root, bin, primitive.Material);
-    if (material_factory) {
-      // update ubo
-      auto gltfMaterial = root.Materials[*primitive.Material];
-      if (auto cutoff = gltfMaterial.AlphaCutoff()) {
-        m_local.cutoff.x = *cutoff;
-      }
-      m_local.color = { 1, 1, 1, 1 };
-      if (auto pbr = gltfMaterial.PbrMetallicRoughness()) {
-        if (pbr->BaseColorFactor.size() == 4) {
-          m_local.color.x = pbr->BaseColorFactor[0];
-          m_local.color.y = pbr->BaseColorFactor[1];
-          m_local.color.z = pbr->BaseColorFactor[2];
-          m_local.color.w = pbr->BaseColorFactor[3];
-        }
-      }
-      m_localUbo->Upload(m_local);
-      m_localUbo->SetBindingPoint(1);
-
-      LocalInfo local{ m_local };
-
-      gltfjson::tree::NodePtr vrm0Material;
+    gltfjson::tree::NodePtr gltfMaterial;
+    gltfjson::tree::NodePtr vrm0Material;
+    if (primitive.Material) {
       if (vrm0Materials) {
         auto p = (*vrm0Materials)[*primitive.Material];
         if (auto name = p->Get(u8"shader")) {
@@ -508,14 +475,25 @@ public:
           }
         }
       }
+      gltfMaterial = root.Materials[*primitive.Material].m_json;
+    }
 
+    auto material_factory = GetOrCreateMaterial(root, bin, primitive.Material);
+    if (material_factory) {
+
+      LocalInfo local{ m_local };
       if (vrm0Material) {
         // VRM0+MToon
         material_factory->Activate(m_shaderSource, world, local, vrm0Material);
       } else {
-        material_factory->Activate(
-          m_shaderSource, world, local, gltfMaterial.m_json);
+        material_factory->Activate(m_shaderSource, world, local, gltfMaterial);
       }
+
+      m_worldUbo->Upload(m_world);
+      m_worldUbo->SetBindingPoint(0);
+
+      m_localUbo->Upload(m_local);
+      m_localUbo->SetBindingPoint(1);
 
     } else {
       // error
@@ -579,6 +557,76 @@ public:
 
     if (auto factory = m_materialMap[m_selected]) {
       ShowShaderVariables(*factory);
+    }
+  }
+
+  std::shared_ptr<grapho::gl3::PbrEnv> m_pbr;
+
+  bool LoadPbr_LOGL(const std::filesystem::path& path)
+  {
+    auto bytes = libvrm::fileutil::ReadAllBytes(path);
+    if (bytes.empty()) {
+      App::Instance().Log(LogLevel::Error) << "fail to read: " << path;
+      return false;
+    }
+
+    auto hdr = std::make_shared<libvrm::gltf::Image>("pbr");
+    if (!hdr->LoadHdr(bytes)) {
+      App::Instance().Log(LogLevel::Error) << "fail to load: " << path;
+      return false;
+    }
+
+    auto texture = grapho::gl3::Texture::Create(
+      {
+        .Width = hdr->Width(),
+        .Height = hdr->Height(),
+        .Format = grapho::PixelFormat::f32_RGB,
+        .ColorSpace = grapho::ColorSpace::Linear,
+        .Pixels = hdr->Pixels(),
+      },
+      true);
+    if (!texture) {
+      return false;
+    }
+
+    m_pbr = std::make_shared<grapho::gl3::PbrEnv>(texture);
+    return true;
+  }
+
+  bool LoadPbr_Khronos(const std::filesystem::path& path) { return false; }
+
+  bool LoadPbr_Threejs(const std::filesystem::path& path) { return false; }
+
+  std::shared_ptr<grapho::gl3::Texture> GetEnvTexture(EnvTextureTypes type)
+  {
+    if (m_pbr) {
+      switch (type) {
+        case EnvTextureTypes::LOGL_BrdfLUT:
+          return m_pbr->BrdfLUTTexture;
+      }
+    }
+    return {};
+  }
+
+  std::shared_ptr<grapho::gl3::Cubemap> GetEnvCubemap(EnvCubemapTypes type)
+  {
+    if (m_pbr) {
+      switch (type) {
+        case EnvCubemapTypes::LOGL_IrradianceMap:
+          return m_pbr->IrradianceMap;
+        case EnvCubemapTypes::LOGL_PrefilterMap:
+          return m_pbr->PrefilterMap;
+      }
+    }
+
+    return {};
+  }
+
+  void RenderSkybox(const DirectX::XMFLOAT4X4& projection,
+                    const DirectX::XMFLOAT4X4& view)
+  {
+    if (m_pbr) {
+      m_pbr->DrawSkybox(projection, view);
     }
   }
 };
@@ -677,5 +725,42 @@ void
 UpdateShader(const std::filesystem::path& path)
 {
   Gl3Renderer::Instance().UpdateShader(path);
+}
+
+bool
+LoadPbr_LOGL(const std::filesystem::path& path)
+{
+  return Gl3Renderer::Instance().LoadPbr_LOGL(path);
+}
+
+bool
+LoadPbr_Khronos(const std::filesystem::path& path)
+{
+  return Gl3Renderer::Instance().LoadPbr_Khronos(path);
+}
+
+bool
+LoadPbr_Threejs(const std::filesystem::path& path)
+{
+  return Gl3Renderer::Instance().LoadPbr_Threejs(path);
+}
+
+std::shared_ptr<grapho::gl3::Texture>
+GetEnvTexture(EnvTextureTypes type)
+{
+  return Gl3Renderer::Instance().GetEnvTexture(type);
+}
+
+std::shared_ptr<grapho::gl3::Cubemap>
+GetEnvCubemap(EnvCubemapTypes type)
+{
+  return Gl3Renderer::Instance().GetEnvCubemap(type);
+}
+
+void
+RenderSkybox(const DirectX::XMFLOAT4X4& projection,
+             const DirectX::XMFLOAT4X4& view)
+{
+  Gl3Renderer::Instance().RenderSkybox(projection, view);
 }
 }

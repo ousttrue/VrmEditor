@@ -243,7 +243,7 @@ App::LoadPath(const std::filesystem::path& path)
   // if (extension == ".fbx") {
   // }
   if (extension == ".hdr") {
-    return m_env->LoadPbr(path);
+    return LoadPbr(path);
   }
   return false;
 }
@@ -288,10 +288,10 @@ App::LoadModel(const std::filesystem::path& path)
   }
 }
 
-void
+bool
 App::LoadPbr(const std::filesystem::path& hdr)
 {
-  m_env->LoadPbr(hdr);
+  return glr::LoadPbr_LOGL(hdr);
 }
 
 void

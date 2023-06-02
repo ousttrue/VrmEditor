@@ -17,6 +17,7 @@ struct Texture;
 namespace grapho {
 namespace gl3 {
 class Texture;
+class Cubemap;
 }
 }
 namespace runtimescene {
@@ -25,6 +26,20 @@ struct DeformedMesh;
 }
 
 namespace glr {
+
+enum class EnvCubemapTypes
+{
+  LOGL_IrradianceMap,
+  LOGL_PrefilterMap,
+  KHRONOS_LambertianEnvMap,
+  KHRONOS_GGXEnvMap,
+};
+
+enum class EnvTextureTypes
+{
+  LOGL_BrdfLUT,
+  KHRONOS_BrdfLUT,
+};
 
 struct RenderingEnv;
 
@@ -76,4 +91,22 @@ UpdateShader(const std::filesystem::path& path);
 void
 SetShaderChunkDir(const std::filesystem::path& path);
 
+bool
+LoadPbr_LOGL(const std::filesystem::path& path);
+
+bool
+LoadPbr_Khronos(const std::filesystem::path& path);
+
+bool
+LoadPbr_Threejs(const std::filesystem::path& path);
+
+std::shared_ptr<grapho::gl3::Texture>
+GetEnvTexture(EnvTextureTypes type);
+
+std::shared_ptr<grapho::gl3::Cubemap>
+GetEnvCubemap(EnvCubemapTypes type);
+
+void
+RenderSkybox(const DirectX::XMFLOAT4X4& projection,
+             const DirectX::XMFLOAT4X4& view);
 }

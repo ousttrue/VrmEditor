@@ -33,7 +33,34 @@ Vec3(const gltfjson::tree::NodePtr& json, const DirectX::XMFLOAT3& defaultValue)
   }
   return defaultValue;
 }
-
+inline DirectX::XMFLOAT4
+Vec4(const gltfjson::tree::NodePtr& json, const DirectX::XMFLOAT4& defaultValue)
+{
+  if (json) {
+    if (auto a = json->Array()) {
+      if (a->size() == 4) {
+        if (auto a0 = (*a)[0]) {
+          if (auto p0 = a0->Ptr<float>()) {
+            if (auto a1 = (*a)[1]) {
+              if (auto p1 = a1->Ptr<float>()) {
+                if (auto a2 = (*a)[2]) {
+                  if (auto p2 = a2->Ptr<float>()) {
+                    if (auto a3 = (*a)[3]) {
+                      if (auto p3 = a3->Ptr<float>()) {
+                        return { *p0, *p1, *p2, *p3 };
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return defaultValue;
+}
 inline std::shared_ptr<MaterialFactory>
 MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
                             const gltfjson::typing::Bin& bin,
@@ -244,9 +271,35 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
         }},
       },
     },
+    .EnvCubemaps{
+      {0, EnvCubemapTypes::KHRONOS_LambertianEnvMap},
+      {1, EnvCubemapTypes::KHRONOS_GGXEnvMap},
+    },
+    .EnvTextures{
+      {2, EnvTextureTypes::KHRONOS_BrdfLUT},
+    },
     .UniformVarMap
     {
-      {"u_BaseColorFactor",Vec4Var{[](auto &w, auto &l, auto){ return l.ColorRGBA(); }}},
+      // PBR env
+      { "u_LambertianEnvSampler", ConstInt(0) }, { "u_GGXEnvSampler", ConstInt(1) },
+      { "u_GGXLUT", ConstInt(2) }, 
+      //
+      { "u_CharlieEnvSampler", ConstInt(3) },
+      { "u_CharlieLUT", ConstInt(4) }, 
+      { "u_SheenELUT", ConstInt(5) },
+      //
+      { "u_NormalSampler", ConstInt(6) }, { "u_EmissiveSampler", ConstInt(7) },
+      { "u_OcclusionSampler", ConstInt(8) }, { "u_BaseColorSampler", ConstInt(9) },
+      { "u_MetallicRoughnessSampler", ConstInt(10) },
+
+      {"u_BaseColorFactor",Vec4Var{[](auto &w, auto &l, auto &json){ 
+        gltfjson::typing::Material m(json);
+        if(auto pbr = m.PbrMetallicRoughness())
+        {
+          return Vec4(pbr->m_json->Get(u8"baseColorFactor"), {1,1,1,1});
+        }
+        return DirectX::XMFLOAT4{1,1,1,1};
+      }}},
       {"u_MetallicFactor",ConstFloat(1.0f)},
       {"u_RoughnessFactor",ConstFloat(1.0f)},
       {"u_Exposure",ConstFloat(1.0f)},
@@ -255,11 +308,7 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
       {"u_ViewProjectionMatrix",Mat4Var{[](auto &w, auto &l, auto){ return w.ViewProjectionMatrix();}}},
 
       {"u_EmissiveFactor",Vec3Var{[](auto &w, auto &l, auto &json){ 
-        if(auto e = json->Get(u8"emissiveFactor"))
-        {
-          return Vec3(e, {0, 0, 0});
-        }
-        return DirectX::XMFLOAT3{0, 0, 0};
+        return Vec3(json->Get(u8"emissiveFactor"), {0, 0, 0});
       }}},
 
       {"u_NormalMatrix",Mat4Var{[](auto &w, auto &l, auto){ return l.NormalMatrix4();}}},
@@ -285,13 +334,6 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
           auto& p = w.m_env.LightPosition;
           return DirectX::XMFLOAT3{ p.x, p.y, p.z };
         }} },
-
-      { "u_LambertianEnvSampler", ConstInt(0) }, { "u_GGXEnvSampler", ConstInt(1) },
-      { "u_GGXLUT", ConstInt(2) }, { "u_CharlieEnvSampler", ConstInt(3) },
-      { "u_CharlieLUT", ConstInt(4) }, { "u_SheenELUT", ConstInt(5) },
-      { "u_NormalSampler", ConstInt(6) }, { "u_EmissiveSampler", ConstInt(7) },
-      { "u_OcclusionSampler", ConstInt(8) }, { "u_BaseColorSampler", ConstInt(9) },
-      { "u_MetallicRoughnessSampler", ConstInt(10) },
 
       { "u_NormalScale", FloatVar{[](auto, auto, auto &json){
         gltfjson::typing::Material m(json);
@@ -342,54 +384,46 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
       else{
         glEnable(GL_CULL_FACE);
       }
-   },
-};
+    },
+  };
 
-  std::shared_ptr<grapho::gl3::Texture> albedo;
-  std::shared_ptr<grapho::gl3::Texture> metallic_roughness;
-  std::shared_ptr<grapho::gl3::Texture> normal;
-  std::shared_ptr<grapho::gl3::Texture> ao;
-  std::shared_ptr<grapho::gl3::Texture> emissive;
   if (materialId) {
     auto src = root.Materials[*materialId];
     if (auto pbr = src.PbrMetallicRoughness()) {
       if (auto baseColorTexture = pbr->BaseColorTexture()) {
-        albedo = GetOrCreateTexture(
-          root, bin, baseColorTexture->Index(), ColorSpace::sRGB);
+        if (auto albedo = GetOrCreateTexture(
+              root, bin, baseColorTexture->Index(), ColorSpace::sRGB)) {
+          ptr->Textures.push_back({ 9, albedo });
+        }
       }
       if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture()) {
-        metallic_roughness = GetOrCreateTexture(
-          root, bin, metallicRoughnessTexture->Index(), ColorSpace::Linear);
+        if (auto metallic_roughness =
+              GetOrCreateTexture(root,
+                                 bin,
+                                 metallicRoughnessTexture->Index(),
+                                 ColorSpace::Linear)) {
+          ptr->Textures.push_back({ 10, metallic_roughness });
+        }
       }
     }
     if (auto normalTexture = src.NormalTexture()) {
-      normal = GetOrCreateTexture(
-        root, bin, normalTexture->Index(), ColorSpace::Linear);
+      if (auto normal = GetOrCreateTexture(
+            root, bin, normalTexture->Index(), ColorSpace::Linear)) {
+        ptr->Textures.push_back({ 6, normal });
+      }
     }
     if (auto occlusionTexture = src.OcclusionTexture()) {
-      ao = GetOrCreateTexture(
-        root, bin, occlusionTexture->Index(), ColorSpace::Linear);
+      if (auto ao = GetOrCreateTexture(
+            root, bin, occlusionTexture->Index(), ColorSpace::Linear)) {
+        ptr->Textures.push_back({ 8, ao });
+      }
     }
     if (auto emissiveTexture = src.EmissiveTexture()) {
-      emissive = GetOrCreateTexture(
-        root, bin, emissiveTexture->Index(), ColorSpace::sRGB);
+      if (auto emissive = GetOrCreateTexture(
+            root, bin, emissiveTexture->Index(), ColorSpace::sRGB)) {
+        ptr->Textures.push_back({ 7, emissive });
+      }
     }
-  }
-
-  if (normal) {
-    ptr->Textures.push_back({ 6, normal });
-  }
-  if (emissive) {
-    ptr->Textures.push_back({ 7, emissive });
-  }
-  if (ao) {
-    ptr->Textures.push_back({ 8, ao });
-  }
-  if (albedo) {
-    ptr->Textures.push_back({ 9, albedo });
-  }
-  if (metallic_roughness) {
-    ptr->Textures.push_back({ 10, metallic_roughness });
   }
 
   return ptr;

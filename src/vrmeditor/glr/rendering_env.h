@@ -9,6 +9,7 @@ struct PbrEnv;
 }
 
 namespace glr {
+
 struct RenderingEnv
 {
   DirectX::XMFLOAT4 Viewport;
@@ -16,10 +17,6 @@ struct RenderingEnv
   DirectX::XMFLOAT4X4 ViewMatrix;
   DirectX::XMFLOAT4X4 ProjectionMatrix;
   DirectX::XMFLOAT3 CameraPosition;
-
-  std::shared_ptr<grapho::gl3::PbrEnv> m_pbr;
-  bool LoadPbr(const std::filesystem::path& hdr);
-  void RenderSkybox();
 
   // w == 0 ? directional : point
   DirectX::XMFLOAT4 LightColor = { 1, 1, 1, 1 };

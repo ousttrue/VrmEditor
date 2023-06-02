@@ -12,7 +12,6 @@ srcs = [
     'glr/rendertarget.cpp',
     'glr/line_gizmo.cpp',
     'glr/overlay.cpp',
-    'glr/rendering_env.cpp',
     'glr/shader_source.cpp',
     'glr/error_check.cpp',
     'glr/material_three_vrm.cpp',

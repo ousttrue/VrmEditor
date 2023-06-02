@@ -73,9 +73,11 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
                   m);
     }
   }
+
   if (m_settings->Skybox) {
-    m_env->RenderSkybox();
+    glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
   }
+
   for (auto [mesh, m] : m_animation->m_table->Drawables()) {
     auto meshInstance = m_animation->GetDeformedMesh(mesh);
     if (m_settings->ShowShadow) {
@@ -164,7 +166,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
     }
   }
   if (m_settings->Skybox) {
-    m_env->RenderSkybox();
+    glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
   }
 
   for (auto [mesh, m] : m_animation->Drawables()) {
