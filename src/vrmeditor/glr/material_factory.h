@@ -35,15 +35,19 @@ struct MaterialFactory
   {
     if (!Compiled) {
       // execute mcaro
-      for (auto& m : VS.Macros) {
-        std::visit([&world, &local, &material](
-                     auto& var) { var.Update(world, local, material); },
-                   m.Value);
+      for (auto& g : VS.MacroGroups) {
+        for (auto& m : g.second) {
+          std::visit([&world, &local, &material](
+                       auto& var) { var.Update(world, local, material); },
+                     m.Value);
+        }
       }
-      for (auto& m : FS.Macros) {
-        std::visit([&world, &local, &material](
-                     auto& var) { var.Update(world, local, material); },
-                   m.Value);
+      for (auto& g : FS.MacroGroups) {
+        for (auto& m : g.second) {
+          std::visit([&world, &local, &material](
+                       auto& var) { var.Update(world, local, material); },
+                     m.Value);
+        }
       }
       auto vs = VS.Expand(Type, shaderSource);
       auto fs = FS.Expand(Type, shaderSource);

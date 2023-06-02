@@ -1,6 +1,7 @@
 #pragma once
 #include "shader_source.h"
 #include "var.h"
+#include <unordered_map>
 #include <variant>
 
 namespace glr {
@@ -37,6 +38,8 @@ struct ShaderEnum
   ShaderMacro Selected;
 };
 
+using ShaderMacroGroup = std::vector<ShaderMacro>;
+
 struct ShaderFactory
 {
   std::string SourceName;
@@ -44,7 +47,7 @@ struct ShaderFactory
   std::u8string Precision;
   std::vector<ShaderEnum> Enums;
   std::vector<std::u8string> Codes;
-  std::vector<ShaderMacro> Macros;
+  std::unordered_map<std::string, ShaderMacroGroup> MacroGroups;
   std::u8string SourceExpanded;
   std::u8string FullSource;
 
@@ -78,9 +81,11 @@ struct ShaderFactory
       FullSource.push_back('\n');
     }
 
-    for (auto& m : Macros) {
-      FullSource += m.Str();
-      FullSource.push_back('\n');
+    for (auto& g : MacroGroups) {
+      for (auto& m : g.second) {
+        FullSource += m.Str();
+        FullSource.push_back('\n');
+      }
     }
 
     for (auto& c : Codes) {

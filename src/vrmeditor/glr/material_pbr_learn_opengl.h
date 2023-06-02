@@ -62,23 +62,23 @@ MaterialFactory_Pbr_LearnOpenGL(const gltfjson::typing::Root& root,
   }
 
   if (albedo) {
-    ptr->FS.Macros.push_back({ u8"HAS_ALBEDO_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_ALBEDO_TEXTURE" });
     ptr->Textures.push_back({ 3, albedo });
   }
   if (normal) {
-    ptr->FS.Macros.push_back({ u8"HAS_NORMAL_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_NORMAL_TEXTURE" });
     ptr->Textures.push_back({ 4, normal });
   }
   if (metallic) {
-    ptr->FS.Macros.push_back({ u8"HAS_METALLIC_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_METALLIC_TEXTURE" });
     ptr->Textures.push_back({ 5, metallic });
   }
   if (roughness) {
-    ptr->FS.Macros.push_back({ u8"HAS_ROUGHNESS_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_ROUGHNESS_TEXTURE" });
     ptr->Textures.push_back({ 6, roughness });
   }
   if (ao) {
-    ptr->FS.Macros.push_back({ u8"HAS_AO_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_AO_TEXTURE" });
     ptr->Textures.push_back({ 7, ao });
   }
 

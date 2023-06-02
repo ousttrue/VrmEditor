@@ -1,4 +1,5 @@
 #pragma once
+#include "colorspace.h"
 #include "material_factory.h"
 
 namespace glr {
@@ -23,7 +24,7 @@ MaterialFactory_Unlit(const gltfjson::typing::Root& root,
 
   if (gltfjson::typing::GetAlphaMode(root, id) ==
       gltfjson::format::AlphaModes::Mask) {
-    ptr->FS.Macros.push_back({ u8"MODE_MASK" });
+    ptr->FS.MacroGroups["AlphaBlend"].push_back({ u8"MODE_MASK" });
   }
 
   if (id) {

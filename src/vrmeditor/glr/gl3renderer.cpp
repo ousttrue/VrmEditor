@@ -684,62 +684,69 @@ public:
         updated = true;
       }
     }
-    for (auto& m : s.Macros) {
-      struct Visitor
-      {
-        ShaderMacro& Def;
+    for (auto& g : s.MacroGroups) {
+      if (ImGui::CollapsingHeader(g.first.c_str())) {
+        for (auto& m : g.second) {
+          struct Visitor
+          {
+            ShaderMacro& Def;
 
-        bool operator()(OptVar& var)
-        {
-          bool value = var.LastValue ? true : false;
-          if (ImGui::Checkbox((const char*)Def.Name.c_str(), &value)) {
-            if (value) {
-              var.Override(std::monostate{});
-            } else {
-              var.Override(std::nullopt);
+            bool operator()(OptVar& var)
+            {
+              bool value = var.LastValue ? true : false;
+              if (ImGui::Checkbox((const char*)Def.Name.c_str(), &value)) {
+                if (value) {
+                  var.Override(std::monostate{});
+                } else {
+                  var.Override(std::nullopt);
+                }
+                return true;
+              } else {
+                return false;
+              }
             }
-            return true;
-          } else {
-            return false;
-          }
-        }
-        bool operator()(BoolVar& var)
-        {
-          if (ImGui::Checkbox((const char*)Def.Name.c_str(), &var.LastValue)) {
-            var.Override(var.LastValue);
-            return true;
-          }
-          return false;
-        }
-        bool operator()(IntVar& var)
-        {
-          if (ImGui::InputInt((const char*)Def.Name.c_str(), &var.LastValue)) {
-            var.Override(var.LastValue);
-            return true;
-          }
-          return false;
-        }
-        bool operator()(FloatVar& var)
-        {
-          if (ImGui::InputFloat((const char*)Def.Name.c_str(),
-                                &var.LastValue)) {
-            var.Override(var.LastValue);
-            return true;
-          }
-          return false;
-        }
-        bool operator()(StringVar& var)
-        {
-          if (ImGui::InputText((const char*)Def.Name.c_str(), &var.LastValue)) {
-            var.Override(var.LastValue);
-            return true;
-          }
-          return false;
-        }
-      };
+            bool operator()(BoolVar& var)
+            {
+              if (ImGui::Checkbox((const char*)Def.Name.c_str(),
+                                  &var.LastValue)) {
+                var.Override(var.LastValue);
+                return true;
+              }
+              return false;
+            }
+            bool operator()(IntVar& var)
+            {
+              if (ImGui::InputInt((const char*)Def.Name.c_str(),
+                                  &var.LastValue)) {
+                var.Override(var.LastValue);
+                return true;
+              }
+              return false;
+            }
+            bool operator()(FloatVar& var)
+            {
+              if (ImGui::InputFloat((const char*)Def.Name.c_str(),
+                                    &var.LastValue)) {
+                var.Override(var.LastValue);
+                return true;
+              }
+              return false;
+            }
+            bool operator()(StringVar& var)
+            {
+              if (ImGui::InputText((const char*)Def.Name.c_str(),
+                                   &var.LastValue)) {
+                var.Override(var.LastValue);
+                return true;
+              }
+              return false;
+            }
+          };
 
-      if (std::visit(Visitor{ m }, m.Value)) {
-        updated = true;
+          if (std::visit(Visitor{ m }, m.Value)) {
+            updated = true;
+          }
+        }
       }
     }
 

@@ -122,10 +122,12 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
     .VS={
       .SourceName = "khronos/primitive.vert",
       .Version=u8"#version 300 es",
-      .Macros{
-        { u8"HAS_NORMAL_VEC3", ConstInt(1) },
-        { u8"HAS_POSITION_VEC3", ConstInt(1) },
-        { u8"HAS_TEXCOORD_0_VEC2", ConstInt(1) },
+      .MacroGroups{
+        {"VERTEX", {
+          { u8"HAS_NORMAL_VEC3", ConstInt(1) },
+          { u8"HAS_POSITION_VEC3", ConstInt(1) },
+          { u8"HAS_TEXCOORD_0_VEC2", ConstInt(1) },
+        }},
       },
     },
     .FS={
@@ -179,13 +181,17 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
           .Selected = {u8"ALPHAMODE", ConstInt(0) },
         },
       },
-      .Macros = {
-        { u8"MATERIAL_METALLICROUGHNESS", ConstInt(1) },
-        { u8"HAS_NORMAL_VEC3", ConstInt(1) },
-        { u8"HAS_POSITION_VEC3", ConstInt(1) },
-        { u8"HAS_TEXCOORD_0_VEC2", ConstInt(1) },
-        { u8"USE_PUNCTUAL", ConstInt(1) },
-        { u8"LIGHT_COUNT", ConstInt(1) },
+      .MacroGroups{
+        {"VERTEX", {
+          { u8"HAS_NORMAL_VEC3", ConstInt(1) },
+          { u8"HAS_POSITION_VEC3", ConstInt(1) },
+          { u8"HAS_TEXCOORD_0_VEC2", ConstInt(1) },
+        }},
+        {"LIGHTING", {
+          { u8"MATERIAL_METALLICROUGHNESS", ConstInt(1) },
+          { u8"USE_PUNCTUAL", ConstInt(1) },
+          { u8"LIGHT_COUNT", ConstInt(1) },
+        }},
       },
     },
     .UniformVarMap
@@ -263,24 +269,29 @@ MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
   }
 
   if (normal) {
-    ptr->FS.Macros.push_back({ u8"HAS_NORMAL_MAP", ConstInt(1) });
+    ptr->FS.MacroGroups["Texture"].push_back(
+      { u8"HAS_NORMAL_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 6, normal });
   }
   if (emissive) {
-    ptr->FS.Macros.push_back({ u8"HAS_EMISSIVE_MAP", ConstInt(1) });
+    ptr->FS.MacroGroups["Texture"].push_back(
+      { u8"HAS_EMISSIVE_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 7, emissive });
   }
   if (ao) {
-    ptr->FS.Macros.push_back({ u8"HAS_OCCLUSION_MAP", ConstInt(1) });
+    ptr->FS.MacroGroups["Texture"].push_back(
+      { u8"HAS_OCCLUSION_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 8, ao });
   }
 
   if (albedo) {
-    ptr->FS.Macros.push_back({ u8"HAS_BASE_COLOR_MAP", ConstInt(1) });
+    ptr->FS.MacroGroups["Texture"].push_back(
+      { u8"HAS_BASE_COLOR_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 9, albedo });
   }
   if (metallic_roughness) {
-    ptr->FS.Macros.push_back({ u8"HAS_METALLIC_ROUGHNESS_MAP", ConstInt(1) });
+    ptr->FS.MacroGroups["Texture"].push_back(
+      { u8"HAS_METALLIC_ROUGHNESS_MAP", ConstInt(1) });
     ptr->Textures.push_back({ 10, metallic_roughness });
   }
 
