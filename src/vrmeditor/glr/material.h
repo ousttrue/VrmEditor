@@ -29,7 +29,7 @@ struct EnvCubemapBind
   EnvCubemapTypes Type;
 };
 
-struct MaterialFactory
+struct Material
 {
   ShaderTypes Type;
   ShaderFactory VS;
@@ -127,7 +127,7 @@ struct MaterialFactory
   }
 };
 
-using MaterialFactoryFunc = std::function<std::shared_ptr<MaterialFactory>(
+using MaterialFactoryFunc = std::function<std::shared_ptr<Material>(
   const gltfjson::typing::Root& root,
   const gltfjson::typing::Bin& bin,
   std::optional<uint32_t> materialId)>;

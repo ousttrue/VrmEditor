@@ -4,7 +4,7 @@
 #include "docks/printfbuffer.h"
 #include "gl3renderer.h"
 #include "gl3renderer_gui.h"
-#include "material_factory.h"
+#include "material.h"
 #include "rendering_env.h"
 #include "shader_source.h"
 #include <DirectXMath.h>
@@ -76,12 +76,12 @@ class Gl3Renderer
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_linearTextureMap;
-  std::vector<std::shared_ptr<MaterialFactory>> m_materialMap;
+  std::vector<std::shared_ptr<Material>> m_materialMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
   std::shared_ptr<grapho::gl3::Texture> m_white;
-  MaterialFactory m_shadow;
-  MaterialFactory m_error;
+  Material m_shadow;
+  Material m_error;
 
   std::shared_ptr<ShaderSourceManager> m_shaderSource;
   std::unordered_map<ShaderTypes, MaterialFactoryFunc> m_materialFactoryMap{
@@ -118,7 +118,7 @@ class Gl3Renderer
     m_localUbo = grapho::gl3::Ubo::Create<grapho::LocalVars>();
   }
 
-  std::shared_ptr<MaterialFactory> CreateMaterial(
+  std::shared_ptr<Material> CreateMaterial(
     ShaderTypes type,
     const gltfjson::typing::Root& root,
     const gltfjson::typing::Bin& bin,
@@ -287,7 +287,7 @@ public:
     return texture;
   }
 
-  std::shared_ptr<MaterialFactory> GetOrCreateMaterial(
+  std::shared_ptr<Material> GetOrCreateMaterial(
     const gltfjson::typing::Root& root,
     const gltfjson::typing::Bin& bin,
     std::optional<uint32_t> id)
@@ -334,7 +334,7 @@ public:
       }
     }
 
-    std::shared_ptr<MaterialFactory> material;
+    std::shared_ptr<Material> material;
     if (mtoon1) {
       material = CreateMaterial(ShaderTypes::MToon1, root, bin, id);
     } else if (mtoon0) {

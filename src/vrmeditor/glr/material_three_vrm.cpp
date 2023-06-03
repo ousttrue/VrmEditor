@@ -2,7 +2,7 @@
 
 #include "colorspace.h"
 #include "gl3renderer.h"
-#include "material_factory.h"
+#include "material.h"
 #include "material_three_vrm.h"
 #include <gltfjson/vrm0_typing.h>
 #include <string_view>
@@ -164,14 +164,14 @@ vec4 emissiveMapTexelToLinear( vec4 value ) { return LinearToLinear( value ); }
 vec4 linearToOutputTexel( vec4 value ) { return LinearToLinear( value ); }
   )";
 
-std::shared_ptr<MaterialFactory>
+std::shared_ptr<Material>
 MaterialFactory_MToon(const gltfjson::typing::Root& root,
                       const gltfjson::typing::Bin& bin,
                       std::optional<uint32_t> materialId)
 {
-  auto ptr = std::make_shared<MaterialFactory>();
+  auto ptr = std::make_shared<Material>();
 
-  *ptr = MaterialFactory{
+  *ptr = Material{
     .Type = ShaderTypes::MToon0,
     .VS={
       .SourceName = "mtoon.vert",

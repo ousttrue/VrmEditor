@@ -11,7 +11,7 @@
 namespace glr {
 
 static bool
-ShowShader(MaterialFactory& f, ShaderFactory& s, TextEditor& editor)
+ShowShader(Material& f, ShaderFactory& s, TextEditor& editor)
 {
   bool updated = false;
   ImGui::TextUnformatted(s.SourceName.c_str());
@@ -111,7 +111,7 @@ ShowShader(MaterialFactory& f, ShaderFactory& s, TextEditor& editor)
 }
 
 void
-ShowShaderSource(MaterialFactory& factory,
+ShowShaderSource(Material& factory,
                  TextEditor& vsEditor,
                  TextEditor& fsEditor)
 {
@@ -152,7 +152,7 @@ ShowShaderSource(MaterialFactory& factory,
 }
 
 void
-ShowShaderVariables(MaterialFactory& factory)
+ShowShaderVariables(Material& factory)
 {
   if (auto compiled = factory.Compiled) {
     auto shader = *compiled;

@@ -1,15 +1,15 @@
 #pragma once
-#include "material_factory.h"
+#include "material.h"
 
 namespace glr {
 
-inline std::shared_ptr<MaterialFactory>
+inline std::shared_ptr<Material>
 MaterialFactory_Shadow(const gltfjson::typing::Root& root,
                        const gltfjson::typing::Bin& bin,
                        std::optional<uint32_t>)
 {
-  auto ptr = std::make_shared<MaterialFactory>();
-  *ptr=MaterialFactory{
+  auto ptr = std::make_shared<Material>();
+  *ptr=Material{
     .Type = ShaderTypes::Shadow,
     .VS = {
       "shadow.vert",

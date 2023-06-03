@@ -1,15 +1,15 @@
 #pragma once
-#include "material_factory.h"
+#include "material.h"
 
 class TextEditor;
 
 namespace glr {
 
 void
-ShowShaderSource(MaterialFactory& factory,
+ShowShaderSource(Material& factory,
                  TextEditor& vsEditor,
                  TextEditor& fsEditor);
 void
-ShowShaderVariables(MaterialFactory& factory);
+ShowShaderVariables(Material& factory);
 
 }

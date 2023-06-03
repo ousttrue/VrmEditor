@@ -2,7 +2,7 @@
 
 #include "app.h"
 #include "gl3renderer.h"
-#include "material_factory.h"
+#include "material.h"
 #include "material_pbr_khronos.h"
 #include "shader_source.h"
 #include <DirectXMath.h>
@@ -64,13 +64,13 @@ Vec4(const gltfjson::tree::NodePtr& json, const DirectX::XMFLOAT4& defaultValue)
   return defaultValue;
 }
 
-std::shared_ptr<MaterialFactory>
+std::shared_ptr<Material>
 MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
                             const gltfjson::typing::Bin& bin,
                             std::optional<uint32_t> materialId)
 {
-  auto ptr = std::make_shared<MaterialFactory>();
-  *ptr = MaterialFactory
+  auto ptr = std::make_shared<Material>();
+  *ptr = Material
   {
     .Type = ShaderTypes::Pbr,
     .VS={
