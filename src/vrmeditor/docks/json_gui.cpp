@@ -3,6 +3,7 @@
 #include "json_gui_labelcache.h"
 #include <charconv>
 #include <glr/gl3renderer.h>
+#include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <ranges>
@@ -80,8 +81,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
 void
 JsonGui::ShowSelector(float indent)
 {
-  if(!m_root)
-  {
+  if (!m_root) {
     return;
   }
 
@@ -91,25 +91,17 @@ JsonGui::ShowSelector(float indent)
   };
   auto leave = []() { ImGui::TreePop(); };
 
-  static ImGuiTableFlags flags =
-    ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH |
-    ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg |
-    ImGuiTableFlags_NoBordersInBody;
+  std::array<const char*, 2> cols = {
+    "Name",
+    "Value",
+  };
 
-  if (ImGui::BeginTable("3ways", 2, flags)) {
-    // The first column will use the default _WidthStretch when ScrollX is Off
-    // and _WidthFixed when ScrollX is On
-    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
-    ImGui::TableSetupColumn(
-      "Value", ImGuiTableColumnFlags_WidthFixed, 20 * 12.0f);
-    ImGui::TableHeadersRow();
+  if (grapho::imgui::BeginTableColumns("##JsonGui::ShowSelector", cols)) {
 
-    {
-      // tree
-      ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
-      gltfjson::tree::TraverseJson(enter, leave, m_root->m_gltf->m_json);
-      ImGui::PopStyleVar();
-    }
+    // tree
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
+    gltfjson::tree::TraverseJson(enter, leave, m_root->m_gltf->m_json);
+    ImGui::PopStyleVar();
 
     ImGui::EndTable();
   }
@@ -118,8 +110,7 @@ JsonGui::ShowSelector(float indent)
 void
 JsonGui::ShowSelected()
 {
-  if(!m_root)
-  {
+  if (!m_root) {
     return;
   }
   m_inspector->ShowGui(*m_root->m_gltf, m_root->m_bin);

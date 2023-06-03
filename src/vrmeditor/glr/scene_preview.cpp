@@ -44,70 +44,22 @@ ScenePreview::ScenePreview(
 {
   if (useTPose) {
     m_rt->render =
-      std::bind(&ScenePreview::RenderTPose, this, std::placeholders::_1);
+      std::bind(&ScenePreview::RenderStatic, this, std::placeholders::_1);
   } else {
     m_rt->render =
-      std::bind(&ScenePreview::RenderAnimation, this, std::placeholders::_1);
+      std::bind(&ScenePreview::RenderRuntime, this, std::placeholders::_1);
   }
 }
 
 void
-ScenePreview::RenderTPose(const grapho::OrbitView& view)
+ScenePreview::RenderStatic(const grapho::OrbitView& view)
 {
   view.Update(&m_env->ProjectionMatrix._11, &m_env->ViewMatrix._11);
   m_env->CameraPosition = view.Position;
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  for (auto [mesh, m] : m_runtime->m_table->Drawables()) {
-    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
-    if (m_settings->ShowMesh) {
-      glr::Render(RenderPass::Color,
-                  *m_env,
-                  *m_runtime->m_table->m_gltf,
-                  m_runtime->m_table->m_bin,
-                  m_runtime->m_table->Vrm0Materials(),
-                  mesh,
-                  m_runtime->m_meshes[mesh],
-                  *meshInstance,
-                  m);
-    }
-  }
-
-  if (m_settings->Skybox) {
-    glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
-  }
-
-  for (auto [mesh, m] : m_runtime->m_table->Drawables()) {
-    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
-    if (m_settings->ShowShadow) {
-      glr::Render(RenderPass::ShadowMatrix,
-                  *m_env,
-                  *m_runtime->m_table->m_gltf,
-                  m_runtime->m_table->m_bin,
-                  m_runtime->m_table->Vrm0Materials(),
-                  mesh,
-                  m_runtime->m_meshes[mesh],
-                  *meshInstance,
-                  m);
-    }
-  }
-
-  if (m_settings->ShowLine) {
-    m_runtime->DrawGizmo(m_gizmo.get());
-    glr::RenderLine(*m_env, m_gizmo->m_lines);
-  }
-  m_gizmo->Clear();
-
-  if (m_settings->ShowCuber) {
-    m_cuber->Instances.clear();
-    for (auto m : m_runtime->m_table->ShapeMatrices()) {
-      m_cuber->Instances.push_back({
-        .Matrix = m,
-      });
-    }
-    m_cuber->Render(*m_env);
-  }
+  RenderPass();
 
   // manipulator
   if (auto node = m_selection->selected.lock()) {
@@ -141,7 +93,7 @@ ScenePreview::RenderTPose(const grapho::OrbitView& view)
 }
 
 void
-ScenePreview::RenderAnimation(const grapho::OrbitView& view)
+ScenePreview::RenderRuntime(const grapho::OrbitView& view)
 {
   view.Update(&m_env->ProjectionMatrix._11, &m_env->ViewMatrix._11);
   m_env->CameraPosition = view.Position;
@@ -151,54 +103,7 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
   m_runtime->NextSpringDelta = m_settings->NextSpringDelta;
   m_settings->NextSpringDelta = {};
 
-  for (auto [mesh, m] : m_runtime->Drawables()) {
-    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
-    if (m_settings->ShowMesh) {
-      glr::Render(RenderPass::Color,
-                  *m_env,
-                  *m_runtime->m_table->m_gltf,
-                  m_runtime->m_table->m_bin,
-                  m_runtime->m_table->Vrm0Materials(),
-                  mesh,
-                  m_runtime->m_meshes[mesh],
-                  *meshInstance,
-                  m);
-    }
-  }
-  if (m_settings->Skybox) {
-    glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
-  }
-
-  for (auto [mesh, m] : m_runtime->Drawables()) {
-    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
-    if (m_settings->ShowShadow) {
-      glr::Render(RenderPass::ShadowMatrix,
-                  *m_env,
-                  *m_runtime->m_table->m_gltf,
-                  m_runtime->m_table->m_bin,
-                  m_runtime->m_table->Vrm0Materials(),
-                  mesh,
-                  m_runtime->m_meshes[mesh],
-                  *meshInstance,
-                  m);
-    }
-  }
-
-  if (m_settings->ShowLine) {
-    m_runtime->DrawGizmo(m_gizmo.get());
-    glr::RenderLine(*m_env, m_gizmo->m_lines);
-  }
-  m_gizmo->Clear();
-
-  if (m_settings->ShowCuber) {
-    m_cuber->Instances.clear();
-    for (auto m : m_runtime->ShapeMatrices()) {
-      m_cuber->Instances.push_back({
-        .Matrix = m,
-      });
-    }
-    m_cuber->Render(*m_env);
-  }
+  RenderPass();
 
   // manipulator
   if (auto init = m_selection->selected.lock()) {
@@ -230,6 +135,77 @@ ScenePreview::RenderAnimation(const grapho::OrbitView& view)
     }
     ImGuizmo::GetContext().mAllowActiveHoverItem = false;
   }
+}
+
+void
+ScenePreview::RenderPass()
+{
+  for (auto [mesh, m] : m_runtime->m_table->Drawables()) {
+    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
+    if (m_settings->ShowMesh) {
+      glr::Render(RenderPass::Opaque,
+                  *m_env,
+                  *m_runtime->m_table->m_gltf,
+                  m_runtime->m_table->m_bin,
+                  m_runtime->m_table->Vrm0Materials(),
+                  mesh,
+                  m_runtime->m_meshes[mesh],
+                  *meshInstance,
+                  m);
+    }
+  }
+
+  if (m_settings->Skybox) {
+    glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
+  }
+
+  for (auto [mesh, m] : m_runtime->m_table->Drawables()) {
+    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
+    if (m_settings->ShowShadow) {
+      glr::Render(RenderPass::ShadowMatrix,
+                  *m_env,
+                  *m_runtime->m_table->m_gltf,
+                  m_runtime->m_table->m_bin,
+                  m_runtime->m_table->Vrm0Materials(),
+                  mesh,
+                  m_runtime->m_meshes[mesh],
+                  *meshInstance,
+                  m);
+    }
+  }
+
+  for (auto [mesh, m] : m_runtime->m_table->Drawables()) {
+    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
+    if (m_settings->ShowMesh) {
+      glr::Render(RenderPass::Transparent,
+                  *m_env,
+                  *m_runtime->m_table->m_gltf,
+                  m_runtime->m_table->m_bin,
+                  m_runtime->m_table->Vrm0Materials(),
+                  mesh,
+                  m_runtime->m_meshes[mesh],
+                  *meshInstance,
+                  m);
+    }
+  }
+
+  if (m_settings->ShowLine) {
+    m_runtime->DrawGizmo(m_gizmo.get());
+    glr::RenderLine(*m_env, m_gizmo->m_lines);
+  }
+  m_gizmo->Clear();
+
+  if (m_settings->ShowCuber) {
+    m_cuber->Instances.clear();
+    for (auto m : m_runtime->m_table->ShapeMatrices()) {
+      m_cuber->Instances.push_back({
+        .Matrix = m,
+      });
+    }
+    m_cuber->Render(*m_env);
+  }
+
+  ////////////////////////////////////////////////////////////
 }
 
 void

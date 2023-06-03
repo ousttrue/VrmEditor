@@ -64,6 +64,13 @@ struct ScenePreview
   {
   }
 
+  void RenderStatic(const grapho::OrbitView& view);
+  void RenderRuntime(const grapho::OrbitView& view);
+
+private:
+  void RenderPass();
+
+public:
   void ShowScreenRect(const char* title,
                       const float color[4],
                       float x,
@@ -71,9 +78,6 @@ struct ScenePreview
                       float w,
                       float h);
   void ShowFullWindow(const char* title, const float color[4]);
-
-  void RenderTPose(const grapho::OrbitView& view);
-  void RenderAnimation(const grapho::OrbitView& view);
 };
 
 }

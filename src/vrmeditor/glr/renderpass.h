@@ -2,7 +2,7 @@
 
 enum class RenderPass
 {
-  Color,
+  Opaque,
+  Transparent,
   ShadowMatrix,
 };
-

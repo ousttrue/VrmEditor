@@ -11,6 +11,7 @@
 #include <TextEditor.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <cuber/mesh.h>
+#include <gltfjson/vrm0_typing.h>
 #include <grapho/gl3/glsl_type_name.h>
 #include <grapho/gl3/pbr.h>
 #include <grapho/gl3/shader.h>
@@ -416,10 +417,11 @@ public:
     }
 
     switch (pass) {
-      case RenderPass::Color: {
+      case RenderPass::Opaque: {
         uint32_t drawOffset = 0;
         for (auto& primitive : mesh->m_primitives) {
-          DrawPrimitive(WorldInfo{ env },
+          DrawPrimitive(true,
+                        WorldInfo{ env },
                         LocalInfo{ m },
                         root,
                         bin,
@@ -429,6 +431,25 @@ public:
                         drawOffset);
           drawOffset += primitive.DrawCount * 4;
         }
+        break;
+      }
+
+      case RenderPass::Transparent: {
+        // first: opaque
+        uint32_t drawOffset = 0;
+        for (auto& primitive : mesh->m_primitives) {
+          DrawPrimitive(false,
+                        WorldInfo{ env },
+                        LocalInfo{ m },
+                        root,
+                        bin,
+                        vrm0Materials,
+                        vao,
+                        primitive,
+                        drawOffset);
+          drawOffset += primitive.DrawCount * 4;
+        }
+        // second: transparent
         break;
       }
 
@@ -449,7 +470,26 @@ public:
     }
   }
 
-  void DrawPrimitive(const WorldInfo& world,
+  static bool IsMaterialOpaque(const gltfjson::tree::NodePtr& gltfMaterial,
+                               const gltfjson::tree::NodePtr& vrm0Material)
+  {
+    if (vrm0Material) {
+      auto m = gltfjson::typing::Vrm0Material(vrm0Material);
+      if (m.RenderType() == u8"Transparent") {
+        return false;
+      }
+    } else if (gltfMaterial) {
+      auto m = gltfjson::typing::Material(gltfMaterial);
+      if (m.AlphaMode() == u8"BLEND") {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  void DrawPrimitive(bool isOpaque,
+                     const WorldInfo& world,
                      const LocalInfo& local,
                      const gltfjson::typing::Root& root,
                      const gltfjson::typing::Bin& bin,
@@ -470,6 +510,10 @@ public:
         }
       }
       gltfMaterial = root.Materials[*primitive.Material].m_json;
+    }
+
+    if (IsMaterialOpaque(gltfMaterial, vrm0Material) != isOpaque) {
+      return;
     }
 
     auto material_factory = GetOrCreateMaterial(root, bin, primitive.Material);
