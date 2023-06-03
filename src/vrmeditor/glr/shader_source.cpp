@@ -277,24 +277,13 @@ struct ShaderSourceManagerImpl
   std::filesystem::path m_dir;
   std::filesystem::path m_chunkDir;
   std::vector<std::shared_ptr<ShaderSource>> m_sourceList;
-  std::unordered_map<std::shared_ptr<ShaderSource>, ShaderTypes>
-    m_sourceTypeMap;
 
-  void RegisterShaderType(const std::shared_ptr<ShaderSource>& source,
-                          ShaderTypes type)
+  std::vector<std::filesystem::path> Update(const std::filesystem::path& path)
   {
-    m_sourceTypeMap.insert({ source, type });
-  }
-
-  std::vector<ShaderTypes> Update(const std::filesystem::path& path)
-  {
-    std::vector<ShaderTypes> list;
+    std::vector<std::filesystem::path> list;
     for (auto& source : m_sourceList) {
       if (Update(source, path)) {
-        auto found = m_sourceTypeMap.find(source);
-        if (found != m_sourceTypeMap.end()) {
-          list.push_back(found->second);
-        }
+        list.push_back(path.lexically_relative(m_dir));
       }
     }
     return list;
@@ -372,15 +361,7 @@ ShaderSourceManager::Get(const std::string& filename)
   return m_impl->Get(filename);
 }
 
-void
-ShaderSourceManager::RegisterShaderType(
-  const std::shared_ptr<ShaderSource>& source,
-  ShaderTypes type)
-{
-  m_impl->RegisterShaderType(source, type);
-}
-
-std::vector<ShaderTypes>
+std::vector<std::filesystem::path>
 ShaderSourceManager::UpdateShader(const std::filesystem::path& path)
 {
   return m_impl->Update(path);

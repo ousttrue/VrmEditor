@@ -31,7 +31,7 @@ struct EnvCubemapBind
 
 struct Material
 {
-  ShaderTypes Type;
+  std::string Name;
   ShaderFactory VS;
   ShaderFactory FS;
   std::expected<std::shared_ptr<grapho::gl3::ShaderProgram>, std::string>
@@ -57,9 +57,9 @@ struct Material
       if (error.empty()) {
         // execute mcaro
         VS.Update(world, local, material);
-        auto vs = VS.Expand(Type, shaderSource);
+        auto vs = VS.Expand(shaderSource);
         FS.Update(world, local, material);
-        auto fs = FS.Expand(Type, shaderSource);
+        auto fs = FS.Expand(shaderSource);
         Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
 
         // match binding

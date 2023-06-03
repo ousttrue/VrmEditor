@@ -11,7 +11,7 @@ MaterialFactory_Unlit(const gltfjson::typing::Root& root,
 {
   auto ptr = std::make_shared<Material>();
   *ptr = Material{
-    .Type =ShaderTypes::Unlit,
+    .Name = "experimental simple unlit",
     .VS = {
       .SourceName = "unlit.vert",
       .Version = u8"#version 450",

@@ -65,14 +65,14 @@ Vec4(const gltfjson::tree::NodePtr& json, const DirectX::XMFLOAT4& defaultValue)
 }
 
 std::shared_ptr<Material>
-MaterialFactory_Pbr_Khronos(const gltfjson::typing::Root& root,
+MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
                             const gltfjson::typing::Bin& bin,
                             std::optional<uint32_t> materialId)
 {
   auto ptr = std::make_shared<Material>();
   *ptr = Material
   {
-    .Type = ShaderTypes::Pbr,
+    .Name = "Khronos glTF-sample-viewer pbr",
     .VS={
       .SourceName = "khronos/primitive.vert",
       .Version=u8"#version 300 es",

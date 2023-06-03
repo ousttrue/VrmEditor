@@ -172,7 +172,7 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
   auto ptr = std::make_shared<Material>();
 
   *ptr = Material{
-    .Type = ShaderTypes::MToon0,
+    .Name = "three-vrm",
     .VS={
       .SourceName = "mtoon.vert",
       .Version = u8"#version 300 es",
@@ -302,9 +302,7 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
 
       gltfjson::tree::NodePtr mtoon1;
       if (extensions) {
-        if (auto mtoon1 = extensions->Get(u8"VRMC_materials_mtoon")) {
-          ptr->Type = ShaderTypes::MToon1;
-        }
+        mtoon1 = extensions->Get(u8"VRMC_materials_mtoon");
       }
     }
 

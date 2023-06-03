@@ -69,13 +69,11 @@ struct ShaderFactory
     }
   }
 
-  std::u8string Expand(ShaderTypes type,
-                       const std::shared_ptr<ShaderSourceManager>& shaderSource)
+  std::u8string Expand(const std::shared_ptr<ShaderSourceManager>& shaderSource)
   {
     FullSource.clear();
 
     auto src = shaderSource->Get(SourceName);
-    shaderSource->RegisterShaderType(src, type);
     SourceExpanded = src->Source;
 
     FullSource += Version;

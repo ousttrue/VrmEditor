@@ -84,16 +84,41 @@ class Gl3Renderer
   Material m_error;
 
   std::shared_ptr<ShaderSourceManager> m_shaderSource;
-  std::unordered_map<ShaderTypes, MaterialFactoryFunc> m_materialFactoryMap{
-    { ShaderTypes::Error, MaterialFactory_Error },
-    { ShaderTypes::Shadow, MaterialFactory_Shadow },
-    // { ShaderTypes::Pbr, MaterialFactory_Pbr_LearnOpenGL },
-    { ShaderTypes::Pbr, MaterialFactory_Pbr_Khronos },
-    { ShaderTypes::Unlit, MaterialFactory_Pbr_Khronos },
-    // { ShaderTypes::Unlit, MaterialFactory_Unlit },
-    { ShaderTypes::MToon1, MaterialFactory_MToon },
-    { ShaderTypes::MToon0, MaterialFactory_MToon },
+
+  struct MaterialFactory
+  {
+    std::string Name;
+    MaterialFactoryFunc Factory;
+
+    std::shared_ptr<Material> operator()(const gltfjson::typing::Root& root,
+                                         const gltfjson::typing::Bin& bin,
+                                         std::optional<uint32_t> materialId)
+    {
+      return Factory(root, bin, materialId);
+    }
   };
+
+  std::vector<MaterialFactory> m_pbrFactories{
+    { "KHRONOS_GLTF_PBR", MaterialFactory_Pbr_Khronos_GLTF },
+    { "LOGL_PBR", MaterialFactory_Pbr_LearnOpenGL },
+  };
+  uint32_t m_pbrFactoriesCurrent = 0;
+
+  std::vector<MaterialFactory> m_unlitFactories{
+    { "KHRONOS_GLTF_PBR", MaterialFactory_Pbr_Khronos_GLTF },
+    { "experimental simple", MaterialFactory_Unlit },
+  };
+  uint32_t m_unlitFactoriesCurrent = 0;
+
+  std::vector<MaterialFactory> m_mtoon0Factories{
+    { "three-vrm", MaterialFactory_MToon },
+  };
+  uint32_t m_mtoon0FactoriesCurrent = 0;
+
+  std::vector<MaterialFactory> m_mtoon1Factories{
+    { "three-vrm", MaterialFactory_MToon },
+  };
+  uint32_t m_mtoon1FactoriesCurrent = 0;
 
   grapho::WorldVars m_world = {};
   std::shared_ptr<grapho::gl3::Ubo> m_worldUbo;
@@ -116,19 +141,6 @@ class Gl3Renderer
 
     m_worldUbo = grapho::gl3::Ubo::Create<grapho::WorldVars>();
     m_localUbo = grapho::gl3::Ubo::Create<grapho::LocalVars>();
-  }
-
-  std::shared_ptr<Material> CreateMaterial(
-    ShaderTypes type,
-    const gltfjson::typing::Root& root,
-    const gltfjson::typing::Bin& bin,
-    std::optional<uint32_t> materialId)
-  {
-    auto found = m_materialFactoryMap.find(type);
-    if (found == m_materialFactoryMap.end()) {
-      return {};
-    }
-    return (found->second)(root, bin, materialId);
   }
 
   ~Gl3Renderer() {}
@@ -178,23 +190,11 @@ public:
   {
     auto list = m_shaderSource->UpdateShader(path);
     for (auto type : list) {
-      switch (type) {
-        case ShaderTypes::Pbr:
-        case ShaderTypes::Unlit:
-        case ShaderTypes::MToon0:
-        case ShaderTypes::MToon1:
-          // clear
-          m_materialMap.clear();
-          break;
-        case ShaderTypes::Shadow:
-          m_shadow = {};
-          break;
-
-        case ShaderTypes::Error:
-          m_error = {};
-          break;
-      }
     }
+    // clear
+    m_materialMap.clear();
+    m_shadow = {};
+    m_error = {};
   }
 
   std::shared_ptr<libvrm::gltf::Image> GetOrCreateImage(
@@ -336,13 +336,13 @@ public:
 
     std::shared_ptr<Material> material;
     if (mtoon1) {
-      material = CreateMaterial(ShaderTypes::MToon1, root, bin, id);
+      material = m_mtoon1Factories[m_mtoon1FactoriesCurrent](root, bin, id);
     } else if (mtoon0) {
-      material = CreateMaterial(ShaderTypes::MToon0, root, bin, id);
+      material = m_mtoon0Factories[m_mtoon0FactoriesCurrent](root, bin, id);
     } else if (unlit) {
-      material = CreateMaterial(ShaderTypes::Unlit, root, bin, id);
+      material = m_unlitFactories[m_unlitFactoriesCurrent](root, bin, id);
     } else {
-      material = CreateMaterial(ShaderTypes::Pbr, root, bin, id);
+      material = m_pbrFactories[m_pbrFactoriesCurrent](root, bin, id);
     }
 
     while (*id >= m_materialMap.size()) {
@@ -440,8 +440,7 @@ public:
 
       case RenderPass::ShadowMatrix: {
         if (!m_shadow.Compiled) {
-          if (auto shadow =
-                CreateMaterial(ShaderTypes::Shadow, root, bin, {})) {
+          if (auto shadow = MaterialFactory_Shadow(root, bin, {})) {
             m_shadow = *shadow;
           }
         }
@@ -498,8 +497,7 @@ public:
     } else {
       // error
       if (!m_error.Compiled) {
-        if (auto error = CreateMaterial(
-              ShaderTypes::Error, root, bin, primitive.Material)) {
+        if (auto error = MaterialFactory_Error(root, bin, primitive.Material)) {
           m_error = *error;
         }
       }
@@ -521,6 +519,50 @@ public:
       m_vsEditor.SetReadOnly(true);
       m_fsEditor.SetText("");
       m_fsEditor.SetReadOnly(true);
+    }
+  }
+
+  static bool ShowSelectImpl(const std::vector<MaterialFactory>& list,
+                             uint32_t* value)
+  {
+    bool updated = false;
+    ImGui::Indent();
+    for (uint32_t i = 0; i < list.size(); ++i) {
+      auto& f = list[i];
+      if (ImGui::Selectable(f.Name.c_str(), i == *value)) {
+        *value = i;
+        updated = true;
+      }
+    }
+    ImGui::Unindent();
+    return updated;
+  }
+
+  void ShowSelectImpl()
+  {
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::CollapsingHeader("PBR")) {
+      if (ShowSelectImpl(m_pbrFactories, &m_pbrFactoriesCurrent)) {
+        m_materialMap.clear();
+      }
+    }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::CollapsingHeader("UNLIT")) {
+      if (ShowSelectImpl(m_unlitFactories, &m_unlitFactoriesCurrent)) {
+        m_materialMap.clear();
+      }
+    }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::CollapsingHeader("MToon0")) {
+      if (ShowSelectImpl(m_mtoon0Factories, &m_mtoon0FactoriesCurrent)) {
+        m_materialMap.clear();
+      }
+    }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::CollapsingHeader("MToon1")) {
+      if (ShowSelectImpl(m_mtoon1Factories, &m_mtoon1FactoriesCurrent)) {
+        m_materialMap.clear();
+      }
     }
   }
 
@@ -672,6 +714,9 @@ ReleaseMaterial(int i)
 void
 CreateDock(const AddDockFunc& addDock)
 {
+  addDock(grapho::imgui::Dock(
+    "GL impl", []() { Gl3Renderer::Instance().ShowSelectImpl(); }));
+
   addDock(grapho::imgui::Dock("GL selector", []() {
     //
     Gl3Renderer::Instance().ShowSelector();

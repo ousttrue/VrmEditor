@@ -11,7 +11,7 @@ MaterialFactory_Error(const gltfjson::typing::Root& root,
   auto ptr = std::make_shared<Material>();
   *ptr = Material
   {
-    .Type = ShaderTypes::Error,
+    .Name = "magenta for Error",
     .VS = {
       .SourceName = "error.vert",
     },

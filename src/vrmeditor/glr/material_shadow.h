@@ -10,7 +10,7 @@ MaterialFactory_Shadow(const gltfjson::typing::Root& root,
 {
   auto ptr = std::make_shared<Material>();
   *ptr=Material{
-    .Type = ShaderTypes::Shadow,
+    .Name = "ShadowMatrix shader",
     .VS = {
       "shadow.vert",
     },

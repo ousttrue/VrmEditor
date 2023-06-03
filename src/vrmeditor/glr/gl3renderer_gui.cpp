@@ -111,37 +111,22 @@ ShowShader(Material& f, ShaderFactory& s, TextEditor& editor)
 }
 
 void
-ShowShaderSource(Material& factory,
-                 TextEditor& vsEditor,
-                 TextEditor& fsEditor)
+ShowShaderSource(Material& material, TextEditor& vsEditor, TextEditor& fsEditor)
 {
-  switch (factory.Type) {
-    case ShaderTypes::Pbr:
-      ImGui::TextUnformatted("pbr");
-      break;
-    case ShaderTypes::Unlit:
-      ImGui::TextUnformatted("unlit");
-      break;
-    case ShaderTypes::MToon0:
-      ImGui::TextUnformatted("mtoon0");
-      break;
-    case ShaderTypes::MToon1:
-      ImGui::TextUnformatted("mtoon1");
-      break;
-  }
+  ImGui::TextUnformatted(material.Name.c_str());
 
   ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
   if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
     if (ImGui::BeginTabItem("VS")) {
-      if (ShowShader(factory, factory.VS, vsEditor)) {
-        factory.Compiled = std::unexpected{ "" };
+      if (ShowShader(material, material.VS, vsEditor)) {
+        material.Compiled = std::unexpected{ "" };
         vsEditor.SetText("");
       }
       ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("FS")) {
-      if (ShowShader(factory, factory.FS, fsEditor)) {
-        factory.Compiled = std::unexpected{ "" };
+      if (ShowShader(material, material.FS, fsEditor)) {
+        material.Compiled = std::unexpected{ "" };
         fsEditor.SetText("");
       }
       ImGui::EndTabItem();

@@ -6,16 +6,16 @@
 
 namespace glr {
 
-enum class ShaderTypes
-{
-  Error,  // fallback
-  MToon1, // VRMC_materials_mtton
-  MToon0,
-  Unlit, // KHR_materials_unlit
-  Pbr,   // glTF default
-
-  Shadow,
-};
+// enum class ShaderTypes
+// {
+//   Error,  // fallback
+//   MToon1, // VRMC_materials_mtton
+//   MToon0,
+//   Unlit, // KHR_materials_unlit
+//   Pbr,   // glTF default
+//
+//   Shadow,
+// };
 
 struct ShaderSource
 {
@@ -38,9 +38,7 @@ public:
   void SetShaderDir(const std::filesystem::path& path);
   void SetShaderChunkDir(const std::filesystem::path& path);
   std::shared_ptr<ShaderSource> Get(const std::string& filename);
-  void RegisterShaderType(const std::shared_ptr<ShaderSource>& source,
-                          ShaderTypes type);
-  std::vector<ShaderTypes> UpdateShader(const std::filesystem::path& path);
+  std::vector<std::filesystem::path> UpdateShader(const std::filesystem::path& path);
 };
 
 }
