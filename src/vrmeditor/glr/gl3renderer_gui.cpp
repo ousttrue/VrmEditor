@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 
+#include "../docks/printfbuffer.h"
 #include "gl3renderer_gui.h"
 #include <TextEditor.h>
 #include <grapho/gl3/glsl_type_name.h>
@@ -9,6 +10,58 @@
 #include <misc/cpp/imgui_stdlib.h>
 
 namespace glr {
+
+struct ShaderMacroVisitor
+{
+  ShaderMacro& Def;
+
+  bool operator()(OptVar& var)
+  {
+    bool value = var.LastValue ? true : false;
+    if (ImGui::Checkbox((const char*)Def.Name.c_str(), &value)) {
+      if (value) {
+        var.Override(std::monostate{});
+      } else {
+        var.Override(std::nullopt);
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+  bool operator()(BoolVar& var)
+  {
+    if (ImGui::Checkbox((const char*)Def.Name.c_str(), &var.LastValue)) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+  bool operator()(IntVar& var)
+  {
+    if (ImGui::InputInt((const char*)Def.Name.c_str(), &var.LastValue)) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+  bool operator()(FloatVar& var)
+  {
+    if (ImGui::InputFloat((const char*)Def.Name.c_str(), &var.LastValue)) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+  bool operator()(StringVar& var)
+  {
+    if (ImGui::InputText((const char*)Def.Name.c_str(), &var.LastValue)) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+};
 
 static bool
 ShowShader(Material& f, ShaderFactory& s, TextEditor& editor)
@@ -35,63 +88,7 @@ ShowShader(Material& f, ShaderFactory& s, TextEditor& editor)
   for (auto& g : s.MacroGroups) {
     if (ImGui::CollapsingHeader(g.first.c_str())) {
       for (auto& m : g.second) {
-        struct Visitor
-        {
-          ShaderMacro& Def;
-
-          bool operator()(OptVar& var)
-          {
-            bool value = var.LastValue ? true : false;
-            if (ImGui::Checkbox((const char*)Def.Name.c_str(), &value)) {
-              if (value) {
-                var.Override(std::monostate{});
-              } else {
-                var.Override(std::nullopt);
-              }
-              return true;
-            } else {
-              return false;
-            }
-          }
-          bool operator()(BoolVar& var)
-          {
-            if (ImGui::Checkbox((const char*)Def.Name.c_str(),
-                                &var.LastValue)) {
-              var.Override(var.LastValue);
-              return true;
-            }
-            return false;
-          }
-          bool operator()(IntVar& var)
-          {
-            if (ImGui::InputInt((const char*)Def.Name.c_str(),
-                                &var.LastValue)) {
-              var.Override(var.LastValue);
-              return true;
-            }
-            return false;
-          }
-          bool operator()(FloatVar& var)
-          {
-            if (ImGui::InputFloat((const char*)Def.Name.c_str(),
-                                  &var.LastValue)) {
-              var.Override(var.LastValue);
-              return true;
-            }
-            return false;
-          }
-          bool operator()(StringVar& var)
-          {
-            if (ImGui::InputText((const char*)Def.Name.c_str(),
-                                 &var.LastValue)) {
-              var.Override(var.LastValue);
-              return true;
-            }
-            return false;
-          }
-        };
-
-        if (std::visit(Visitor{ m }, m.Value)) {
+        if (std::visit(ShaderMacroVisitor{ m }, m.Value)) {
           updated = true;
         }
       }
@@ -136,9 +133,76 @@ ShowShaderSource(Material& material, TextEditor& vsEditor, TextEditor& fsEditor)
   }
 }
 
+// std::variant<IntVar, FloatVar, Vec3Var, Vec4Var, Mat3Var, Mat4Var>;
+struct UniformVisitor
+{
+  // ShaderMacro& Def;
+  const char* Name;
+
+  bool operator()(IntVar& var)
+  {
+    if (ImGui::InputInt(Name, &var.LastValue)) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+  bool operator()(FloatVar& var)
+  {
+    if (ImGui::InputFloat(Name, &var.LastValue)) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+  bool operator()(Vec3Var& var)
+  {
+    if (ImGui::InputFloat3(Name, &var.LastValue.x)) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+  bool operator()(Vec4Var& var)
+  {
+    if (ImGui::InputFloat4(Name, &var.LastValue.x)) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+  bool operator()(RgbVar& var)
+  {
+    if (ImGui::ColorEdit3(Name, &var.LastValue[0])) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+  bool operator()(RgbaVar& var)
+  {
+    if (ImGui::ColorEdit4(Name, &var.LastValue[0])) {
+      var.Override(var.LastValue);
+      return true;
+    }
+    return false;
+  }
+  bool operator()(Mat3Var& var)
+  {
+    ImGui::TextUnformatted("Mat3");
+    return false;
+  }
+  bool operator()(Mat4Var& var)
+  {
+    ImGui::TextUnformatted("Mat4");
+    return false;
+  }
+};
+
 void
 ShowShaderVariables(Material& factory)
 {
+  bool updated = false;
   if (auto compiled = factory.Compiled) {
     auto shader = *compiled;
 
@@ -147,6 +211,8 @@ ShowShaderVariables(Material& factory)
       "index", "location", "type", "name", "binding"
     };
     if (grapho::imgui::BeginTableColumns("uniforms", cols)) {
+      PrintfBuffer buf;
+      ImGui::PushItemWidth(-1);
       for (int i = 0; i < shader->Uniforms.size(); ++i) {
         ImGui::TableNextRow();
         auto& u = shader->Uniforms[i];
@@ -162,15 +228,18 @@ ShowShaderVariables(Material& factory)
         ImGui::TextUnformatted(grapho::gl3::ShaderTypeName(u.Type));
         ImGui::TableSetColumnIndex(3);
         ImGui::TextUnformatted(u.Name.c_str());
-        if (factory.UniformVars[i]) {
+        if (auto& u = factory.UniformVars[i]) {
           ImGui::TableSetColumnIndex(4);
-          ImGui::TextUnformatted("OK");
+          if (std::visit(UniformVisitor{ buf.Printf("##uniform_%d", i) }, *u)) {
+            updated = true;
+          }
         }
         if (u.Location == -1) {
           ImGui::PopStyleColor();
           ImGui::EndDisabled();
         }
       }
+      ImGui::PopItemWidth();
       ImGui::EndTable();
     }
   } else {

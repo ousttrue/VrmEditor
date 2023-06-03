@@ -1,5 +1,6 @@
 #pragma once
 #include "info.h"
+#include <array>
 #include <functional>
 #include <gltfjson.h>
 #include <sstream>
@@ -44,6 +45,8 @@ using Vec3Var = Variable<DirectX::XMFLOAT3>;
 using Vec4Var = Variable<DirectX::XMFLOAT4>;
 using Mat3Var = Variable<DirectX::XMFLOAT3X3>;
 using Mat4Var = Variable<DirectX::XMFLOAT4X4>;
+using RgbVar = Variable<std::array<float, 3>>;
+using RgbaVar = Variable<std::array<float, 4>>;
 
 inline auto
 ConstInt(int value)

@@ -16,7 +16,7 @@
 namespace glr {
 
 using UniformVar =
-  std::variant<IntVar, FloatVar, Vec3Var, Vec4Var, Mat3Var, Mat4Var>;
+  std::variant<IntVar, FloatVar, Vec3Var, Vec4Var, Mat3Var, Mat4Var, RgbVar, RgbaVar>;
 
 struct EnvTextureBind
 {

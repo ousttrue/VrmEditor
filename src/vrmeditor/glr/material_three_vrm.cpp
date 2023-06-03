@@ -316,10 +316,14 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
 //   uniform sampler2D spotShadowMap[NUM_SPOT_LIGHT_SHADOWS];
 //   uniform sampler2D pointShadowMap[NUM_POINT_LIGHT_SHADOWS];
 
-  { "shaderColorFactor", Vec3Var{ [](auto, auto, auto& json) {
+    { "litFactor", RgbVar{ [](auto, auto, auto& json) {
       gltfjson::typing::Vrm0Material m(json);
-      auto c = m.ShadeColor();
-      return DirectX::XMFLOAT3{ c[0], c[1], c[2] };
+      auto c = m.Color();
+      return std::array<float, 3>{ c[0], c[1], c[2] };
+      } } },
+    { "shadeColorFactor", RgbVar{ [](auto, auto, auto& json) {
+      gltfjson::typing::Vrm0Material m(json);
+      return m.ShadeColor();
     } } },
     { "projectionMatrix",
       Mat4Var{ [](auto& w, auto& l, auto) { return w.ProjectionMatrix(); } } },
@@ -339,16 +343,9 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
     { "mapUvTransform",
       Mat3Var{ [](auto& w, auto& l, auto) { return l.IdentityMatrix3; } } },
     { "opacity", ConstFloat(1) },
-    { "litFactor", Vec3Var{ [](auto, auto, auto) {
-        return DirectX::XMFLOAT3{ 1, 1, 1 };
-      } } },
     { "ambientLightColor", Vec3Var{ [](auto, auto, auto) {
         return DirectX::XMFLOAT3{ 1, 1, 1 };
       } } },
-    { "shadeColorFactor", Vec3Var{ [](auto, auto, auto) {
-        return DirectX::XMFLOAT3{ 0, 0, 0 };
-      } } },
-
     { "directionalLights[0].direction",
       Vec3Var{ [](auto, auto, auto) { return DirectX::XMFLOAT3(3, 3, 3); } } },
     { "directionalLights[0].color",
