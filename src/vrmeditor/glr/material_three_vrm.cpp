@@ -271,15 +271,15 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
       {"cameraPosition",Vec3Var{[](auto &w,auto &l, auto){
     return w.CameraPosition();}}},
       {"modelMatrix",Mat4Var{[](auto &w,auto &l, auto){
-    return l.ModelMatrix();}}},
+    return l.ModelMatrix;}}},
       {"normalMatrix",Mat3Var{[](auto &w,auto &l, auto){
-    return l.NormalMatrix3();}}},
+    return l.NormalMatrix3;}}},
       {"modelViewMatrix",Mat4Var{[](auto &w,auto &l, auto){
-    return mult(l.ModelMatrix(), w.ViewMatrix());}}},
+    return mult(l.ModelMatrix, w.ViewMatrix());}}},
       {"uvTransform",Mat3Var{[](auto &w,auto &l, auto){
-    return l.UvTransformMatrix();}}},
+    return l.IdentityMatrix3;}}},
       {"mapUvTransform",Mat3Var{[](auto &w,auto &l, auto){
-    return l.UvTransformMatrix();}}},
+    return l.IdentityMatrix3;}}},
       {"map",ConstInt(0)},
       {"opacity",ConstFloat(1)},
       {"litFactor",Vec3Var{[](auto, auto, auto){

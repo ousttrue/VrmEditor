@@ -24,7 +24,7 @@ MaterialFactory_Error(const gltfjson::typing::Root& root,
       {"View",
         Mat4Var{[](auto &world, auto &local, auto){ return world.ViewMatrix();}}},
       {"Model",
-        Mat4Var{[](auto &world, auto &local, auto){ return local.ModelMatrix();}}},
+        Mat4Var{[](auto &world, auto &local, auto){ return local.ModelMatrix;}}},
     },
   };
   return ptr;

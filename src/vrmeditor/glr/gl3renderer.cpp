@@ -120,11 +120,6 @@ class Gl3Renderer
   };
   uint32_t m_mtoon1FactoriesCurrent = 0;
 
-  grapho::WorldVars m_world = {};
-  std::shared_ptr<grapho::gl3::Ubo> m_worldUbo;
-  grapho::LocalVars m_local = {};
-  std::shared_ptr<grapho::gl3::Ubo> m_localUbo;
-
   uint32_t m_selected = 0;
 
   Gl3Renderer()
@@ -138,9 +133,6 @@ class Gl3Renderer
       grapho::ColorSpace::sRGB,
       white,
     });
-
-    m_worldUbo = grapho::gl3::Ubo::Create<grapho::WorldVars>();
-    m_localUbo = grapho::gl3::Ubo::Create<grapho::LocalVars>();
   }
 
   ~Gl3Renderer() {}
@@ -423,16 +415,18 @@ public:
                              deformed.Vertices.data());
     }
 
-    m_local.model = m;
-    m_local.CalcNormalMatrix();
-    WorldInfo world{ env };
-
     switch (pass) {
       case RenderPass::Color: {
         uint32_t drawOffset = 0;
         for (auto& primitive : mesh->m_primitives) {
-          DrawPrimitive(
-            world, root, bin, vrm0Materials, vao, primitive, drawOffset);
+          DrawPrimitive(WorldInfo{ env },
+                        LocalInfo{ m },
+                        root,
+                        bin,
+                        vrm0Materials,
+                        vao,
+                        primitive,
+                        drawOffset);
           drawOffset += primitive.DrawCount * 4;
         }
         break;
@@ -444,7 +438,7 @@ public:
             m_shadow = *shadow;
           }
         }
-        m_shadow.Activate(m_shaderSource, world, LocalInfo{ m_local }, {});
+        m_shadow.Activate(m_shaderSource, WorldInfo{ env }, LocalInfo{ m }, {});
         uint32_t drawCount = 0;
         for (auto& primitive : mesh->m_primitives) {
           drawCount += primitive.DrawCount * 4;
@@ -456,6 +450,7 @@ public:
   }
 
   void DrawPrimitive(const WorldInfo& world,
+                     const LocalInfo& local,
                      const gltfjson::typing::Root& root,
                      const gltfjson::typing::Bin& bin,
                      const gltfjson::tree::ArrayValue* vrm0Materials,
@@ -480,19 +475,12 @@ public:
     auto material_factory = GetOrCreateMaterial(root, bin, primitive.Material);
     if (material_factory) {
 
-      LocalInfo local{ m_local };
       if (vrm0Material) {
         // VRM0+MToon
         material_factory->Activate(m_shaderSource, world, local, vrm0Material);
       } else {
         material_factory->Activate(m_shaderSource, world, local, gltfMaterial);
       }
-
-      m_worldUbo->Upload(m_world);
-      m_worldUbo->SetBindingPoint(0);
-
-      m_localUbo->Upload(m_local);
-      m_localUbo->SetBindingPoint(1);
 
     } else {
       // error
@@ -501,7 +489,7 @@ public:
           m_error = *error;
         }
       }
-      m_error.Activate(m_shaderSource, world, LocalInfo(m_local), {});
+      m_error.Activate(m_shaderSource, world, local, {});
     }
 
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);

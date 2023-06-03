@@ -29,17 +29,23 @@ struct WorldInfo
 
 struct LocalInfo
 {
-  const grapho::LocalVars& m_local;
-  bool HasVertexColor = false;
+  DirectX::XMFLOAT4X4 ModelMatrix;
+  DirectX::XMFLOAT4X4 NormalMatrix4;
+  DirectX::XMFLOAT3X3 NormalMatrix3;
+  DirectX::XMFLOAT3X3 IdentityMatrix3;
+  bool HasVertexColor;
 
-  DirectX::XMFLOAT4X4 ModelMatrix() const { return m_local.model; }
-  DirectX::XMFLOAT4X4 NormalMatrix4() const { return m_local.normalMatrix; }
-  DirectX::XMFLOAT3X3 NormalMatrix3() const { return m_local.normalMatrix3(); }
-  DirectX::XMFLOAT4 ColorRGBA() const { return m_local.color; }
-  DirectX::XMFLOAT3 EmissiveRGB() const { return m_local.emissiveColor; }
-  DirectX::XMFLOAT3X3 UvTransformMatrix() const
+  LocalInfo(const DirectX::XMFLOAT4X4& model, bool hasVertexColor = false)
+    : ModelMatrix(model)
+    , HasVertexColor(hasVertexColor)
   {
-    return m_local.uvTransform();
+    auto m = DirectX::XMLoadFloat4x4(&ModelMatrix);
+    DirectX::XMVECTOR det;
+    auto ti = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, m));
+    DirectX::XMStoreFloat4x4(&NormalMatrix4, ti);
+    DirectX::XMStoreFloat3x3(&NormalMatrix3, ti);
+
+    DirectX::XMStoreFloat3x3(&IdentityMatrix3, DirectX::XMMatrixIdentity());
   }
 };
 

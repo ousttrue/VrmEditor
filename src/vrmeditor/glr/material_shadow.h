@@ -22,7 +22,7 @@ MaterialFactory_Shadow(const gltfjson::typing::Root& root,
         Mat4Var{[](auto &world, auto &local, auto){return world.ProjectionMatrix();}}},
       { "View",Mat4Var{[](auto &world, auto &local, auto){return world.ViewMatrix();}}},
       {"Shadow",Mat4Var{[](auto &world, auto &local, auto){return world.ShadowMatrix();}}},
-      {"Model",Mat4Var{[](auto &world, auto &local, auto){return local.ModelMatrix();}}},
+      {"Model",Mat4Var{[](auto &world, auto &local, auto){return local.ModelMatrix;}}},
     },
   };
   return ptr;
