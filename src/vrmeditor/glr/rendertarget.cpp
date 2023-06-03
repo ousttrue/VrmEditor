@@ -34,7 +34,7 @@ RenderTarget::Clear(int width, int height, const float color[4])
     FboTexture = grapho::gl3::Texture::Create({
       width,
       height,
-      grapho::PixelFormat::u8_RGBA,
+      grapho::PixelFormat::u8_RGB,
       grapho::ColorSpace::Linear,
     });
     Fbo->AttachTexture2D(FboTexture->Handle());

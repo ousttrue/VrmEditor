@@ -520,6 +520,7 @@ public:
     if (isTransparent) {
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      // glBlendFuncSeparate(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA,GL_SRC_ALPHA,GL_ONE);
     }
 
     auto material_factory = GetOrCreateMaterial(root, bin, primitive.Material);
