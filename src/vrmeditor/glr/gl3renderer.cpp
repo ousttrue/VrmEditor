@@ -420,7 +420,7 @@ public:
       case RenderPass::Opaque: {
         uint32_t drawOffset = 0;
         for (auto& primitive : mesh->m_primitives) {
-          DrawPrimitive(true,
+          DrawPrimitive(false,
                         WorldInfo{ env },
                         LocalInfo{ m },
                         root,
@@ -438,7 +438,7 @@ public:
         // first: opaque
         uint32_t drawOffset = 0;
         for (auto& primitive : mesh->m_primitives) {
-          DrawPrimitive(false,
+          DrawPrimitive(true,
                         WorldInfo{ env },
                         LocalInfo{ m },
                         root,
@@ -470,25 +470,27 @@ public:
     }
   }
 
-  static bool IsMaterialOpaque(const gltfjson::tree::NodePtr& gltfMaterial,
-                               const gltfjson::tree::NodePtr& vrm0Material)
+  static bool MaterialIsTransparent(const gltfjson::tree::NodePtr& gltfMaterial,
+                                    const gltfjson::tree::NodePtr& vrm0Material)
   {
     if (vrm0Material) {
       auto m = gltfjson::typing::Vrm0Material(vrm0Material);
-      if (m.RenderType() == u8"Transparent") {
-        return false;
+      if (auto p = m.BlendMode()) {
+        if (*p == 2 || *p == 3) {
+          return true;
+        }
       }
     } else if (gltfMaterial) {
       auto m = gltfjson::typing::Material(gltfMaterial);
       if (m.AlphaMode() == u8"BLEND") {
-        return false;
+        return true;
       }
     }
 
-    return true;
+    return false;
   }
 
-  void DrawPrimitive(bool isOpaque,
+  void DrawPrimitive(bool isTransparent,
                      const WorldInfo& world,
                      const LocalInfo& local,
                      const gltfjson::typing::Root& root,
@@ -512,8 +514,12 @@ public:
       gltfMaterial = root.Materials[*primitive.Material].m_json;
     }
 
-    if (IsMaterialOpaque(gltfMaterial, vrm0Material) != isOpaque) {
+    if (MaterialIsTransparent(gltfMaterial, vrm0Material) != isTransparent) {
       return;
+    }
+    if (isTransparent) {
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     auto material_factory = GetOrCreateMaterial(root, bin, primitive.Material);
@@ -537,6 +543,10 @@ public:
     }
 
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);
+
+    if (isTransparent) {
+      glDisable(GL_BLEND);
+    }
     ERROR_CHECK;
   }
 

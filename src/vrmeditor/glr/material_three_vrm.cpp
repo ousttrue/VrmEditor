@@ -232,6 +232,18 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
           { u8"UNION_CLIPPING_PLANES", ConstInt(0) },
           { u8"isOrthographic", ConstBool(false) },
         }},
+        {"Material", {
+          {u8"USE_ALPHATEST", OptVar{[](auto,auto,auto &json)->std::optional<std::monostate>{
+            gltfjson::typing::Vrm0Material m(json);
+            if(auto p = m.BlendMode())
+            {
+              if(*p == 1){
+                return std::monostate{};
+              }
+            }
+            return std::nullopt;
+          }}},
+        }},
         // { u8"DEBUG_LITSHADERATE" },
         // { u8"DEBUG_UV" },
         // { u8"DEBUG_NORMAL" },
@@ -240,7 +252,6 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
         // { u8"USE_UVANIMATIONMASKTEXTURE"},
 // color_pars_fragment: #if defined( USE_COLOR_ALPHA )
 // color_pars_fragment: #elif defined( USE_COLOR )
-// alphatest_pars_fragment: #ifdef USE_ALPHATEST
 // aomap_pars_fragment: #ifdef USE_AOMAP
 // emissivemap_pars_fragment: #ifdef USE_EMISSIVEMAP
 // lights_pars_begin: #if defined ( LEGACY_LIGHTS )
@@ -325,6 +336,14 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
       gltfjson::typing::Vrm0Material m(json);
       return m.ShadeColor();
     } } },
+    { "alphaTest", FloatVar{ [](auto, auto, auto& json) {
+      gltfjson::typing::Vrm0Material m(json);
+      if(auto p=m.Cutoff()){
+        return *p;
+      }
+      return 0.5f;
+    } } },
+    //
     { "projectionMatrix",
       Mat4Var{ [](auto& w, auto& l, auto) { return w.ProjectionMatrix(); } } },
     { "viewMatrix",
@@ -399,7 +418,7 @@ MaterialFactory_MToon(const gltfjson::typing::Root& root,
       if (auto p = m.SphereAddTexture()) {
         if (auto texture =
               GetOrCreateTexture(root, bin, (uint32_t)*p, ColorSpace::Linear)) {
-          ptr->Textures.push_back({ 2, texture });
+          ptr->Textures.push_back({ 5, texture });
         }
       }
     }

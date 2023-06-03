@@ -407,20 +407,6 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
     .UpdateState = [](auto, auto, auto &json)
     {
       gltfjson::typing::Material m(json);
-      auto mode = m.AlphaMode();
-      if(mode == u8"MASK")
-      {
-        glDisable(GL_BLEND);
-      }
-      else if(mode == u8"BLEND")
-      {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      }
-      else{
-        // OPAQUE
-        glDisable(GL_BLEND);
-      }
 
       bool *ds;
       if((ds = m.DoubleSided()) && *ds)
