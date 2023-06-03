@@ -38,7 +38,7 @@ struct ViewSettings
 
 struct ScenePreview
 {
-  std::shared_ptr<runtimescene::RuntimeScene> m_animation;
+  std::shared_ptr<runtimescene::RuntimeScene> m_runtime;
   std::shared_ptr<RenderingEnv> m_env;
   std::shared_ptr<ViewSettings> m_settings;
   std::shared_ptr<SceneNodeSelection> m_selection;
