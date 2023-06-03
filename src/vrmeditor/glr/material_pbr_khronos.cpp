@@ -335,18 +335,10 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
         }
         return 1.0f;
       }}},
-      {"u_Exposure",ConstFloat(1.0f)},
-
-      {"u_ModelMatrix",Mat4Var{[](auto &w, auto &l, auto){ return l.ModelMatrix;}}},
-      {"u_ViewProjectionMatrix",Mat4Var{[](auto &w, auto &l, auto){ return w.ViewProjectionMatrix();}}},
-
+      // material
       {"u_EmissiveFactor",Vec3Var{[](auto &w, auto &l, auto &json){ 
         return Vec3(json->Get(u8"emissiveFactor"), {0, 0, 0});
       }}},
-
-      {"u_NormalMatrix",Mat4Var{[](auto &w, auto &l, auto){ 
-        return l.NormalMatrix4;}}},
-
       { "u_NormalScale", FloatVar{[](auto, auto, auto &json){
         gltfjson::typing::Material m(json);
         if (auto normalTexture = m.NormalTexture()) {
@@ -357,8 +349,6 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
         }
         return 1.0f;
       }}},
-
-
       { "u_AlphaCutoff", FloatVar{[](auto, auto, auto &json){
         gltfjson::typing::Material m(json);
         if(auto p = m.AlphaCutoff())
@@ -369,6 +359,23 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
           return 0.5f;
         }
       }}},
+      {"u_OcclusionStrength", FloatVar{[](auto,auto,auto&json){
+        gltfjson::typing::Material m(json);
+        if(auto info = m.OcclusionTexture())
+        {
+          if(auto strength = info->Strength())
+          {
+            return *strength;
+          }
+        }
+        return 1.0f;
+      }}},
+      // other
+      {"u_Exposure",ConstFloat(1.0f)},
+      {"u_ModelMatrix",Mat4Var{[](auto &w, auto &l, auto){ return l.ModelMatrix;}}},
+      {"u_ViewProjectionMatrix",Mat4Var{[](auto &w, auto &l, auto){ return w.ViewProjectionMatrix();}}},
+      {"u_NormalMatrix",Mat4Var{[](auto &w, auto &l, auto){ 
+        return l.NormalMatrix4;}}},
 
       // world
       {"u_EnvIntensity", FloatVar{[](auto, auto, auto){ return 1.0f; }}},
