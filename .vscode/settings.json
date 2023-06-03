@@ -18,8 +18,4 @@
     ],
     "testMate.cpp.test.executables": "prefix/bin/tests*",
     "C_Cpp.default.compileCommands": "builddir\\vscode_compile_commands.json",
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.python"
-    },
-    "python.formatting.provider": "none"
 }

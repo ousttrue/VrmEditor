@@ -8,10 +8,22 @@ INCLUDE_LESS_THAN = re.compile(r'^include\s*<([^"]*)>')
 
 
 class Printer:
-    def __init__(self, chunk_root: Optional[pathlib.Path]) -> None:
+    def __init__(
+        self, chunk_root: Optional[pathlib.Path], *, print_sampler=True
+    ) -> None:
         self.chunk_root = chunk_root
         self.root = None
         self.used = set()
+        self.print_sampler = print_sampler
+
+    def print_macro(self, msg: str):
+        if not self.print_sampler:
+            print(msg)
+
+    def print_line(self, msg: str):
+        if self.print_sampler:
+            if re.match(r'^\s*uniform\s+sampler', msg):
+                print(msg)
 
     def process(self, path: pathlib.Path, indent=""):
         if not self.root:
@@ -29,10 +41,11 @@ class Printer:
             l = l.strip()
             if len(l) == 0:
                 continue
+
+            self.print_line(l)
             if l[0] != "#":
                 continue
 
-            # print(l)
             l = l[1:].strip()
             if l.split()[0] in ["endif", "else", "undef"]:
                 continue
@@ -41,12 +54,16 @@ class Printer:
                 # print(l)
                 m = INCLUDE_QUOTE.match(l)
                 if m:
-                    print(f"{indent}{path.relative_to(self.root)} => {m.group(1)}")
+                    self.print_macro(
+                        f"{indent}{path.relative_to(self.root)} => {m.group(1)}"
+                    )
                     self.process(path.parent / m.group(1), indent + "  ")
                     continue
                 m = INCLUDE_LESS_THAN.match(l)
                 if m:
-                    print(f"{indent}{path.relative_to(self.root)} => {m.group(1)}")
+                    self.print_macro(
+                        f"{indent}{path.relative_to(self.root)} => {m.group(1)}"
+                    )
                     self.process(path.parent / m.group(1), indent + "  ")
                     continue
 
@@ -55,7 +72,7 @@ class Printer:
                 if l in self.used:
                     pass
                 else:
-                    print(f"{indent}{path.relative_to(self.root)}: #{l}")
+                    self.print_macro(f"{indent}{path.relative_to(self.root)}: #{l}")
                     self.used.add(l)
 
 
