@@ -222,8 +222,22 @@ MaterialFactory_MToon0(const gltfjson::Root& root,
       Vec3Var{ [](auto, auto, auto) { return DirectX::XMFLOAT3(3, 3, 3); } } },
     { "directionalLights[0].color",
       Vec3Var{ [](auto, auto, auto) { return DirectX::XMFLOAT3(1, 1, 1); } } },
-}
-,
+    }
+    ,
+    .UpdateState = [](auto, auto, auto &json)
+    {
+      gltfjson::vrm0::Vrm0Material m(json);
+
+      // bool *ds;
+      // if((ds = m.DoubleSided()) && *ds)
+      // {
+      //   glDisable(GL_CULL_FACE);
+      //   glFrontFace(GL_CCW);
+      // }
+      // else{
+      //   glEnable(GL_CULL_FACE);
+      // }
+    },
 };
 
   auto m = gltfjson::vrm0::Vrm0Material(mtoon0);

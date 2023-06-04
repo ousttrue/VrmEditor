@@ -41,7 +41,7 @@ MaterialFactory_MToon(const gltfjson::Root& root,
       return MaterialFactory_MToon1(root, bin, *materialId, mtoon1);
 
     } else if (mtoon0) {
-      return MaterialFactory_MToon1(root, bin, *materialId, mtoon0);
+      return MaterialFactory_MToon0(root, bin, *materialId, mtoon0);
     }
   }
 

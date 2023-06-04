@@ -403,7 +403,7 @@ public:
               const DirectX::XMFLOAT4X4& m)
   {
     glEnable(GL_DEPTH_TEST);
-    // glDepthFunc(GL_LESS);
+    glDepthFunc(GL_LESS);
 
     auto vao = GetOrCreateMesh(meshId, mesh);
     // upload vertices. CPU skinning and morpht target.
