@@ -544,7 +544,7 @@ RuntimeScene::Drawables()
       DirectX::XMStoreFloat4x4(
         &m_drawables.back().Matrix,
         GetRuntimeNode(m_table->m_nodes[i])->WorldMatrix());
-      auto instance = GetDeformedMesh(*mesh);
+      // auto instance = GetDeformedMesh(*mesh);
     }
   }
 

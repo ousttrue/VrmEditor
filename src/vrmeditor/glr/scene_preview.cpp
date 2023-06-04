@@ -59,7 +59,7 @@ ScenePreview::RenderStatic(const grapho::OrbitView& view)
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  RenderPass();
+  RenderPass(m_runtime->m_table->Drawables());
 
   // manipulator
   if (auto node = m_selection->selected.lock()) {
@@ -103,7 +103,7 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
   m_runtime->NextSpringDelta = m_settings->NextSpringDelta;
   m_settings->NextSpringDelta = {};
 
-  RenderPass();
+  RenderPass(m_runtime->Drawables());
 
   // manipulator
   if (auto init = m_selection->selected.lock()) {
@@ -138,9 +138,9 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
 }
 
 void
-ScenePreview::RenderPass()
+ScenePreview::RenderPass(std::span<const libvrm::gltf::DrawItem> drawables)
 {
-  for (auto [mesh, m] : m_runtime->m_table->Drawables()) {
+  for (auto [mesh, m] : drawables) {
     auto meshInstance = m_runtime->GetDeformedMesh(mesh);
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Opaque,
@@ -159,7 +159,7 @@ ScenePreview::RenderPass()
     glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
   }
 
-  for (auto [mesh, m] : m_runtime->m_table->Drawables()) {
+  for (auto [mesh, m] : drawables) {
     auto meshInstance = m_runtime->GetDeformedMesh(mesh);
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix,
@@ -174,7 +174,7 @@ ScenePreview::RenderPass()
     }
   }
 
-  for (auto [mesh, m] : m_runtime->m_table->Drawables()) {
+  for (auto [mesh, m] : drawables) {
     auto meshInstance = m_runtime->GetDeformedMesh(mesh);
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Transparent,
@@ -197,7 +197,7 @@ ScenePreview::RenderPass()
 
   if (m_settings->ShowCuber) {
     m_cuber->Instances.clear();
-    for (auto m : m_runtime->m_table->ShapeMatrices()) {
+    for (auto m : m_runtime->ShapeMatrices()) {
       m_cuber->Instances.push_back({
         .Matrix = m,
       });

@@ -52,49 +52,40 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
 static std::expected<bool, std::string>
 ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
 {
-  // if (!has(scene->m_gltf->Json, "extensions")) {
-  //   return std::unexpected{ "no extensions" };
-  // }
-  // auto& extensions = scene->m_gltf->Json.at("extensions");
-  //
-  // if (!has(extensions, "VRM")) {
-  //   return std::unexpected{ "no extensions.VRM" };
-  // }
-  // auto VRM = extensions.at("VRM");
-  //
-  // if (has(VRM, "humanoid")) {
-  //   auto& humanoid = VRM.at("humanoid");
-  //   if (has(humanoid, "humanBones")) {
-  //     auto& humanBones = humanoid.at("humanBones");
-  //     // bone & node
-  //     for (auto& humanBone : humanBones) {
-  //       int index = humanBone.at("node");
-  //       std::string_view name = humanBone.at("bone");
-  //       // std::cout << name << ": " << index << std::endl;
-  //       if (auto bone = vrm::HumanBoneFromName(name, vrm::VrmVersion::_0_x))
-  //       {
-  //         scene->m_nodes[index]->Humanoid = *bone;
-  //       }
-  //     }
-  //   }
-  // }
-  //
-  // // meta
-  // // specVersion
-  // // exporterVersion
-  //
-  // // firstPerson
-  // // materialProperties
-  // if (has(VRM, "materialProperties")) {
-  //   auto& props = VRM.at("materialProperties");
-  //   for (int i = 0; i < props.size(); ++i) {
-  //     if (props[i].at("shader") == "VRM/MToon") {
-  //       // TODO
-  //       scene->m_materials[i]->Type = MaterialTypes::MToon0;
-  //     }
-  //   }
-  // }
-  //
+  auto extensions = scene->m_gltf->Extensions();
+  if (!extensions) {
+    return std::unexpected{ "no extensions" };
+  }
+
+  auto VRM = extensions->Get(u8"VRM");
+  if (!VRM) {
+    return std::unexpected{ "no extensions.VRM" };
+  }
+
+  if (auto humanoid = VRM->Get(u8"humanoid")) {
+    if (auto humanBones = humanoid->Get(u8"humanBones")) {
+      if (auto array = humanBones->Array()) {
+        // bone & node
+        for (auto& humanBone : *array) {
+          if (auto node = humanBone->Get(u8"node")) {
+            auto index = (uint32_t)*node->Ptr<float>();
+            auto name = humanBone->Get(u8"bone")->U8String();
+            // std::cout << name << ": " << index << std::endl;
+            if (auto bone = vrm::HumanBoneFromName(gltfjson::from_u8(name),
+                                                   vrm::VrmVersion::_0_x)) {
+              scene->m_nodes[index]->Humanoid = *bone;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // meta
+  // specVersion
+  // exporterVersion
+  // firstPerson
+
   // if (has(VRM, "blendShapeMaster")) {
   //
   //   scene->m_expressions = std::make_shared<vrm::Expressions>();
@@ -160,7 +151,8 @@ ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
   //       float radius = boneGroup.at("hitRadius");
   //       std::vector<std::shared_ptr<vrm::SpringColliderGroup>>
   //       colliderGroups; if (has(boneGroup, "colliderGroups")) {
-  //         for (uint32_t colliderGroup_index : boneGroup.at("colliderGroups"))
+  //         for (uint32_t colliderGroup_index :
+  //         boneGroup.at("colliderGroups"))
   //         {
   //           auto colliderGroup =
   //             scene->m_springColliderGroups[colliderGroup_index];
@@ -186,31 +178,33 @@ ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
 static std::expected<bool, std::string>
 ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
 {
-  // if (!has(scene->m_gltf->Json, "extensions")) {
-  //   return std::unexpected{ "no extensions" };
-  // }
-  // auto& extensions = scene->m_gltf->Json.at("extensions");
-  //
-  // if (!has(extensions, "VRMC_vrm")) {
-  //   return std::unexpected{ "no extensions.VRMC_vrm" };
-  // }
-  //
-  // auto VRMC_vrm = extensions.at("VRMC_vrm");
-  // if (has(VRMC_vrm, "humanoid")) {
-  //   auto& humanoid = VRMC_vrm.at("humanoid");
-  //   if (has(humanoid, "humanBones")) {
-  //     auto& humanBones = humanoid.at("humanBones");
-  //     for (auto& kv : humanBones.items()) {
-  //       if (auto bone =
-  //             vrm::HumanBoneFromName(kv.key(), vrm::VrmVersion::_1_0)) {
-  //         scene->m_nodes[kv.value().at("node")]->Humanoid = *bone;
-  //       } else {
-  //         std::cout << kv.key() << std::endl;
-  //       }
-  //     }
-  //   }
-  // }
-  //
+  auto extensions = scene->m_gltf->Extensions();
+  if (!extensions) {
+    return std::unexpected{ "no extensions" };
+  }
+
+  auto VRMC_vrm = extensions->Get(u8"VRMC_vrm");
+  if (!VRMC_vrm) {
+    return std::unexpected{ "no extensions.VRMC_vrm" };
+  }
+
+  if (auto humanoid = VRMC_vrm->Get(u8"humanoid")) {
+    if (auto humanBones = humanoid->Get(u8"humanBones")) {
+      if (auto object = humanBones->Object()) {
+        for (auto& kv : *object) {
+          auto name = kv.first;
+          if (auto bone = vrm::HumanBoneFromName(gltfjson::from_u8(name),
+                                                 vrm::VrmVersion::_1_0)) {
+            auto index = (uint32_t)*kv.second->Get(u8"node")->Ptr<float>();
+            scene->m_nodes[index]->Humanoid = *bone;
+          } else {
+            std::cout << gltfjson::from_u8(name) << std::endl;
+          }
+        }
+      }
+    }
+  }
+
   // if (has(extensions, "VRMC_springBone")) {
   //   auto& VRMC_springBone = extensions.at("VRMC_springBone");
   //   if (has(VRMC_springBone, "springs")) {
@@ -248,7 +242,8 @@ ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
   //         auto& sphere = shape.at("sphere");
   //         ptr->Type = vrm::SpringColliderShapeType::Sphere;
   //         ptr->Radius = sphere.value("radius", 0.0f);
-  //         ptr->Offset = sphere.value("offset", DirectX::XMFLOAT3{ 0, 0, 0 });
+  //         ptr->Offset = sphere.value("offset", DirectX::XMFLOAT3{ 0, 0, 0
+  //         });
   //       } else if (has(shape, "capsule")) {
   //         auto& capsule = shape.at("capsule");
   //         ptr->Type = vrm::SpringColliderShapeType::Capsule;

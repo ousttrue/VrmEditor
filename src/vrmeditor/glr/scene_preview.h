@@ -5,11 +5,18 @@
 #include <grapho/orbitview.h>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <vrm/animation/timeline.h>
 
 namespace runtimescene {
 struct RuntimeScene;
+}
+
+namespace libvrm {
+namespace gltf {
+struct DrawItem;
+}
 }
 
 namespace glr {
@@ -68,7 +75,7 @@ struct ScenePreview
   void RenderRuntime(const grapho::OrbitView& view);
 
 private:
-  void RenderPass();
+  void RenderPass(std::span<const libvrm::gltf::DrawItem> drawables);
 
 public:
   void ShowScreenRect(const char* title,
