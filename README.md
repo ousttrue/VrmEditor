@@ -4,48 +4,36 @@ read, write, edit and animation test.
 
 ## features
 
-| function                         | read | write | edit |                      |
-| -------------------------------- | ---- | ----- | ---- | -------------------- |
-| glTF-2.0                         |      |       |      |                      |
-| (mesh)                           | ✅   | ✅    | ---  |                      |
-| (draco)                          | 🟩   | ---   | ---  |                      |
-| (quantity)                       | 🟩   | ---   | ---  |                      |
-| (material)                       | ✅   | ✅    | ✅   |                      |
-| (material.ColorTexture)          | ✅   | ✅    | ---  |                      |
-| (material.mtoon-0.x)             | 🟩   | 🟩    | 🟩   |                      |
-| (material.mtoon-1.0)             | 🟩   | 🟩    | 🟩   |                      |
-| (animation.TRS)                  | ✅   | ✅    | 🟩   | TODO:keyframe editor |
-| (animation.morphTarget)          | ✅   | ✅    | 🟩   |                      |
-| (animation.linear_interpolation) | 🟩   | 🟩    | 🟩   |                      |
-| (animation.cubic_interpolation)  | 🟩   | 🟩    | 🟩   |                      |
-| vrm-0.x                          |      |       |      |                      |
-| (meta)                           | 🟩   | 🟩    | 🟩   |                      |
-| (expression.morphtarget)         | ✅   | 🟩    | 🟩   |                      |
-| (expression.material)            | 🟩   | 🟩    | 🟩   |                      |
-| (lookat.bone)                    | 🟩   | 🟩    | 🟩   |                      |
-| (lookat.expression)              | 🟩   | 🟩    | 🟩   |                      |
-| (springbone)                     | ✅   | 🟩    | 🟩   |                      |
-| (humanoid)                       | ✅   | 🟩    | 🟩   |                      |
-| (Y180 rotation)                  | 🟩   | 🟩    | ---  | vrm-0.x face -Z      |
-| vrm-1.0                          |      |       |      |                      |
-| (expression.morphtarget)         | ✅   | 🟩    | 🟩   |                      |
-| (expression.material)            | 🟩   | 🟩    | 🟩   |                      |
-| (lookat.bone)                    | 🟩   | 🟩    | 🟩   |                      |
-| (lookat.expression)              | 🟩   | 🟩    | 🟩   |                      |
-| (springbone)                     | ✅   | 🟩    | 🟩   | TODO:capusule        |
-| (humanoid)                       | ✅   | 🟩    | 🟩   |                      |
-| (constraint)                     | ✅   | 🟩    | 🟩   |                      |
-| vrm-animation                    |      |       |      |                      |
-| (humanoid)                       | ✅   | 🟩    | 🟩   |                      |
-| (expression)                     | ✅   | ✅    | 🟩   |                      |
-| (lookat)                         | 🟩   | 🟩    | 🟩   |                      |
-| bvh                              | ✅   | ---   | ---  |                      |
-| (humanoid mapping)               | ✅   | ---   | ---  |                      |
-| fbx                              | 🟩   | ---   | ---  |                      |
+- [x] glTF-2.0
+  - [ ] animation.linear_interpolation
+  - [ ] animation.cubic_interpolation
+- [x] bvh
+- [ ] fbx
+
+### glTF Extensions
+
+- [ ] KHR_draco_mesh_compression
+- [ ] KHR_lights_punctual
+- [ ] KHR_materials_clearcoat
+- [ ] KHR_materials_emissive_strength
+- [ ] KHR_materials_ior
+- [ ] KHR_materials_iridescence
+- [ ] KHR_materials_sheen
+- [ ] KHR_materials_specular
+- [ ] KHR_materials_transmission
+- [x] KHR_materials_unlit
+- [ ] KHR_materials_variants
+- [ ] KHR_materials_volume
+- [ ] KHR_mesh_quantization
+- [ ] KHR_texture_basisu
+- [ ] KHR_texture_transform
+- [ ] KHR_xmp_json_ld
+- [x] vrm-0.x
+- [ ] vrm-1.0
 
 ## TODO
 
-- BoxInterleaved
+- GLTF_SAMPLE_MODELS: BoxInterleaved
 
 ## Memo
 
@@ -56,12 +44,12 @@ read, write, edit and animation test.
   drawlilst ^
             |
         +------------+
-        |libvrm scene| <- Pose/Animation
+        |libvrm scene| <- Skinning/MorphTarget/Pose/Animation
         +------------+
      import ^|
             |v export
         +--------+
-        |gltfjson| <- ImGui/TPose
+        |gltfjson| <- json dom tree: ImGui Edit
         +--------+
 deserialize ^|
             |v serialize
@@ -102,15 +90,15 @@ deserialize ^|
 ### shaders
 
 - PBR: https://github.com/JoeyDeVries/LearnOpenGL/tree/master/src/6.pbr/2.2.2.ibl_specular_textured
-- PBR: https://github.com/KhronosGroup/glTF-Sample-Viewer
+- PBR/Unlit: https://github.com/KhronosGroup/glTF-Sample-Viewer
 - MToon: https://github.com/pixiv/three-vrm
-  - PBR: https://github.com/mrdoob/three.js/tree/r150 (r150 required)
+  - depends: https://github.com/mrdoob/three.js/tree/r150 (r150 required)
 
 ### external
 
-- cuber
-- gltfjson
-- grapho
+- gltfjson(JSON utility)
+- grapho(GPU API wrapper)
+- cuber(bone draw helper)
 
 ## build
 
@@ -126,13 +114,13 @@ deserialize ^|
 
 ```
 # msvc17
-$ meson setup builddir -Dcpp_std=c++latest
+$ meson setup builddir -Dcpp_std=c++latest -Dexecutable=true
 $ meson compile -C builddir
 ```
 
 ```
 # clang16 on Ubuntu22.04
-$ meson setup builddir -Dcpp_std=c++2b
+$ meson setup builddir -Dcpp_std=c++2b -Dexecutable=true
 $ meson compile -C builddir
 ```
 
@@ -178,7 +166,7 @@ udp / bvh
 - `libvrm::runtime` (NodeAnimation, MorphTarget, Skinning)
 - `libvrm::serialization` (Udp pose)
 
-## icon
+## nerdfont icon
 
 - [ ]  : play
 - [ ]  : stop
