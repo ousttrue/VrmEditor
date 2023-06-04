@@ -1,10 +1,23 @@
 #include "vrm/importer.h"
 #include "vrm/gltf.h"
+#include <DirectXMath.h>
 
 #include <gltfjson/json_tree_parser.h>
 
 namespace libvrm {
 namespace gltf {
+
+static DirectX::XMFLOAT4
+RotateY180(const DirectX::XMFLOAT4& src)
+{
+  auto r = DirectX::XMLoadFloat4(&src);
+  auto y180 = DirectX::XMQuaternionRotationMatrix(
+    DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(180.0f)));
+  DirectX::XMFLOAT4 dst;
+  DirectX::XMStoreFloat4(&dst, DirectX::XMQuaternionMultiply(y180, r));
+  auto a = dst;
+  return dst;
+}
 
 static std::expected<std::shared_ptr<gltf::Node>, std::string>
 ParseNode(const std::shared_ptr<GltfRoot>& scene,
@@ -28,11 +41,6 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
     if (node.Translation.size() == 3) {
       auto& t = node.Translation;
       ptr->InitialTransform.Translation = { t[0], t[1], t[2] };
-    }
-    if (scene->m_type == ModelType::Vrm0) {
-      // rotate: Y180
-      auto t = ptr->InitialTransform.Translation;
-      ptr->InitialTransform.Translation = { -t.x, t.y, -t.z };
     }
     // R
     if (node.Rotation.size() == 4) {
@@ -171,7 +179,12 @@ ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
   //     }
   //   }
   // }
-  //
+
+  for (auto& root : scene->m_roots) {
+    root->InitialTransform.Rotation =
+      RotateY180(root->InitialTransform.Rotation);
+  }
+
   return true;
 }
 

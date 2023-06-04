@@ -114,7 +114,6 @@ struct RuntimeNode
   }
 
   void SetWorldRotation(const DirectX::XMVECTOR& world, bool recursive = false)
-  // void Node::SetWorldRotation(const DirectX::XMVECTOR& world, bool recursive)
   {
     auto parent = ParentWorldRotation();
     DirectX::XMStoreFloat4(&Transform.Rotation,

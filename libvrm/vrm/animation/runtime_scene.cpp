@@ -697,11 +697,19 @@ RuntimeScene::SetHumanPose(const libvrm::vrm::HumanPose& pose)
     if (auto init = m_table->GetBoneNode(pose.Bones[i])) {
       auto node = GetRuntimeNode(init);
       if (i == 0) {
-        DirectX::XMStoreFloat3(
-          &node->Transform.Translation,
-          DirectX::XMVectorAdd(
-            DirectX::XMLoadFloat3(&init->InitialTransform.Translation),
-            DirectX::XMLoadFloat3(&pose.RootPosition)));
+        // hips move
+        // DirectX::XMStoreFloat3(
+        //   &node->Transform.Translation,
+        //   DirectX::XMVectorAdd(
+        //     DirectX::XMLoadFloat3(&init->InitialTransform.Translation),
+        //     DirectX::XMLoadFloat3(&pose.RootPosition)));
+
+        // TODO: position from Model Root ?
+        auto pos = pose.RootPosition;
+        auto init_pos = init->WorldInitialTransform.Translation;
+        node->SetWorldMatrix(DirectX::XMMatrixTranslation(
+          init_pos.x + pos.x, init_pos.y + pos.y, init_pos.z + pos.z));
+        auto a = 0;
       }
 
       auto worldInitial =
