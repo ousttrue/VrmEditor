@@ -11,7 +11,7 @@
 #include <TextEditor.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <cuber/mesh.h>
-#include <gltfjson/vrm0_typing.h>
+#include <gltfjson/gltf_typing_vrm0.h>
 #include <grapho/gl3/glsl_type_name.h>
 #include <grapho/gl3/pbr.h>
 #include <grapho/gl3/shader.h>
@@ -40,9 +40,9 @@
 namespace glr {
 
 static std::expected<std::shared_ptr<libvrm::gltf::Image>, std::string>
-ParseImage(const gltfjson::typing::Root& root,
-           const gltfjson::typing::Bin& bin,
-           const gltfjson::typing::Image& image)
+ParseImage(const gltfjson::Root& root,
+           const gltfjson::Bin& bin,
+           const gltfjson::Image& image)
 {
   std::span<const uint8_t> bytes;
   if (auto bufferView = image.BufferView()) {
@@ -91,8 +91,8 @@ class Gl3Renderer
     std::string Name;
     MaterialFactoryFunc Factory;
 
-    std::shared_ptr<Material> operator()(const gltfjson::typing::Root& root,
-                                         const gltfjson::typing::Bin& bin,
+    std::shared_ptr<Material> operator()(const gltfjson::Root& root,
+                                         const gltfjson::Bin& bin,
                                          std::optional<uint32_t> materialId)
     {
       return Factory(root, bin, materialId);
@@ -191,8 +191,8 @@ public:
   }
 
   std::shared_ptr<libvrm::gltf::Image> GetOrCreateImage(
-    const gltfjson::typing::Root& root,
-    const gltfjson::typing::Bin& bin,
+    const gltfjson::Root& root,
+    const gltfjson::Bin& bin,
     std::optional<uint32_t> id)
   {
     if (!id) {
@@ -214,8 +214,8 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::Texture> GetOrCreateTexture(
-    const gltfjson::typing::Root& root,
-    const gltfjson::typing::Bin& bin,
+    const gltfjson::Root& root,
+    const gltfjson::Bin& bin,
     std::optional<uint32_t> id,
     ColorSpace colorspace)
   {
@@ -251,26 +251,24 @@ public:
     if (auto samplerIndex = src.Sampler()) {
       auto sampler = root.Samplers[*samplerIndex];
       texture->Bind();
-      glTexParameteri(GL_TEXTURE_2D,
-                      GL_TEXTURE_MAG_FILTER,
-                      gltfjson::typing::value_or<int>(
-                        sampler.MagFilter(),
-                        (int)gltfjson::format::TextureMagFilter::LINEAR));
-      glTexParameteri(GL_TEXTURE_2D,
-                      GL_TEXTURE_MIN_FILTER,
-                      gltfjson::typing::value_or<int>(
-                        sampler.MinFilter(),
-                        (int)gltfjson::format::TextureMinFilter::LINEAR));
       glTexParameteri(
         GL_TEXTURE_2D,
-        GL_TEXTURE_WRAP_S,
-        gltfjson::typing::value_or<int>(
-          sampler.WrapS(), (int)gltfjson::format::TextureWrap::REPEAT));
+        GL_TEXTURE_MAG_FILTER,
+        gltfjson::value_or<int>(sampler.MagFilter(),
+                                (int)gltfjson::TextureMagFilter::LINEAR));
       glTexParameteri(
         GL_TEXTURE_2D,
-        GL_TEXTURE_WRAP_T,
-        gltfjson::typing::value_or<int>(
-          sampler.WrapT(), (int)gltfjson::format::TextureWrap::REPEAT));
+        GL_TEXTURE_MIN_FILTER,
+        gltfjson::value_or<int>(sampler.MinFilter(),
+                                (int)gltfjson::TextureMinFilter::LINEAR));
+      glTexParameteri(GL_TEXTURE_2D,
+                      GL_TEXTURE_WRAP_S,
+                      gltfjson::value_or<int>(
+                        sampler.WrapS(), (int)gltfjson::TextureWrap::REPEAT));
+      glTexParameteri(GL_TEXTURE_2D,
+                      GL_TEXTURE_WRAP_T,
+                      gltfjson::value_or<int>(
+                        sampler.WrapT(), (int)gltfjson::TextureWrap::REPEAT));
       texture->Unbind();
     } else {
       // TODO: default sampler
@@ -280,10 +278,9 @@ public:
     return texture;
   }
 
-  std::shared_ptr<Material> GetOrCreateMaterial(
-    const gltfjson::typing::Root& root,
-    const gltfjson::typing::Bin& bin,
-    std::optional<uint32_t> id)
+  std::shared_ptr<Material> GetOrCreateMaterial(const gltfjson::Root& root,
+                                                const gltfjson::Bin& bin,
+                                                std::optional<uint32_t> id)
   {
     if (!id) {
       return {};
@@ -397,8 +394,8 @@ public:
 
   void Render(RenderPass pass,
               const RenderingEnv& env,
-              const gltfjson::typing::Root& root,
-              const gltfjson::typing::Bin& bin,
+              const gltfjson::Root& root,
+              const gltfjson::Bin& bin,
               const gltfjson::tree::ArrayValue* vrm0Materials,
               uint32_t meshId,
               const std::shared_ptr<runtimescene::BaseMesh>& mesh,
@@ -474,14 +471,14 @@ public:
                                     const gltfjson::tree::NodePtr& vrm0Material)
   {
     if (vrm0Material) {
-      auto m = gltfjson::typing::Vrm0Material(vrm0Material);
+      auto m = gltfjson::vrm0::Vrm0Material(vrm0Material);
       if (auto p = m.BlendMode()) {
         if (*p == 2 || *p == 3) {
           return true;
         }
       }
     } else if (gltfMaterial) {
-      auto m = gltfjson::typing::Material(gltfMaterial);
+      auto m = gltfjson::Material(gltfMaterial);
       if (m.AlphaMode() == u8"BLEND") {
         return true;
       }
@@ -493,8 +490,8 @@ public:
   void DrawPrimitive(bool isTransparent,
                      const WorldInfo& world,
                      const LocalInfo& local,
-                     const gltfjson::typing::Root& root,
-                     const gltfjson::typing::Bin& bin,
+                     const gltfjson::Root& root,
+                     const gltfjson::Bin& bin,
                      const gltfjson::tree::ArrayValue* vrm0Materials,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
                      const runtimescene::Primitive& primitive,
@@ -719,8 +716,8 @@ public:
 void
 Render(RenderPass pass,
        const RenderingEnv& env,
-       const gltfjson::typing::Root& root,
-       const gltfjson::typing::Bin& bin,
+       const gltfjson::Root& root,
+       const gltfjson::Bin& bin,
        const gltfjson::tree::ArrayValue* vrm0Materials,
        uint32_t meshId,
        const std::shared_ptr<runtimescene::BaseMesh>& mesh,
@@ -777,8 +774,8 @@ CreateDock(const AddDockFunc& addDock)
 }
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreateTexture(const gltfjson::typing::Root& root,
-                   const gltfjson::typing::Bin& bin,
+GetOrCreateTexture(const gltfjson::Root& root,
+                   const gltfjson::Bin& bin,
                    std::optional<uint32_t> texture,
                    ColorSpace colorspace)
 {

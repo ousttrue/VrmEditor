@@ -26,23 +26,24 @@ public:
 
   void Clear() { m_labelCache.clear(); }
 
-  static bool IsChildOfRoot(std::u8string_view jsonpath)
-  {
-    gltfjson::JsonPath path(jsonpath);
-    if (path.Size() == 3) {
-      for (auto& name : gltfjson::format::ChildOfRootProperties) {
-        if (path[1] == name) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
+  // static bool IsChildOfRoot(std::u8string_view jsonpath)
+  // {
+  //   gltfjson::JsonPath path(jsonpath);
+  //   if (path.Size() == 3) {
+  //     for (auto& name : gltfjson::ChildOfRootProperties) {
+  //       if (path[1] == name) {
+  //         return true;
+  //       }
+  //     }
+  //   }
+  //
+  //   return false;
+  // }
 
   void ClearCache(std::u8string_view jsonpath)
   {
-    if (IsChildOfRoot(jsonpath)) {
+    if (true /*IsChildOfRoot(jsonpath)*/) {
+      // clear all descendants
       for (auto it = m_labelCache.begin(); it != m_labelCache.end();) {
         if (it->first.starts_with(jsonpath)) {
           // clear all descendants

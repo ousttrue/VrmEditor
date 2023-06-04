@@ -9,7 +9,7 @@ namespace gltf {
 static std::expected<std::shared_ptr<gltf::Node>, std::string>
 ParseNode(const std::shared_ptr<GltfRoot>& scene,
           int i,
-          const gltfjson::typing::Node& node)
+          const gltfjson::Node& node)
 {
   auto ptr = std::make_shared<gltf::Node>(node.Name());
 
@@ -420,7 +420,7 @@ Load(const std::shared_ptr<GltfRoot>& scene,
   gltfjson::tree::Parser parser(json_chunk);
   if (auto result = parser.ParseExpected()) {
     gltfjson::tree::Parser parser(json_chunk);
-    scene->m_gltf = std::make_shared<gltfjson::typing::Root>(parser.Parse());
+    scene->m_gltf = std::make_shared<gltfjson::Root>(parser.Parse());
     scene->m_bin = { dir, bin_chunk };
     if (!scene->m_bin.Dir) {
       scene->m_bin.Dir = std::make_shared<gltfjson::Directory>();

@@ -48,12 +48,12 @@ LabelCacheManager::Get(const gltfjson::tree::NodePtr& item,
   if (auto found = m_iconMap.Match(jsonpath)) {
     icon = *found;
   }
-  label.Key += gltfjson::tree::from_u8(icon);
-  label.Key += gltfjson::tree::from_u8(GetLastName(jsonpath));
+  label.Key += gltfjson::from_u8(icon);
+  label.Key += gltfjson::from_u8(GetLastName(jsonpath));
   auto object = item->Object();
   if (object && object->find(u8"name") != object->end()) {
     label.Value = "{";
-    label.Value += gltfjson::tree::from_u8((*object)[u8"name"]->U8String());
+    label.Value += gltfjson::from_u8((*object)[u8"name"]->U8String());
     label.Value += "}";
   } else {
     std::stringstream ss;

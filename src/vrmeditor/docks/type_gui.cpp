@@ -11,9 +11,9 @@
 #include <unordered_map>
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Asset asset)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Asset asset)
 {
   ShowGuiString("copyright", asset.m_json, u8"copyright");
   ShowGuiString("generator", asset.m_json, u8"generator");
@@ -23,7 +23,7 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 static bool
-ShowGuiChildOfRoot(gltfjson::typing::ChildOfRootProperty& prop)
+ShowGuiChildOfRoot(gltfjson::ChildOfRootProperty& prop)
 {
   ShowGuiString("name", prop.m_json, u8"name");
   return false;
@@ -31,9 +31,9 @@ ShowGuiChildOfRoot(gltfjson::typing::ChildOfRootProperty& prop)
 
 // buffer/bufferView/accessor
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Buffer buffer)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Buffer buffer)
 {
   ShowGuiChildOfRoot(buffer);
   ImGui::BeginDisabled(true);
@@ -44,9 +44,9 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::BufferView bufferView)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::BufferView bufferView)
 {
   ShowGuiChildOfRoot(bufferView);
   ImGui::BeginDisabled(true);
@@ -56,30 +56,30 @@ ShowGui(const gltfjson::typing::Root& root,
   ShowGuiUInt32("ByteOffset", bufferView.m_json, u8"byteOffset");
   ShowGuiUInt32("ByteLength", bufferView.m_json, u8"byteLength");
   ShowGuiUInt32("ByteStride", bufferView.m_json, u8"byteStride");
-  ShowGuiEnum<gltfjson::format::Targets>(
-    "Target", bufferView.m_json, u8"target", gltfjson::format::TargetsCombo);
+  ShowGuiEnum<gltfjson::Targets>(
+    "Target", bufferView.m_json, u8"target", gltfjson::TargetsCombo);
   ImGui::EndDisabled();
   return false;
 }
 
 namespace std {
 template<>
-class hash<
-  std::tuple<gltfjson::format::ComponentTypes, gltfjson::format::Types>>
+class hash<std::tuple<gltfjson::ComponentTypes, std::u8string>>
 {
 public:
-  size_t operator()(const std::tuple<gltfjson::format::ComponentTypes,
-                                     gltfjson::format::Types>& x) const
+  size_t operator()(
+    const std::tuple<gltfjson::ComponentTypes, std::u8string>& x) const
   {
-    return hash<int>()((int)std::get<0>(x)) ^ hash<int>()((int)std::get<1>(x));
+    return hash<int>()((int)std::get<0>(x)) ^
+           hash<std::u8string>()(std::get<1>(x));
   }
 };
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Accessor accessor)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Accessor accessor)
 {
   ShowGuiChildOfRoot(accessor);
   ImGui::BeginDisabled(true);
@@ -88,20 +88,17 @@ ShowGui(const gltfjson::typing::Root& root,
 
   ShowGuiUInt32("ByteOffset", accessor.m_json, u8"byteOffset");
 
-  ShowGuiEnum<gltfjson::format::ComponentTypes>(
-    "ComponentType",
-    accessor.m_json,
-    u8"componentType",
-    gltfjson::format::ComponentTypesCombo);
+  ShowGuiEnum<gltfjson::ComponentTypes>("ComponentType",
+                                        accessor.m_json,
+                                        u8"componentType",
+                                        gltfjson::ComponentTypesCombo);
   ShowGuiBool("Normalized", accessor.m_json, u8"normalized");
   ShowGuiUInt32("Count", accessor.m_json, u8"count");
 
   std::array<const char*, 7> TypesCombo = {
     "SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4",
   };
-  if(ShowGuiStringEnum("Type", accessor.m_json, u8"type", TypesCombo))
-  {
-
+  if (ShowGuiStringEnum("Type", accessor.m_json, u8"type", TypesCombo)) {
   }
 
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
@@ -125,77 +122,68 @@ ShowGui(const gltfjson::typing::Root& root,
   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
   ShowGuiOptional(accessor.m_json, u8"sparse", [](auto& node) {
     // TODO:
-    // gltfjson::typing::Sparse
+    // gltfjson::Sparse
     return false;
   });
   ImGui::EndDisabled();
 
   using ShowAccessorTable =
-    std::function<void(const gltfjson::typing::Root& root,
-                       const gltfjson::typing::Bin& bin,
-                       const gltfjson::typing::Accessor& accessor)>;
+    std::function<void(const gltfjson::Root& root,
+                       const gltfjson::Bin& bin,
+                       const gltfjson::Accessor& accessor)>;
 
-  using AccessorTypeKey =
-    std::tuple<gltfjson::format::ComponentTypes, gltfjson::format::Types>;
+  using AccessorTypeKey = std::tuple<gltfjson::ComponentTypes, std::u8string>;
   static std::unordered_map<AccessorTypeKey, ShowAccessorTable> s_GuiMap = {
-    { { gltfjson::format::ComponentTypes::UNSIGNED_BYTE,
-        gltfjson::format::Types::SCALAR },
+    { { gltfjson::ComponentTypes::UNSIGNED_BYTE, u8"SCALAR" },
       [](auto& root, auto& bin, auto& accessor) {
         if (auto values =
               bin.template GetAccessorBytes<uint8_t>(root, accessor)) {
           ShowGuiAccessorScalar<uint8_t>(*values);
         }
       } },
-    { { gltfjson::format::ComponentTypes::UNSIGNED_SHORT,
-        gltfjson::format::Types::SCALAR },
+    { { gltfjson::ComponentTypes::UNSIGNED_SHORT, u8"SCALAR" },
       [](auto& root, auto& bin, auto& accessor) {
         if (auto values =
               bin.template GetAccessorBytes<uint16_t>(root, accessor)) {
           ShowGuiAccessorScalar<uint16_t>(*values);
         }
       } },
-    { { gltfjson::format::ComponentTypes::UNSIGNED_SHORT,
-        gltfjson::format::Types::VEC4 },
+    { { gltfjson::ComponentTypes::UNSIGNED_SHORT, u8"VEC4" },
       [](auto& root, auto& bin, auto& accessor) {
         if (auto values = bin.template GetAccessorBytes<runtimescene::ushort4>(
               root, accessor)) {
           ShowGuiAccessorInt4<runtimescene::ushort4>(*values);
         }
       } },
-    { { gltfjson::format::ComponentTypes::UNSIGNED_INT,
-        gltfjson::format::Types::SCALAR },
+    { { gltfjson::ComponentTypes::UNSIGNED_INT, u8"SCALAR" },
       [](auto& root, auto& bin, auto& accessor) {
         if (auto values =
               bin.template GetAccessorBytes<uint32_t>(root, accessor)) {
           ShowGuiAccessorScalar<uint32_t>(*values);
         }
       } },
-    { { gltfjson::format::ComponentTypes::FLOAT,
-        gltfjson::format::Types::VEC2 },
+    { { gltfjson::ComponentTypes::FLOAT, u8"VEC2" },
       [](auto& root, auto& bin, auto& accessor) {
         if (auto values = bin.template GetAccessorBytes<DirectX::XMFLOAT2>(
               root, accessor)) {
           ShowGuiAccessorVec2<DirectX::XMFLOAT2>(*values);
         }
       } },
-    { { gltfjson::format::ComponentTypes::FLOAT,
-        gltfjson::format::Types::VEC3 },
+    { { gltfjson::ComponentTypes::FLOAT, u8"VEC3" },
       [](auto& root, auto& bin, auto& accessor) {
         if (auto values = bin.template GetAccessorBytes<DirectX::XMFLOAT3>(
               root, accessor)) {
           ShowGuiAccessorVec3<DirectX::XMFLOAT3>(*values);
         }
       } },
-    { { gltfjson::format::ComponentTypes::FLOAT,
-        gltfjson::format::Types::VEC4 },
+    { { gltfjson::ComponentTypes::FLOAT, u8"VEC4" },
       [](auto& root, auto& bin, auto& accessor) {
         if (auto values = bin.template GetAccessorBytes<DirectX::XMFLOAT4>(
               root, accessor)) {
           ShowGuiAccessorVec4<DirectX::XMFLOAT4>(*values);
         }
       } },
-    { { gltfjson::format::ComponentTypes::FLOAT,
-        gltfjson::format::Types::MAT4 },
+    { { gltfjson::ComponentTypes::FLOAT, u8"MAT4" },
       [](auto& root, auto& bin, auto& accessor) {
         if (auto values = bin.template GetAccessorBytes<DirectX::XMFLOAT4X4>(
               root, accessor)) {
@@ -204,10 +192,8 @@ ShowGui(const gltfjson::typing::Root& root,
       } },
   };
 
-  AccessorTypeKey key{
-    (gltfjson::format::ComponentTypes)*accessor.ComponentType(),
-    *gltfjson::format::types_from_str(accessor.Type())
-  };
+  AccessorTypeKey key{ (gltfjson::ComponentTypes)*accessor.ComponentType(),
+                       accessor.Type() };
   auto found = s_GuiMap.find(key);
   if (found != s_GuiMap.end()) {
     found->second(root, bin, accessor);
@@ -217,9 +203,9 @@ ShowGui(const gltfjson::typing::Root& root,
 
 // image/sampler/texture/material/mesh
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Image image)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Image image)
 {
   ShowGuiChildOfRoot(image);
   ImGui::BeginDisabled(true);
@@ -232,32 +218,30 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Sampler sampler)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Sampler sampler)
 {
   ShowGuiChildOfRoot(sampler);
-  ShowGuiEnum<gltfjson::format::TextureMagFilter>(
-    "magFilter",
-    sampler.m_json,
-    u8"magFilter",
-    gltfjson::format::TextureMagFilterCombo);
-  ShowGuiEnum<gltfjson::format::TextureMinFilter>(
-    "minFilter",
-    sampler.m_json,
-    u8"minFilter",
-    gltfjson::format::TextureMinFilterCombo);
-  ShowGuiEnum<gltfjson::format::TextureWrap>(
-    "wrapS", sampler.m_json, u8"wrapS", gltfjson::format::TextureWrapCombo);
-  ShowGuiEnum<gltfjson::format::TextureWrap>(
-    "wrapT", sampler.m_json, u8"wrapT", gltfjson::format::TextureWrapCombo);
+  ShowGuiEnum<gltfjson::TextureMagFilter>("magFilter",
+                                          sampler.m_json,
+                                          u8"magFilter",
+                                          gltfjson::TextureMagFilterCombo);
+  ShowGuiEnum<gltfjson::TextureMinFilter>("minFilter",
+                                          sampler.m_json,
+                                          u8"minFilter",
+                                          gltfjson::TextureMinFilterCombo);
+  ShowGuiEnum<gltfjson::TextureWrap>(
+    "wrapS", sampler.m_json, u8"wrapS", gltfjson::TextureWrapCombo);
+  ShowGuiEnum<gltfjson::TextureWrap>(
+    "wrapT", sampler.m_json, u8"wrapT", gltfjson::TextureWrapCombo);
   return false;
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Texture texture)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Texture texture)
 {
   bool updated = false;
   if (ShowGuiChildOfRoot(texture)) {
@@ -273,9 +257,9 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 static bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::TextureInfo info)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::TextureInfo info)
 {
   bool updated = false;
   if (SelectId("Index", info.m_json, u8"index", root.Textures.m_json)) {
@@ -291,27 +275,25 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 static bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::NormalTextureInfo info)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::NormalTextureInfo info)
 {
-  return ShowGui(
-    root, bin, *static_cast<gltfjson::typing::TextureInfo*>(&info));
+  return ShowGui(root, bin, *static_cast<gltfjson::TextureInfo*>(&info));
 }
 
 static bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::OcclusionTextureInfo info)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::OcclusionTextureInfo info)
 {
-  return ShowGui(
-    root, bin, *static_cast<gltfjson::typing::TextureInfo*>(&info));
+  return ShowGui(root, bin, *static_cast<gltfjson::TextureInfo*>(&info));
 }
 
 static bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::PbrMetallicRoughness pbr)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::PbrMetallicRoughness pbr)
 {
   bool updated = false;
   if (ShowGuiColor4(
@@ -320,7 +302,7 @@ ShowGui(const gltfjson::typing::Root& root,
   }
   if (ShowGuiOptional(
         pbr.m_json, u8"baseColorTexture", [&root, &bin](auto& node) {
-          return ::ShowGui(root, bin, gltfjson::typing::TextureInfo{ node });
+          return ::ShowGui(root, bin, gltfjson::TextureInfo{ node });
         })) {
     updated = true;
   }
@@ -342,7 +324,7 @@ ShowGui(const gltfjson::typing::Root& root,
     "be sampled as having `1.0` in G and B components.");
   if (ShowGuiOptional(
         pbr.m_json, u8"metallicRoughnessTexture", [&root, &bin](auto node) {
-          return ::ShowGui(root, bin, gltfjson::typing::TextureInfo{ node });
+          return ::ShowGui(root, bin, gltfjson::TextureInfo{ node });
         })) {
     updated = true;
   }
@@ -350,9 +332,9 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Material material)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Material material)
 {
   bool updated = false;
   if (ShowGuiChildOfRoot(material)) {
@@ -361,15 +343,13 @@ ShowGui(const gltfjson::typing::Root& root,
 
   if (ShowGuiOptional(
         material.m_json, u8"pbrMetallicRoughness", [&root, &bin](auto& pbr) {
-          return ::ShowGui(
-            root, bin, gltfjson::typing::PbrMetallicRoughness{ pbr });
+          return ::ShowGui(root, bin, gltfjson::PbrMetallicRoughness{ pbr });
         })) {
     updated = true;
   }
   if (ShowGuiOptional(
         material.m_json, u8"normalTexture", [&root, &bin](auto& info) {
-          return ::ShowGui(
-            root, bin, gltfjson::typing::NormalTextureInfo{ info });
+          return ::ShowGui(root, bin, gltfjson::NormalTextureInfo{ info });
         })) {
     updated = true;
   }
@@ -382,15 +362,14 @@ ShowGui(const gltfjson::typing::Root& root,
              "does not have an occlusion texture.");
   if (ShowGuiOptional(
         material.m_json, u8"occlusionTexture", [&root, &bin](auto& info) {
-          return ::ShowGui(
-            root, bin, gltfjson::typing::OcclusionTextureInfo{ info });
+          return ::ShowGui(root, bin, gltfjson::OcclusionTextureInfo{ info });
         })) {
     updated = true;
   }
 
   if (ShowGuiOptional(
         material.m_json, u8"emissiveTexture", [&root, &bin](auto& info) {
-          return ::ShowGui(root, bin, gltfjson::typing::TextureInfo{ info });
+          return ::ShowGui(root, bin, gltfjson::TextureInfo{ info });
         })) {
     updated = true;
   }
@@ -421,8 +400,7 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 static bool
-ShowGui(const gltfjson::typing::Root& root,
-        gltfjson::typing::MeshPrimitiveAttributes attribute)
+ShowGui(const gltfjson::Root& root, gltfjson::MeshPrimitiveAttributes attribute)
 {
   SelectId("POSITION", attribute.m_json, u8"POSITION", root.Accessors.m_json);
   SelectId("NORMAL", attribute.m_json, u8"NORMAL", root.Accessors.m_json);
@@ -442,9 +420,9 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::MeshPrimitiveMorphTarget target)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::MeshPrimitiveMorphTarget target)
 {
   SelectId("POSITION", target.m_json, u8"POSITION", root.Accessors.m_json);
   SelectId("NORMAL", target.m_json, u8"NORMAL", root.Accessors.m_json);
@@ -452,9 +430,9 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::MeshPrimitive prim)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::MeshPrimitive prim)
 {
   ImGui::PushID(&prim);
   {
@@ -466,11 +444,8 @@ ShowGui(const gltfjson::typing::Root& root,
   SelectId("Material", prim.m_json, u8"material", root.Materials.m_json);
   {
     ImGui::BeginDisabled(true);
-    ShowGuiEnum<gltfjson::format::MeshPrimitiveTopology>(
-      "Mode",
-      prim.m_json,
-      u8"mode",
-      gltfjson::format::MeshPrimitiveTopologyCombo);
+    ShowGuiEnum<gltfjson::MeshPrimitiveTopology>(
+      "Mode", prim.m_json, u8"mode", gltfjson::MeshPrimitiveTopologyCombo);
     ImGui::EndDisabled();
   }
   ImGui::PopID();
@@ -478,9 +453,9 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Mesh mesh)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Mesh mesh)
 {
   ShowGuiChildOfRoot(mesh);
 
@@ -495,9 +470,9 @@ ShowGui(const gltfjson::typing::Root& root,
 
 // skin/node/scene/animation
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Skin skin)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Skin skin)
 {
   ShowGuiChildOfRoot(skin);
   ImGui::BeginDisabled(true);
@@ -512,9 +487,9 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Node node)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Node node)
 {
   ShowGuiChildOfRoot(node);
   // Id Camera;
@@ -580,9 +555,9 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Scene scene)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Scene scene)
 {
   ShowGuiChildOfRoot(scene);
   // ListId("Nodes", scene.Nodes, root.Nodes);
@@ -590,9 +565,9 @@ ShowGui(const gltfjson::typing::Root& root,
 }
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Animation animation)
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Animation animation)
 {
   ShowGuiChildOfRoot(animation);
   return false;

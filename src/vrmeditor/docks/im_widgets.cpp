@@ -173,7 +173,7 @@ ShowGuiStringEnum(const char* label,
   int i = 0;
   for (; i < items.size(); ++i) {
     auto str = items[i];
-    if (*p == gltfjson::tree::to_u8(str)) {
+    if (*p == gltfjson::to_u8(str)) {
       break;
     }
   }
@@ -185,7 +185,7 @@ ShowGuiStringEnum(const char* label,
   }
 
   if (grapho::imgui::GenericCombo<int>(label, &i, combo)) {
-    *p = gltfjson::tree::to_u8(std::get<1>(combo[i]));
+    *p = gltfjson::to_u8(std::get<1>(combo[i]));
     return true;
   } else {
     return false;
@@ -442,8 +442,8 @@ ShowGuiOptional(
 }
 
 void
-ShowGuiTexturePreview(const gltfjson::typing::Root& root,
-                      const gltfjson::typing::Bin& bin,
+ShowGuiTexturePreview(const gltfjson::Root& root,
+                      const gltfjson::Bin& bin,
                       const gltfjson::tree::NodePtr& parentNode,
                       const char8_t* key)
 {

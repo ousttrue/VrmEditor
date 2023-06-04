@@ -1,6 +1,7 @@
 #include "json_gui.h"
 #include "json_gui_factory.h"
 #include "json_gui_labelcache.h"
+#include <array>
 #include <charconv>
 #include <glr/gl3renderer.h>
 #include <grapho/imgui/widgets.h>

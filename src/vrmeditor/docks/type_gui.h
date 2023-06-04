@@ -4,69 +4,69 @@
 #include <vrm/gltf.h>
 
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Asset asset);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Asset asset);
 
 bool
 ShowText(const std::u8string& text);
 
 // buffer/bufferView/accessor
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Buffer buffer);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Buffer buffer);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::BufferView bufferView);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::BufferView bufferView);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Accessor accessor);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Accessor accessor);
 // image/sampler/texture/material/mesh
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Image image);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Image image);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Sampler sampler);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Sampler sampler);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Texture texture);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Texture texture);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Material material);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Material material);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Mesh mesh);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Mesh mesh);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::MeshPrimitive prim);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::MeshPrimitive prim);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::MeshPrimitiveMorphTarget target);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::MeshPrimitiveMorphTarget target);
 // skin/node/scene/animation
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Skin skin);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Skin skin);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Node node);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Node node);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Scene scene);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Scene scene);
 bool
-ShowGui(const gltfjson::typing::Root& root,
-        const gltfjson::typing::Bin& bin,
-        gltfjson::typing::Animation animation);
+ShowGui(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        gltfjson::Animation animation);

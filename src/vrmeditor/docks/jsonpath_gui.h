@@ -7,8 +7,8 @@
 inline ShowGuiFunc
 SelectSampler(std::u8string_view jsonpath)
 {
-  return [](const gltfjson::typing::Root& root,
-            const gltfjson::typing::Bin& bin,
+  return [](const gltfjson::Root& root,
+            const gltfjson::Bin& bin,
             const gltfjson::tree::NodePtr& node) {
     if (SelectId("Sampler", node, root.Samplers.m_json)) {
       return true;
@@ -21,8 +21,8 @@ SelectSampler(std::u8string_view jsonpath)
 inline ShowGuiFunc
 SelectTexture(std::u8string_view jsonpath)
 {
-  return [](const gltfjson::typing::Root& root,
-            const gltfjson::typing::Bin& bin,
+  return [](const gltfjson::Root& root,
+            const gltfjson::Bin& bin,
             const gltfjson::tree::NodePtr& node) {
     if (SelectId("Source", node, root.Textures.m_json)) {
       return true;
@@ -42,8 +42,8 @@ struct FloatSlider
   {
     auto view = gltfjson::JsonPath(jsonpath).Back();
     std::u8string label{ view.begin(), view.end() };
-    return [label, min=Min, max=Max, def=Default](const gltfjson::typing::Root& root,
-                                      const gltfjson::typing::Bin& bin,
+    return [label, min=Min, max=Max, def=Default](const gltfjson::Root& root,
+                                      const gltfjson::Bin& bin,
                                       const gltfjson::tree::NodePtr& node) {
       if (ShowGuiSliderFloat(
             (const char*)label.c_str(), node, min, max, def)) {

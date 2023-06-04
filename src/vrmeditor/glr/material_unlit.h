@@ -5,8 +5,8 @@
 namespace glr {
 
 inline std::shared_ptr<Material>
-MaterialFactory_Unlit(const gltfjson::typing::Root& root,
-                      const gltfjson::typing::Bin& bin,
+MaterialFactory_Unlit(const gltfjson::Root& root,
+                      const gltfjson::Bin& bin,
                       std::optional<uint32_t> id)
 {
   auto ptr = std::make_shared<Material>();
@@ -48,10 +48,10 @@ MaterialFactory_Unlit(const gltfjson::typing::Root& root,
   // }
   //
 
-  if (gltfjson::typing::GetAlphaMode(root, id) ==
-      gltfjson::format::AlphaModes::Mask) {
-    ptr->FS.MacroGroups["AlphaBlend"].push_back({ u8"MODE_MASK" });
-  }
+  // if (gltfjson::GetAlphaMode(root, id) ==
+  //     gltfjson::format::AlphaModes::Mask) {
+  //   ptr->FS.MacroGroups["AlphaBlend"].push_back({ u8"MODE_MASK" });
+  // }
 
   if (id) {
     auto src = root.Materials[*id];

@@ -11,8 +11,8 @@ inline CreateGuiFunc
 TypeFunc()
 {
   return [](auto jsonapath) {
-    return [](const gltfjson::typing::Root& root,
-              const gltfjson::typing::Bin& bin,
+    return [](const gltfjson::Root& root,
+              const gltfjson::Bin& bin,
               const gltfjson::tree::NodePtr& node) {
       ImGui::PushID(node.get());
       auto updated = ::ShowGui(root, bin, T{ node });
@@ -24,30 +24,30 @@ TypeFunc()
 
 JsonGuiFactoryManager::JsonGuiFactoryManager()
   : m_guiFactories({
-      { u8"/asset", TypeFunc<gltfjson::typing::Asset>() },
+      { u8"/asset", TypeFunc<gltfjson::Asset>() },
       // buffer/bufferView/accessor
-      { u8"/buffers/*", TypeFunc<gltfjson::typing::Buffer>() },
-      { u8"/bufferViews/*", TypeFunc<gltfjson::typing::BufferView>() },
-      { u8"/accessors/*", TypeFunc<gltfjson::typing::Accessor>() },
+      { u8"/buffers/*", TypeFunc<gltfjson::Buffer>() },
+      { u8"/bufferViews/*", TypeFunc<gltfjson::BufferView>() },
+      { u8"/accessors/*", TypeFunc<gltfjson::Accessor>() },
       // image/sampelr/texture/material
-      { u8"/images/*", TypeFunc<gltfjson::typing::Image>() },
-      { u8"/samplers/*", TypeFunc<gltfjson::typing::Sampler>() },
-      { u8"/textures/*", TypeFunc<gltfjson::typing::Texture>() },
+      { u8"/images/*", TypeFunc<gltfjson::Image>() },
+      { u8"/samplers/*", TypeFunc<gltfjson::Sampler>() },
+      { u8"/textures/*", TypeFunc<gltfjson::Texture>() },
       { u8"/textures/*/sampler", SelectSampler },
       { u8"/textures/*/source", SelectTexture },
-      { u8"/materials/*", TypeFunc<gltfjson::typing::Material>() },
+      { u8"/materials/*", TypeFunc<gltfjson::Material>() },
       { u8"/materials/*/alphaCutoff",
         FloatSlider{ .Min = 0, .Max = 1, .Default = 0.5f } },
       // mesh/skin
-      { u8"/meshes/*", TypeFunc<gltfjson::typing::Mesh>() },
+      { u8"/meshes/*", TypeFunc<gltfjson::Mesh>() },
       { u8"/meshes/*/primitives/*",
-        TypeFunc<gltfjson::typing::MeshPrimitive>() },
-      { u8"/skins/*", TypeFunc<gltfjson::typing::Skin>() },
+        TypeFunc<gltfjson::MeshPrimitive>() },
+      { u8"/skins/*", TypeFunc<gltfjson::Skin>() },
       // node/scene/animation/camera
-      { u8"/nodes/*", TypeFunc<gltfjson::typing::Node>() },
-      { u8"/scenes/*", TypeFunc<gltfjson::typing::Scene>() },
-      { u8"/animations/*", TypeFunc<gltfjson::typing::Animation>() },
-      // { u8"/cameras/*", TypeFunc<gltfjson::typing::Camera>() },
+      { u8"/nodes/*", TypeFunc<gltfjson::Node>() },
+      { u8"/scenes/*", TypeFunc<gltfjson::Scene>() },
+      { u8"/animations/*", TypeFunc<gltfjson::Animation>() },
+      // { u8"/cameras/*", TypeFunc<gltfjson::Camera>() },
 
       { u8"/accessors", JsonGuiAccessorList },
       { u8"/meshes/*/primitives/*/indices", JsonGuiAccessorReference },
@@ -71,22 +71,22 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       // { "/extensions/VRM/secondaryAnimation/colliderGroups/*/colliders",
       //   JsonGuiVrm0ColliderList },
 
-      { u8"/extensions/VRM", TypeFunc<gltfjson::typing::vrm0::VRM>() },
-      { u8"/extensions/VRM/meta", TypeFunc<gltfjson::typing::vrm0::Meta>() },
+      { u8"/extensions/VRM", TypeFunc<gltfjson::vrm0::VRM>() },
+      { u8"/extensions/VRM/meta", TypeFunc<gltfjson::vrm0::Meta>() },
       { u8"/extensions/VRM/humanoid",
-        TypeFunc<gltfjson::typing::vrm0::Humanoid>() },
+        TypeFunc<gltfjson::vrm0::Humanoid>() },
       { u8"/extensions/VRM/firstPerson",
-        TypeFunc<gltfjson::typing::vrm0::FirstPerson>() },
+        TypeFunc<gltfjson::vrm0::FirstPerson>() },
       { u8"/extensions/VRM/blendShapeMaster/blendShapeGroups/*",
-        TypeFunc<gltfjson::typing::vrm0::BlendShapeGroup>() },
+        TypeFunc<gltfjson::vrm0::BlendShapeGroup>() },
       { u8"/extensions/VRM/secondaryAnimation/boneGroups",
         JsonGuiVrm0SpringList },
       { u8"/extensions/VRM/secondaryAnimation/boneGroups/*",
-        TypeFunc<gltfjson::typing::vrm0::Spring>() },
+        TypeFunc<gltfjson::vrm0::Spring>() },
       { u8"/extensions/VRM/secondaryAnimation/colliderGroups/*",
-        TypeFunc<gltfjson::typing::vrm0::ColliderGroup>() },
+        TypeFunc<gltfjson::vrm0::ColliderGroup>() },
       { u8"/extensions/VRM/materialProperties/*",
-        TypeFunc<gltfjson::typing::vrm0::Material>() },
+        TypeFunc<gltfjson::vrm0::Material>() },
 
       // },
       // { "/extensions/VRMC_springBone/springs/*/joints",
@@ -100,8 +100,8 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
 }
 
 void
-JsonGuiFactoryManager::ShowGui(const gltfjson::typing::Root& root,
-                               const gltfjson::typing::Bin& bin)
+JsonGuiFactoryManager::ShowGui(const gltfjson::Root& root,
+                               const gltfjson::Bin& bin)
 {
   ImGui::TextUnformatted((const char*)m_selected.c_str());
   if (!m_cache) {

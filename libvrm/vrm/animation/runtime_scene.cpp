@@ -4,21 +4,22 @@
 #include "animation.h"
 #include "runtime_node.h"
 #include "spring_collision.h"
+#include <gltfjson.h>
 
 namespace runtimescene {
 
 static std::expected<bool, std::string>
-AddIndices(const gltfjson::typing::Root& root,
-           const gltfjson::typing::Bin& bin,
+AddIndices(const gltfjson::Root& root,
+           const gltfjson::Bin& bin,
            int vertex_offset,
            BaseMesh* mesh,
-           const gltfjson::typing::MeshPrimitive& prim)
+           const gltfjson::MeshPrimitive& prim)
 {
   if (auto indices = prim.Indices()) {
     auto accessor_index = (uint32_t)*indices;
     auto accessor = root.Accessors[accessor_index];
-    switch ((gltfjson::format::ComponentTypes)*accessor.ComponentType()) {
-      case gltfjson::format::ComponentTypes::UNSIGNED_BYTE: {
+    switch ((gltfjson::ComponentTypes)*accessor.ComponentType()) {
+      case gltfjson::ComponentTypes::UNSIGNED_BYTE: {
         if (auto span = bin.GetAccessorBytes<uint8_t>(root, accessor_index)) {
           mesh->addSubmesh(vertex_offset, *span, prim.Material());
           return true;
@@ -26,7 +27,7 @@ AddIndices(const gltfjson::typing::Root& root,
           return std::unexpected{ span.error() };
         }
       } break;
-      case gltfjson::format::ComponentTypes::UNSIGNED_SHORT: {
+      case gltfjson::ComponentTypes::UNSIGNED_SHORT: {
         if (auto span = bin.GetAccessorBytes<uint16_t>(root, accessor_index)) {
           mesh->addSubmesh(vertex_offset, *span, prim.Material());
           return true;
@@ -34,7 +35,7 @@ AddIndices(const gltfjson::typing::Root& root,
           return std::unexpected{ span.error() };
         }
       } break;
-      case gltfjson::format::ComponentTypes::UNSIGNED_INT: {
+      case gltfjson::ComponentTypes::UNSIGNED_INT: {
         if (auto span = bin.GetAccessorBytes<uint32_t>(root, accessor_index)) {
           mesh->addSubmesh(vertex_offset, *span, prim.Material());
           return true;
@@ -64,14 +65,12 @@ u8_to_str(const std::u8string& src)
 }
 
 static std::expected<std::shared_ptr<BaseMesh>, std::string>
-ParseMesh(const gltfjson::typing::Root& root,
-          const gltfjson::typing::Bin& bin,
-          int meshIndex)
+ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
 {
   auto mesh = root.Meshes[meshIndex];
   auto ptr = std::make_shared<BaseMesh>();
   ptr->Name = mesh.Name();
-  std::optional<gltfjson::typing::MeshPrimitiveAttributes> lastAtributes;
+  std::optional<gltfjson::MeshPrimitiveAttributes> lastAtributes;
 
   for (auto prim : mesh.Primitives) {
     if (prim.Attributes() == lastAtributes) {
@@ -226,9 +225,7 @@ ParseMesh(const gltfjson::typing::Root& root,
 }
 
 static std::expected<std::shared_ptr<Skin>, std::string>
-ParseSkin(const gltfjson::typing::Root& root,
-          const gltfjson::typing::Bin& bin,
-          int i)
+ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
 {
   auto skin = root.Skins[i];
   auto ptr = std::make_shared<Skin>();
@@ -263,9 +260,7 @@ ParseSkin(const gltfjson::typing::Root& root,
 }
 
 static std::expected<std::shared_ptr<Animation>, std::string>
-ParseAnimation(const gltfjson::typing::Root& root,
-               const gltfjson::typing::Bin& bin,
-               int i)
+ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
 {
   auto animation = root.Animations[i];
   auto ptr = std::make_shared<Animation>(animation.Name());
@@ -279,15 +274,15 @@ ParseAnimation(const gltfjson::typing::Root& root,
     int sampler_index = *channel.Sampler();
     auto sampler = samplers[sampler_index];
 
-    auto target = *channel.Target();
-    int node_index = *target.Node();
-    auto path = (gltfjson::format::PathTypes)*target.Path();
+    auto target = channel.Target();
+    int node_index = *target->Node();
+    auto path = target->Path();
 
     // time
     int input_index = *sampler.Input();
     if (auto times = bin.GetAccessorBytes<float>(root, input_index)) {
       int output_index = *sampler.Output();
-      if (path == gltfjson::format::PathTypes::Translation) {
+      if (path == u8"translation") {
         if (auto values =
               bin.GetAccessorBytes<DirectX::XMFLOAT3>(root, output_index)) {
           ptr->AddTranslation(node_index,
@@ -297,7 +292,7 @@ ParseAnimation(const gltfjson::typing::Root& root,
         } else {
           return std::unexpected{ values.error() };
         }
-      } else if (path == gltfjson::format::PathTypes::Rotation) {
+      } else if (path == u8"rotation") {
         if (auto values =
               bin.GetAccessorBytes<DirectX::XMFLOAT4>(root, output_index)) {
           ptr->AddRotation(node_index,
@@ -307,7 +302,7 @@ ParseAnimation(const gltfjson::typing::Root& root,
         } else {
           return std::unexpected{ values.error() };
         }
-      } else if (path == gltfjson::format::PathTypes::Scale) {
+      } else if (path == u8"scale") {
         if (auto values =
               bin.GetAccessorBytes<DirectX::XMFLOAT3>(root, output_index)) {
           ptr->AddScale(node_index,
@@ -317,7 +312,7 @@ ParseAnimation(const gltfjson::typing::Root& root,
         } else {
           return std::unexpected{ values.error() };
         }
-      } else if (path == gltfjson::format::PathTypes::Weights) {
+      } else if (path == u8"weights") {
         if (auto values = bin.GetAccessorBytes<float>(root, output_index)) {
           auto node = root.Nodes[node_index];
           if (auto mesh = node.Mesh()) {

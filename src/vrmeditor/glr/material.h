@@ -128,7 +128,7 @@ struct Material
 };
 
 using MaterialFactoryFunc = std::function<std::shared_ptr<Material>(
-  const gltfjson::typing::Root& root,
-  const gltfjson::typing::Bin& bin,
+  const gltfjson::Root& root,
+  const gltfjson::Bin& bin,
   std::optional<uint32_t> materialId)>;
 }

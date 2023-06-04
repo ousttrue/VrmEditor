@@ -1,7 +1,6 @@
 #include "gltfjson_gui.h"
 #include "printfbuffer.h"
 #include "type_gui.h"
-#include <gltfjson/type_icon.h>
 #include <grapho/imgui/widgets.h>
 
 GltfJsonGui::GltfJsonGui()
@@ -15,8 +14,8 @@ GltfJsonGui::~GltfJsonGui()
 }
 
 template<typename T>
-using ShowChild = std::function<void(const gltfjson::typing::Root& root,
-                                     const gltfjson::typing::Bin& bin,
+using ShowChild = std::function<void(const gltfjson::Root& root,
+                                     const gltfjson::Bin& bin,
                                      T&,
                                      grapho::imgui::TreeSplitter::UI*)>;
 
@@ -24,9 +23,9 @@ template<typename T>
 static void
 Push(grapho::imgui::TreeSplitter* splitter,
      const char* label,
-     const gltfjson::typing::Root& root,
-     const gltfjson::typing::Bin& bin,
-     gltfjson::typing::JsonArrayBase<T>& values,
+     const gltfjson::Root& root,
+     const gltfjson::Bin& bin,
+     gltfjson::JsonArrayBase<T>& values,
      const ShowChild<T>& showChild = {})
 {
   PrintfBuffer buf;
@@ -66,8 +65,8 @@ Push(grapho::imgui::TreeSplitter* splitter,
 }
 
 void
-GltfJsonGui::SetGltf(gltfjson::typing::Root& gltf,
-                     const gltfjson::typing::Bin& bin)
+GltfJsonGui::SetGltf(gltfjson::Root& gltf,
+                     const gltfjson::Bin& bin)
 {
   m_splitter->Clear();
   // m_splitter->Push("asset", nullptr, [&gltf]() { ::ShowGui(*gltf.Asset());
@@ -83,10 +82,10 @@ GltfJsonGui::SetGltf(gltfjson::typing::Root& gltf,
   Push(m_splitter, "󰉋 textures", gltf, bin, gltf.Textures);
   Push(m_splitter, "󰉋 materials", gltf, bin, gltf.Materials);
 
-  ShowChild<gltfjson::typing::Mesh> meshCallback =
-    [splitter = m_splitter](const gltfjson::typing::Root& root,
-                            const gltfjson::typing::Bin& bin,
-                            gltfjson::typing::Mesh& value,
+  ShowChild<gltfjson::Mesh> meshCallback =
+    [splitter = m_splitter](const gltfjson::Root& root,
+                            const gltfjson::Bin& bin,
+                            gltfjson::Mesh& value,
                             grapho::imgui::TreeSplitter::UI* child) {
       PrintfBuffer buf;
       int j = 0;

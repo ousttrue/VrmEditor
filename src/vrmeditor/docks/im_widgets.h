@@ -229,7 +229,7 @@ ShowGuiOptional(
   const std::function<bool(const gltfjson::tree::NodePtr&)>& showGui);
 
 void
-ShowGuiTexturePreview(const gltfjson::typing::Root& root,
-                      const gltfjson::typing::Bin& bin,
+ShowGuiTexturePreview(const gltfjson::Root& root,
+                      const gltfjson::Bin& bin,
                       const gltfjson::tree::NodePtr& parentNode,
                       const char8_t* key);

@@ -20,8 +20,8 @@ GetIndex(std::u8string_view jsonpath)
 }
 
 static void
-JsonGuiAccessorUShort4(const gltfjson::typing::Root& root,
-                       const gltfjson::typing::Bin& bin,
+JsonGuiAccessorUShort4(const gltfjson::Root& root,
+                       const gltfjson::Bin& bin,
                        const gltfjson::tree::NodePtr& node)
 {
   if (auto items = bin.GetAccessorBytes<runtimescene::ushort4>(
@@ -55,8 +55,8 @@ JsonGuiAccessorUShort4(const gltfjson::typing::Root& root,
 }
 
 static void
-JsonGuiAccessorVec2(const gltfjson::typing::Root& root,
-                    const gltfjson::typing::Bin& bin,
+JsonGuiAccessorVec2(const gltfjson::Root& root,
+                    const gltfjson::Bin& bin,
                     const gltfjson::tree::NodePtr& node)
 {
   if (auto items = bin.GetAccessorBytes<DirectX::XMFLOAT2>(
@@ -88,8 +88,8 @@ JsonGuiAccessorVec2(const gltfjson::typing::Root& root,
 }
 
 static void
-JsonGuiAccessorVec3(const gltfjson::typing::Root& root,
-                    const gltfjson::typing::Bin& bin,
+JsonGuiAccessorVec3(const gltfjson::Root& root,
+                    const gltfjson::Bin& bin,
                     const gltfjson::tree::NodePtr& node)
 {
   if (auto items = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
@@ -124,8 +124,8 @@ JsonGuiAccessorVec3(const gltfjson::typing::Root& root,
 }
 
 static void
-JsonGuiAccessorVec4(const gltfjson::typing::Root& root,
-                    const gltfjson::typing::Bin& bin,
+JsonGuiAccessorVec4(const gltfjson::Root& root,
+                    const gltfjson::Bin& bin,
                     const gltfjson::tree::NodePtr& node)
 {
   if (auto items = bin.GetAccessorBytes<DirectX::XMFLOAT4>(
@@ -159,8 +159,8 @@ JsonGuiAccessorVec4(const gltfjson::typing::Root& root,
 }
 
 static void
-JsonGuiAccessorMat4(const gltfjson::typing::Root& root,
-                    const gltfjson::typing::Bin& bin,
+JsonGuiAccessorMat4(const gltfjson::Root& root,
+                    const gltfjson::Bin& bin,
                     const gltfjson::tree::NodePtr& node)
 {
   if (auto items = bin.GetAccessorBytes<DirectX::XMFLOAT4X4>(
@@ -221,20 +221,20 @@ JsonGuiAccessorMat4(const gltfjson::typing::Root& root,
 ShowGuiFunc
 JsonGuiAccessorReference(std::u8string_view jsonpath)
 {
-  return [](const gltfjson::typing::Root& root,
-            const gltfjson::typing::Bin& bin,
+  return [](const gltfjson::Root& root,
+            const gltfjson::Bin& bin,
             const gltfjson::tree::NodePtr& node) {
     auto accessor_index = (int)*node->Ptr<float>();
     auto accessor = root.Accessors[accessor_index];
     auto component_type =
-      (gltfjson::format::ComponentTypes)*accessor.ComponentType();
+      (gltfjson::ComponentTypes)*accessor.ComponentType();
     auto type = accessor.Type();
-    if (component_type == gltfjson::format::ComponentTypes::UNSIGNED_SHORT) {
+    if (component_type == gltfjson::ComponentTypes::UNSIGNED_SHORT) {
       // ushort
       if (type == u8"VEC4") {
         JsonGuiAccessorUShort4(root, bin, node);
       }
-    } else if (component_type == gltfjson::format::ComponentTypes::FLOAT) {
+    } else if (component_type == gltfjson::ComponentTypes::FLOAT) {
       // float
       if (type == u8"VEC2") {
         JsonGuiAccessorVec2(root, bin, node);
@@ -261,8 +261,8 @@ ShowGuiFunc
 JsonGuiAccessorList(std::u8string_view jsonpath)
 {
   return [items = std::vector<AccessorItem>()](
-           const gltfjson::typing::Root& root,
-           const gltfjson::typing::Bin& bin,
+           const gltfjson::Root& root,
+           const gltfjson::Bin& bin,
            const gltfjson::tree::NodePtr& node) mutable {
     if (items.empty()) {
       auto& accessors = root.Accessors;
@@ -336,9 +336,9 @@ JsonGuiAccessorList(std::u8string_view jsonpath)
           //    << *accessor.Count() << "]";
           items.push_back({
             "TYPE",
-            static_cast<int>(*gltfjson::format::component_size(
-                               (gltfjson::format::ComponentTypes)*component) *
-                             *gltfjson::format::type_count(type) * count),
+            static_cast<int>(*gltfjson::component_size(
+                               (gltfjson::ComponentTypes)*component) *
+                             *gltfjson::type_count(type) * count),
           });
         }
         {

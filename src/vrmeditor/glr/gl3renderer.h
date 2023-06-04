@@ -46,8 +46,8 @@ struct RenderingEnv;
 void
 Render(RenderPass pass,
        const RenderingEnv& camera,
-       const gltfjson::typing::Root& root,
-       const gltfjson::typing::Bin& bin,
+       const gltfjson::Root& root,
+       const gltfjson::Bin& bin,
        const gltfjson::tree::ArrayValue* vrm0Materials,
        uint32_t meshId,
        const std::shared_ptr<runtimescene::BaseMesh>& mesh,
@@ -70,8 +70,8 @@ void
 CreateDock(const AddDockFunc& addDock);
 
 std::shared_ptr<grapho::gl3::Texture>
-GetOrCreateTexture(const gltfjson::typing::Root& root,
-                   const gltfjson::typing::Bin& bin,
+GetOrCreateTexture(const gltfjson::Root& root,
+                   const gltfjson::Bin& bin,
                    std::optional<uint32_t> texture,
                    glr::ColorSpace colorspace);
 

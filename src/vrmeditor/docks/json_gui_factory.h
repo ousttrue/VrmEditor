@@ -43,8 +43,8 @@ public:
     m_cache = {};
   }
 
-  void ShowGui(const gltfjson::typing::Root& root,
-               const gltfjson::typing::Bin& bin);
+  void ShowGui(const gltfjson::Root& root,
+               const gltfjson::Bin& bin);
 
   void RaiseUpdated(std::u8string_view jsonpath)
   {

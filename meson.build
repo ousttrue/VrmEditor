@@ -1,7 +1,8 @@
 project(
     'VrmEditor',
     'cpp',
-    version: '0.1.0',
+    version: '1.0.0',
+    license: 'MIT',
     default_options: [],
 )
 # add_global_arguments('/experimental:module', language: 'cpp')

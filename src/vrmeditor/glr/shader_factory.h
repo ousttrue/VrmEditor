@@ -29,7 +29,7 @@ struct ShaderEnum
     std::u8string Str() const
     {
       std::stringstream ss;
-      ss << "#define " << gltfjson::tree::from_u8(Name) << " " << Value;
+      ss << "#define " << gltfjson::from_u8(Name) << " " << Value;
       auto str = ss.str();
       return { (const char8_t*)str.data(), str.size() };
     }

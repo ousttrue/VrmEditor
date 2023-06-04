@@ -44,8 +44,8 @@ struct GltfRoot
 {
   ModelType m_type = ModelType::Gltf;
   std::vector<uint8_t> m_bytes;
-  std::shared_ptr<gltfjson::typing::Root> m_gltf;
-  gltfjson::typing::Bin m_bin;
+  std::shared_ptr<gltfjson::Root> m_gltf;
+  gltfjson::Bin m_bin;
   std::string m_title = "scene";
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;

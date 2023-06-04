@@ -4,8 +4,8 @@
 namespace glr {
 
 inline std::shared_ptr<Material>
-MaterialFactory_Error(const gltfjson::typing::Root& root,
-                      const gltfjson::typing::Bin& bin,
+MaterialFactory_Error(const gltfjson::Root& root,
+                      const gltfjson::Bin& bin,
                       std::optional<uint32_t>)
 {
   auto ptr = std::make_shared<Material>();

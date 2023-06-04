@@ -41,8 +41,8 @@ JsonGuiVrm0SpringList(std::u8string_view jsonpath)
 {
   // std::string path{ jsonpath.begin(), jsonpath.end() };
   // auto springs = scene->m_gltf.Json.at(nlohmann::json::json_pointer(path));
-  return [](const gltfjson::typing::Root& root,
-            const gltfjson::typing::Bin& bin,
+  return [](const gltfjson::Root& root,
+            const gltfjson::Bin& bin,
             const gltfjson::tree::NodePtr& node) {
     std::array<const char*, 9> cols = {
       "index",      "comment", "dragForce", "gravity",   "radius",

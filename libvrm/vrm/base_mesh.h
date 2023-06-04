@@ -1,7 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
 #include <assert.h>
-#include <gltfjson/gltf.h>
+#include <gltfjson.h>
 #include <memory>
 #include <span>
 #include <vector>
@@ -35,7 +35,7 @@ operator*(const DirectX::XMFLOAT3& lhs, float rhs)
 struct Primitive
 {
   uint32_t DrawCount;
-  gltfjson::format::Id Material;
+  std::optional<uint32_t> Material;
 };
 
 struct MorphVertex

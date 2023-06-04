@@ -65,8 +65,8 @@ Vec4(const gltfjson::tree::NodePtr& json, const DirectX::XMFLOAT4& defaultValue)
 }
 
 std::shared_ptr<Material>
-MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
-                                 const gltfjson::typing::Bin& bin,
+MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
+                                 const gltfjson::Bin& bin,
                                  std::optional<uint32_t> materialId)
 {
   auto ptr = std::make_shared<Material>();
@@ -133,7 +133,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
             { u8"ALPHAMODE_BLEND", 2 },
           },
           .Selected = {u8"ALPHAMODE", IntVar{[](auto, auto, auto &json){
-            gltfjson::typing::Material m(json);
+            gltfjson::Material m(json);
             auto mode = m.AlphaMode();
             if(mode == u8"MASK")
             {
@@ -165,7 +165,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
         }},
         {"Texture",{
           {u8"HAS_BASE_COLOR_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
-            gltfjson::typing::Material m(json);
+            gltfjson::Material m(json);
             if(auto pbr = m.PbrMetallicRoughness())
             {
               if(pbr->BaseColorTexture())
@@ -178,7 +178,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
           {u8"HAS_BASECOLOR_UV_TRANSFORM", Disable()},
 
           {u8"HAS_NORMAL_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
-            gltfjson::typing::Material m(json);
+            gltfjson::Material m(json);
             if (auto info = m.NormalTexture()) {
               return std::monostate{};
             }
@@ -189,7 +189,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
           {u8"HAS_NORMAL_UV_TRANSFORM", Disable()},
 
           {u8"HAS_EMISSIVE_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
-            gltfjson::typing::Material m(json);
+            gltfjson::Material m(json);
             if (auto info = m.EmissiveTexture()) {
               return std::monostate{};
             }
@@ -198,7 +198,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
           {u8"HAS_EMISSIVE_UV_TRANSFORM", Disable()},
 
           {u8"HAS_OCCLUSION_MAP", OptVar{[](auto,auto,auto &json)->std::optional<std::monostate>{
-            gltfjson::typing::Material m(json);
+            gltfjson::Material m(json);
             if (auto info = m.OcclusionTexture()) {
               return std::monostate{};
             }
@@ -207,7 +207,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
           {u8"HAS_OCCLUSION_UV_TRANSFORM", Disable()},
 
           {u8"HAS_METALLIC_ROUGHNESS_MAP", OptVar{[](auto,auto,auto &json)->std::optional<std::monostate>{
-            gltfjson::typing::Material m(json);
+            gltfjson::Material m(json);
             if(auto pbr = m.PbrMetallicRoughness())
             {
               if(pbr->MetallicRoughnessTexture())
@@ -300,7 +300,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
       // pbr
       //
       {"u_BaseColorFactor",Vec4Var{[](auto &w, auto &l, auto &json){ 
-        gltfjson::typing::Material m(json);
+        gltfjson::Material m(json);
         if(auto pbr = m.PbrMetallicRoughness())
         {
           return Vec4(pbr->m_json->Get(u8"baseColorFactor"), {1,1,1,1});
@@ -308,7 +308,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
         return DirectX::XMFLOAT4{1,1,1,1};
       }}},
       {"u_MetallicFactor",FloatVar{[](auto,auto,auto&json){
-        gltfjson::typing::Material m(json);
+        gltfjson::Material m(json);
         if(auto pbr = m.PbrMetallicRoughness())
         {
           if(auto metallicFactor=pbr->m_json->Get(u8"metallicFactor"))
@@ -322,7 +322,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
         return 1.0f;
       }}},
       {"u_RoughnessFactor",FloatVar{[](auto,auto,auto&json){
-        gltfjson::typing::Material m(json);
+        gltfjson::Material m(json);
         if(auto pbr = m.PbrMetallicRoughness())
         {
           if(auto metallicFactor=pbr->m_json->Get(u8"roughnessFactor"))
@@ -340,7 +340,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
         return Vec3(json->Get(u8"emissiveFactor"), {0, 0, 0});
       }}},
       { "u_NormalScale", FloatVar{[](auto, auto, auto &json){
-        gltfjson::typing::Material m(json);
+        gltfjson::Material m(json);
         if (auto normalTexture = m.NormalTexture()) {
           if(auto p = normalTexture->Scale())
           {
@@ -350,7 +350,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
         return 1.0f;
       }}},
       { "u_AlphaCutoff", FloatVar{[](auto, auto, auto &json){
-        gltfjson::typing::Material m(json);
+        gltfjson::Material m(json);
         if(auto p = m.AlphaCutoff())
         {
           return *p;
@@ -360,7 +360,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
         }
       }}},
       {"u_OcclusionStrength", FloatVar{[](auto,auto,auto&json){
-        gltfjson::typing::Material m(json);
+        gltfjson::Material m(json);
         if(auto info = m.OcclusionTexture())
         {
           if(auto strength = info->Strength())
@@ -406,7 +406,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::typing::Root& root,
     },
     .UpdateState = [](auto, auto, auto &json)
     {
-      gltfjson::typing::Material m(json);
+      gltfjson::Material m(json);
 
       bool *ds;
       if((ds = m.DoubleSided()) && *ds)

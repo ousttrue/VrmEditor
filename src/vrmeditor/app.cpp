@@ -25,6 +25,7 @@
 #include <fstream>
 #include <gltfjson.h>
 #include <gltfjson/glb.h>
+#include <gltfjson/json_tree_exporter.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
 #include <vrm/animation/animation_update.h>
