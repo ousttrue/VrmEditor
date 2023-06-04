@@ -99,15 +99,17 @@ std::span<const DrawItem>
 GltfRoot::Drawables()
 {
   m_drawables.clear();
-  for (uint32_t i = 0; i < m_nodes.size(); ++i) {
-    auto node = m_nodes[i];
-    auto gltfNode = m_gltf->Nodes[i];
-    if (auto mesh = gltfNode.Mesh()) {
-      m_drawables.push_back({
-        .Mesh = *mesh,
-      });
-      DirectX::XMStoreFloat4x4(&m_drawables.back().Matrix,
-                               node->WorldInitialMatrix());
+  if (m_gltf) {
+    for (uint32_t i = 0; i < m_nodes.size(); ++i) {
+      auto node = m_nodes[i];
+      auto gltfNode = m_gltf->Nodes[i];
+      if (auto mesh = gltfNode.Mesh()) {
+        m_drawables.push_back({
+          .Mesh = *mesh,
+        });
+        DirectX::XMStoreFloat4x4(&m_drawables.back().Matrix,
+                                 node->WorldInitialMatrix());
+      }
     }
   }
   return m_drawables;
