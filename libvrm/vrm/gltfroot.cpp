@@ -69,7 +69,6 @@ GltfRoot::GetBoundingBox() const
       auto gltfNode = m_gltf->Nodes[i];
       auto node = m_nodes[i];
       bb.Extend(node->WorldInitialTransform.Translation);
-      bb.Extend(node->WorldInitialTransform.Translation);
       if (gltfNode.Mesh()) {
         auto mesh = m_gltf->Meshes[*gltfNode.Mesh()];
         for (auto prim : mesh.Primitives) {
@@ -91,6 +90,12 @@ GltfRoot::GetBoundingBox() const
         }
       }
     }
+  }
+  else{
+    for(auto &node: m_nodes)
+    {
+        bb.Extend(node->WorldInitialTransform.Translation);
+    }    
   }
   return bb;
 }
