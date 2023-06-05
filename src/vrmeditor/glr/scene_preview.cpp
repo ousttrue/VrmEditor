@@ -9,10 +9,10 @@
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <vrm/runtime_node.h>
-#include <vrm/runtime_scene.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanoid/humanbones.h>
+#include <vrm/runtime_node.h>
+#include <vrm/runtime_scene.h>
 
 namespace glr {
 
@@ -28,13 +28,12 @@ ViewSettings::Popup(const std::string& name)
   }
 }
 
-ScenePreview::ScenePreview(
-  const std::shared_ptr<libvrm::RuntimeScene>& scene,
-  const std::shared_ptr<RenderingEnv>& env,
-  const std::shared_ptr<grapho::OrbitView>& view,
-  const std::shared_ptr<ViewSettings>& settings,
-  const std::shared_ptr<SceneNodeSelection>& selection,
-  bool useTPose)
+ScenePreview::ScenePreview(const std::shared_ptr<libvrm::RuntimeScene>& scene,
+                           const std::shared_ptr<RenderingEnv>& env,
+                           const std::shared_ptr<grapho::OrbitView>& view,
+                           const std::shared_ptr<ViewSettings>& settings,
+                           const std::shared_ptr<SceneNodeSelection>& selection,
+                           bool useTPose)
   : m_runtime(scene)
   , m_env(env)
   , m_settings(settings)
@@ -155,7 +154,6 @@ ScenePreview::RenderPass(std::span<const libvrm::DrawItem> drawables)
                   *m_env,
                   *m_runtime->m_table->m_gltf,
                   m_runtime->m_table->m_bin,
-                  m_runtime->m_table->Vrm0Materials(),
                   mesh,
                   m_runtime->m_meshes[mesh],
                   *meshInstance,
@@ -170,7 +168,6 @@ ScenePreview::RenderPass(std::span<const libvrm::DrawItem> drawables)
                   *m_env,
                   *m_runtime->m_table->m_gltf,
                   m_runtime->m_table->m_bin,
-                  m_runtime->m_table->Vrm0Materials(),
                   mesh,
                   m_runtime->m_meshes[mesh],
                   *meshInstance,
@@ -185,7 +182,6 @@ ScenePreview::RenderPass(std::span<const libvrm::DrawItem> drawables)
                   *m_env,
                   *m_runtime->m_table->m_gltf,
                   m_runtime->m_table->m_bin,
-                  m_runtime->m_table->Vrm0Materials(),
                   mesh,
                   m_runtime->m_meshes[mesh],
                   *meshInstance,

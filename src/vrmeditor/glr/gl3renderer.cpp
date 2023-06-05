@@ -394,7 +394,6 @@ public:
               const RenderingEnv& env,
               const gltfjson::Root& root,
               const gltfjson::Bin& bin,
-              const gltfjson::tree::ArrayValue* vrm0Materials,
               uint32_t meshId,
               const std::shared_ptr<libvrm::BaseMesh>& mesh,
               const libvrm::DeformedMesh& deformed,
@@ -419,7 +418,6 @@ public:
                         LocalInfo{ m },
                         root,
                         bin,
-                        vrm0Materials,
                         vao,
                         primitive,
                         drawOffset);
@@ -437,7 +435,6 @@ public:
                         LocalInfo{ m },
                         root,
                         bin,
-                        vrm0Materials,
                         vao,
                         primitive,
                         drawOffset);
@@ -489,7 +486,6 @@ public:
                      const LocalInfo& local,
                      const gltfjson::Root& root,
                      const gltfjson::Bin& bin,
-                     const gltfjson::tree::ArrayValue* vrm0Materials,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
                      const libvrm::Primitive& primitive,
                      uint32_t drawOffset)
@@ -497,15 +493,8 @@ public:
     gltfjson::tree::NodePtr gltfMaterial;
     gltfjson::tree::NodePtr vrm0Material;
     if (primitive.Material) {
-      if (vrm0Materials) {
-        auto p = (*vrm0Materials)[*primitive.Material];
-        if (auto name = p->Get(u8"shader")) {
-          if (name->U8String() == u8"VRM/MToon") {
-            vrm0Material = p;
-          }
-        }
-      }
       gltfMaterial = root.Materials[*primitive.Material].m_json;
+      vrm0Material = gltfjson::vrm0::GetVrmMaterial(root, *primitive.Material);
     }
 
     if (MaterialIsTransparent(gltfMaterial, vrm0Material) != isTransparent) {
@@ -715,14 +704,13 @@ Render(RenderPass pass,
        const RenderingEnv& env,
        const gltfjson::Root& root,
        const gltfjson::Bin& bin,
-       const gltfjson::tree::ArrayValue* vrm0Materials,
        uint32_t meshId,
        const std::shared_ptr<libvrm::BaseMesh>& mesh,
        const libvrm::DeformedMesh& deformed,
        const DirectX::XMFLOAT4X4& m)
 {
   Gl3Renderer::Instance().Render(
-    pass, env, root, bin, vrm0Materials, meshId, mesh, deformed, m);
+    pass, env, root, bin, meshId, mesh, deformed, m);
 }
 
 void
