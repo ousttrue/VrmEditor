@@ -55,18 +55,23 @@ Gui::Gui(const void* window, const char* glsl_version)
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
 
-  Docks.push_back(grapho::imgui::Dock(
-    "demo", [](const char*, bool* p_open) { ImGui::ShowDemoWindow(p_open); }));
+#ifndef NDEBUG
+  Docks.push_back(
+    grapho::imgui::Dock("[debug] demo", [](const char*, bool* p_open) {
+      ImGui::ShowDemoWindow(p_open);
+    }));
   Docks.back().IsOpen = false;
 
-  Docks.push_back(grapho::imgui::Dock("metrics", [](const char*, bool* p_open) {
-    ImGui::ShowMetricsWindow(p_open);
-  }));
+  Docks.push_back(
+    grapho::imgui::Dock("[debug] metrics", [](const char*, bool* p_open) {
+      ImGui::ShowMetricsWindow(p_open);
+    }));
   Docks.back().IsOpen = false;
+#endif
 
   PostTask([this]() { LoadFont(); });
 
-  Docks.push_back(grapho::imgui::Dock("font", [this]() {
+  Docks.push_back(grapho::imgui::Dock("[setting] font", [this]() {
     if (ImGui::SliderInt("fontSize", &FontSize, 10, 50)) {
       PostTask([this]() { LoadFont(); });
     }

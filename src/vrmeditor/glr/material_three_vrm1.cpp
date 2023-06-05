@@ -171,7 +171,7 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
         }},
         {"Material", {
           // {u8"USE_ALPHATEST", OptVar{[](auto,auto,auto &json)->std::optional<std::monostate>{
-          //   gltfjson::vrm0::Vrm0Material m(json);
+          //   gltfjson::vrm0::Material m(json);
           //   if(auto p = m.BlendMode())
           //   {
           //     if(*p == 1){
@@ -221,7 +221,7 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
         return std::array<float, 3>{0, 0, 0};
       } } },
       // { "alphaTest", FloatVar{ [](auto, auto, auto& json) {
-      //   gltfjson::vrm0::Vrm0Material m(json);
+      //   gltfjson::vrm0::Material m(json);
       //   if(auto p=m.Cutoff()){
       //     return *p;
       //   }

@@ -471,7 +471,7 @@ public:
                                     const gltfjson::tree::NodePtr& vrm0Material)
   {
     if (vrm0Material) {
-      auto m = gltfjson::vrm0::Vrm0Material(vrm0Material);
+      auto m = gltfjson::vrm0::Material(vrm0Material);
       if (auto p = m.BlendMode()) {
         if (*p == 2 || *p == 3) {
           return true;

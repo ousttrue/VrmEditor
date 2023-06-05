@@ -88,7 +88,7 @@ grapho::imgui::Dock
 AssetDir::CreateDock(const LoadFunc& callback)
 {
   return {
-    std::string("[") + Name + "]",
+    std::string("[asset] ") + Name,
     [this, callback]() {
       if (ImGui::Button(" Open")) {
         App::Instance().Log(LogLevel::Info)

@@ -1,9 +1,11 @@
-#include "scene_preview.h"
+#include <GL/glew.h>
+
 #include "cuber.h"
 #include "gl3renderer.h"
 #include "line_gizmo.h"
 #include "overlay.h"
 #include "rendertarget.h"
+#include "scene_preview.h"
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
@@ -140,6 +142,12 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
 void
 ScenePreview::RenderPass(std::span<const libvrm::gltf::DrawItem> drawables)
 {
+  glDisable(GL_DEPTH_TEST);
+  if (m_settings->Skybox) {
+    glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
+  }
+
+  glEnable(GL_DEPTH_TEST);
   for (auto [mesh, m] : drawables) {
     auto meshInstance = m_runtime->GetDeformedMesh(mesh);
     if (m_settings->ShowMesh) {
@@ -153,10 +161,6 @@ ScenePreview::RenderPass(std::span<const libvrm::gltf::DrawItem> drawables)
                   *meshInstance,
                   m);
     }
-  }
-
-  if (m_settings->Skybox) {
-    glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
   }
 
   for (auto [mesh, m] : drawables) {

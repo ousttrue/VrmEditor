@@ -139,7 +139,10 @@ App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
                      m_selection);
 
     VrmDock::CreateVrm(addDock, "vrm", m_runtime->m_table);
-    ExportDock::Create(addDock, "export", m_runtime, indent);
+
+#ifndef NDEBUG
+    ExportDock::Create(addDock, "[debug] export", m_runtime, indent);
+#endif
   }
 
   return m_runtime;
@@ -343,13 +346,15 @@ App::Run()
     gui->AddDock(dock);
   };
 
-  ImTimeline::Create(addDock, "timeline", m_timeline);
+#ifndef NDEBUG
+  ImTimeline::Create(addDock, "[animation] timeline", m_timeline);
+  PoseStream->CreateDock(addDock, "[animation] input-stream");
+#endif
+
   ImLogger::Create(addDock, "logger", m_logger);
   glr::CreateDock(addDock);
   ViewDock::CreateSetting(
     addDock, "view-settings", m_env, m_runtimeView, m_settings);
-
-  PoseStream->CreateDock(addDock);
 
   auto indent = m_gui->FontSize * 0.5f;
   addDock({

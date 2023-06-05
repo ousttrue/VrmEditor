@@ -93,7 +93,7 @@ struct HumanPoseStream
 
   bool LoadMotion(const std::filesystem::path& path);
 
-  void CreateDock(const AddDockFunc& addDock);
+  void CreateDock(const AddDockFunc& addDock, const char *title);
   void Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node = {});
 };
 }
