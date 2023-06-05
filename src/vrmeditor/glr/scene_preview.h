@@ -49,6 +49,8 @@ struct ScenePreview
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<LineGizmo> m_gizmo;
 
+  std::unordered_map<uint32_t, std::shared_ptr<libvrm::DrawItem>> m_nodeDrawMap;
+
   ScenePreview(const std::shared_ptr<libvrm::RuntimeScene>& scene,
                const std::shared_ptr<RenderingEnv>& env,
                const std::shared_ptr<grapho::OrbitView>& view,
@@ -70,7 +72,9 @@ struct ScenePreview
   void RenderRuntime(const grapho::OrbitView& view);
 
 private:
-  void RenderPass(std::span<const libvrm::DrawItem> drawables);
+  void RenderPass(
+    const std::unordered_map<uint32_t, std::shared_ptr<libvrm::DrawItem>>&
+      nodeDrawMap);
 
 public:
   void ShowScreenRect(const char* title,

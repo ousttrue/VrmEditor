@@ -30,10 +30,10 @@ AnimationUpdate(const Animation& animation,
   for (auto& [k, v] : animation.m_weightsMap) {
     auto node = nodes[k];
     auto values = v.GetValue(seconds, repeat);
-    if (auto mesh = runtime->m_table->m_gltf->Nodes[k].Mesh()) {
-      if (auto instance = runtime->GetDeformedMesh(*mesh)) {
-        instance->Weights.assign(values.begin(), values.end());
-      }
+    if (auto meshId = runtime->m_table->m_gltf->Nodes[k].Mesh()) {
+      // if (auto instance = runtime->GetDeformedMesh(*meshId)) {
+      //   instance->Weights.assign(values.begin(), values.end());
+      // }
     }
   }
 }

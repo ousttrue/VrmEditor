@@ -5,21 +5,18 @@ namespace libvrm {
 
 struct DeformedMesh
 {
-  // morph targets
-  std::vector<float> Weights;
   // skinning
   std::vector<Vertex> Vertices;
 
   DeformedMesh(const std::shared_ptr<BaseMesh>& mesh)
-    : Weights(mesh->m_morphTargets.size())
-    , Vertices(mesh->m_vertices)
+    : Vertices(mesh->m_vertices)
   {
   }
 
-  void applySkinning(Vertex* dst,
+  void ApplySkinning(Vertex* dst,
                      const Vertex& src,
                      float w,
-                     std::span<DirectX::XMFLOAT4X4> matrices,
+                     std::span<const DirectX::XMFLOAT4X4> matrices,
                      uint16_t matrixIndex)
   {
     if (w > 0) {
@@ -45,18 +42,20 @@ struct DeformedMesh
     }
   }
 
-  void applyMorphTargetAndSkinning(
+  void ApplyMorphTargetAndSkinning(
     const BaseMesh& mesh,
-    std::span<DirectX::XMFLOAT4X4> skinningMatrices)
+    const std::unordered_map<uint32_t, float>& morphMap,
+    std::span<const DirectX::XMFLOAT4X4> skinningMatrices)
   {
     // clear & apply morph target
     Vertices.clear();
     for (int i = 0; i < mesh.m_vertices.size(); ++i) {
       auto v = mesh.m_vertices[i];
-      for (int j = 0; j < Weights.size(); ++j) {
+      for (int j = 0; j < mesh.m_morphTargets.size(); ++j) {
         auto& morphtarget = mesh.m_morphTargets[j];
-        if (Weights[j]) {
-          v.Position += morphtarget->Vertices[i].position * Weights[j];
+        auto found = morphMap.find(j);
+        if (found != morphMap.end()) {
+          v.Position += morphtarget->Vertices[i].position * found->second;
         }
       }
       Vertices.push_back(v);
@@ -71,13 +70,13 @@ struct DeformedMesh
         dst.Normal = { 0, 0, 0 };
         auto binding = mesh.m_bindings[i];
         if (auto w = binding.Weights.x)
-          applySkinning(&dst, src, w, skinningMatrices, binding.Joints.X);
+          ApplySkinning(&dst, src, w, skinningMatrices, binding.Joints.X);
         if (auto w = binding.Weights.y)
-          applySkinning(&dst, src, w, skinningMatrices, binding.Joints.Y);
+          ApplySkinning(&dst, src, w, skinningMatrices, binding.Joints.Y);
         if (auto w = binding.Weights.z)
-          applySkinning(&dst, src, w, skinningMatrices, binding.Joints.Z);
+          ApplySkinning(&dst, src, w, skinningMatrices, binding.Joints.Z);
         if (auto w = binding.Weights.w)
-          applySkinning(&dst, src, w, skinningMatrices, binding.Joints.W);
+          ApplySkinning(&dst, src, w, skinningMatrices, binding.Joints.W);
       }
     }
   }

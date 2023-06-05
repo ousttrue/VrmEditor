@@ -1,8 +1,8 @@
 #pragma once
+#include "base_mesh.h"
 #include "expression.h"
 #include "spring_bone.h"
 #include "spring_collider.h"
-#include "base_mesh.h"
 #include <DirectXMath.h>
 #include <functional>
 #include <gltfjson.h>
@@ -36,6 +36,8 @@ struct DrawItem
 {
   uint32_t Mesh;
   DirectX::XMFLOAT4X4 Matrix;
+  std::unordered_map<uint32_t, float> MorphMap;
+  std::vector<DirectX::XMFLOAT4X4> SkinningMatrices;
 };
 
 struct GltfRoot
@@ -62,7 +64,6 @@ struct GltfRoot
 
   std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
 
-  std::vector<DrawItem> m_drawables;
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
 
   GltfRoot();
@@ -118,7 +119,8 @@ struct GltfRoot
     }
   }
 
-  std::span<const DrawItem> Drawables();
+  void UpdateDrawables(
+    std::unordered_map<uint32_t, std::shared_ptr<DrawItem>>& nodeDrawMap);
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
 };
 

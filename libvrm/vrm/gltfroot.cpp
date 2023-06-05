@@ -1,7 +1,7 @@
 #include "gltfroot.h"
-#include "spring_bone.h"
 #include "base_mesh.h"
 #include "dmath.h"
+#include "spring_bone.h"
 #include <DirectXMath.h>
 #include <array>
 #include <expected>
@@ -98,24 +98,32 @@ GltfRoot::GetBoundingBox() const
   return bb;
 }
 
-std::span<const DrawItem>
-GltfRoot::Drawables()
+void
+GltfRoot::UpdateDrawables(
+  std::unordered_map<uint32_t, std::shared_ptr<DrawItem>>& nodeDrawMap)
 {
-  m_drawables.clear();
   if (m_gltf) {
     for (uint32_t i = 0; i < m_nodes.size(); ++i) {
       auto node = m_nodes[i];
       auto gltfNode = m_gltf->Nodes[i];
+
       if (auto mesh = gltfNode.Mesh()) {
-        m_drawables.push_back({
-          .Mesh = *mesh,
-        });
-        DirectX::XMStoreFloat4x4(&m_drawables.back().Matrix,
-                                 node->WorldInitialMatrix());
+        auto found = nodeDrawMap.find(i);
+        std::shared_ptr<DrawItem> item;
+        if (found != nodeDrawMap.end()) {
+          item = found->second;
+        } else {
+          item = std::make_shared<DrawItem>();
+          nodeDrawMap.insert({ i, item });
+        }
+
+        item->Mesh = *mesh;
+        DirectX::XMStoreFloat4x4(&item->Matrix, node->WorldInitialMatrix());
+        item->MorphMap.clear();
+        item->SkinningMatrices = {};
       }
     }
   }
-  return m_drawables;
 }
 
 std::span<const DirectX::XMFLOAT4X4>

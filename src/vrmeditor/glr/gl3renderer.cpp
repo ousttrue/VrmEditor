@@ -25,6 +25,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <unordered_map>
 #include <variant>
+#include <vrm/base_mesh.h>
 #include <vrm/deformed_mesh.h>
 #include <vrm/fileutil.h>
 #include <vrm/image.h>
@@ -67,11 +68,224 @@ ParseImage(const gltfjson::Root& root,
   return ptr;
 }
 
+static std::expected<bool, std::string>
+AddIndices(const gltfjson::Root& root,
+           const gltfjson::Bin& bin,
+           int vertex_offset,
+           libvrm::BaseMesh* mesh,
+           const gltfjson::MeshPrimitive& prim)
+{
+  if (auto indices = prim.Indices()) {
+    auto accessor_index = (uint32_t)*indices;
+    auto accessor = root.Accessors[accessor_index];
+    switch ((gltfjson::ComponentTypes)*accessor.ComponentType()) {
+      case gltfjson::ComponentTypes::UNSIGNED_BYTE: {
+        if (auto span = bin.GetAccessorBytes<uint8_t>(root, accessor_index)) {
+          mesh->addSubmesh(vertex_offset, *span, prim.Material());
+          return true;
+        } else {
+          return std::unexpected{ span.error() };
+        }
+      } break;
+      case gltfjson::ComponentTypes::UNSIGNED_SHORT: {
+        if (auto span = bin.GetAccessorBytes<uint16_t>(root, accessor_index)) {
+          mesh->addSubmesh(vertex_offset, *span, prim.Material());
+          return true;
+        } else {
+          return std::unexpected{ span.error() };
+        }
+      } break;
+      case gltfjson::ComponentTypes::UNSIGNED_INT: {
+        if (auto span = bin.GetAccessorBytes<uint32_t>(root, accessor_index)) {
+          mesh->addSubmesh(vertex_offset, *span, prim.Material());
+          return true;
+        } else {
+          return std::unexpected{ span.error() };
+        }
+      } break;
+      default:
+        return std::unexpected{ "invalid index type" };
+    }
+  } else {
+    std::vector<uint32_t> indexList;
+    auto vertex_count = mesh->m_vertices.size();
+    indexList.reserve(vertex_count);
+    for (int i = 0; i < vertex_count; ++i) {
+      indexList.push_back(i);
+    }
+    mesh->addSubmesh<uint32_t>(vertex_offset, indexList, prim.Material());
+    return true;
+  }
+}
+
+static std::expected<std::shared_ptr<libvrm::BaseMesh>, std::string>
+ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
+{
+  auto mesh = root.Meshes[meshIndex];
+  auto ptr = std::make_shared<libvrm::BaseMesh>();
+  ptr->Name = mesh.Name();
+  std::optional<gltfjson::MeshPrimitiveAttributes> lastAtributes;
+
+  for (auto prim : mesh.Primitives) {
+    if (prim.Attributes() == lastAtributes) {
+      // for vrm shared vertex buffer
+      if (auto expected = AddIndices(root, bin, 0, ptr.get(), prim)) {
+        // OK
+      } else {
+        return std::unexpected{ expected.error() };
+      }
+    } else {
+      // extend vertex buffer
+      std::span<const DirectX::XMFLOAT3> positions;
+      if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
+            root, *prim.Attributes()->POSITION())) {
+        positions = *accessor;
+      } else {
+        return std::unexpected{ accessor.error() };
+      }
+      // if (scene->m_type == ModelType::Vrm0) {
+      // std::vector<DirectX::XMFLOAT3> copy;
+      //   copy.reserve(positions.size());
+      //   for (auto& p : positions) {
+      //     copy.push_back({ -p.x, p.y, -p.z });
+      //   }
+      //   positions = copy;
+      // }
+      auto offset = ptr->addPosition(positions);
+
+      if (auto normal = prim.Attributes()->NORMAL()) {
+        if (auto accessor =
+              bin.GetAccessorBytes<DirectX::XMFLOAT3>(root, *normal)) {
+          ptr->setNormal(offset, *accessor);
+        } else {
+          return std::unexpected{ accessor.error() };
+        }
+      }
+
+      if (auto tex0 = prim.Attributes()->TEXCOORD_0()) {
+        if (auto accessor =
+              bin.GetAccessorBytes<DirectX::XMFLOAT2>(root, *tex0)) {
+          ptr->setUv(offset, *accessor);
+        } else {
+          return std::unexpected{ accessor.error() };
+        }
+      }
+
+      auto joints0 = prim.Attributes()->JOINTS_0();
+      auto weights0 = prim.Attributes()->WEIGHTS_0();
+      if (joints0 && weights0) {
+        // skinning
+        int joint_accessor = *joints0;
+        auto item_size = root.Accessors[joint_accessor].Stride();
+        switch (item_size) {
+          case 4:
+            if (auto accessor =
+                  bin.GetAccessorBytes<libvrm::byte4>(root, joint_accessor)) {
+              if (auto accessor_w =
+                    bin.GetAccessorBytes<DirectX::XMFLOAT4>(root, *weights0)) {
+                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
+              } else {
+                return std::unexpected{ accessor_w.error() };
+              }
+            } else {
+              return std::unexpected{ accessor.error() };
+            }
+            break;
+
+          case 8:
+            if (auto accessor =
+                  bin.GetAccessorBytes<libvrm::ushort4>(root, joint_accessor)) {
+              if (auto accessor_w =
+                    bin.GetAccessorBytes<DirectX::XMFLOAT4>(root, *weights0)) {
+                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
+              } else {
+                return std::unexpected{ accessor_w.error() };
+              }
+            } else {
+              return std::unexpected{ accessor.error() };
+            }
+            break;
+
+          default:
+            // not implemented
+            return std::unexpected{ "JOINTS_0 is not ushort4" };
+        }
+      }
+
+      // extend morph target
+      {
+        auto& targets = prim.Targets;
+        for (int i = 0; i < targets.size(); ++i) {
+          auto target = targets[i];
+          auto morph = ptr->getOrCreateMorphTarget(i);
+          // std::cout << target << std::endl;
+          std::span<const DirectX::XMFLOAT3> positions;
+          if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
+                root, *target.POSITION())) {
+            positions = *accessor;
+          } else {
+            return std::unexpected{ accessor.error() };
+          }
+          // if (scene->m_type == ModelType::Vrm0) {
+          //   std::vector<DirectX::XMFLOAT3> copy;
+          //   copy.reserve(positions.size());
+          //   for (auto& p : positions) {
+          //     copy.push_back({ -p.x, p.y, -p.z });
+          //   }
+          //   positions = copy;
+          // }
+          /*auto morphOffset =*/morph->addPosition(positions);
+        }
+      }
+
+      // extend indices and add vertex offset
+      if (auto expected = AddIndices(root, bin, offset, ptr.get(), prim)) {
+        // OK
+      } else {
+        return std::unexpected{ expected.error() };
+      }
+    }
+
+    // find morph target name
+    // primitive.extras.targetNames
+    // if (has(prim, "extras")) {
+    //   auto& extras = prim.at("extras");
+    //   if (has(extras, "targetNames")) {
+    //     auto& names = extras.at("targetNames");
+    //     // std::cout << names << std::endl;
+    //     for (int i = 0; i < names.size(); ++i) {
+    //       ptr->getOrCreateMorphTarget(i)->Name = names[i];
+    //     }
+    //   }
+    // }
+
+    lastAtributes = *prim.Attributes();
+  }
+
+  // find morph target name
+  // mesh.extras.targetNames
+  // if (has(mesh, "extras")) {
+  //   auto& extras = mesh.at("extras");
+  //   if (has(extras, "targetNames")) {
+  //     auto& names = extras.at("targetNames");
+  //     // std::cout << names << std::endl;
+  //     for (int i = 0; i < names.size(); ++i) {
+  //       ptr->getOrCreateMorphTarget(i)->Name = names[i];
+  //     }
+  //   }
+  // }
+
+  return ptr;
+}
+
 class Gl3Renderer
 {
   TextEditor m_vsEditor;
   TextEditor m_fsEditor;
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::Image>> m_imageMap;
+  std::unordered_map<uint32_t, std::shared_ptr<libvrm::DeformedMesh>>
+    m_deformMap;
+  std::unordered_map<uint32_t, std::shared_ptr<libvrm::BaseMesh>> m_baseMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
@@ -84,6 +298,8 @@ class Gl3Renderer
   Material m_error;
 
   std::shared_ptr<ShaderSourceManager> m_shaderSource;
+
+  std::unordered_map<uint32_t, std::shared_ptr<libvrm::BaseMesh>> m_baseMeshMap;
 
   struct MaterialFactory
   {
@@ -390,32 +606,73 @@ public:
     return vao;
   }
 
+  std::shared_ptr<libvrm::BaseMesh> GetOrCreateBaseMesh(
+    const gltfjson::Root& root,
+    const gltfjson::Bin& bin,
+    uint32_t mesh)
+  {
+    auto found = m_baseMap.find(mesh);
+    if (found != m_baseMap.end()) {
+      return found->second;
+    }
+
+    if (auto base = ParseMesh(root, bin, mesh)) {
+      m_baseMap.insert({ mesh, *base });
+      return *base;
+    } else {
+      return {};
+    }
+  }
+
+  std::shared_ptr<libvrm::DeformedMesh> GetOrCreateDeformedMesh(
+    uint32_t mesh,
+    const std::shared_ptr<libvrm::BaseMesh>& baseMesh)
+  {
+    auto found = m_deformMap.find(mesh);
+    if (found != m_deformMap.end()) {
+      return found->second;
+    }
+
+    auto runtime = std::make_shared<libvrm::DeformedMesh>(baseMesh);
+    m_deformMap.insert({ mesh, runtime });
+    return runtime;
+  }
+
   void Render(RenderPass pass,
               const RenderingEnv& env,
               const gltfjson::Root& root,
               const gltfjson::Bin& bin,
               uint32_t meshId,
-              const std::shared_ptr<libvrm::BaseMesh>& mesh,
-              const libvrm::DeformedMesh& deformed,
-              const DirectX::XMFLOAT4X4& m)
+              const DirectX::XMFLOAT4X4& modelMatrix,
+              const std::unordered_map<uint32_t, float>& morphMap,
+              std::span<const DirectX::XMFLOAT4X4> skinningMatrices)
   {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    auto vao = GetOrCreateMesh(meshId, mesh);
+    auto baseMesh = GetOrCreateBaseMesh(root, bin, meshId);
+    if (!baseMesh) {
+      return;
+    }
+    auto vao = GetOrCreateMesh(meshId, baseMesh);
+
     // upload vertices. CPU skinning and morpht target.
-    if (deformed.Vertices.size()) {
-      vao->slots_[0]->Upload(deformed.Vertices.size() * sizeof(libvrm::Vertex),
-                             deformed.Vertices.data());
+    auto deformed = GetOrCreateDeformedMesh(meshId, baseMesh);
+    if (deformed->Vertices.size()) {
+      // apply morphtarget & skinning
+      deformed->ApplyMorphTargetAndSkinning(
+        *baseMesh, morphMap, skinningMatrices);
+      vao->slots_[0]->Upload(deformed->Vertices.size() * sizeof(libvrm::Vertex),
+                             deformed->Vertices.data());
     }
 
     switch (pass) {
       case RenderPass::Opaque: {
         uint32_t drawOffset = 0;
-        for (auto& primitive : mesh->m_primitives) {
+        for (auto& primitive : baseMesh->m_primitives) {
           DrawPrimitive(false,
                         WorldInfo{ env },
-                        LocalInfo{ m },
+                        LocalInfo{ modelMatrix },
                         root,
                         bin,
                         vao,
@@ -429,10 +686,10 @@ public:
       case RenderPass::Transparent: {
         // first: opaque
         uint32_t drawOffset = 0;
-        for (auto& primitive : mesh->m_primitives) {
+        for (auto& primitive : baseMesh->m_primitives) {
           DrawPrimitive(true,
                         WorldInfo{ env },
-                        LocalInfo{ m },
+                        LocalInfo{ modelMatrix },
                         root,
                         bin,
                         vao,
@@ -450,9 +707,10 @@ public:
             m_shadow = *shadow;
           }
         }
-        m_shadow.Activate(m_shaderSource, WorldInfo{ env }, LocalInfo{ m }, {});
+        m_shadow.Activate(
+          m_shaderSource, WorldInfo{ env }, LocalInfo{ modelMatrix }, {});
         uint32_t drawCount = 0;
-        for (auto& primitive : mesh->m_primitives) {
+        for (auto& primitive : baseMesh->m_primitives) {
           drawCount += primitive.DrawCount * 4;
         }
         vao->Draw(GL_TRIANGLES, drawCount, 0);
@@ -705,12 +963,12 @@ Render(RenderPass pass,
        const gltfjson::Root& root,
        const gltfjson::Bin& bin,
        uint32_t meshId,
-       const std::shared_ptr<libvrm::BaseMesh>& mesh,
-       const libvrm::DeformedMesh& deformed,
-       const DirectX::XMFLOAT4X4& m)
+       const DirectX::XMFLOAT4X4& modelMatrix,
+       const std::unordered_map<uint32_t, float>& morphMap,
+       std::span<const DirectX::XMFLOAT4X4> skinningMatrices)
 {
   Gl3Renderer::Instance().Render(
-    pass, env, root, bin, meshId, mesh, deformed, m);
+    pass, env, root, bin, meshId, modelMatrix, morphMap, skinningMatrices);
 }
 
 void

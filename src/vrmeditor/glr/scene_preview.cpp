@@ -60,7 +60,8 @@ ScenePreview::RenderStatic(const grapho::OrbitView& view)
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  RenderPass(m_runtime->m_table->Drawables());
+  m_runtime->m_table->UpdateDrawables(m_nodeDrawMap);
+  RenderPass(m_nodeDrawMap);
 
   // manipulator
   if (auto node = m_selection->selected.lock()) {
@@ -104,7 +105,9 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
   m_runtime->NextSpringDelta = m_settings->NextSpringDelta;
   m_settings->NextSpringDelta = {};
 
-  RenderPass(m_runtime->Drawables());
+  m_runtime->m_table->UpdateDrawables(m_nodeDrawMap);
+  m_runtime->UpdateDrawables(m_nodeDrawMap);
+  RenderPass(m_nodeDrawMap);
 
   // manipulator
   if (auto init = m_selection->selected.lock()) {
@@ -139,7 +142,9 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
 }
 
 void
-ScenePreview::RenderPass(std::span<const libvrm::DrawItem> drawables)
+ScenePreview::RenderPass(
+  const std::unordered_map<uint32_t, std::shared_ptr<libvrm::DrawItem>>&
+    drawables)
 {
   glDisable(GL_DEPTH_TEST);
   if (m_settings->Skybox) {
@@ -147,45 +152,45 @@ ScenePreview::RenderPass(std::span<const libvrm::DrawItem> drawables)
   }
 
   glEnable(GL_DEPTH_TEST);
-  for (auto [mesh, m] : drawables) {
-    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
+  for (auto [_, draw] : drawables) {
+    // auto meshInstance = m_runtime->GetDeformedMesh(meshId);
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Opaque,
                   *m_env,
                   *m_runtime->m_table->m_gltf,
                   m_runtime->m_table->m_bin,
-                  mesh,
-                  m_runtime->m_meshes[mesh],
-                  *meshInstance,
-                  m);
+                  draw->Mesh,
+                  draw->Matrix,
+                  draw->MorphMap,
+                  draw->SkinningMatrices);
     }
   }
 
-  for (auto [mesh, m] : drawables) {
-    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
+  for (auto [_, draw] : drawables) {
+    // auto meshInstance = m_runtime->GetDeformedMesh(meshId);
     if (m_settings->ShowShadow) {
       glr::Render(RenderPass::ShadowMatrix,
                   *m_env,
                   *m_runtime->m_table->m_gltf,
                   m_runtime->m_table->m_bin,
-                  mesh,
-                  m_runtime->m_meshes[mesh],
-                  *meshInstance,
-                  m);
+                  draw->Mesh,
+                  draw->Matrix,
+                  draw->MorphMap,
+                  draw->SkinningMatrices);
     }
   }
 
-  for (auto [mesh, m] : drawables) {
-    auto meshInstance = m_runtime->GetDeformedMesh(mesh);
+  for (auto [_, draw] : drawables) {
+    // auto meshInstance = m_runtime->GetDeformedMesh(meshId);
     if (m_settings->ShowMesh) {
       glr::Render(RenderPass::Transparent,
                   *m_env,
                   *m_runtime->m_table->m_gltf,
                   m_runtime->m_table->m_bin,
-                  mesh,
-                  m_runtime->m_meshes[mesh],
-                  *meshInstance,
-                  m);
+                  draw->Mesh,
+                  draw->Matrix,
+                  draw->MorphMap,
+                  draw->SkinningMatrices);
     }
   }
 

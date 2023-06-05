@@ -49,9 +49,9 @@ Render(RenderPass pass,
        const gltfjson::Root& root,
        const gltfjson::Bin& bin,
        uint32_t meshId,
-       const std::shared_ptr<libvrm::BaseMesh>& mesh,
-       const libvrm::DeformedMesh& instance,
-       const DirectX::XMFLOAT4X4& m);
+       const DirectX::XMFLOAT4X4& modelMatrix,
+       const std::unordered_map<uint32_t, float>& morphMap,
+       std::span<const DirectX::XMFLOAT4X4> skinningMatrices);
 
 // clear current render target
 void
