@@ -1,11 +1,11 @@
-#include "vrm/importer.h"
-#include "vrm/gltf.h"
+#include "importer.h"
+#include "gltfroot.h"
+#include "node.h"
 #include <DirectXMath.h>
-
+#include <gltfjson.h>
 #include <gltfjson/json_tree_parser.h>
 
 namespace libvrm {
-namespace gltf {
 
 static DirectX::XMFLOAT4
 RotateY180(const DirectX::XMFLOAT4& src)
@@ -19,12 +19,12 @@ RotateY180(const DirectX::XMFLOAT4& src)
   return dst;
 }
 
-static std::expected<std::shared_ptr<gltf::Node>, std::string>
+static std::expected<std::shared_ptr<Node>, std::string>
 ParseNode(const std::shared_ptr<GltfRoot>& scene,
           int i,
           const gltfjson::Node& node)
 {
-  auto ptr = std::make_shared<gltf::Node>(node.Name());
+  auto ptr = std::make_shared<Node>(node.Name());
 
   if (node.Matrix.size() == 16) {
     // matrix
@@ -79,8 +79,8 @@ ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
             auto index = (uint32_t)*node->Ptr<float>();
             auto name = humanBone->Get(u8"bone")->U8String();
             // std::cout << name << ": " << index << std::endl;
-            if (auto bone = vrm::HumanBoneFromName(gltfjson::from_u8(name),
-                                                   vrm::VrmVersion::_0_x)) {
+            if (auto bone = HumanBoneFromName(gltfjson::from_u8(name),
+                                              VrmVersion::_0_x)) {
               scene->m_nodes[index]->Humanoid = *bone;
             }
           }
@@ -206,8 +206,8 @@ ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
       if (auto object = humanBones->Object()) {
         for (auto& kv : *object) {
           auto name = kv.first;
-          if (auto bone = vrm::HumanBoneFromName(gltfjson::from_u8(name),
-                                                 vrm::VrmVersion::_1_0)) {
+          if (auto bone =
+                HumanBoneFromName(gltfjson::from_u8(name), VrmVersion::_1_0)) {
             auto index = (uint32_t)*kv.second->Get(u8"node")->Ptr<float>();
             scene->m_nodes[index]->Humanoid = *bone;
           } else {
@@ -381,7 +381,7 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
     for (int i = 0; i < nodes.size(); ++i) {
       auto node = nodes[i];
       for (auto child : node.Children) {
-        gltf::Node::AddChild(scene->m_nodes[i], scene->m_nodes[child]);
+        Node::AddChild(scene->m_nodes[i], scene->m_nodes[child]);
       }
     }
   }
@@ -393,7 +393,7 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   }
 
   // calc world
-  auto enter = [](const std::shared_ptr<gltf::Node>& node) {
+  auto enter = [](const std::shared_ptr<Node>& node) {
     node->CalcWorldInitialMatrix();
     // node->CalcInitialMatrix();
     return true;
@@ -474,5 +474,5 @@ LoadPath(const std::filesystem::path& path)
     return std::unexpected{ bytes.error() };
   }
 }
-}
-}
+
+} // namespace

@@ -1,7 +1,7 @@
 #pragma once
+#include <gltfjson.h>
 #include <gltfjson/gltf_typing_vrm0.h>
 #include <string>
-#include <vrm/gltf.h>
 
 bool
 ShowGui(const gltfjson::Root& root,

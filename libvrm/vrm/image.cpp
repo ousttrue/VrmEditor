@@ -3,7 +3,6 @@
 #include <stb_image.h>
 
 namespace libvrm {
-namespace gltf {
 
 bool
 Image::IsJpeg(std::span<const uint8_t> data)
@@ -73,5 +72,4 @@ Image::LoadHdr(std::span<const uint8_t> data)
   }
 }
 
-}
-}
+} // namespace

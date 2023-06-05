@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace libvrm {
-namespace fileutil {
+
 static std::vector<uint8_t>
 ReadAllBytes(const std::filesystem::path& filename)
 {
@@ -19,5 +19,5 @@ ReadAllBytes(const std::filesystem::path& filename)
   ifs.read((char*)buffer.data(), pos);
   return buffer;
 }
-}
-}
+
+} // namespace

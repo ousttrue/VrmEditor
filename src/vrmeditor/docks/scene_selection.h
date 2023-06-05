@@ -3,6 +3,6 @@
 
 struct SceneNodeSelection
 {
-  std::weak_ptr<libvrm::gltf::Node> selected;
-  std::weak_ptr<libvrm::gltf::Node> new_selected;
+  std::weak_ptr<libvrm::Node> selected;
+  std::weak_ptr<libvrm::Node> new_selected;
 };

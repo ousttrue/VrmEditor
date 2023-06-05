@@ -54,4 +54,4 @@ IntervalTimer::~IntervalTimer()
   delete m_impl;
 }
 
-}
+} // namespace

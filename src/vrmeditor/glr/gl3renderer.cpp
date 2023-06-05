@@ -27,7 +27,6 @@
 #include <variant>
 #include <vrm/deformed_mesh.h>
 #include <vrm/fileutil.h>
-#include <vrm/gltf.h>
 #include <vrm/image.h>
 
 #include "material_error.h"
@@ -39,7 +38,7 @@
 
 namespace glr {
 
-static std::expected<std::shared_ptr<libvrm::gltf::Image>, std::string>
+static std::expected<std::shared_ptr<libvrm::Image>, std::string>
 ParseImage(const gltfjson::Root& root,
            const gltfjson::Bin& bin,
            const gltfjson::Image& image)
@@ -61,7 +60,7 @@ ParseImage(const gltfjson::Root& root,
     return std::unexpected{ "not bufferView nor uri" };
   }
   auto name = image.Name();
-  auto ptr = std::make_shared<libvrm::gltf::Image>(name);
+  auto ptr = std::make_shared<libvrm::Image>(name);
   if (!ptr->Load(bytes)) {
     return std::unexpected{ "Image: fail to load" };
   }
@@ -72,7 +71,7 @@ class Gl3Renderer
 {
   TextEditor m_vsEditor;
   TextEditor m_fsEditor;
-  std::unordered_map<uint32_t, std::shared_ptr<libvrm::gltf::Image>> m_imageMap;
+  std::unordered_map<uint32_t, std::shared_ptr<libvrm::Image>> m_imageMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
@@ -190,7 +189,7 @@ public:
     m_error = {};
   }
 
-  std::shared_ptr<libvrm::gltf::Image> GetOrCreateImage(
+  std::shared_ptr<libvrm::Image> GetOrCreateImage(
     const gltfjson::Root& root,
     const gltfjson::Bin& bin,
     std::optional<uint32_t> id)
@@ -646,13 +645,13 @@ public:
 
   bool LoadPbr_LOGL(const std::filesystem::path& path)
   {
-    auto bytes = libvrm::fileutil::ReadAllBytes(path);
+    auto bytes = libvrm::ReadAllBytes(path);
     if (bytes.empty()) {
       App::Instance().Log(LogLevel::Error) << "fail to read: " << path;
       return false;
     }
 
-    auto hdr = std::make_shared<libvrm::gltf::Image>("pbr");
+    auto hdr = std::make_shared<libvrm::Image>("pbr");
     if (!hdr->LoadHdr(bytes)) {
       App::Instance().Log(LogLevel::Error) << "fail to load: " << path;
       return false;

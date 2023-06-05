@@ -215,8 +215,8 @@ IsIdentity(const DirectX::XMFLOAT4& q)
 int
 PushJoints(std::vector<JointDefinition>& joints,
            std::vector<DirectX::XMFLOAT4>& rotations,
-           const std::shared_ptr<gltf::Node>& node,
-           const std::function<uint16_t(const std::shared_ptr<gltf::Node>&)>&
+           const std::shared_ptr<Node>& node,
+           const std::function<uint16_t(const std::shared_ptr<Node>&)>&
              getParentIndex)
 {
   joints.push_back({
@@ -247,7 +247,7 @@ PushJoints(std::vector<JointDefinition>& joints,
 void
 UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
                         uint32_t id,
-                        const std::shared_ptr<gltf::GltfRoot>& scene)
+                        const std::shared_ptr<GltfRoot>& scene)
 {
   auto payload = GetOrCreatePayload();
   m_joints.clear();
@@ -281,7 +281,7 @@ UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
 
 static void
 PushJoints(std::shared_ptr<Payload>& payload,
-           const std::shared_ptr<gltf::Node>& node,
+           const std::shared_ptr<Node>& node,
            bool pack)
 {
   if (pack) {
@@ -302,7 +302,7 @@ PushJoints(std::shared_ptr<Payload>& payload,
 void
 UdpSender::SendFrame(asio::ip::udp::endpoint ep,
                      uint32_t id,
-                     const std::shared_ptr<gltf::GltfRoot>& scene,
+                     const std::shared_ptr<GltfRoot>& scene,
                      bool pack)
 {
   auto payload = GetOrCreatePayload();

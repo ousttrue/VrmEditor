@@ -7,7 +7,7 @@ class VrmDock
 public:
   static void CreateVrm(const AddDockFunc& addDock,
                         std::string_view title,
-                        const std::shared_ptr<libvrm::gltf::GltfRoot>& scene);
+                        const std::shared_ptr<libvrm::GltfRoot>& scene);
   // static void CreateExpression(const AddDockFunc& addDock,
   //                              std::string_view title,
   //                              const std::shared_ptr<libvrm::gltf::Scene>& scene);

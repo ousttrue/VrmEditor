@@ -27,9 +27,9 @@ UpdateSceneFromBvhFrame(
   Time time);
 
 void
-InitializeSceneFromBvh(const std::shared_ptr<gltf::GltfRoot>& scene,
+InitializeSceneFromBvh(const std::shared_ptr<GltfRoot>& scene,
                        const std::shared_ptr<bvh::Bvh>& bvh,
-                       const std::shared_ptr<vrm::HumanBoneMap>& map = {});
+                       const std::shared_ptr<HumanBoneMap>& map = {});
 
 }
 }

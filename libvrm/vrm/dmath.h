@@ -1,7 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
 #include <ostream>
-#include <vrm/dmath.h>
 
 inline std::ostream&
 operator<<(std::ostream& os, const DirectX::XMFLOAT3& v)

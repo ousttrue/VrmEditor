@@ -2,7 +2,6 @@
 #include "animation/spring_bone.h"
 #include "base_mesh.h"
 #include "dmath.h"
-#include "gltf.h"
 #include <DirectXMath.h>
 #include <array>
 #include <expected>
@@ -17,7 +16,8 @@
 #include <string>
 #include <vector>
 
-namespace libvrm::gltf {
+namespace libvrm {
+
 GltfRoot::GltfRoot() {}
 
 GltfRoot::~GltfRoot()
@@ -28,7 +28,7 @@ GltfRoot::~GltfRoot()
 void
 GltfRoot::Traverse(const EnterFunc& enter,
                    const LeaveFunc& leave,
-                   const std::shared_ptr<gltf::Node>& node)
+                   const std::shared_ptr<Node>& node)
 {
   if (node) {
     if (enter(node)) {
@@ -47,8 +47,8 @@ GltfRoot::Traverse(const EnterFunc& enter,
   }
 }
 
-std::shared_ptr<gltf::Node>
-GltfRoot::GetBoneNode(vrm::HumanBones bone)
+std::shared_ptr<Node>
+GltfRoot::GetBoneNode(HumanBones bone)
 {
   for (auto& node : m_nodes) {
     if (auto humanoid = node->Humanoid) {
@@ -90,12 +90,10 @@ GltfRoot::GetBoundingBox() const
         }
       }
     }
-  }
-  else{
-    for(auto &node: m_nodes)
-    {
-        bb.Extend(node->WorldInitialTransform.Translation);
-    }    
+  } else {
+    for (auto& node : m_nodes) {
+      bb.Extend(node->WorldInitialTransform.Translation);
+    }
   }
   return bb;
 }
@@ -133,4 +131,4 @@ GltfRoot::ShapeMatrices()
   return m_shapeMatrices;
 }
 
-}
+} // namespace

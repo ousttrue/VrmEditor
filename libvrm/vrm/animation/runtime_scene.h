@@ -1,9 +1,13 @@
 #pragma once
-#include "../gltf.h"
+#include "../gltfroot.h"
 #include "../humanoid/humanpose.h"
 #include "runtime_springjoint.h"
 #include "spring_bone.h"
 #include <unordered_map>
+
+namespace libvrm {
+struct Skin;
+}
 
 namespace runtimescene {
 
@@ -23,7 +27,6 @@ struct RuntimeNode;
 struct DeformedMesh;
 struct RuntimeSpringCollision;
 struct BaseMesh;
-struct Skin;
 struct Animation;
 
 using RenderFunc = std::function<
@@ -31,11 +34,11 @@ using RenderFunc = std::function<
 
 struct RuntimeScene
 {
-  std::shared_ptr<libvrm::gltf::GltfRoot> m_table;
+  std::shared_ptr<libvrm::GltfRoot> m_table;
   std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
   std::vector<std::shared_ptr<BaseMesh>> m_meshes;
-  std::vector<std::shared_ptr<Skin>> m_skins;
+  std::vector<std::shared_ptr<libvrm::Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
 
   std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
@@ -52,57 +55,57 @@ struct RuntimeScene
   }
 
   libvrm::Time NextSpringDelta = libvrm::Time(0.0);
-  std::shared_ptr<libvrm::gltf::GltfRoot> m_lastScene;
+  std::shared_ptr<libvrm::GltfRoot> m_lastScene;
 
   std::unordered_map<uint32_t, std::shared_ptr<DeformedMesh>> m_meshMap;
-  std::unordered_map<std::shared_ptr<libvrm::gltf::Node>,
+  std::unordered_map<std::shared_ptr<libvrm::Node>,
                      std::shared_ptr<RuntimeNode>>
     m_nodeMap;
 
-  std::unordered_map<std::shared_ptr<libvrm::vrm::SpringJoint>,
+  std::unordered_map<std::shared_ptr<libvrm::SpringJoint>,
                      std::shared_ptr<RuntimeSpringJoint>>
     m_jointMap;
-  std::unordered_map<std::shared_ptr<libvrm::vrm::SpringBone>,
+  std::unordered_map<std::shared_ptr<libvrm::SpringBone>,
                      std::shared_ptr<RuntimeSpringCollision>>
     m_springCollisionMap;
 
-  RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table);
+  RuntimeScene(const std::shared_ptr<libvrm::GltfRoot>& table);
   void Reset();
 
   std::shared_ptr<DeformedMesh> GetDeformedMesh(uint32_t mesh);
   std::shared_ptr<RuntimeNode> GetRuntimeNode(
-    const std::shared_ptr<libvrm::gltf::Node>& node);
+    const std::shared_ptr<libvrm::Node>& node);
 
   std::shared_ptr<RuntimeSpringJoint> GetRuntimeJoint(
-    const std::shared_ptr<libvrm::vrm::SpringJoint>& joint);
+    const std::shared_ptr<libvrm::SpringJoint>& joint);
   std::shared_ptr<RuntimeSpringCollision> GetRuntimeSpringCollision(
-    const std::shared_ptr<libvrm::vrm::SpringBone>& springBone);
+    const std::shared_ptr<libvrm::SpringBone>& springBone);
 
-  std::vector<libvrm::gltf::DrawItem> m_drawables;
-  std::span<const libvrm::gltf::DrawItem> Drawables();
+  std::vector<libvrm::DrawItem> m_drawables;
+  std::span<const libvrm::DrawItem> Drawables();
 
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
 
-  void SpringUpdate(const std::shared_ptr<libvrm::vrm::SpringBone>& solver,
+  void SpringUpdate(const std::shared_ptr<libvrm::SpringBone>& solver,
                     libvrm::Time deltaForSimulation);
-  void SpringDrawGizmo(const std::shared_ptr<libvrm::vrm::SpringBone>& solver,
+  void SpringDrawGizmo(const std::shared_ptr<libvrm::SpringBone>& solver,
                        libvrm::IGizmoDrawer* gizmo);
   void SpringColliderDrawGizmo(
-    const std::shared_ptr<libvrm::vrm::SpringCollider>& collider,
+    const std::shared_ptr<libvrm::SpringCollider>& collider,
     libvrm::IGizmoDrawer* gizmo);
   DirectX::XMVECTOR SpringColliderPosition(
-    const std::shared_ptr<libvrm::vrm::SpringCollider>& collider);
+    const std::shared_ptr<libvrm::SpringCollider>& collider);
 
-  void NodeConstraintProcess(const libvrm::vrm::NodeConstraint& constraint,
+  void NodeConstraintProcess(const libvrm::NodeConstraint& constraint,
                              const std::shared_ptr<RuntimeNode>& dst);
 
   // humanpose
-  std::vector<libvrm::vrm::HumanBones> m_humanBoneMap;
+  std::vector<libvrm::HumanBones> m_humanBoneMap;
   std::vector<DirectX::XMFLOAT4> m_rotations;
-  libvrm::vrm::HumanPose m_pose;
-  libvrm::vrm::HumanPose UpdateHumanPose();
-  void SetHumanPose(const libvrm::vrm::HumanPose& pose);
+  libvrm::HumanPose m_pose;
+  libvrm::HumanPose UpdateHumanPose();
+  void SetHumanPose(const libvrm::HumanPose& pose);
   void SyncHierarchy();
   void DrawGizmo(libvrm::IGizmoDrawer* gizmo);
 };

@@ -13,7 +13,7 @@ enum PinDataTypes
 {
   HumanPose,
 };
-using InputData = std::variant<libvrm::vrm::HumanPose>;
+using InputData = std::variant<libvrm::HumanPose>;
 
 struct GraphPin
 {

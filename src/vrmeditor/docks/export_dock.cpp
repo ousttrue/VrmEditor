@@ -14,7 +14,7 @@ ExportDock::Create(const AddDockFunc& addDock,
                    const std::shared_ptr<runtimescene::RuntimeScene>& scene,
                    float indent)
 {
-  auto debug_table = std::make_shared<libvrm::gltf::GltfRoot>();
+  auto debug_table = std::make_shared<libvrm::GltfRoot>();
   // auto impl = std::make_shared<JsonGui>();
   // impl->SetScene(debug_table);
 

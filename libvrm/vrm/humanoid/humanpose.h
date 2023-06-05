@@ -4,7 +4,6 @@
 #include <span>
 
 namespace libvrm {
-namespace vrm {
 
 struct HumanPose
 {
@@ -95,5 +94,4 @@ struct HumanPose
   }
 };
 
-}
-}
+} // namespace

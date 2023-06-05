@@ -55,7 +55,7 @@ struct SliderLabel
 };
 
 static bool
-Enable(const std::shared_ptr<libvrm::vrm::Expression>& ex)
+Enable(const std::shared_ptr<libvrm::Expression>& ex)
 {
   if (!ex)
     return false;
@@ -64,10 +64,10 @@ Enable(const std::shared_ptr<libvrm::vrm::Expression>& ex)
 
 class VrmGui
 {
-  std::shared_ptr<libvrm::gltf::GltfRoot> m_scene;
+  std::shared_ptr<libvrm::GltfRoot> m_scene;
 
 public:
-  VrmGui(const std::shared_ptr<libvrm::gltf::GltfRoot>& scene)
+  VrmGui(const std::shared_ptr<libvrm::GltfRoot>& scene)
     : m_scene(scene)
   {
   }
@@ -86,25 +86,25 @@ public:
         ImGui::PushID("set1");
         // 喜怒哀楽驚
         auto emotion = SliderColor::FromHue(2.0f / 7);
-        auto happy = ex->Get(libvrm::vrm::ExpressionPreset::happy);
+        auto happy = ex->Get(libvrm::ExpressionPreset::happy);
         int i = 0;
         s_labels.push_back({
           VSlider(
             i++, "happy", Enable(happy) ? &happy->weight : nullptr, emotion),
           "喜",
         });
-        auto angry = ex->Get(libvrm::vrm::ExpressionPreset::angry);
+        auto angry = ex->Get(libvrm::ExpressionPreset::angry);
         s_labels.push_back({
           VSlider(
             i++, "angry", Enable(angry) ? &angry->weight : nullptr, emotion),
           "怒",
         });
-        auto sad = ex->Get(libvrm::vrm::ExpressionPreset::sad);
+        auto sad = ex->Get(libvrm::ExpressionPreset::sad);
         s_labels.push_back({
           VSlider(i++, "sad", Enable(sad) ? &sad->weight : nullptr, emotion),
           "哀",
         });
-        auto relaxed = ex->Get(libvrm::vrm::ExpressionPreset::relaxed);
+        auto relaxed = ex->Get(libvrm::ExpressionPreset::relaxed);
         s_labels.push_back({
           VSlider(i++,
                   "relaxed",
@@ -112,7 +112,7 @@ public:
                   emotion),
           "楽",
         });
-        auto surprised = ex->Get(libvrm::vrm::ExpressionPreset::surprised);
+        auto surprised = ex->Get(libvrm::ExpressionPreset::surprised);
         s_labels.push_back({
           VSlider(i++,
                   "surprised",
@@ -122,31 +122,31 @@ public:
         });
         // lipsync
         auto lipsync = SliderColor::FromHue(0.0f / 7);
-        auto lip_aa = ex->Get(libvrm::vrm::ExpressionPreset::aa);
+        auto lip_aa = ex->Get(libvrm::ExpressionPreset::aa);
         s_labels.push_back({
           VSlider(
             i++, "aa", Enable(lip_aa) ? &lip_aa->weight : nullptr, lipsync),
           "aa",
         });
-        auto lip_ih = ex->Get(libvrm::vrm::ExpressionPreset::ih);
+        auto lip_ih = ex->Get(libvrm::ExpressionPreset::ih);
         s_labels.push_back({
           VSlider(
             i++, "ih", Enable(lip_ih) ? &lip_ih->weight : nullptr, lipsync),
           "ih",
         });
-        auto lip_ou = ex->Get(libvrm::vrm::ExpressionPreset::ou);
+        auto lip_ou = ex->Get(libvrm::ExpressionPreset::ou);
         s_labels.push_back({
           VSlider(
             i++, "ou", Enable(lip_ou) ? &lip_ou->weight : nullptr, lipsync),
           "ou",
         });
-        auto lip_ee = ex->Get(libvrm::vrm::ExpressionPreset::ee);
+        auto lip_ee = ex->Get(libvrm::ExpressionPreset::ee);
         s_labels.push_back({
           VSlider(
             i++, "ee", Enable(lip_ee) ? &lip_ee->weight : nullptr, lipsync),
           "ee",
         });
-        auto lip_oh = ex->Get(libvrm::vrm::ExpressionPreset::oh);
+        auto lip_oh = ex->Get(libvrm::ExpressionPreset::oh);
         s_labels.push_back({
           VSlider(
             i++, "oh", Enable(lip_oh) ? &lip_oh->weight : nullptr, lipsync),
@@ -154,7 +154,7 @@ public:
         });
         // blink
         auto blink = SliderColor::FromHue(4.0f / 7);
-        auto blink_LR = ex->Get(libvrm::vrm::ExpressionPreset::blink);
+        auto blink_LR = ex->Get(libvrm::ExpressionPreset::blink);
         s_labels.push_back({
           VSlider(i++,
                   "blink",
@@ -162,7 +162,7 @@ public:
                   blink),
           "--",
         });
-        auto blink_L = ex->Get(libvrm::vrm::ExpressionPreset::blinkLeft);
+        auto blink_L = ex->Get(libvrm::ExpressionPreset::blinkLeft);
         s_labels.push_back({
           VSlider(i++,
                   "blinkLeft",
@@ -170,7 +170,7 @@ public:
                   blink),
           "󰈈-",
         });
-        auto blink_R = ex->Get(libvrm::vrm::ExpressionPreset::blinkRight);
+        auto blink_R = ex->Get(libvrm::ExpressionPreset::blinkRight);
         s_labels.push_back({
           VSlider(i++,
                   "blinkRight",
@@ -180,7 +180,7 @@ public:
         });
         // lookat
         auto lookat = SliderColor::FromHue(6.0f / 7);
-        auto look_up = ex->Get(libvrm::vrm::ExpressionPreset::lookUp);
+        auto look_up = ex->Get(libvrm::ExpressionPreset::lookUp);
         s_labels.push_back({
           VSlider(i++,
                   "lookUp",
@@ -188,7 +188,7 @@ public:
                   lookat),
           "󰈈",
         });
-        auto look_down = ex->Get(libvrm::vrm::ExpressionPreset::lookDown);
+        auto look_down = ex->Get(libvrm::ExpressionPreset::lookDown);
         s_labels.push_back({
           VSlider(i++,
                   "lookDown",
@@ -196,7 +196,7 @@ public:
                   lookat),
           "󰈈",
         });
-        auto look_right = ex->Get(libvrm::vrm::ExpressionPreset::lookRight);
+        auto look_right = ex->Get(libvrm::ExpressionPreset::lookRight);
         s_labels.push_back({
           VSlider(i++,
                   "lookRight",
@@ -204,7 +204,7 @@ public:
                   lookat),
           "󰈈",
         });
-        auto look_left = ex->Get(libvrm::vrm::ExpressionPreset::lookLeft);
+        auto look_left = ex->Get(libvrm::ExpressionPreset::lookLeft);
         s_labels.push_back({
           VSlider(i++,
                   "lookLeft",
@@ -242,12 +242,12 @@ public:
   void Show()
   {
     switch (m_scene->m_type) {
-      case libvrm::gltf::ModelType::Gltf:
+      case libvrm::ModelType::Gltf:
         break;
-      case libvrm::gltf::ModelType::Vrm0:
+      case libvrm::ModelType::Vrm0:
         ImGui::Text("%s", "vrm-0.x");
         break;
-      case libvrm::gltf::ModelType::Vrm1:
+      case libvrm::ModelType::Vrm1:
         ImGui::Text("%s", "vrm-1.0");
         break;
     }
@@ -273,7 +273,7 @@ public:
 void
 VrmDock::CreateVrm(const AddDockFunc& addDock,
                    std::string_view title,
-                   const std::shared_ptr<libvrm::gltf::GltfRoot>& scene)
+                   const std::shared_ptr<libvrm::GltfRoot>& scene)
 {
   auto gui = std::make_shared<VrmGui>(scene);
 

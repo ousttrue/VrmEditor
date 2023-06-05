@@ -5,7 +5,6 @@
 #include <string_view>
 
 namespace libvrm {
-namespace vrm {
 
 enum class VrmVersion
 {
@@ -349,5 +348,5 @@ HumanBoneToWidthDepth(HumanBones bone)
       return { 0.05f, 0.05f };
   }
 }
-}
-}
+
+} // namespace

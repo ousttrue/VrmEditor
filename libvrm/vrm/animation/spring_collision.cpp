@@ -3,7 +3,7 @@
 namespace runtimescene {
 
 RuntimeSpringCollision::RuntimeSpringCollision(
-  const std::shared_ptr<libvrm::vrm::SpringBone>& springBone)
+  const std::shared_ptr<libvrm::SpringBone>& springBone)
 {
   for (auto& group : springBone->Colliders) {
     for (auto& collider : group->Colliders) {

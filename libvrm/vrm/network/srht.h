@@ -68,238 +68,238 @@ enum class HumanoidBones : uint16_t
   RIGHT_LITTLE_INTERMEDIATE,
   RIGHT_LITTLE_DISTAL,
 };
-inline std::optional<vrm::HumanBones>
+inline std::optional<HumanBones>
 ToVrmBone(srht::HumanoidBones src)
 {
   switch (src) {
       // body: 6
     case HumanoidBones::HIPS:
-      return vrm::HumanBones::hips;
+      return HumanBones::hips;
     case HumanoidBones::SPINE:
-      return vrm::HumanBones::spine;
+      return HumanBones::spine;
     case HumanoidBones::CHEST:
-      return vrm::HumanBones::chest;
+      return HumanBones::chest;
     case HumanoidBones::UPPER_CHEST:
-      return vrm::HumanBones::upperChest;
+      return HumanBones::upperChest;
     case HumanoidBones::NECK:
-      return vrm::HumanBones::neck;
+      return HumanBones::neck;
     case HumanoidBones::HEAD:
-      return vrm::HumanBones::head;
+      return HumanBones::head;
       // legs: 4 x 2
     case HumanoidBones::LEFT_UPPER_LEG:
-      return vrm::HumanBones::leftUpperLeg;
+      return HumanBones::leftUpperLeg;
     case HumanoidBones::LEFT_LOWER_LEG:
-      return vrm::HumanBones::leftLowerLeg;
+      return HumanBones::leftLowerLeg;
     case HumanoidBones::LEFT_FOOT:
-      return vrm::HumanBones::leftFoot;
+      return HumanBones::leftFoot;
     case HumanoidBones::LEFT_TOES:
-      return vrm::HumanBones::leftToes;
+      return HumanBones::leftToes;
     case HumanoidBones::RIGHT_UPPER_LEG:
-      return vrm::HumanBones::rightUpperLeg;
+      return HumanBones::rightUpperLeg;
     case HumanoidBones::RIGHT_LOWER_LEG:
-      return vrm::HumanBones::rightLowerLeg;
+      return HumanBones::rightLowerLeg;
     case HumanoidBones::RIGHT_FOOT:
-      return vrm::HumanBones::rightFoot;
+      return HumanBones::rightFoot;
     case HumanoidBones::RIGHT_TOES:
-      return vrm::HumanBones::rightToes;
+      return HumanBones::rightToes;
       // arms: 4 x 2
     case HumanoidBones::LEFT_SHOULDER:
-      return vrm::HumanBones::leftShoulder;
+      return HumanBones::leftShoulder;
     case HumanoidBones::LEFT_UPPER_ARM:
-      return vrm::HumanBones::leftUpperArm;
+      return HumanBones::leftUpperArm;
     case HumanoidBones::LEFT_LOWER_ARM:
-      return vrm::HumanBones::leftLowerArm;
+      return HumanBones::leftLowerArm;
     case HumanoidBones::LEFT_HAND:
-      return vrm::HumanBones::leftHand;
+      return HumanBones::leftHand;
     case HumanoidBones::RIGHT_SHOULDER:
-      return vrm::HumanBones::rightShoulder;
+      return HumanBones::rightShoulder;
     case HumanoidBones::RIGHT_UPPER_ARM:
-      return vrm::HumanBones::rightUpperArm;
+      return HumanBones::rightUpperArm;
     case HumanoidBones::RIGHT_LOWER_ARM:
-      return vrm::HumanBones::rightLowerArm;
+      return HumanBones::rightLowerArm;
     case HumanoidBones::RIGHT_HAND:
-      return vrm::HumanBones::rightHand;
+      return HumanBones::rightHand;
       // fingers: 3 x 5 x 2
     case HumanoidBones::LEFT_THUMB_METACARPAL:
-      return vrm::HumanBones::leftThumbMetacarpal;
+      return HumanBones::leftThumbMetacarpal;
     case HumanoidBones::LEFT_THUMB_PROXIMAL:
-      return vrm::HumanBones::leftThumbProximal;
+      return HumanBones::leftThumbProximal;
     case HumanoidBones::LEFT_THUMB_DISTAL:
-      return vrm::HumanBones::leftThumbDistal;
+      return HumanBones::leftThumbDistal;
     case HumanoidBones::LEFT_INDEX_PROXIMAL:
-      return vrm::HumanBones::leftIndexProximal;
+      return HumanBones::leftIndexProximal;
     case HumanoidBones::LEFT_INDEX_INTERMEDIATE:
-      return vrm::HumanBones::leftIndexIntermediate;
+      return HumanBones::leftIndexIntermediate;
     case HumanoidBones::LEFT_INDEX_DISTAL:
-      return vrm::HumanBones::leftIndexDistal;
+      return HumanBones::leftIndexDistal;
     case HumanoidBones::LEFT_MIDDLE_PROXIMAL:
-      return vrm::HumanBones::leftMiddleProximal;
+      return HumanBones::leftMiddleProximal;
     case HumanoidBones::LEFT_MIDDLE_INTERMEDIATE:
-      return vrm::HumanBones::leftMiddleIntermediate;
+      return HumanBones::leftMiddleIntermediate;
     case HumanoidBones::LEFT_MIDDLE_DISTAL:
-      return vrm::HumanBones::leftMiddleDistal;
+      return HumanBones::leftMiddleDistal;
     case HumanoidBones::LEFT_RING_PROXIMAL:
-      return vrm::HumanBones::leftRingProximal;
+      return HumanBones::leftRingProximal;
     case HumanoidBones::LEFT_RING_INTERMEDIATE:
-      return vrm::HumanBones::leftRingIntermediate;
+      return HumanBones::leftRingIntermediate;
     case HumanoidBones::LEFT_RING_DISTAL:
-      return vrm::HumanBones::leftRingDistal;
+      return HumanBones::leftRingDistal;
     case HumanoidBones::LEFT_LITTLE_PROXIMAL:
-      return vrm::HumanBones::leftLittleProximal;
+      return HumanBones::leftLittleProximal;
     case HumanoidBones::LEFT_LITTLE_INTERMEDIATE:
-      return vrm::HumanBones::leftLittleIntermediate;
+      return HumanBones::leftLittleIntermediate;
     case HumanoidBones::LEFT_LITTLE_DISTAL:
-      return vrm::HumanBones::leftLittleDistal;
+      return HumanBones::leftLittleDistal;
     case HumanoidBones::RIGHT_THUMB_METACARPAL:
-      return vrm::HumanBones::rightThumbMetacarpal;
+      return HumanBones::rightThumbMetacarpal;
     case HumanoidBones::RIGHT_THUMB_PROXIMAL:
-      return vrm::HumanBones::rightThumbProximal;
+      return HumanBones::rightThumbProximal;
     case HumanoidBones::RIGHT_THUMB_DISTAL:
-      return vrm::HumanBones::rightThumbMetacarpal;
+      return HumanBones::rightThumbMetacarpal;
     case HumanoidBones::RIGHT_INDEX_PROXIMAL:
-      return vrm::HumanBones::rightIndexProximal;
+      return HumanBones::rightIndexProximal;
     case HumanoidBones::RIGHT_INDEX_INTERMEDIATE:
-      return vrm::HumanBones::rightIndexIntermediate;
+      return HumanBones::rightIndexIntermediate;
     case HumanoidBones::RIGHT_INDEX_DISTAL:
-      return vrm::HumanBones::rightIndexDistal;
+      return HumanBones::rightIndexDistal;
     case HumanoidBones::RIGHT_MIDDLE_PROXIMAL:
-      return vrm::HumanBones::rightMiddleProximal;
+      return HumanBones::rightMiddleProximal;
     case HumanoidBones::RIGHT_MIDDLE_INTERMEDIATE:
-      return vrm::HumanBones::rightMiddleIntermediate;
+      return HumanBones::rightMiddleIntermediate;
     case HumanoidBones::RIGHT_MIDDLE_DISTAL:
-      return vrm::HumanBones::rightMiddleDistal;
+      return HumanBones::rightMiddleDistal;
     case HumanoidBones::RIGHT_RING_PROXIMAL:
-      return vrm::HumanBones::rightRingProximal;
+      return HumanBones::rightRingProximal;
     case HumanoidBones::RIGHT_RING_INTERMEDIATE:
-      return vrm::HumanBones::rightRingIntermediate;
+      return HumanBones::rightRingIntermediate;
     case HumanoidBones::RIGHT_RING_DISTAL:
-      return vrm::HumanBones::rightRingDistal;
+      return HumanBones::rightRingDistal;
     case HumanoidBones::RIGHT_LITTLE_PROXIMAL:
-      return vrm::HumanBones::rightLittleProximal;
+      return HumanBones::rightLittleProximal;
     case HumanoidBones::RIGHT_LITTLE_INTERMEDIATE:
-      return vrm::HumanBones::rightLittleIntermediate;
+      return HumanBones::rightLittleIntermediate;
     case HumanoidBones::RIGHT_LITTLE_DISTAL:
-      return vrm::HumanBones::rightLittleDistal;
+      return HumanBones::rightLittleDistal;
   }
 
   return {};
 }
 inline HumanoidBones
-FromVrmBone(vrm::HumanBones vrm_bone)
+FromVrmBone(HumanBones vrm_bone)
 {
   switch (vrm_bone) {
-    case vrm::HumanBones::hips:
+    case HumanBones::hips:
       return HumanoidBones::HIPS;
-    case vrm::HumanBones::spine:
+    case HumanBones::spine:
       return HumanoidBones::SPINE;
-    case vrm::HumanBones::chest:
+    case HumanBones::chest:
       return HumanoidBones::CHEST;
-    case vrm::HumanBones::upperChest:
+    case HumanBones::upperChest:
       return HumanoidBones::UPPER_CHEST;
-    case vrm::HumanBones::neck:
+    case HumanBones::neck:
       return HumanoidBones::NECK;
-    case vrm::HumanBones::head:
+    case HumanBones::head:
       return HumanoidBones::HEAD;
-    case vrm::HumanBones::leftEye:
+    case HumanBones::leftEye:
       return {};
-    case vrm::HumanBones::rightEye:
+    case HumanBones::rightEye:
       return {};
-    case vrm::HumanBones::jaw:
+    case HumanBones::jaw:
       return {};
       // arms
-    case vrm::HumanBones::leftShoulder:
+    case HumanBones::leftShoulder:
       return HumanoidBones::LEFT_SHOULDER;
-    case vrm::HumanBones::leftUpperArm:
+    case HumanBones::leftUpperArm:
       return HumanoidBones::LEFT_UPPER_ARM;
-    case vrm::HumanBones::leftLowerArm:
+    case HumanBones::leftLowerArm:
       return HumanoidBones::LEFT_LOWER_ARM;
-    case vrm::HumanBones::leftHand:
+    case HumanBones::leftHand:
       return HumanoidBones::LEFT_HAND;
-    case vrm::HumanBones::rightShoulder:
+    case HumanBones::rightShoulder:
       return HumanoidBones::RIGHT_SHOULDER;
-    case vrm::HumanBones::rightUpperArm:
+    case HumanBones::rightUpperArm:
       return HumanoidBones::RIGHT_UPPER_ARM;
-    case vrm::HumanBones::rightLowerArm:
+    case HumanBones::rightLowerArm:
       return HumanoidBones::RIGHT_LOWER_ARM;
-    case vrm::HumanBones::rightHand:
+    case HumanBones::rightHand:
       return HumanoidBones::RIGHT_HAND;
       // legs
-    case vrm::HumanBones::leftUpperLeg:
+    case HumanBones::leftUpperLeg:
       return HumanoidBones::LEFT_UPPER_LEG;
-    case vrm::HumanBones::leftLowerLeg:
+    case HumanBones::leftLowerLeg:
       return HumanoidBones::LEFT_LOWER_LEG;
-    case vrm::HumanBones::leftFoot:
+    case HumanBones::leftFoot:
       return HumanoidBones::LEFT_FOOT;
-    case vrm::HumanBones::leftToes:
+    case HumanBones::leftToes:
       return HumanoidBones::LEFT_TOES;
-    case vrm::HumanBones::rightUpperLeg:
+    case HumanBones::rightUpperLeg:
       return HumanoidBones::RIGHT_UPPER_LEG;
-    case vrm::HumanBones::rightLowerLeg:
+    case HumanBones::rightLowerLeg:
       return HumanoidBones::RIGHT_LOWER_LEG;
-    case vrm::HumanBones::rightFoot:
+    case HumanBones::rightFoot:
       return HumanoidBones::RIGHT_FOOT;
-    case vrm::HumanBones::rightToes:
+    case HumanBones::rightToes:
       return HumanoidBones::RIGHT_TOES;
       // fingers
-    case vrm::HumanBones::leftThumbMetacarpal:
+    case HumanBones::leftThumbMetacarpal:
       return HumanoidBones::LEFT_THUMB_METACARPAL;
-    case vrm::HumanBones::leftThumbProximal:
+    case HumanBones::leftThumbProximal:
       return HumanoidBones::LEFT_THUMB_PROXIMAL;
-    case vrm::HumanBones::leftThumbDistal:
+    case HumanBones::leftThumbDistal:
       return HumanoidBones::LEFT_THUMB_DISTAL;
-    case vrm::HumanBones::leftIndexProximal:
+    case HumanBones::leftIndexProximal:
       return HumanoidBones::LEFT_INDEX_PROXIMAL;
-    case vrm::HumanBones::leftIndexIntermediate:
+    case HumanBones::leftIndexIntermediate:
       return HumanoidBones::LEFT_INDEX_INTERMEDIATE;
-    case vrm::HumanBones::leftIndexDistal:
+    case HumanBones::leftIndexDistal:
       return HumanoidBones::LEFT_INDEX_DISTAL;
-    case vrm::HumanBones::leftMiddleProximal:
+    case HumanBones::leftMiddleProximal:
       return HumanoidBones::LEFT_MIDDLE_PROXIMAL;
-    case vrm::HumanBones::leftMiddleIntermediate:
+    case HumanBones::leftMiddleIntermediate:
       return HumanoidBones::LEFT_MIDDLE_INTERMEDIATE;
-    case vrm::HumanBones::leftMiddleDistal:
+    case HumanBones::leftMiddleDistal:
       return HumanoidBones::LEFT_MIDDLE_DISTAL;
-    case vrm::HumanBones::leftRingProximal:
+    case HumanBones::leftRingProximal:
       return HumanoidBones::LEFT_RING_PROXIMAL;
-    case vrm::HumanBones::leftRingIntermediate:
+    case HumanBones::leftRingIntermediate:
       return HumanoidBones::LEFT_RING_INTERMEDIATE;
-    case vrm::HumanBones::leftRingDistal:
+    case HumanBones::leftRingDistal:
       return HumanoidBones::LEFT_RING_DISTAL;
-    case vrm::HumanBones::leftLittleProximal:
+    case HumanBones::leftLittleProximal:
       return HumanoidBones::LEFT_LITTLE_PROXIMAL;
-    case vrm::HumanBones::leftLittleIntermediate:
+    case HumanBones::leftLittleIntermediate:
       return HumanoidBones::LEFT_LITTLE_INTERMEDIATE;
-    case vrm::HumanBones::leftLittleDistal:
+    case HumanBones::leftLittleDistal:
       return HumanoidBones::LEFT_LITTLE_DISTAL;
-    case vrm::HumanBones::rightThumbMetacarpal:
+    case HumanBones::rightThumbMetacarpal:
       return HumanoidBones::RIGHT_THUMB_METACARPAL;
-    case vrm::HumanBones::rightThumbProximal:
+    case HumanBones::rightThumbProximal:
       return HumanoidBones::RIGHT_THUMB_PROXIMAL;
-    case vrm::HumanBones::rightThumbDistal:
+    case HumanBones::rightThumbDistal:
       return HumanoidBones::RIGHT_THUMB_DISTAL;
-    case vrm::HumanBones::rightIndexProximal:
+    case HumanBones::rightIndexProximal:
       return HumanoidBones::RIGHT_INDEX_PROXIMAL;
-    case vrm::HumanBones::rightIndexIntermediate:
+    case HumanBones::rightIndexIntermediate:
       return HumanoidBones::RIGHT_INDEX_INTERMEDIATE;
-    case vrm::HumanBones::rightIndexDistal:
+    case HumanBones::rightIndexDistal:
       return HumanoidBones::RIGHT_INDEX_DISTAL;
-    case vrm::HumanBones::rightMiddleProximal:
+    case HumanBones::rightMiddleProximal:
       return HumanoidBones::RIGHT_MIDDLE_PROXIMAL;
-    case vrm::HumanBones::rightMiddleIntermediate:
+    case HumanBones::rightMiddleIntermediate:
       return HumanoidBones::RIGHT_MIDDLE_INTERMEDIATE;
-    case vrm::HumanBones::rightMiddleDistal:
+    case HumanBones::rightMiddleDistal:
       return HumanoidBones::RIGHT_MIDDLE_DISTAL;
-    case vrm::HumanBones::rightRingProximal:
+    case HumanBones::rightRingProximal:
       return HumanoidBones::RIGHT_RING_PROXIMAL;
-    case vrm::HumanBones::rightRingIntermediate:
+    case HumanBones::rightRingIntermediate:
       return HumanoidBones::RIGHT_RING_INTERMEDIATE;
-    case vrm::HumanBones::rightRingDistal:
+    case HumanBones::rightRingDistal:
       return HumanoidBones::RIGHT_RING_DISTAL;
-    case vrm::HumanBones::rightLittleProximal:
+    case HumanBones::rightLittleProximal:
       return HumanoidBones::RIGHT_LITTLE_PROXIMAL;
-    case vrm::HumanBones::rightLittleIntermediate:
+    case HumanBones::rightLittleIntermediate:
       return HumanoidBones::RIGHT_LITTLE_INTERMEDIATE;
-    case vrm::HumanBones::rightLittleDistal:
+    case HumanBones::rightLittleDistal:
       return HumanoidBones::RIGHT_LITTLE_DISTAL;
 
     default:

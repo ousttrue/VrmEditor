@@ -71,7 +71,7 @@ ScenePreview::RenderStatic(const grapho::OrbitView& view)
     ImGuizmo::GetContext().mAllowActiveHoverItem = true;
     ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
     if (auto humanoid = node->Humanoid) {
-      if (*humanoid == libvrm::vrm::HumanBones::hips) {
+      if (*humanoid == libvrm::HumanBones::hips) {
         operation = operation | ImGuizmo::TRANSLATE;
       }
     } else {
@@ -116,7 +116,7 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
     ImGuizmo::GetContext().mAllowActiveHoverItem = true;
     ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
     if (auto humanoid = init->Humanoid) {
-      if (*humanoid == libvrm::vrm::HumanBones::hips) {
+      if (*humanoid == libvrm::HumanBones::hips) {
         operation = operation | ImGuizmo::TRANSLATE;
       }
     } else {
@@ -140,7 +140,7 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
 }
 
 void
-ScenePreview::RenderPass(std::span<const libvrm::gltf::DrawItem> drawables)
+ScenePreview::RenderPass(std::span<const libvrm::DrawItem> drawables)
 {
   glDisable(GL_DEPTH_TEST);
   if (m_settings->Skybox) {

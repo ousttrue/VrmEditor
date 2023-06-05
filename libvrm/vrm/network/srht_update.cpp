@@ -47,7 +47,7 @@ namespace libvrm {
 
 namespace srht {
 void
-UpdateScene(const std::shared_ptr<gltf::GltfRoot>& scene,
+UpdateScene(const std::shared_ptr<GltfRoot>& scene,
             std::span<const uint8_t> data)
 {
   BinaryReader r(data);
@@ -74,7 +74,7 @@ UpdateScene(const std::shared_ptr<gltf::GltfRoot>& scene,
     for (int i = 0; i < joints.size(); ++i) {
       char buf[256];
       snprintf(buf, sizeof(buf), "%d", i);
-      auto ptr = std::make_shared<gltf::Node>(buf);
+      auto ptr = std::make_shared<Node>(buf);
       auto& joint = joints[i];
       ptr->InitialTransform.Translation.x = joint.xFromParent;
       ptr->InitialTransform.Translation.y = joint.yFromParent;
@@ -94,7 +94,7 @@ UpdateScene(const std::shared_ptr<gltf::GltfRoot>& scene,
         scene->m_roots.push_back(ptr);
       } else {
         auto parent = scene->m_nodes[joint.parentBoneIndex];
-        gltf::Node::AddChild(parent, ptr);
+        Node::AddChild(parent, ptr);
       }
     }
     scene->InitializeNodes();
@@ -104,7 +104,7 @@ UpdateScene(const std::shared_ptr<gltf::GltfRoot>& scene,
       auto header = r.Get<FrameHeader>();
       auto root = scene->m_roots[0];
       auto humanoid = root->Humanoid;
-      if (!humanoid || *humanoid == vrm::HumanBones::hips) {
+      if (!humanoid || *humanoid == HumanBones::hips) {
         // only move non humanoid or hips
         // root->Transform.Translation.x = header.x;
         // root->Transform.Translation.y = header.y;
@@ -133,17 +133,17 @@ UpdateScene(const std::shared_ptr<gltf::GltfRoot>& scene,
 
 void
 MakeSkeleton(uint32_t skeletonId,
-             const std::shared_ptr<gltf::Node>& root,
+             const std::shared_ptr<Node>& root,
              std::vector<uint8_t>& out)
 {
 }
 
 void
 MakeFrame(uint32_t skeletonId,
-          const std::shared_ptr<gltf::Node>& root,
+          const std::shared_ptr<Node>& root,
           std::vector<uint8_t>& out)
 {
 }
 
-}
-}
+} // namespace
+} // namespace

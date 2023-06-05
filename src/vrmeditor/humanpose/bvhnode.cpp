@@ -14,7 +14,7 @@ namespace humanpose {
 BvhNode::BvhNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
-  auto table = std::make_shared<libvrm::gltf::GltfRoot>();
+  auto table = std::make_shared<libvrm::GltfRoot>();
   m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
 
   // update preview
@@ -23,7 +23,7 @@ BvhNode::BvhNode(int id, std::string_view name)
 
 void
 BvhNode::SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
-                const std::shared_ptr<libvrm::vrm::HumanBoneMap>& map)
+                const std::shared_ptr<libvrm::HumanBoneMap>& map)
 {
   m_bvh = bvh;
 
@@ -41,7 +41,7 @@ void
 BvhNode::TimeUpdate(libvrm::Time time)
 {
   if (m_initialPose) {
-    Outputs[0].Value = libvrm::vrm::HumanPose::Initial();
+    Outputs[0].Value = libvrm::HumanPose::Initial();
     // m_scene->SetInitialPose();
   } else {
     // update scene from bvh

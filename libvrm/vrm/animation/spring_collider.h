@@ -8,11 +8,8 @@
 #include <vector>
 
 namespace libvrm {
-namespace gltf {
-struct Node;
-}
 
-namespace vrm {
+struct Node;
 
 enum class SpringColliderShapeType
 {
@@ -22,7 +19,7 @@ enum class SpringColliderShapeType
 
 struct SpringCollider
 {
-  std::shared_ptr<gltf::Node> Node;
+  std::shared_ptr<Node> Node;
   SpringColliderShapeType Type = SpringColliderShapeType::Sphere;
   DirectX::XMFLOAT3 Offset = { 0, 0, 0 };
   float Radius = 0;
@@ -73,5 +70,4 @@ struct SpringColliderGroup
 //   return os;
 // }
 
-}
-}
+} // namespace

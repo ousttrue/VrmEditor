@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace runtimescene {
+namespace libvrm {
 
 struct Skin
 {
@@ -17,4 +17,4 @@ struct Skin
   std::optional<uint32_t> Root;
 };
 
-}
+} // namespace

@@ -224,11 +224,11 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
   return ptr;
 }
 
-static std::expected<std::shared_ptr<Skin>, std::string>
+static std::expected<std::shared_ptr<libvrm::Skin>, std::string>
 ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
 {
   auto skin = root.Skins[i];
-  auto ptr = std::make_shared<Skin>();
+  auto ptr = std::make_shared<libvrm::Skin>();
   ptr->Name = u8_to_str(skin.Name());
   for (auto joint : skin.Joints) {
     ptr->Joints.push_back(joint);
@@ -340,7 +340,7 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
   return ptr;
 }
 
-RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
+RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::GltfRoot>& table)
   : m_table(table)
 {
   Reset();
@@ -384,7 +384,7 @@ RuntimeScene::Reset()
 }
 
 std::shared_ptr<RuntimeNode>
-RuntimeScene::GetRuntimeNode(const std::shared_ptr<libvrm::gltf::Node>& node)
+RuntimeScene::GetRuntimeNode(const std::shared_ptr<libvrm::Node>& node)
 {
   auto found = m_nodeMap.find(node);
   if (found != m_nodeMap.end()) {
@@ -410,7 +410,7 @@ RuntimeScene::GetDeformedMesh(uint32_t mesh)
 
 std::shared_ptr<RuntimeSpringJoint>
 RuntimeScene::GetRuntimeJoint(
-  const std::shared_ptr<libvrm::vrm::SpringJoint>& joint)
+  const std::shared_ptr<libvrm::SpringJoint>& joint)
 {
   auto found = m_jointMap.find(joint);
   if (found != m_jointMap.end()) {
@@ -424,7 +424,7 @@ RuntimeScene::GetRuntimeJoint(
 
 std::shared_ptr<RuntimeSpringCollision>
 RuntimeScene::GetRuntimeSpringCollision(
-  const std::shared_ptr<libvrm::vrm::SpringBone>& springBone)
+  const std::shared_ptr<libvrm::SpringBone>& springBone)
 {
   auto found = m_springCollisionMap.find(springBone);
   if (found != m_springCollisionMap.end()) {
@@ -436,7 +436,7 @@ RuntimeScene::GetRuntimeSpringCollision(
   return runtime;
 }
 
-std::span<const libvrm::gltf::DrawItem>
+std::span<const libvrm::DrawItem>
 RuntimeScene::Drawables()
 {
   if (!m_table->m_gltf) {
@@ -473,7 +473,7 @@ RuntimeScene::Drawables()
     // VRM0 expression to morphTarget
     auto nodeToIndex = [nodes = m_table->m_nodes,
                         expressions = m_table->m_expressions](
-                         const std::shared_ptr<libvrm::gltf::Node>& node) {
+                         const std::shared_ptr<libvrm::Node>& node) {
       for (uint32_t i = 0; i < nodes.size(); ++i) {
         if (node == nodes[i]) {
           return i;
@@ -577,7 +577,7 @@ RuntimeScene::DrawGizmo(libvrm::IGizmoDrawer* gizmo)
 
 void
 RuntimeScene::SpringUpdate(
-  const std::shared_ptr<libvrm::vrm::SpringBone>& spring,
+  const std::shared_ptr<libvrm::SpringBone>& spring,
   libvrm::Time delta)
 {
   bool doUpdate = delta.count() > 0;
@@ -595,7 +595,7 @@ RuntimeScene::SpringUpdate(
 
 void
 RuntimeScene::SpringDrawGizmo(
-  const std::shared_ptr<libvrm::vrm::SpringBone>& solver,
+  const std::shared_ptr<libvrm::SpringBone>& solver,
   libvrm::IGizmoDrawer* gizmo)
 {
   for (auto& joint : solver->Joints) {
@@ -606,7 +606,7 @@ RuntimeScene::SpringDrawGizmo(
 
 void
 RuntimeScene::SpringColliderDrawGizmo(
-  const std::shared_ptr<libvrm::vrm::SpringCollider>& collider,
+  const std::shared_ptr<libvrm::SpringCollider>& collider,
   libvrm::IGizmoDrawer* gizmo)
 {
   DirectX::XMFLOAT3 offset;
@@ -615,11 +615,11 @@ RuntimeScene::SpringColliderDrawGizmo(
     GetRuntimeNode(collider->Node)
       ->WorldTransformPoint(DirectX::XMLoadFloat3(&collider->Offset)));
   switch (collider->Type) {
-    case libvrm::vrm::SpringColliderShapeType::Sphere:
+    case libvrm::SpringColliderShapeType::Sphere:
       gizmo->DrawSphere(offset, collider->Radius, { 0, 1, 1, 1 });
       break;
 
-    case libvrm::vrm::SpringColliderShapeType::Capsule: {
+    case libvrm::SpringColliderShapeType::Capsule: {
       DirectX::XMFLOAT3 tail;
       DirectX::XMStoreFloat3(
         &tail,
@@ -636,13 +636,13 @@ RuntimeScene::SpringColliderDrawGizmo(
 
 DirectX::XMVECTOR
 RuntimeScene::SpringColliderPosition(
-  const std::shared_ptr<libvrm::vrm::SpringCollider>& collider)
+  const std::shared_ptr<libvrm::SpringCollider>& collider)
 {
   return GetRuntimeNode(collider->Node)
     ->WorldTransformPoint(DirectX::XMLoadFloat3(&collider->Offset));
 }
 
-libvrm::vrm::HumanPose
+libvrm::HumanPose
 RuntimeScene::UpdateHumanPose()
 {
   auto mult4 = [](const DirectX::XMVECTOR& q0,
@@ -660,7 +660,7 @@ RuntimeScene::UpdateHumanPose()
   for (auto& node : m_nodes) {
     if (auto humanoid = node->Node->Humanoid) {
       m_humanBoneMap.push_back(*humanoid);
-      if (m_humanBoneMap.back() == libvrm::vrm::HumanBones::hips) {
+      if (m_humanBoneMap.back() == libvrm::HumanBones::hips) {
         // delta move
         DirectX::XMStoreFloat3(
           &m_pose.RootPosition,
@@ -689,7 +689,7 @@ RuntimeScene::UpdateHumanPose()
 }
 
 void
-RuntimeScene::SetHumanPose(const libvrm::vrm::HumanPose& pose)
+RuntimeScene::SetHumanPose(const libvrm::HumanPose& pose)
 {
   assert(pose.Bones.size() == pose.Rotations.size());
 
@@ -803,7 +803,7 @@ RuntimeScene::SyncHierarchy()
 
 void
 RuntimeScene::NodeConstraintProcess(
-  const libvrm::vrm::NodeConstraint& constraint,
+  const libvrm::NodeConstraint& constraint,
   const std::shared_ptr<RuntimeNode>& dst)
 {
   auto src = constraint.Source.lock();

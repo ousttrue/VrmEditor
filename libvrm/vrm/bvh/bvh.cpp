@@ -398,7 +398,7 @@ Bvh::~Bvh() {}
 std::expected<std::shared_ptr<Bvh>, std::string>
 Bvh::FromFile(const std::filesystem::path& path)
 {
-  auto bytes = fileutil::ReadAllBytes(path);
+  auto bytes = ReadAllBytes(path);
   if (bytes.empty()) {
     return std::unexpected{ std::string("fail to read: " + path.string()) };
   }

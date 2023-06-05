@@ -26,7 +26,7 @@ struct InitialPose : public GraphNodeBase
 
   void TimeUpdate(libvrm::Time time) override
   {
-    Outputs[0].Value = libvrm::vrm::HumanPose::Initial();
+    Outputs[0].Value = libvrm::HumanPose::Initial();
   }
 };
 
@@ -92,8 +92,8 @@ HumanPoseStream::HumanPoseStream()
     {});
 
   sink->Pull = [this](GraphNodeBase::InputNodes inputs) {
-    if (std::holds_alternative<libvrm::vrm::HumanPose>(inputs[0])) {
-      auto value = std::get<libvrm::vrm::HumanPose>(inputs[0]);
+    if (std::holds_alternative<libvrm::HumanPose>(inputs[0])) {
+      auto value = std::get<libvrm::HumanPose>(inputs[0]);
       for (auto it = HumanPoseChanged.begin(); it != HumanPoseChanged.end();) {
         if ((*it)(value)) {
           ++it;
@@ -228,7 +228,7 @@ HumanPoseStream::TryRemoveLink(int link_id)
 bool
 HumanPoseStream::LoadMotion(const std::filesystem::path& path)
 {
-  auto bytes = libvrm::fileutil::ReadAllBytes(path);
+  auto bytes = libvrm::ReadAllBytes(path);
   if (bytes.empty()) {
     App::Instance().Log(LogLevel::Error) << "fail to read: " + path.string();
     return false;

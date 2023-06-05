@@ -213,7 +213,7 @@ struct IncludeExpander
       return std::unexpected{ "circular include !" };
     }
     IncludeFiles.push_back(path);
-    auto bytes = libvrm::fileutil::ReadAllBytes(path);
+    auto bytes = libvrm::ReadAllBytes(path);
     std::u8string_view source{ (const char8_t*)bytes.data(), bytes.size() };
 
     std::u8string dst;
@@ -233,7 +233,7 @@ struct IncludeExpander
 
   std::u8string ExpandInclude(const std::filesystem::path& path)
   {
-    auto bytes = libvrm::fileutil::ReadAllBytes(path);
+    auto bytes = libvrm::ReadAllBytes(path);
     std::u8string_view root_source{ (const char8_t*)bytes.data(),
                                     bytes.size() };
 

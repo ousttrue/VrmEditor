@@ -6,12 +6,12 @@ namespace runtimescene {
 
 struct RuntimeSpringCollision
 {
-  std::vector<std::shared_ptr<libvrm::vrm::SpringColliderGroup>> ColliderGroups;
+  std::vector<std::shared_ptr<libvrm::SpringColliderGroup>> ColliderGroups;
   int Current = 0;
   void Clear() { Current = 0; }
 
   RuntimeSpringCollision(
-    const std::shared_ptr<libvrm::vrm::SpringBone>& springBone);
+    const std::shared_ptr<libvrm::SpringBone>& springBone);
 
   std::optional<DirectX::XMVECTOR> Collide(const DirectX::XMVECTOR& pos,
                                            float radius);

@@ -1,8 +1,9 @@
 #pragma once
 #include "node.h"
+#include <algorithm>
 #include <functional>
 
-namespace libvrm::vrm {
+namespace libvrm {
 
 enum class ExpressionPreset
 {
@@ -46,20 +47,20 @@ union MorphTargetKey
 }
 
 template<>
-struct std::hash<libvrm::vrm::MorphTargetKey>
+struct std::hash<libvrm::MorphTargetKey>
 {
-  std::size_t operator()(const libvrm::vrm::MorphTargetKey& key) const
+  std::size_t operator()(const libvrm::MorphTargetKey& key) const
   {
     return key.Hash;
   }
 };
 
-namespace libvrm::vrm {
+namespace libvrm {
 struct ExpressionMorphTargetBind
 {
   // mesh index
   int mesh;
-  std::shared_ptr<gltf::Node> Node;
+  std::shared_ptr<Node> Node;
   // blendshape index
   int index;
   // max weight value(100)
@@ -77,7 +78,7 @@ struct ExpressionMaterialBind
 {};
 
 using NodeToIndexFunc =
-  std::function<uint32_t(const std::shared_ptr<gltf::Node>& node)>;
+  std::function<uint32_t(const std::shared_ptr<Node>& node)>;
 
 struct Expression
 {
@@ -225,4 +226,4 @@ struct Expressions
   }
 };
 
-}
+} // namespace

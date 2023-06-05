@@ -3,7 +3,7 @@
 #include <list>
 #include <memory>
 #include <unordered_set>
-#include <vrm/gltf.h>
+#include <vrm/gltfroot.h>
 #include <vrm/humanoid/humanbones.h>
 
 class FileWatcher;
@@ -89,7 +89,7 @@ public:
   void ProjectMode();
 
   std::shared_ptr<runtimescene::RuntimeScene> SetScene(
-    const std::shared_ptr<libvrm::gltf::GltfRoot>& scene);
+    const std::shared_ptr<libvrm::GltfRoot>& scene);
   LogStream Log(LogLevel level);
   void LoadImGuiIni(std::string_view ini);
   void LoadImNodesIni(std::string_view ini);

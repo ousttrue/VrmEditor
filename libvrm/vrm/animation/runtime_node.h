@@ -13,9 +13,9 @@ using PushInstance = std::function<void(const Instance&)>;
 
 struct RuntimeNode
 {
-  std::shared_ptr<libvrm::gltf::Node> Node;
+  std::shared_ptr<libvrm::Node> Node;
 
-  RuntimeNode(const std::shared_ptr<libvrm::gltf::Node>& node)
+  RuntimeNode(const std::shared_ptr<libvrm::Node>& node)
     : Node(node)
   {
     Transform = node->InitialTransform;
@@ -38,7 +38,7 @@ struct RuntimeNode
   }
 
   // local
-  libvrm::gltf::EuclideanTransform Transform = {};
+  libvrm::EuclideanTransform Transform = {};
   DirectX::XMFLOAT3 Scale = { 1, 1, 1 };
   DirectX::XMMATRIX Matrix() const
   {
@@ -47,7 +47,7 @@ struct RuntimeNode
   }
 
   // world
-  libvrm::gltf::EuclideanTransform WorldTransform = {};
+  libvrm::EuclideanTransform WorldTransform = {};
   DirectX::XMFLOAT3 WorldScale = { 1, 1, 1 };
   DirectX::XMMATRIX WorldMatrix() const
   {

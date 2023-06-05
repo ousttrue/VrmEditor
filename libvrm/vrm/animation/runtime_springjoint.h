@@ -1,8 +1,8 @@
 #pragma once
 #include "spring_collider.h"
 #include "spring_joint.h"
+#include "timeline.h"
 #include <DirectXMath.h>
-#include <vrm/scenetypes.h>
 
 namespace runtimescene {
 
@@ -11,14 +11,14 @@ struct RuntimeScene;
 
 struct RuntimeSpringJoint
 {
-  std::shared_ptr<libvrm::vrm::SpringJoint> Joint;
+  std::shared_ptr<libvrm::SpringJoint> Joint;
 
   DirectX::XMFLOAT3 m_currentTailPosotion;
   DirectX::XMFLOAT3 m_lastTailPosotion;
   float m_tailLength;
   DirectX::XMFLOAT3 m_initLocalTailDir;
 
-  RuntimeSpringJoint(const std::shared_ptr<libvrm::vrm::SpringJoint>& joint);
+  RuntimeSpringJoint(const std::shared_ptr<libvrm::SpringJoint>& joint);
 
   void Update(RuntimeScene* runtime,
               libvrm::Time time,

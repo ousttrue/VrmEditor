@@ -5,12 +5,8 @@
 #include <string_view>
 
 namespace libvrm {
-namespace gltf {
 
 struct Node;
-}
-
-namespace vrm {
 
 enum class NodeConstraintTypes
 {
@@ -118,7 +114,7 @@ GetRollVector(NodeConstraintRollAxis axis)
 struct NodeConstraint
 {
   NodeConstraintTypes Type;
-  std::weak_ptr<gltf::Node> Source;
+  std::weak_ptr<Node> Source;
   float Weight = 1.0f;
   union
   {
@@ -127,5 +123,4 @@ struct NodeConstraint
   };
 };
 
-}
-}
+} // namespace

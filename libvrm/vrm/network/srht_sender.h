@@ -14,10 +14,9 @@
 #include <asio.hpp>
 
 namespace libvrm {
-namespace gltf {
+
 struct Node;
 struct GltfRoot;
-}
 
 namespace srht {
 struct Payload;
@@ -44,12 +43,12 @@ public:
 
   void SendSkeleton(asio::ip::udp::endpoint ep,
                     uint32_t id,
-                    const std::shared_ptr<gltf::GltfRoot>& scene);
+                    const std::shared_ptr<GltfRoot>& scene);
   void SendFrame(asio::ip::udp::endpoint ep,
                  uint32_t id,
-                 const std::shared_ptr<gltf::GltfRoot>& scene,
+                 const std::shared_ptr<GltfRoot>& scene,
                  bool pack = true);
 };
 
-}
-}
+} // namespace
+} // namespace

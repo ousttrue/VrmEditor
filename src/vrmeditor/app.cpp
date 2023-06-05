@@ -94,7 +94,7 @@ App::ProjectMode()
 }
 
 std::shared_ptr<runtimescene::RuntimeScene>
-App::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& table)
+App::SetScene(const std::shared_ptr<libvrm::GltfRoot>& table)
 {
   glr::Release();
   m_runtime = std::make_shared<runtimescene::RuntimeScene>(table);
@@ -254,7 +254,7 @@ App::LoadPath(const std::filesystem::path& path)
 bool
 App::LoadModel(const std::filesystem::path& path)
 {
-  if (auto table = libvrm::gltf::LoadPath(path)) {
+  if (auto table = libvrm::LoadPath(path)) {
     auto scene = SetScene(*table);
     // bind time line
 
@@ -286,7 +286,7 @@ App::LoadModel(const std::filesystem::path& path)
     return true;
   } else {
     Log(LogLevel::Error) << table.error();
-    SetScene(std::make_shared<libvrm::gltf::GltfRoot>());
+    SetScene(std::make_shared<libvrm::GltfRoot>());
     return false;
   }
 }

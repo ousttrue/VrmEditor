@@ -3,7 +3,6 @@
 #include <iostream>
 
 namespace libvrm {
-namespace gltf {
 
 Node::Node(std::string_view name)
   : Name(name)
@@ -53,14 +52,14 @@ Node::GetShapeTail()
   for (auto& child : Children) {
     if (auto childHumanBone = child->Humanoid) {
       switch (*childHumanBone) {
-        case vrm::HumanBones::spine:
-        case vrm::HumanBones::neck:
-        case vrm::HumanBones::leftMiddleProximal:
-        case vrm::HumanBones::rightMiddleProximal:
+        case HumanBones::spine:
+        case HumanBones::neck:
+        case HumanBones::leftMiddleProximal:
+        case HumanBones::rightMiddleProximal:
           return child;
 
-        case vrm::HumanBones::leftEye:
-        case vrm::HumanBones::rightEye:
+        case HumanBones::leftEye:
+        case HumanBones::rightEye:
           break;
 
         default:
@@ -87,7 +86,7 @@ Node::GetShapeTail()
   return nullptr;
 }
 
-std::optional<vrm::HumanBones>
+std::optional<HumanBones>
 Node::ClosestBone()
 {
   if (Humanoid) {
@@ -102,7 +101,7 @@ Node::ClosestBone()
     }
   } else if (auto parent = Parent.lock()) {
     if (auto parentHumanoid = parent->Humanoid) {
-      if (vrm::HumanBoneIsFinger(*parentHumanoid)) {
+      if (HumanBoneIsFinger(*parentHumanoid)) {
         return *parentHumanoid;
       }
     }
@@ -116,12 +115,12 @@ Node::CalcShape()
   float w = 0.02f;
   float d = 0.02f;
   if (Humanoid) {
-    ShapeColor = vrm::HumanBoneToColor(*Humanoid);
-    auto size = vrm::HumanBoneToWidthDepth(*Humanoid);
+    ShapeColor = HumanBoneToColor(*Humanoid);
+    auto size = HumanBoneToWidthDepth(*Humanoid);
     w = size.x;
     d = size.y;
   } else if (auto humanBone = ClosestBone()) {
-    auto size = vrm::HumanBoneToWidthDepth(*humanBone);
+    auto size = HumanBoneToWidthDepth(*humanBone);
     w = size.x;
     d = size.y;
   }
@@ -207,5 +206,4 @@ mul4(DirectX::XMVECTOR q0,
   return DirectX::XMQuaternionMultiply(mul3(q0, q1, q2), q3);
 }
 
-}
-}
+} // namespace

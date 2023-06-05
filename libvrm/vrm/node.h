@@ -1,7 +1,6 @@
 #pragma once
 #include "animation/constraint.h"
 #include "humanoid/humanbones.h"
-#include "scenetypes.h"
 #include <DirectXMath.h>
 #include <assert.h>
 #include <list>
@@ -15,7 +14,6 @@
 #include <vector>
 
 namespace libvrm {
-namespace gltf {
 
 struct EuclideanTransform
 {
@@ -55,8 +53,8 @@ struct Node
 {
   // uint32_t Index;
   std::string Name;
-  std::optional<vrm::HumanBones> Humanoid;
-  std::optional<vrm::NodeConstraint> Constraint;
+  std::optional<HumanBones> Humanoid;
+  std::optional<NodeConstraint> Constraint;
 
   std::list<std::shared_ptr<Node>> Children;
   std::weak_ptr<Node> Parent;
@@ -170,7 +168,7 @@ struct Node
   DirectX::XMFLOAT4X4 ShapeMatrix;
   DirectX::XMFLOAT4 ShapeColor = { 1, 1, 1, 1 };
   void CalcShape();
-  std::optional<vrm::HumanBones> ClosestBone();
+  std::optional<HumanBones> ClosestBone();
   bool AnyTail()
   {
     for (auto& child : Children) {
@@ -186,5 +184,4 @@ struct Node
   std::shared_ptr<Node> GetShapeTail();
 };
 
-}
-}
+} // namespace

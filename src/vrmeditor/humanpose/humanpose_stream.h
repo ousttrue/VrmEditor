@@ -8,7 +8,7 @@ class Cuber;
 class UdpReceiver;
 
 namespace humanpose {
-using HumanPoseFunc = std::function<bool(const libvrm::vrm::HumanPose& pose)>;
+using HumanPoseFunc = std::function<bool(const libvrm::HumanPose& pose)>;
 
 struct Link
 {
@@ -34,14 +34,14 @@ struct HumanPoseStream
   std::list<std::shared_ptr<Link>> Links;
   std::list<HumanPoseFunc> HumanPoseChanged;
 
-  std::list<std::shared_ptr<libvrm::vrm::HumanBoneMap>> m_humanBoneMapList;
-  std::shared_ptr<libvrm::vrm::HumanBoneMap> AddHumanBoneMap()
+  std::list<std::shared_ptr<libvrm::HumanBoneMap>> m_humanBoneMapList;
+  std::shared_ptr<libvrm::HumanBoneMap> AddHumanBoneMap()
   {
-    auto ptr = std::make_shared<libvrm::vrm::HumanBoneMap>();
+    auto ptr = std::make_shared<libvrm::HumanBoneMap>();
     m_humanBoneMapList.push_back(ptr);
     return ptr;
   }
-  std::shared_ptr<libvrm::vrm::HumanBoneMap> FindHumanBoneMap(
+  std::shared_ptr<libvrm::HumanBoneMap> FindHumanBoneMap(
     const libvrm::bvh::Bvh& bvh) const
   {
     for (auto& map : m_humanBoneMapList) {

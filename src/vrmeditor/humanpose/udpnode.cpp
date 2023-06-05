@@ -12,7 +12,7 @@ namespace humanpose {
 UdpNode::UdpNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
-  auto table = std::make_shared<libvrm::gltf::GltfRoot>();
+  auto table = std::make_shared<libvrm::GltfRoot>();
   m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
   m_scene->m_table->m_title = "UDP";
 

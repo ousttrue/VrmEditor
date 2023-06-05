@@ -3,16 +3,14 @@
 #include <memory>
 
 namespace libvrm {
-namespace gltf {
-struct Node;
-}
 
-namespace vrm {
+struct Node;
+
 class SpringJoint
 {
 public:
-  std::shared_ptr<gltf::Node> Head;
-  std::shared_ptr<gltf::Node> Tail;
+  std::shared_ptr<Node> Head;
+  std::shared_ptr<Node> Tail;
   // if Tail is nullptr
   DirectX::XMFLOAT3 LocalTailPosition;
 
@@ -25,8 +23,8 @@ public:
   float Radius = 0;
 
 public:
-  SpringJoint(const std::shared_ptr<gltf::Node>& head,
-              const std::shared_ptr<gltf::Node>& tail,
+  SpringJoint(const std::shared_ptr<Node>& head,
+              const std::shared_ptr<Node>& tail,
               const DirectX::XMFLOAT3& localTailPosition,
               float dragForce,
               float stiffness,
@@ -41,5 +39,4 @@ public:
   }
 };
 
-}
-}
+} // namespace

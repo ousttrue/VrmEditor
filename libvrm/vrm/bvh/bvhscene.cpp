@@ -41,11 +41,11 @@ UpdateSceneFromBvhFrame(
 }
 
 static void
-PushJoint(const std::shared_ptr<gltf::GltfRoot>& scene,
+PushJoint(const std::shared_ptr<GltfRoot>& scene,
           const bvh::Joint& joint,
           float scaling)
 {
-  auto node = std::make_shared<gltf::Node>(joint.name);
+  auto node = std::make_shared<Node>(joint.name);
   node->InitialTransform.Rotation = { 0, 0, 0, 1 };
   node->InitialTransform.Translation = joint.localOffset;
   node->InitialTransform.Translation.x *= scaling;
@@ -55,16 +55,16 @@ PushJoint(const std::shared_ptr<gltf::GltfRoot>& scene,
   scene->m_nodes.push_back(node);
   if (auto parent_index = joint.parent) {
     auto parent = scene->m_nodes[*parent_index];
-    gltf::Node::AddChild(parent, node);
+    Node::AddChild(parent, node);
   } else {
     scene->m_roots.push_back(node);
   }
 }
 
 void
-InitializeSceneFromBvh(const std::shared_ptr<gltf::GltfRoot>& scene,
+InitializeSceneFromBvh(const std::shared_ptr<GltfRoot>& scene,
                        const std::shared_ptr<bvh::Bvh>& bvh,
-                       const std::shared_ptr<vrm::HumanBoneMap>& map)
+                       const std::shared_ptr<HumanBoneMap>& map)
 {
   scene->m_title = "BVH";
   for (auto& joint : bvh->joints) {

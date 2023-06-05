@@ -7,7 +7,7 @@ class ImHumanoid
   std::vector<const char*> m_items;
 
 public:
-  void ShowBody(libvrm::gltf::GltfRoot& scene)
+  void ShowBody(libvrm::GltfRoot& scene)
   {
     m_items.clear();
     for (auto& node : scene.m_nodes) {
@@ -20,11 +20,11 @@ public:
       ImGui::TableSetupColumn("Bone", ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("Node", ImGuiTableColumnFlags_WidthStretch);
       ImGui::TableHeadersRow();
-      for (int i = 0; i < (int)libvrm::vrm::HumanBones::leftThumbMetacarpal;
+      for (int i = 0; i < (int)libvrm::HumanBones::leftThumbMetacarpal;
            ++i) {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
-        ImGui::Text("%s", libvrm::vrm::HumanBonesNames[i]);
+        ImGui::Text("%s", libvrm::HumanBonesNames[i]);
 
         uint32_t index = -1;
         const char* combo_preview_value = "--";
@@ -56,7 +56,7 @@ public:
     }
   }
 
-  void ShowFingers(libvrm::gltf::GltfRoot& scene)
+  void ShowFingers(libvrm::GltfRoot& scene)
   {
     //   ss.str("");
     //   if (auto node_index = humanoid[i]) {
@@ -78,13 +78,13 @@ public:
       ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch);
       ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch);
       ImGui::TableHeadersRow();
-      for (int i = (int)libvrm::vrm::HumanBones::leftThumbMetacarpal;
-           i < (int)libvrm::vrm::HumanBones::rightThumbMetacarpal;
+      for (int i = (int)libvrm::HumanBones::leftThumbMetacarpal;
+           i < (int)libvrm::HumanBones::rightThumbMetacarpal;
            ++i) {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         // skip "Left" 4
-        ImGui::Text("%s", libvrm::vrm::HumanBonesNames[i] + 4);
+        ImGui::Text("%s", libvrm::HumanBonesNames[i] + 4);
 
         uint32_t left_index = -1;
         const char* left_combo_preview_value = "--";

@@ -24,7 +24,7 @@ struct BvhNode : public GraphNodeBase
   // constructor
   BvhNode(int id, std::string_view name);
   void SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
-              const std::shared_ptr<libvrm::vrm::HumanBoneMap>& map);
+              const std::shared_ptr<libvrm::HumanBoneMap>& map);
   void TimeUpdate(libvrm::Time time) override;
   void DrawContent() override;
 };

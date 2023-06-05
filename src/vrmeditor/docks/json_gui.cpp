@@ -29,7 +29,7 @@ JsonGui::JsonGui()
 }
 
 void
-JsonGui::SetScene(const std::shared_ptr<libvrm::gltf::GltfRoot>& root)
+JsonGui::SetScene(const std::shared_ptr<libvrm::GltfRoot>& root)
 {
   m_root = root;
   m_label->Clear();

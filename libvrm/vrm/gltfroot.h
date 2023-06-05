@@ -3,7 +3,6 @@
 #include "animation/spring_bone.h"
 #include "animation/spring_collider.h"
 #include "base_mesh.h"
-#include "scenetypes.h"
 #include <DirectXMath.h>
 #include <functional>
 #include <gltfjson.h>
@@ -21,7 +20,6 @@ struct Animation;
 }
 }
 
-namespace gltf {
 struct Node;
 
 using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
@@ -51,16 +49,16 @@ struct GltfRoot
   std::vector<std::shared_ptr<Node>> m_roots;
 
   // extensions
-  std::shared_ptr<vrm::animation::Animation> m_vrma;
-  std::shared_ptr<vrm::Expressions> m_expressions;
+  // std::shared_ptr<vrm::animation::Animation> m_vrma;
+  std::shared_ptr<Expressions> m_expressions;
 
   // spring
   gltfjson::tree::NodePtr m_vrm0Materials;
-  std::vector<std::shared_ptr<vrm::SpringCollider>> m_springColliders;
-  std::vector<std::shared_ptr<vrm::SpringColliderGroup>> m_springColliderGroups;
-  std::vector<std::shared_ptr<vrm::SpringBone>> m_springBones;
+  std::vector<std::shared_ptr<SpringCollider>> m_springColliders;
+  std::vector<std::shared_ptr<SpringColliderGroup>> m_springColliderGroups;
+  std::vector<std::shared_ptr<SpringBone>> m_springBones;
 
-  std::unordered_map<vrm::MorphTargetKey, float> m_morphTargetMap;
+  std::unordered_map<MorphTargetKey, float> m_morphTargetMap;
 
   std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
 
@@ -85,7 +83,7 @@ struct GltfRoot
     m_morphTargetMap.clear();
 
     m_gltf = {};
-    m_vrma = {};
+    // m_vrma = {};
     m_expressions = {};
   }
 
@@ -108,7 +106,7 @@ struct GltfRoot
                 const LeaveFunc& leave,
                 const std::shared_ptr<Node>& node = nullptr);
 
-  std::shared_ptr<Node> GetBoneNode(vrm::HumanBones bone);
+  std::shared_ptr<Node> GetBoneNode(HumanBones bone);
 
   runtimescene::BoundingBox GetBoundingBox() const;
 
@@ -124,5 +122,4 @@ struct GltfRoot
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
 };
 
-}
-}
+} // namespace

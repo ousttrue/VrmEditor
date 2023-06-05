@@ -14,9 +14,7 @@ struct RuntimeScene;
 }
 
 namespace libvrm {
-namespace gltf {
 struct DrawItem;
-}
 }
 
 namespace glr {
@@ -75,7 +73,7 @@ struct ScenePreview
   void RenderRuntime(const grapho::OrbitView& view);
 
 private:
-  void RenderPass(std::span<const libvrm::gltf::DrawItem> drawables);
+  void RenderPass(std::span<const libvrm::DrawItem> drawables);
 
 public:
   void ShowScreenRect(const char* title,

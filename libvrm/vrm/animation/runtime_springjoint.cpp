@@ -7,7 +7,7 @@
 namespace runtimescene {
 
 RuntimeSpringJoint::RuntimeSpringJoint(
-  const std::shared_ptr<libvrm::vrm::SpringJoint>& joint)
+  const std::shared_ptr<libvrm::SpringJoint>& joint)
   : Joint(joint)
 {
   auto world = joint->Head->WorldInitialTransformPoint(
