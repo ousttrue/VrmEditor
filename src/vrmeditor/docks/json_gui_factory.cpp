@@ -1,5 +1,6 @@
 #include "json_gui_factory.h"
-#include "json_gui_accessor.h"
+#include "jsonpath_gui_accessor.h"
+#include "jsonpath_gui_node.h"
 #include "json_gui_vrm0.h"
 #include "jsonpath_gui.h"
 #include "type_gui.h"
@@ -40,10 +41,10 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
         FloatSlider{ .Min = 0, .Max = 1, .Default = 0.5f } },
       // mesh/skin
       { u8"/meshes/*", TypeFunc<gltfjson::Mesh>() },
-      { u8"/meshes/*/primitives/*",
-        TypeFunc<gltfjson::MeshPrimitive>() },
+      { u8"/meshes/*/primitives/*", TypeFunc<gltfjson::MeshPrimitive>() },
       { u8"/skins/*", TypeFunc<gltfjson::Skin>() },
       // node/scene/animation/camera
+      { u8"/nodes", JsonGuiNodes },
       { u8"/nodes/*", TypeFunc<gltfjson::Node>() },
       { u8"/scenes/*", TypeFunc<gltfjson::Scene>() },
       { u8"/animations/*", TypeFunc<gltfjson::Animation>() },
@@ -73,8 +74,7 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
 
       { u8"/extensions/VRM", TypeFunc<gltfjson::vrm0::VRM>() },
       { u8"/extensions/VRM/meta", TypeFunc<gltfjson::vrm0::Meta>() },
-      { u8"/extensions/VRM/humanoid",
-        TypeFunc<gltfjson::vrm0::Humanoid>() },
+      { u8"/extensions/VRM/humanoid", TypeFunc<gltfjson::vrm0::Humanoid>() },
       { u8"/extensions/VRM/firstPerson",
         TypeFunc<gltfjson::vrm0::FirstPerson>() },
       { u8"/extensions/VRM/blendShapeMaster/blendShapeGroups/*",

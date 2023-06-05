@@ -364,7 +364,7 @@ App::Run()
     [json = m_json, indent]() mutable { json->ShowSelector(indent); },
     true,
   });
-  addDock({ "inspector", [json = m_json]() mutable { json->ShowSelected(); } });
+  addDock({ "json-inspector", [json = m_json]() mutable { json->ShowSelected(); }, true });
 
   addDock({ "hierarchy",
             [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },

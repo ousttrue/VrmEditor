@@ -257,7 +257,7 @@ struct AccessorItem
   std::string Ref;
 };
 
-ShowGuiFunc
+inline ShowGuiFunc
 JsonGuiAccessorList(std::u8string_view jsonpath)
 {
   return [items = std::vector<AccessorItem>()](

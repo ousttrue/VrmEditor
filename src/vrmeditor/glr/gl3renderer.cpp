@@ -764,10 +764,13 @@ CreateDock(const AddDockFunc& addDock)
     Gl3Renderer::Instance().ShowSelectedShaderSource();
   }));
 
-  addDock(grapho::imgui::Dock("GL selected shader variables", []() {
-    //
-    Gl3Renderer::Instance().ShowSelectedShaderVariables();
-  }));
+  addDock(grapho::imgui::Dock(
+    "GL selected shader variables",
+    []() {
+      //
+      Gl3Renderer::Instance().ShowSelectedShaderVariables();
+    },
+    true));
 }
 
 std::shared_ptr<grapho::gl3::Texture>
