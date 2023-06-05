@@ -1,7 +1,7 @@
 #pragma once
-#include "animation/expression.h"
-#include "animation/spring_bone.h"
-#include "animation/spring_collider.h"
+#include "expression.h"
+#include "spring_bone.h"
+#include "spring_collider.h"
 #include "base_mesh.h"
 #include <DirectXMath.h>
 #include <functional>
@@ -108,7 +108,7 @@ struct GltfRoot
 
   std::shared_ptr<Node> GetBoneNode(HumanBones bone);
 
-  runtimescene::BoundingBox GetBoundingBox() const;
+  BoundingBox GetBoundingBox() const;
 
   void InitializeNodes()
   {

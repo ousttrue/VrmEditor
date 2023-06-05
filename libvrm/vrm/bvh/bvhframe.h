@@ -1,5 +1,5 @@
 #pragma once
-#include "vrm/animation/timeline.h"
+#include "../timeline.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <ostream>

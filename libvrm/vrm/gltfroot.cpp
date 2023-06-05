@@ -1,5 +1,5 @@
 #include "gltfroot.h"
-#include "animation/spring_bone.h"
+#include "spring_bone.h"
 #include "base_mesh.h"
 #include "dmath.h"
 #include <DirectXMath.h>
@@ -60,10 +60,10 @@ GltfRoot::GetBoneNode(HumanBones bone)
   return {};
 }
 
-runtimescene::BoundingBox
+BoundingBox
 GltfRoot::GetBoundingBox() const
 {
-  runtimescene::BoundingBox bb{};
+  BoundingBox bb{};
   if (m_gltf) {
     for (uint32_t i = 0; i < m_gltf->Nodes.size(); ++i) {
       auto gltfNode = m_gltf->Nodes[i];
@@ -78,7 +78,7 @@ GltfRoot::GetBoundingBox() const
           auto& min = accessor.Min;
           auto& max = accessor.Max;
           if (min.size() == 3 && max.size() == 3) {
-            runtimescene::BoundingBox mesh_bb = {
+            BoundingBox mesh_bb = {
               { min[0], min[1], min[2] },
               { max[0], max[1], max[2] },
             };

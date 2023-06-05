@@ -4,21 +4,21 @@
 #include <gltfjson/glb.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <vrm/animation/runtime_scene.h>
+#include <vrm/runtime_scene.h>
 #include <vrm/gltfroot.h>
 #include <vrm/importer.h>
 
 void
 ExportDock::Create(const AddDockFunc& addDock,
                    std::string_view title,
-                   const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+                   const std::shared_ptr<libvrm::RuntimeScene>& scene,
                    float indent)
 {
   auto debug_table = std::make_shared<libvrm::GltfRoot>();
   // auto impl = std::make_shared<JsonGui>();
   // impl->SetScene(debug_table);
 
-  auto debug_scene = std::make_shared<runtimescene::RuntimeScene>(debug_table);
+  auto debug_scene = std::make_shared<libvrm::RuntimeScene>(debug_table);
   auto preview = std::make_shared<glr::ScenePreview>(debug_scene);
 
   addDock(grapho::imgui::Dock(title, [scene, debug_scene, indent, preview]() {

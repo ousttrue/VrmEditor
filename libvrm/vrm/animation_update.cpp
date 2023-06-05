@@ -1,9 +1,9 @@
 #include "animation_update.h"
-#include "../deformed_mesh.h"
+#include "deformed_mesh.h"
 #include "runtime_node.h"
 #include "runtime_scene.h"
 
-namespace runtimescene {
+namespace libvrm {
 
 void
 AnimationUpdate(const Animation& animation,

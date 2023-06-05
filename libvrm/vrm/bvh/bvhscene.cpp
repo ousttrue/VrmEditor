@@ -1,12 +1,12 @@
 #include "bvhscene.h"
-#include "vrm/node.h"
+#include "../node.h"
 
 namespace libvrm::bvh {
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void
 UpdateSceneFromBvhFrame(
-  const std::shared_ptr<runtimescene::RuntimeScene>& scene,
-  std::shared_ptr<runtimescene::RuntimeNode>& node,
+  const std::shared_ptr<RuntimeScene>& scene,
+  std::shared_ptr<RuntimeNode>& node,
   const std::shared_ptr<bvh::Bvh>& bvh,
   const bvh::Frame& frame,
   float scaling)
@@ -25,7 +25,7 @@ UpdateSceneFromBvhFrame(
 
 void
 UpdateSceneFromBvhFrame(
-  const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+  const std::shared_ptr<RuntimeScene>& scene,
   const std::shared_ptr<bvh::Bvh>& bvh,
   Time time)
 {

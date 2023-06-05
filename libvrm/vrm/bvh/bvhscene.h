@@ -1,7 +1,7 @@
 #pragma once
-#include "../animation/runtime_node.h"
-#include "../animation/runtime_scene.h"
-#include "../animation/timeline.h"
+#include "../runtime_node.h"
+#include "../runtime_scene.h"
+#include "../timeline.h"
 #include "../gltfroot.h"
 #include "../node.h"
 #include "bvh.h"
@@ -14,15 +14,15 @@ namespace bvh {
 
 void
 UpdateSceneFromBvhFrame(
-  const std::shared_ptr<runtimescene::RuntimeScene>& scene,
-  std::shared_ptr<runtimescene::RuntimeNode>& node,
+  const std::shared_ptr<RuntimeScene>& scene,
+  std::shared_ptr<RuntimeNode>& node,
   const std::shared_ptr<bvh::Bvh>& bvh,
   const bvh::Frame& frame,
   float scaling);
 
 void
 UpdateSceneFromBvhFrame(
-  const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+  const std::shared_ptr<RuntimeScene>& scene,
   const std::shared_ptr<bvh::Bvh>& bvh,
   Time time);
 

@@ -1,11 +1,11 @@
 #pragma once
-#include "../node.h"
+#include "node.h"
 #include "timeline.h"
 #include <span>
 #include <unordered_map>
 #include <vector>
 
-namespace runtimescene {
+namespace libvrm {
 
 enum class AnimationTargets
 {

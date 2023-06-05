@@ -3,7 +3,7 @@
 #include <glr/scene_preview.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <vrm/animation/runtime_scene.h>
+#include <vrm/runtime_scene.h>
 #include <vrm/gltfroot.h>
 #include <vrm/network/srht_update.h>
 
@@ -13,7 +13,7 @@ UdpNode::UdpNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
   auto table = std::make_shared<libvrm::GltfRoot>();
-  m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
+  m_scene = std::make_shared<libvrm::RuntimeScene>(table);
   m_scene->m_table->m_title = "UDP";
 
   // update preview

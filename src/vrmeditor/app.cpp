@@ -27,11 +27,11 @@
 #include <gltfjson/json_tree_exporter.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <vrm/animation/animation_update.h>
-#include <vrm/animation/timeline.h>
+#include <vrm/animation_update.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
 #include <vrm/importer.h>
+#include <vrm/timeline.h>
 
 const auto WINDOW_TITLE = "VrmEditor";
 
@@ -93,14 +93,14 @@ App::ProjectMode()
   m_gui->DarkMode();
 }
 
-std::shared_ptr<runtimescene::RuntimeScene>
+std::shared_ptr<libvrm::RuntimeScene>
 App::SetScene(const std::shared_ptr<libvrm::GltfRoot>& table)
 {
   glr::Release();
-  m_runtime = std::make_shared<runtimescene::RuntimeScene>(table);
+  m_runtime = std::make_shared<libvrm::RuntimeScene>(table);
   m_timeline->Tracks.clear();
 
-  std::weak_ptr<runtimescene::RuntimeScene> weak = m_runtime;
+  std::weak_ptr<libvrm::RuntimeScene> weak = m_runtime;
   PoseStream->HumanPoseChanged.push_back([weak](const auto& pose) {
     if (auto scene = weak.lock()) {
       scene->SetHumanPose(pose);
@@ -260,10 +260,10 @@ App::LoadModel(const std::filesystem::path& path)
 
     for (auto& animation : scene->m_animations) {
       auto track = m_timeline->AddTrack("gltf", animation->Duration());
-      std::weak_ptr<runtimescene::RuntimeScene> weak = scene;
+      std::weak_ptr<libvrm::RuntimeScene> weak = scene;
       track->Callbacks.push_back([animation, weak](auto time, bool repeat) {
         if (auto scene = weak.lock()) {
-          runtimescene::AnimationUpdate(
+          libvrm::AnimationUpdate(
             *animation, time, scene->m_table->m_nodes, scene, repeat);
           return true;
         } else {

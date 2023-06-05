@@ -1,12 +1,12 @@
 #include "runtime_scene.h"
-#include "../deformed_mesh.h"
-#include "../skin.h"
 #include "animation.h"
+#include "deformed_mesh.h"
 #include "runtime_node.h"
+#include "skin.h"
 #include "spring_collision.h"
 #include <gltfjson.h>
 
-namespace runtimescene {
+namespace libvrm {
 
 static std::expected<bool, std::string>
 AddIndices(const gltfjson::Root& root,
@@ -409,8 +409,7 @@ RuntimeScene::GetDeformedMesh(uint32_t mesh)
 }
 
 std::shared_ptr<RuntimeSpringJoint>
-RuntimeScene::GetRuntimeJoint(
-  const std::shared_ptr<libvrm::SpringJoint>& joint)
+RuntimeScene::GetRuntimeJoint(const std::shared_ptr<libvrm::SpringJoint>& joint)
 {
   auto found = m_jointMap.find(joint);
   if (found != m_jointMap.end()) {
@@ -576,9 +575,8 @@ RuntimeScene::DrawGizmo(libvrm::IGizmoDrawer* gizmo)
 }
 
 void
-RuntimeScene::SpringUpdate(
-  const std::shared_ptr<libvrm::SpringBone>& spring,
-  libvrm::Time delta)
+RuntimeScene::SpringUpdate(const std::shared_ptr<libvrm::SpringBone>& spring,
+                           libvrm::Time delta)
 {
   bool doUpdate = delta.count() > 0;
   if (!doUpdate) {
@@ -594,9 +592,8 @@ RuntimeScene::SpringUpdate(
 }
 
 void
-RuntimeScene::SpringDrawGizmo(
-  const std::shared_ptr<libvrm::SpringBone>& solver,
-  libvrm::IGizmoDrawer* gizmo)
+RuntimeScene::SpringDrawGizmo(const std::shared_ptr<libvrm::SpringBone>& solver,
+                              libvrm::IGizmoDrawer* gizmo)
 {
   for (auto& joint : solver->Joints) {
     auto runtime = GetRuntimeJoint(joint);
@@ -802,9 +799,8 @@ RuntimeScene::SyncHierarchy()
 // }
 
 void
-RuntimeScene::NodeConstraintProcess(
-  const libvrm::NodeConstraint& constraint,
-  const std::shared_ptr<RuntimeNode>& dst)
+RuntimeScene::NodeConstraintProcess(const libvrm::NodeConstraint& constraint,
+                                    const std::shared_ptr<RuntimeNode>& dst)
 {
   auto src = constraint.Source.lock();
   if (!src) {

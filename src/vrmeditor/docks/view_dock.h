@@ -2,14 +2,14 @@
 #include "glr/scene_preview.h"
 #include "gui.h"
 #include <imgui.h>
-#include <vrm/animation/runtime_scene.h>
+#include <vrm/runtime_scene.h>
 
 class ViewDock
 {
 public:
   static void Create(const AddDockFunc& addDock,
                      std::string_view title,
-                     const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+                     const std::shared_ptr<libvrm::RuntimeScene>& scene,
                      const std::shared_ptr<glr::RenderingEnv>& env,
                      const std::shared_ptr<grapho::OrbitView>& view,
                      const std::shared_ptr<glr::ViewSettings>& settings,
@@ -41,7 +41,7 @@ public:
                           const std::shared_ptr<glr::ViewSettings>& settings,
                           const std::shared_ptr<SceneNodeSelection>& selection)
   {
-    auto scene = std::make_shared<runtimescene::RuntimeScene>(table);
+    auto scene = std::make_shared<libvrm::RuntimeScene>(table);
     auto preview = std::make_shared<glr::ScenePreview>(
       scene, env, view, settings, selection, true);
 

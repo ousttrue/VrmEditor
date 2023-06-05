@@ -2,7 +2,7 @@
 #include <chrono>
 #include <optional>
 #include <string>
-#include <vrm/animation/timeline.h>
+#include <vrm/timeline.h>
 
 struct FrameInfo
 {

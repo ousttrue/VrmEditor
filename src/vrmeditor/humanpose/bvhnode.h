@@ -7,14 +7,14 @@ namespace glr {
 struct ScenePreview;
 }
 
-namespace runtimescene {
+namespace libvrm {
 struct RuntimeScene;
 }
 
 namespace humanpose {
 struct BvhNode : public GraphNodeBase
 {
-  std::shared_ptr<runtimescene::RuntimeScene> m_scene;
+  std::shared_ptr<libvrm::RuntimeScene> m_scene;
   std::shared_ptr<libvrm::bvh::Bvh> m_bvh;
 
   std::shared_ptr<glr::ScenePreview> m_preview;

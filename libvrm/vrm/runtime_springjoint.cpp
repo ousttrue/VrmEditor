@@ -4,7 +4,7 @@
 #include "spring_collision.h"
 #include <vrm/dmath.h>
 
-namespace runtimescene {
+namespace libvrm {
 
 RuntimeSpringJoint::RuntimeSpringJoint(
   const std::shared_ptr<libvrm::SpringJoint>& joint)

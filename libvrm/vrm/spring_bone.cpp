@@ -1,5 +1,5 @@
 #include "spring_bone.h"
-#include "../gizmo.h"
+#include "gizmo.h"
 #include "spring_joint.h"
 #include <iostream>
 

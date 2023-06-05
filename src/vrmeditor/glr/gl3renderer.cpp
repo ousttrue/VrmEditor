@@ -189,10 +189,9 @@ public:
     m_error = {};
   }
 
-  std::shared_ptr<libvrm::Image> GetOrCreateImage(
-    const gltfjson::Root& root,
-    const gltfjson::Bin& bin,
-    std::optional<uint32_t> id)
+  std::shared_ptr<libvrm::Image> GetOrCreateImage(const gltfjson::Root& root,
+                                                  const gltfjson::Bin& bin,
+                                                  std::optional<uint32_t> id)
   {
     if (!id) {
       return {};
@@ -343,7 +342,7 @@ public:
 
   std::shared_ptr<grapho::gl3::Vao> GetOrCreateMesh(
     uint32_t id,
-    const std::shared_ptr<runtimescene::BaseMesh>& mesh)
+    const std::shared_ptr<libvrm::BaseMesh>& mesh)
   {
     assert(mesh);
 
@@ -366,22 +365,22 @@ public:
         .Id = { 0, 0, "vPosition" },
         .Type = grapho::ValueType::Float,
         .Count = 3,
-        .Offset = offsetof(runtimescene::Vertex, Position),
-        .Stride = sizeof(runtimescene::Vertex),
+        .Offset = offsetof(libvrm::Vertex, Position),
+        .Stride = sizeof(libvrm::Vertex),
       },
       {
         .Id = { 1, 0, "vNormal" },
         .Type = grapho::ValueType::Float,
         .Count = 3,
-        .Offset = offsetof(runtimescene::Vertex, Normal),
-        .Stride = sizeof(runtimescene::Vertex),
+        .Offset = offsetof(libvrm::Vertex, Normal),
+        .Stride = sizeof(libvrm::Vertex),
       },
       {
         .Id = { 2, 0, "vUv" },
         .Type = grapho::ValueType::Float,
         .Count = 2,
-        .Offset = offsetof(runtimescene::Vertex, Uv),
-        .Stride = sizeof(runtimescene::Vertex),
+        .Offset = offsetof(libvrm::Vertex, Uv),
+        .Stride = sizeof(libvrm::Vertex),
       },
     };
     auto vao = grapho::gl3::Vao::Create(layouts, slots, ibo);
@@ -397,8 +396,8 @@ public:
               const gltfjson::Bin& bin,
               const gltfjson::tree::ArrayValue* vrm0Materials,
               uint32_t meshId,
-              const std::shared_ptr<runtimescene::BaseMesh>& mesh,
-              const runtimescene::DeformedMesh& deformed,
+              const std::shared_ptr<libvrm::BaseMesh>& mesh,
+              const libvrm::DeformedMesh& deformed,
               const DirectX::XMFLOAT4X4& m)
   {
     glEnable(GL_DEPTH_TEST);
@@ -407,8 +406,7 @@ public:
     auto vao = GetOrCreateMesh(meshId, mesh);
     // upload vertices. CPU skinning and morpht target.
     if (deformed.Vertices.size()) {
-      vao->slots_[0]->Upload(deformed.Vertices.size() *
-                               sizeof(runtimescene::Vertex),
+      vao->slots_[0]->Upload(deformed.Vertices.size() * sizeof(libvrm::Vertex),
                              deformed.Vertices.data());
     }
 
@@ -493,7 +491,7 @@ public:
                      const gltfjson::Bin& bin,
                      const gltfjson::tree::ArrayValue* vrm0Materials,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
-                     const runtimescene::Primitive& primitive,
+                     const libvrm::Primitive& primitive,
                      uint32_t drawOffset)
   {
     gltfjson::tree::NodePtr gltfMaterial;
@@ -719,8 +717,8 @@ Render(RenderPass pass,
        const gltfjson::Bin& bin,
        const gltfjson::tree::ArrayValue* vrm0Materials,
        uint32_t meshId,
-       const std::shared_ptr<runtimescene::BaseMesh>& mesh,
-       const runtimescene::DeformedMesh& deformed,
+       const std::shared_ptr<libvrm::BaseMesh>& mesh,
+       const libvrm::DeformedMesh& deformed,
        const DirectX::XMFLOAT4X4& m)
 {
   Gl3Renderer::Instance().Render(

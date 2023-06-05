@@ -2,7 +2,7 @@
 #include "spring_bone.h"
 #include "spring_collider.h"
 
-namespace runtimescene {
+namespace libvrm {
 
 struct RuntimeSpringCollision
 {

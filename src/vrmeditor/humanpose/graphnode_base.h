@@ -5,7 +5,7 @@
 #include <string_view>
 #include <variant>
 #include <vector>
-#include <vrm/animation/timeline.h>
+#include <vrm/timeline.h>
 #include <vrm/humanoid/humanpose.h>
 
 namespace humanpose {

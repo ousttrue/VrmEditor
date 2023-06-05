@@ -1,6 +1,6 @@
 #include "spring_collision.h"
 
-namespace runtimescene {
+namespace libvrm {
 
 RuntimeSpringCollision::RuntimeSpringCollision(
   const std::shared_ptr<libvrm::SpringBone>& springBone)

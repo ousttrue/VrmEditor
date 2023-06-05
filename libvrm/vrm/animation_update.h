@@ -1,7 +1,8 @@
 #pragma once
 #include "animation.h"
 
-namespace runtimescene {
+namespace libvrm {
+
 struct RuntimeScene;
 
 void

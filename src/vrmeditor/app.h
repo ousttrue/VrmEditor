@@ -12,6 +12,8 @@ namespace libvrm {
 namespace bvh {
 struct Bvh;
 }
+
+struct RuntimeScene;
 struct Timeline;
 }
 
@@ -37,10 +39,6 @@ struct ViewSettings;
 struct RenderingEnv;
 }
 
-namespace runtimescene {
-struct RuntimeScene;
-}
-
 class Gui;
 struct AssetDir;
 class LuaEngine;
@@ -64,7 +62,7 @@ class App
   std::shared_ptr<ImLogger> m_logger;
 
   std::shared_ptr<libvrm::Timeline> m_timeline;
-  std::shared_ptr<runtimescene::RuntimeScene> m_runtime;
+  std::shared_ptr<libvrm::RuntimeScene> m_runtime;
   std::shared_ptr<struct SceneNodeSelection> m_selection;
   std::shared_ptr<grapho::OrbitView> m_staticView;
   std::shared_ptr<grapho::OrbitView> m_runtimeView;
@@ -88,7 +86,7 @@ public:
 
   void ProjectMode();
 
-  std::shared_ptr<runtimescene::RuntimeScene> SetScene(
+  std::shared_ptr<libvrm::RuntimeScene> SetScene(
     const std::shared_ptr<libvrm::GltfRoot>& scene);
   LogStream Log(LogLevel level);
   void LoadImGuiIni(std::string_view ini);

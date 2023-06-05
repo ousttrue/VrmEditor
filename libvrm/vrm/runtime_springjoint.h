@@ -4,7 +4,7 @@
 #include "timeline.h"
 #include <DirectXMath.h>
 
-namespace runtimescene {
+namespace libvrm {
 
 struct RuntimeSpringCollision;
 struct RuntimeScene;

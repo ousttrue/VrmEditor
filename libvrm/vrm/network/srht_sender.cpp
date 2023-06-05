@@ -1,5 +1,5 @@
 #include "srht_sender.h"
-#include "../animation/runtime_node.h"
+#include "../runtime_node.h"
 #include "../bvh/bvh.h"
 #include "../gltfroot.h"
 #include <DirectXMath.h>

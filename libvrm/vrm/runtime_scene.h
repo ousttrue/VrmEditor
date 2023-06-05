@@ -1,15 +1,17 @@
 #pragma once
-#include "../gltfroot.h"
-#include "../humanoid/humanpose.h"
+#include "gltfroot.h"
+#include "humanoid/humanpose.h"
 #include "runtime_springjoint.h"
 #include "spring_bone.h"
 #include <unordered_map>
 
 namespace libvrm {
 struct Skin;
-}
-
-namespace runtimescene {
+struct RuntimeNode;
+struct DeformedMesh;
+struct RuntimeSpringCollision;
+struct BaseMesh;
+struct Animation;
 
 template<typename T>
 inline std::optional<size_t>
@@ -22,12 +24,6 @@ _IndexOf(std::span<const T> values, const T& target)
   }
   return {};
 }
-
-struct RuntimeNode;
-struct DeformedMesh;
-struct RuntimeSpringCollision;
-struct BaseMesh;
-struct Animation;
 
 using RenderFunc = std::function<
   void(const std::shared_ptr<BaseMesh>&, const DeformedMesh&, const float[16])>;
@@ -110,4 +106,4 @@ struct RuntimeScene
   void DrawGizmo(libvrm::IGizmoDrawer* gizmo);
 };
 
-}
+} // namespace

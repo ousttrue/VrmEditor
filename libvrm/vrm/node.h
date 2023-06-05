@@ -1,5 +1,5 @@
 #pragma once
-#include "animation/constraint.h"
+#include "constraint.h"
 #include "humanoid/humanbones.h"
 #include <DirectXMath.h>
 #include <assert.h>

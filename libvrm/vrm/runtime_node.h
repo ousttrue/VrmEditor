@@ -2,7 +2,7 @@
 #include <functional>
 #include <vrm/node.h>
 
-namespace runtimescene {
+namespace libvrm {
 
 struct Instance
 {
@@ -185,4 +185,4 @@ struct RuntimeNode
   }
 };
 
-}
+} // namespace

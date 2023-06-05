@@ -3,8 +3,8 @@
 #include "glr/scene_preview.h"
 #include "humanpose_stream.h"
 #include <grapho/orbitview.h>
-#include <vrm/animation/runtime_scene.h>
-#include <vrm/animation/timeline.h>
+#include <vrm/runtime_scene.h>
+#include <vrm/timeline.h>
 #include <vrm/bvh/bvhscene.h>
 #include <vrm/humanoid/humanpose.h>
 
@@ -15,7 +15,7 @@ BvhNode::BvhNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
   auto table = std::make_shared<libvrm::GltfRoot>();
-  m_scene = std::make_shared<runtimescene::RuntimeScene>(table);
+  m_scene = std::make_shared<libvrm::RuntimeScene>(table);
 
   // update preview
   m_preview = std::make_shared<glr::ScenePreview>(m_scene);

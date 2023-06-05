@@ -7,13 +7,10 @@
 #include <optional>
 #include <span>
 #include <string>
-#include <vrm/animation/timeline.h>
-
-namespace runtimescene {
-struct RuntimeScene;
-}
+#include <vrm/timeline.h>
 
 namespace libvrm {
+struct RuntimeScene;
 struct DrawItem;
 }
 
@@ -43,7 +40,7 @@ struct ViewSettings
 
 struct ScenePreview
 {
-  std::shared_ptr<runtimescene::RuntimeScene> m_runtime;
+  std::shared_ptr<libvrm::RuntimeScene> m_runtime;
   std::shared_ptr<RenderingEnv> m_env;
   std::shared_ptr<ViewSettings> m_settings;
   std::shared_ptr<SceneNodeSelection> m_selection;
@@ -52,14 +49,14 @@ struct ScenePreview
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<LineGizmo> m_gizmo;
 
-  ScenePreview(const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+  ScenePreview(const std::shared_ptr<libvrm::RuntimeScene>& scene,
                const std::shared_ptr<RenderingEnv>& env,
                const std::shared_ptr<grapho::OrbitView>& view,
                const std::shared_ptr<ViewSettings>& settings,
                const std::shared_ptr<SceneNodeSelection>& selection,
                bool useTPose);
 
-  ScenePreview(const std::shared_ptr<runtimescene::RuntimeScene>& scene)
+  ScenePreview(const std::shared_ptr<libvrm::RuntimeScene>& scene)
     : ScenePreview(scene,
                    std::make_shared<RenderingEnv>(),
                    std::make_shared<grapho::OrbitView>(),

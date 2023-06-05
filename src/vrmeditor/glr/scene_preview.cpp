@@ -9,8 +9,8 @@
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <vrm/animation/runtime_node.h>
-#include <vrm/animation/runtime_scene.h>
+#include <vrm/runtime_node.h>
+#include <vrm/runtime_scene.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanoid/humanbones.h>
 
@@ -29,7 +29,7 @@ ViewSettings::Popup(const std::string& name)
 }
 
 ScenePreview::ScenePreview(
-  const std::shared_ptr<runtimescene::RuntimeScene>& scene,
+  const std::shared_ptr<libvrm::RuntimeScene>& scene,
   const std::shared_ptr<RenderingEnv>& env,
   const std::shared_ptr<grapho::OrbitView>& view,
   const std::shared_ptr<ViewSettings>& settings,

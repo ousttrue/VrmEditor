@@ -3,7 +3,7 @@
 
 class UdpReceiver;
 
-namespace runtimescene {
+namespace libvrm {
 struct RuntimeScene;
 }
 
@@ -14,7 +14,7 @@ struct ScenePreview;
 namespace humanpose {
 struct UdpNode : public GraphNodeBase
 {
-  std::shared_ptr<runtimescene::RuntimeScene> m_scene;
+  std::shared_ptr<libvrm::RuntimeScene> m_scene;
   std::shared_ptr<UdpReceiver> m_udp;
   std::shared_ptr<glr::ScenePreview> m_preview;
 

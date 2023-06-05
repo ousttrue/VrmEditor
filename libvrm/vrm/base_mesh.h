@@ -6,7 +6,7 @@
 #include <span>
 #include <vector>
 
-namespace runtimescene {
+namespace libvrm {
 
 inline DirectX::XMFLOAT3&
 operator+=(DirectX::XMFLOAT3& lhs, const DirectX::XMFLOAT3& rhs)

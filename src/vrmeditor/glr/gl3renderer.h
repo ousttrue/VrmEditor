@@ -20,7 +20,7 @@ class Texture;
 class Cubemap;
 }
 }
-namespace runtimescene {
+namespace libvrm {
 struct BaseMesh;
 struct DeformedMesh;
 }
@@ -50,8 +50,8 @@ Render(RenderPass pass,
        const gltfjson::Bin& bin,
        const gltfjson::tree::ArrayValue* vrm0Materials,
        uint32_t meshId,
-       const std::shared_ptr<runtimescene::BaseMesh>& mesh,
-       const runtimescene::DeformedMesh& instance,
+       const std::shared_ptr<libvrm::BaseMesh>& mesh,
+       const libvrm::DeformedMesh& instance,
        const DirectX::XMFLOAT4X4& m);
 
 // clear current render target
