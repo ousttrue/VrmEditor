@@ -7,6 +7,7 @@
 #include <vrm/humanoid/humanbones.h>
 
 class FileWatcher;
+class HierarchyGui;
 
 namespace libvrm {
 namespace bvh {
@@ -60,6 +61,7 @@ class App
   std::shared_ptr<LuaEngine> m_lua;
   std::list<std::shared_ptr<AssetDir>> m_assets;
   std::shared_ptr<ImLogger> m_logger;
+  std::shared_ptr<HierarchyGui> m_hierarchy;
 
   std::shared_ptr<libvrm::Timeline> m_timeline;
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;

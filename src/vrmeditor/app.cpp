@@ -4,6 +4,7 @@
 #include "assetdir.h"
 #include "docks/export_dock.h"
 #include "docks/gui.h"
+#include "docks/hierarchy_gui.h"
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
@@ -45,7 +46,7 @@ App::App()
   auto file = get_home() / ".vrmeditor.ini.lua";
   m_ini = file.u8string();
   m_selection = std::make_shared<SceneNodeSelection>();
-
+  m_hierarchy = std::make_shared<HierarchyGui>();
   m_staticView = std::make_shared<grapho::OrbitView>();
   m_runtimeView = std::make_shared<grapho::OrbitView>();
   m_timeline = std::make_shared<libvrm::Timeline>();
@@ -142,6 +143,8 @@ App::SetScene(const std::shared_ptr<libvrm::GltfRoot>& table)
 #ifndef NDEBUG
     ExportDock::Create(addDock, "[debug] export", m_runtime, indent);
 #endif
+
+    m_hierarchy->SetRuntimeScene(m_runtime, indent);
   }
 
   return m_runtime;
@@ -362,6 +365,10 @@ App::Run()
     true,
   });
   addDock({ "inspector", [json = m_json]() mutable { json->ShowSelected(); } });
+
+  addDock({ "hierarchy",
+            [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
+            true });
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {

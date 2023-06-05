@@ -27,6 +27,7 @@ srcs = [
     'docks/json_gui_factory.cpp',
     'docks/json_gui_labelcache.cpp',
     'docks/im_widgets.cpp',
+    'docks/hierarchy_gui.cpp',
     'humanpose/humanpose_stream.cpp',
     'humanpose/udp_receiver.cpp',
     'humanpose/bvhnode.cpp',
