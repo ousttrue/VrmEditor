@@ -16,20 +16,29 @@ struct DeformedMesh
   {
   }
 
-  void applySkinning(DirectX::XMFLOAT3* dst,
-                     const DirectX::XMFLOAT3& src,
+  void applySkinning(Vertex* dst,
+                     const Vertex& src,
                      float w,
                      std::span<DirectX::XMFLOAT4X4> matrices,
                      uint16_t matrixIndex)
   {
     if (w > 0) {
       if (matrixIndex < matrices.size()) {
-        auto pos = DirectX::XMLoadFloat3(&src);
-        auto newPos = DirectX::XMVector3Transform(
-          pos, DirectX::XMLoadFloat4x4(&matrices[matrixIndex]));
         DirectX::XMFLOAT3 store;
-        DirectX::XMStoreFloat3(&store, newPos);
-        *dst += (store * w);
+        {
+          auto pos = DirectX::XMLoadFloat3(&src.Position);
+          auto newPos = DirectX::XMVector3Transform(
+            pos, DirectX::XMLoadFloat4x4(&matrices[matrixIndex]));
+          DirectX::XMStoreFloat3(&store, newPos);
+          dst->Position += (store * w);
+        }
+        {
+          auto normal = DirectX::XMLoadFloat3(&src.Normal);
+          auto newNormal = DirectX::XMVector3Transform(
+            normal, DirectX::XMLoadFloat4x4(&matrices[matrixIndex]));
+          DirectX::XMStoreFloat3(&store, newNormal);
+          dst->Normal += (store * w);
+        }
       } else {
         // error
       }
@@ -62,17 +71,13 @@ struct DeformedMesh
         dst.Normal = { 0, 0, 0 };
         auto binding = mesh.m_bindings[i];
         if (auto w = binding.Weights.x)
-          applySkinning(
-            &dst.Position, src.Position, w, skinningMatrices, binding.Joints.X);
+          applySkinning(&dst, src, w, skinningMatrices, binding.Joints.X);
         if (auto w = binding.Weights.y)
-          applySkinning(
-            &dst.Position, src.Position, w, skinningMatrices, binding.Joints.Y);
+          applySkinning(&dst, src, w, skinningMatrices, binding.Joints.Y);
         if (auto w = binding.Weights.z)
-          applySkinning(
-            &dst.Position, src.Position, w, skinningMatrices, binding.Joints.Z);
+          applySkinning(&dst, src, w, skinningMatrices, binding.Joints.Z);
         if (auto w = binding.Weights.w)
-          applySkinning(
-            &dst.Position, src.Position, w, skinningMatrices, binding.Joints.W);
+          applySkinning(&dst, src, w, skinningMatrices, binding.Joints.W);
       }
     }
   }

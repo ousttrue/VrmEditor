@@ -21,7 +21,6 @@ srcs = [
     'docks/imlogger.cpp',
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',
-    'docks/gltfjson_gui.cpp',
     'docks/type_gui.cpp',
     'docks/type_gui_vrm0.cpp',
     'docks/json_gui.cpp',
