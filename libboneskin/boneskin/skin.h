@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace libvrm {
+namespace boneskin {
 
 struct Skin
 {

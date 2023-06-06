@@ -1,7 +1,7 @@
 #pragma once
 #include "base_mesh.h"
 
-namespace libvrm {
+namespace boneskin {
 
 struct DeformedMesh
 {

@@ -6,6 +6,7 @@
 #include "type_gui.h"
 #include "type_gui_accessor.h"
 #include <array>
+#include <boneskin/types.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <sstream>
 #include <unordered_map>
@@ -150,9 +151,9 @@ ShowGui(const gltfjson::Root& root,
       } },
     { { gltfjson::ComponentTypes::UNSIGNED_SHORT, u8"VEC4" },
       [](auto& root, auto& bin, auto& accessor) {
-        if (auto values = bin.template GetAccessorBytes<libvrm::ushort4>(
+        if (auto values = bin.template GetAccessorBytes<boneskin::ushort4>(
               root, accessor)) {
-          ShowGuiAccessorInt4<libvrm::ushort4>(*values);
+          ShowGuiAccessorInt4<boneskin::ushort4>(*values);
         }
       } },
     { { gltfjson::ComponentTypes::UNSIGNED_INT, u8"SCALAR" },

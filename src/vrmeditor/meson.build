@@ -61,6 +61,7 @@ executable(
         simplefilewatcher_dep,
         stb_dep,
         imgui_colortextedit_dep,
+        boneskin_dep,
     ],
 )
 

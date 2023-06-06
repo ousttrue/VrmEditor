@@ -1,5 +1,4 @@
 #include "gltfroot.h"
-#include "base_mesh.h"
 #include "dmath.h"
 #include "spring_bone.h"
 #include <DirectXMath.h>

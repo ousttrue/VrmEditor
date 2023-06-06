@@ -9,6 +9,9 @@
 #include "shader_source.h"
 #include <DirectXMath.h>
 #include <TextEditor.h>
+#include <boneskin/base_mesh.h>
+#include <boneskin/deformed_mesh.h>
+#include <boneskin/skin.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <cuber/mesh.h>
 #include <gltfjson/gltf_typing_vrm0.h>
@@ -25,11 +28,8 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <unordered_map>
 #include <variant>
-#include <vrm/base_mesh.h>
-#include <vrm/deformed_mesh.h>
 #include <vrm/fileutil.h>
 #include <vrm/image.h>
-#include <vrm/skin.h>
 
 #include "material_error.h"
 #include "material_pbr_khronos.h"
@@ -69,11 +69,11 @@ ParseImage(const gltfjson::Root& root,
   return ptr;
 }
 
-static std::expected<std::shared_ptr<libvrm::Skin>, std::string>
+static std::expected<std::shared_ptr<boneskin::Skin>, std::string>
 ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, uint32_t i)
 {
   auto skin = root.Skins[i];
-  auto ptr = std::make_shared<libvrm::Skin>();
+  auto ptr = std::make_shared<boneskin::Skin>();
   ptr->Name = gltfjson::from_u8(skin.Name());
   for (auto joint : skin.Joints) {
     ptr->Joints.push_back(joint);
@@ -99,7 +99,7 @@ static std::expected<bool, std::string>
 AddIndices(const gltfjson::Root& root,
            const gltfjson::Bin& bin,
            int vertex_offset,
-           libvrm::BaseMesh* mesh,
+           boneskin::BaseMesh* mesh,
            const gltfjson::MeshPrimitive& prim)
 {
   if (auto indices = prim.Indices()) {
@@ -145,11 +145,11 @@ AddIndices(const gltfjson::Root& root,
   }
 }
 
-static std::expected<std::shared_ptr<libvrm::BaseMesh>, std::string>
+static std::expected<std::shared_ptr<boneskin::BaseMesh>, std::string>
 ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
 {
   auto mesh = root.Meshes[meshIndex];
-  auto ptr = std::make_shared<libvrm::BaseMesh>();
+  auto ptr = std::make_shared<boneskin::BaseMesh>();
   ptr->Name = mesh.Name();
   std::optional<gltfjson::MeshPrimitiveAttributes> lastAtributes;
 
@@ -207,7 +207,7 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
         switch (item_size) {
           case 4:
             if (auto accessor =
-                  bin.GetAccessorBytes<libvrm::byte4>(root, joint_accessor)) {
+                  bin.GetAccessorBytes<boneskin::byte4>(root, joint_accessor)) {
               if (auto accessor_w =
                     bin.GetAccessorBytes<DirectX::XMFLOAT4>(root, *weights0)) {
                 ptr->setBoneSkinning(offset, *accessor, *accessor_w);
@@ -220,8 +220,8 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
             break;
 
           case 8:
-            if (auto accessor =
-                  bin.GetAccessorBytes<libvrm::ushort4>(root, joint_accessor)) {
+            if (auto accessor = bin.GetAccessorBytes<boneskin::ushort4>(
+                  root, joint_accessor)) {
               if (auto accessor_w =
                     bin.GetAccessorBytes<DirectX::XMFLOAT4>(root, *weights0)) {
                 ptr->setBoneSkinning(offset, *accessor, *accessor_w);
@@ -310,10 +310,10 @@ class Gl3Renderer
   TextEditor m_vsEditor;
   TextEditor m_fsEditor;
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::Image>> m_imageMap;
-  std::unordered_map<uint32_t, std::shared_ptr<libvrm::DeformedMesh>>
+  std::unordered_map<uint32_t, std::shared_ptr<boneskin::DeformedMesh>>
     m_deformMap;
-  std::unordered_map<uint32_t, std::shared_ptr<libvrm::BaseMesh>> m_baseMap;
-  std::unordered_map<uint32_t, std::shared_ptr<libvrm::Skin>> m_skinMap;
+  std::unordered_map<uint32_t, std::shared_ptr<boneskin::BaseMesh>> m_baseMap;
+  std::unordered_map<uint32_t, std::shared_ptr<boneskin::Skin>> m_skinMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
@@ -327,7 +327,8 @@ class Gl3Renderer
 
   std::shared_ptr<ShaderSourceManager> m_shaderSource;
 
-  std::unordered_map<uint32_t, std::shared_ptr<libvrm::BaseMesh>> m_baseMeshMap;
+  std::unordered_map<uint32_t, std::shared_ptr<boneskin::BaseMesh>>
+    m_baseMeshMap;
 
   struct NodeMesh
   {
@@ -596,7 +597,7 @@ public:
 
   std::shared_ptr<grapho::gl3::Vao> GetOrCreateMesh(
     uint32_t id,
-    const std::shared_ptr<libvrm::BaseMesh>& mesh)
+    const std::shared_ptr<boneskin::BaseMesh>& mesh)
   {
     assert(mesh);
 
@@ -619,22 +620,22 @@ public:
         .Id = { 0, 0, "vPosition" },
         .Type = grapho::ValueType::Float,
         .Count = 3,
-        .Offset = offsetof(libvrm::Vertex, Position),
-        .Stride = sizeof(libvrm::Vertex),
+        .Offset = offsetof(boneskin::Vertex, Position),
+        .Stride = sizeof(boneskin::Vertex),
       },
       {
         .Id = { 1, 0, "vNormal" },
         .Type = grapho::ValueType::Float,
         .Count = 3,
-        .Offset = offsetof(libvrm::Vertex, Normal),
-        .Stride = sizeof(libvrm::Vertex),
+        .Offset = offsetof(boneskin::Vertex, Normal),
+        .Stride = sizeof(boneskin::Vertex),
       },
       {
         .Id = { 2, 0, "vUv" },
         .Type = grapho::ValueType::Float,
         .Count = 2,
-        .Offset = offsetof(libvrm::Vertex, Uv),
-        .Stride = sizeof(libvrm::Vertex),
+        .Offset = offsetof(boneskin::Vertex, Uv),
+        .Stride = sizeof(boneskin::Vertex),
       },
     };
     auto vao = grapho::gl3::Vao::Create(layouts, slots, ibo);
@@ -644,7 +645,7 @@ public:
     return vao;
   }
 
-  std::shared_ptr<libvrm::BaseMesh> GetOrCreateBaseMesh(
+  std::shared_ptr<boneskin::BaseMesh> GetOrCreateBaseMesh(
     const gltfjson::Root& root,
     const gltfjson::Bin& bin,
     std::optional<uint32_t> mesh)
@@ -666,23 +667,23 @@ public:
     }
   }
 
-  std::shared_ptr<libvrm::DeformedMesh> GetOrCreateDeformedMesh(
+  std::shared_ptr<boneskin::DeformedMesh> GetOrCreateDeformedMesh(
     uint32_t mesh,
-    const std::shared_ptr<libvrm::BaseMesh>& baseMesh)
+    const std::shared_ptr<boneskin::BaseMesh>& baseMesh)
   {
     auto found = m_deformMap.find(mesh);
     if (found != m_deformMap.end()) {
       return found->second;
     }
 
-    auto runtime = std::make_shared<libvrm::DeformedMesh>(baseMesh);
+    auto runtime = std::make_shared<boneskin::DeformedMesh>(baseMesh);
     m_deformMap.insert({ mesh, runtime });
     return runtime;
   }
 
-  std::shared_ptr<libvrm::Skin> GetOrCreaeSkin(const gltfjson::Root& root,
-                                               const gltfjson::Bin& bin,
-                                               std::optional<uint32_t> skinId)
+  std::shared_ptr<boneskin::Skin> GetOrCreaeSkin(const gltfjson::Root& root,
+                                                 const gltfjson::Bin& bin,
+                                                 std::optional<uint32_t> skinId)
   {
     if (!skinId) {
       return {};
@@ -750,7 +751,7 @@ public:
               *baseMesh, drawables[i].MorphMap, skinningMatrices);
             auto vao = GetOrCreateMesh(*meshId, baseMesh);
             vao->slots_[0]->Upload(deformed->Vertices.size() *
-                                     sizeof(libvrm::Vertex),
+                                     sizeof(boneskin::Vertex),
                                    deformed->Vertices.data());
           }
         }
@@ -776,7 +777,7 @@ public:
               const RenderingEnv& env,
               const gltfjson::Root& root,
               const gltfjson::Bin& bin,
-              const std::shared_ptr<libvrm::BaseMesh>& baseMesh,
+              const std::shared_ptr<boneskin::BaseMesh>& baseMesh,
               const std::shared_ptr<grapho::gl3::Vao>& vao,
               const DirectX::XMFLOAT4X4& modelMatrix)
   {
@@ -860,7 +861,7 @@ public:
                      const gltfjson::Root& root,
                      const gltfjson::Bin& bin,
                      const std::shared_ptr<grapho::gl3::Vao>& vao,
-                     const libvrm::Primitive& primitive,
+                     const boneskin::Primitive& primitive,
                      uint32_t drawOffset)
   {
     gltfjson::tree::NodePtr gltfMaterial;

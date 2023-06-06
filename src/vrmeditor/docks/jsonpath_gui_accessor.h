@@ -7,7 +7,7 @@
 #include <grapho/imgui/widgets.h>
 #include <optional>
 #include <string>
-#include <vrm/base_mesh.h>
+#include <boneskin/types.h>
 
 static std::optional<int>
 GetIndex(std::u8string_view jsonpath)
@@ -24,7 +24,7 @@ JsonGuiAccessorUShort4(const gltfjson::Root& root,
                        const gltfjson::Bin& bin,
                        const gltfjson::tree::NodePtr& node)
 {
-  if (auto items = bin.GetAccessorBytes<libvrm::ushort4>(
+  if (auto items = bin.GetAccessorBytes<boneskin::ushort4>(
         root, (int)*node->Ptr<float>())) {
     ImGui::Text("ushort4[%zu]", items->size());
     std::array<const char*, 5> cols = {

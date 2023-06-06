@@ -33,6 +33,7 @@ asio_dep = dependency('asio')
 gltfjson_dep = dependency('gltfjson')
 simplefilewatcher_dep = dependency('simplefilewatcher')
 subdir('libvrm')
+subdir('libboneskin')
 
 if get_option('executables')
     subdir('src')

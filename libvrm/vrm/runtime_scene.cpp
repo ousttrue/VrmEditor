@@ -1,6 +1,5 @@
 #include "runtime_scene.h"
 #include "animation.h"
-#include "deformed_mesh.h"
 #include "runtime_node.h"
 #include "spring_collision.h"
 #include <gltfjson.h>
