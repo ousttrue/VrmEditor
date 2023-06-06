@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/SergiusTheBest/plog
+revision = master
+depth = 1
+patch_directory = plog
+
+[provide]
+plog = plog_dep

@@ -33,6 +33,8 @@ asio_dep = dependency('asio')
 gltfjson_dep = dependency('gltfjson')
 simplefilewatcher_dep = dependency('simplefilewatcher')
 remotery_dep = subproject('remotery').get_variable('remotery_dep')
+# plog_dep = subproject('sergiusthebest-plog').get_variable('plog_dep')
+plog_dep = dependency('plog')
 subdir('libvrm')
 subdir('libboneskin')
 

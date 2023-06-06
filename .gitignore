@@ -15,7 +15,7 @@
 !/subprojects/spanmath.wrap
 !/subprojects/stb.wrap
 !/subprojects/simplefilewatcher.wrap
-#
+!/subprojects/plog.wrap
 !/subprojects/ImGuizmo
 !/subprojects/ImGuiFileDialog
 !/subprojects/ImFileDialog

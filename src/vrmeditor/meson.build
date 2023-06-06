@@ -63,6 +63,7 @@ executable(
         imgui_colortextedit_dep,
         boneskin_dep,
         remotery_dep,
+        plog_dep,
     ],
 )
 
