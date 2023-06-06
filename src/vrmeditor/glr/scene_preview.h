@@ -1,6 +1,7 @@
 #pragma once
 #include "docks/scene_selection.h"
 #include "rendering_env.h"
+#include "renderpass.h"
 #include "rendertarget.h"
 #include <grapho/orbitview.h>
 #include <memory>
@@ -49,7 +50,7 @@ struct ScenePreview
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<LineGizmo> m_gizmo;
 
-  std::unordered_map<uint32_t, std::shared_ptr<libvrm::DrawItem>> m_nodeDrawMap;
+  std::vector<RenderPass> m_renderpass;
 
   ScenePreview(const std::shared_ptr<libvrm::RuntimeScene>& scene,
                const std::shared_ptr<RenderingEnv>& env,
@@ -72,9 +73,7 @@ struct ScenePreview
   void RenderRuntime(const grapho::OrbitView& view);
 
 private:
-  void RenderPass(
-    const std::unordered_map<uint32_t, std::shared_ptr<libvrm::DrawItem>>&
-      nodeDrawMap);
+  void Render(std::span<libvrm::DrawItem> drawables, bool isTPose);
 
 public:
   void ShowScreenRect(const char* title,
@@ -86,4 +85,4 @@ public:
   void ShowFullWindow(const char* title, const float color[4]);
 };
 
-}
+} // namespace

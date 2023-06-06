@@ -29,6 +29,7 @@
 #include <vrm/deformed_mesh.h>
 #include <vrm/fileutil.h>
 #include <vrm/image.h>
+#include <vrm/skin.h>
 
 #include "material_error.h"
 #include "material_pbr_khronos.h"
@@ -65,6 +66,32 @@ ParseImage(const gltfjson::Root& root,
   if (!ptr->Load(bytes)) {
     return std::unexpected{ "Image: fail to load" };
   }
+  return ptr;
+}
+
+static std::expected<std::shared_ptr<libvrm::Skin>, std::string>
+ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, uint32_t i)
+{
+  auto skin = root.Skins[i];
+  auto ptr = std::make_shared<libvrm::Skin>();
+  ptr->Name = gltfjson::from_u8(skin.Name());
+  for (auto joint : skin.Joints) {
+    ptr->Joints.push_back(joint);
+  }
+
+  std::span<const DirectX::XMFLOAT4X4> matrices;
+  if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT4X4>(
+        root, *skin.InverseBindMatrices())) {
+    matrices = *accessor;
+  } else {
+    return std::unexpected{ accessor.error() };
+  }
+  std::vector<DirectX::XMFLOAT4X4> copy;
+  ptr->BindMatrices.assign(matrices.begin(), matrices.end());
+
+  assert(ptr->Joints.size() == ptr->BindMatrices.size());
+
+  ptr->Root = skin.Skeleton();
   return ptr;
 }
 
@@ -286,6 +313,7 @@ class Gl3Renderer
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::DeformedMesh>>
     m_deformMap;
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::BaseMesh>> m_baseMap;
+  std::unordered_map<uint32_t, std::shared_ptr<libvrm::Skin>> m_skinMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
     m_srgbTextureMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
@@ -300,6 +328,13 @@ class Gl3Renderer
   std::shared_ptr<ShaderSourceManager> m_shaderSource;
 
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::BaseMesh>> m_baseMeshMap;
+
+  struct NodeMesh
+  {
+    uint32_t NodeIndex;
+    uint32_t MeshIndex;
+  };
+  std::vector<NodeMesh> m_meshNodes;
 
   struct MaterialFactory
   {
@@ -363,6 +398,9 @@ public:
   void Release()
   {
     m_imageMap.clear();
+    m_baseMap.clear();
+    m_deformMap.clear();
+    m_skinMap.clear();
     m_materialMap.clear();
     m_srgbTextureMap.clear();
     m_linearTextureMap.clear();
@@ -609,15 +647,19 @@ public:
   std::shared_ptr<libvrm::BaseMesh> GetOrCreateBaseMesh(
     const gltfjson::Root& root,
     const gltfjson::Bin& bin,
-    uint32_t mesh)
+    std::optional<uint32_t> mesh)
   {
-    auto found = m_baseMap.find(mesh);
+    if (!mesh) {
+      return {};
+    }
+
+    auto found = m_baseMap.find(*mesh);
     if (found != m_baseMap.end()) {
       return found->second;
     }
 
-    if (auto base = ParseMesh(root, bin, mesh)) {
-      m_baseMap.insert({ mesh, *base });
+    if (auto base = ParseMesh(root, bin, *mesh)) {
+      m_baseMap.insert({ *mesh, *base });
       return *base;
     } else {
       return {};
@@ -638,33 +680,110 @@ public:
     return runtime;
   }
 
-  void Render(RenderPass pass,
-              const RenderingEnv& env,
-              const gltfjson::Root& root,
-              const gltfjson::Bin& bin,
-              uint32_t meshId,
-              const DirectX::XMFLOAT4X4& modelMatrix,
-              const std::unordered_map<uint32_t, float>& morphMap,
-              std::span<const DirectX::XMFLOAT4X4> skinningMatrices)
+  std::shared_ptr<libvrm::Skin> GetOrCreaeSkin(const gltfjson::Root& root,
+                                               const gltfjson::Bin& bin,
+                                               std::optional<uint32_t> skinId)
+  {
+    if (!skinId) {
+      return {};
+    }
+
+    auto found = m_skinMap.find(*skinId);
+    if (found != m_skinMap.end()) {
+      return found->second;
+    }
+
+    if (auto skin = ParseSkin(root, bin, *skinId)) {
+      m_skinMap.insert({ *skinId, *skin });
+      return *skin;
+    } else {
+      return {};
+    }
+  }
+
+  void RenderPasses(std::span<const RenderPass> passes,
+                    bool isTPose,
+                    const RenderingEnv& env,
+                    const gltfjson::Root& root,
+                    const gltfjson::Bin& bin,
+                    std::span<const libvrm::DrawItem> drawables)
   {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    auto baseMesh = GetOrCreateBaseMesh(root, bin, meshId);
-    if (!baseMesh) {
-      return;
-    }
-    auto vao = GetOrCreateMesh(meshId, baseMesh);
+    assert(root.Nodes.size() == drawables.size());
+    m_meshNodes.clear();
 
-    // upload vertices. CPU skinning and morpht target.
-    auto deformed = GetOrCreateDeformedMesh(meshId, baseMesh);
-    if (deformed->Vertices.size()) {
-      // apply morphtarget & skinning
-      deformed->ApplyMorphTargetAndSkinning(
-        *baseMesh, morphMap, skinningMatrices);
-      vao->slots_[0]->Upload(deformed->Vertices.size() * sizeof(libvrm::Vertex),
-                             deformed->Vertices.data());
+    for (uint32_t i = 0; i < drawables.size(); ++i) {
+      auto gltfNode = root.Nodes[i];
+      if (auto meshId = gltfNode.Mesh()) {
+        m_meshNodes.push_back({ i, *meshId });
+        if (auto baseMesh = GetOrCreateBaseMesh(root, bin, meshId)) {
+
+          std::span<const DirectX::XMFLOAT4X4> skinningMatrices;
+          if (!isTPose) {
+            if (auto skin = GetOrCreaeSkin(root, bin, gltfNode.Skin())) {
+              // update skinnning
+              skin->CurrentMatrices.resize(skin->BindMatrices.size());
+
+              auto rootInverse = DirectX::XMMatrixIdentity();
+              if (auto root_index = skin->Root) {
+                rootInverse = DirectX::XMMatrixInverse(
+                  nullptr, DirectX::XMLoadFloat4x4(&drawables[i].Matrix));
+              }
+
+              for (int i = 0; i < skin->Joints.size(); ++i) {
+                auto m = skin->BindMatrices[i];
+                DirectX::XMStoreFloat4x4(
+                  &skin->CurrentMatrices[i],
+                  DirectX::XMLoadFloat4x4(&m) *
+                    DirectX::XMLoadFloat4x4(
+                      &drawables[skin->Joints[i]].Matrix) *
+                    rootInverse);
+              }
+
+              skinningMatrices = skin->CurrentMatrices;
+            }
+          }
+
+          // upload vertices. CPU skinning and morpht target.
+          auto deformed = GetOrCreateDeformedMesh(*meshId, baseMesh);
+          if (deformed->Vertices.size()) {
+            // apply morphtarget & skinning
+            deformed->ApplyMorphTargetAndSkinning(
+              *baseMesh, drawables[i].MorphMap, skinningMatrices);
+            auto vao = GetOrCreateMesh(*meshId, baseMesh);
+            vao->slots_[0]->Upload(deformed->Vertices.size() *
+                                     sizeof(libvrm::Vertex),
+                                   deformed->Vertices.data());
+          }
+        }
+      }
     }
+
+    // render
+    for (auto pass : passes) {
+      for (auto& [nodeId, meshId] : m_meshNodes) {
+        auto gltfNode = root.Nodes[nodeId];
+        if (auto meshId = gltfNode.Mesh()) {
+          if (auto baseMesh = GetOrCreateBaseMesh(root, bin, meshId)) {
+            auto vao = GetOrCreateMesh(*meshId, baseMesh);
+            Render(
+              pass, env, root, bin, baseMesh, vao, drawables[nodeId].Matrix);
+          }
+        }
+      }
+    }
+  }
+
+  void Render(RenderPass pass,
+              const RenderingEnv& env,
+              const gltfjson::Root& root,
+              const gltfjson::Bin& bin,
+              const std::shared_ptr<libvrm::BaseMesh>& baseMesh,
+              const std::shared_ptr<grapho::gl3::Vao>& vao,
+              const DirectX::XMFLOAT4X4& modelMatrix)
+  {
 
     switch (pass) {
       case RenderPass::Opaque: {
@@ -958,17 +1077,15 @@ public:
 };
 
 void
-Render(RenderPass pass,
-       const RenderingEnv& env,
-       const gltfjson::Root& root,
-       const gltfjson::Bin& bin,
-       uint32_t meshId,
-       const DirectX::XMFLOAT4X4& modelMatrix,
-       const std::unordered_map<uint32_t, float>& morphMap,
-       std::span<const DirectX::XMFLOAT4X4> skinningMatrices)
+RenderPasses(std::span<const RenderPass> passes,
+             bool isTPose,
+             const RenderingEnv& env,
+             const gltfjson::Root& root,
+             const gltfjson::Bin& bin,
+             std::span<const libvrm::DrawItem> drawables)
 {
-  Gl3Renderer::Instance().Render(
-    pass, env, root, bin, meshId, modelMatrix, morphMap, skinningMatrices);
+  Gl3Renderer::Instance().RenderPasses(
+    passes, isTPose, env, root, bin, drawables);
 }
 
 void

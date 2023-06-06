@@ -34,10 +34,10 @@ enum class ModelType
 
 struct DrawItem
 {
-  uint32_t Mesh;
+  // uint32_t Mesh;
   DirectX::XMFLOAT4X4 Matrix;
   std::unordered_map<uint32_t, float> MorphMap;
-  std::vector<DirectX::XMFLOAT4X4> SkinningMatrices;
+  // std::vector<DirectX::XMFLOAT4X4> SkinningMatrices;
 };
 
 struct GltfRoot
@@ -119,8 +119,8 @@ struct GltfRoot
     }
   }
 
-  void UpdateDrawables(
-    std::unordered_map<uint32_t, std::shared_ptr<DrawItem>>& nodeDrawMap);
+  std::vector<DrawItem> m_drawables;
+  std::span<DrawItem> Drawables();
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
 };
 

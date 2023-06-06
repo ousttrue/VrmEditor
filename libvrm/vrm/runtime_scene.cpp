@@ -2,37 +2,10 @@
 #include "animation.h"
 #include "deformed_mesh.h"
 #include "runtime_node.h"
-#include "skin.h"
 #include "spring_collision.h"
 #include <gltfjson.h>
 
 namespace libvrm {
-
-static std::expected<std::shared_ptr<libvrm::Skin>, std::string>
-ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
-{
-  auto skin = root.Skins[i];
-  auto ptr = std::make_shared<libvrm::Skin>();
-  ptr->Name = gltfjson::from_u8(skin.Name());
-  for (auto joint : skin.Joints) {
-    ptr->Joints.push_back(joint);
-  }
-
-  std::span<const DirectX::XMFLOAT4X4> matrices;
-  if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT4X4>(
-        root, *skin.InverseBindMatrices())) {
-    matrices = *accessor;
-  } else {
-    return std::unexpected{ accessor.error() };
-  }
-  std::vector<DirectX::XMFLOAT4X4> copy;
-  ptr->BindMatrices.assign(matrices.begin(), matrices.end());
-
-  assert(ptr->Joints.size() == ptr->BindMatrices.size());
-
-  ptr->Root = skin.Skeleton();
-  return ptr;
-}
 
 static std::expected<std::shared_ptr<Animation>, std::string>
 ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
@@ -119,13 +92,6 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<libvrm::GltfRoot>& table)
   : m_table(table)
 {
   Reset();
-
-  if (m_table->m_gltf) {
-    for (uint32_t i = 0; i < m_table->m_gltf->Skins.size(); ++i) {
-      auto skin = ParseSkin(*m_table->m_gltf, m_table->m_bin, i);
-      m_skins.push_back(*skin);
-    }
-  }
 }
 
 void
@@ -193,9 +159,7 @@ RuntimeScene::GetRuntimeSpringCollision(
 }
 
 void
-RuntimeScene::UpdateDrawables(
-  const std::unordered_map<uint32_t, std::shared_ptr<libvrm::DrawItem>>&
-    nodeDrawMap)
+RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
 {
   if (!m_table->m_gltf) {
     return;
@@ -241,43 +205,15 @@ RuntimeScene::UpdateDrawables(
     };
     for (auto& [k, v] :
          m_table->m_expressions->EvalMorphTargetMap(nodeToIndex)) {
-      auto found = nodeDrawMap.find(k.NodeIndex);
-      if (found != nodeDrawMap.end()) {
-        found->second->MorphMap[k.MorphIndex] = v;
-      }
+      auto& item = drawables[k.NodeIndex];
+      item.MorphMap[k.MorphIndex] = v;
     }
   }
 
-  // skinning
-  for (auto& [nodeIndex, drawItem] : nodeDrawMap) {
-    auto gltfNode = m_table->m_gltf->Nodes[nodeIndex];
-
-    if (auto skinIndex = gltfNode.Skin()) {
-      auto skin = m_skins[*skinIndex];
-      skin->CurrentMatrices.resize(skin->BindMatrices.size());
-
-      auto rootInverse = DirectX::XMMatrixIdentity();
-      if (auto root_index = skin->Root) {
-        rootInverse = DirectX::XMMatrixInverse(
-          nullptr, GetRuntimeNode(m_table->m_nodes[nodeIndex])->WorldMatrix());
-      }
-
-      for (int i = 0; i < skin->Joints.size(); ++i) {
-        auto node = m_table->m_nodes[skin->Joints[i]];
-        auto m = skin->BindMatrices[i];
-        DirectX::XMStoreFloat4x4(&skin->CurrentMatrices[i],
-                                 DirectX::XMLoadFloat4x4(&m) *
-                                   GetRuntimeNode(node)->WorldMatrix() *
-                                   rootInverse);
-      }
-
-      drawItem->SkinningMatrices = skin->CurrentMatrices;
-    }
-
+  for (uint32_t i = 0; i < drawables.size(); ++i) {
     // model matrix
     DirectX::XMStoreFloat4x4(
-      &drawItem->Matrix,
-      GetRuntimeNode(m_table->m_nodes[nodeIndex])->WorldMatrix());
+      &drawables[i].Matrix, GetRuntimeNode(m_table->m_nodes[i])->WorldMatrix());
   }
 }
 

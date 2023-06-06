@@ -7,7 +7,6 @@
 #include <unordered_map>
 
 namespace libvrm {
-struct Skin;
 struct RuntimeNode;
 struct RuntimeSpringCollision;
 struct Animation;
@@ -26,10 +25,9 @@ _IndexOf(std::span<const T> values, const T& target)
 
 struct RuntimeScene
 {
-  std::shared_ptr<libvrm::GltfRoot> m_table;
+  std::shared_ptr<GltfRoot> m_table;
   std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
-  std::vector<std::shared_ptr<Skin>> m_skins;
   std::vector<std::shared_ptr<Animation>> m_animations;
 
   std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
@@ -45,59 +43,55 @@ struct RuntimeScene
     }
   }
 
-  libvrm::Time NextSpringDelta = libvrm::Time(0.0);
-  std::shared_ptr<libvrm::GltfRoot> m_lastScene;
+  Time NextSpringDelta = libvrm::Time(0.0);
+  std::shared_ptr<GltfRoot> m_lastScene;
 
-  std::unordered_map<std::shared_ptr<libvrm::Node>,
-                     std::shared_ptr<RuntimeNode>>
+  std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<RuntimeNode>>
     m_nodeMap;
 
-  std::unordered_map<std::shared_ptr<libvrm::SpringJoint>,
+  std::unordered_map<std::shared_ptr<SpringJoint>,
                      std::shared_ptr<RuntimeSpringJoint>>
     m_jointMap;
-  std::unordered_map<std::shared_ptr<libvrm::SpringBone>,
+  std::unordered_map<std::shared_ptr<SpringBone>,
                      std::shared_ptr<RuntimeSpringCollision>>
     m_springCollisionMap;
 
-  RuntimeScene(const std::shared_ptr<libvrm::GltfRoot>& table);
+  RuntimeScene(const std::shared_ptr<GltfRoot>& table);
   void Reset();
 
   std::shared_ptr<RuntimeNode> GetRuntimeNode(
-    const std::shared_ptr<libvrm::Node>& node);
+    const std::shared_ptr<Node>& node);
 
   std::shared_ptr<RuntimeSpringJoint> GetRuntimeJoint(
-    const std::shared_ptr<libvrm::SpringJoint>& joint);
+    const std::shared_ptr<SpringJoint>& joint);
   std::shared_ptr<RuntimeSpringCollision> GetRuntimeSpringCollision(
-    const std::shared_ptr<libvrm::SpringBone>& springBone);
+    const std::shared_ptr<SpringBone>& springBone);
 
-  void UpdateDrawables(
-    const std::unordered_map<uint32_t, std::shared_ptr<libvrm::DrawItem>>&
-      nodeDrawMap);
+  void UpdateDrawables(std::span<DrawItem> drawables);
 
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
 
-  void SpringUpdate(const std::shared_ptr<libvrm::SpringBone>& solver,
-                    libvrm::Time deltaForSimulation);
-  void SpringDrawGizmo(const std::shared_ptr<libvrm::SpringBone>& solver,
-                       libvrm::IGizmoDrawer* gizmo);
-  void SpringColliderDrawGizmo(
-    const std::shared_ptr<libvrm::SpringCollider>& collider,
-    libvrm::IGizmoDrawer* gizmo);
+  void SpringUpdate(const std::shared_ptr<SpringBone>& solver,
+                    Time deltaForSimulation);
+  void SpringDrawGizmo(const std::shared_ptr<SpringBone>& solver,
+                       IGizmoDrawer* gizmo);
+  void SpringColliderDrawGizmo(const std::shared_ptr<SpringCollider>& collider,
+                               IGizmoDrawer* gizmo);
   DirectX::XMVECTOR SpringColliderPosition(
-    const std::shared_ptr<libvrm::SpringCollider>& collider);
+    const std::shared_ptr<SpringCollider>& collider);
 
-  void NodeConstraintProcess(const libvrm::NodeConstraint& constraint,
+  void NodeConstraintProcess(const NodeConstraint& constraint,
                              const std::shared_ptr<RuntimeNode>& dst);
 
   // humanpose
-  std::vector<libvrm::HumanBones> m_humanBoneMap;
+  std::vector<HumanBones> m_humanBoneMap;
   std::vector<DirectX::XMFLOAT4> m_rotations;
-  libvrm::HumanPose m_pose;
-  libvrm::HumanPose UpdateHumanPose();
-  void SetHumanPose(const libvrm::HumanPose& pose);
+  HumanPose m_pose;
+  HumanPose UpdateHumanPose();
+  void SetHumanPose(const HumanPose& pose);
   void SyncHierarchy();
-  void DrawGizmo(libvrm::IGizmoDrawer* gizmo);
+  void DrawGizmo(IGizmoDrawer* gizmo);
 };
 
 } // namespace

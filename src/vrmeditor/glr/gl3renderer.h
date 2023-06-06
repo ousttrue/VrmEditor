@@ -7,13 +7,13 @@
 #include <gltfjson.h>
 #include <memory>
 
-namespace libvrm {
-namespace gltf {
-struct Mesh;
-class Image;
-struct Texture;
-}
-}
+// namespace libvrm {
+// namespace gltf {
+// struct Mesh;
+// class Image;
+// struct Texture;
+// }
+// }
 namespace grapho {
 namespace gl3 {
 class Texture;
@@ -23,6 +23,7 @@ class Cubemap;
 namespace libvrm {
 struct BaseMesh;
 struct DeformedMesh;
+struct DrawItem;
 }
 
 namespace glr {
@@ -44,14 +45,12 @@ enum class EnvTextureTypes
 struct RenderingEnv;
 
 void
-Render(RenderPass pass,
-       const RenderingEnv& camera,
-       const gltfjson::Root& root,
-       const gltfjson::Bin& bin,
-       uint32_t meshId,
-       const DirectX::XMFLOAT4X4& modelMatrix,
-       const std::unordered_map<uint32_t, float>& morphMap,
-       std::span<const DirectX::XMFLOAT4X4> skinningMatrices);
+RenderPasses(std::span<const RenderPass> passes,
+             bool isTPose,
+             const RenderingEnv& camera,
+             const gltfjson::Root& root,
+             const gltfjson::Bin& bin,
+             std::span<const libvrm::DrawItem> drawables);
 
 // clear current render target
 void

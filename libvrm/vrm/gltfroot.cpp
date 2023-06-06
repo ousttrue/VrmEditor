@@ -98,32 +98,22 @@ GltfRoot::GetBoundingBox() const
   return bb;
 }
 
-void
-GltfRoot::UpdateDrawables(
-  std::unordered_map<uint32_t, std::shared_ptr<DrawItem>>& nodeDrawMap)
+std::span<DrawItem>
+GltfRoot::Drawables()
 {
   if (m_gltf) {
+    m_drawables.resize(m_nodes.size());
     for (uint32_t i = 0; i < m_nodes.size(); ++i) {
       auto node = m_nodes[i];
       auto gltfNode = m_gltf->Nodes[i];
-
-      if (auto mesh = gltfNode.Mesh()) {
-        auto found = nodeDrawMap.find(i);
-        std::shared_ptr<DrawItem> item;
-        if (found != nodeDrawMap.end()) {
-          item = found->second;
-        } else {
-          item = std::make_shared<DrawItem>();
-          nodeDrawMap.insert({ i, item });
-        }
-
-        item->Mesh = *mesh;
-        DirectX::XMStoreFloat4x4(&item->Matrix, node->WorldInitialMatrix());
-        item->MorphMap.clear();
-        item->SkinningMatrices = {};
-      }
+      auto& item = m_drawables[i];
+      DirectX::XMStoreFloat4x4(&item.Matrix, node->WorldInitialMatrix());
+      item.MorphMap.clear();
     }
+  } else {
+    m_drawables.clear();
   }
+  return m_drawables;
 }
 
 std::span<const DirectX::XMFLOAT4X4>

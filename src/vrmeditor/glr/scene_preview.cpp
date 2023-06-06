@@ -60,8 +60,8 @@ ScenePreview::RenderStatic(const grapho::OrbitView& view)
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  m_runtime->m_table->UpdateDrawables(m_nodeDrawMap);
-  RenderPass(m_nodeDrawMap);
+  auto drawables = m_runtime->m_table->Drawables();
+  Render(drawables, true);
 
   // manipulator
   if (auto node = m_selection->selected.lock()) {
@@ -105,9 +105,11 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
   m_runtime->NextSpringDelta = m_settings->NextSpringDelta;
   m_settings->NextSpringDelta = {};
 
-  m_runtime->m_table->UpdateDrawables(m_nodeDrawMap);
-  m_runtime->UpdateDrawables(m_nodeDrawMap);
-  RenderPass(m_nodeDrawMap);
+  auto drawables = m_runtime->m_table->Drawables();
+  if (drawables.size()) {
+    m_runtime->UpdateDrawables(drawables);
+  }
+  Render(drawables, false);
 
   // manipulator
   if (auto init = m_selection->selected.lock()) {
@@ -142,56 +144,31 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
 }
 
 void
-ScenePreview::RenderPass(
-  const std::unordered_map<uint32_t, std::shared_ptr<libvrm::DrawItem>>&
-    drawables)
+ScenePreview::Render(std::span<libvrm::DrawItem> drawables, bool isTPose)
 {
   glDisable(GL_DEPTH_TEST);
   if (m_settings->Skybox) {
     glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
   }
 
-  glEnable(GL_DEPTH_TEST);
-  for (auto [_, draw] : drawables) {
-    // auto meshInstance = m_runtime->GetDeformedMesh(meshId);
+  if (drawables.size()) {
+    m_renderpass.clear();
+    glEnable(GL_DEPTH_TEST);
     if (m_settings->ShowMesh) {
-      glr::Render(RenderPass::Opaque,
-                  *m_env,
-                  *m_runtime->m_table->m_gltf,
-                  m_runtime->m_table->m_bin,
-                  draw->Mesh,
-                  draw->Matrix,
-                  draw->MorphMap,
-                  draw->SkinningMatrices);
+      m_renderpass.push_back(RenderPass::Opaque);
     }
-  }
-
-  for (auto [_, draw] : drawables) {
-    // auto meshInstance = m_runtime->GetDeformedMesh(meshId);
     if (m_settings->ShowShadow) {
-      glr::Render(RenderPass::ShadowMatrix,
-                  *m_env,
-                  *m_runtime->m_table->m_gltf,
-                  m_runtime->m_table->m_bin,
-                  draw->Mesh,
-                  draw->Matrix,
-                  draw->MorphMap,
-                  draw->SkinningMatrices);
+      m_renderpass.push_back(RenderPass::ShadowMatrix);
     }
-  }
-
-  for (auto [_, draw] : drawables) {
-    // auto meshInstance = m_runtime->GetDeformedMesh(meshId);
     if (m_settings->ShowMesh) {
-      glr::Render(RenderPass::Transparent,
-                  *m_env,
-                  *m_runtime->m_table->m_gltf,
-                  m_runtime->m_table->m_bin,
-                  draw->Mesh,
-                  draw->Matrix,
-                  draw->MorphMap,
-                  draw->SkinningMatrices);
+      m_renderpass.push_back(RenderPass::Transparent);
     }
+    glr::RenderPasses(m_renderpass,
+                      isTPose,
+                      *m_env,
+                      *m_runtime->m_table->m_gltf,
+                      m_runtime->m_table->m_bin,
+                      drawables);
   }
 
   if (m_settings->ShowLine) {
@@ -209,8 +186,6 @@ ScenePreview::RenderPass(
     }
     m_cuber->Render(*m_env);
   }
-
-  ////////////////////////////////////////////////////////////
 }
 
 void
