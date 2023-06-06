@@ -32,6 +32,7 @@ imgui_colortextedit_dep = dependency('ImGuiColorTextEdit')
 asio_dep = dependency('asio')
 gltfjson_dep = dependency('gltfjson')
 simplefilewatcher_dep = dependency('simplefilewatcher')
+remotery_dep = subproject('remotery').get_variable('remotery_dep')
 subdir('libvrm')
 subdir('libboneskin')
 

@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "outFile": "out.js",
+    "allowJs": true,
+    "sourceMap": true
+  },
+  "include": ["ThreadFrame.js"]
+}

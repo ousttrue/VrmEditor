@@ -28,6 +28,7 @@
 #include <gltfjson/json_tree_exporter.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
+#include <remotery.h>
 #include <vrm/animation_update.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
@@ -339,6 +340,11 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 int
 App::Run()
 {
+  // Create the main instance of Remotery.
+  // You need only do this once per program.
+  Remotery* rmt;
+  rmt_CreateGlobalInstance(&rmt);
+
   GL_ErrorClear("CreateWindow");
 
   // must after App::App
@@ -364,7 +370,9 @@ App::Run()
     [json = m_json, indent]() mutable { json->ShowSelector(indent); },
     true,
   });
-  addDock({ "json-inspector", [json = m_json]() mutable { json->ShowSelected(); }, true });
+  addDock({ "json-inspector",
+            [json = m_json]() mutable { json->ShowSelected(); },
+            true });
 
   addDock({ "hierarchy",
             [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
@@ -372,38 +380,51 @@ App::Run()
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
-    ERROR_CHECK;
+    {
+      rmt_ScopedCPUSample(update, 0);
 
-    m_watcher->Update();
+      ERROR_CHECK;
 
-    auto time = info->Time;
+      m_watcher->Update();
 
-    if (lastTime) {
-      auto delta = time - *lastTime;
-      m_timeline->SetDeltaTime(delta);
-    } else {
-      m_timeline->SetDeltaTime({}, true);
+      auto time = info->Time;
+
+      if (lastTime) {
+        auto delta = time - *lastTime;
+        m_timeline->SetDeltaTime(delta);
+      } else {
+        m_timeline->SetDeltaTime({}, true);
+      }
+      PoseStream->Update(time);
+      lastTime = time;
+
+      // newFrame
+      if (m_gui->NewFrame()) {
+        SaveState();
+      }
+      ImGuizmo::BeginFrame();
     }
-    PoseStream->Update(time);
-    lastTime = time;
 
-    // newFrame
-    if (m_gui->NewFrame()) {
-      SaveState();
+    {
+      rmt_ScopedCPUSample(gui, 0);
+      m_gui->DockSpace();
     }
-    ImGuizmo::BeginFrame();
 
-    m_gui->DockSpace();
+    {
+      rmt_ScopedCPUSample(render, 0);
+      glViewport(0, 0, info->Width, info->Height);
+      glClearColor(0, 0, 0, 0);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glViewport(0, 0, info->Width, info->Height);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    m_gui->Render();
-    m_platform->Present();
+      m_gui->Render();
+      m_platform->Present();
+    }
   }
 
   SaveState();
+
+  // Destroy the main instance of Remotery.
+  rmt_DestroyGlobalInstance(rmt);
 
   return 0;
 }
