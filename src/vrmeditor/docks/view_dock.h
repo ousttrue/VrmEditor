@@ -89,12 +89,14 @@ public:
         // 60FPS
         ImGui::Checkbox("Spring", &settings->EnableSpring);
         if (settings->EnableSpring) {
-          settings->NextSpringDelta = libvrm::Time(1.0 / 60);
         } else {
           if (ImGui::Button("Spring step")) {
             settings->NextSpringDelta = libvrm::Time(1.0 / 60);
           }
         }
+      }
+      if (settings->EnableSpring) {
+        settings->NextSpringDelta = libvrm::Time(1.0 / 60);
       }
 
       if (ImGui::CollapsingHeader("Pbr Env")) {
