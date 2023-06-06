@@ -3,10 +3,11 @@
 #include "glr/scene_preview.h"
 #include "humanpose_stream.h"
 #include <grapho/orbitview.h>
-#include <vrm/runtime_scene.h>
-#include <vrm/timeline.h>
+#include <plog/Log.h>
 #include <vrm/bvh/bvhscene.h>
 #include <vrm/humanoid/humanpose.h>
+#include <vrm/runtime_scene.h>
+#include <vrm/timeline.h>
 
 namespace humanpose {
 
@@ -30,7 +31,7 @@ BvhNode::SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
   if (map) {
 
   } else {
-    App::Instance().Log(LogLevel::Wran) << "humanoid map not found";
+    PLOG_WARNING << "humanoid map not found";
   }
 
   libvrm::bvh::InitializeSceneFromBvh(m_scene->m_table, bvh, map);

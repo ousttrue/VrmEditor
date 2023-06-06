@@ -3,6 +3,7 @@
 #include "fs_util.h"
 #include <algorithm>
 #include <imgui.h>
+#include <plog/Log.h>
 
 std::optional<Asset>
 Asset::FromPath(const std::filesystem::path& path)
@@ -91,8 +92,7 @@ AssetDir::CreateDock(const LoadFunc& callback)
     std::string("[asset] ") + Name,
     [this, callback]() {
       if (ImGui::Button(" Open")) {
-        App::Instance().Log(LogLevel::Info)
-          << "open: " << (const char*)Dir.u8string().c_str();
+        PLOG_INFO << "open: " << (const char*)Dir.u8string().c_str();
         shell_open(Dir);
       }
       ImGui::SameLine();

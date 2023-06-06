@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <docks/imlogger.h>
 #include <plog/Appenders/ColorConsoleAppender.h>
 #include <plog/Formatters/TxtFormatter.h>
 #include <plog/Init.h>
@@ -11,6 +12,24 @@
 #include "windows_helper.h"
 #else
 #endif
+
+namespace plog {
+template<class Formatter> // Typically a formatter is passed as a template
+                          // parameter.
+class ImLoggerAppender
+  : public IAppender // All appenders MUST inherit IAppender interface.
+{
+public:
+  virtual void write(const Record& record)
+    PLOG_OVERRIDE // This is a method from IAppender that MUST be implemented.
+  {
+    util::nstring str = Formatter::format(
+      record); // Use the formatter to get a string from a record.
+
+    ImLogger::Instance().AddLog(record.getSeverity(), str);
+  }
+};
+}
 
 // int WINAPI
 // WinMain(HINSTANCE hInstance,
@@ -26,17 +45,13 @@ main(int argc, char** argv)
   //   RedirectIOToConsole();
   // #endif
 
-  static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
-  plog::init(plog::verbose, &consoleAppender);
+  // static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
+  // plog::init(plog::verbose, &consoleAppender);
+  static plog::ImLoggerAppender<plog::TxtFormatter> imLoggerAppender;
+  plog::init(plog::debug,
+             &imLoggerAppender); // Initialize the logger with our appender.
 
-  // Log severity levels are printed in different colors.
-  PLOG_VERBOSE << "This is a VERBOSE message";
-  PLOG_DEBUG << "This is a DEBUG message";
-  PLOG_INFO << "This is an INFO message";
-  PLOG_WARNING << "This is a WARNING message";
-  PLOG_ERROR << "This is an ERROR message";
-  PLOG_FATAL << "This is a FATAL message";
-
+  //
   auto& app = App::Instance();
 
   auto exe = GetExe();

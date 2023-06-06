@@ -3,6 +3,7 @@
 #include "app.h"
 #include "error_check.h"
 #include <iostream>
+#include <plog/Log.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -70,8 +71,7 @@ GL_ErrorCheck(const char* fmt, ...)
 
   GLenum err;
   while ((err = glGetError()) != GL_NO_ERROR) {
-    App::Instance().Log(LogLevel::Wran)
-      << m_buf << " => " << gl_error_string(err);
+    PLOG_WARNING << m_buf << " => " << gl_error_string(err);
 
     std::cerr << m_buf << " => " << gl_error_string(err);
     assert(false);

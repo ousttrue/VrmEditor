@@ -65,6 +65,9 @@ executable(
         remotery_dep,
         plog_dep,
     ],
+    # cpp_args: [
+    #     '-DPLOG_ENABLE_WCHAR_INPUT',
+    # ],
 )
 
 install_subdir(

@@ -44,7 +44,6 @@ class Gui;
 struct AssetDir;
 class LuaEngine;
 class Platform;
-class ImLogger;
 class Gl3Renderer;
 struct JsonGui;
 
@@ -60,7 +59,6 @@ class App
   std::shared_ptr<Gui> m_gui;
   std::shared_ptr<LuaEngine> m_lua;
   std::list<std::shared_ptr<AssetDir>> m_assets;
-  std::shared_ptr<ImLogger> m_logger;
   std::shared_ptr<HierarchyGui> m_hierarchy;
 
   std::shared_ptr<libvrm::Timeline> m_timeline;
@@ -90,7 +88,6 @@ public:
 
   std::shared_ptr<libvrm::RuntimeScene> SetScene(
     const std::shared_ptr<libvrm::GltfRoot>& scene);
-  LogStream Log(LogLevel level);
   void LoadImGuiIni(std::string_view ini);
   void LoadImNodesIni(std::string_view ini);
   void SetWindowSize(int width, int height, bool maximize);

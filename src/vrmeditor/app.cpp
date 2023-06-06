@@ -42,7 +42,6 @@ App::App()
   m_watcher = std::make_shared<FileWatcher>(
     [=](const std::filesystem::path& path) { this->OnFileUpdated(path); });
 
-  m_logger = std::make_shared<ImLogger>();
   m_lua = std::make_shared<LuaEngine>();
   auto file = get_home() / ".vrmeditor.ini.lua";
   m_ini = file.u8string();
@@ -62,8 +61,8 @@ App::App()
   }
   GL_ErrorClear("CreateWindow");
 
-  Log(LogLevel::Info) << "GL_VERSION: " << glGetString(GL_VERSION);
-  Log(LogLevel::Info) << "GL_VENDOR: " << glGetString(GL_VENDOR);
+  PLOG_INFO << "GL_VERSION: " << glGetString(GL_VERSION);
+  PLOG_INFO << "GL_VENDOR: " << glGetString(GL_VENDOR);
   if (glewInit() != GLEW_OK) {
     throw std::runtime_error("glewInit");
   }
@@ -149,18 +148,6 @@ App::SetScene(const std::shared_ptr<libvrm::GltfRoot>& table)
   }
 
   return m_runtime;
-}
-
-LogStream
-App::Log(LogLevel level)
-{
-  return {
-    m_logger->Begin(level),
-    [logger = m_logger]() {
-      // flush
-      logger->End();
-    },
-  };
 }
 
 void
@@ -285,11 +272,11 @@ App::LoadModel(const std::filesystem::path& path)
     m_runtimeView->Fit(bb.Min, bb.Max);
     m_env->SetShadowHeight(bb.Min.y);
 
-    Log(LogLevel::Info) << path;
+    PLOG_INFO << path.string();
 
     return true;
   } else {
-    Log(LogLevel::Error) << table.error();
+    PLOG_ERROR << table.error();
     SetScene(std::make_shared<libvrm::GltfRoot>());
     return false;
   }
@@ -304,11 +291,11 @@ App::LoadPbr(const std::filesystem::path& hdr)
 void
 App::LoadLua(const std::filesystem::path& path)
 {
-  Log(LogLevel::Info) << path;
+  PLOG_INFO << path.string();
   if (auto ret = m_lua->DoFile(path)) {
     // ok
   } else {
-    Log(LogLevel::Error) << ret.error();
+    PLOG_ERROR << ret.error();
   }
 }
 
@@ -333,7 +320,7 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
   auto dock = m_assets.back()->CreateDock(callback);
   m_gui->AddDock(dock);
 
-  Log(LogLevel::Info) << name << " => " << path;
+  PLOG_INFO << name << " => " << path.string();
   return true;
 }
 
@@ -359,7 +346,11 @@ App::Run()
   PoseStream->CreateDock(addDock, "[animation] input-stream");
 #endif
 
-  ImLogger::Create(addDock, "logger", m_logger);
+  addDock({
+    "logger",
+    []() { ImLogger::Instance().Draw(); },
+    true,
+  });
   glr::CreateDock(addDock);
   ViewDock::CreateSetting(
     addDock, "view-settings", m_env, m_runtimeView, m_settings);

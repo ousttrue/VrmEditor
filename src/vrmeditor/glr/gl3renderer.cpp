@@ -27,6 +27,7 @@
 #include <imgui.h>
 #include <iostream>
 #include <misc/cpp/imgui_stdlib.h>
+#include <plog/Log.h>
 #include <unordered_map>
 #include <variant>
 #include <vrm/fileutil.h>
@@ -462,7 +463,7 @@ public:
       m_imageMap.insert({ *id, *image });
       return *image;
     } else {
-      App::Instance().Log(LogLevel::Error) << image.error();
+      PLOG_ERROR << image.error();
       return {};
     }
   }
@@ -1012,13 +1013,13 @@ public:
   {
     auto bytes = libvrm::ReadAllBytes(path);
     if (bytes.empty()) {
-      App::Instance().Log(LogLevel::Error) << "fail to read: " << path;
+      PLOG_ERROR << "fail to read: " << path.string();
       return false;
     }
 
     auto hdr = std::make_shared<libvrm::Image>("pbr");
     if (!hdr->LoadHdr(bytes)) {
-      App::Instance().Log(LogLevel::Error) << "fail to load: " << path;
+      PLOG_ERROR << "fail to load: " << path.string();
       return false;
     }
 

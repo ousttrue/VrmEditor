@@ -1,5 +1,6 @@
 #include "shader_source.h"
 #include "app.h"
+#include <plog/Log.h>
 #include <ranges>
 #include <span>
 #include <string_view>
@@ -181,7 +182,7 @@ struct IncludeExpander
 #endif
         return chunk;
       } else {
-        App::Instance().Log(LogLevel::Wran) << include.error();
+        PLOG_WARNING << include.error();
         return {};
       }
     } else {
@@ -293,14 +294,14 @@ struct ShaderSourceManagerImpl
               const std::filesystem::path& path)
   {
     if (source->Path == path) {
-      App::Instance().Log(LogLevel::Info) << source->Path << ": updated";
+      PLOG_INFO << source->Path.string() << ": updated";
       source->Source.clear();
       return true;
     } else {
       for (auto& include : source->Includes) {
         if (include == path) {
-          App::Instance().Log(LogLevel::Info)
-            << path << " include from " << source->Path << ": updated";
+          PLOG_INFO << path.string() << " include from "
+                    << source->Path.string() << ": updated";
           source->Source.clear();
           return true;
         }

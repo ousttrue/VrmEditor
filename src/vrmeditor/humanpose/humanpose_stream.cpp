@@ -230,7 +230,7 @@ HumanPoseStream::LoadMotion(const std::filesystem::path& path)
 {
   auto bytes = libvrm::ReadAllBytes(path);
   if (bytes.empty()) {
-    App::Instance().Log(LogLevel::Error) << "fail to read: " + path.string();
+    PLOG_ERROR << "fail to read: " + path.string();
     return false;
   }
 
@@ -238,13 +238,12 @@ HumanPoseStream::LoadMotion(const std::filesystem::path& path)
   auto bvh = std::make_shared<libvrm::bvh::Bvh>();
   if (auto parsed = bvh->Parse({ (const char*)bytes.data(), bytes.size() })) {
   } else {
-    App::Instance().Log(LogLevel::Error) << "LoadMotion: " << path;
-    App::Instance().Log(LogLevel::Error) << "LoadMotion: " << parsed.error();
+    PLOG_ERROR << "LoadMotion: " << path.string();
+    PLOG_ERROR << "LoadMotion: " << parsed.error();
     return false;
   }
   auto scaling = bvh->GuessScaling();
-  App::Instance().Log(LogLevel::Info)
-    << "LoadMotion: " << scaling << ", " << path;
+  PLOG_INFO << "LoadMotion: " << scaling << ", " << path.string();
 
   auto node = CreateNode<BvhNode>(
     "Bvh",
