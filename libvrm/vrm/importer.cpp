@@ -255,61 +255,54 @@ ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
     }
   }
 
-  // auto& nodes = scene->m_gltf->Json.at("nodes");
-  // for (size_t i = 0; i < nodes.size(); ++i) {
-  //   auto& node = nodes[i];
-  //   auto ptr = scene->m_nodes[i];
-  //   if (has(node, "extensions")) {
-  //     auto& extensions = node.at("extensions");
-  //     if (has(extensions, "VRMC_node_constraint")) {
-  //       auto& VRMC_node_constraint = extensions.at("VRMC_node_constraint");
-  //       if (has(VRMC_node_constraint, "constraint")) {
-  //         auto& constraint = VRMC_node_constraint.at("constraint");
-  //         // roll
-  //         auto weight = constraint.value("weight", 1.0f);
-  //         static DirectX::XMFLOAT4 s_constraint_color{ 1, 0.6f, 1, 1 };
-  //         if (has(constraint, "roll")) {
-  //           auto& roll = constraint.at("roll");
-  //           int source_index = roll.at("source");
-  //           ptr->Constraint = vrm::NodeConstraint{
-  //             .Type = vrm::NodeConstraintTypes::Roll,
-  //             .Source = scene->m_nodes[source_index],
-  //             .Weight = weight,
-  //           };
-  //           std::string_view axis = roll.at("rollAxis");
-  //           ptr->Constraint->RollAxis =
-  //             vrm::NodeConstraintRollAxisFromName(axis);
-  //           ptr->ShapeColor = s_constraint_color;
-  //         }
-  //         // aim
-  //         if (has(constraint, "aim")) {
-  //           auto& aim = constraint.at("aim");
-  //           int source_index = aim.at("source");
-  //           ptr->Constraint = vrm::NodeConstraint{
-  //             .Type = vrm::NodeConstraintTypes::Aim,
-  //             .Source = scene->m_nodes[source_index],
-  //             .Weight = weight,
-  //           };
-  //           std::string_view axis = aim.at("aimAxis");
-  //           ptr->Constraint->AimAxis =
-  //           vrm::NodeConstraintAimAxisFromName(axis); ptr->ShapeColor =
-  //           s_constraint_color;
-  //         }
-  //         // rotation
-  //         if (has(constraint, "rotation")) {
-  //           auto& rotation = constraint.at("rotation");
-  //           int source_index = rotation.at("source");
-  //           ptr->Constraint = vrm::NodeConstraint{
-  //             .Type = vrm::NodeConstraintTypes::Rotation,
-  //             .Source = scene->m_nodes[source_index],
-  //             .Weight = weight,
-  //           };
-  //           ptr->ShapeColor = s_constraint_color;
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+  auto& nodes = scene->m_gltf->Nodes;
+  for (size_t i = 0; i < nodes.size(); ++i) {
+    auto node = nodes[i];
+    auto ptr = scene->m_nodes[i];
+    if (auto VRMC_node_constraint =
+          node.GetExtension<gltfjson::vrm1::VRMC_node_constraint>()) {
+      if (auto constraint = VRMC_node_constraint->Constraint()) {
+        static DirectX::XMFLOAT4 s_constraint_color{ 1, 0.6f, 1, 1 };
+
+        if (auto roll = constraint->Roll()) {
+          // roll
+          auto source_index = roll->Source();
+          ptr->Constraint = NodeConstraint{
+            .Type = NodeConstraintTypes::Roll,
+            .Source = scene->m_nodes[*source_index],
+            .Weight = *roll->Weight(),
+          };
+          auto axis = roll->RollAxis();
+          ptr->Constraint->RollAxis =
+            NodeConstraintRollAxisFromName(gltfjson::from_u8(axis));
+          ptr->ShapeColor = s_constraint_color;
+        } else if (auto aim = constraint->Aim()) {
+          // aim
+          auto source_index = aim->Source();
+          ptr->Constraint = NodeConstraint{
+            .Type = NodeConstraintTypes::Aim,
+            .Source = scene->m_nodes[*source_index],
+            .Weight = *aim->Weight(),
+          };
+          auto axis = aim->AimAxis();
+          ptr->Constraint->AimAxis =
+            NodeConstraintAimAxisFromName(gltfjson::from_u8(axis));
+          ptr->ShapeColor = s_constraint_color;
+        } else if (auto rotation = constraint->Rotation()) {
+          // rotation
+          auto source_index = rotation->Source();
+          ptr->Constraint = NodeConstraint{
+            .Type = NodeConstraintTypes::Rotation,
+            .Source = scene->m_nodes[*source_index],
+            .Weight = *rotation->Weight(),
+          };
+          ptr->ShapeColor = s_constraint_color;
+        } else {
+          assert(false);
+        }
+      }
+    }
+  }
 
   return true;
 }
@@ -334,7 +327,6 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
     if (auto VRM = extensions->Get(u8"VRM")) {
       scene->m_type = ModelType::Vrm0;
       scene->m_title = "vrm-0.x";
-      scene->m_vrm0Materials = VRM->Get(u8"materialProperties");
     }
     if (extensions->Get(u8"VRMC_vrm")) {
       scene->m_type = ModelType::Vrm1;
@@ -366,12 +358,9 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   }
 
   // calc world
-  auto enter = [](const std::shared_ptr<Node>& node) {
-    node->CalcWorldInitialMatrix();
-    // node->CalcInitialMatrix();
-    return true;
-  };
-  scene->Traverse(enter, {});
+  for (auto& root : scene->m_roots) {
+    root->CalcWorldInitialMatrix(true);
+  }
 
   if (scene->m_type == ModelType::Vrm0) {
     if (auto vrm0 = ParseVrm0(scene)) {

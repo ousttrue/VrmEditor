@@ -19,32 +19,7 @@ namespace libvrm {
 
 GltfRoot::GltfRoot() {}
 
-GltfRoot::~GltfRoot()
-{
-  std::cout << "Scene::~Scene()" << std::endl;
-}
-
-void
-GltfRoot::Traverse(const EnterFunc& enter,
-                   const LeaveFunc& leave,
-                   const std::shared_ptr<Node>& node)
-{
-  if (node) {
-    if (enter(node)) {
-      for (auto& child : node->Children) {
-        Traverse(enter, leave, child);
-      }
-      if (leave) {
-        leave();
-      }
-    }
-  } else {
-    // root
-    for (auto& child : m_roots) {
-      Traverse(enter, leave, child);
-    }
-  }
-}
+GltfRoot::~GltfRoot() {}
 
 std::shared_ptr<Node>
 GltfRoot::GetBoneNode(HumanBones bone)

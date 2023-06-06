@@ -15,9 +15,6 @@ namespace libvrm {
 
 struct Node;
 
-using EnterFunc = std::function<bool(const std::shared_ptr<Node>&)>;
-using LeaveFunc = std::function<void()>;
-
 enum class ModelType
 {
   Gltf,
@@ -69,12 +66,9 @@ struct GltfRoot
   std::shared_ptr<Expressions> m_expressions;
 
   // spring
-  gltfjson::tree::NodePtr m_vrm0Materials;
   std::vector<std::shared_ptr<SpringCollider>> m_springColliders;
   std::vector<std::shared_ptr<SpringColliderGroup>> m_springColliderGroups;
   std::vector<std::shared_ptr<SpringBone>> m_springBones;
-
-  std::unordered_map<MorphTargetKey, float> m_morphTargetMap;
 
   std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
 
@@ -95,19 +89,8 @@ struct GltfRoot
     m_springColliderGroups.clear();
     m_springBones.clear();
 
-    m_morphTargetMap.clear();
-
     m_gltf = {};
-    // m_vrma = {};
     m_expressions = {};
-  }
-
-  gltfjson::tree::ArrayValue* Vrm0Materials() const
-  {
-    if (m_vrm0Materials) {
-      return m_vrm0Materials->Array();
-    }
-    return nullptr;
   }
 
   void RaiseSceneUpdated()
@@ -116,10 +99,6 @@ struct GltfRoot
       callback(*this);
     }
   }
-
-  void Traverse(const EnterFunc& enter,
-                const LeaveFunc& leave,
-                const std::shared_ptr<Node>& node = nullptr);
 
   std::shared_ptr<Node> GetBoneNode(HumanBones bone);
 
