@@ -171,39 +171,4 @@ Node::CalcShape()
   }
 }
 
-// static void
-// Constraint_Rotation(const std::shared_ptr<Node>& src,
-//                     const std::shared_ptr<Node>& dst,
-//                     float weight)
-// {
-//   auto delta = DirectX::XMQuaternionMultiply(
-//     DirectX::XMLoadFloat4(&src->Transform.Rotation),
-//     DirectX::XMQuaternionInverse(
-//       DirectX::XMLoadFloat4(&src->InitialTransform.Rotation)));
-//
-//   DirectX::XMStoreFloat4(
-//     &dst->Transform.Rotation,
-//     DirectX::XMQuaternionSlerp(
-//       DirectX::XMLoadFloat4(&dst->InitialTransform.Rotation),
-//       DirectX::XMQuaternionMultiply(
-//         delta, DirectX::XMLoadFloat4(&dst->InitialTransform.Rotation)),
-//       weight));
-// }
-
-static DirectX::XMVECTOR
-mul3(DirectX::XMVECTOR q0, DirectX::XMVECTOR q1, DirectX::XMVECTOR q2)
-{
-  return DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(q0, q1),
-                                       q2);
-}
-
-static DirectX::XMVECTOR
-mul4(DirectX::XMVECTOR q0,
-     DirectX::XMVECTOR q1,
-     DirectX::XMVECTOR q2,
-     DirectX::XMVECTOR q3)
-{
-  return DirectX::XMQuaternionMultiply(mul3(q0, q1, q2), q3);
-}
-
 } // namespace

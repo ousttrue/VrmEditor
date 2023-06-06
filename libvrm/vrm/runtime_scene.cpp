@@ -1,5 +1,6 @@
 #include "runtime_scene.h"
 #include "animation.h"
+#include "dmath.h"
 #include "expression.h"
 #include "gizmo.h"
 #include "runtime_node.h"
@@ -9,17 +10,6 @@
 #include <gltfjson/gltf_typing_vrm1.h>
 
 namespace libvrm {
-
-static DirectX::XMFLOAT4
-RotateY180(const DirectX::XMFLOAT4& src)
-{
-  auto r = DirectX::XMLoadFloat4(&src);
-  auto y180 = DirectX::XMQuaternionRotationMatrix(
-    DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(180.0f)));
-  DirectX::XMFLOAT4 dst;
-  DirectX::XMStoreFloat4(&dst, DirectX::XMQuaternionMultiply(y180, r));
-  return dst;
-}
 
 static void
 ParseVrm0(RuntimeScene* scene, const gltfjson::vrm0::VRM& VRM)
@@ -580,18 +570,11 @@ RuntimeScene::SetHumanPose(const HumanPose& pose)
       auto node = GetRuntimeNode(init);
       if (i == 0) {
         // hips move
-        // DirectX::XMStoreFloat3(
-        //   &node->Transform.Translation,
-        //   DirectX::XMVectorAdd(
-        //     DirectX::XMLoadFloat3(&init->InitialTransform.Translation),
-        //     DirectX::XMLoadFloat3(&pose.RootPosition)));
-
         // TODO: position from Model Root ?
         auto pos = pose.RootPosition;
         auto init_pos = init->WorldInitialTransform.Translation;
         node->SetWorldMatrix(DirectX::XMMatrixTranslation(
           init_pos.x + pos.x, init_pos.y + pos.y, init_pos.z + pos.z));
-        auto a = 0;
       }
 
       auto worldInitial =
@@ -623,65 +606,100 @@ RuntimeScene::SyncHierarchy()
   }
 }
 
-// static void
-// Constraint_Aim(const std::shared_ptr<Node>& src,
-//                const std::shared_ptr<Node>& dst,
-//                float weight,
-//                const DirectX::XMVECTOR axis)
-// {
-//   auto dstParentWorldQuat = dst->ParentWorldRotation();
-//   auto fromVec = DirectX::XMVector3Rotate(
-//     axis,
-//     DirectX::XMQuaternionMultiply(
-//       DirectX::XMLoadFloat4(&dst->InitialTransform.Rotation),
-//       dstParentWorldQuat));
-//   auto toVec = DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(
-//     DirectX::XMLoadFloat3(&src->WorldTransform.Translation),
-//     DirectX::XMLoadFloat3(&dst->WorldTransform.Translation)));
-//   auto fromToQuat = dmath::rotate_from_to(fromVec, toVec);
-//
-//   DirectX::XMStoreFloat4(
-//     &dst->Transform.Rotation,
-//     DirectX::XMQuaternionSlerp(
-//       DirectX::XMLoadFloat4(&dst->InitialTransform.Rotation),
-//       mul4(DirectX::XMLoadFloat4(&dst->InitialTransform.Rotation),
-//            dstParentWorldQuat,
-//            fromToQuat,
-//            DirectX::XMQuaternionInverse(dstParentWorldQuat)),
-//       weight));
-// }
+static void
+Constraint_Rotation(const std::shared_ptr<RuntimeNode>& src,
+                    const std::shared_ptr<RuntimeNode>& dst,
+                    float weight)
+{
+  auto delta = DirectX::XMQuaternionMultiply(
+    DirectX::XMLoadFloat4(&src->Transform.Rotation),
+    DirectX::XMQuaternionInverse(
+      DirectX::XMLoadFloat4(&src->Node->InitialTransform.Rotation)));
 
-// static void
-// Constraint_Roll(const std::shared_ptr<Node>& src,
-//                 const std::shared_ptr<Node>& dst,
-//                 float weight,
-//                 DirectX::XMVECTOR axis)
-// {
-//   auto deltaSrcQuat = DirectX::XMQuaternionMultiply(
-//     DirectX::XMLoadFloat4(&src->Transform.Rotation),
-//     DirectX::XMQuaternionInverse(
-//       DirectX::XMLoadFloat4(&src->InitialTransform.Rotation)));
-//   auto deltaSrcQuatInParent =
-//     mul3(DirectX::XMQuaternionInverse(
-//            DirectX::XMLoadFloat4(&src->InitialTransform.Rotation)),
-//          deltaSrcQuat,
-//          DirectX::XMLoadFloat4(&src->InitialTransform.Rotation));
-//   auto deltaSrcQuatInDst =
-//     mul3(DirectX::XMLoadFloat4(&dst->InitialTransform.Rotation),
-//          deltaSrcQuatInParent,
-//          DirectX::XMQuaternionInverse(
-//            DirectX::XMLoadFloat4(&dst->InitialTransform.Rotation)));
-//   auto toVec = DirectX::XMQuaternionMultiply(axis, deltaSrcQuatInDst);
-//   auto fromToQuat = dmath::rotate_from_to(axis, toVec);
-//
-//   DirectX::XMStoreFloat4(
-//     &dst->Transform.Rotation,
-//     DirectX::XMQuaternionSlerp(
-//       DirectX::XMLoadFloat4(&dst->InitialTransform.Rotation),
-//       DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(fromToQuat),
-//                                     deltaSrcQuatInDst),
-//       weight));
-// }
+  DirectX::XMStoreFloat4(
+    &dst->Transform.Rotation,
+    DirectX::XMQuaternionSlerp(
+      DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+      DirectX::XMQuaternionMultiply(
+        delta, DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation)),
+      weight));
+}
+
+static DirectX::XMVECTOR
+mul3(DirectX::XMVECTOR q0, DirectX::XMVECTOR q1, DirectX::XMVECTOR q2)
+{
+  return DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(q0, q1),
+                                       q2);
+}
+
+static DirectX::XMVECTOR
+mul4(DirectX::XMVECTOR q0,
+     DirectX::XMVECTOR q1,
+     DirectX::XMVECTOR q2,
+     DirectX::XMVECTOR q3)
+{
+  return DirectX::XMQuaternionMultiply(mul3(q0, q1, q2), q3);
+}
+
+static void
+Constraint_Roll(const std::shared_ptr<RuntimeNode>& src,
+                const std::shared_ptr<RuntimeNode>& dst,
+                float weight,
+                DirectX::XMVECTOR axis)
+{
+  auto deltaSrcQuat = DirectX::XMQuaternionMultiply(
+    DirectX::XMLoadFloat4(&src->Transform.Rotation),
+    DirectX::XMQuaternionInverse(
+      DirectX::XMLoadFloat4(&src->Node->InitialTransform.Rotation)));
+  auto deltaSrcQuatInParent =
+    mul3(DirectX::XMQuaternionInverse(
+           DirectX::XMLoadFloat4(&src->Node->InitialTransform.Rotation)),
+         deltaSrcQuat,
+         DirectX::XMLoadFloat4(&src->Node->InitialTransform.Rotation));
+  auto deltaSrcQuatInDst =
+    mul3(DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+         deltaSrcQuatInParent,
+         DirectX::XMQuaternionInverse(
+           DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation)));
+  auto toVec = DirectX::XMQuaternionMultiply(axis, deltaSrcQuatInDst);
+  auto fromToQuat = dmath::rotate_from_to(axis, toVec);
+
+  DirectX::XMStoreFloat4(
+    &dst->Transform.Rotation,
+    DirectX::XMQuaternionSlerp(
+      DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+      DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(fromToQuat),
+                                    deltaSrcQuatInDst),
+      weight));
+}
+
+static void
+Constraint_Aim(const std::shared_ptr<RuntimeNode>& src,
+               const std::shared_ptr<RuntimeNode>& dst,
+               float weight,
+               const DirectX::XMVECTOR axis)
+{
+  auto dstParentWorldQuat = dst->ParentWorldRotation();
+  auto fromVec = DirectX::XMVector3Rotate(
+    axis,
+    DirectX::XMQuaternionMultiply(
+      DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+      dstParentWorldQuat));
+  auto toVec = DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(
+    DirectX::XMLoadFloat3(&src->WorldTransform.Translation),
+    DirectX::XMLoadFloat3(&dst->WorldTransform.Translation)));
+  auto fromToQuat = dmath::rotate_from_to(fromVec, toVec);
+
+  DirectX::XMStoreFloat4(
+    &dst->Transform.Rotation,
+    DirectX::XMQuaternionSlerp(
+      DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+      mul4(DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+           dstParentWorldQuat,
+           fromToQuat,
+           DirectX::XMQuaternionInverse(dstParentWorldQuat)),
+      weight));
+}
 
 void
 RuntimeScene::NodeConstraintProcess(const NodeConstraint& constraint,
@@ -692,18 +710,21 @@ RuntimeScene::NodeConstraintProcess(const NodeConstraint& constraint,
     return;
   }
 
-  // switch (Type) {
-  //   case NodeConstraintTypes::Rotation:
-  //     Constraint_Rotation(src, dst, Weight);
-  //     break;
-  //
-  //   case NodeConstraintTypes::Roll:
-  //     Constraint_Roll(src, dst, Weight, GetRollVector(RollAxis));
-  //     break;
-  //
-  //   case NodeConstraintTypes::Aim:
-  //     Constraint_Aim(src, dst, Weight, GetAxisVector(AimAxis));
-  //     break;
-  // }
+  switch (constraint.Type) {
+    case NodeConstraintTypes::Rotation:
+      Constraint_Rotation(src, dst, constraint.Weight);
+      break;
+
+    case NodeConstraintTypes::Roll:
+      Constraint_Roll(
+        src, dst, constraint.Weight, GetRollVector(constraint.RollAxis));
+      break;
+
+    case NodeConstraintTypes::Aim:
+      Constraint_Aim(
+        src, dst, constraint.Weight, GetAxisVector(constraint.AimAxis));
+      break;
+  }
 }
-}
+
+} // namespace
