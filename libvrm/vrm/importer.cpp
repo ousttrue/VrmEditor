@@ -3,6 +3,8 @@
 #include "node.h"
 #include <DirectXMath.h>
 #include <gltfjson.h>
+#include <gltfjson/gltf_typing_vrm0.h>
+#include <gltfjson/gltf_typing_vrm1.h>
 #include <gltfjson/json_tree_parser.h>
 
 namespace libvrm {
@@ -60,30 +62,21 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
 static std::expected<bool, std::string>
 ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
 {
-  auto extensions = scene->m_gltf->Extensions();
-  if (!extensions) {
-    return std::unexpected{ "no extensions" };
-  }
-
-  auto VRM = extensions->Get(u8"VRM");
+  auto VRM = scene->m_gltf->GetExtension<gltfjson::vrm0::VRM>();
   if (!VRM) {
     return std::unexpected{ "no extensions.VRM" };
   }
 
-  if (auto humanoid = VRM->Get(u8"humanoid")) {
-    if (auto humanBones = humanoid->Get(u8"humanBones")) {
-      if (auto array = humanBones->Array()) {
-        // bone & node
-        for (auto& humanBone : *array) {
-          if (auto node = humanBone->Get(u8"node")) {
-            auto index = (uint32_t)*node->Ptr<float>();
-            auto name = humanBone->Get(u8"bone")->U8String();
-            // std::cout << name << ": " << index << std::endl;
-            if (auto bone = HumanBoneFromName(gltfjson::from_u8(name),
-                                              VrmVersion::_0_x)) {
-              scene->m_nodes[index]->Humanoid = *bone;
-            }
-          }
+  if (auto humanoid = VRM->Humanoid()) {
+    // bone & node
+    for (auto humanBone : humanoid->HumanBones) {
+      if (auto node = humanBone.Node()) {
+        auto index = *node;
+        auto name = humanBone.Bone();
+        // std::cout << name << ": " << index << std::endl;
+        if (auto bone =
+              HumanBoneFromName(gltfjson::from_u8(name), VrmVersion::_0_x)) {
+          scene->m_nodes[index]->Humanoid = *bone;
         }
       }
     }
@@ -123,62 +116,57 @@ ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
   //     }
   //   }
   // }
-  //
-  // if (has(VRM, "secondaryAnimation")) {
-  //   auto& secondaryAnimation = VRM.at("secondaryAnimation");
-  //   if (has(secondaryAnimation, "colliderGroups")) {
-  //     auto& colliderGroups = secondaryAnimation.at("colliderGroups");
-  //     for (auto& colliderGroup : colliderGroups) {
-  //       auto group = std::make_shared<vrm::SpringColliderGroup>();
-  //       uint32_t node_index = colliderGroup.at("node");
-  //       auto colliderNode = scene->m_nodes[node_index];
-  //       if (has(colliderGroup, "colliders")) {
-  //         for (auto& collider : colliderGroup.at("colliders")) {
-  //           auto item = std::make_shared<vrm::SpringCollider>();
-  //           auto& offset = collider.at("offset");
-  //           float x = offset.at("x");
-  //           float y = offset.at("y");
-  //           float z = offset.at("z");
-  //           // vrm0: springbone collider offset is
-  //           // UnityCoordinate(LeftHanded)
-  //           item->Offset = { -x, y, z };
-  //           item->Radius = collider.at("radius");
-  //           item->Node = colliderNode;
-  //           scene->m_springColliders.push_back(item);
-  //           group->Colliders.push_back(item);
-  //         }
-  //       }
-  //       scene->m_springColliderGroups.push_back(group);
-  //     }
-  //   }
-  //   if (has(secondaryAnimation, "boneGroups")) {
-  //     auto& boneGroups = secondaryAnimation.at("boneGroups");
-  //     for (auto& boneGroup : boneGroups) {
-  //       float stiffness = boneGroup.at("stiffiness");
-  //       float dragForce = boneGroup.at("dragForce");
-  //       float radius = boneGroup.at("hitRadius");
-  //       std::vector<std::shared_ptr<vrm::SpringColliderGroup>>
-  //       colliderGroups; if (has(boneGroup, "colliderGroups")) {
-  //         for (uint32_t colliderGroup_index :
-  //         boneGroup.at("colliderGroups"))
-  //         {
-  //           auto colliderGroup =
-  //             scene->m_springColliderGroups[colliderGroup_index];
-  //           colliderGroups.push_back(colliderGroup);
-  //         }
-  //       }
-  //       for (auto& bone : boneGroup.at("bones")) {
-  //         auto spring = std::make_shared<vrm::SpringBone>();
-  //         spring->AddJointRecursive(
-  //           scene->m_nodes[bone], dragForce, stiffness, radius);
-  //         scene->m_springBones.push_back(spring);
-  //         for (auto& g : colliderGroups) {
-  //           spring->AddColliderGroup(g);
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+
+  if (auto secondaryAnimation = VRM->SecondaryAnimation()) {
+    for (auto colliderGroup : secondaryAnimation->ColliderGroups) {
+      auto group = std::make_shared<SpringColliderGroup>();
+      auto node_index = colliderGroup.Node();
+      auto colliderNode = scene->m_nodes[*node_index];
+      for (auto collider : colliderGroup.Colliders) {
+        auto item = std::make_shared<SpringCollider>();
+        if (auto offset = collider.Offset()) {
+          auto x = (*offset)[u8"x"]->Ptr<float>();
+          auto y = (*offset)[u8"y"]->Ptr<float>();
+          auto z = (*offset)[u8"z"]->Ptr<float>();
+          // vrm0: springbone collider offset is UnityCoordinate(LeftHanded)
+          item->Offset = { -*x, *y, *z };
+        }
+        item->Radius = *collider.Radius();
+        item->Node = colliderNode;
+        scene->m_springColliders.push_back(item);
+        group->Colliders.push_back(item);
+      }
+      scene->m_springColliderGroups.push_back(group);
+    }
+    for (auto boneGroup : secondaryAnimation->Springs) {
+      auto stiffness = boneGroup.Stifness();
+      auto dragForce = boneGroup.DragForce();
+      auto radius = boneGroup.HitRadius();
+      std::vector<std::shared_ptr<SpringColliderGroup>> colliderGroups;
+      if (auto array = boneGroup.ColliderGroups()) {
+        for (auto colliderGroup_index : *array) {
+          auto colliderGroup =
+            scene->m_springColliderGroups[(uint32_t)*colliderGroup_index
+                                            ->Ptr<float>()];
+          colliderGroups.push_back(colliderGroup);
+        }
+      }
+      if (auto array = boneGroup.Bones()) {
+        for (auto bone : *array) {
+          auto spring = std::make_shared<SpringBone>();
+          spring->AddJointRecursive(
+            scene->m_nodes[(uint32_t)*bone->Ptr<float>()],
+            *dragForce,
+            *stiffness,
+            *radius);
+          scene->m_springBones.push_back(spring);
+          for (auto& g : colliderGroups) {
+            spring->AddColliderGroup(g);
+          }
+        }
+      }
+    }
+  }
 
   for (auto& root : scene->m_roots) {
     root->InitialTransform.Rotation =
