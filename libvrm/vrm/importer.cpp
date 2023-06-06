@@ -17,7 +17,6 @@ RotateY180(const DirectX::XMFLOAT4& src)
     DirectX::XMMatrixRotationY(DirectX::XMConvertToRadians(180.0f)));
   DirectX::XMFLOAT4 dst;
   DirectX::XMStoreFloat4(&dst, DirectX::XMQuaternionMultiply(y180, r));
-  auto a = dst;
   return dst;
 }
 
@@ -179,19 +178,14 @@ ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
 static std::expected<bool, std::string>
 ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
 {
-  auto extensions = scene->m_gltf->Extensions();
-  if (!extensions) {
-    return std::unexpected{ "no extensions" };
-  }
-
-  auto VRMC_vrm = extensions->Get(u8"VRMC_vrm");
+  auto VRMC_vrm = scene->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>();
   if (!VRMC_vrm) {
     return std::unexpected{ "no extensions.VRMC_vrm" };
   }
 
-  if (auto humanoid = VRMC_vrm->Get(u8"humanoid")) {
-    if (auto humanBones = humanoid->Get(u8"humanBones")) {
-      if (auto object = humanBones->Object()) {
+  if (auto humanoid = VRMC_vrm->Humanoid()) {
+    if (auto humanBones = humanoid->HumanBones()) {
+      if (auto object = humanBones->m_json->Object()) {
         for (auto& kv : *object) {
           auto name = kv.first;
           if (auto bone =
@@ -206,70 +200,61 @@ ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
     }
   }
 
-  // if (has(extensions, "VRMC_springBone")) {
-  //   auto& VRMC_springBone = extensions.at("VRMC_springBone");
-  //   if (has(VRMC_springBone, "springs")) {
-  //     auto& springs = VRMC_springBone.at("springs");
-  //     for (auto& spring : springs) {
-  //       auto springBone = std::make_shared<vrm::SpringBone>();
-  //       std::shared_ptr<Node> head;
-  //       for (auto& joint : spring.at("joints")) {
-  //         int node_index = joint.at("node");
-  //         auto tail = scene->m_nodes[node_index];
-  //         if (head) {
-  //           float stiffness = joint.at("stiffness");
-  //           float dragForce = joint.at("dragForce");
-  //           float radius = joint.at("hitRadius");
-  //           springBone->AddJoint(head,
-  //                                tail,
-  //                                tail->InitialTransform.Translation,
-  //                                stiffness,
-  //                                dragForce,
-  //                                radius);
-  //         }
-  //         head = tail;
-  //       }
-  //       scene->m_springBones.push_back(springBone);
-  //     }
-  //   }
-  //   if (has(VRMC_springBone, "colliders")) {
-  //     auto& colliders = VRMC_springBone.at("colliders");
-  //     for (auto& collider : colliders) {
-  //       auto ptr = std::make_shared<vrm::SpringCollider>();
-  //       uint32_t node_index = collider.at("node");
-  //       ptr->Node = scene->m_nodes[node_index];
-  //       auto& shape = collider.at("shape");
-  //       if (has(shape, "sphere")) {
-  //         auto& sphere = shape.at("sphere");
-  //         ptr->Type = vrm::SpringColliderShapeType::Sphere;
-  //         ptr->Radius = sphere.value("radius", 0.0f);
-  //         ptr->Offset = sphere.value("offset", DirectX::XMFLOAT3{ 0, 0, 0
-  //         });
-  //       } else if (has(shape, "capsule")) {
-  //         auto& capsule = shape.at("capsule");
-  //         ptr->Type = vrm::SpringColliderShapeType::Capsule;
-  //         ptr->Radius = capsule.value("radius", 0.0f);
-  //         ptr->Offset = capsule.value("offset", DirectX::XMFLOAT3{ 0, 0, 0
-  //         }); ptr->Tail = capsule.value("tail", DirectX::XMFLOAT3{ 0, 0, 0
-  //         });
-  //       } else {
-  //         assert(false);
-  //       }
-  //       scene->m_springColliders.push_back(ptr);
-  //     }
-  //   }
-  //   if (has(VRMC_springBone, "colliderGroups")) {
-  //     auto& colliderGroups = VRMC_springBone.at("colliderGroups");
-  //     for (auto& colliderGroup : colliderGroups) {
-  //       auto ptr = std::make_shared<vrm::SpringColliderGroup>();
-  //       for (uint32_t collider_index : colliderGroup.at("colliders")) {
-  //         ptr->Colliders.push_back(scene->m_springColliders[collider_index]);
-  //       }
-  //       scene->m_springColliderGroups.push_back(ptr);
-  //     }
-  //   }
-  // }
-  //
+  if (auto VRMC_springBone =
+        scene->m_gltf->GetExtension<gltfjson::vrm1::VRMC_springBone>()) {
+    // for (auto collider : VRMC_springBone->Colliders) {
+    //   auto ptr = std::make_shared<SpringCollider>();
+    //   uint32_t node_index = *collider.Node();
+    //   ptr->Node = scene->m_nodes[node_index];
+    //   if (auto shape = collider.Shape()) {
+    //     if (auto sphere = shape->Sphere()) {
+    //       ptr->Type = SpringColliderShapeType::Sphere;
+    //       ptr->Radius = *sphere->Radius();
+    //       // ptr->Offset = *((DirectX::XMFLOAT3*)&gltfjson::Vec3(
+    //       //   sphere->m_json->Get(u8"offset"), { 0, 0, 0 }));
+    //     } else if (auto capsule = shape->Capsule()) {
+    //       ptr->Type = SpringColliderShapeType::Capsule;
+    //       ptr->Radius = *capsule->Radius();
+    //       // ptr->Offset = capsule.value("offset", DirectX::XMFLOAT3{ 0, 0, 0
+    //       // }); ptr->Tail = capsule.value("tail", DirectX::XMFLOAT3{ 0, 0, 0
+    //       // });
+    //     } else {
+    //       assert(false);
+    //     }
+    //   }
+    //   scene->m_springColliders.push_back(ptr);
+    // }
+    // for (auto colliderGroup : VRMC_springBone->ColliderGroups) {
+    //   auto ptr = std::make_shared<SpringColliderGroup>();
+    //   // for (auto collider : colliderGroup.Colliders) {
+    //   //   auto collider_index =
+    //   // ptr->Colliders.push_back(scene->m_springColliders[collider_index]);
+    //   // }
+    //   scene->m_springColliderGroups.push_back(ptr);
+    // }
+    for (auto spring : VRMC_springBone->Springs) {
+      auto springBone = std::make_shared<SpringBone>();
+      std::shared_ptr<Node> head;
+      for (auto joint : spring.Joints) {
+        auto node_index = (uint32_t)*joint.Node();
+        auto tail = scene->m_nodes[node_index];
+        if (head) {
+          float stiffness = *joint.Stiffness();
+          float dragForce = *joint.DragForce();
+          float radius = *joint.HitRadius();
+          springBone->AddJoint(head,
+                               tail,
+                               tail->InitialTransform.Translation,
+                               stiffness,
+                               dragForce,
+                               radius);
+        }
+        head = tail;
+      }
+      scene->m_springBones.push_back(springBone);
+    }
+  }
+
   // auto& nodes = scene->m_gltf->Json.at("nodes");
   // for (size_t i = 0; i < nodes.size(); ++i) {
   //   auto& node = nodes[i];
