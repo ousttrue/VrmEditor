@@ -62,9 +62,6 @@ struct GltfRoot
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;
 
-  // extensions
-  std::shared_ptr<Expressions> m_expressions;
-
   // spring
   std::vector<std::shared_ptr<SpringCollider>> m_springColliders;
   std::vector<std::shared_ptr<SpringColliderGroup>> m_springColliderGroups;
@@ -90,7 +87,6 @@ struct GltfRoot
     m_springBones.clear();
 
     m_gltf = {};
-    m_expressions = {};
   }
 
   void RaiseSceneUpdated()

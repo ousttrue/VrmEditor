@@ -64,10 +64,10 @@ Enable(const std::shared_ptr<libvrm::Expression>& ex)
 
 class VrmGui
 {
-  std::shared_ptr<libvrm::GltfRoot> m_scene;
+  std::shared_ptr<libvrm::RuntimeScene> m_scene;
 
 public:
-  VrmGui(const std::shared_ptr<libvrm::GltfRoot>& scene)
+  VrmGui(const std::shared_ptr<libvrm::RuntimeScene>& scene)
     : m_scene(scene)
   {
   }
@@ -241,16 +241,16 @@ public:
   //
   void Show()
   {
-    switch (m_scene->m_type) {
-      case libvrm::ModelType::Gltf:
-        break;
-      case libvrm::ModelType::Vrm0:
-        ImGui::Text("%s", "vrm-0.x");
-        break;
-      case libvrm::ModelType::Vrm1:
-        ImGui::Text("%s", "vrm-1.0");
-        break;
-    }
+    // switch (m_scene->m_type) {
+    //   case libvrm::ModelType::Gltf:
+    //     break;
+    //   case libvrm::ModelType::Vrm0:
+    //     ImGui::Text("%s", "vrm-0.x");
+    //     break;
+    //   case libvrm::ModelType::Vrm1:
+    //     ImGui::Text("%s", "vrm-1.0");
+    //     break;
+    // }
 
     if (ImGui::CollapsingHeader("meta", ImGuiTreeNodeFlags_None)) {
     }
@@ -273,7 +273,7 @@ public:
 void
 VrmDock::CreateVrm(const AddDockFunc& addDock,
                    std::string_view title,
-                   const std::shared_ptr<libvrm::GltfRoot>& scene)
+                   const std::shared_ptr<libvrm::RuntimeScene>& scene)
 {
   auto gui = std::make_shared<VrmGui>(scene);
 

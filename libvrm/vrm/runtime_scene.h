@@ -30,6 +30,9 @@ struct RuntimeScene
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
   std::vector<std::shared_ptr<Animation>> m_animations;
 
+  // extensions
+  std::shared_ptr<Expressions> m_expressions;
+
   std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
   {
     return _IndexOf<std::shared_ptr<RuntimeNode>>(m_nodes, node);

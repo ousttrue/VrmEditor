@@ -138,7 +138,7 @@ App::SetScene(const std::shared_ptr<libvrm::GltfRoot>& table)
                      m_settings,
                      m_selection);
 
-    VrmDock::CreateVrm(addDock, "vrm", m_runtime->m_table);
+    VrmDock::CreateVrm(addDock, "vrm", m_runtime);
 
 #ifndef NDEBUG
     ExportDock::Create(addDock, "[debug] export", m_runtime, indent);

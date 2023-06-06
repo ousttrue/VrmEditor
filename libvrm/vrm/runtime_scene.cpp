@@ -190,10 +190,9 @@ RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
   }
   NextSpringDelta = {};
 
-  if (m_table->m_expressions) {
+  if (m_expressions) {
     // VRM0 expression to morphTarget
-    auto nodeToIndex = [nodes = m_table->m_nodes,
-                        expressions = m_table->m_expressions](
+    auto nodeToIndex = [nodes = m_table->m_nodes, expressions = m_expressions](
                          const std::shared_ptr<libvrm::Node>& node) {
       for (uint32_t i = 0; i < nodes.size(); ++i) {
         if (node == nodes[i]) {
@@ -202,8 +201,7 @@ RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
       }
       return (uint32_t)-1;
     };
-    for (auto& [k, v] :
-         m_table->m_expressions->EvalMorphTargetMap(nodeToIndex)) {
+    for (auto& [k, v] : m_expressions->EvalMorphTargetMap(nodeToIndex)) {
       auto& item = drawables[k.NodeIndex];
       item.MorphMap[k.MorphIndex] = v;
     }
