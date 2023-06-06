@@ -702,7 +702,6 @@ public:
   }
 
   void RenderPasses(std::span<const RenderPass> passes,
-                    bool isTPose,
                     const RenderingEnv& env,
                     const gltfjson::Root& root,
                     const gltfjson::Bin& bin,
@@ -721,29 +720,26 @@ public:
         if (auto baseMesh = GetOrCreateBaseMesh(root, bin, meshId)) {
 
           std::span<const DirectX::XMFLOAT4X4> skinningMatrices;
-          if (!isTPose) {
-            if (auto skin = GetOrCreaeSkin(root, bin, gltfNode.Skin())) {
-              // update skinnning
-              skin->CurrentMatrices.resize(skin->BindMatrices.size());
+          if (auto skin = GetOrCreaeSkin(root, bin, gltfNode.Skin())) {
+            // update skinnning
+            skin->CurrentMatrices.resize(skin->BindMatrices.size());
 
-              auto rootInverse = DirectX::XMMatrixIdentity();
-              if (auto root_index = skin->Root) {
-                rootInverse = DirectX::XMMatrixInverse(
-                  nullptr, DirectX::XMLoadFloat4x4(&drawables[i].Matrix));
-              }
-
-              for (int i = 0; i < skin->Joints.size(); ++i) {
-                auto m = skin->BindMatrices[i];
-                DirectX::XMStoreFloat4x4(
-                  &skin->CurrentMatrices[i],
-                  DirectX::XMLoadFloat4x4(&m) *
-                    DirectX::XMLoadFloat4x4(
-                      &drawables[skin->Joints[i]].Matrix) *
-                    rootInverse);
-              }
-
-              skinningMatrices = skin->CurrentMatrices;
+            auto rootInverse = DirectX::XMMatrixIdentity();
+            if (auto root_index = skin->Root) {
+              rootInverse = DirectX::XMMatrixInverse(
+                nullptr, DirectX::XMLoadFloat4x4(&drawables[i].Matrix));
             }
+
+            for (int i = 0; i < skin->Joints.size(); ++i) {
+              auto m = skin->BindMatrices[i];
+              DirectX::XMStoreFloat4x4(
+                &skin->CurrentMatrices[i],
+                DirectX::XMLoadFloat4x4(&m) *
+                  DirectX::XMLoadFloat4x4(&drawables[skin->Joints[i]].Matrix) *
+                  rootInverse);
+            }
+
+            skinningMatrices = skin->CurrentMatrices;
           }
 
           // upload vertices. CPU skinning and morpht target.
@@ -1078,14 +1074,12 @@ public:
 
 void
 RenderPasses(std::span<const RenderPass> passes,
-             bool isTPose,
              const RenderingEnv& env,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
              std::span<const libvrm::DrawItem> drawables)
 {
-  Gl3Renderer::Instance().RenderPasses(
-    passes, isTPose, env, root, bin, drawables);
+  Gl3Renderer::Instance().RenderPasses(passes, env, root, bin, drawables);
 }
 
 void

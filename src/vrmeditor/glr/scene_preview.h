@@ -73,7 +73,7 @@ struct ScenePreview
   void RenderRuntime(const grapho::OrbitView& view);
 
 private:
-  void Render(std::span<libvrm::DrawItem> drawables, bool isTPose);
+  void Render(std::span<libvrm::DrawItem> drawables);
 
 public:
   void ShowScreenRect(const char* title,

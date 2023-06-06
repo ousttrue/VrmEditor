@@ -61,7 +61,7 @@ ScenePreview::RenderStatic(const grapho::OrbitView& view)
   glr::ClearRendertarget(*m_env);
 
   auto drawables = m_runtime->m_table->Drawables();
-  Render(drawables, true);
+  Render(drawables);
 
   // manipulator
   if (auto node = m_selection->selected.lock()) {
@@ -109,7 +109,7 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
   if (drawables.size()) {
     m_runtime->UpdateDrawables(drawables);
   }
-  Render(drawables, false);
+  Render(drawables);
 
   // manipulator
   if (auto init = m_selection->selected.lock()) {
@@ -144,14 +144,14 @@ ScenePreview::RenderRuntime(const grapho::OrbitView& view)
 }
 
 void
-ScenePreview::Render(std::span<libvrm::DrawItem> drawables, bool isTPose)
+ScenePreview::Render(std::span<libvrm::DrawItem> drawables)
 {
-  glDisable(GL_DEPTH_TEST);
-  if (m_settings->Skybox) {
-    glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
-  }
-
   if (drawables.size()) {
+    glDisable(GL_DEPTH_TEST);
+    if (m_settings->Skybox) {
+      glr::RenderSkybox(m_env->ProjectionMatrix, m_env->ViewMatrix);
+    }
+
     m_renderpass.clear();
     glEnable(GL_DEPTH_TEST);
     if (m_settings->ShowMesh) {
@@ -164,7 +164,6 @@ ScenePreview::Render(std::span<libvrm::DrawItem> drawables, bool isTPose)
       m_renderpass.push_back(RenderPass::Transparent);
     }
     glr::RenderPasses(m_renderpass,
-                      isTPose,
                       *m_env,
                       *m_runtime->m_table->m_gltf,
                       m_runtime->m_table->m_bin,
@@ -213,4 +212,5 @@ ScenePreview::ShowFullWindow(const char* title, const float color[4])
   auto size = ImGui::GetContentRegionAvail();
   ShowScreenRect(title, color, pos.x, pos.y, size.x, size.y);
 }
-}
+
+} // namespace

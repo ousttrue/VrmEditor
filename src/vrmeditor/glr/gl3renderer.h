@@ -46,7 +46,6 @@ struct RenderingEnv;
 
 void
 RenderPasses(std::span<const RenderPass> passes,
-             bool isTPose,
              const RenderingEnv& camera,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
