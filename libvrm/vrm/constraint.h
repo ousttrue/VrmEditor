@@ -6,7 +6,7 @@
 
 namespace libvrm {
 
-struct Node;
+struct RuntimeNode;
 
 enum class NodeConstraintTypes
 {
@@ -114,7 +114,7 @@ GetRollVector(NodeConstraintRollAxis axis)
 struct NodeConstraint
 {
   NodeConstraintTypes Type;
-  std::weak_ptr<Node> Source;
+  std::weak_ptr<RuntimeNode> Source;
   float Weight = 1.0f;
   union
   {

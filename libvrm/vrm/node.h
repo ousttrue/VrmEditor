@@ -54,7 +54,6 @@ struct Node
   // uint32_t Index;
   std::string Name;
   std::optional<HumanBones> Humanoid;
-  std::optional<NodeConstraint> Constraint;
 
   std::list<std::shared_ptr<Node>> Children;
   std::weak_ptr<Node> Parent;

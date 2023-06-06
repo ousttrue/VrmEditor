@@ -32,6 +32,10 @@ struct RuntimeScene
 
   // extensions
   std::shared_ptr<Expressions> m_expressions;
+  // spring
+  std::vector<std::shared_ptr<SpringCollider>> m_springColliders;
+  std::vector<std::shared_ptr<SpringColliderGroup>> m_springColliderGroups;
+  std::vector<std::shared_ptr<SpringBone>> m_springBones;
 
   std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
   {

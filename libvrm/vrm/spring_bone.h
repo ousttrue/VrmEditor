@@ -2,6 +2,7 @@
 #include "spring_collider.h"
 #include "spring_joint.h"
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace libvrm {
@@ -18,15 +19,15 @@ struct SpringBone
     Colliders.push_back(colliderGroup);
   }
 
-  void AddJoint(const std::shared_ptr<Node>& head,
-                const std::shared_ptr<Node>& tail,
+  void AddJoint(const std::shared_ptr<RuntimeNode>& head,
+                const std::shared_ptr<RuntimeNode>& tail,
                 const DirectX::XMFLOAT3& localTailPosition,
                 float dragForce,
                 float stiffiness,
                 float radius);
 
   // for vrm0
-  void AddJointRecursive(const std::shared_ptr<Node>& node,
+  void AddJointRecursive(const std::shared_ptr<RuntimeNode>& node,
                          float dragForce,
                          float stiffiness,
                          float radius);

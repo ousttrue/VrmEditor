@@ -1,5 +1,7 @@
 #include "spring_bone.h"
 #include "gizmo.h"
+#include "node.h"
+#include "runtime_node.h"
 #include "spring_joint.h"
 #include <iostream>
 
@@ -76,8 +78,8 @@ operator<<(std::ostream& os, const DirectX::XMFLOAT4& v)
 namespace libvrm {
 
 void
-SpringBone::AddJoint(const std::shared_ptr<Node>& head,
-                     const std::shared_ptr<Node>& tail,
+SpringBone::AddJoint(const std::shared_ptr<RuntimeNode>& head,
+                     const std::shared_ptr<RuntimeNode>& tail,
                      const DirectX::XMFLOAT3& localTailPosition,
                      float dragForce,
                      float stiffiness,
@@ -89,7 +91,7 @@ SpringBone::AddJoint(const std::shared_ptr<Node>& head,
 }
 
 void
-SpringBone::AddJointRecursive(const std::shared_ptr<Node>& node,
+SpringBone::AddJointRecursive(const std::shared_ptr<RuntimeNode>& node,
                               float dragForce,
                               float stiffiness,
                               float radius)
@@ -98,17 +100,17 @@ SpringBone::AddJointRecursive(const std::shared_ptr<Node>& node,
     for (auto& child : node->Children) {
       AddJoint(node,
                child,
-               child->InitialTransform.Translation,
+               child->Node->InitialTransform.Translation,
                dragForce,
                stiffiness,
                radius);
       break;
     }
   } else {
-    auto delta = node->WorldInitialTransform.Translation -
-                 node->ParentWorldInitialPosition();
+    auto delta = node->Node->WorldInitialTransform.Translation -
+                 node->Node->ParentWorldInitialPosition();
     auto childPosition = DirectX::XMVectorAdd(
-      DirectX::XMLoadFloat3(&node->WorldInitialTransform.Translation),
+      DirectX::XMLoadFloat3(&node->Node->WorldInitialTransform.Translation),
       DirectX::XMVectorScale(
         DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&delta)), 0.07f));
 
@@ -117,7 +119,7 @@ SpringBone::AddJointRecursive(const std::shared_ptr<Node>& node,
       &localTailPosition,
       DirectX::XMVector3Transform(
         childPosition,
-        DirectX::XMMatrixInverse(nullptr, node->WorldInitialMatrix())));
+        DirectX::XMMatrixInverse(nullptr, node->Node->WorldInitialMatrix())));
 
     AddJoint(node, nullptr, localTailPosition, dragForce, stiffiness, radius);
   }

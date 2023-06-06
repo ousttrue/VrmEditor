@@ -1,5 +1,6 @@
 #include "srht_update.h"
 #include "../gltfroot.h"
+#include "../node.h"
 #include "srht.h"
 #include <algorithm>
 

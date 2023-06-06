@@ -1,4 +1,5 @@
 #pragma once
+#include "constraint.h"
 #include <functional>
 #include <vrm/node.h>
 
@@ -14,6 +15,7 @@ using PushInstance = std::function<void(const Instance&)>;
 struct RuntimeNode
 {
   std::shared_ptr<libvrm::Node> Node;
+  std::optional<NodeConstraint> Constraint;
 
   RuntimeNode(const std::shared_ptr<libvrm::Node>& node)
     : Node(node)

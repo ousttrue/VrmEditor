@@ -1,7 +1,5 @@
 #pragma once
-#include "expression.h"
-#include "spring_bone.h"
-#include "spring_collider.h"
+#include "humanoid/humanbones.h"
 #include <DirectXMath.h>
 #include <functional>
 #include <gltfjson.h>
@@ -61,15 +59,9 @@ struct GltfRoot
   std::string m_title = "scene";
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;
-
-  // spring
-  std::vector<std::shared_ptr<SpringCollider>> m_springColliders;
-  std::vector<std::shared_ptr<SpringColliderGroup>> m_springColliderGroups;
-  std::vector<std::shared_ptr<SpringBone>> m_springBones;
-
   std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
-
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
+  std::vector<DrawItem> m_drawables;
 
   GltfRoot();
   ~GltfRoot();
@@ -81,11 +73,6 @@ struct GltfRoot
     m_type = {};
     m_nodes.clear();
     m_roots.clear();
-
-    m_springColliders.clear();
-    m_springColliderGroups.clear();
-    m_springBones.clear();
-
     m_gltf = {};
   }
 
@@ -97,18 +84,8 @@ struct GltfRoot
   }
 
   std::shared_ptr<Node> GetBoneNode(HumanBones bone);
-
   BoundingBox GetBoundingBox() const;
-
-  void InitializeNodes()
-  {
-    for (auto& root : m_roots) {
-      root->CalcWorldInitialMatrix(true);
-      root->CalcShape();
-    }
-  }
-
-  std::vector<DrawItem> m_drawables;
+  void InitializeNodes();
   std::span<DrawItem> Drawables();
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
 };

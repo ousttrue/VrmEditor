@@ -59,255 +59,6 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
 }
 
 static std::expected<bool, std::string>
-ParseVrm0(const std::shared_ptr<GltfRoot>& scene)
-{
-  auto VRM = scene->m_gltf->GetExtension<gltfjson::vrm0::VRM>();
-  if (!VRM) {
-    return std::unexpected{ "no extensions.VRM" };
-  }
-
-  if (auto humanoid = VRM->Humanoid()) {
-    // bone & node
-    for (auto humanBone : humanoid->HumanBones) {
-      if (auto node = humanBone.Node()) {
-        auto index = *node;
-        auto name = humanBone.Bone();
-        // std::cout << name << ": " << index << std::endl;
-        if (auto bone =
-              HumanBoneFromName(gltfjson::from_u8(name), VrmVersion::_0_x)) {
-          scene->m_nodes[index]->Humanoid = *bone;
-        }
-      }
-    }
-  }
-
-  // meta
-  // specVersion
-  // exporterVersion
-  // firstPerson
-
-  // if (has(VRM, "blendShapeMaster")) {
-  //
-  //   scene->m_expressions = std::make_shared<vrm::Expressions>();
-  //
-  //   auto& blendShapeMaster = VRM.at("blendShapeMaster");
-  //   if (has(blendShapeMaster, "blendShapeGroups")) {
-  //     auto& blendShapeGroups = blendShapeMaster.at("blendShapeGroups");
-  //     for (auto& g : blendShapeGroups) {
-  //       //
-  //       {"binds":[],"isBinary":false,"materialValues":[],"name":"Neutral","presetName":"neutral"}
-  //       // std::cout << g << std::endl;
-  //       auto expression = scene->m_expressions->addBlendShape(
-  //         g.at("presetName"), g.at("name"), g.value("isBinary", false));
-  //       if (has(g, "binds")) {
-  //         for (vrm::ExpressionMorphTargetBind bind : g.at("binds")) {
-  //           // [0-100] to [0-1]
-  //           bind.weight *= 0.01f;
-  //           for (auto& node : scene->m_nodes) {
-  //             if (node->Mesh == scene->m_meshes[bind.mesh]) {
-  //               bind.Node = node;
-  //               break;
-  //             }
-  //           }
-  //           expression->morphBinds.push_back(bind);
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-
-  if (auto secondaryAnimation = VRM->SecondaryAnimation()) {
-    for (auto colliderGroup : secondaryAnimation->ColliderGroups) {
-      auto group = std::make_shared<SpringColliderGroup>();
-      auto node_index = colliderGroup.Node();
-      auto colliderNode = scene->m_nodes[*node_index];
-      for (auto collider : colliderGroup.Colliders) {
-        auto item = std::make_shared<SpringCollider>();
-        if (auto offset = collider.Offset()) {
-          auto x = (*offset)[u8"x"]->Ptr<float>();
-          auto y = (*offset)[u8"y"]->Ptr<float>();
-          auto z = (*offset)[u8"z"]->Ptr<float>();
-          // vrm0: springbone collider offset is UnityCoordinate(LeftHanded)
-          item->Offset = { -*x, *y, *z };
-        }
-        item->Radius = *collider.Radius();
-        item->Node = colliderNode;
-        scene->m_springColliders.push_back(item);
-        group->Colliders.push_back(item);
-      }
-      scene->m_springColliderGroups.push_back(group);
-    }
-    for (auto boneGroup : secondaryAnimation->Springs) {
-      auto stiffness = boneGroup.Stifness();
-      auto dragForce = boneGroup.DragForce();
-      auto radius = boneGroup.HitRadius();
-      std::vector<std::shared_ptr<SpringColliderGroup>> colliderGroups;
-      if (auto array = boneGroup.ColliderGroups()) {
-        for (auto colliderGroup_index : *array) {
-          auto colliderGroup =
-            scene->m_springColliderGroups[(uint32_t)*colliderGroup_index
-                                            ->Ptr<float>()];
-          colliderGroups.push_back(colliderGroup);
-        }
-      }
-      if (auto array = boneGroup.Bones()) {
-        for (auto bone : *array) {
-          auto spring = std::make_shared<SpringBone>();
-          spring->AddJointRecursive(
-            scene->m_nodes[(uint32_t)*bone->Ptr<float>()],
-            *dragForce,
-            *stiffness,
-            *radius);
-          scene->m_springBones.push_back(spring);
-          for (auto& g : colliderGroups) {
-            spring->AddColliderGroup(g);
-          }
-        }
-      }
-    }
-  }
-
-  for (auto& root : scene->m_roots) {
-    root->InitialTransform.Rotation =
-      RotateY180(root->InitialTransform.Rotation);
-  }
-
-  return true;
-}
-
-static std::expected<bool, std::string>
-ParseVrm1(const std::shared_ptr<GltfRoot>& scene)
-{
-  auto VRMC_vrm = scene->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>();
-  if (!VRMC_vrm) {
-    return std::unexpected{ "no extensions.VRMC_vrm" };
-  }
-
-  if (auto humanoid = VRMC_vrm->Humanoid()) {
-    if (auto humanBones = humanoid->HumanBones()) {
-      if (auto object = humanBones->m_json->Object()) {
-        for (auto& kv : *object) {
-          auto name = kv.first;
-          if (auto bone =
-                HumanBoneFromName(gltfjson::from_u8(name), VrmVersion::_1_0)) {
-            auto index = (uint32_t)*kv.second->Get(u8"node")->Ptr<float>();
-            scene->m_nodes[index]->Humanoid = *bone;
-          } else {
-            std::cout << gltfjson::from_u8(name) << std::endl;
-          }
-        }
-      }
-    }
-  }
-
-  if (auto VRMC_springBone =
-        scene->m_gltf->GetExtension<gltfjson::vrm1::VRMC_springBone>()) {
-    // for (auto collider : VRMC_springBone->Colliders) {
-    //   auto ptr = std::make_shared<SpringCollider>();
-    //   uint32_t node_index = *collider.Node();
-    //   ptr->Node = scene->m_nodes[node_index];
-    //   if (auto shape = collider.Shape()) {
-    //     if (auto sphere = shape->Sphere()) {
-    //       ptr->Type = SpringColliderShapeType::Sphere;
-    //       ptr->Radius = *sphere->Radius();
-    //       // ptr->Offset = *((DirectX::XMFLOAT3*)&gltfjson::Vec3(
-    //       //   sphere->m_json->Get(u8"offset"), { 0, 0, 0 }));
-    //     } else if (auto capsule = shape->Capsule()) {
-    //       ptr->Type = SpringColliderShapeType::Capsule;
-    //       ptr->Radius = *capsule->Radius();
-    //       // ptr->Offset = capsule.value("offset", DirectX::XMFLOAT3{ 0, 0, 0
-    //       // }); ptr->Tail = capsule.value("tail", DirectX::XMFLOAT3{ 0, 0, 0
-    //       // });
-    //     } else {
-    //       assert(false);
-    //     }
-    //   }
-    //   scene->m_springColliders.push_back(ptr);
-    // }
-    // for (auto colliderGroup : VRMC_springBone->ColliderGroups) {
-    //   auto ptr = std::make_shared<SpringColliderGroup>();
-    //   // for (auto collider : colliderGroup.Colliders) {
-    //   //   auto collider_index =
-    //   // ptr->Colliders.push_back(scene->m_springColliders[collider_index]);
-    //   // }
-    //   scene->m_springColliderGroups.push_back(ptr);
-    // }
-    for (auto spring : VRMC_springBone->Springs) {
-      auto springBone = std::make_shared<SpringBone>();
-      std::shared_ptr<Node> head;
-      for (auto joint : spring.Joints) {
-        auto node_index = (uint32_t)*joint.Node();
-        auto tail = scene->m_nodes[node_index];
-        if (head) {
-          float stiffness = *joint.Stiffness();
-          float dragForce = *joint.DragForce();
-          float radius = *joint.HitRadius();
-          springBone->AddJoint(head,
-                               tail,
-                               tail->InitialTransform.Translation,
-                               stiffness,
-                               dragForce,
-                               radius);
-        }
-        head = tail;
-      }
-      scene->m_springBones.push_back(springBone);
-    }
-  }
-
-  auto& nodes = scene->m_gltf->Nodes;
-  for (size_t i = 0; i < nodes.size(); ++i) {
-    auto node = nodes[i];
-    auto ptr = scene->m_nodes[i];
-    if (auto VRMC_node_constraint =
-          node.GetExtension<gltfjson::vrm1::VRMC_node_constraint>()) {
-      if (auto constraint = VRMC_node_constraint->Constraint()) {
-        static DirectX::XMFLOAT4 s_constraint_color{ 1, 0.6f, 1, 1 };
-
-        if (auto roll = constraint->Roll()) {
-          // roll
-          auto source_index = roll->Source();
-          ptr->Constraint = NodeConstraint{
-            .Type = NodeConstraintTypes::Roll,
-            .Source = scene->m_nodes[*source_index],
-            .Weight = *roll->Weight(),
-          };
-          auto axis = roll->RollAxis();
-          ptr->Constraint->RollAxis =
-            NodeConstraintRollAxisFromName(gltfjson::from_u8(axis));
-          ptr->ShapeColor = s_constraint_color;
-        } else if (auto aim = constraint->Aim()) {
-          // aim
-          auto source_index = aim->Source();
-          ptr->Constraint = NodeConstraint{
-            .Type = NodeConstraintTypes::Aim,
-            .Source = scene->m_nodes[*source_index],
-            .Weight = *aim->Weight(),
-          };
-          auto axis = aim->AimAxis();
-          ptr->Constraint->AimAxis =
-            NodeConstraintAimAxisFromName(gltfjson::from_u8(axis));
-          ptr->ShapeColor = s_constraint_color;
-        } else if (auto rotation = constraint->Rotation()) {
-          // rotation
-          auto source_index = rotation->Source();
-          ptr->Constraint = NodeConstraint{
-            .Type = NodeConstraintTypes::Rotation,
-            .Source = scene->m_nodes[*source_index],
-            .Weight = *rotation->Weight(),
-          };
-          ptr->ShapeColor = s_constraint_color;
-        } else {
-          assert(false);
-        }
-      }
-    }
-  }
-
-  return true;
-}
-
-static std::expected<bool, std::string>
 Parse(const std::shared_ptr<GltfRoot>& scene)
 {
   scene->m_title = "glTF";
@@ -322,17 +73,6 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   //     }
   //   }
   // }
-
-  if (auto extensions = scene->m_gltf->Extensions()) {
-    if (auto VRM = extensions->Get(u8"VRM")) {
-      scene->m_type = ModelType::Vrm0;
-      scene->m_title = "vrm-0.x";
-    }
-    if (extensions->Get(u8"VRMC_vrm")) {
-      scene->m_type = ModelType::Vrm1;
-      scene->m_title = "vrm-1.0";
-    }
-  }
 
   {
     auto& nodes = scene->m_gltf->Nodes;
@@ -357,22 +97,48 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
     }
   }
 
-  // calc world
-  for (auto& root : scene->m_roots) {
-    root->CalcWorldInitialMatrix(true);
-  }
-
-  if (scene->m_type == ModelType::Vrm0) {
-    if (auto vrm0 = ParseVrm0(scene)) {
-    } else {
-      return std::unexpected{ vrm0.error() };
+  // humanoid
+  if (auto VRMC_vrm = scene->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
+    scene->m_type = ModelType::Vrm1;
+    scene->m_title = "vrm-1.0";
+    if (auto humanoid = VRMC_vrm->Humanoid()) {
+      if (auto humanBones = humanoid->HumanBones()) {
+        if (auto object = humanBones->m_json->Object()) {
+          for (auto& kv : *object) {
+            auto name = kv.first;
+            if (auto bone = HumanBoneFromName(gltfjson::from_u8(name),
+                                              VrmVersion::_1_0)) {
+              auto index = (uint32_t)*kv.second->Get(u8"node")->Ptr<float>();
+              scene->m_nodes[index]->Humanoid = *bone;
+            } else {
+              std::cout << gltfjson::from_u8(name) << std::endl;
+            }
+          }
+        }
+      }
     }
-  }
+  } else if (auto VRM = scene->m_gltf->GetExtension<gltfjson::vrm0::VRM>()) {
+    scene->m_type = ModelType::Vrm0;
+    scene->m_title = "vrm-0.x";
+    if (auto humanoid = VRM->Humanoid()) {
+      // bone & node
+      for (auto humanBone : humanoid->HumanBones) {
+        if (auto node = humanBone.Node()) {
+          auto index = *node;
+          auto name = humanBone.Bone();
+          // std::cout << name << ": " << index << std::endl;
+          if (auto bone =
+                HumanBoneFromName(gltfjson::from_u8(name), VrmVersion::_0_x)) {
+            scene->m_nodes[index]->Humanoid = *bone;
+          }
+        }
+      }
+    }
 
-  if (scene->m_type == ModelType::Vrm1) {
-    if (auto vrm1 = ParseVrm1(scene)) {
-    } else {
-      return std::unexpected{ vrm1.error() };
+    // ROTATE Y180 VRM-0.X TPose
+    for (auto& root : scene->m_roots) {
+      root->InitialTransform.Rotation =
+        RotateY180(root->InitialTransform.Rotation);
     }
   }
 

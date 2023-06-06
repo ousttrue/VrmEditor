@@ -1,6 +1,7 @@
 #pragma once
 #include <imgui.h>
 #include <vrm/gltfroot.h>
+#include <vrm/node.h>
 
 class ImHumanoid
 {
@@ -20,8 +21,7 @@ public:
       ImGui::TableSetupColumn("Bone", ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("Node", ImGuiTableColumnFlags_WidthStretch);
       ImGui::TableHeadersRow();
-      for (int i = 0; i < (int)libvrm::HumanBones::leftThumbMetacarpal;
-           ++i) {
+      for (int i = 0; i < (int)libvrm::HumanBones::leftThumbMetacarpal; ++i) {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("%s", libvrm::HumanBonesNames[i]);

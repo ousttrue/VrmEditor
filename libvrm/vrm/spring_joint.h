@@ -4,13 +4,13 @@
 
 namespace libvrm {
 
-struct Node;
+struct RuntimeNode;
 
 class SpringJoint
 {
 public:
-  std::shared_ptr<Node> Head;
-  std::shared_ptr<Node> Tail;
+  std::shared_ptr<RuntimeNode> Head;
+  std::shared_ptr<RuntimeNode> Tail;
   // if Tail is nullptr
   DirectX::XMFLOAT3 LocalTailPosition;
 
@@ -23,8 +23,8 @@ public:
   float Radius = 0;
 
 public:
-  SpringJoint(const std::shared_ptr<Node>& head,
-              const std::shared_ptr<Node>& tail,
+  SpringJoint(const std::shared_ptr<RuntimeNode>& head,
+              const std::shared_ptr<RuntimeNode>& tail,
               const DirectX::XMFLOAT3& localTailPosition,
               float dragForce,
               float stiffness,

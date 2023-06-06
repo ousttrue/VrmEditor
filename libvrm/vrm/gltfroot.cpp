@@ -1,5 +1,6 @@
 #include "gltfroot.h"
 #include "dmath.h"
+#include "node.h"
 #include "spring_bone.h"
 #include <DirectXMath.h>
 #include <array>
@@ -70,6 +71,15 @@ GltfRoot::GetBoundingBox() const
     }
   }
   return bb;
+}
+
+void
+GltfRoot::InitializeNodes()
+{
+  for (auto& root : m_roots) {
+    root->CalcWorldInitialMatrix(true);
+    root->CalcShape();
+  }
 }
 
 std::span<DrawItem>
