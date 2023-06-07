@@ -19,7 +19,7 @@ glr_lib = static_library(
         libvrm_dep,
         cuber_dep,
         plog_dep,
-        remotery_dep,
+        # remotery_dep,
         boneskin_dep,
     ],
 )

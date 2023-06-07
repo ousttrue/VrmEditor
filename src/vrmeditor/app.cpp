@@ -27,7 +27,7 @@
 #include <gltfjson/json_tree_exporter.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <remotery.h>
+// #include <remotery.h>
 #include <vrm/animation_update.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
@@ -325,8 +325,8 @@ App::Run()
 {
   // Create the main instance of Remotery.
   // You need only do this once per program.
-  Remotery* rmt;
-  rmt_CreateGlobalInstance(&rmt);
+  // Remotery* rmt;
+  // rmt_CreateGlobalInstance(&rmt);
 
   GL_ErrorClear("CreateWindow");
 
@@ -391,7 +391,7 @@ App::Run()
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
     {
-      rmt_ScopedCPUSample(update, 0);
+      // rmt_ScopedCPUSample(update, 0);
 
       ERROR_CHECK;
 
@@ -416,12 +416,12 @@ App::Run()
     }
 
     {
-      rmt_ScopedCPUSample(gui, 0);
+      // rmt_ScopedCPUSample(gui, 0);
       m_gui->DockSpace();
     }
 
     {
-      rmt_ScopedCPUSample(render, 0);
+      // rmt_ScopedCPUSample(render, 0);
       glr::ClearBackBuffer(info->Width, info->Height);
 
       m_gui->Render();
@@ -432,7 +432,7 @@ App::Run()
   SaveState();
 
   // Destroy the main instance of Remotery.
-  rmt_DestroyGlobalInstance(rmt);
+  // rmt_DestroyGlobalInstance(rmt);
 
   return 0;
 }

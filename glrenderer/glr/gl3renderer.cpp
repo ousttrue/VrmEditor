@@ -5,7 +5,7 @@
 #include "rendering_env.h"
 #include "shader_source.h"
 #include <DirectXMath.h>
-#include <Remotery.h>
+// #include <Remotery.h>
 #include <boneskin/base_mesh.h>
 #include <boneskin/deformed_mesh.h>
 #include <boneskin/skin.h>
@@ -689,7 +689,7 @@ public:
                     const gltfjson::Bin& bin,
                     std::span<const libvrm::DrawItem> drawables)
   {
-    rmt_ScopedCPUSample(RenderPasses, 0);
+    // rmt_ScopedCPUSample(RenderPasses, 0);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
@@ -705,7 +705,7 @@ public:
           std::span<const DirectX::XMFLOAT4X4> skinningMatrices;
           if (auto skin = GetOrCreaeSkin(root, bin, gltfNode.Skin())) {
             // update skinnning
-            rmt_ScopedCPUSample(SkinningMatrices, 0);
+            // rmt_ScopedCPUSample(SkinningMatrices, 0);
 
             skin->CurrentMatrices.resize(skin->BindMatrices.size());
 
@@ -731,7 +731,7 @@ public:
           auto deformed = GetOrCreateDeformedMesh(*meshId, baseMesh);
           if (deformed->Vertices.size()) {
             // apply morphtarget & skinning
-            rmt_ScopedCPUSample(SkinningApply, 0);
+            // rmt_ScopedCPUSample(SkinningApply, 0);
             deformed->ApplyMorphTargetAndSkinning(
               *baseMesh, drawables[i].MorphMap, skinningMatrices);
             auto vao = GetOrCreateMesh(*meshId, baseMesh);

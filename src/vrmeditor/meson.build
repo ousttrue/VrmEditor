@@ -53,7 +53,7 @@ executable(
         stb_dep,
         imgui_colortextedit_dep,
         boneskin_dep,
-        remotery_dep,
+        # remotery_dep,
         plog_dep,
         glr_dep,
     ],
