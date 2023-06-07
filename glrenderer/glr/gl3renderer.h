@@ -105,7 +105,7 @@ void
 RenderSkybox(const DirectX::XMFLOAT4X4& projection,
              const DirectX::XMFLOAT4X4& view);
 
-std::shared_ptr<Material>
-GetMaterial(uint32_t index);
+std::vector<std::shared_ptr<Material>>&
+MaterialMap();
 
 } // namespace

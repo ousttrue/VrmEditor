@@ -70,7 +70,7 @@ App::App()
 
   PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
-  // m_gl3gui = std::make_shared<Gl3RendererGui>();
+  m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
 
   auto track = m_timeline->AddTrack("PoseStream", {});
   track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
@@ -358,26 +358,26 @@ App::Run()
   // void
   // CreateDock(const AddDockFunc& addDock)
   {
-    // addDock(
-    //   grapho::imgui::Dock("GL impl", [=]() { m_gl3gui->ShowSelectImpl(); }));
-    //
-    // addDock(grapho::imgui::Dock("GL selector", []() {
-    //   //
-    //   glr::Gl3Renderer::Instance().ShowSelector();
-    // }));
-    //
-    // addDock(grapho::imgui::Dock("GL selected shader source", []() {
-    //   //
-    //   glr::Gl3Renderer::Instance().ShowSelectedShaderSource();
-    // }));
-    //
-    // addDock(grapho::imgui::Dock(
-    //   "GL selected shader variables",
-    //   []() {
-    //     //
-    //     glr::Gl3Renderer::Instance().ShowSelectedShaderVariables();
-    //   },
-    //   true));
+    addDock(
+      grapho::imgui::Dock("GL impl", [=]() { m_gl3gui->ShowSelectImpl(); }));
+
+    addDock(grapho::imgui::Dock("GL selector", [=]() {
+      //
+      m_gl3gui->ShowSelector();
+    }));
+
+    addDock(grapho::imgui::Dock("GL selected shader source", [=]() {
+      //
+      m_gl3gui->ShowSelectedShaderSource();
+    }));
+
+    addDock(grapho::imgui::Dock(
+      "GL selected shader variables",
+      [=]() {
+        //
+        m_gl3gui->ShowSelectedShaderVariables();
+      },
+      true));
   }
 
   ViewDock::CreateSetting(

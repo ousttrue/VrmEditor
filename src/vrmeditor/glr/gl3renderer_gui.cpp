@@ -3,6 +3,7 @@
 #include "../docks/printfbuffer.h"
 #include "gl3renderer_gui.h"
 #include <TextEditor.h>
+#include <glr/gl3renderer.h>
 #include <glr/material.h>
 #include <grapho/gl3/glsl_type_name.h>
 #include <grapho/imgui/csscolor.h>
@@ -262,7 +263,7 @@ Gl3RendererGui::Select(uint32_t i)
     return;
   }
   m_selected = i;
-  if (glr::GetMaterial(m_selected)) {
+  if (MaterialMap()[m_selected]) {
     m_vsEditor.SetText("");
     m_vsEditor.SetReadOnly(true);
     m_fsEditor.SetText("");
@@ -287,7 +288,7 @@ ShowSelectImpl(const std::vector<MaterialFactory>& list, uint32_t* value)
 }
 
 void
-ShowSelectImpl()
+Gl3RendererGui::ShowSelectImpl()
 {
   // ImGui::SetNextItemOpen(true, ImGuiCond_Once);
   // if (ImGui::CollapsingHeader("PBR")) {
@@ -316,42 +317,42 @@ ShowSelectImpl()
 }
 
 void
-ShowSelector()
+Gl3RendererGui::ShowSelector()
 {
-  // for (uint32_t i = 0; i < m_materialMap.size(); ++i) {
-  //   PrintfBuffer buf;
-  //   if (ImGui::Selectable(buf.Printf("%d", i), i == m_selected)) {
-  //     Select(i);
-  //   }
-  // }
+  for (uint32_t i = 0; i < MaterialMap().size(); ++i) {
+    PrintfBuffer buf;
+    if (ImGui::Selectable(buf.Printf("%d", i), i == m_selected)) {
+      Select(i);
+    }
+  }
 }
 
 void
 Gl3RendererGui::ShowSelectedShaderSource()
 {
   ImGui::Text("%d", m_selected);
-  // if (m_selected >= m_materialMap.size()) {
-  //   return;
-  // }
-  //
-  // if (auto factory = m_materialMap[m_selected]) {
-  //   ShowShaderSource(*factory, m_vsEditor, m_fsEditor);
-  // } else {
-  //   ImGui::TextUnformatted("nullopt");
-  // }
+  if (m_selected >= MaterialMap().size()) {
+    return;
+  }
+
+  if (auto factory = MaterialMap()[m_selected]) {
+    ShowShaderSource(*factory);
+  } else {
+    ImGui::TextUnformatted("nullopt");
+  }
 }
 
 void
 Gl3RendererGui::ShowSelectedShaderVariables()
 {
   ImGui::Text("%d", m_selected);
-  // if (m_selected >= m_materialMap.size()) {
-  //   return;
-  // }
-  //
-  // if (auto factory = m_materialMap[m_selected]) {
-  //   ShowShaderVariables(*factory);
-  // }
+  if (m_selected >= MaterialMap().size()) {
+    return;
+  }
+
+  if (auto factory = MaterialMap()[m_selected]) {
+    ShowShaderVariables(*factory);
+  }
 }
 
 } // namespace

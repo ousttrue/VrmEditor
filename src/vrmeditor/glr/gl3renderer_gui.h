@@ -11,13 +11,15 @@ class Gl3RendererGui
   uint32_t m_selected = 0;
 
 public:
-  void ShowShaderSource(Material& factory);
-  void ShowShaderVariables(Material& factory);
-  void Select(uint32_t i);
-
-private:
+  void ShowSelectImpl();
+  void ShowSelector();
   void ShowSelectedShaderSource();
   void ShowSelectedShaderVariables();
+
+private:
+  void Select(uint32_t i);
+  void ShowShaderSource(Material& factory);
+  void ShowShaderVariables(Material& factory);
 };
 
 }

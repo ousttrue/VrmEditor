@@ -386,9 +386,9 @@ public:
     m_drawableMap.clear();
   }
 
-  std::shared_ptr<Material> GetMaterial(uint32_t index)
+  std::vector<std::shared_ptr<Material>>& MaterialMap()
   {
-    return m_materialMap[index];
+    return m_materialMap;
   }
 
   void ReleaseMaterial(uint32_t i)
@@ -1072,9 +1072,10 @@ RenderSkybox(const DirectX::XMFLOAT4X4& projection,
   Gl3Renderer::Instance().RenderSkybox(projection, view);
 }
 
-std::shared_ptr<Material>
-GetMaterial(uint32_t index)
+std::vector<std::shared_ptr<Material>>&
+MaterialMap()
 {
-  return Gl3Renderer::Instance().GetMaterial(index);
+  return Gl3Renderer::Instance().MaterialMap();
 }
-}
+
+} // namespace
