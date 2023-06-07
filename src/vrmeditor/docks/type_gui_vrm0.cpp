@@ -1,5 +1,3 @@
-#include <GL/glew.h>
-
 #include "im_widgets.h"
 #include "type_gui_vrm0.h"
 

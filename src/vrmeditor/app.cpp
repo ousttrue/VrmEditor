@@ -1,5 +1,3 @@
-#include <GL/glew.h>
-
 #include "app.h"
 #include "assetdir.h"
 #include "docks/export_dock.h"
@@ -62,11 +60,7 @@ App::App()
   }
   GL_ErrorClear("CreateWindow");
 
-  PLOG_INFO << "GL_VERSION: " << glGetString(GL_VERSION);
-  PLOG_INFO << "GL_VENDOR: " << glGetString(GL_VENDOR);
-  if (glewInit() != GLEW_OK) {
-    throw std::runtime_error("glewInit");
-  }
+  glr::Initialize();
 
   PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
@@ -78,12 +72,12 @@ App::App()
     return true;
   });
 
-  glEnable(GL_DEPTH_TEST);
-  // set depth function to less than AND equal for skybox depth trick.
-  glDepthFunc(GL_LEQUAL);
-  // enable seamless cubemap sampling for lower mip levels in the pre-filter
-  // map.
-  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+  // glEnable(GL_DEPTH_TEST);
+  // // set depth function to less than AND equal for skybox depth trick.
+  // glDepthFunc(GL_LEQUAL);
+  // // enable seamless cubemap sampling for lower mip levels in the pre-filter
+  // // map.
+  // glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
   m_json = std::make_shared<JsonGui>();
 }
@@ -431,9 +425,7 @@ App::Run()
 
     {
       rmt_ScopedCPUSample(render, 0);
-      glViewport(0, 0, info->Width, info->Height);
-      glClearColor(0, 0, 0, 0);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glr::ClearBackBuffer(info->Width, info->Height);
 
       m_gui->Render();
       m_platform->Present();

@@ -1,9 +1,6 @@
-#include <GL/glew.h>
-
 #include "im_widgets.h"
 #include <array>
 #include <glr/gl3renderer.h>
-#include <grapho/gl3/texture.h>
 
 struct InputTextCallback_UserData
 {
@@ -454,9 +451,9 @@ ShowGuiTexturePreview(const gltfjson::Root& root,
   auto node = parentNode->Get(key);
   if (node) {
     if (auto p = node->Ptr<float>()) {
-      if (auto texture = glr::GetOrCreateTexture(
+      if (auto texture = glr::GetOrCreateTextureHandle(
             root, bin, (uint32_t)*p, glr::ColorSpace::Linear)) {
-        ImGui::Image((ImTextureID)(int64_t)texture->Handle(), { 150, 150 });
+        ImGui::Image((ImTextureID)(uint64_t)*texture, { 150, 150 });
         return;
       }
     }

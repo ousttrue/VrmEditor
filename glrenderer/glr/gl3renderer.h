@@ -47,6 +47,11 @@ enum class EnvTextureTypes
 struct RenderingEnv;
 
 void
+Initialize();
+void
+ClearBackBuffer(int width, int height);
+
+void
 RenderPasses(std::span<const RenderPass> passes,
              const RenderingEnv& camera,
              const gltfjson::Root& root,
@@ -69,6 +74,12 @@ GetOrCreateTexture(const gltfjson::Root& root,
                    const gltfjson::Bin& bin,
                    std::optional<uint32_t> texture,
                    glr::ColorSpace colorspace);
+
+std::optional<uint32_t>
+GetOrCreateTextureHandle(const gltfjson::Root& root,
+                         const gltfjson::Bin& bin,
+                         std::optional<uint32_t> texture,
+                         ColorSpace colorspace);
 
 void
 RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data);

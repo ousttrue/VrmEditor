@@ -38,7 +38,6 @@ executable(
     install: true,
     # gui_app: true,
     dependencies: [
-        glew_dep,
         glfw_dep,
         imgui_dep,
         grapho_dep,

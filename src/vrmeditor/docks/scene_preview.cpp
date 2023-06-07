@@ -1,5 +1,3 @@
-#include <GL/glew.h>
-
 #include "overlay.h"
 #include "scene_preview.h"
 #include <DirectXMath.h>

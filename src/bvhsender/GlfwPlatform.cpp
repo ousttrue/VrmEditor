@@ -3,7 +3,7 @@
 #include <imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <stdio.h>
-#include <GL/glew.h>
+// #include <GL/glew.h>
 
 const char *glsl_version = nullptr;
 

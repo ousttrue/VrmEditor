@@ -1,5 +1,3 @@
-#include <GL/glew.h>
-
 #include "app.h"
 #include "glr/gl3renderer.h"
 #include "im_widgets.h"

@@ -964,6 +964,24 @@ public:
 };
 
 void
+Initialize()
+{
+  PLOG_INFO << "GL_VERSION: " << glGetString(GL_VERSION);
+  PLOG_INFO << "GL_VENDOR: " << glGetString(GL_VENDOR);
+  if (glewInit() != GLEW_OK) {
+    throw std::runtime_error("glewInit");
+  }
+}
+
+void
+ClearBackBuffer(int width, int height)
+{
+  glViewport(0, 0, width, height);
+  glClearColor(0, 0, 0, 1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void
 RenderPasses(std::span<const RenderPass> passes,
              const RenderingEnv& env,
              const gltfjson::Root& root,
@@ -1004,6 +1022,18 @@ GetOrCreateTexture(const gltfjson::Root& root,
 {
   return Gl3Renderer::Instance().GetOrCreateTexture(
     root, bin, texture, colorspace);
+}
+
+std::optional<uint32_t>
+GetOrCreateTextureHandle(const gltfjson::Root& root,
+                         const gltfjson::Bin& bin,
+                         std::optional<uint32_t> texture,
+                         ColorSpace colorspace)
+{
+  if (auto p = GetOrCreateTexture(root, bin, texture, colorspace)) {
+    return p->Handle();
+  }
+  return {};
 }
 
 void

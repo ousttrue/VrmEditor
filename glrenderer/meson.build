@@ -12,6 +12,7 @@ glr_lib = static_library(
         'glr/line_gizmo.cpp',
         'glr/rendertarget.cpp',
         'glr/scene_renderer.cpp',
+        'glr/material.cpp',
     ],
     dependencies: [
         glew_dep,
