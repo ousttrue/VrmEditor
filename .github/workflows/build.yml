@@ -26,7 +26,8 @@ jobs:
       - run: scripts/build.ps1
       - uses: actions/upload-artifact@v3
         with:
-          path: vrmeditor
+          name: artifact_windows
+          path: vrmeditor*.zip
 
   create_release:
     name: create release from tag
