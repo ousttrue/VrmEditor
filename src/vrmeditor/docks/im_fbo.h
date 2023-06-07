@@ -1,5 +1,5 @@
 #pragma once
-#include "../glr/rendertarget.h"
+#include <glr/rendertarget.h>
 #include <memory>
 
 struct ImFbo

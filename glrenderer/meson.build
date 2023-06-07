@@ -10,6 +10,7 @@ glr_lib = static_library(
         'glr/material_pbr_khronos.cpp',
         'glr/cuber.cpp',
         'glr/line_gizmo.cpp',
+        'glr/rendertarget.cpp',
     ],
     dependencies: [
         glew_dep,

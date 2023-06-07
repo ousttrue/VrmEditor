@@ -1,7 +1,6 @@
 #pragma once
 #include "docks/im_fbo.h"
 #include "docks/scene_selection.h"
-#include "rendertarget.h"
 #include <glr/rendering_env.h>
 #include <glr/renderpass.h>
 #include <grapho/orbitview.h>

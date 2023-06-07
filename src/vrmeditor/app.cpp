@@ -3,6 +3,7 @@
 #include "app.h"
 #include "assetdir.h"
 #include "docks/export_dock.h"
+#include "docks/gl3renderer_gui.h"
 #include "docks/gui.h"
 #include "docks/hierarchy_gui.h"
 #include "docks/humanoid_dock.h"
@@ -14,16 +15,15 @@
 #include "docks/vrm_dock.h"
 #include "filewatcher.h"
 #include "fs_util.h"
-#include "glr/error_check.h"
-#include "glr/gl3renderer_gui.h"
-#include "glr/rendering_env.h"
 #include "humanpose/humanpose_stream.h"
 #include "luahost.h"
 #include "platform.h"
 #include <ImGuizmo.h>
 #include <cuber/mesh.h>
 #include <fstream>
+#include <glr/error_check.h>
 #include <glr/gl3renderer.h>
+#include <glr/rendering_env.h>
 #include <gltfjson.h>
 #include <gltfjson/glb.h>
 #include <gltfjson/json_tree_exporter.h>
