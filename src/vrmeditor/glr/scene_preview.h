@@ -1,8 +1,8 @@
 #pragma once
 #include "docks/scene_selection.h"
-#include "rendering_env.h"
-#include "renderpass.h"
 #include "rendertarget.h"
+#include <glr/rendering_env.h>
+#include <glr/renderpass.h>
 #include <grapho/orbitview.h>
 #include <memory>
 #include <optional>

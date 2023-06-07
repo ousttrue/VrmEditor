@@ -3,11 +3,13 @@
 #include "../docks/printfbuffer.h"
 #include "gl3renderer_gui.h"
 #include <TextEditor.h>
+#include <glr/material.h>
 #include <grapho/gl3/glsl_type_name.h>
 #include <grapho/imgui/csscolor.h>
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
+#include <vector>
 
 namespace glr {
 
@@ -108,23 +110,23 @@ ShowShader(Material& f, ShaderFactory& s, TextEditor& editor)
 }
 
 void
-ShowShaderSource(Material& material, TextEditor& vsEditor, TextEditor& fsEditor)
+Gl3RendererGui::ShowShaderSource(Material& material)
 {
   ImGui::TextUnformatted(material.Name.c_str());
 
   ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
   if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
     if (ImGui::BeginTabItem("VS")) {
-      if (ShowShader(material, material.VS, vsEditor)) {
+      if (ShowShader(material, material.VS, m_vsEditor)) {
         material.Compiled = std::unexpected{ "" };
-        vsEditor.SetText("");
+        m_vsEditor.SetText("");
       }
       ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("FS")) {
-      if (ShowShader(material, material.FS, fsEditor)) {
+      if (ShowShader(material, material.FS, m_fsEditor)) {
         material.Compiled = std::unexpected{ "" };
-        fsEditor.SetText("");
+        m_fsEditor.SetText("");
       }
       ImGui::EndTabItem();
     }
@@ -200,7 +202,7 @@ struct UniformVisitor
 };
 
 void
-ShowShaderVariables(Material& factory)
+Gl3RendererGui::ShowShaderVariables(Material& factory)
 {
   bool updated = false;
   if (auto compiled = factory.Compiled) {
@@ -253,4 +255,103 @@ ShowShaderVariables(Material& factory)
   }
 }
 
+void
+Gl3RendererGui::Select(uint32_t i)
+{
+  if (i == m_selected) {
+    return;
+  }
+  m_selected = i;
+  if (glr::GetMaterial(m_selected)) {
+    m_vsEditor.SetText("");
+    m_vsEditor.SetReadOnly(true);
+    m_fsEditor.SetText("");
+    m_fsEditor.SetReadOnly(true);
+  }
 }
+
+static bool
+ShowSelectImpl(const std::vector<MaterialFactory>& list, uint32_t* value)
+{
+  bool updated = false;
+  ImGui::Indent();
+  for (uint32_t i = 0; i < list.size(); ++i) {
+    auto& f = list[i];
+    if (ImGui::Selectable(f.Name.c_str(), i == *value)) {
+      *value = i;
+      updated = true;
+    }
+  }
+  ImGui::Unindent();
+  return updated;
+}
+
+void
+ShowSelectImpl()
+{
+  // ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+  // if (ImGui::CollapsingHeader("PBR")) {
+  //   if (ShowSelectImpl(m_pbrFactories, &m_pbrFactoriesCurrent)) {
+  //     m_materialMap.clear();
+  //   }
+  // }
+  // ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+  // if (ImGui::CollapsingHeader("UNLIT")) {
+  //   if (ShowSelectImpl(m_unlitFactories, &m_unlitFactoriesCurrent)) {
+  //     m_materialMap.clear();
+  //   }
+  // }
+  // ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+  // if (ImGui::CollapsingHeader("MToon0")) {
+  //   if (ShowSelectImpl(m_mtoon0Factories, &m_mtoon0FactoriesCurrent)) {
+  //     m_materialMap.clear();
+  //   }
+  // }
+  // ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+  // if (ImGui::CollapsingHeader("MToon1")) {
+  //   if (ShowSelectImpl(m_mtoon1Factories, &m_mtoon1FactoriesCurrent)) {
+  //     m_materialMap.clear();
+  //   }
+  // }
+}
+
+void
+ShowSelector()
+{
+  // for (uint32_t i = 0; i < m_materialMap.size(); ++i) {
+  //   PrintfBuffer buf;
+  //   if (ImGui::Selectable(buf.Printf("%d", i), i == m_selected)) {
+  //     Select(i);
+  //   }
+  // }
+}
+
+void
+Gl3RendererGui::ShowSelectedShaderSource()
+{
+  ImGui::Text("%d", m_selected);
+  // if (m_selected >= m_materialMap.size()) {
+  //   return;
+  // }
+  //
+  // if (auto factory = m_materialMap[m_selected]) {
+  //   ShowShaderSource(*factory, m_vsEditor, m_fsEditor);
+  // } else {
+  //   ImGui::TextUnformatted("nullopt");
+  // }
+}
+
+void
+Gl3RendererGui::ShowSelectedShaderVariables()
+{
+  ImGui::Text("%d", m_selected);
+  // if (m_selected >= m_materialMap.size()) {
+  //   return;
+  // }
+  //
+  // if (auto factory = m_materialMap[m_selected]) {
+  //   ShowShaderVariables(*factory);
+  // }
+}
+
+} // namespace

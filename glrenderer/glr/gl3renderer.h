@@ -1,6 +1,6 @@
 #pragma once
 #include "colorspace.h"
-#include "docks/gui.h"
+// #include "docks/gui.h"
 #include "renderpass.h"
 #include <cuber/mesh.h>
 #include <filesystem>
@@ -27,6 +27,8 @@ struct DrawItem;
 }
 
 namespace glr {
+
+struct Material;
 
 enum class EnvCubemapTypes
 {
@@ -61,10 +63,6 @@ Release();
 
 void
 ReleaseMaterial(int i);
-
-// resource viewer
-void
-CreateDock(const AddDockFunc& addDock);
 
 std::shared_ptr<grapho::gl3::Texture>
 GetOrCreateTexture(const gltfjson::Root& root,
@@ -106,4 +104,8 @@ GetEnvCubemap(EnvCubemapTypes type);
 void
 RenderSkybox(const DirectX::XMFLOAT4X4& projection,
              const DirectX::XMFLOAT4X4& view);
-}
+
+std::shared_ptr<Material>
+GetMaterial(uint32_t index);
+
+} // namespace

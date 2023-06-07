@@ -1,6 +1,6 @@
 #include <GL/glew.h>
 
-#include "rendering_env.h"
+#include <glr/rendering_env.h>
 #include "rendertarget.h"
 #include <functional>
 #include <grapho/gl3/fbo.h>

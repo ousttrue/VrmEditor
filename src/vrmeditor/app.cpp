@@ -15,7 +15,7 @@
 #include "filewatcher.h"
 #include "fs_util.h"
 #include "glr/error_check.h"
-#include "glr/gl3renderer.h"
+#include "glr/gl3renderer_gui.h"
 #include "glr/rendering_env.h"
 #include "humanpose/humanpose_stream.h"
 #include "luahost.h"
@@ -23,6 +23,7 @@
 #include <ImGuizmo.h>
 #include <cuber/mesh.h>
 #include <fstream>
+#include <glr/gl3renderer.h>
 #include <gltfjson.h>
 #include <gltfjson/glb.h>
 #include <gltfjson/json_tree_exporter.h>
@@ -69,6 +70,7 @@ App::App()
 
   PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
+  // m_gl3gui = std::make_shared<Gl3RendererGui>();
 
   auto track = m_timeline->AddTrack("PoseStream", {});
   track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
@@ -351,7 +353,33 @@ App::Run()
     []() { ImLogger::Instance().Draw(); },
     true,
   });
-  glr::CreateDock(addDock);
+
+  //   glr::CreateDock(addDock);
+  // void
+  // CreateDock(const AddDockFunc& addDock)
+  {
+    // addDock(
+    //   grapho::imgui::Dock("GL impl", [=]() { m_gl3gui->ShowSelectImpl(); }));
+    //
+    // addDock(grapho::imgui::Dock("GL selector", []() {
+    //   //
+    //   glr::Gl3Renderer::Instance().ShowSelector();
+    // }));
+    //
+    // addDock(grapho::imgui::Dock("GL selected shader source", []() {
+    //   //
+    //   glr::Gl3Renderer::Instance().ShowSelectedShaderSource();
+    // }));
+    //
+    // addDock(grapho::imgui::Dock(
+    //   "GL selected shader variables",
+    //   []() {
+    //     //
+    //     glr::Gl3Renderer::Instance().ShowSelectedShaderVariables();
+    //   },
+    //   true));
+  }
+
   ViewDock::CreateSetting(
     addDock, "view-settings", m_env, m_runtimeView, m_settings);
 

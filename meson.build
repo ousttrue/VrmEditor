@@ -37,6 +37,7 @@ remotery_dep = subproject('remotery').get_variable('remotery_dep')
 plog_dep = dependency('plog')
 subdir('libvrm')
 subdir('libboneskin')
+subdir('glrenderer')
 
 if get_option('executables')
     subdir('src')

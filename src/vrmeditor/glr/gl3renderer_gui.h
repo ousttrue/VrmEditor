@@ -1,15 +1,23 @@
 #pragma once
-#include "material.h"
-
-class TextEditor;
+#include <TextEditor.h>
 
 namespace glr {
 
-void
-ShowShaderSource(Material& factory,
-                 TextEditor& vsEditor,
-                 TextEditor& fsEditor);
-void
-ShowShaderVariables(Material& factory);
+struct Material;
+class Gl3RendererGui
+{
+  TextEditor m_vsEditor;
+  TextEditor m_fsEditor;
+  uint32_t m_selected = 0;
+
+public:
+  void ShowShaderSource(Material& factory);
+  void ShowShaderVariables(Material& factory);
+  void Select(uint32_t i);
+
+private:
+  void ShowSelectedShaderSource();
+  void ShowSelectedShaderVariables();
+};
 
 }

@@ -1,7 +1,7 @@
 #include <GL/glew.h>
 
 #include "cuber.h"
-#include "gl3renderer.h"
+#include <glr/gl3renderer.h>
 #include "line_gizmo.h"
 #include "overlay.h"
 #include "rendertarget.h"

@@ -44,7 +44,7 @@ class Gui;
 struct AssetDir;
 class LuaEngine;
 class Platform;
-class Gl3Renderer;
+class Gl3RendererGui;
 struct JsonGui;
 
 class GltfJsonGui;
@@ -70,6 +70,7 @@ class App
   std::shared_ptr<glr::RenderingEnv> m_env;
 
   std::shared_ptr<JsonGui> m_json;
+  // std::shared_ptr<Gl3RendererGui> m_gl3gui;
 
   App();
 

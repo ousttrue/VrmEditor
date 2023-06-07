@@ -1,6 +1,5 @@
 #include <GL/glew.h>
 
-#include "app.h"
 #include "gl3renderer.h"
 #include "material.h"
 #include "material_pbr_khronos.h"

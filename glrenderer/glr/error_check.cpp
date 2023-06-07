@@ -1,6 +1,5 @@
 #include <GL/glew.h>
 
-#include "app.h"
 #include "error_check.h"
 #include <iostream>
 #include <plog/Log.h>

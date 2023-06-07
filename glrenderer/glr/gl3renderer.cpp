@@ -1,15 +1,11 @@
 #include <GL/glew.h>
 
-#include "app.h"
-#include "docks/printfbuffer.h"
 #include "gl3renderer.h"
-#include "gl3renderer_gui.h"
 #include "material.h"
 #include "rendering_env.h"
 #include "shader_source.h"
 #include <DirectXMath.h>
 #include <Remotery.h>
-#include <TextEditor.h>
 #include <boneskin/base_mesh.h>
 #include <boneskin/deformed_mesh.h>
 #include <boneskin/skin.h>
@@ -22,15 +18,12 @@
 #include <grapho/gl3/texture.h>
 #include <grapho/gl3/ubo.h>
 #include <grapho/gl3/vao.h>
-#include <grapho/imgui/csscolor.h>
-#include <grapho/imgui/widgets.h>
-#include <imgui.h>
 #include <iostream>
-#include <misc/cpp/imgui_stdlib.h>
 #include <plog/Log.h>
 #include <unordered_map>
 #include <variant>
 #include <vrm/fileutil.h>
+#include <vrm/gltfroot.h>
 #include <vrm/image.h>
 
 #include "material_error.h"
@@ -309,8 +302,6 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
 
 class Gl3Renderer
 {
-  TextEditor m_vsEditor;
-  TextEditor m_fsEditor;
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::Image>> m_imageMap;
   std::unordered_map<uint32_t, std::shared_ptr<boneskin::DeformedMesh>>
     m_deformMap;
@@ -339,19 +330,6 @@ class Gl3Renderer
   };
   std::vector<NodeMesh> m_meshNodes;
 
-  struct MaterialFactory
-  {
-    std::string Name;
-    MaterialFactoryFunc Factory;
-
-    std::shared_ptr<Material> operator()(const gltfjson::Root& root,
-                                         const gltfjson::Bin& bin,
-                                         std::optional<uint32_t> materialId)
-    {
-      return Factory(root, bin, materialId);
-    }
-  };
-
   std::vector<MaterialFactory> m_pbrFactories{
     { "KHRONOS_GLTF_PBR", MaterialFactory_Pbr_Khronos_GLTF },
     { "LOGL_PBR", MaterialFactory_Pbr_LearnOpenGL },
@@ -373,8 +351,6 @@ class Gl3Renderer
     { "three-vrm", MaterialFactory_MToon },
   };
   uint32_t m_mtoon1FactoriesCurrent = 0;
-
-  uint32_t m_selected = 0;
 
   Gl3Renderer()
     : m_shaderSource(new ShaderSourceManager)
@@ -408,8 +384,11 @@ public:
     m_srgbTextureMap.clear();
     m_linearTextureMap.clear();
     m_drawableMap.clear();
-    m_vsEditor.SetText("");
-    m_fsEditor.SetText("");
+  }
+
+  std::shared_ptr<Material> GetMaterial(uint32_t index)
+  {
+    return m_materialMap[index];
   }
 
   void ReleaseMaterial(uint32_t i)
@@ -913,100 +892,6 @@ public:
     ERROR_CHECK;
   }
 
-  void Select(uint32_t i)
-  {
-    if (i == m_selected) {
-      return;
-    }
-    m_selected = i;
-    if (auto material = m_materialMap[m_selected]) {
-      m_vsEditor.SetText("");
-      m_vsEditor.SetReadOnly(true);
-      m_fsEditor.SetText("");
-      m_fsEditor.SetReadOnly(true);
-    }
-  }
-
-  static bool ShowSelectImpl(const std::vector<MaterialFactory>& list,
-                             uint32_t* value)
-  {
-    bool updated = false;
-    ImGui::Indent();
-    for (uint32_t i = 0; i < list.size(); ++i) {
-      auto& f = list[i];
-      if (ImGui::Selectable(f.Name.c_str(), i == *value)) {
-        *value = i;
-        updated = true;
-      }
-    }
-    ImGui::Unindent();
-    return updated;
-  }
-
-  void ShowSelectImpl()
-  {
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::CollapsingHeader("PBR")) {
-      if (ShowSelectImpl(m_pbrFactories, &m_pbrFactoriesCurrent)) {
-        m_materialMap.clear();
-      }
-    }
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::CollapsingHeader("UNLIT")) {
-      if (ShowSelectImpl(m_unlitFactories, &m_unlitFactoriesCurrent)) {
-        m_materialMap.clear();
-      }
-    }
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::CollapsingHeader("MToon0")) {
-      if (ShowSelectImpl(m_mtoon0Factories, &m_mtoon0FactoriesCurrent)) {
-        m_materialMap.clear();
-      }
-    }
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::CollapsingHeader("MToon1")) {
-      if (ShowSelectImpl(m_mtoon1Factories, &m_mtoon1FactoriesCurrent)) {
-        m_materialMap.clear();
-      }
-    }
-  }
-
-  void ShowSelector()
-  {
-    for (uint32_t i = 0; i < m_materialMap.size(); ++i) {
-      PrintfBuffer buf;
-      if (ImGui::Selectable(buf.Printf("%d", i), i == m_selected)) {
-        Select(i);
-      }
-    }
-  }
-
-  void ShowSelectedShaderSource()
-  {
-    ImGui::Text("%d", m_selected);
-    if (m_selected >= m_materialMap.size()) {
-      return;
-    }
-
-    if (auto factory = m_materialMap[m_selected]) {
-      ShowShaderSource(*factory, m_vsEditor, m_fsEditor);
-    } else {
-      ImGui::TextUnformatted("nullopt");
-    }
-  }
-
-  void ShowSelectedShaderVariables()
-  {
-    ImGui::Text("%d", m_selected);
-    if (m_selected >= m_materialMap.size()) {
-      return;
-    }
-
-    if (auto factory = m_materialMap[m_selected]) {
-      ShowShaderVariables(*factory);
-    }
-  }
-
   std::shared_ptr<grapho::gl3::PbrEnv> m_pbr;
 
   bool LoadPbr_LOGL(const std::filesystem::path& path)
@@ -1111,31 +996,6 @@ ReleaseMaterial(int i)
   Gl3Renderer::Instance().ReleaseMaterial(i);
 }
 
-void
-CreateDock(const AddDockFunc& addDock)
-{
-  addDock(grapho::imgui::Dock(
-    "GL impl", []() { Gl3Renderer::Instance().ShowSelectImpl(); }));
-
-  addDock(grapho::imgui::Dock("GL selector", []() {
-    //
-    Gl3Renderer::Instance().ShowSelector();
-  }));
-
-  addDock(grapho::imgui::Dock("GL selected shader source", []() {
-    //
-    Gl3Renderer::Instance().ShowSelectedShaderSource();
-  }));
-
-  addDock(grapho::imgui::Dock(
-    "GL selected shader variables",
-    []() {
-      //
-      Gl3Renderer::Instance().ShowSelectedShaderVariables();
-    },
-    true));
-}
-
 std::shared_ptr<grapho::gl3::Texture>
 GetOrCreateTexture(const gltfjson::Root& root,
                    const gltfjson::Bin& bin,
@@ -1210,5 +1070,11 @@ RenderSkybox(const DirectX::XMFLOAT4X4& projection,
              const DirectX::XMFLOAT4X4& view)
 {
   Gl3Renderer::Instance().RenderSkybox(projection, view);
+}
+
+std::shared_ptr<Material>
+GetMaterial(uint32_t index)
+{
+  return Gl3Renderer::Instance().GetMaterial(index);
 }
 }

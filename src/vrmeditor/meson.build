@@ -5,18 +5,12 @@ srcs = [
     'luahost.cpp',
     'assetdir.cpp',
     'filewatcher.cpp',
-    'glr/gl3renderer.cpp',
     'glr/gl3renderer_gui.cpp',
     'glr/cuber.cpp',
     'glr/scene_preview.cpp',
     'glr/rendertarget.cpp',
     'glr/line_gizmo.cpp',
     'glr/overlay.cpp',
-    'glr/shader_source.cpp',
-    'glr/error_check.cpp',
-    'glr/material_three_vrm0.cpp',
-    'glr/material_three_vrm1.cpp',
-    'glr/material_pbr_khronos.cpp',
     'docks/gui.cpp',
     'docks/imlogger.cpp',
     'docks/vrm_dock.cpp',
@@ -64,21 +58,9 @@ executable(
         boneskin_dep,
         remotery_dep,
         plog_dep,
+        glr_dep,
     ],
     # cpp_args: [
     #     '-DPLOG_ENABLE_WCHAR_INPUT',
     # ],
-)
-
-install_subdir(
-    'shaders',
-    install_dir: 'shaders',
-    install_tag: 'runtime',
-    strip_directory: true,
-)
-install_subdir(
-    'threejs_shader_chunks',
-    install_dir: 'threejs_shader_chunks',
-    install_tag: 'runtime',
-    strip_directory: true,
 )

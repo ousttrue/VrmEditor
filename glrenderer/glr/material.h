@@ -15,8 +15,14 @@
 
 namespace glr {
 
-using UniformVar =
-  std::variant<IntVar, FloatVar, Vec3Var, Vec4Var, Mat3Var, Mat4Var, RgbVar, RgbaVar>;
+using UniformVar = std::variant<IntVar,
+                                FloatVar,
+                                Vec3Var,
+                                Vec4Var,
+                                Mat3Var,
+                                Mat4Var,
+                                RgbVar,
+                                RgbaVar>;
 
 struct EnvTextureBind
 {
@@ -127,8 +133,22 @@ struct Material
   }
 };
 
-using MaterialFactoryFunc = std::function<std::shared_ptr<Material>(
-  const gltfjson::Root& root,
-  const gltfjson::Bin& bin,
-  std::optional<uint32_t> materialId)>;
-}
+using MaterialFactoryFunc =
+  std::function<std::shared_ptr<Material>(const gltfjson::Root& root,
+                                          const gltfjson::Bin& bin,
+                                          std::optional<uint32_t> materialId)>;
+
+struct MaterialFactory
+{
+  std::string Name;
+  MaterialFactoryFunc Factory;
+
+  std::shared_ptr<Material> operator()(const gltfjson::Root& root,
+                                       const gltfjson::Bin& bin,
+                                       std::optional<uint32_t> materialId)
+  {
+    return Factory(root, bin, materialId);
+  }
+};
+
+} // namespace
