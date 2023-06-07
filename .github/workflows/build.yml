@@ -54,4 +54,4 @@ jobs:
           # title: "Release ${{ github.ref }}"
           prerelease: false
           files: |
-            vrmeditor*
+            vrmeditor.zip
