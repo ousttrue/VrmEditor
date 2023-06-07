@@ -32,6 +32,7 @@ jobs:
   create_release:
     name: create release from tag
     runs-on: ubuntu-20.04
+    permissions: write-all
 
     steps:
       - name: Wait for build_windows
