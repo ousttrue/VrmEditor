@@ -277,5 +277,8 @@ VrmDock::CreateVrm(const AddDockFunc& addDock,
 {
   auto gui = std::make_shared<VrmGui>(scene);
 
-  addDock(grapho::imgui::Dock(title, [gui]() { gui->Show(); }));
+  addDock({
+    { title.begin(), title.end() },
+    [gui]() { gui->Show(); },
+  });
 }

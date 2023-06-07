@@ -99,8 +99,10 @@ public:
                      const std::shared_ptr<libvrm::Timeline>& timeline)
   {
     auto timelineGui = std::make_shared<ImTimeline>();
-    addDock(grapho::imgui::Dock(
-      title, [timeline, timelineGui]() { timelineGui->show(timeline); }));
+    addDock({
+      .Name = { title.begin(), title.end() },
+      .OnShow = [timeline, timelineGui]() { timelineGui->show(timeline); },
+    });
   }
 
   void show(const std::shared_ptr<libvrm::Timeline>& timeline,

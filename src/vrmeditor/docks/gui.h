@@ -72,8 +72,8 @@ public:
       }
     }
 
-    Docks.push_back(grapho::imgui::Dock(name, []() {}));
-    Docks.back().IsOpen = visible;
+    Docks.push_back(
+      { .Name = { name.begin(), name.end() }, .IsOpen = visible });
   }
 
   void LoadState(std::string_view ini);

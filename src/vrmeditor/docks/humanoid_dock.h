@@ -12,23 +12,23 @@ public:
   {
     auto imHumanoid = std::make_shared<ImHumanoid>();
 
-    addDock(grapho::imgui::Dock(
-      body_title, [scene, imHumanoid](const char* title, bool* p_open) {
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-        if (ImGui::Begin(title, p_open)) {
+    addDock({
+      .Name = { body_title.begin(), body_title.end() },
+      .OnShow =
+        [scene, imHumanoid]() {
+          //
           imHumanoid->ShowBody(*scene);
-        }
-        ImGui::End();
-        ImGui::PopStyleVar();
-      }));
-    addDock(grapho::imgui::Dock(
-      finger_title, [scene, imHumanoid](const char* title, bool* p_open) {
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-        if (ImGui::Begin(title, p_open)) {
+        },
+      .StyleVars = { { ImGuiStyleVar_WindowPadding, { 0, 0 } } },
+    });
+    addDock({
+      .Name = { finger_title.begin(), finger_title.end() },
+      .OnShow =
+        [scene, imHumanoid]() {
+          //
           imHumanoid->ShowFingers(*scene);
-        }
-        ImGui::End();
-        ImGui::PopStyleVar();
-      }));
+        },
+      .StyleVars = { { ImGuiStyleVar_WindowPadding, { 0, 0 } } },
+    });
   }
 };

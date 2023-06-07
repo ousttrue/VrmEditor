@@ -56,16 +56,26 @@ Gui::Gui(const void* window, const char* glsl_version)
   }
 
 #ifndef NDEBUG
-  Docks.push_back(
-    grapho::imgui::Dock("[debug] demo", [](const char*, bool* p_open) {
-      ImGui::ShowDemoWindow(p_open);
-    }));
+  Docks.push_back({
+    .Name = "[debug] demo",
+    .Begin =
+      [](auto, auto popen, auto) {
+        ImGui::ShowDemoWindow(popen);
+        return false;
+      },
+    .End = {},
+  });
   Docks.back().IsOpen = false;
 
-  Docks.push_back(
-    grapho::imgui::Dock("[debug] metrics", [](const char*, bool* p_open) {
-      ImGui::ShowMetricsWindow(p_open);
-    }));
+  Docks.push_back({
+    .Name = "[debug] metrics",
+    .Begin =
+      [](const char*, bool* p_open, auto) {
+        ImGui::ShowMetricsWindow(p_open);
+        return false;
+      },
+    .End = {},
+  });
   Docks.back().IsOpen = false;
 #endif
 
@@ -289,28 +299,52 @@ Gui::NewFrame()
 void
 Gui::DockSpace()
 {
-  grapho::imgui::DockSpace(DOCK_SPACE, Docks, &m_resetLayout, [=]() {
-    if (ImGui::BeginMenu("File")) {
-      static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh,.vrma,.hdr";
-      if (ImGui::MenuItem("Open", "")) {
-        ImGuiFileDialog::Instance()->OpenDialog(
-          OPEN_FILE_DIALOG, "Open", filters, m_current.string().c_str());
+  if (m_resetLayout) {
+    grapho::imgui::DockSpaceLayout(DOCK_SPACE);
+    m_resetLayout = false;
+  }
+
+  {
+    grapho::imgui::BeginDockSpace(DOCK_SPACE);
+    if (ImGui::BeginMenuBar()) {
+      if (ImGui::BeginMenu("File")) {
+        static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh,.vrma,.hdr";
+        if (ImGui::MenuItem("Open", "")) {
+          ImGuiFileDialog::Instance()->OpenDialog(
+            OPEN_FILE_DIALOG, "Open", filters, m_current.string().c_str());
+        }
+
+        if (ImGui::MenuItem("Save", "")) {
+          ImGuiFileDialog::Instance()->OpenDialog(
+            SAVE_FILE_DIALOG,
+            "Save",
+            filters,
+            m_current.string().c_str(),
+            "out",
+            1,
+            nullptr,
+            ImGuiFileDialogFlags_ConfirmOverwrite);
+        }
+        ImGui::EndMenu();
       }
 
-      if (ImGui::MenuItem("Save", "")) {
-        ImGuiFileDialog::Instance()->OpenDialog(
-          SAVE_FILE_DIALOG,
-          "Save",
-          filters,
-          m_current.string().c_str(),
-          "out",
-          1,
-          nullptr,
-          ImGuiFileDialogFlags_ConfirmOverwrite);
+      if (ImGui::BeginMenu("Docks")) {
+        if (ImGui::MenuItem("Reset", "")) {
+          m_resetLayout = true;
+        }
+        ImGui::Separator();
+        // Disabling fullscreen would allow the window to be moved to the front
+        // of other windows, which we can't undo at the moment without finer
+        // window depth/z control.
+        for (auto& dock : Docks) {
+          ImGui::MenuItem(dock.Name.c_str(), nullptr, &dock.IsOpen);
+        }
+        ImGui::EndMenu();
       }
-      ImGui::EndMenu();
+      ImGui::EndMenuBar();
     }
-  });
+    ImGui::End();
+  }
 
   // display
   if (ImGuiFileDialog::Instance()->Display(OPEN_FILE_DIALOG)) {
@@ -344,6 +378,11 @@ Gui::DockSpace()
 
     // close
     ImGuiFileDialog::Instance()->Close();
+  }
+
+  // docks
+  for (auto& dock : Docks) {
+    dock.Show();
   }
 }
 
