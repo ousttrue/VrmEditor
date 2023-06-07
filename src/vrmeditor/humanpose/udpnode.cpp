@@ -1,11 +1,11 @@
 #include "udpnode.h"
+#include "../docks/scene_preview.h"
 #include "udp_receiver.h"
-#include <glr/scene_preview.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-#include <vrm/runtime_scene.h>
 #include <vrm/gltfroot.h>
 #include <vrm/network/srht_update.h>
+#include <vrm/runtime_scene.h>
 
 namespace humanpose {
 // constructor
@@ -17,7 +17,7 @@ UdpNode::UdpNode(int id, std::string_view name)
   m_scene->m_table->m_title = "UDP";
 
   // update preview
-  m_preview = std::make_shared<glr::ScenePreview>(m_scene);
+  m_preview = ScenePreview::Create(m_scene);
 
   m_udp = std::make_shared<UdpReceiver>();
 

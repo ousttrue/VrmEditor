@@ -1,6 +1,6 @@
 #include "bvhnode.h"
+#include "../docks/scene_preview.h"
 #include "app.h"
-#include "glr/scene_preview.h"
 #include "humanpose_stream.h"
 #include <grapho/orbitview.h>
 #include <plog/Log.h>
@@ -19,7 +19,7 @@ BvhNode::BvhNode(int id, std::string_view name)
   m_scene = std::make_shared<libvrm::RuntimeScene>(table);
 
   // update preview
-  m_preview = std::make_shared<glr::ScenePreview>(m_scene);
+  m_preview = ScenePreview::Create(m_scene);
 }
 
 void

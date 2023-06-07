@@ -1,6 +1,7 @@
 #pragma once
-#include "glr/scene_preview.h"
 #include "gui.h"
+#include "scene_preview.h"
+#include <glr/rendering_env.h>
 #include <imgui.h>
 #include <vrm/runtime_scene.h>
 
@@ -15,8 +16,7 @@ public:
                      const std::shared_ptr<glr::ViewSettings>& settings,
                      const std::shared_ptr<SceneNodeSelection>& selection)
   {
-    auto preview = std::make_shared<glr::ScenePreview>(
-      scene, env, view, settings, selection, false);
+    auto preview = ScenePreview::Create(scene, env, view, settings, selection);
 
     addDock(grapho::imgui::Dock(
       title, [preview, scene, settings](const char* title, bool* p_open) {
@@ -41,19 +41,16 @@ public:
                           const std::shared_ptr<glr::ViewSettings>& settings,
                           const std::shared_ptr<SceneNodeSelection>& selection)
   {
-    auto scene = std::make_shared<libvrm::RuntimeScene>(table);
-    auto preview = std::make_shared<glr::ScenePreview>(
-      scene, env, view, settings, selection, true);
+    auto preview = ScenePreview::Create(table, env, view, settings, selection);
 
     addDock(grapho::imgui::Dock(
-      title, [preview, scene, settings](const char* title, bool* p_open) {
+      title, [preview, table, settings](const char* title, bool* p_open) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
         if (ImGui::Begin(title,
                          p_open,
                          ImGuiWindowFlags_NoScrollbar |
                            ImGuiWindowFlags_NoScrollWithMouse)) {
-          preview->ShowFullWindow(scene->m_table->m_title.c_str(),
-                                  settings->Color);
+          preview->ShowFullWindow(table->m_title.c_str(), settings->Color);
         }
         ImGui::End();
         ImGui::PopStyleVar();

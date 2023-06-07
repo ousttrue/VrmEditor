@@ -5,7 +5,7 @@ srcs = [
     'luahost.cpp',
     'assetdir.cpp',
     'filewatcher.cpp',
-    'glr/scene_preview.cpp',
+    'docks/scene_preview.cpp',
     'docks/gl3renderer_gui.cpp',
     'docks/overlay.cpp',
     'docks/gui.cpp',

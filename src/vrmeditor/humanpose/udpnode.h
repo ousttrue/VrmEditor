@@ -7,16 +7,14 @@ namespace libvrm {
 struct RuntimeScene;
 }
 
-namespace glr {
-struct ScenePreview;
-}
+class ScenePreview;
 
 namespace humanpose {
 struct UdpNode : public GraphNodeBase
 {
   std::shared_ptr<libvrm::RuntimeScene> m_scene;
   std::shared_ptr<UdpReceiver> m_udp;
-  std::shared_ptr<glr::ScenePreview> m_preview;
+  std::shared_ptr<ScenePreview> m_preview;
 
   bool m_initialPose = false;
 

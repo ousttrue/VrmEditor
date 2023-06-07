@@ -3,21 +3,20 @@
 #include <vrm/bvh/bvh.h>
 #include <vrm/bvh/humanbone_map.h>
 
-namespace glr {
-struct ScenePreview;
-}
+class ScenePreview;
 
 namespace libvrm {
 struct RuntimeScene;
 }
 
 namespace humanpose {
+
 struct BvhNode : public GraphNodeBase
 {
   std::shared_ptr<libvrm::RuntimeScene> m_scene;
   std::shared_ptr<libvrm::bvh::Bvh> m_bvh;
 
-  std::shared_ptr<glr::ScenePreview> m_preview;
+  std::shared_ptr<ScenePreview> m_preview;
 
   bool m_initialPose = false;
 
@@ -28,4 +27,5 @@ struct BvhNode : public GraphNodeBase
   void TimeUpdate(libvrm::Time time) override;
   void DrawContent() override;
 };
-}
+
+} // namespace

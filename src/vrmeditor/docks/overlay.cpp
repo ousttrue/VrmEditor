@@ -2,8 +2,6 @@
 #include <imgui.h>
 #include <stdio.h>
 
-namespace glr {
-
 void
 Overlay(const ImVec2& pos,
         const char* title,
@@ -40,6 +38,4 @@ Overlay(const ImVec2& pos,
   ImGui::PopStyleVar();
 
   ImGui::SetCursorPos(backup);
-}
-
 }

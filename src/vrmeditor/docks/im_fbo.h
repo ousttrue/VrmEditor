@@ -2,10 +2,11 @@
 #include <glr/rendertarget.h>
 #include <memory>
 
-struct ImFbo
+class ImFbo
 {
   std::shared_ptr<glr::RenderTarget> m_rt;
 
+public:
   static std::shared_ptr<ImFbo> Create(
     const std::shared_ptr<grapho::OrbitView>& view,
     const glr::RenderFunc& callback);

@@ -12,6 +12,9 @@ RenderTarget::RenderTarget(const std::shared_ptr<grapho::OrbitView>& view)
   : View(view)
   , Fbo(new grapho::gl3::Fbo)
 {
+  if (!View) {
+    View = std::make_shared<grapho::OrbitView>();
+  }
 }
 
 uint32_t
@@ -80,4 +83,3 @@ RenderTarget::End(bool isActive,
 }
 
 } // namespace
-
