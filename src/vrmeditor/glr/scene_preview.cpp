@@ -38,17 +38,17 @@ ScenePreview::ScenePreview(const std::shared_ptr<libvrm::RuntimeScene>& scene,
   , m_env(env)
   , m_settings(settings)
   , m_selection(selection)
-  //
-  , m_rt(std::make_shared<RenderTarget>(view))
   , m_cuber(std::make_shared<Cuber>())
   , m_gizmo(std::make_shared<LineGizmo>())
 {
   if (useTPose) {
-    m_rt->render =
-      std::bind(&ScenePreview::RenderStatic, this, std::placeholders::_1);
+    m_fbo = ImFbo::Create(
+      view,
+      std::bind(&ScenePreview::RenderStatic, this, std::placeholders::_1));
   } else {
-    m_rt->render =
-      std::bind(&ScenePreview::RenderRuntime, this, std::placeholders::_1);
+    m_fbo = ImFbo::Create(
+      view,
+      std::bind(&ScenePreview::RenderRuntime, this, std::placeholders::_1));
   }
 }
 
@@ -199,7 +199,7 @@ ScenePreview::ShowScreenRect(const char* title,
     return;
   }
   auto sc = ImGui::GetCursorScreenPos();
-  m_rt->ShowFbo(x, y, w, h, color);
+  m_fbo->ShowFbo(x, y, w, h, color);
   // top, right pivot
   Overlay({ sc.x + w - 10, sc.y + 10 }, title);
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "docks/im_fbo.h"
 #include "docks/scene_selection.h"
 #include "rendertarget.h"
 #include <glr/rendering_env.h>
@@ -46,7 +47,7 @@ struct ScenePreview
   std::shared_ptr<ViewSettings> m_settings;
   std::shared_ptr<SceneNodeSelection> m_selection;
 
-  std::shared_ptr<RenderTarget> m_rt;
+  std::shared_ptr<ImFbo> m_fbo;
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<LineGizmo> m_gizmo;
 
