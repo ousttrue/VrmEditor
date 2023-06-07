@@ -39,7 +39,7 @@ class Gui
   std::filesystem::path m_baseFont;
   std::filesystem::path m_japanseseFont;
   std::filesystem::path m_iconFont;
-  bool m_resetLayout = false;
+  bool m_resetLayout = true;
 
 public:
   std::vector<grapho::imgui::Dock> Docks;

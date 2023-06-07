@@ -154,6 +154,7 @@ Gui::DarkMode()
 void
 Gui::LoadState(std::string_view ini)
 {
+  m_resetLayout = false;
   ImGui::LoadIniSettingsFromMemory(ini.data(), ini.size());
 }
 
@@ -299,13 +300,40 @@ Gui::NewFrame()
 void
 Gui::DockSpace()
 {
-  if (m_resetLayout) {
-    grapho::imgui::DockSpaceLayout(DOCK_SPACE);
-    m_resetLayout = false;
-  }
-
   {
     grapho::imgui::BeginDockSpace(DOCK_SPACE);
+
+    if (m_resetLayout) {
+      for (auto& dock : Docks) {
+        if (dock.Name == "Json" || dock.Name == "Json-Inspector" ||
+            dock.Name == "3D-View") {
+          dock.IsOpen = true;
+        } else {
+          dock.IsOpen = false;
+        }
+      }
+
+      grapho::imgui::DockSpaceLayout(DOCK_SPACE, []() {
+        auto root = ImGui::GetID(DOCK_SPACE);
+        // auto json = ImGui::GetID("Json");
+        // auto json_i = ImGui::GetID("Json-Inspector");
+        // auto view = ImGui::GetID("3D-View");
+        ImGuiID left_id, right_id;
+        ImGui::DockBuilderSplitNode(
+          root, ImGuiDir_Left, 0.3f, &left_id, &right_id);
+        // ImGui::DockBuilderDockWindow("Json", left_id);
+        ImGui::DockBuilderDockWindow("3D-View", right_id);
+
+        ImGuiID top_id, bottom_id;
+        ImGui::DockBuilderSplitNode(
+          left_id, ImGuiDir_Down, 0.4f, &top_id, &bottom_id);
+        ImGui::DockBuilderDockWindow("Json", top_id);
+        ImGui::DockBuilderDockWindow("Json-Inspector", bottom_id);
+      });
+
+      m_resetLayout = false;
+    }
+
     if (ImGui::BeginMenuBar()) {
       if (ImGui::BeginMenu("File")) {
         static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh,.vrma,.hdr";

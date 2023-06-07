@@ -119,7 +119,7 @@ App::SetScene(const std::shared_ptr<libvrm::GltfRoot>& table)
       addDock, "humanoid-body", "humanoid-finger", m_runtime->m_table);
 
     ViewDock::CreateTPose(addDock,
-                          "T-Pose",
+                          "3D-View",
                           m_runtime->m_table,
                           m_env,
                           m_staticView,
@@ -127,7 +127,7 @@ App::SetScene(const std::shared_ptr<libvrm::GltfRoot>& table)
                           m_selection);
 
     ViewDock::Create(addDock,
-                     "Runtime",
+                     "Runtime-View",
                      m_runtime,
                      m_env,
                      m_runtimeView,
@@ -345,7 +345,6 @@ App::Run()
   addDock({
     "logger",
     []() { ImLogger::Instance().Draw(); },
-    true,
   });
 
   //   glr::CreateDock(addDock);
@@ -365,13 +364,10 @@ App::Run()
       m_gl3gui->ShowSelectedShaderSource();
     }));
 
-    addDock(grapho::imgui::Dock(
-      "GL selected shader variables",
-      [=]() {
-        //
-        m_gl3gui->ShowSelectedShaderVariables();
-      },
-      true));
+    addDock(grapho::imgui::Dock("GL selected shader variables", [=]() {
+      //
+      m_gl3gui->ShowSelectedShaderVariables();
+    }));
   }
 
   ViewDock::CreateSetting(
@@ -379,17 +375,18 @@ App::Run()
 
   auto indent = m_gui->FontSize * 0.5f;
   addDock({
-    "json",
+    "Json",
     [json = m_json, indent]() mutable { json->ShowSelector(indent); },
-    true,
   });
-  addDock({ "json-inspector",
-            [json = m_json]() mutable { json->ShowSelected(); },
-            true });
+  addDock({
+    "Json-Inspector",
+    [json = m_json]() mutable { json->ShowSelected(); },
+  });
 
-  addDock({ "hierarchy",
-            [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
-            true });
+  addDock({
+    "hierarchy",
+    [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
+  });
 
   std::optional<libvrm::Time> lastTime;
   while (auto info = m_platform->NewFrame()) {
