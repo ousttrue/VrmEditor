@@ -326,7 +326,7 @@ Gui::DockSpace()
 
         ImGuiID top_id, bottom_id;
         ImGui::DockBuilderSplitNode(
-          left_id, ImGuiDir_Down, 0.4f, &top_id, &bottom_id);
+          left_id, ImGuiDir_Up, 0.4f, &top_id, &bottom_id);
         ImGui::DockBuilderDockWindow("Json", top_id);
         ImGui::DockBuilderDockWindow("Json-Inspector", bottom_id);
       });
@@ -336,7 +336,7 @@ Gui::DockSpace()
 
     if (ImGui::BeginMenuBar()) {
       if (ImGui::BeginMenu("File")) {
-        static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh,.vrma,.hdr";
+        static auto filters = ".vrm,.glb,.gltf,.fbx,.bvh,.vrma,.hdr,.*";
         if (ImGui::MenuItem("Open", "")) {
           ImGuiFileDialog::Instance()->OpenDialog(
             OPEN_FILE_DIALOG, "Open", filters, m_current.string().c_str());

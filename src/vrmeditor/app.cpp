@@ -382,6 +382,7 @@ App::Run()
     "Json-Inspector",
     [json = m_json]() mutable { json->ShowSelected(); },
   });
+  addDock({ "3D-View" });
 
   addDock({
     "hierarchy",

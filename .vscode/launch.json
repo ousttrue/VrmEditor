@@ -39,6 +39,17 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "(Windows) 起動 empty",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
             "type": "lldb",
             "request": "launch",
             "name": "(Linux) Launch",
