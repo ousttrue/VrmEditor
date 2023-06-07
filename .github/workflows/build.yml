@@ -26,4 +26,31 @@ jobs:
       - run: scripts/build.ps1
       - uses: actions/upload-artifact@v3
         with:
-          path: prefix/bin
+          path: vrmeditor
+
+  create_release:
+    name: create release from tag
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Wait for build_windows
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: build for Windows
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact_windows
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          # title: "Release ${{ github.ref }}"
+          prerelease: false
+          files: |
+            vrmeditor*
