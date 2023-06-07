@@ -1,14 +1,14 @@
 #include <GL/glew.h>
 
-#include "cuber.h"
-#include <glr/gl3renderer.h>
-#include "line_gizmo.h"
-#include "overlay.h"
+#include "../docks/overlay.h"
 #include "rendertarget.h"
 #include "scene_preview.h"
 #include <DirectXMath.h>
 #include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
+#include <glr/cuber.h>
+#include <glr/gl3renderer.h>
+#include <glr/line_gizmo.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanoid/humanbones.h>
 #include <vrm/runtime_node.h>

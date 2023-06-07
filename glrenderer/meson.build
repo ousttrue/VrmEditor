@@ -8,6 +8,8 @@ glr_lib = static_library(
         'glr/material_three_vrm0.cpp',
         'glr/material_three_vrm1.cpp',
         'glr/material_pbr_khronos.cpp',
+        'glr/cuber.cpp',
+        'glr/line_gizmo.cpp',
     ],
     dependencies: [
         glew_dep,
