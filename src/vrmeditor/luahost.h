@@ -20,5 +20,5 @@ public:
   }
   // lua_State* state() { return L_; }
   std::expected<bool, std::string> Eval(std::string_view script);
-  std::expected<bool, std::string> DoFile(const std::filesystem::path& path);
+  void DoFile(const std::filesystem::path& path);
 };

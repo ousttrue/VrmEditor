@@ -32,7 +32,7 @@ public:
     static Platform s_instance;
     return s_instance;
   }
-  GLFWwindow* CreateWindow(int width,
+  GLFWwindow* WindowCreate(int width,
                            int height,
                            bool is_maximized,
                            const char* title);

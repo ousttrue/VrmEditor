@@ -33,27 +33,15 @@
 #include <vrm/gizmo.h>
 #include <vrm/importer.h>
 #include <vrm/timeline.h>
+#ifdef _WIN32
+#include "windows_helper.h"
+#else
+#endif
 
 FileWatcher g_watcher;
 std::filesystem::path g_shaderDir;
 
 const auto WINDOW_TITLE = "VrmEditor";
-
-static std::optional<std::filesystem::path>
-getRelative(const std::filesystem::path& base,
-            const std::filesystem::path& target)
-{
-  std::filesystem::path last;
-  for (auto current = target.parent_path(); current != last;
-       current = current.parent_path()) {
-    if (current == base) {
-      return std::filesystem::path(
-        target.string().substr(base.string().size() + 1));
-      break;
-    }
-  }
-  return std::nullopt;
-}
 
 class App
 {
@@ -76,9 +64,6 @@ class App
 public:
   App()
   {
-    g_watcher.AddCallback(
-      [=](const std::filesystem::path& path) { this->OnFileUpdated(path); });
-
     auto file = get_home() / ".vrmeditor.ini.lua";
     m_ini = file.u8string();
     m_selection = std::make_shared<SceneNodeSelection>();
@@ -91,7 +76,7 @@ public:
     m_settings->ShowCuber = false;
 
     auto window =
-      Platform::Instance().CreateWindow(2000, 1200, false, WINDOW_TITLE);
+      Platform::Instance().WindowCreate(2000, 1200, false, WINDOW_TITLE);
     if (!window) {
       throw std::runtime_error("createWindow");
     }
@@ -421,16 +406,6 @@ public:
     return glr::LoadPbr_LOGL(hdr);
   }
 
-  void LoadLua(const std::filesystem::path& path)
-  {
-    PLOG_INFO << path.string();
-    if (auto ret = LuaEngine::Instance().DoFile(path)) {
-      // ok
-    } else {
-      PLOG_ERROR << ret.error();
-    }
-  }
-
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path)
   {
     if (!std::filesystem::is_directory(path)) {
@@ -459,25 +434,6 @@ public:
   {
     m_gui->SetDockVisible(name, visible);
   }
-
-  void SetShaderDir(const std::filesystem::path& path)
-  {
-    g_shaderDir = path;
-    g_watcher.Watch(path);
-    glr::SetShaderDir(path);
-  }
-
-  void OnFileUpdated(const std::filesystem::path& path)
-  {
-    if (auto rel = getRelative(g_shaderDir, path)) {
-      glr::UpdateShader(*rel);
-    }
-  }
-
-  void SetShaderChunkDir(const std::filesystem::path& path)
-  {
-    glr::SetShaderChunkDir(path);
-  }
 };
 App g_app;
 
@@ -486,24 +442,22 @@ namespace app {
 void
 SetShaderDir(const std::filesystem::path& path)
 {
-  g_app.SetShaderDir(path);
+  // g_app.SetShaderDir(path);
+  g_shaderDir = path;
+  g_watcher.Watch(path);
+  glr::SetShaderDir(path);
 }
+
 void
 SetShaderChunkDir(const std::filesystem::path& path)
 {
-  g_app.SetShaderChunkDir(path);
+  glr::SetShaderChunkDir(path);
 }
 
 void
 LoadModel(const std::filesystem::path& path)
 {
   g_app.LoadModel(path);
-}
-
-void
-LoadLua(const std::filesystem::path& path)
-{
-  g_app.LoadLua(path);
 }
 
 void
@@ -518,9 +472,55 @@ ProjectMode()
   g_app.ProjectMode();
 }
 
-void
-Run()
+static std::optional<std::filesystem::path>
+getRelative(const std::filesystem::path& base,
+            const std::filesystem::path& target)
 {
+  std::filesystem::path last;
+  for (auto current = target.parent_path(); current != last;
+       current = current.parent_path()) {
+    if (current == base) {
+      return std::filesystem::path(
+        target.string().substr(base.string().size() + 1));
+      break;
+    }
+  }
+  return std::nullopt;
+};
+
+void
+Run(std::span<const char*> args)
+{
+  auto exe = GetExe();
+  auto base = exe.parent_path().parent_path();
+  app::SetShaderDir(base / "shaders");
+  app::SetShaderChunkDir(base / "threejs_shader_chunks");
+
+  // load user ~/.vrmeditor.lua
+  auto user_conf = get_home() / ".vrmeditor.lua";
+  if (std::filesystem::exists(user_conf)) {
+    LuaEngine::Instance().DoFile(user_conf);
+  }
+
+  for (auto _arg : args) {
+    std::string_view arg = _arg;
+    if (arg.ends_with(".lua")) {
+      // prooject mode
+      ProjectMode();
+      LuaEngine::Instance().DoFile(arg);
+    } else {
+      // viewermode
+      LoadModel(arg);
+    }
+    // LoadPath(arg);
+  }
+
+  g_watcher.AddCallback([](const std::filesystem::path& path) {
+    if (auto rel = getRelative(g_shaderDir, path)) {
+      glr::UpdateShader(*rel);
+    }
+  });
+
   g_app.Run();
 }
 

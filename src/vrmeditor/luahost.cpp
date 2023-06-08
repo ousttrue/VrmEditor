@@ -7,6 +7,7 @@
 #include "platform.h"
 #include <filesystem>
 #include <iostream>
+#include <plog/Log.h>
 #include <type_traits>
 
 static int
@@ -117,7 +118,7 @@ struct LuaEngineImpl
     return true;
   }
 
-  std::expected<bool, std::string> DoFile(const std::filesystem::path& path)
+  void DoFile(const std::filesystem::path& path)
   {
     auto mb = path.u8string();
     auto ret = luaL_dofile(m_lua, (const char*)mb.c_str());
@@ -126,9 +127,9 @@ struct LuaEngineImpl
       lua_pop(m_lua, 1); // pop error message
       // std::cout << "luaL_dofile(): " << ret << std::endl;
       // std::cout << lua_tostring(m_lua, -1) << std::endl;
-      return std::unexpected{ msg };
+      // return std::unexpected{ msg };
+      PLOG_ERROR << msg;
     }
-    return true;
   }
 };
 
@@ -148,8 +149,8 @@ LuaEngine::Eval(std::string_view script)
   return m_impl->Eval({ script.begin(), script.end() });
 }
 
-std::expected<bool, std::string>
+void
 LuaEngine::DoFile(const std::filesystem::path& path)
 {
-  return m_impl->DoFile(path);
+  m_impl->DoFile(path);
 }

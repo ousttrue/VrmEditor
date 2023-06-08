@@ -27,7 +27,7 @@ Platform::~Platform()
 }
 
 GLFWwindow*
-Platform::CreateWindow(int width,
+Platform::WindowCreate(int width,
                        int height,
                        bool is_maximized,
                        const char* title)

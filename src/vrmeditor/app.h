@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include <span>
 
 class Gui;
 
@@ -13,15 +14,13 @@ SetShaderChunkDir(const std::filesystem::path& path);
 void
 LoadModel(const std::filesystem::path& path);
 void
-LoadLua(const std::filesystem::path& path);
-void
 LoadPath(const std::filesystem::path& path);
 
 void
 ProjectMode();
 
 void
-Run();
+Run(std::span<const char*> args);
 
 bool
 WriteScene(const std::filesystem::path& path);
