@@ -34,14 +34,16 @@
 #include <vrm/importer.h>
 #include <vrm/timeline.h>
 
+FileWatcher g_watcher;
+std::filesystem::path g_shaderDir;
+
 const auto WINDOW_TITLE = "VrmEditor";
 
 App::App()
 {
-  m_watcher = std::make_shared<FileWatcher>(
+  g_watcher.AddCallback(
     [=](const std::filesystem::path& path) { this->OnFileUpdated(path); });
 
-  m_lua = std::make_shared<LuaEngine>();
   auto file = get_home() / ".vrmeditor.ini.lua";
   m_ini = file.u8string();
   m_selection = std::make_shared<SceneNodeSelection>();
@@ -64,22 +66,14 @@ App::App()
 
   glr::Initialize();
 
-  PoseStream = std::make_shared<humanpose::HumanPoseStream>();
   m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
   m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
 
   auto track = m_timeline->AddTrack("PoseStream", {});
-  track->Callbacks.push_back([pose = PoseStream](auto time, auto repeat) {
-    pose->Update(time);
+  track->Callbacks.push_back([](auto time, auto repeat) {
+    humanpose::HumanPoseStream::Instance().Update(time);
     return true;
   });
-
-  // glEnable(GL_DEPTH_TEST);
-  // // set depth function to less than AND equal for skybox depth trick.
-  // glDepthFunc(GL_LEQUAL);
-  // // enable seamless cubemap sampling for lower mip levels in the pre-filter
-  // // map.
-  // glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
   m_json = std::make_shared<JsonGui>();
 }
@@ -100,14 +94,15 @@ App::SetScene(const std::shared_ptr<libvrm::GltfRoot>& table)
   m_timeline->Tracks.clear();
 
   std::weak_ptr<libvrm::RuntimeScene> weak = m_runtime;
-  PoseStream->HumanPoseChanged.push_back([weak](const auto& pose) {
-    if (auto scene = weak.lock()) {
-      scene->SetHumanPose(pose);
-      return true;
-    } else {
-      return false;
-    }
-  });
+  humanpose::HumanPoseStream::Instance().HumanPoseChanged.push_back(
+    [weak](const auto& pose) {
+      if (auto scene = weak.lock()) {
+        scene->SetHumanPose(pose);
+        return true;
+      } else {
+        return false;
+      }
+    });
 
   auto addDock = [gui = m_gui](const grapho::imgui::Dock& dock) {
     gui->AddDock(dock);
@@ -169,9 +164,9 @@ App::SaveState()
 
   // imnodes
   os << "vrmeditor.imnodes_load_ini [===[\n"
-     << PoseStream->Save() << "\n]===]\n\n";
+     << humanpose::HumanPoseStream::Instance().Save() << "\n]===]\n\n";
 
-  for (auto& link : PoseStream->Links) {
+  for (auto& link : humanpose::HumanPoseStream::Instance().Links) {
     os << "vrmeditor.imnodes_add_link(" << link->Start << ", " << link->End
        << ")\n";
   }
@@ -230,7 +225,7 @@ App::LoadPath(const std::filesystem::path& path)
     return LoadModel(path);
   }
   if (extension == ".bvh") {
-    return PoseStream->LoadMotion(path);
+    return humanpose::HumanPoseStream::Instance().LoadMotion(path);
   }
   // if (extension == ".fbx") {
   // }
@@ -290,7 +285,7 @@ void
 App::LoadLua(const std::filesystem::path& path)
 {
   PLOG_INFO << path.string();
-  if (auto ret = m_lua->DoFile(path)) {
+  if (auto ret = LuaEngine::Instance().DoFile(path)) {
     // ok
   } else {
     PLOG_ERROR << ret.error();
@@ -333,7 +328,7 @@ App::Run()
   GL_ErrorClear("CreateWindow");
 
   // must after App::App
-  m_lua->DoFile(m_ini);
+  LuaEngine::Instance().DoFile(m_ini);
 
   auto addDock = [gui = m_gui](const grapho::imgui::Dock& dock) {
     gui->AddDock(dock);
@@ -341,7 +336,8 @@ App::Run()
 
 #ifndef NDEBUG
   ImTimeline::Create(addDock, "[animation] timeline", m_timeline);
-  PoseStream->CreateDock(addDock, "[animation] input-stream");
+  humanpose::HumanPoseStream::Instance().CreateDock(addDock,
+                                                    "[animation] input-stream");
 #endif
 
   addDock({
@@ -398,7 +394,7 @@ App::Run()
 
       ERROR_CHECK;
 
-      m_watcher->Update();
+      g_watcher.Update();
 
       auto time = info->Time;
 
@@ -408,7 +404,7 @@ App::Run()
       } else {
         m_timeline->SetDeltaTime({}, true);
       }
-      PoseStream->Update(time);
+      humanpose::HumanPoseStream::Instance().Update(time);
       lastTime = time;
 
       // newFrame
@@ -449,8 +445,8 @@ App::ShowDock(std::string_view name, bool visible)
 void
 App::SetShaderDir(const std::filesystem::path& path)
 {
-  m_shaderDir = path;
-  m_watcher->Watch(path);
+  g_shaderDir = path;
+  g_watcher.Watch(path);
   glr::SetShaderDir(path);
 }
 
@@ -479,7 +475,7 @@ getRelative(const std::filesystem::path& base,
 void
 App::OnFileUpdated(const std::filesystem::path& path)
 {
-  if (auto rel = getRelative(m_shaderDir, path)) {
+  if (auto rel = getRelative(g_shaderDir, path)) {
     glr::UpdateShader(*rel);
   }
 }

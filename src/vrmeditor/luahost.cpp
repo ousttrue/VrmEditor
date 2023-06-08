@@ -19,7 +19,7 @@ vrmeditor_add_human_map(lua_State* L)
     return 0;
   }
 
-  auto map = App::Instance().PoseStream->AddHumanBoneMap();
+  auto map = humanpose::HumanPoseStream::Instance().AddHumanBoneMap();
   lua_pushnil(L);
   while (lua_next(L, -2)) {
     if (auto value = lua_tostring(L, -1)) {
@@ -52,10 +52,10 @@ struct LuaEngineImpl
           App::Instance().LoadImGuiIni(ini);
         }) },
       { "imnodes_load_ini", MakeLuaFunc([](const std::string& ini) {
-          App::Instance().PoseStream->LoadIni(ini);
+          humanpose::HumanPoseStream::Instance().LoadIni(ini);
         }) },
       { "imnodes_add_link", MakeLuaFunc([](int start, int end) {
-          App::Instance().PoseStream->TryCreateLink(start, end);
+          humanpose::HumanPoseStream::Instance().TryCreateLink(start, end);
         }) },
       { "set_window_size",
         MakeLuaFunc([](int width, int height, bool is_maximized) {
@@ -79,7 +79,7 @@ struct LuaEngineImpl
           return App::Instance().LoadModel(path);
         }) },
       { "load_motion", MakeLuaFunc([](const std::filesystem::path& path) {
-          return App::Instance().PoseStream->LoadMotion(path);
+          return humanpose::HumanPoseStream::Instance().LoadMotion(path);
         }) },
       { "add_asset_dir",
         MakeLuaFunc(

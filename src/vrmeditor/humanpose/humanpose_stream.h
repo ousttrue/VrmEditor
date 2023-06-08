@@ -52,8 +52,19 @@ struct HumanPoseStream
     return {};
   }
 
+private:
   HumanPoseStream();
+
+public:
   ~HumanPoseStream();
+  HumanPoseStream(const HumanPoseStream&) = delete;
+  HumanPoseStream& operator=(const HumanPoseStream&) = delete;
+  static HumanPoseStream& Instance()
+  {
+    static HumanPoseStream s_instance;
+    return s_instance;
+  }
+
   void LoadIni(std::string_view ini);
   std::string Save();
 
@@ -93,7 +104,7 @@ struct HumanPoseStream
 
   bool LoadMotion(const std::filesystem::path& path);
 
-  void CreateDock(const AddDockFunc& addDock, const char *title);
+  void CreateDock(const AddDockFunc& addDock, const char* title);
   void Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node = {});
 };
 }

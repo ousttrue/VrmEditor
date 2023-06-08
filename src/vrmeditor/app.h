@@ -51,13 +51,9 @@ class GltfJsonGui;
 
 class App
 {
-  std::shared_ptr<FileWatcher> m_watcher;
-  std::filesystem::path m_shaderDir;
-
   std::filesystem::path m_ini;
   std::shared_ptr<Platform> m_platform;
   std::shared_ptr<Gui> m_gui;
-  std::shared_ptr<LuaEngine> m_lua;
   std::list<std::shared_ptr<AssetDir>> m_assets;
   std::shared_ptr<HierarchyGui> m_hierarchy;
 
@@ -75,7 +71,6 @@ class App
   App();
 
 public:
-  std::shared_ptr<humanpose::HumanPoseStream> PoseStream;
   ~App();
   App(const App&) = delete;
   App& operator=(const App&) = delete;
@@ -94,7 +89,6 @@ public:
   void SetWindowSize(int width, int height, bool maximize);
   void SaveState();
 
-  const std::shared_ptr<LuaEngine>& Lua() const { return m_lua; }
   int Run();
   bool WriteScene(const std::filesystem::path& path);
 

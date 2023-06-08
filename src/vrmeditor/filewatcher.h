@@ -9,8 +9,9 @@ class FileWatcher
   struct FileWatcherImpl* m_impl;
 
 public:
-  FileWatcher(const OnFileUpdated& callback);
+  FileWatcher();
   ~FileWatcher();
+  void AddCallback(const OnFileUpdated& callback);
   void Watch(const std::filesystem::path& path);
   void Update();
 };
