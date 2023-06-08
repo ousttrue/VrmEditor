@@ -60,7 +60,11 @@ deserialize ^|
 
 ### 1
 
-- read / write vrm-0.x & 1.0
+- [x] read / write vrm-0.x & 1.0
+
+### 2
+
+- [ ] edit all json node
 
 ### x
 
@@ -86,6 +90,7 @@ deserialize ^|
 - googletest
 - asio
 - simplefilewatcher
+- plog
 
 ### shaders
 
@@ -145,17 +150,21 @@ Naming conventions for variables with a wider scope than local variables.
 
 ### folder / namespace
 
-#### core
+#### libvrm
 
-node(gltf) / mesh / skinning / deformed_mesh
+node & morphtarget
 
-#### animation
+animation / springbone / constraint
 
-node(animation / pose) / animation / springbone / constraint
-
-#### humanoid
+##### humanoid
 
 udp / bvh
+
+#### boneskin
+
+boneskinning
+
+mesh / skinning / deformed_mesh
 
 #### namespace
 
@@ -165,38 +174,3 @@ udp / bvh
 - `libvrm::bvh`
 - `libvrm::runtime` (NodeAnimation, MorphTarget, Skinning)
 - `libvrm::serialization` (Udp pose)
-
-## nerdfont icon
-
-- [ ]  : play
-- [ ]  : stop
-- [ ] 󰒭 : next
-- [x]  : image icon
-- [x]  : text icon
-- [x]  : buffer_view icon
-- [x]  : accessor icon
-- [x] 󰕣 : mesh icon
-- [x] 󰂹 : humanoid icon
-- [x] 󰚟 : spring icon
-- [ ] 󱥔 : spring collider icon
-- [x]  : morph
-- [x]  : hips
-- [x] 󱍞 : head
-- [x] 󰹆 : hand-left
-- [x] 󰹇 : hand-right
-- [x] 󱗈 : foot, toes
-- [x] 󰱰 喜
-- [x] 󰱩 怒
-- [x] 󰱶 哀
-- [x] 󰱱 楽
-- [x] 󰱮 驚
-- [x] ‿ ‿ blink
-- [x] 󰈈 ‿ blink-L
-- [x] ‿ 󰈈 blink-R
-- [x] 󰈈  lookAt-up
-- [x] 󰈈  lookAt-down
-- [x] 󰈈  lookAt-left
-- [x] 󰈈  lookAt-right
-- [x]  : texture
-- [x]  : material
-- [x] 󰕣 : mesh

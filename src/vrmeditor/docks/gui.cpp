@@ -5,6 +5,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_internal.h>
+#include <misc/freetype/imgui_freetype.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <ImGuiFileDialog.h>
@@ -244,12 +245,31 @@ Gui::LoadFont()
       //
       0,
     };
-    auto iconFontSize = static_cast<float>(FontSize * 2.0f / 3.0f);
+    auto iconFontSize = static_cast<float>(FontSize);
     config.PixelSnapH = true;
     config.GlyphMinAdvanceX = iconFontSize;
     config.SizePixels = iconFontSize;
     io.Fonts->AddFontFromFileTTF(
       m_iconFont.string().c_str(), config.SizePixels, &config, icons_ranges);
+  }
+
+  // emoji
+  {
+    auto iconFontSize = static_cast<float>(FontSize);
+    config.PixelSnapH = true;
+    config.SizePixels = iconFontSize;
+    // config.OversampleH = 1;
+    // config.OversampleV = 1;
+    config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
+    static ImWchar const emoji_ranges[] = {
+      0x10000,
+      0x1ffff,
+      0,
+    };
+    io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\seguiemj.ttf",
+                                 config.SizePixels,
+                                 &config,
+                                 emoji_ranges);
   }
 
   io.Fonts->Build();

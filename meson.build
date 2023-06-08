@@ -9,6 +9,7 @@ project(
 
 glew_dep = dependency('glew', default_options: ['default_library=static'])
 glfw_dep = dependency('glfw3', default_options: ['default_library=static'])
+freetype_dep = dependency('freetype')
 imgui_dep = dependency('imgui', default_options: ['default_library=static'])
 grapho_dep = dependency('grapho')
 stb_dep = dependency('stb')

@@ -16,6 +16,8 @@
 !/subprojects/stb.wrap
 !/subprojects/simplefilewatcher.wrap
 !/subprojects/plog.wrap
+!/subprojects/freetype2.wrap
+#
 !/subprojects/ImGuizmo
 !/subprojects/ImGuiFileDialog
 !/subprojects/ImFileDialog
@@ -33,4 +35,8 @@ tmp.*
 
 debug.vert
 debug.frag
+
+# sphinx
+.venv
+_build
 
