@@ -1,11 +1,13 @@
 #include "json_gui_factory.h"
-#include "jsonpath_gui_accessor.h"
-#include "jsonpath_gui_node.h"
 #include "json_gui_vrm0.h"
 #include "jsonpath_gui.h"
+#include "jsonpath_gui_accessor.h"
+#include "jsonpath_gui_node.h"
 #include "type_gui.h"
 #include "type_gui_vrm0.h"
+#include <gltfjson.h>
 #include <imgui.h>
+#include <misc/cpp/imgui_stdlib.h>
 
 template<typename T>
 inline CreateGuiFunc
@@ -99,19 +101,79 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
 {
 }
 
+struct NodeTypeVisitor
+{
+  void operator()(std::monostate) { ImGui::TextUnformatted("[null]"); }
+  void operator()(bool) { ImGui::TextUnformatted("[bool]"); }
+  void operator()(float) { ImGui::TextUnformatted("[float]"); }
+  void operator()(const std::u8string&) { ImGui::TextUnformatted("[string]"); }
+  void operator()(const gltfjson::tree::ArrayValue&)
+  {
+    ImGui::TextUnformatted("[array]");
+  }
+  void operator()(const gltfjson::tree::ObjectValue&)
+  {
+    ImGui::TextUnformatted("[object]");
+  }
+};
+
+struct NodeEditorVisitor
+{
+  gltfjson::tree::NodePtr node;
+  bool operator()(std::monostate) { return false; }
+  bool operator()(bool& value) { return ImGui::Checkbox("##bool", &value); }
+  bool operator()(float& value) { return ImGui::InputFloat("##float", &value); }
+  bool operator()(std::u8string& value)
+  {
+    std::string tmp((const char*)value.data(), value.size());
+    if (ImGui::InputText("##text", &tmp)) {
+      value.assign((const char8_t*)tmp.data(), tmp.size());
+      return true;
+    }
+    return false;
+  }
+  bool operator()(const gltfjson::tree::ArrayValue&)
+  {
+    ImGui::BeginDisabled(true);
+    if (ImGui::Button("Add")) {
+      // TODO
+    }
+    ImGui::EndDisabled();
+    return false;
+  }
+  bool operator()(const gltfjson::tree::ObjectValue&)
+  {
+    ImGui::BeginDisabled(true);
+    if (ImGui::Button("Add")) {
+      // TODO
+    }
+    ImGui::EndDisabled();
+    return false;
+  }
+};
+
 void
 JsonGuiFactoryManager::ShowGui(const gltfjson::Root& root,
                                const gltfjson::Bin& bin)
 {
+  auto node = gltfjson::tree::FindJsonPath(root.m_json, m_selected);
+
+  if (node) {
+    std::visit(NodeTypeVisitor{}, node->Var);
+    ImGui::SameLine();
+  }
+  // json path
   ImGui::TextUnformatted((const char*)m_selected.c_str());
+
   if (!m_cache) {
-    if (auto mached = m_guiFactories.Match(m_selected)) {
-      m_cache = (*mached)(m_selected);
+    if (auto match = m_guiFactories.Match(m_selected)) {
+      m_cache = (*match)(m_selected);
     } else {
-      m_cache = [](auto& root, auto& bin, auto& node) { return false; };
+      m_cache = [](auto& root, auto& bin, auto& node) {
+        return std::visit(NodeEditorVisitor{}, node->Var);
+      };
     }
   }
-  auto node = gltfjson::tree::FindJsonPath(root.m_json, m_selected);
   if (node) {
     if (m_cache(root, bin, node)) {
       RaiseUpdated(m_selected);
