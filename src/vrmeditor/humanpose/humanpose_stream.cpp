@@ -3,6 +3,7 @@
 #include "bvhnode.h"
 #include "udpnode.h"
 #include <imnodes.h>
+#include <plog/Log.h>
 #include <vrm/fileutil.h>
 
 namespace humanpose {

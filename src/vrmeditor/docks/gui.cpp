@@ -405,7 +405,7 @@ Gui::DockSpace()
       // std::cout << filePathName << "::" << filePath << std::endl;
       if (std::filesystem::exists(path)) {
         m_current = path.parent_path();
-        App::Instance().LoadPath(path);
+        app::LoadPath(path);
       }
     }
 
@@ -421,7 +421,7 @@ Gui::DockSpace()
       // action
       // std::cout << filePathName << "::" << filePath << std::endl;
       m_current = path.parent_path();
-      App::Instance().WriteScene(path);
+      app::WriteScene(path);
     }
 
     // close

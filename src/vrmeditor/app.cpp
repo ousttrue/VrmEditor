@@ -39,6 +39,62 @@ std::filesystem::path g_shaderDir;
 
 const auto WINDOW_TITLE = "VrmEditor";
 
+class App
+{
+  std::filesystem::path m_ini;
+  std::shared_ptr<Platform> m_platform;
+  std::shared_ptr<Gui> m_gui;
+  std::list<std::shared_ptr<AssetDir>> m_assets;
+  std::shared_ptr<HierarchyGui> m_hierarchy;
+
+  std::shared_ptr<libvrm::Timeline> m_timeline;
+  std::shared_ptr<libvrm::RuntimeScene> m_runtime;
+  std::shared_ptr<struct SceneNodeSelection> m_selection;
+  std::shared_ptr<grapho::OrbitView> m_staticView;
+  std::shared_ptr<grapho::OrbitView> m_runtimeView;
+  std::shared_ptr<glr::ViewSettings> m_settings;
+  std::shared_ptr<glr::RenderingEnv> m_env;
+
+  std::shared_ptr<JsonGui> m_json;
+  std::shared_ptr<glr::Gl3RendererGui> m_gl3gui;
+
+public:
+  App();
+  ~App();
+  App(const App&) = delete;
+  App& operator=(const App&) = delete;
+  static App& Instance()
+  {
+    static App s_instance;
+    return s_instance;
+  }
+
+  void ProjectMode();
+
+  std::shared_ptr<libvrm::RuntimeScene> SetScene(
+    const std::shared_ptr<libvrm::GltfRoot>& scene);
+  void LoadImGuiIni(std::string_view ini);
+  void LoadImNodesIni(std::string_view ini);
+  void SetWindowSize(int width, int height, bool maximize);
+  void SaveState();
+
+  int Run();
+  bool WriteScene(const std::filesystem::path& path);
+
+  // expose to lua
+  const std::shared_ptr<Gui>& GetGui() const { return m_gui; }
+  bool LoadPath(const std::filesystem::path& path);
+  bool LoadModel(const std::filesystem::path& path);
+  bool LoadPbr(const std::filesystem::path& hdr);
+  void LoadLua(const std::filesystem::path& path);
+  bool AddAssetDir(std::string_view name, const std::filesystem::path& path);
+  void ShowDock(std::string_view name, bool visible);
+  void SetShaderDir(const std::filesystem::path& path);
+  void OnFileUpdated(const std::filesystem::path& path);
+  void SetShaderChunkDir(const std::filesystem::path& path);
+};
+App g_app;
+
 App::App()
 {
   g_watcher.AddCallback(
@@ -478,4 +534,55 @@ App::OnFileUpdated(const std::filesystem::path& path)
   if (auto rel = getRelative(g_shaderDir, path)) {
     glr::UpdateShader(*rel);
   }
+}
+
+namespace app {
+
+void
+SetShaderDir(const std::filesystem::path& path)
+{
+  g_app.SetShaderDir(path);
+}
+void
+SetShaderChunkDir(const std::filesystem::path& path)
+{
+  g_app.SetShaderChunkDir(path);
+}
+
+void
+LoadModel(const std::filesystem::path& path)
+{
+  g_app.LoadModel(path);
+}
+
+void
+LoadLua(const std::filesystem::path& path)
+{
+  g_app.LoadLua(path);
+}
+
+void
+LoadPath(const std::filesystem::path& path)
+{
+  g_app.LoadPath(path);
+}
+
+void
+ProjectMode()
+{
+  g_app.ProjectMode();
+}
+
+void
+Run()
+{
+  g_app.Run();
+}
+
+bool
+WriteScene(const std::filesystem::path& path)
+{
+  return g_app.WriteScene(path);
+}
+
 }

@@ -52,30 +52,30 @@ main(int argc, char** argv)
              &imLoggerAppender); // Initialize the logger with our appender.
 
   //
-  auto& app = App::Instance();
+  // auto& app = App::Instance();
 
   auto exe = GetExe();
   auto base = exe.parent_path().parent_path();
-  app.SetShaderDir(base / "shaders");
-  app.SetShaderChunkDir(base / "threejs_shader_chunks");
+  app::SetShaderDir(base / "shaders");
+  app::SetShaderChunkDir(base / "threejs_shader_chunks");
 
   // load user ~/.vrmeditor.lua
   auto user_conf = get_home() / ".vrmeditor.lua";
   if (std::filesystem::exists(user_conf)) {
-    app.LoadLua(user_conf);
+    app::LoadLua(user_conf);
   }
 
   if (argc > 1) {
     std::string_view arg = argv[1];
     if (arg.ends_with(".lua")) {
       // prooject mode
-      app.ProjectMode();
-      app.LoadLua(argv[1]);
+      app::ProjectMode();
+      app::LoadLua(argv[1]);
     } else {
       // viewermode
-      app.LoadModel(argv[1]);
+      app::LoadModel(argv[1]);
     }
   }
 
-  return app.Run();
+  return app::Run();
 }
