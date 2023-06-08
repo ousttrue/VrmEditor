@@ -9,19 +9,6 @@
 #include <string>
 #include <string_view>
 
-struct Delta
-{
-  int X;
-  int Y;
-};
-
-struct MouseEvent
-{
-  std::optional<Delta> RightDrag;
-  std::optional<Delta> MiddleDrag;
-  std::optional<int> Wheel;
-};
-
 using AddDockFunc = std::function<void(const grapho::imgui::Dock& dock)>;
 
 using Task = std::function<void()>;
@@ -79,7 +66,6 @@ public:
   void LoadState(std::string_view ini);
   std::string SaveState();
 
-  std::optional<MouseEvent> BackgroundMouseEvent() const;
   // return WantSaveIniSettings
   bool NewFrame();
   void DockSpace();

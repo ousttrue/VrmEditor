@@ -275,29 +275,6 @@ Gui::LoadFont()
   io.Fonts->Build();
 }
 
-std::optional<MouseEvent>
-Gui::BackgroundMouseEvent() const
-{
-  MouseEvent event{};
-
-  auto& io = ImGui::GetIO();
-  if (!io.WantCaptureMouse) {
-    // mouse event is consumed by ImGui
-    if (io.MouseDown[1]) {
-      event.RightDrag = Delta{ static_cast<int>(io.MouseDelta.x),
-                               static_cast<int>(io.MouseDelta.y) };
-    }
-    if (io.MouseDown[2]) {
-      event.MiddleDrag = Delta{ static_cast<int>(io.MouseDelta.x),
-                                static_cast<int>(io.MouseDelta.y) };
-    }
-    if (io.MouseWheel) {
-      event.Wheel = static_cast<int>(io.MouseWheel);
-    }
-  }
-  return event;
-}
-
 bool
 Gui::NewFrame()
 {
