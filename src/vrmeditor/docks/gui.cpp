@@ -262,7 +262,7 @@ Gui::LoadFont()
     // config.OversampleV = 1;
     config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
     static ImWchar const emoji_ranges[] = {
-      0x10000,
+      0x1,
       0x1ffff,
       0,
     };
