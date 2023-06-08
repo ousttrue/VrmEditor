@@ -475,12 +475,6 @@ LoadPath(const std::filesystem::path& path)
   g_app.LoadPath(path);
 }
 
-void
-ProjectMode()
-{
-  Gui::Instance().DarkMode();
-}
-
 static std::optional<std::filesystem::path>
 getRelative(const std::filesystem::path& base,
             const std::filesystem::path& target)
@@ -515,7 +509,7 @@ Run(std::span<const char*> args)
     std::string_view arg = _arg;
     if (arg.ends_with(".lua")) {
       // prooject mode
-      ProjectMode();
+      Gui::Instance().DarkMode();
       LuaEngine::Instance().DoFile(arg);
     } else {
       // viewermode
@@ -539,22 +533,10 @@ WriteScene(const std::filesystem::path& path)
   return g_app.WriteScene(path);
 }
 
-void
-LoadImGuiIni(std::string_view ini)
-{
-  Gui::Instance().LoadState(ini);
-}
-
 bool
 AddAssetDir(std::string_view name, const std::filesystem::path& path)
 {
   return g_app.AddAssetDir(name, path);
-}
-
-void
-ShowDock(std::string_view name, bool visible)
-{
-  DockSpaceManager::Instance().SetDockVisible(name, visible);
 }
 
 bool

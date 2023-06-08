@@ -1,5 +1,6 @@
 #include "luahost.h"
 #include "app.h"
+#include "docks/dockspace.h"
 #include "docks/gui.h"
 #include "glr/gl3renderer.h"
 #include "humanpose/humanpose_stream.h"
@@ -50,8 +51,9 @@ struct LuaEngineImpl
     luaL_openlibs(m_lua);
 
     constexpr struct luaL_Reg VrmEditorLuaModule[] = {
-      { "imgui_load_ini",
-        MakeLuaFunc([](const std::string& ini) { app::LoadImGuiIni(ini); }) },
+      { "imgui_load_ini", MakeLuaFunc([](const std::string& ini) {
+          Gui::Instance().LoadState(ini);
+        }) },
       { "imnodes_load_ini", MakeLuaFunc([](const std::string& ini) {
           humanpose::HumanPoseStream::Instance().LoadIni(ini);
         }) },
@@ -89,7 +91,7 @@ struct LuaEngineImpl
           }) },
       { "add_human_map", vrmeditor_add_human_map },
       { "show_dock", MakeLuaFunc([](const std::string& name, bool visible) {
-          app::ShowDock(name, visible);
+          DockSpaceManager::Instance().SetDockVisible(name, visible);
         }) },
       { "load_pbr", MakeLuaFunc([](const std::filesystem::path& path) {
           app::LoadPbr(path);
@@ -99,7 +101,7 @@ struct LuaEngineImpl
         }) },
       { "set_shader_chunk_path",
         MakeLuaFunc([](const std::filesystem::path& path) {
-          app::SetShaderChunkDir(path);
+          glr::SetShaderChunkDir(path);
         }) },
       { nullptr, nullptr },
     };
