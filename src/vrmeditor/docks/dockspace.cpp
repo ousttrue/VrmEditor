@@ -183,7 +183,7 @@ DockSpaceManager::ShowGui()
       // std::cout << filePathName << "::" << filePath << std::endl;
       if (std::filesystem::exists(path)) {
         m_fileDialogCurrent = path.parent_path();
-        app::LoadPath(path);
+        app::TaskLoadPath(path);
       }
     }
 

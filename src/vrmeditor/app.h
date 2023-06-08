@@ -9,14 +9,13 @@ using Task = std::function<void()>;
 
 void
 PostTask(const Task& task);
+void
+TaskLoadModel(const std::filesystem::path& path);
+void
+TaskLoadPath(const std::filesystem::path& path);
 
 void
 SetShaderDir(const std::filesystem::path& path);
-
-void
-LoadModel(const std::filesystem::path& path);
-void
-LoadPath(const std::filesystem::path& path);
 
 void
 Run(std::span<const char*> args);

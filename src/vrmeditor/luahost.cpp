@@ -79,7 +79,7 @@ struct LuaEngineImpl
         }) },
       // asset
       { "load_model", MakeLuaFunc([](const std::filesystem::path& path) {
-          return app::LoadModel(path);
+          return app::TaskLoadModel(path);
         }) },
       { "load_motion", MakeLuaFunc([](const std::filesystem::path& path) {
           return humanpose::HumanPoseStream::Instance().LoadMotion(path);

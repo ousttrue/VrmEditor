@@ -449,30 +449,24 @@ PostTask(const Task& task)
 }
 
 void
+TaskLoadModel(const std::filesystem::path& path)
+{
+  PostTask([path]() { g_app.LoadModel(path); });
+}
+
+void
+TaskLoadPath(const std::filesystem::path& path)
+{
+  PostTask([path]() { g_app.LoadPath(path); });
+}
+
+void
 SetShaderDir(const std::filesystem::path& path)
 {
   // g_app.SetShaderDir(path);
   g_shaderDir = path;
   g_watcher.Watch(path);
   glr::SetShaderDir(path);
-}
-
-void
-SetShaderChunkDir(const std::filesystem::path& path)
-{
-  glr::SetShaderChunkDir(path);
-}
-
-void
-LoadModel(const std::filesystem::path& path)
-{
-  g_app.LoadModel(path);
-}
-
-void
-LoadPath(const std::filesystem::path& path)
-{
-  g_app.LoadPath(path);
 }
 
 static std::optional<std::filesystem::path>
@@ -497,7 +491,7 @@ Run(std::span<const char*> args)
   auto exe = GetExe();
   auto base = exe.parent_path().parent_path();
   app::SetShaderDir(base / "shaders");
-  app::SetShaderChunkDir(base / "threejs_shader_chunks");
+  glr::SetShaderChunkDir(base / "threejs_shader_chunks");
 
   // load user ~/.vrmeditor.lua
   auto user_conf = get_home() / ".vrmeditor.lua";
@@ -513,7 +507,7 @@ Run(std::span<const char*> args)
       LuaEngine::Instance().DoFile(arg);
     } else {
       // viewermode
-      LoadModel(arg);
+      TaskLoadModel(arg);
     }
     // LoadPath(arg);
   }
