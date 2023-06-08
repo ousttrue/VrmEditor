@@ -1,5 +1,6 @@
 #pragma once
-#include "gui.h"
+#include "dockspace.h"
+#include <memory>
 
 namespace libvrm {
 struct RuntimeScene;

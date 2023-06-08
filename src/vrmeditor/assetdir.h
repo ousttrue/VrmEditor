@@ -1,5 +1,5 @@
 #pragma once
-#include "docks/gui.h"
+#include "docks/dockspace.h"
 #include <filesystem>
 #include <functional>
 #include <imgui.h>
@@ -23,10 +23,7 @@ struct Asset
   static std::optional<Asset> FromPath(const std::filesystem::path& path);
   bool Show(float width) const;
 
-  bool operator<(const Asset& b) const noexcept
-  {
-    return Path < b.Path;
-  }
+  bool operator<(const Asset& b) const noexcept { return Path < b.Path; }
 };
 
 struct AssetDir

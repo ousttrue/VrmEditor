@@ -9,6 +9,7 @@ srcs = [
     'docks/gl3renderer_gui.cpp',
     'docks/overlay.cpp',
     'docks/gui.cpp',
+    'docks/dockspace.cpp',
     'docks/imlogger.cpp',
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',

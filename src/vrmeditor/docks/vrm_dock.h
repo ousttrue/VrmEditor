@@ -1,5 +1,5 @@
 #pragma once
-#include "gui.h"
+#include "dockspace.h"
 #include <vrm/runtime_scene.h>
 
 class VrmDock

@@ -124,7 +124,7 @@ public:
       });
 
     auto addDock = [](const grapho::imgui::Dock& dock) {
-      Gui::Instance().AddDock(dock);
+      DockSpaceManager::Instance().AddDock(dock);
     };
     auto indent = Gui::Instance().FontSize * 0.5f;
 
@@ -182,7 +182,7 @@ public:
        << Gui::Instance().SaveState() << "\n]===]\n\n";
 
     // dock visibility
-    for (auto& dock : Gui::Instance().Docks) {
+    for (auto& dock : DockSpaceManager::Instance().Docks) {
       if (!dock.IsOpen) {
         os << "vrmeditor.show_dock('" << dock.Name << "', false)\n";
       }
@@ -208,7 +208,7 @@ public:
     LuaEngine::Instance().DoFile(m_ini);
 
     auto addDock = [](const grapho::imgui::Dock& dock) {
-      Gui::Instance().AddDock(dock);
+      DockSpaceManager::Instance().AddDock(dock);
     };
 
 #ifndef NDEBUG
@@ -305,7 +305,7 @@ public:
 
       {
         // rmt_ScopedCPUSample(gui, 0);
-        Gui::Instance().DockSpace();
+        DockSpaceManager::Instance().ShowGui();
       }
 
       {
@@ -432,7 +432,7 @@ public:
     };
 
     auto dock = m_assets.back()->CreateDock(callback);
-    Gui::Instance().AddDock(dock);
+    DockSpaceManager::Instance().AddDock(dock);
 
     PLOG_INFO << name << " => " << path.string();
     return true;
@@ -554,7 +554,7 @@ AddAssetDir(std::string_view name, const std::filesystem::path& path)
 void
 ShowDock(std::string_view name, bool visible)
 {
-  Gui::Instance().SetDockVisible(name, visible);
+  DockSpaceManager::Instance().SetDockVisible(name, visible);
 }
 
 bool

@@ -1,5 +1,5 @@
 #pragma once
-#include "docks/gui.h"
+#include "docks/dockspace.h"
 #include "graphnode_base.h"
 #include <list>
 #include <vrm/bvh/humanbone_map.h>
