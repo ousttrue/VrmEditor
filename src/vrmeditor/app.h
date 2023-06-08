@@ -1,10 +1,16 @@
 #pragma once
 #include <filesystem>
+#include <functional>
 #include <span>
 
 class Gui;
 
 namespace app {
+
+using Task = std::function<void()>;
+
+void
+PostTask(const Task& task);
 
 void
 SetShaderDir(const std::filesystem::path& path);

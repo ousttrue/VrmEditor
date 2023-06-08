@@ -5,13 +5,11 @@
 #include <list>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <string>
 #include <string_view>
 
 using AddDockFunc = std::function<void(const grapho::imgui::Dock& dock)>;
 
-using Task = std::function<void()>;
 
 class Gui
 {
@@ -21,7 +19,6 @@ class Gui
   const void* m_window = nullptr;
 
   std::string m_glsl_version;
-  std::queue<Task> m_tasks;
 
   std::filesystem::path m_baseFont;
   std::filesystem::path m_japanseseFont;
@@ -70,7 +67,6 @@ public:
   bool NewFrame();
   void DockSpace();
   void Render();
-  void PostTask(const Task& task) { m_tasks.push(task); }
 
   void LoadFont();
   bool SetFont(const std::filesystem::path& path);

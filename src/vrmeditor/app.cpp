@@ -27,7 +27,7 @@
 #include <gltfjson/json_tree_exporter.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
-// #include <remotery.h>
+#include <queue>
 #include <vrm/animation_update.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
@@ -42,6 +42,8 @@ FileWatcher g_watcher;
 std::filesystem::path g_shaderDir;
 
 const auto WINDOW_TITLE = "VrmEditor";
+
+std::queue<app::Task> g_tasks;
 
 class App
 {
@@ -268,7 +270,19 @@ public:
     });
 
     std::optional<libvrm::Time> lastTime;
-    while (auto info = Platform::Instance().NewFrame()) {
+    while (true) {
+
+      if (!g_tasks.empty()) {
+        // dequeue task
+        g_tasks.front()();
+        g_tasks.pop();
+      }
+
+      auto info = Platform::Instance().NewFrame();
+      if (!info) {
+        break;
+      }
+
       {
         // rmt_ScopedCPUSample(update, 0);
 
@@ -438,6 +452,12 @@ public:
 App g_app;
 
 namespace app {
+
+void
+PostTask(const Task& task)
+{
+  g_tasks.push(task);
+}
 
 void
 SetShaderDir(const std::filesystem::path& path)

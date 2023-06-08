@@ -80,11 +80,11 @@ Gui::Gui(const void* window, const char* glsl_version)
   Docks.back().IsOpen = false;
 #endif
 
-  PostTask([this]() { LoadFont(); });
+  app::PostTask([=]() { LoadFont(); });
 
   Docks.push_back(grapho::imgui::Dock("[setting] font", [this]() {
     if (ImGui::SliderInt("fontSize", &FontSize, 10, 50)) {
-      PostTask([this]() { LoadFont(); });
+      app::PostTask([=]() { LoadFont(); });
     }
 
     // Load Fonts
@@ -278,13 +278,6 @@ Gui::LoadFont()
 bool
 Gui::NewFrame()
 {
-
-  if (!m_tasks.empty()) {
-    // dequeue task
-    m_tasks.front()();
-    m_tasks.pop();
-  }
-
   // Start the Dear ImGui frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
