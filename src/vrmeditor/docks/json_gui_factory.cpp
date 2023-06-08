@@ -105,7 +105,7 @@ struct NodeTypeVisitor
 {
   void operator()(std::monostate) { ImGui::TextUnformatted("[null]"); }
   void operator()(bool) { ImGui::TextUnformatted("[bool]"); }
-  void operator()(float) { ImGui::TextUnformatted("[float]"); }
+  void operator()(float) { ImGui::TextUnformatted("[number]"); }
   void operator()(const std::u8string&) { ImGui::TextUnformatted("[string]"); }
   void operator()(const gltfjson::tree::ArrayValue&)
   {
