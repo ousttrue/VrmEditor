@@ -20,9 +20,24 @@ const auto SAVE_FILE_DIALOG = "SAVE_FILE_DIALOG";
 
 const auto DOCK_SPACE = "VRDocksPACE";
 
-Gui::Gui(const void* window, const char* glsl_version)
-  : m_window(window)
-  , m_glsl_version(glsl_version)
+struct GuiImpl
+{
+  GuiImpl(const void* window, const char* glsl_version)
+  {
+    ImGui_ImplOpenGL3_Init(glsl_version);
+    ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)window, true);
+  }
+
+  ~GuiImpl()
+  {
+    auto& io = ImGui::GetIO();
+    io.Fonts->Clear();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
+  }
+};
+
+Gui::Gui()
 {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -39,8 +54,8 @@ Gui::Gui(const void* window, const char* glsl_version)
     ImGuiConfigFlags_NavEnableGamepad;              // Enable Gamepad Controls
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
 #ifdef _WIN32
-  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport /
-                                                      // Platform Windows
+  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport
+                                                      // / Platform Windows
 #endif
   // io.ConfigViewportsNoAutoMerge = true;
   // io.ConfigViewportsNoTaskBarIcon = true;
@@ -80,11 +95,9 @@ Gui::Gui(const void* window, const char* glsl_version)
   Docks.back().IsOpen = false;
 #endif
 
-  app::PostTask([=]() { LoadFont(); });
-
   Docks.push_back(grapho::imgui::Dock("[setting] font", [this]() {
     if (ImGui::SliderInt("fontSize", &FontSize, 10, 50)) {
-      app::PostTask([=]() { LoadFont(); });
+      app::PostTask([=]() { Shutdown(); });
     }
 
     // Load Fonts
@@ -141,9 +154,24 @@ Gui::Gui(const void* window, const char* glsl_version)
 
 Gui::~Gui()
 {
-  // Setup Platform/Renderer backends
-  ImGui_ImplGlfw_Shutdown();
-  ImGui_ImplOpenGL3_Shutdown();
+  Shutdown();
+}
+
+void
+Gui::SetWindow(const void* window, const char* glsl_version)
+{
+  Shutdown();
+  m_window = window;
+  m_glsl_version = glsl_version;
+}
+
+void
+Gui::Shutdown()
+{
+  if (m_impl) {
+    delete m_impl;
+    m_impl = nullptr;
+  }
 }
 
 void
@@ -175,9 +203,6 @@ Gui::SetFont(const std::filesystem::path& path)
   }
   m_baseFont = path;
   return true;
-
-  ImNodes::DestroyContext();
-  ImGui::DestroyContext();
 }
 
 bool
@@ -201,19 +226,13 @@ Gui::AddIconFont(const std::filesystem::path& path)
 }
 
 void
-Gui::LoadFont()
+Gui::Initialize()
 {
   ImGuiIO& io = ImGui::GetIO();
 
-  if (m_initialized) {
-    io.Fonts->Clear();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui_ImplOpenGL3_Shutdown();
-  }
-  // Setup Platform/Renderer backends
-  ImGui_ImplOpenGL3_Init(m_glsl_version.c_str());
-  ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)m_window, true);
-  m_initialized = true;
+  Shutdown();
+
+  m_impl = new GuiImpl(m_window, m_glsl_version.c_str());
 
   ImFontConfig config;
   config.SizePixels = static_cast<float>(FontSize);
@@ -278,6 +297,10 @@ Gui::LoadFont()
 bool
 Gui::NewFrame()
 {
+  if (!m_impl) {
+    Initialize();
+  }
+
   // Start the Dear ImGui frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();

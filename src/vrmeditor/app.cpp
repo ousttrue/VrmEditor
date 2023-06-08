@@ -48,7 +48,6 @@ std::queue<app::Task> g_tasks;
 class App
 {
   std::filesystem::path m_ini;
-  std::shared_ptr<Gui> m_gui;
   std::list<std::shared_ptr<AssetDir>> m_assets;
   std::shared_ptr<HierarchyGui> m_hierarchy;
 
@@ -88,8 +87,8 @@ public:
 
     glr::Initialize();
 
-    m_gui =
-      std::make_shared<Gui>(window, Platform::Instance().glsl_version.c_str());
+    Gui::Instance().SetWindow(window,
+                              Platform::Instance().glsl_version.c_str());
     m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
 
     auto track = m_timeline->AddTrack("PoseStream", {});
@@ -105,8 +104,6 @@ public:
 
   App(const App&) = delete;
   App& operator=(const App&) = delete;
-
-  void ProjectMode() { m_gui->DarkMode(); }
 
   std::shared_ptr<libvrm::RuntimeScene> SetScene(
     const std::shared_ptr<libvrm::GltfRoot>& table)
@@ -126,10 +123,10 @@ public:
         }
       });
 
-    auto addDock = [gui = m_gui](const grapho::imgui::Dock& dock) {
-      gui->AddDock(dock);
+    auto addDock = [](const grapho::imgui::Dock& dock) {
+      Gui::Instance().AddDock(dock);
     };
-    auto indent = m_gui->FontSize * 0.5f;
+    auto indent = Gui::Instance().FontSize * 0.5f;
 
     {
       m_json->SetScene(table);
@@ -165,8 +162,6 @@ public:
     return m_runtime;
   }
 
-  void LoadImGuiIni(std::string_view ini) { m_gui->LoadState(ini); }
-
   void SaveState()
   {
     std::ofstream os((const char*)m_ini.u8string().c_str());
@@ -184,10 +179,10 @@ public:
 
     // imgui
     os << "vrmeditor.imgui_load_ini [===[\n"
-       << m_gui->SaveState() << "\n]===]\n\n";
+       << Gui::Instance().SaveState() << "\n]===]\n\n";
 
     // dock visibility
-    for (auto& dock : m_gui->Docks) {
+    for (auto& dock : Gui::Instance().Docks) {
       if (!dock.IsOpen) {
         os << "vrmeditor.show_dock('" << dock.Name << "', false)\n";
       }
@@ -212,8 +207,8 @@ public:
     // must after App::App
     LuaEngine::Instance().DoFile(m_ini);
 
-    auto addDock = [gui = m_gui](const grapho::imgui::Dock& dock) {
-      gui->AddDock(dock);
+    auto addDock = [](const grapho::imgui::Dock& dock) {
+      Gui::Instance().AddDock(dock);
     };
 
 #ifndef NDEBUG
@@ -253,7 +248,7 @@ public:
     ViewDock::CreateSetting(
       addDock, "view-settings", m_env, m_runtimeView, m_settings);
 
-    auto indent = m_gui->FontSize * 0.5f;
+    auto indent = Gui::Instance().FontSize * 0.5f;
     addDock({
       "Json",
       [json = m_json, indent]() mutable { json->ShowSelector(indent); },
@@ -302,7 +297,7 @@ public:
         lastTime = time;
 
         // newFrame
-        if (m_gui->NewFrame()) {
+        if (Gui::Instance().NewFrame()) {
           SaveState();
         }
         ImGuizmo::BeginFrame();
@@ -310,14 +305,14 @@ public:
 
       {
         // rmt_ScopedCPUSample(gui, 0);
-        m_gui->DockSpace();
+        Gui::Instance().DockSpace();
       }
 
       {
         // rmt_ScopedCPUSample(render, 0);
         glr::ClearBackBuffer(info->Width, info->Height);
 
-        m_gui->Render();
+        Gui::Instance().Render();
         Platform::Instance().Present();
       }
     }
@@ -354,7 +349,6 @@ public:
   }
 
   // expose to lua
-  const std::shared_ptr<Gui>& GetGui() const { return m_gui; }
   bool LoadPath(const std::filesystem::path& path)
   {
     auto extension = path.extension().string();
@@ -438,15 +432,10 @@ public:
     };
 
     auto dock = m_assets.back()->CreateDock(callback);
-    m_gui->AddDock(dock);
+    Gui::Instance().AddDock(dock);
 
     PLOG_INFO << name << " => " << path.string();
     return true;
-  }
-
-  void ShowDock(std::string_view name, bool visible)
-  {
-    m_gui->SetDockVisible(name, visible);
   }
 };
 App g_app;
@@ -489,7 +478,7 @@ LoadPath(const std::filesystem::path& path)
 void
 ProjectMode()
 {
-  g_app.ProjectMode();
+  Gui::Instance().DarkMode();
 }
 
 static std::optional<std::filesystem::path>
@@ -506,7 +495,7 @@ getRelative(const std::filesystem::path& base,
     }
   }
   return std::nullopt;
-};
+}
 
 void
 Run(std::span<const char*> args)
@@ -550,16 +539,10 @@ WriteScene(const std::filesystem::path& path)
   return g_app.WriteScene(path);
 }
 
-const std::shared_ptr<Gui>&
-GetGui()
-{
-  return g_app.GetGui();
-}
-
 void
 LoadImGuiIni(std::string_view ini)
 {
-  g_app.LoadImGuiIni(ini);
+  Gui::Instance().LoadState(ini);
 }
 
 bool
@@ -571,7 +554,7 @@ AddAssetDir(std::string_view name, const std::filesystem::path& path)
 void
 ShowDock(std::string_view name, bool visible)
 {
-  g_app.ShowDock(name, visible);
+  Gui::Instance().SetDockVisible(name, visible);
 }
 
 bool

@@ -31,9 +31,6 @@ Run(std::span<const char*> args);
 bool
 WriteScene(const std::filesystem::path& path);
 
-const std::shared_ptr<Gui>&
-GetGui();
-
 void
 LoadImGuiIni(std::string_view ini);
 

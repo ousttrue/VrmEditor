@@ -64,16 +64,16 @@ struct LuaEngineImpl
         }) },
       // font settings
       { "set_font_size", MakeLuaFunc([](int font_size) {
-          app::GetGui()->FontSize = font_size;
+          Gui::Instance().FontSize = font_size;
         }) },
       { "set_font", MakeLuaFunc([](const std::filesystem::path& path) {
-          return app::GetGui()->SetFont(path);
+          return Gui::Instance().SetFont(path);
         }) },
       { "add_japanese_font", MakeLuaFunc([](const std::filesystem::path& path) {
-          return app::GetGui()->AddJapaneseFont(path);
+          return Gui::Instance().AddJapaneseFont(path);
         }) },
       { "add_icon_font", MakeLuaFunc([](const std::filesystem::path& path) {
-          return app::GetGui()->AddIconFont(path);
+          return Gui::Instance().AddIconFont(path);
         }) },
       // asset
       { "load_model", MakeLuaFunc([](const std::filesystem::path& path) {
