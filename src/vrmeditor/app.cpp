@@ -42,7 +42,6 @@ const auto WINDOW_TITLE = "VrmEditor";
 class App
 {
   std::filesystem::path m_ini;
-  std::shared_ptr<Platform> m_platform;
   std::shared_ptr<Gui> m_gui;
   std::list<std::shared_ptr<AssetDir>> m_assets;
   std::shared_ptr<HierarchyGui> m_hierarchy;
@@ -111,18 +110,19 @@ App::App()
   m_settings = std::make_shared<glr::ViewSettings>();
   m_settings->ShowCuber = false;
 
-  m_platform = std::make_shared<Platform>();
-  auto window = m_platform->CreateWindow(2000, 1200, false, WINDOW_TITLE);
+  auto window =
+    Platform::Instance().CreateWindow(2000, 1200, false, WINDOW_TITLE);
   if (!window) {
     throw std::runtime_error("createWindow");
   }
   GL_ErrorClear("CreateWindow");
 
-  m_platform->OnDrops.push_back([=](auto& path) { LoadPath(path); });
+  Platform::Instance().OnDrops.push_back([=](auto& path) { LoadPath(path); });
 
   glr::Initialize();
 
-  m_gui = std::make_shared<Gui>(window, m_platform->glsl_version.c_str());
+  m_gui =
+    std::make_shared<Gui>(window, Platform::Instance().glsl_version.c_str());
   m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
 
   auto track = m_timeline->AddTrack("PoseStream", {});
@@ -208,7 +208,7 @@ App::LoadImGuiIni(std::string_view ini)
 void
 App::SetWindowSize(int width, int height, bool maximize)
 {
-  m_platform->SetWindowSize(width, height, maximize);
+  Platform::Instance().SetWindowSize(width, height, maximize);
 }
 
 void
@@ -239,8 +239,8 @@ App::SaveState()
   }
   os << "\n";
 
-  auto [width, height] = m_platform->WindowSize();
-  auto maximize = m_platform->IsWindowMaximized();
+  auto [width, height] = Platform::Instance().WindowSize();
+  auto maximize = Platform::Instance().IsWindowMaximized();
   os << "vrmeditor.set_window_size(" << width << ", " << height << ", "
      << (maximize ? "true" : "false") << ")\n\n";
 }
@@ -361,7 +361,7 @@ App::AddAssetDir(std::string_view name, const std::filesystem::path& path)
 
   auto callback = [this](const std::filesystem::path& path) {
     if (LoadPath(path)) {
-      m_platform->SetTitle(path.string());
+      Platform::Instance().SetTitle(path.string());
     } else {
     }
   };
@@ -444,7 +444,7 @@ App::Run()
   });
 
   std::optional<libvrm::Time> lastTime;
-  while (auto info = m_platform->NewFrame()) {
+  while (auto info = Platform::Instance().NewFrame()) {
     {
       // rmt_ScopedCPUSample(update, 0);
 
@@ -480,7 +480,7 @@ App::Run()
       glr::ClearBackBuffer(info->Width, info->Height);
 
       m_gui->Render();
-      m_platform->Present();
+      Platform::Instance().Present();
     }
   }
 
@@ -585,4 +585,34 @@ WriteScene(const std::filesystem::path& path)
   return g_app.WriteScene(path);
 }
 
+const std::shared_ptr<Gui>&
+GetGui()
+{
+  return g_app.GetGui();
 }
+
+void
+LoadImGuiIni(std::string_view ini)
+{
+  g_app.LoadImGuiIni(ini);
+}
+
+bool
+AddAssetDir(std::string_view name, const std::filesystem::path& path)
+{
+  return g_app.AddAssetDir(name, path);
+}
+
+void
+ShowDock(std::string_view name, bool visible)
+{
+  g_app.ShowDock(name, visible);
+}
+
+bool
+LoadPbr(const std::filesystem::path& hdr)
+{
+  return g_app.LoadPbr(hdr);
+}
+
+} // namespace

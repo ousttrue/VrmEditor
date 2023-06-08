@@ -19,11 +19,19 @@ class Platform
 {
   struct GLFWwindow* m_window = nullptr;
 
+  Platform();
+
 public:
   std::list<OnDropFunc> OnDrops;
   std::string glsl_version;
-  Platform();
   ~Platform();
+  Platform(const Platform&) = delete;
+  Platform& operator=(const Platform&) = delete;
+  static Platform& Instance()
+  {
+    static Platform s_instance;
+    return s_instance;
+  }
   GLFWwindow* CreateWindow(int width,
                            int height,
                            bool is_maximized,

@@ -4,6 +4,7 @@
 #include "glr/gl3renderer.h"
 #include "humanpose/humanpose_stream.h"
 #include "makeluafunc.h"
+#include "platform.h"
 #include <filesystem>
 #include <iostream>
 #include <type_traits>
@@ -48,58 +49,57 @@ struct LuaEngineImpl
     luaL_openlibs(m_lua);
 
     constexpr struct luaL_Reg VrmEditorLuaModule[] = {
-      // { "imgui_load_ini", MakeLuaFunc([](const std::string& ini) {
-      //     App::Instance().LoadImGuiIni(ini);
-      //   }) },
-      // { "imnodes_load_ini", MakeLuaFunc([](const std::string& ini) {
-      //     humanpose::HumanPoseStream::Instance().LoadIni(ini);
-      //   }) },
-      // { "imnodes_add_link", MakeLuaFunc([](int start, int end) {
-      //     humanpose::HumanPoseStream::Instance().TryCreateLink(start, end);
-      //   }) },
-      // { "set_window_size",
-      //   MakeLuaFunc([](int width, int height, bool is_maximized) {
-      //     App::Instance().SetWindowSize(width, height, is_maximized);
-      //   }) },
-      // // font settings
-      // { "set_font_size", MakeLuaFunc([](int font_size) {
-      //     App::Instance().GetGui()->FontSize = font_size;
-      //   }) },
-      // { "set_font", MakeLuaFunc([](const std::filesystem::path& path) {
-      //     return App::Instance().GetGui()->SetFont(path);
-      //   }) },
-      // { "add_japanese_font", MakeLuaFunc([](const std::filesystem::path& path) {
-      //     return App::Instance().GetGui()->AddJapaneseFont(path);
-      //   }) },
-      // { "add_icon_font", MakeLuaFunc([](const std::filesystem::path& path) {
-      //     return App::Instance().GetGui()->AddIconFont(path);
-      //   }) },
-      // // asset
-      // { "load_model", MakeLuaFunc([](const std::filesystem::path& path) {
-      //     return App::Instance().LoadModel(path);
-      //   }) },
-      // { "load_motion", MakeLuaFunc([](const std::filesystem::path& path) {
-      //     return humanpose::HumanPoseStream::Instance().LoadMotion(path);
-      //   }) },
-      // { "add_asset_dir",
-      //   MakeLuaFunc(
-      //     [](const std::string& name, const std::filesystem::path& dir) {
-      //       App::Instance().AddAssetDir(name, dir);
-      //     }) },
-      // { "add_human_map", vrmeditor_add_human_map },
-      // { "show_dock", MakeLuaFunc([](const std::string& name, bool visible) {
-      //     App::Instance().ShowDock(name, visible);
-      //   }) },
-      // { "load_pbr", MakeLuaFunc([](const std::filesystem::path& path) {
-      //     App::Instance().LoadPbr(path);
-      //   }) },
-      // { "set_shaderpath", MakeLuaFunc([](const std::filesystem::path& path) {
-      //     App::Instance().SetShaderDir(path);
-      //   }) },
-      // { "set_shader_chunk_path",
-      //   MakeLuaFunc([](const std::filesystem::path& path) {
-      //     App::Instance().SetShaderChunkDir(path);
-      //   }) },
+      { "imgui_load_ini",
+        MakeLuaFunc([](const std::string& ini) { app::LoadImGuiIni(ini); }) },
+      { "imnodes_load_ini", MakeLuaFunc([](const std::string& ini) {
+          humanpose::HumanPoseStream::Instance().LoadIni(ini);
+        }) },
+      { "imnodes_add_link", MakeLuaFunc([](int start, int end) {
+          humanpose::HumanPoseStream::Instance().TryCreateLink(start, end);
+        }) },
+      { "set_window_size",
+        MakeLuaFunc([](int width, int height, bool is_maximized) {
+          Platform::Instance().SetWindowSize(width, height, is_maximized);
+        }) },
+      // font settings
+      { "set_font_size", MakeLuaFunc([](int font_size) {
+          app::GetGui()->FontSize = font_size;
+        }) },
+      { "set_font", MakeLuaFunc([](const std::filesystem::path& path) {
+          return app::GetGui()->SetFont(path);
+        }) },
+      { "add_japanese_font", MakeLuaFunc([](const std::filesystem::path& path) {
+          return app::GetGui()->AddJapaneseFont(path);
+        }) },
+      { "add_icon_font", MakeLuaFunc([](const std::filesystem::path& path) {
+          return app::GetGui()->AddIconFont(path);
+        }) },
+      // asset
+      { "load_model", MakeLuaFunc([](const std::filesystem::path& path) {
+          return app::LoadModel(path);
+        }) },
+      { "load_motion", MakeLuaFunc([](const std::filesystem::path& path) {
+          return humanpose::HumanPoseStream::Instance().LoadMotion(path);
+        }) },
+      { "add_asset_dir",
+        MakeLuaFunc(
+          [](const std::string& name, const std::filesystem::path& dir) {
+            app::AddAssetDir(name, dir);
+          }) },
+      { "add_human_map", vrmeditor_add_human_map },
+      { "show_dock", MakeLuaFunc([](const std::string& name, bool visible) {
+          app::ShowDock(name, visible);
+        }) },
+      { "load_pbr", MakeLuaFunc([](const std::filesystem::path& path) {
+          app::LoadPbr(path);
+        }) },
+      { "set_shaderpath", MakeLuaFunc([](const std::filesystem::path& path) {
+          app::SetShaderDir(path);
+        }) },
+      { "set_shader_chunk_path",
+        MakeLuaFunc([](const std::filesystem::path& path) {
+          app::SetShaderChunkDir(path);
+        }) },
       { nullptr, nullptr },
     };
     luaL_register(m_lua, "vrmeditor", VrmEditorLuaModule);

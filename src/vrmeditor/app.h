@@ -1,6 +1,8 @@
 #pragma once
 #include <filesystem>
 
+class Gui;
+
 namespace app {
 
 void
@@ -23,5 +25,20 @@ Run();
 
 bool
 WriteScene(const std::filesystem::path& path);
+
+const std::shared_ptr<Gui>&
+GetGui();
+
+void
+LoadImGuiIni(std::string_view ini);
+
+bool
+AddAssetDir(std::string_view name, const std::filesystem::path& path);
+
+void
+ShowDock(std::string_view name, bool visible);
+
+bool
+LoadPbr(const std::filesystem::path& hdr);
 
 } // namespace
