@@ -1,5 +1,7 @@
 #pragma once
 #include <chrono>
+#include <filesystem>
+#include <functional>
 #include <optional>
 #include <string>
 #include <vrm/timeline.h>
@@ -11,11 +13,14 @@ struct FrameInfo
   libvrm::Time Time;
 };
 
+using OnDropFunc = std::function<void(const std::filesystem::path&)>;
+
 class Platform
 {
   struct GLFWwindow* m_window = nullptr;
 
 public:
+  std::list<OnDropFunc> OnDrops;
   std::string glsl_version;
   Platform();
   ~Platform();

@@ -60,6 +60,8 @@ App::App()
   }
   GL_ErrorClear("CreateWindow");
 
+  m_platform->OnDrops.push_back([=](auto& path) { LoadPath(path); });
+
   glr::Initialize();
 
   PoseStream = std::make_shared<humanpose::HumanPoseStream>();

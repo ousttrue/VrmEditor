@@ -1,8 +1,10 @@
 #include "platform.h"
+#include <plog/Log.h>
+#include <stdexcept>
 #include <vrm/timeline.h>
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <stdexcept>
 
 static void
 error_callback(int error, const char* description)
@@ -64,11 +66,26 @@ Platform::CreateWindow(int width,
   if (!m_window) {
     return nullptr;
   }
+  glfwSetWindowUserPointer(m_window, this);
+
   if (is_maximized) {
     glfwMaximizeWindow(m_window);
   }
   glfwMakeContextCurrent(m_window);
   glfwSwapInterval(1);
+
+  auto drop_callback = +[](GLFWwindow* window, int count, const char** paths) {
+    auto self = (Platform*)glfwGetWindowUserPointer(window);
+    for (int i = 0; i < count; i++) {
+      std::filesystem::path drop = paths[i];
+      PLOG_INFO << "drop_callback[" << i << "]: " << drop.string();
+      for (auto& callback : self->OnDrops) {
+        callback(drop);
+      }
+    }
+  };
+  glfwSetDropCallback(m_window, drop_callback);
+
   return m_window;
 }
 
