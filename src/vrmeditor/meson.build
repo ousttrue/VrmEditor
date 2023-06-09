@@ -17,7 +17,6 @@ srcs = [
     'docks/type_gui_vrm0.cpp',
     'docks/json_gui.cpp',
     'docks/json_gui_factory.cpp',
-    'docks/json_gui_labelcache.cpp',
     'docks/im_widgets.cpp',
     'docks/hierarchy_gui.cpp',
     'docks/im_fbo.cpp',

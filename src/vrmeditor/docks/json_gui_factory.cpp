@@ -27,10 +27,24 @@ TypeFunc()
 
 JsonGuiFactoryManager::JsonGuiFactoryManager()
   : m_guiFactories({
+      { u8"/extensions", { u8"⭐" } },
+      { u8"/extras", { u8"⭐" } },
+      { u8"/extensionsUsed", { u8"⭐" } },
+      //
+      { u8"/extensions/VRMC_vrm", { u8"🌟" } },
+      { u8"/extensions/VRMC_vrm/humanoid", { u8"👤" } },
       // { "/extensions/VRMC_springBone/springs/*/joints",
       // JsonGuiVrm1SpringJoints
       // },
       // { "/extensions/VRMC_springBone/colliders", JsonGuiVrm1SpringColliders
+      //
+      { u8"/extensions/VRM", { u8"🌟" } },
+      { u8"/extensions/VRM/meta", { u8"📄" } },
+      { u8"/extensions/VRM/humanoid", { u8"👤" } },
+      { u8"/extensions/VRM/blendShapeMaster", { u8"😀" } },
+      { u8"/extensions/VRM/firstPerson", { u8"👀" } },
+      { u8"/extensions/VRM/secondaryAnimation", { u8"🔗" } },
+      { u8"/extensions/VRM/materialProperties", { u8"🎨" } },
       // // { "/extensions/VRM/secondaryAnimation/colliderGroups/*/colliders",
       // //   JsonGuiVrm0ColliderList },
       //
@@ -51,14 +65,18 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       //   TypeFunc<gltfjson::vrm0::Material>() },
       { u8"/asset", { u8"📄", TypeFunc<gltfjson::Asset>() } },
       // buffer/bufferView/accessor
+      { u8"/buffers", { u8"🔢" } },
       { u8"/buffers/*", { u8"🔢", TypeFunc<gltfjson::Buffer>() } },
+      { u8"/bufferViews", { u8"🔢" } },
       { u8"/bufferViews/*", { u8"🔢", TypeFunc<gltfjson::BufferView>() } },
       { u8"/accessors", { u8"🔢", JsonGuiAccessorList } },
       { u8"/accessors/*", { u8"🔢", TypeFunc<gltfjson::Accessor>() } },
       // image/sampelr/texture/material
       // { u8"/images", { u8"🖼", JsonGuiImageList } },
       { u8"/images/*", { u8"🖼", TypeFunc<gltfjson::Image>() } },
+      { u8"/samplers", { u8"🖼" } },
       { u8"/samplers/*", { u8"🖼", TypeFunc<gltfjson::Sampler>() } },
+      { u8"/textures", { u8"🖼" } },
       { u8"/textures/*", { u8"🖼", TypeFunc<gltfjson::Texture>() } },
       { u8"/textures/*/sampler", { u8"", SelectSampler } },
       { u8"/textures/*/source", { u8"", SelectTexture } },
@@ -69,6 +87,7 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
         { u8"", FloatSlider{ .Min = 0, .Max = 1, .Default = 0.5f } },
       },
       // mesh/skin
+      { u8"/meshes", { u8"🔺" } },
       // // { "/meshes", JsonGuiMeshList },
       { u8"/meshes/*", { u8"🔺", TypeFunc<gltfjson::Mesh>() } },
       {
@@ -93,7 +112,10 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       // node/scene/animation/camera
       { u8"/nodes", { u8"✳ ", JsonGuiNodes } },
       { u8"/nodes/*", { u8"✳ ", TypeFunc<gltfjson::Node>() } },
+      { u8"/scenes", { u8"✳ " } },
       { u8"/scenes/*", { u8"✳ ", TypeFunc<gltfjson::Scene>() } },
+      { u8"/scene", { u8"✳ " } },
+      { u8"/animations", { u8"▶ " } },
       {
         u8"/animations/*",
         { u8"▶ ", TypeFunc<gltfjson::Animation>() },
@@ -158,27 +180,29 @@ void
 JsonGuiFactoryManager::ShowGui(const gltfjson::Root& root,
                                const gltfjson::Bin& bin)
 {
-  auto node = gltfjson::tree::FindJsonPath(root.m_json, m_selected);
+  auto node = gltfjson::tree::FindJsonPath(root.m_json, m_jsonpath);
 
   if (node) {
     std::visit(NodeTypeVisitor{}, node->Var);
     ImGui::SameLine();
   }
   // json path
-  ImGui::TextUnformatted((const char*)m_selected.c_str());
+  ImGui::TextUnformatted((const char*)m_jsonpath.c_str());
 
-  if (!m_cache) {
-    if (auto match = m_guiFactories.Match(m_selected)) {
-      m_cache = match->Editor(m_selected);
+  if (!m_editor) {
+    auto found = m_cacheMap.find(m_jsonpath);
+    if (found != m_cacheMap.end() && found->second.Editor) {
+      m_editor = found->second.Editor(m_jsonpath);
     } else {
-      m_cache = [](auto& root, auto& bin, auto& node) {
+      // default
+      m_editor = [](auto& root, auto& bin, auto& node) {
         return std::visit(NodeEditorVisitor{}, node->Var);
       };
     }
   }
   if (node) {
-    if (m_cache(root, bin, node)) {
-      RaiseUpdated(m_selected);
+    if (m_editor(root, bin, node)) {
+      RaiseUpdated(m_jsonpath);
     }
   }
 }

@@ -3,23 +3,60 @@
 #include <functional>
 #include <gltfjson/jsonpath.h>
 #include <list>
+#include <string>
 
 class JsonGuiFactoryManager
 {
-  std::u8string m_selected;
   gltfjson::JsonPathMap<JsonGuiItem> m_guiFactories;
-  ShowGuiFunc m_cache;
+
+  struct Cache
+  {
+    std::string Key;
+    std::string Value;
+    CreateGuiFunc Editor;
+  };
+  std::unordered_map<std::u8string, Cache> m_cacheMap;
+  std::u8string m_jsonpath;
+  ShowGuiFunc m_editor;
   using OnUpdatedFunc = std::function<void(std::u8string_view)>;
   std::list<OnUpdatedFunc> m_onUpdatedCallbacks;
 
 public:
   JsonGuiFactoryManager();
 
-  void Clear() { m_cache = {}; }
+  void ClearAll()
+  {
+    m_cacheMap.clear();
+    m_editor = {};
+  }
+
+  void ClearJsonPath(std::u8string_view jsonpath)
+  {
+    if (true /*IsChildOfRoot(jsonpath)*/) {
+      // clear all descendants
+      for (auto it = m_cacheMap.begin(); it != m_cacheMap.end();) {
+        if (it->first.starts_with(jsonpath)) {
+          // clear all descendants
+          it = m_cacheMap.erase(it);
+        } else {
+          ++it;
+        }
+      }
+    } else {
+      for (auto it = m_cacheMap.begin(); it != m_cacheMap.end();) {
+        gltfjson::JsonPath path(it->first);
+        if (path.Match(jsonpath)) {
+          it = m_cacheMap.erase(it);
+        } else {
+          ++it;
+        }
+      }
+    }
+  }
 
   bool IsSelected(std::u8string_view jsonpath) const
   {
-    return jsonpath == m_selected;
+    return jsonpath == m_jsonpath;
   }
 
   bool ShouldOpen(std::u8string_view jsonpath) const
@@ -29,8 +66,8 @@ public:
       return true;
     }
 
-    if (m_selected.starts_with(jsonpath)) {
-      if (m_selected[jsonpath.size()] == u8'/') {
+    if (m_jsonpath.starts_with(jsonpath)) {
+      if (m_jsonpath[jsonpath.size()] == u8'/') {
         return true;
       }
     }
@@ -39,8 +76,8 @@ public:
 
   void Select(std::u8string_view jsonpath)
   {
-    m_selected = jsonpath;
-    m_cache = {};
+    m_jsonpath = jsonpath;
+    m_editor = {};
   }
 
   void ShowGui(const gltfjson::Root& root, const gltfjson::Bin& bin);
@@ -55,5 +92,52 @@ public:
   void OnUpdated(const OnUpdatedFunc& callback)
   {
     m_onUpdatedCallbacks.push_back(callback);
+  }
+
+  inline std::u8string_view GetLastName(std::u8string_view src)
+  {
+    auto pos = src.rfind('/');
+    if (pos != std::string::npos) {
+      return src.substr(pos + 1);
+    } else {
+      return src;
+    }
+  }
+
+  Cache& Get(std::u8string_view jsonpath, const gltfjson::tree::NodePtr& item)
+  {
+    auto found = m_cacheMap.find({ jsonpath.begin(), jsonpath.end() });
+    if (found != m_cacheMap.end()) {
+      return found->second;
+    }
+
+    Cache label;
+    // auto path = gltfjson::JsonPath(jsonpath);
+    // std::u8string icon;
+    auto factory = m_guiFactories.Match(jsonpath);
+    // icon = found->Icon;
+    // }
+    if (factory) {
+      label.Key += gltfjson::from_u8(factory->Icon);
+    }
+    label.Key += gltfjson::from_u8(GetLastName(jsonpath));
+    auto object = item->Object();
+    if (object && object->find(u8"name") != object->end()) {
+      label.Value = "{";
+      label.Value += gltfjson::from_u8((*object)[u8"name"]->U8String());
+      label.Value += "}";
+    } else {
+      std::stringstream ss;
+      ss << *item;
+      label.Value = ss.str();
+    }
+    auto inserted = m_cacheMap.insert({
+      { jsonpath.begin(), jsonpath.end() },
+      label,
+    });
+    if (factory) {
+      inserted.first->second.Editor = factory->Editor;
+    }
+    return inserted.first->second;
   }
 };

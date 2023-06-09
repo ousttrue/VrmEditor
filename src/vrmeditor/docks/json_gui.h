@@ -17,12 +17,10 @@ struct JsonGuiItem
   CreateGuiFunc Editor;
 };
 
-class LabelCacheManager;
 class JsonGuiFactoryManager;
 struct JsonGui
 {
   std::shared_ptr<libvrm::GltfRoot> m_root;
-  std::shared_ptr<LabelCacheManager> m_label;
   std::shared_ptr<JsonGuiFactoryManager> m_inspector;
 
   JsonGui();

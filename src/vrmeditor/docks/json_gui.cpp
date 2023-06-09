@@ -1,6 +1,5 @@
 #include "json_gui.h"
 #include "json_gui_factory.h"
-#include "json_gui_labelcache.h"
 #include <array>
 #include <charconv>
 #include <glr/gl3renderer.h>
@@ -12,8 +11,7 @@
 #include <string_view>
 
 JsonGui::JsonGui()
-  : m_label(new LabelCacheManager)
-  , m_inspector(new JsonGuiFactoryManager)
+  : m_inspector(new JsonGuiFactoryManager)
 {
 
   m_inspector->OnUpdated([](auto jsonpath) {
@@ -24,16 +22,16 @@ JsonGui::JsonGui()
     }
   });
 
-  m_inspector->OnUpdated(std::bind(
-    &LabelCacheManager::ClearCache, m_label.get(), std::placeholders::_1));
+  m_inspector->OnUpdated(std::bind(&JsonGuiFactoryManager::ClearJsonPath,
+                                   m_inspector.get(),
+                                   std::placeholders::_1));
 }
 
 void
 JsonGui::SetScene(const std::shared_ptr<libvrm::GltfRoot>& root)
 {
   m_root = root;
-  m_label->Clear();
-  m_inspector->Clear();
+  m_inspector->ClearAll();
 }
 
 bool
@@ -53,7 +51,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item, std::u8string_view jsonpath)
     node_flags |= ImGuiTreeNodeFlags_Selected;
   }
 
-  auto& label = m_label->Get(item, jsonpath);
+  auto& label = m_inspector->Get(jsonpath, item);
 
   ImGui::TableNextRow();
 
