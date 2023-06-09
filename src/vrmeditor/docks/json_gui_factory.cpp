@@ -30,6 +30,7 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       { u8"/extensions", { u8"⭐" } },
       { u8"/extras", { u8"⭐" } },
       { u8"/extensionsUsed", { u8"⭐" } },
+      { u8"/extensionsRequired", { u8"⭐" } },
       //
       { u8"/extensions/VRMC_vrm", { u8"🌟" } },
       { u8"/extensions/VRMC_vrm/humanoid", { u8"👤" } },
@@ -42,7 +43,7 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       { u8"/extensions/VRM/meta", { u8"📄" } },
       { u8"/extensions/VRM/humanoid", { u8"👤" } },
       { u8"/extensions/VRM/humanoid/humanBones/*", { u8"🦴" } },
-      { u8"/extensions/VRM/humanoid/humanBones/*/node", { u8"⤴ " } },
+      { u8"/extensions/VRM/humanoid/humanBones/*/node", { u8"⚓" } },
       { u8"/extensions/VRM/blendShapeMaster", { u8"😀" } },
       { u8"/extensions/VRM/firstPerson", { u8"👀" } },
       { u8"/extensions/VRM/secondaryAnimation", { u8"🔗" } },
@@ -152,17 +153,18 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       { u8"/skins/*", { u8"📐", TypeFunc<gltfjson::Skin>() } },
       { u8"/skins/*/inverseBindMatrices", { u8"", JsonGuiAccessorReference } },
       // node/scene/animation/camera
-      { u8"/nodes", { u8"✳ ", JsonGuiNodes } },
-      { u8"/nodes/*", { u8"✳ ", TypeFunc<gltfjson::Node>() } },
-      { u8"/scenes", { u8"✳ " } },
-      { u8"/scenes/*", { u8"✳ ", TypeFunc<gltfjson::Scene>() } },
-      { u8"/scene", { u8"✳ " } },
+      { u8"/nodes", { u8"🛞", JsonGuiNodes } },
+      { u8"/nodes/*", { u8"🛞", TypeFunc<gltfjson::Node>() } },
+      { u8"/scenes", { u8"🛞" } },
+      { u8"/scenes/*", { u8"🛞", TypeFunc<gltfjson::Scene>() } },
+      { u8"/scene", { u8"🛞" } },
       { u8"/animations", { u8"▶ " } },
       {
         u8"/animations/*",
         { u8"▶ ", TypeFunc<gltfjson::Animation>() },
       },
-      // { u8"/cameras/*", { u8"🎥", TypeFunc<gltfjson::Camera>() } },
+      { u8"/cameras", { u8"🎥" } },
+      { u8"/cameras/*", { u8"🎥" } },
     })
 {
 }

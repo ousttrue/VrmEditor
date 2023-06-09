@@ -17,11 +17,12 @@ using LoadFunc = std::function<void(const std::filesystem::path& path)>;
 struct Asset
 {
   std::filesystem::path Path;
+  std::u8string Type;
   std::u8string Label;
   ImVec4 Color;
 
   static std::optional<Asset> FromPath(const std::filesystem::path& path);
-  bool Show(float width) const;
+  bool Show() const;
 
   bool operator<(const Asset& b) const noexcept { return Path < b.Path; }
 };
@@ -38,6 +39,7 @@ struct AssetDir
   {
   }
 
+  void ShowGui(const LoadFunc& callback);
   void Update();
   grapho::imgui::Dock CreateDock(const LoadFunc& callback);
 };
