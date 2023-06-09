@@ -58,6 +58,8 @@ if fbx_samples then
   ok = vrmeditor.add_asset_dir("fbx", fbx_samples)
 end
 
+vrmeditor.add_asset_dir("ufbx", "../../ufbx/ufbx/data")
+
 --
 -- bvh
 --

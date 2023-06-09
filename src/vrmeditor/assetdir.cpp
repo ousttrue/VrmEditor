@@ -102,12 +102,12 @@ AssetDir::Update()
 void
 AssetDir::ShowGui(const LoadFunc& callback)
 {
-  if (ImGui::Button(" Open")) {
+  if (ImGui::Button("📁Open")) {
     PLOG_INFO << "open: " << (const char*)Dir.u8string().c_str();
     shell_open(Dir);
   }
   ImGui::SameLine();
-  if (ImGui::Button("󰑓 Reload")) {
+  if (ImGui::Button("🔄Reload")) {
     this->Update();
   }
   ImGui::Separator();

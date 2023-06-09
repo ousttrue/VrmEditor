@@ -5,6 +5,7 @@ srcs = [
     'luahost.cpp',
     'assetdir.cpp',
     'filewatcher.cpp',
+    'fbx_loader.cpp',
     'docks/scene_preview.cpp',
     'docks/gl3renderer_gui.cpp',
     'docks/overlay.cpp',
@@ -56,6 +57,7 @@ executable(
         # remotery_dep,
         plog_dep,
         glr_dep,
+        ufbx_dep,
     ],
     # cpp_args: [
     #     '-DPLOG_ENABLE_WCHAR_INPUT',

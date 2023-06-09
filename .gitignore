@@ -25,6 +25,7 @@
 !/subprojects/minijson_writer
 !/subprojects/ImGuiColorTextEdit
 !/subprojects/remotery
+!/subprojects/ufbx
 /builddir/
 /prefix/
 

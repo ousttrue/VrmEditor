@@ -11,6 +11,7 @@
 #include "docks/scene_selection.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
+#include "fbx_loader.h"
 #include "filewatcher.h"
 #include "fs_util.h"
 #include "humanpose/humanpose_stream.h"
@@ -362,8 +363,9 @@ public:
     if (extension == ".bvh") {
       return humanpose::HumanPoseStream::Instance().LoadMotion(path);
     }
-    // if (extension == ".fbx") {
-    // }
+    if (extension == ".fbx") {
+      return LoadFbx(path);
+    }
     if (extension == ".hdr") {
       return LoadPbr(path);
     }
@@ -407,6 +409,18 @@ public:
       SetScene(std::make_shared<libvrm::GltfRoot>());
       return false;
     }
+  }
+
+  bool LoadFbx(const std::filesystem::path& path)
+  {
+    FbxLoader fbx;
+    if (!fbx.Load(path)) {
+      PLOG_ERROR << fbx.Error();
+      return false;
+    }
+
+    PLOG_DEBUG << "ufbx success: " << path.string();
+    return false;
   }
 
   bool LoadPbr(const std::filesystem::path& hdr)
