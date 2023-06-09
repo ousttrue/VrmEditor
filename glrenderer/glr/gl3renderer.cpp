@@ -314,7 +314,6 @@ class Gl3Renderer
   std::vector<std::shared_ptr<Material>> m_materialMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
-  std::shared_ptr<grapho::gl3::Texture> m_white;
   Material m_shadow;
   Material m_error;
 
@@ -355,14 +354,6 @@ class Gl3Renderer
   Gl3Renderer()
     : m_shaderSource(new ShaderSourceManager)
   {
-    static uint8_t white[] = { 255, 255, 255, 255 };
-    m_white = grapho::gl3::Texture::Create({
-      1,
-      1,
-      grapho::PixelFormat::u8_RGBA,
-      grapho::ColorSpace::sRGB,
-      white,
-    });
   }
 
   ~Gl3Renderer() {}

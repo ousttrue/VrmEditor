@@ -13,6 +13,8 @@ void
 TaskLoadModel(const std::filesystem::path& path);
 void
 TaskLoadPath(const std::filesystem::path& path);
+void
+TaskLoadPbr(const std::filesystem::path& hdr);
 
 void
 SetShaderDir(const std::filesystem::path& path);
@@ -25,8 +27,5 @@ WriteScene(const std::filesystem::path& path);
 
 bool
 AddAssetDir(std::string_view name, const std::filesystem::path& path);
-
-bool
-LoadPbr(const std::filesystem::path& hdr);
 
 } // namespace

@@ -10,7 +10,6 @@
 namespace glr {
 RenderTarget::RenderTarget(const std::shared_ptr<grapho::OrbitView>& view)
   : View(view)
-  , Fbo(new grapho::gl3::Fbo)
 {
   if (!View) {
     View = std::make_shared<grapho::OrbitView>();
@@ -22,6 +21,9 @@ RenderTarget::Begin(int width, int height, const float color[4])
 {
   if (width == 0 || height == 0) {
     return 0;
+  }
+  if (!Fbo) {
+    Fbo = std::make_shared<grapho::gl3::Fbo>();
   }
 
   if (FboTexture) {

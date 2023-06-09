@@ -6,6 +6,10 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+int Platform::Width = 2000;
+int Platform::Height = 1200;
+bool Platform::IsMaximized = false;
+
 static void
 error_callback(int error, const char* description)
 {
@@ -27,10 +31,7 @@ Platform::~Platform()
 }
 
 GLFWwindow*
-Platform::WindowCreate(int width,
-                       int height,
-                       bool is_maximized,
-                       const char* title)
+Platform::WindowCreate(const char* title)
 {
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -62,13 +63,13 @@ Platform::WindowCreate(int width,
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-  m_window = glfwCreateWindow(width, height, title, NULL, NULL);
+  m_window = glfwCreateWindow(Width, Height, title, NULL, NULL);
   if (!m_window) {
     return nullptr;
   }
   glfwSetWindowUserPointer(m_window, this);
 
-  if (is_maximized) {
+  if (IsMaximized) {
     glfwMaximizeWindow(m_window);
   }
   glfwMakeContextCurrent(m_window);
@@ -147,8 +148,13 @@ Platform::IsWindowMaximized() const
 void
 Platform::SetWindowSize(int width, int height, bool maximize)
 {
-  glfwSetWindowSize(m_window, width, height);
-  if (maximize) {
-    glfwMaximizeWindow(m_window);
+  Width = width;
+  Height = height;
+  IsMaximized = maximize;
+  if (m_window) {
+    glfwSetWindowSize(m_window, width, height);
+    if (maximize) {
+      glfwMaximizeWindow(m_window);
+    }
   }
 }

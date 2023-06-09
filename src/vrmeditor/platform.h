@@ -22,6 +22,10 @@ class Platform
   Platform();
 
 public:
+  static int Width;
+  static int Height;
+  static bool IsMaximized;
+
   std::list<OnDropFunc> OnDrops;
   std::string glsl_version;
   ~Platform();
@@ -32,10 +36,7 @@ public:
     static Platform s_instance;
     return s_instance;
   }
-  GLFWwindow* WindowCreate(int width,
-                           int height,
-                           bool is_maximized,
-                           const char* title);
+  GLFWwindow* WindowCreate(const char* title);
   std::optional<FrameInfo> NewFrame();
   void Present();
   void SetTitle(const std::string& title);

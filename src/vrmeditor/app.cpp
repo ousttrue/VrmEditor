@@ -46,9 +46,10 @@ const auto WINDOW_TITLE = "VrmEditor";
 
 std::queue<app::Task> g_tasks;
 
+std::filesystem::path g_ini;
+
 class App
 {
-  std::filesystem::path m_ini;
   std::list<std::shared_ptr<AssetDir>> m_assets;
   std::shared_ptr<HierarchyGui> m_hierarchy;
 
@@ -66,38 +67,20 @@ class App
 public:
   App()
   {
-    auto file = get_home() / ".vrmeditor.ini.lua";
-    m_ini = file.u8string();
     m_selection = std::make_shared<SceneNodeSelection>();
     m_hierarchy = std::make_shared<HierarchyGui>();
     m_staticView = std::make_shared<grapho::OrbitView>();
     m_runtimeView = std::make_shared<grapho::OrbitView>();
     m_timeline = std::make_shared<libvrm::Timeline>();
-    m_env = std::make_shared<glr::RenderingEnv>();
-    m_settings = std::make_shared<glr::ViewSettings>();
-    m_settings->ShowCuber = false;
-
-    auto window =
-      Platform::Instance().WindowCreate(2000, 1200, false, WINDOW_TITLE);
-    if (!window) {
-      throw std::runtime_error("createWindow");
-    }
-    GL_ErrorClear("CreateWindow");
-
-    Platform::Instance().OnDrops.push_back([=](auto& path) { LoadPath(path); });
-
-    glr::Initialize();
-
-    Gui::Instance().SetWindow(window,
-                              Platform::Instance().glsl_version.c_str());
-    m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
-
     auto track = m_timeline->AddTrack("PoseStream", {});
     track->Callbacks.push_back([](auto time, auto repeat) {
       humanpose::HumanPoseStream::Instance().Update(time);
       return true;
     });
-
+    m_env = std::make_shared<glr::RenderingEnv>();
+    m_settings = std::make_shared<glr::ViewSettings>();
+    m_settings->ShowCuber = false;
+    m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
     m_json = std::make_shared<JsonGui>();
   }
 
@@ -165,7 +148,7 @@ public:
 
   void SaveState()
   {
-    std::ofstream os((const char*)m_ini.u8string().c_str());
+    std::ofstream os((const char*)g_ini.u8string().c_str());
 
     os << "-- This file is auto generated ini file.\n\n";
 
@@ -196,17 +179,16 @@ public:
        << (maximize ? "true" : "false") << ")\n\n";
   }
 
-  int Run()
+  int Run(GLFWwindow* window)
   {
+    glr::Initialize();
+    Gui::Instance().SetWindow(window,
+                              Platform::Instance().glsl_version.c_str());
+
     // Create the main instance of Remotery.
     // You need only do this once per program.
     // Remotery* rmt;
     // rmt_CreateGlobalInstance(&rmt);
-
-    GL_ErrorClear("CreateWindow");
-
-    // must after App::App
-    LuaEngine::Instance().DoFile(m_ini);
 
     auto addDock = [](const grapho::imgui::Dock& dock) {
       DockSpaceManager::Instance().AddDock(dock);
@@ -265,6 +247,7 @@ public:
       [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
     });
 
+    GL_ErrorClear("Initialize");
     std::optional<libvrm::Time> lastTime;
     while (true) {
 
@@ -281,6 +264,7 @@ public:
 
       {
         // rmt_ScopedCPUSample(update, 0);
+        GL_ErrorClear("Frame");
 
         ERROR_CHECK;
 
@@ -476,6 +460,12 @@ TaskLoadPath(const std::filesystem::path& path)
 }
 
 void
+TaskLoadPbr(const std::filesystem::path& hdr)
+{
+  PostTask([hdr]() { g_app.LoadPbr(hdr); });
+}
+
+void
 SetShaderDir(const std::filesystem::path& path)
 {
   // g_app.SetShaderDir(path);
@@ -503,6 +493,10 @@ getRelative(const std::filesystem::path& base,
 void
 Run(std::span<const char*> args)
 {
+  auto file = get_home() / ".vrmeditor.ini.lua";
+  g_ini = file.u8string();
+  LuaEngine::Instance().DoFile(g_ini);
+
   auto exe = GetExe();
   auto base = exe.parent_path().parent_path();
   app::SetShaderDir(base / "shaders");
@@ -533,7 +527,15 @@ Run(std::span<const char*> args)
     }
   });
 
-  g_app.Run();
+  auto window = Platform::Instance().WindowCreate(WINDOW_TITLE);
+  if (!window) {
+    throw std::runtime_error("createWindow");
+  }
+  GL_ErrorClear("CreateWindow");
+  Platform::Instance().OnDrops.push_back(
+    [](auto& path) { g_app.LoadPath(path); });
+
+  g_app.Run(window);
 }
 
 bool
@@ -546,12 +548,6 @@ bool
 AddAssetDir(std::string_view name, const std::filesystem::path& path)
 {
   return g_app.AddAssetDir(name, path);
-}
-
-bool
-LoadPbr(const std::filesystem::path& hdr)
-{
-  return g_app.LoadPbr(hdr);
 }
 
 } // namespace
