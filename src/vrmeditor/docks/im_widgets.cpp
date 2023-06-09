@@ -202,34 +202,39 @@ ShowGuiStringEnum(const char* label,
   }
 }
 
-bool
+std::optional<std::array<float, 3>>
 ShowGuiColor3(const char* label,
-              const gltfjson::tree::NodePtr& parentNode,
-              std::u8string_view key,
-              const std::array<float, 3>& defaultColor)
+              const gltfjson::tree::NodePtr& node,
+              const std::array<float, 3>& defaultValue)
 {
-  if (!parentNode) {
-    return false;
-  }
-  auto node = parentNode->Get(key);
-  if (!node) {
-    node = parentNode->Add(key, gltfjson::tree::ArrayValue{});
+  auto value = defaultValue;
+  if (node) {
+    if (auto p = node->Ptr<gltfjson::tree::ArrayValue>()) {
+      if (p->size() == 3) {
+        if (auto p0 = (*p)[0]->Ptr<float>()) {
+          if (auto p1 = (*p)[1]->Ptr<float>()) {
+            if (auto p2 = (*p)[2]->Ptr<float>()) {
+              value = { *p0, *p1, *p2 };
+            }
+          }
+        }
+      }
+    }
   }
 
-  auto values = FillArray<3>(node, defaultColor);
-  if (ImGui::ColorEdit4(label, &values[0])) {
-    node->Set(values);
-    return true;
+  if (ImGui::ColorEdit3(label, &value[0])) {
+    if (node) {
+      node->Set(value);
+    }
+    return value;
   } else {
-    return false;
+    return {};
   }
 }
 
 std::optional<std::array<float, 4>>
 ShowGuiColor4(const char* label,
               const gltfjson::tree::NodePtr& node,
-              // const gltfjson::tree::NodePtr& parentNode,
-              // std::u8string_view key,
               const std::array<float, 4>& defaultValue)
 {
   auto value = defaultValue;
@@ -253,7 +258,7 @@ ShowGuiColor4(const char* label,
     if (node) {
       node->Set(value);
     }
-    return { value };
+    return value;
   } else {
     return {};
   }

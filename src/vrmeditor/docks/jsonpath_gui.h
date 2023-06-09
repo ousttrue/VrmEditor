@@ -58,6 +58,26 @@ struct FloatSlider
   }
 };
 
+struct RgbPicker
+{
+  std::array<float, 3> Default = { 1, 1, 1 };
+
+  ShowGuiFunc operator()(std::u8string_view jsonpath)
+  {
+    auto view = gltfjson::JsonPath(jsonpath).Back();
+    std::u8string label{ view.begin(), view.end() };
+    return [label, def = Default](const gltfjson::Root& root,
+                                  const gltfjson::Bin& bin,
+                                  const gltfjson::tree::NodePtr& node) {
+      if (ShowGuiColor3((const char*)label.c_str(), node, def)) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+  }
+};
+
 struct RgbaPicker
 {
   std::array<float, 4> Default = { 1, 1, 1, 1 };
@@ -88,8 +108,8 @@ struct StringEnum
     std::u8string label{ view.begin(), view.end() };
     // std::span<const char*> values = Values;
     return [label, &values = Values](const gltfjson::Root& root,
-                           const gltfjson::Bin& bin,
-                           const gltfjson::tree::NodePtr& node) {
+                                     const gltfjson::Bin& bin,
+                                     const gltfjson::tree::NodePtr& node) {
       if (ShowGuiStringEnum((const char*)label.c_str(), node, values)) {
         return true;
       } else {

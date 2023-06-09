@@ -147,11 +147,22 @@ ShowGuiStringEnum(const char* label,
 }
 
 // emissive
-bool
+std::optional<std::array<float, 3>>
+ShowGuiColor3(const char* label,
+              const gltfjson::tree::NodePtr& node,
+              const std::array<float, 3>& defaultColor);
+
+inline bool
 ShowGuiColor3(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
               std::u8string_view key,
-              const std::array<float, 3>& defaultColor);
+              const std::array<float, 3>& defaultColor)
+{
+  return ParentKey(
+    label, parentNode, key, [defaultColor](auto label, auto node) {
+      return ShowGuiColor3(label, node, defaultColor);
+    });
+}
 
 // baseColor
 std::optional<std::array<float, 4>>

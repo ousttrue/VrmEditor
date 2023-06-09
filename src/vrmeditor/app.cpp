@@ -236,10 +236,6 @@ public:
       "Json",
       [json = m_json, indent]() mutable { json->ShowSelector(indent); },
     });
-    addDock({
-      "Json-Inspector",
-      [json = m_json]() mutable { json->ShowSelected(); },
-    });
     addDock({ "3D-View" });
 
     addDock({
