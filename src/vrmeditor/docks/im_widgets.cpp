@@ -130,11 +130,10 @@ ShowGuiSliderFloat(const char* label,
                    float max,
                    float defaultValue)
 {
+  assert(node);
   float value = defaultValue;
-  if (node) {
-    if (auto p = node->Ptr<float>()) {
-      value = *p;
-    }
+  if (auto p = node->Ptr<float>()) {
+    value = *p;
   }
 
   if (ImGui::SliderFloat(label, &value, min, max)) {
@@ -147,20 +146,33 @@ ShowGuiSliderFloat(const char* label,
   }
 }
 
-bool
+std::optional<std::u8string>
 ShowGuiStringEnum(const char* label,
-                  const gltfjson::tree::NodePtr& parentNode,
-                  std::u8string_view key,
+                  const gltfjson::tree::NodePtr& node,
+                  // const gltfjson::tree::NodePtr& parentNode,
+                  // std::u8string_view key,
                   std::span<const char*> items)
 {
-  if (!parentNode) {
-    return false;
-  }
-  auto node = parentNode->Get(key);
-  if (!node) {
-    node = parentNode->Add(key, u8"");
-  }
+  // if (!parentNode) {
+  //   return false;
+  // }
+  // auto node = parentNode->Get(key);
+  // if (!node) {
+  //   node = parentNode->Add(key, u8"");
+  // }
 
+  // int value = 0;
+  // if (node) {
+  //   if (auto p = node->Ptr<std::u8string>()) {
+  //     for (int i = 0; i < items.size(); ++i) {
+  //       if (*p == (const char8_t*)items[i]) {
+  //         value = i;
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }
+  assert(node);
   auto p = node->Ptr<std::u8string>();
   if (!p) {
     node->Var = u8"";
@@ -182,10 +194,11 @@ ShowGuiStringEnum(const char* label,
   }
 
   if (grapho::imgui::GenericCombo<int>(label, &i, combo)) {
-    *p = gltfjson::to_u8(std::get<1>(combo[i]));
-    return true;
+    auto value = std::get<1>(combo[i]);
+    *p = gltfjson::to_u8(value);
+    return std::u8string((const char8_t*)value.data(), value.size());
   } else {
-    return false;
+    return {};
   }
 }
 
@@ -212,26 +225,37 @@ ShowGuiColor3(const char* label,
   }
 }
 
-bool
+std::optional<std::array<float, 4>>
 ShowGuiColor4(const char* label,
-              const gltfjson::tree::NodePtr& parentNode,
-              std::u8string_view key,
-              const std::array<float, 4>& defaultColor)
+              const gltfjson::tree::NodePtr& node,
+              // const gltfjson::tree::NodePtr& parentNode,
+              // std::u8string_view key,
+              const std::array<float, 4>& defaultValue)
 {
-  if (!parentNode) {
-    return false;
-  }
-  auto node = parentNode->Get(key);
-  if (!node) {
-    node = parentNode->Add(key, gltfjson::tree::ArrayValue{});
+  auto value = defaultValue;
+  if (node) {
+    if (auto p = node->Ptr<gltfjson::tree::ArrayValue>()) {
+      if (p->size() == 4) {
+        if (auto p0 = (*p)[0]->Ptr<float>()) {
+          if (auto p1 = (*p)[1]->Ptr<float>()) {
+            if (auto p2 = (*p)[2]->Ptr<float>()) {
+              if (auto p3 = (*p)[3]->Ptr<float>()) {
+                value = { *p0, *p1, *p2, *p3 };
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
-  auto values = FillArray<4>(node, defaultColor);
-  if (ImGui::ColorEdit4(label, &values[0])) {
-    node->Set(values);
-    return true;
+  if (ImGui::ColorEdit4(label, &value[0])) {
+    if (node) {
+      node->Set(value);
+    }
+    return { value };
   } else {
-    return false;
+    return {};
   }
 }
 

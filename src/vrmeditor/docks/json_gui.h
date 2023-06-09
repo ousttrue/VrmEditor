@@ -14,7 +14,8 @@ using CreateGuiFunc = std::function<ShowGuiFunc(std::u8string_view jsonpath)>;
 struct JsonGuiItem
 {
   std::u8string Icon;
-  CreateGuiFunc Editor;
+  CreateGuiFunc Factory;
+  std::string Description;
 };
 
 class JsonGuiFactoryManager;

@@ -41,10 +41,31 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       { u8"/extensions/VRM", { u8"🌟" } },
       { u8"/extensions/VRM/meta", { u8"📄" } },
       { u8"/extensions/VRM/humanoid", { u8"👤" } },
+      { u8"/extensions/VRM/humanoid/humanBones/*", { u8"🦴" } },
+      { u8"/extensions/VRM/humanoid/humanBones/*/node", { u8"⤴ " } },
       { u8"/extensions/VRM/blendShapeMaster", { u8"😀" } },
       { u8"/extensions/VRM/firstPerson", { u8"👀" } },
       { u8"/extensions/VRM/secondaryAnimation", { u8"🔗" } },
-      { u8"/extensions/VRM/materialProperties", { u8"🎨" } },
+      { u8"/extensions/VRM/materialProperties", { u8"💎" } },
+      { u8"/extensions/VRM/materialProperties/*", { u8"💎" } },
+      {
+        u8"/extensions/VRM/materialProperties/*/vectorProperties/_Color",
+        { u8"💎", RgbaPicker{} },
+      },
+      {
+        u8"/extensions/VRM/materialProperties/*/vectorProperties/_ShadeColor",
+        { u8"💎", RgbaPicker{} },
+      },
+      {
+        u8"/extensions/VRM/materialProperties/*/vectorProperties/"
+        u8"_EmissionColor",
+        { u8"💎", RgbaPicker{} },
+      },
+      {
+        u8"/extensions/VRM/materialProperties/*/vectorProperties/"
+        u8"_OutlineColor",
+        { u8"💎", RgbaPicker{} },
+      },
       // // { "/extensions/VRM/secondaryAnimation/colliderGroups/*/colliders",
       // //   JsonGuiVrm0ColliderList },
       //
@@ -65,14 +86,14 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       //   TypeFunc<gltfjson::vrm0::Material>() },
       { u8"/asset", { u8"📄", TypeFunc<gltfjson::Asset>() } },
       // buffer/bufferView/accessor
-      { u8"/buffers", { u8"🔢" } },
-      { u8"/buffers/*", { u8"🔢", TypeFunc<gltfjson::Buffer>() } },
-      { u8"/bufferViews", { u8"🔢" } },
-      { u8"/bufferViews/*", { u8"🔢", TypeFunc<gltfjson::BufferView>() } },
-      { u8"/accessors", { u8"🔢", JsonGuiAccessorList } },
-      { u8"/accessors/*", { u8"🔢", TypeFunc<gltfjson::Accessor>() } },
+      { u8"/buffers", { u8"📦" } },
+      { u8"/buffers/*", { u8"📦", TypeFunc<gltfjson::Buffer>() } },
+      { u8"/bufferViews", { u8"📦" } },
+      { u8"/bufferViews/*", { u8"📦", TypeFunc<gltfjson::BufferView>() } },
+      { u8"/accessors", { u8"📦", JsonGuiAccessorList } },
+      { u8"/accessors/*", { u8"📦", TypeFunc<gltfjson::Accessor>() } },
       // image/sampelr/texture/material
-      // { u8"/images", { u8"🖼", JsonGuiImageList } },
+      { u8"/images", { u8"🖼" } },
       { u8"/images/*", { u8"🖼", TypeFunc<gltfjson::Image>() } },
       { u8"/samplers", { u8"🖼" } },
       { u8"/samplers/*", { u8"🖼", TypeFunc<gltfjson::Sampler>() } },
@@ -80,16 +101,37 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
       { u8"/textures/*", { u8"🖼", TypeFunc<gltfjson::Texture>() } },
       { u8"/textures/*/sampler", { u8"", SelectSampler } },
       { u8"/textures/*/source", { u8"", SelectTexture } },
-      // { u8"/materials", { u8"🎨", JsonGuiMaterialList } },
-      { u8"/materials/*", { u8"🎨", TypeFunc<gltfjson::Material>() } },
+      { u8"/materials", { u8"💎" } },
+      { u8"/materials/*",
+        { u8"💎",
+          TypeFunc<gltfjson::Material>(),
+          "https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/"
+          "schema/material.schema.json" } },
+      {
+        u8"/materials/*/pbrMetallicRoughness/baseColorFactor",
+        { u8"🎨",
+          RgbaPicker{ .Default = { 1, 1, 1, 1 } },
+          "The factors for the base color of the material. This value defines "
+          "linear multipliers for the sampled texels of the base color "
+          "texture." },
+      },
+      {
+        u8"/materials/*/alphaMode",
+        {
+          u8"👻",
+          StringEnum{ .Values = { "OPAQUE", "MASK", "BLEND" } },
+        },
+      },
       {
         u8"/materials/*/alphaCutoff",
-        { u8"", FloatSlider{ .Min = 0, .Max = 1, .Default = 0.5f } },
+        { u8"👻",
+          FloatSlider{ .Min = 0, .Max = 1, .Default = 0.5f },
+          "The alpha cutoff value of the material." },
       },
       // mesh/skin
-      { u8"/meshes", { u8"🔺" } },
+      { u8"/meshes", { u8"📐" } },
       // // { "/meshes", JsonGuiMeshList },
-      { u8"/meshes/*", { u8"🔺", TypeFunc<gltfjson::Mesh>() } },
+      { u8"/meshes/*", { u8"📐", TypeFunc<gltfjson::Mesh>() } },
       {
         u8"/meshes/*/primitives/*",
         { u8"", TypeFunc<gltfjson::MeshPrimitive>() },
@@ -106,8 +148,8 @@ JsonGuiFactoryManager::JsonGuiFactoryManager()
         { u8"", JsonGuiAccessorReference } },
       { u8"/meshes/*/primitives/*/attributes/WEIGHTS_0",
         { u8"", JsonGuiAccessorReference } },
-      // { u8"/skins", { u8"🔺", JsonGuiSkinList } },
-      { u8"/skins/*", { u8"🔺", TypeFunc<gltfjson::Skin>() } },
+      { u8"/skins", { u8"📐" } },
+      { u8"/skins/*", { u8"📐", TypeFunc<gltfjson::Skin>() } },
       { u8"/skins/*/inverseBindMatrices", { u8"", JsonGuiAccessorReference } },
       // node/scene/animation/camera
       { u8"/nodes", { u8"✳ ", JsonGuiNodes } },
@@ -191,8 +233,9 @@ JsonGuiFactoryManager::ShowGui(const gltfjson::Root& root,
 
   if (!m_editor) {
     auto found = m_cacheMap.find(m_jsonpath);
-    if (found != m_cacheMap.end() && found->second.Editor) {
-      m_editor = found->second.Editor(m_jsonpath);
+    if (found != m_cacheMap.end() && found->second.Factory) {
+      m_current = found->second;
+      m_editor = found->second.Factory(m_jsonpath);
     } else {
       // default
       m_editor = [](auto& root, auto& bin, auto& node) {
@@ -200,6 +243,11 @@ JsonGuiFactoryManager::ShowGui(const gltfjson::Root& root,
       };
     }
   }
+
+  if (m_current.Description.size()) {
+    ImGui::TextWrapped("%s", m_current.Description.c_str());
+  }
+
   if (node) {
     if (m_editor(root, bin, node)) {
       RaiseUpdated(m_jsonpath);

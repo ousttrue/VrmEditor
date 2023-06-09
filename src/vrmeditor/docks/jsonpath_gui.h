@@ -1,8 +1,11 @@
 #pragma once
 #include "im_widgets.h"
 #include "json_gui.h"
+#include <array>
 #include <gltfjson.h>
 #include <gltfjson/jsonpath.h>
+#include <span>
+#include <vector>
 
 inline ShowGuiFunc
 SelectSampler(std::u8string_view jsonpath)
@@ -47,6 +50,47 @@ struct FloatSlider
              const gltfjson::Bin& bin,
              const gltfjson::tree::NodePtr& node) {
       if (ShowGuiSliderFloat((const char*)label.c_str(), node, min, max, def)) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+  }
+};
+
+struct RgbaPicker
+{
+  std::array<float, 4> Default = { 1, 1, 1, 1 };
+
+  ShowGuiFunc operator()(std::u8string_view jsonpath)
+  {
+    auto view = gltfjson::JsonPath(jsonpath).Back();
+    std::u8string label{ view.begin(), view.end() };
+    return [label, def = Default](const gltfjson::Root& root,
+                                  const gltfjson::Bin& bin,
+                                  const gltfjson::tree::NodePtr& node) {
+      if (ShowGuiColor4((const char*)label.c_str(), node, def)) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+  }
+};
+
+struct StringEnum
+{
+  std::vector<const char*> Values;
+
+  ShowGuiFunc operator()(std::u8string_view jsonpath)
+  {
+    auto view = gltfjson::JsonPath(jsonpath).Back();
+    std::u8string label{ view.begin(), view.end() };
+    // std::span<const char*> values = Values;
+    return [label, &values = Values](const gltfjson::Root& root,
+                           const gltfjson::Bin& bin,
+                           const gltfjson::tree::NodePtr& node) {
+      if (ShowGuiStringEnum((const char*)label.c_str(), node, values)) {
         return true;
       } else {
         return false;

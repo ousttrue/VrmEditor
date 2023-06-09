@@ -53,7 +53,7 @@ ParentKey(const char* label,
   auto updated = showGui(label, node);
   if (updated) {
     if (node) {
-      node->Var = *updated;
+      node->Set(*updated);
     } else {
       parentNode->Add(key, *updated);
     }
@@ -128,11 +128,23 @@ ShowGuiEnum(const char* label,
   }
 }
 
-bool
+std::optional<std::u8string>
+ShowGuiStringEnum(const char* label,
+                  const gltfjson::tree::NodePtr& node,
+                  // const gltfjson::tree::NodePtr& parentNode,
+                  // std::u8string_view key,
+                  std::span<const char*> items);
+
+inline bool
 ShowGuiStringEnum(const char* label,
                   const gltfjson::tree::NodePtr& parentNode,
                   std::u8string_view key,
-                  std::span<const char*> items);
+                  std::span<const char*> items)
+{
+  return ParentKey(label, parentNode, key, [items](auto label, auto node) {
+    return ShowGuiStringEnum(label, node, items);
+  });
+}
 
 // emissive
 bool
@@ -142,11 +154,22 @@ ShowGuiColor3(const char* label,
               const std::array<float, 3>& defaultColor);
 
 // baseColor
-bool
+std::optional<std::array<float, 4>>
+ShowGuiColor4(const char* label,
+              const gltfjson::tree::NodePtr& node,
+              const std::array<float, 4>& defaultValue);
+
+inline bool
 ShowGuiColor4(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
               std::u8string_view key,
-              const std::array<float, 4>& defaultColor);
+              const std::array<float, 4>& defaultColor)
+{
+  return ParentKey(
+    label, parentNode, key, [defaultColor](auto label, auto node) {
+      return ShowGuiColor4(label, node, defaultColor);
+    });
+}
 
 bool
 ShowGuiFloat3(const char* label,

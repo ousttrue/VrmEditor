@@ -13,10 +13,12 @@ class JsonGuiFactoryManager
   {
     std::string Key;
     std::string Value;
-    CreateGuiFunc Editor;
+    CreateGuiFunc Factory;
+    std::string Description;
   };
   std::unordered_map<std::u8string, Cache> m_cacheMap;
   std::u8string m_jsonpath;
+  Cache m_current;
   ShowGuiFunc m_editor;
   using OnUpdatedFunc = std::function<void(std::u8string_view)>;
   std::list<OnUpdatedFunc> m_onUpdatedCallbacks;
@@ -27,6 +29,7 @@ public:
   void ClearAll()
   {
     m_cacheMap.clear();
+    m_current = {};
     m_editor = {};
   }
 
@@ -77,6 +80,7 @@ public:
   void Select(std::u8string_view jsonpath)
   {
     m_jsonpath = jsonpath;
+    m_current = {};
     m_editor = {};
   }
 
@@ -104,6 +108,16 @@ public:
     }
   }
 
+  struct NodeTypeIconVisitor
+  {
+    const char* operator()(std::monostate) { return ""; }
+    const char* operator()(bool) { return "✅"; }
+    const char* operator()(float) { return "🔢"; }
+    const char* operator()(const std::u8string&) { return "📄"; }
+    const char* operator()(const gltfjson::tree::ArrayValue&) { return "[]"; }
+    const char* operator()(const gltfjson::tree::ObjectValue&) { return "{}"; }
+  };
+
   Cache& Get(std::u8string_view jsonpath, const gltfjson::tree::NodePtr& item)
   {
     auto found = m_cacheMap.find({ jsonpath.begin(), jsonpath.end() });
@@ -111,33 +125,34 @@ public:
       return found->second;
     }
 
-    Cache label;
+    Cache cache;
     // auto path = gltfjson::JsonPath(jsonpath);
     // std::u8string icon;
     auto factory = m_guiFactories.Match(jsonpath);
     // icon = found->Icon;
     // }
     if (factory) {
-      label.Key += gltfjson::from_u8(factory->Icon);
+      cache.Key += gltfjson::from_u8(factory->Icon);
+      cache.Factory = factory->Factory;
+      cache.Description = factory->Description;
+    } else {
+      cache.Key += std::visit(NodeTypeIconVisitor{}, item->Var);
     }
-    label.Key += gltfjson::from_u8(GetLastName(jsonpath));
+    cache.Key += gltfjson::from_u8(GetLastName(jsonpath));
     auto object = item->Object();
     if (object && object->find(u8"name") != object->end()) {
-      label.Value = "{";
-      label.Value += gltfjson::from_u8((*object)[u8"name"]->U8String());
-      label.Value += "}";
+      cache.Value = "{";
+      cache.Value += gltfjson::from_u8((*object)[u8"name"]->U8String());
+      cache.Value += "}";
     } else {
       std::stringstream ss;
       ss << *item;
-      label.Value = ss.str();
+      cache.Value = ss.str();
     }
     auto inserted = m_cacheMap.insert({
       { jsonpath.begin(), jsonpath.end() },
-      label,
+      cache,
     });
-    if (factory) {
-      inserted.first->second.Editor = factory->Editor;
-    }
     return inserted.first->second;
   }
 };
