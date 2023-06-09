@@ -221,7 +221,7 @@ Gl3RendererGui::ShowShaderVariables(Material& factory)
         auto& u = shader->Uniforms[i];
         if (u.Location == -1) {
           ImGui::BeginDisabled(true);
-          ImGui::PushStyleColor(ImGuiCol_Text, grapho::imgui::gray);
+          ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::gray);
         }
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("%d", i);

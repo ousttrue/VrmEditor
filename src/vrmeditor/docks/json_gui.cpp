@@ -189,7 +189,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   bool node_open = false;
   if (item) {
     if (Has(prop.Flags, JsonPropFlags::Unknown)) {
-      ImGui::PushStyleColor(ImGuiCol_Text, grapho::imgui::yellow);
+      ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::yellow);
     }
     node_open = ImGui::TreeNodeEx((void*)(intptr_t)item.get(),
                                   node_flags,
@@ -199,7 +199,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
       ImGui::PopStyleColor();
     }
   } else {
-    ImGui::PushStyleColor(ImGuiCol_Text, grapho::imgui::gray);
+    ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::gray);
     // ImGui::TextUnformatted((const char*)label.Key.c_str());
     node_open = ImGui::TreeNodeEx((const char*)jsonpath.data(),
                                   node_flags,
