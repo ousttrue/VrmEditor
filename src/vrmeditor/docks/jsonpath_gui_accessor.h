@@ -1,13 +1,13 @@
 #pragma once
-#include "showgui.h"
+#include "json_gui.h"
 #include <array>
+#include <boneskin/types.h>
 #include <gltfjson.h>
 #include <gltfjson/bin.h>
 #include <gltfjson/jsonpath.h>
 #include <grapho/imgui/widgets.h>
 #include <optional>
 #include <string>
-#include <boneskin/types.h>
 
 static std::optional<int>
 GetIndex(std::u8string_view jsonpath)
@@ -226,8 +226,7 @@ JsonGuiAccessorReference(std::u8string_view jsonpath)
             const gltfjson::tree::NodePtr& node) {
     auto accessor_index = (int)*node->Ptr<float>();
     auto accessor = root.Accessors[accessor_index];
-    auto component_type =
-      (gltfjson::ComponentTypes)*accessor.ComponentType();
+    auto component_type = (gltfjson::ComponentTypes)*accessor.ComponentType();
     auto type = accessor.Type();
     if (component_type == gltfjson::ComponentTypes::UNSIGNED_SHORT) {
       // ushort
@@ -336,9 +335,9 @@ JsonGuiAccessorList(std::u8string_view jsonpath)
           //    << *accessor.Count() << "]";
           items.push_back({
             "TYPE",
-            static_cast<int>(*gltfjson::component_size(
-                               (gltfjson::ComponentTypes)*component) *
-                             *gltfjson::type_count(type) * count),
+            static_cast<int>(
+              *gltfjson::component_size((gltfjson::ComponentTypes)*component) *
+              *gltfjson::type_count(type) * count),
           });
         }
         {

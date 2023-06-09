@@ -1,6 +1,5 @@
 #pragma once
 #include "json_gui.h"
-#include "showgui.h"
 #include <grapho/imgui/widgets.h>
 
 // inline ShowGuiFunc

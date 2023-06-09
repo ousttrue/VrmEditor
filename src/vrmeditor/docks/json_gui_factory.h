@@ -1,5 +1,5 @@
 #pragma once
-#include "showgui.h"
+#include "json_gui.h"
 #include <functional>
 #include <gltfjson/jsonpath.h>
 #include <list>
@@ -7,7 +7,7 @@
 class JsonGuiFactoryManager
 {
   std::u8string m_selected;
-  gltfjson::JsonPathMap<CreateGuiFunc> m_guiFactories;
+  gltfjson::JsonPathMap<JsonGuiItem> m_guiFactories;
   ShowGuiFunc m_cache;
   using OnUpdatedFunc = std::function<void(std::u8string_view)>;
   std::list<OnUpdatedFunc> m_onUpdatedCallbacks;
@@ -43,8 +43,7 @@ public:
     m_cache = {};
   }
 
-  void ShowGui(const gltfjson::Root& root,
-               const gltfjson::Bin& bin);
+  void ShowGui(const gltfjson::Root& root, const gltfjson::Bin& bin);
 
   void RaiseUpdated(std::u8string_view jsonpath)
   {

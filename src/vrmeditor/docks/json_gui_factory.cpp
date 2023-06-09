@@ -27,76 +27,78 @@ TypeFunc()
 
 JsonGuiFactoryManager::JsonGuiFactoryManager()
   : m_guiFactories({
-      { u8"/asset", TypeFunc<gltfjson::Asset>() },
-      // buffer/bufferView/accessor
-      { u8"/buffers/*", TypeFunc<gltfjson::Buffer>() },
-      { u8"/bufferViews/*", TypeFunc<gltfjson::BufferView>() },
-      { u8"/accessors/*", TypeFunc<gltfjson::Accessor>() },
-      // image/sampelr/texture/material
-      { u8"/images/*", TypeFunc<gltfjson::Image>() },
-      { u8"/samplers/*", TypeFunc<gltfjson::Sampler>() },
-      { u8"/textures/*", TypeFunc<gltfjson::Texture>() },
-      { u8"/textures/*/sampler", SelectSampler },
-      { u8"/textures/*/source", SelectTexture },
-      { u8"/materials/*", TypeFunc<gltfjson::Material>() },
-      { u8"/materials/*/alphaCutoff",
-        FloatSlider{ .Min = 0, .Max = 1, .Default = 0.5f } },
-      // mesh/skin
-      { u8"/meshes/*", TypeFunc<gltfjson::Mesh>() },
-      { u8"/meshes/*/primitives/*", TypeFunc<gltfjson::MeshPrimitive>() },
-      { u8"/skins/*", TypeFunc<gltfjson::Skin>() },
-      // node/scene/animation/camera
-      { u8"/nodes", JsonGuiNodes },
-      { u8"/nodes/*", TypeFunc<gltfjson::Node>() },
-      { u8"/scenes/*", TypeFunc<gltfjson::Scene>() },
-      { u8"/animations/*", TypeFunc<gltfjson::Animation>() },
-      // { u8"/cameras/*", TypeFunc<gltfjson::Camera>() },
-
-      { u8"/accessors", JsonGuiAccessorList },
-      { u8"/meshes/*/primitives/*/indices", JsonGuiAccessorReference },
-      { u8"/meshes/*/primitives/*/attributes/POSITION",
-        JsonGuiAccessorReference },
-      { u8"/meshes/*/primitives/*/attributes/NORMAL",
-        JsonGuiAccessorReference },
-      { u8"/meshes/*/primitives/*/attributes/TEXCOORD_0",
-        JsonGuiAccessorReference },
-      { u8"/meshes/*/primitives/*/attributes/JOINTS_0",
-        JsonGuiAccessorReference },
-      { u8"/meshes/*/primitives/*/attributes/WEIGHTS_0",
-        JsonGuiAccessorReference },
-      { u8"/skins/*/inverseBindMatrices", JsonGuiAccessorReference },
-
-      // { "/skins", JsonGuiSkinList },
-      // { "/images", JsonGuiImageList },
-      // { "/materials", JsonGuiMaterialList },
-      // { "/meshes", JsonGuiMeshList },
-      // { "/nodes", JsonGuiNodeList },
-      // { "/extensions/VRM/secondaryAnimation/colliderGroups/*/colliders",
-      //   JsonGuiVrm0ColliderList },
-
-      { u8"/extensions/VRM", TypeFunc<gltfjson::vrm0::VRM>() },
-      { u8"/extensions/VRM/meta", TypeFunc<gltfjson::vrm0::Meta>() },
-      { u8"/extensions/VRM/humanoid", TypeFunc<gltfjson::vrm0::Humanoid>() },
-      { u8"/extensions/VRM/firstPerson",
-        TypeFunc<gltfjson::vrm0::FirstPerson>() },
-      { u8"/extensions/VRM/blendShapeMaster/blendShapeGroups/*",
-        TypeFunc<gltfjson::vrm0::BlendShapeGroup>() },
-      { u8"/extensions/VRM/secondaryAnimation/boneGroups",
-        JsonGuiVrm0SpringList },
-      { u8"/extensions/VRM/secondaryAnimation/boneGroups/*",
-        TypeFunc<gltfjson::vrm0::Spring>() },
-      { u8"/extensions/VRM/secondaryAnimation/colliderGroups/*",
-        TypeFunc<gltfjson::vrm0::ColliderGroup>() },
-      { u8"/extensions/VRM/materialProperties/*",
-        TypeFunc<gltfjson::vrm0::Material>() },
-
-      // },
       // { "/extensions/VRMC_springBone/springs/*/joints",
       // JsonGuiVrm1SpringJoints
       // },
       // { "/extensions/VRMC_springBone/colliders", JsonGuiVrm1SpringColliders
-      // },
+      // // { "/extensions/VRM/secondaryAnimation/colliderGroups/*/colliders",
+      // //   JsonGuiVrm0ColliderList },
       //
+      // { u8"/extensions/VRM", TypeFunc<gltfjson::vrm0::VRM>() },
+      // { u8"/extensions/VRM/meta", TypeFunc<gltfjson::vrm0::Meta>() },
+      // { u8"/extensions/VRM/humanoid", TypeFunc<gltfjson::vrm0::Humanoid>() },
+      // { u8"/extensions/VRM/firstPerson",
+      //   TypeFunc<gltfjson::vrm0::FirstPerson>() },
+      // { u8"/extensions/VRM/blendShapeMaster/blendShapeGroups/*",
+      //   TypeFunc<gltfjson::vrm0::BlendShapeGroup>() },
+      // { u8"/extensions/VRM/secondaryAnimation/boneGroups",
+      //   JsonGuiVrm0SpringList },
+      // { u8"/extensions/VRM/secondaryAnimation/boneGroups/*",
+      //   TypeFunc<gltfjson::vrm0::Spring>() },
+      // { u8"/extensions/VRM/secondaryAnimation/colliderGroups/*",
+      //   TypeFunc<gltfjson::vrm0::ColliderGroup>() },
+      // { u8"/extensions/VRM/materialProperties/*",
+      //   TypeFunc<gltfjson::vrm0::Material>() },
+      { u8"/asset", { u8"📄", TypeFunc<gltfjson::Asset>() } },
+      // buffer/bufferView/accessor
+      { u8"/buffers/*", { u8"🔢", TypeFunc<gltfjson::Buffer>() } },
+      { u8"/bufferViews/*", { u8"🔢", TypeFunc<gltfjson::BufferView>() } },
+      { u8"/accessors", { u8"🔢", JsonGuiAccessorList } },
+      { u8"/accessors/*", { u8"🔢", TypeFunc<gltfjson::Accessor>() } },
+      // image/sampelr/texture/material
+      // { u8"/images", { u8"🖼", JsonGuiImageList } },
+      { u8"/images/*", { u8"🖼", TypeFunc<gltfjson::Image>() } },
+      { u8"/samplers/*", { u8"🖼", TypeFunc<gltfjson::Sampler>() } },
+      { u8"/textures/*", { u8"🖼", TypeFunc<gltfjson::Texture>() } },
+      { u8"/textures/*/sampler", { u8"", SelectSampler } },
+      { u8"/textures/*/source", { u8"", SelectTexture } },
+      // { u8"/materials", { u8"🎨", JsonGuiMaterialList } },
+      { u8"/materials/*", { u8"🎨", TypeFunc<gltfjson::Material>() } },
+      {
+        u8"/materials/*/alphaCutoff",
+        { u8"", FloatSlider{ .Min = 0, .Max = 1, .Default = 0.5f } },
+      },
+      // mesh/skin
+      // // { "/meshes", JsonGuiMeshList },
+      { u8"/meshes/*", { u8"🔺", TypeFunc<gltfjson::Mesh>() } },
+      {
+        u8"/meshes/*/primitives/*",
+        { u8"", TypeFunc<gltfjson::MeshPrimitive>() },
+      },
+      { u8"/meshes/*/primitives/*/indices",
+        { u8"", JsonGuiAccessorReference } },
+      { u8"/meshes/*/primitives/*/attributes/POSITION",
+        { u8"", JsonGuiAccessorReference } },
+      { u8"/meshes/*/primitives/*/attributes/NORMAL",
+        { u8"", JsonGuiAccessorReference } },
+      { u8"/meshes/*/primitives/*/attributes/TEXCOORD_0",
+        { u8"", JsonGuiAccessorReference } },
+      { u8"/meshes/*/primitives/*/attributes/JOINTS_0",
+        { u8"", JsonGuiAccessorReference } },
+      { u8"/meshes/*/primitives/*/attributes/WEIGHTS_0",
+        { u8"", JsonGuiAccessorReference } },
+      // { u8"/skins", { u8"🔺", JsonGuiSkinList } },
+      { u8"/skins/*", { u8"🔺", TypeFunc<gltfjson::Skin>() } },
+      { u8"/skins/*/inverseBindMatrices", { u8"", JsonGuiAccessorReference } },
+      // node/scene/animation/camera
+      { u8"/nodes", { u8"✳ ", JsonGuiNodes } },
+      { u8"/nodes/*", { u8"✳ ", TypeFunc<gltfjson::Node>() } },
+      { u8"/scenes/*", { u8"✳ ", TypeFunc<gltfjson::Scene>() } },
+      {
+        u8"/animations/*",
+        { u8"▶ ", TypeFunc<gltfjson::Animation>() },
+      },
+      // { u8"/cameras/*", { u8"🎥", TypeFunc<gltfjson::Camera>() } },
     })
 {
 }
@@ -167,7 +169,7 @@ JsonGuiFactoryManager::ShowGui(const gltfjson::Root& root,
 
   if (!m_cache) {
     if (auto match = m_guiFactories.Match(m_selected)) {
-      m_cache = (*match)(m_selected);
+      m_cache = match->Editor(m_selected);
     } else {
       m_cache = [](auto& root, auto& bin, auto& node) {
         return std::visit(NodeEditorVisitor{}, node->Var);

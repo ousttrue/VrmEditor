@@ -1,6 +1,6 @@
 #pragma once
 #include "im_widgets.h"
-#include "showgui.h"
+#include "json_gui.h"
 #include <gltfjson.h>
 #include <gltfjson/jsonpath.h>
 
@@ -42,11 +42,11 @@ struct FloatSlider
   {
     auto view = gltfjson::JsonPath(jsonpath).Back();
     std::u8string label{ view.begin(), view.end() };
-    return [label, min=Min, max=Max, def=Default](const gltfjson::Root& root,
-                                      const gltfjson::Bin& bin,
-                                      const gltfjson::tree::NodePtr& node) {
-      if (ShowGuiSliderFloat(
-            (const char*)label.c_str(), node, min, max, def)) {
+    return [label, min = Min, max = Max, def = Default](
+             const gltfjson::Root& root,
+             const gltfjson::Bin& bin,
+             const gltfjson::tree::NodePtr& node) {
+      if (ShowGuiSliderFloat((const char*)label.c_str(), node, min, max, def)) {
         return true;
       } else {
         return false;

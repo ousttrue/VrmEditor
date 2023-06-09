@@ -1,5 +1,5 @@
 #pragma once
-#include "showgui.h"
+#include "json_gui.h"
 #include <gltfjson.h>
 #include <gltfjson/gltf_typing_vrm0.h>
 #include <gltfjson/gltf_typing_vrm1.h>
