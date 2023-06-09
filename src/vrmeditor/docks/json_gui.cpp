@@ -186,27 +186,32 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   if (m_inspector->ShouldOpen(jsonpath)) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
   }
-  bool node_open = false;
+
+  int push = 0;
   if (item) {
     if (Has(prop.Flags, JsonPropFlags::Unknown)) {
       ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::yellow);
-    }
-    node_open = ImGui::TreeNodeEx((void*)(intptr_t)item.get(),
-                                  node_flags,
-                                  "%s",
-                                  (const char*)label.Key.c_str());
-    if (Has(prop.Flags, JsonPropFlags::Unknown)) {
-      ImGui::PopStyleColor();
+      ++push;
     }
   } else {
     ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::gray);
-    // ImGui::TextUnformatted((const char*)label.Key.c_str());
-    node_open = ImGui::TreeNodeEx((const char*)jsonpath.data(),
-                                  node_flags,
-                                  "%s",
-                                  (const char*)label.Key.c_str());
-    ImGui::PopStyleColor();
+    ++push;
   }
+
+  // uint32_t id = 0;
+  // auto found = m_idMap.find(jsonpath);
+  // if (found != m_idMap.end()) {
+  //   id = found->second;
+  // } else {
+  //   id = m_idMap.size();
+  //   m_idMap.insert({ jsonpath, id });
+  // }
+  auto id = ImGui::GetID((const char*)jsonpath.c_str());
+
+  auto node_open = ImGui::TreeNodeEx(
+    (void*)(intptr_t)id, node_flags, "%s", (const char*)label.Key.c_str());
+  ImGui::PopStyleColor(push);
+
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     m_inspector->Select(jsonpath);
   }
@@ -308,8 +313,8 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
       if (auto definition = m_definitionMap.Match(jsonpath)) {
         for (auto prop : definition->Props) {
           jsonpath += prop.Key;
+          used.insert(prop.Key);
           if (auto child = item->Get(prop.Key)) {
-            used.insert(prop.Key);
             Traverse(child, jsonpath, prop);
           } else {
             Traverse(nullptr, jsonpath, prop);

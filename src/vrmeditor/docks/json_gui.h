@@ -61,6 +61,8 @@ struct JsonGui
   gltfjson::JsonPathMap<JsonObjectDefinition> m_definitionMap;
   PrintfBuffer m_buf;
 
+  std::unordered_map<std::u8string, uint32_t> m_idMap;
+
   JsonGui();
   void SetScene(const std::shared_ptr<libvrm::GltfRoot>& root);
   bool Enter(const gltfjson::tree::NodePtr& item,
