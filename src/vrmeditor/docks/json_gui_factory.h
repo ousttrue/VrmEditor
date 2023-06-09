@@ -135,16 +135,19 @@ public:
       cache.Key += gltfjson::from_u8(factory->Icon);
       cache.Factory = factory->Factory;
       cache.Description = factory->Description;
-    } else {
+    } else if (item) {
       cache.Key += std::visit(NodeTypeIconVisitor{}, item->Var);
     }
     cache.Key += gltfjson::from_u8(GetLastName(jsonpath));
-    auto object = item->Object();
+    gltfjson::tree::ObjectValue* object = nullptr;
+    if (item) {
+      object = item->Object();
+    }
     if (object && object->find(u8"name") != object->end()) {
       cache.Value = "{";
       cache.Value += gltfjson::from_u8((*object)[u8"name"]->U8String());
       cache.Value += "}";
-    } else {
+    } else if (item) {
       std::stringstream ss;
       ss << *item;
       cache.Value = ss.str();
