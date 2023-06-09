@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <string>
+#include <vrm/gltfroot.h>
 
 class FbxLoader
 {
@@ -9,6 +10,6 @@ class FbxLoader
 public:
   FbxLoader();
   ~FbxLoader();
-  bool Load(const std::filesystem::path& path);
+  std::shared_ptr<libvrm::GltfRoot> Load(const std::filesystem::path& path);
   std::string Error() const;
 };

@@ -83,6 +83,12 @@ JsonGui::ShowSelector(float indent)
   if (!m_root) {
     return;
   }
+  if (!m_root->m_gltf) {
+    return;
+  }
+  if (!m_root->m_gltf->m_json) {
+    return;
+  }
 
   auto enter = [this](const gltfjson::tree::NodePtr& item,
                       std::u8string_view jsonpath) {
@@ -112,5 +118,12 @@ JsonGui::ShowSelected()
   if (!m_root) {
     return;
   }
+  if (!m_root->m_gltf) {
+    return;
+  }
+  if (!m_root->m_gltf->m_json) {
+    return;
+  }
+
   m_inspector->ShowGui(*m_root->m_gltf, m_root->m_bin);
 }

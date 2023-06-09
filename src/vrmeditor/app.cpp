@@ -106,11 +106,11 @@ public:
   App(const App&) = delete;
   App& operator=(const App&) = delete;
 
-  std::shared_ptr<libvrm::RuntimeScene> SetScene(
-    const std::shared_ptr<libvrm::GltfRoot>& table)
+  std::shared_ptr<libvrm::RuntimeScene> SetGltf(
+    const std::shared_ptr<libvrm::GltfRoot>& gltf)
   {
     glr::Release();
-    m_runtime = std::make_shared<libvrm::RuntimeScene>(table);
+    m_runtime = std::make_shared<libvrm::RuntimeScene>(gltf);
     m_timeline->Tracks.clear();
 
     std::weak_ptr<libvrm::RuntimeScene> weak = m_runtime;
@@ -130,7 +130,7 @@ public:
     auto indent = Gui::Instance().FontSize * 0.5f;
 
     {
-      m_json->SetScene(table);
+      m_json->SetScene(gltf);
 
       HumanoidDock::Create(
         addDock, "humanoid-body", "humanoid-finger", m_runtime->m_table);
@@ -374,8 +374,8 @@ public:
 
   bool LoadModel(const std::filesystem::path& path)
   {
-    if (auto table = libvrm::LoadPath(path)) {
-      auto scene = SetScene(*table);
+    if (auto gltf = libvrm::LoadPath(path)) {
+      auto scene = SetGltf(*gltf);
       // bind time line
 
       for (auto& animation : scene->m_animations) {
@@ -405,8 +405,8 @@ public:
 
       return true;
     } else {
-      PLOG_ERROR << table.error();
-      SetScene(std::make_shared<libvrm::GltfRoot>());
+      PLOG_ERROR << gltf.error();
+      SetGltf(std::make_shared<libvrm::GltfRoot>());
       return false;
     }
   }
@@ -414,13 +414,14 @@ public:
   bool LoadFbx(const std::filesystem::path& path)
   {
     FbxLoader fbx;
-    if (!fbx.Load(path)) {
+    if (auto gltf = fbx.Load(path)) {
+      PLOG_DEBUG << "ufbx success: " << path.string();
+      auto scene = SetGltf(gltf);
+      return false;
+    } else {
       PLOG_ERROR << fbx.Error();
       return false;
     }
-
-    PLOG_DEBUG << "ufbx success: " << path.string();
-    return false;
   }
 
   bool LoadPbr(const std::filesystem::path& hdr)

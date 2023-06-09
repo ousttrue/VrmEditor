@@ -14,11 +14,15 @@ struct FbxLoaderImpl
     }
   }
 
-  bool Load(const std::filesystem::path& path)
+  std::shared_ptr<libvrm::GltfRoot> Load(const std::filesystem::path& path)
   {
     ufbx_load_opts opts = { 0 }; // Optional, pass NULL for defaults
     m_scene = ufbx_load_file(path.string().c_str(), &opts, &m_error);
-    return m_scene != nullptr;
+    if (!m_scene) {
+      return {};
+    }
+    auto ptr = std::make_shared<libvrm::GltfRoot>();
+    return ptr;
   }
 };
 
@@ -32,7 +36,7 @@ FbxLoader::~FbxLoader()
   delete m_impl;
 }
 
-bool
+std::shared_ptr<libvrm::GltfRoot>
 FbxLoader::Load(const std::filesystem::path& path)
 {
   return m_impl->Load(path);
