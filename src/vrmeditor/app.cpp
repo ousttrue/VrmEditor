@@ -7,7 +7,6 @@
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
-#include "docks/json_gui.h"
 #include "docks/scene_selection.h"
 #include "docks/view_dock.h"
 #include "docks/vrm_dock.h"
@@ -15,6 +14,7 @@
 #include "filewatcher.h"
 #include "fs_util.h"
 #include "humanpose/humanpose_stream.h"
+#include "jsongui/json_gui.h"
 #include "luahost.h"
 #include "platform.h"
 #include <ImGuizmo.h>

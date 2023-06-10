@@ -1,5 +1,5 @@
 #include "hierarchy_gui.h"
-#include "printfbuffer.h"
+#include "../printfbuffer.h"
 #include <imgui.h>
 
 #include <grapho/imgui/widgets.h>

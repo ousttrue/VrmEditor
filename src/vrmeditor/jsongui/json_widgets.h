@@ -1,5 +1,5 @@
 #pragma once
-#include "printfbuffer.h"
+#include "../printfbuffer.h"
 #include <array>
 #include <gltfjson.h>
 #include <grapho/imgui/widgets.h>

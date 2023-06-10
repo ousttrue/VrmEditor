@@ -1,6 +1,6 @@
 #include <GL/glew.h>
 
-#include "../docks/printfbuffer.h"
+#include "../printfbuffer.h"
 #include "gl3renderer_gui.h"
 #include <TextEditor.h>
 #include <glr/gl3renderer.h>

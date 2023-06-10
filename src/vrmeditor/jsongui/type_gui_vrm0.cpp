@@ -1,5 +1,5 @@
-#include "im_widgets.h"
 #include "type_gui_vrm0.h"
+#include "../json_widgets.h"
 
 bool
 ShowGui(const gltfjson::Root& root,
@@ -99,7 +99,6 @@ ShowGui(const gltfjson::Root& root,
   SelectId("Node", colliderGroup.m_json, u8"node", root.Nodes.m_json);
   return false;
 }
-
 
 bool
 ShowGui(const gltfjson::Root& root,
