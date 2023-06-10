@@ -11,7 +11,7 @@ enum class JsonPropFlags : uint32_t
 {
   None = 0,
   Required = 0x01,
-  ReadOnly = 0x02,
+  // ReadOnly = 0x02,
   Unknown = 0x04,
   ArrayChild = 0x08,
   DictObject = 0x10,
@@ -32,30 +32,16 @@ Has(JsonPropFlags lhs, JsonPropFlags rhs)
   return (int)lhs & (int)rhs;
 }
 
-using ValueTextFunc =
-  std::function<std::u8string(const gltfjson::tree::NodePtr& item)>;
-
 struct JsonValue
 {
   // active node editor
   ShowGuiFunc Editor;
-  // texture represents or default value
-  ValueTextFunc Text;
   // default json node for add
-  std::u8string DefaultJson = u8"no default";
+  std::u8string DefaultJson;
+  bool IsFixedArray = false;
+  // texture represents or default value
 
-  std::u8string TextOrDeault(const gltfjson::tree::NodePtr& item) const
-  {
-    if (item) {
-      if (Text) {
-        return Text(item);
-      } else {
-        return u8"default text func";
-      }
-    } else {
-      return DefaultJson;
-    }
-  }
+  std::u8string TextOrDeault(const gltfjson::tree::NodePtr& item) const;
   ShowGuiFunc EditorOrDefault() const;
 };
 

@@ -1,29 +1,57 @@
 #include "json_prop.h"
 #include "json_widgets.h"
-// #include "type_gui.h"
 
-// std::u8string
-// JsonProp::Value(const gltfjson::tree::NodePtr& item) const
-// {
-//   if (item) {
-//     std::u8string name;
-//     if (auto obj = item->Object()) {
-//       if (auto p = item->Get(u8"name")) {
-//         name = p->U8String();
-//       }
-//     }
-//     std::stringstream ss;
-//     if (name.size()) {
-//       ss << "{" << gltfjson::from_u8(name) << "}";
-//     } else {
-//       ss << *item;
-//     }
-//     auto str = ss.str();
-//     return std::u8string{ (const char8_t*)str.data(), str.size() };
-//   } else {
-//     return u8"";
-//   }
-// }
+static std::u8string
+ToStr(const gltfjson::tree::ArrayValue& array)
+{
+  std::stringstream ss;
+  ss << "[" << array.size() << "]";
+  auto str = ss.str();
+  return { (const char8_t*)str.c_str(), str.size() };
+}
+
+static std::u8string
+ToStr(const gltfjson::tree::ObjectValue& object)
+{
+  std::stringstream ss;
+  std::u8string name;
+  auto found = object.find(u8"name");
+  if (found != object.end()) {
+    name = found->second->U8String();
+  }
+  if (name.size()) {
+    ss << "{" << gltfjson::from_u8(name) << "}";
+  } else {
+    ss << "{...}";
+  }
+  auto str = ss.str();
+  return { (const char8_t*)str.c_str(), str.size() };
+}
+
+static std::u8string
+ToStr(const gltfjson::tree::NodePtr& item)
+{
+  if (auto object = item->Object()) {
+    return ToStr(*object);
+  } else if (auto array = item->Array()) {
+    return ToStr(*array);
+  } else {
+    std::stringstream ss;
+    ss << *item;
+    auto str = ss.str();
+    return { (const char8_t*)str.c_str(), str.size() };
+  }
+}
+
+std::u8string
+JsonValue::TextOrDeault(const gltfjson::tree::NodePtr& item) const
+{
+  if (item) {
+    return ToStr(item);
+  } else {
+    return DefaultJson;
+  }
+}
 
 struct NodeTypeEditVisitor
 {
@@ -46,8 +74,16 @@ struct NodeTypeEditVisitor
     //
     return InputU8Text("##_string", &value);
   }
-  bool operator()(gltfjson::tree::ArrayValue& value) { return false; }
-  bool operator()(gltfjson::tree::ObjectValue& value) { return false; }
+  bool operator()(gltfjson::tree::ArrayValue& value)
+  {
+    ImGui::TextUnformatted((const char*)ToStr(value).c_str());
+    return false;
+  }
+  bool operator()(gltfjson::tree::ObjectValue& value)
+  {
+    ImGui::TextUnformatted((const char*)ToStr(value).c_str());
+    return false;
+  }
 };
 
 ShowGuiFunc

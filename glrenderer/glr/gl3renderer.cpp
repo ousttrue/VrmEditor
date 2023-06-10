@@ -830,6 +830,21 @@ public:
     return false;
   }
 
+  static std::tuple<gltfjson::tree::NodePtr, gltfjson::tree::NodePtr>
+  GetMaterial(const gltfjson::Root& root, std::optional<uint32_t> index)
+  {
+    if (!index) {
+      return {};
+    }
+
+    if (*index >= root.Materials.size()) {
+      return {};
+    }
+
+    return { root.Materials[*index].m_json,
+             gltfjson::vrm0::GetVrmMaterial(root, *index) };
+  }
+
   void DrawPrimitive(bool isTransparent,
                      const WorldInfo& world,
                      const LocalInfo& local,
@@ -839,12 +854,7 @@ public:
                      const boneskin::Primitive& primitive,
                      uint32_t drawOffset)
   {
-    gltfjson::tree::NodePtr gltfMaterial;
-    gltfjson::tree::NodePtr vrm0Material;
-    if (primitive.Material) {
-      gltfMaterial = root.Materials[*primitive.Material].m_json;
-      vrm0Material = gltfjson::vrm0::GetVrmMaterial(root, *primitive.Material);
-    }
+    auto [gltfMaterial, vrm0Material] = GetMaterial(root, primitive.Material);
 
     if (MaterialIsTransparent(gltfMaterial, vrm0Material) != isTransparent) {
       return;
