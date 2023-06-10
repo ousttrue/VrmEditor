@@ -11,7 +11,8 @@ enum class EditorResult
 {
   None,
   Updated,
-  Created,
+  KeyCreated,
+  ArrayAppended,
   Removed,
 };
 
@@ -39,9 +40,9 @@ struct JsonGui
   void ShowSelector(float indent);
 
 private:
-  void Traverse(const gltfjson::tree::NodePtr& item,
-                std::u8string& jsonpath,
-                const JsonProp& prop);
+  EditorResult Traverse(const gltfjson::tree::NodePtr& item,
+                        std::u8string& jsonpath,
+                        const JsonProp& prop);
 
   bool ShouldOpen(std::u8string_view jsonpath) const
   {

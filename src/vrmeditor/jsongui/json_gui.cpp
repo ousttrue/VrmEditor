@@ -1,5 +1,5 @@
 #include "json_gui.h"
-#include "jsonpath_gui.h"
+#include "json_widgets.h"
 #include <array>
 #include <charconv>
 #include <glr/gl3renderer.h>
@@ -8,6 +8,7 @@
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <plog/Log.h>
 #include <ranges>
 #include <sstream>
 #include <string_view>
@@ -16,6 +17,33 @@
 JsonGui::JsonGui()
   : m_definitionMap({
       {
+        // https : //
+        // github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json
+        u8"/",
+        { {
+          { u8"asset", u8"📄", {}, JsonPropFlags::Required },
+          //
+          { u8"extensions", u8"⭐" },
+          { u8"extensionsUsed", u8"⭐" },
+          { u8"extensionsRequired", u8"⭐" },
+          { u8"extras", u8"⭐" },
+          //
+          { u8"buffers", u8"📦" },
+          { u8"bufferViews", u8"📦" },
+          { u8"accessors", u8"📦" },
+          //
+          { u8"images", u8"🖼" },
+          { u8"samplers", u8"🖼" },
+          { u8"textures", u8"🖼" },
+          { u8"materials", u8"💎" },
+          { u8"meshes", u8"📐" },
+          { u8"skins", u8"📐" },
+          { u8"nodes", u8"🛞" },
+          { u8"scenes", u8"🛞" },
+          { u8"scene", u8"🆔" },
+        } },
+      },
+      {
         u8"/extensions",
         { {
           { u8"VRM", u8"🌟" },
@@ -23,9 +51,10 @@ JsonGui::JsonGui()
           { u8"VRMC_springBone", u8"🌟" },
         } },
       },
-      //
+
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.schema.json
         u8"/extensions/VRM",
         { {
           { u8"exporterVersion", u8"📄" },
@@ -39,7 +68,8 @@ JsonGui::JsonGui()
         } },
       },
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.meta.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.meta.schema.json
         u8"/extensions/VRM/meta",
         { {
           { u8"title", u8"🪪" },
@@ -58,7 +88,8 @@ JsonGui::JsonGui()
         } },
       },
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.humanoid.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.humanoid.schema.json
         u8"/extensions/VRM/humanoid",
         { {
           { u8"humanBones", u8"🦴" },
@@ -73,7 +104,8 @@ JsonGui::JsonGui()
         } },
       },
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.humanoid.bone.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.humanoid.bone.schema.json
         u8"/extensions/VRM/humanoid/humanBones/*",
         { {
           { u8"bone", u8"🦴" },
@@ -86,7 +118,8 @@ JsonGui::JsonGui()
         } },
       },
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.firstperson.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.firstperson.schema.json
         u8"/extensions/VRM/firstPerson",
         { {
           { u8"firstPersonBone", u8"🆔" },
@@ -100,14 +133,16 @@ JsonGui::JsonGui()
         } },
       },
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.blendshape.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.blendshape.schema.json
         u8"/extensions/VRM/blendShapeMaster",
         { {
           { u8"blendShapeGroups", u8"😀" },
         } },
       },
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.blendshape.group.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.blendshape.group.schema.json
         u8"/extensions/VRM/blendShapeMaster/blendShapeGroups/*",
         { {
           { u8"name", u8"📄" },
@@ -118,7 +153,8 @@ JsonGui::JsonGui()
         } },
       },
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.secondaryanimation.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.secondaryanimation.schema.json
         u8"/extensions/VRM/secondaryanimation",
         { {
           { u8"boneGroups", u8"🔗" },
@@ -126,7 +162,8 @@ JsonGui::JsonGui()
         } },
       },
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.material.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.material.schema.json
         u8"/extensions/VRM/materialProperties/*",
         { {
           { u8"name", u8"📄" },
@@ -141,7 +178,8 @@ JsonGui::JsonGui()
       },
       //
       {
-        // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.schema.json
+        // https : //
+        // github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.schema.json
         u8"/extensions/VRMC_vrm",
         { {
           { u8"specVersion", u8"📄" },
@@ -177,32 +215,6 @@ JsonGui::JsonGui()
         } },
       },
       //
-      {
-        // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json
-        u8"/",
-        { {
-          { u8"asset", u8"📄", {}, JsonPropFlags::Required },
-          //
-          { u8"extensions", u8"⭐" },
-          { u8"extensionsUsed", u8"⭐" },
-          { u8"extensionsRequired", u8"⭐" },
-          { u8"extras", u8"⭐" },
-          //
-          { u8"buffers", u8"📦" },
-          { u8"bufferViews", u8"📦" },
-          { u8"accessors", u8"📦" },
-          //
-          { u8"images", u8"🖼" },
-          { u8"samplers", u8"🖼" },
-          { u8"textures", u8"🖼" },
-          { u8"materials", u8"💎" },
-          { u8"meshes", u8"📐" },
-          { u8"skins", u8"📐" },
-          { u8"nodes", u8"🛞" },
-          { u8"scenes", u8"🛞" },
-          { u8"scene", u8"🆔" },
-        } },
-      },
       {
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/asset.schema.json
         u8"/asset",
@@ -301,12 +313,16 @@ JsonGui::JsonGui()
           { u8"normalTexture", u8"🖼" },
           { u8"occlusionTexture", u8"🖼" },
           { u8"emissiveTexture", u8"🖼" },
-          { u8"emissiveFactor", u8"🎨", RgbPicker{ .Default = { 0, 0, 0 } } },
+          {
+            u8"emissiveFactor",
+            u8"🎨",
+            { RgbPicker{ .Default = { 0, 0, 0 } } },
+          },
           { u8"alphaMode", u8"📄" },
           {
             u8"alphaCutoff",
             u8"🎚️",
-            FloatSlider{},
+            { FloatSlider{} },
           },
           { u8"doubleSided", u8"✅" },
         } },
@@ -315,24 +331,24 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.pbrMetallicRoughness.schema.json
         u8"/materials/*/pbrMetallicRoughness",
         { {
-          { u8"baseColorFactor", u8"🎨", RgbaPicker{} },
+          { u8"baseColorFactor", u8"🎨", { RgbaPicker{} } },
           { u8"baseColorTexture", u8"🖼" },
           {
             u8"metallicFactor",
             u8"🎚️",
-            FloatSlider{ .Default = 1.0f },
+            { FloatSlider{ .Default = 1.0f } },
           },
           {
             u8"roughnessFactor",
             u8"🎚️",
-            FloatSlider{ .Default = 1.0f },
+            { FloatSlider{ .Default = 1.0f } },
           },
           { u8"metallicRoughnessTexture", u8"🖼" },
         } },
       },
       {
-        // https : //
-        // github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.primitive.schema.json
+        // https
+        // ://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.primitive.schema.json
         u8"/meshes/*/primitives/*",
         { {
           { u8"attributes",
@@ -344,8 +360,7 @@ JsonGui::JsonGui()
         } },
       },
       {
-        // https : //
-        // github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.schema.json
+        // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.schema.json
         u8"/meshes/*",
         { {
           { u8"primitives", u8"[]", {}, JsonPropFlags::Required },
@@ -353,8 +368,7 @@ JsonGui::JsonGui()
         } },
       },
       {
-        // https : //
-        // github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
+        // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
         u8"/nodes/*",
         { {
           { u8"mesh", u8"🆔" },
@@ -437,14 +451,16 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   if (found != m_cacheMap.end()) {
     cache = &found->second;
   } else {
-    auto inserted =
-      m_cacheMap.insert({ jsonpath, { prop.Label(), prop.Value(item) } });
+    auto inserted = m_cacheMap.insert(
+      { jsonpath, { prop.Label(), prop.Value.TextOrDeault(item) } });
     cache = &inserted.first->second;
-    cache->Editor = prop.EditorOrDefault(item, jsonpath);
+    cache->Editor = prop.Value.EditorOrDefault();
   }
   auto node_open = ImGui::TreeNodeEx(
     (void*)(intptr_t)id, node_flags, "%s", (const char*)cache->Label.data());
   ImGui::PopStyleColor(push);
+
+  ImGui::PushID((const char*)jsonpath.c_str());
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     m_jsonpath = jsonpath;
@@ -460,29 +476,30 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
     ImGui::TextUnformatted((const char*)cache->Value.c_str());
   }
 
-  // 2
+  // 2 add/remove
   ImGui::TableNextColumn();
   if (Has(prop.Flags, JsonPropFlags::Unknown)) {
-    if (ImGui::Button("-")) {
+    if (ImGui::Button("-##unknown")) {
+      result = EditorResult::Removed;
     }
   } else if (Has(prop.Flags, JsonPropFlags::Required)) {
     ImGui::TextUnformatted("📍");
   } else if (item) {
     if (item->Array()) {
-      if (ImGui::Button("+")) {
-        // item->Append();
-        result = EditorResult::Updated;
+      if (ImGui::Button("+##array_append")) {
+        result = EditorResult::ArrayAppended;
       }
     } else {
-      if (ImGui::Button("-")) {
+      if (ImGui::Button("-##removed")) {
         result = EditorResult::Removed;
       }
     }
   } else {
-    if (ImGui::Button("+")) {
-      result = EditorResult::Created;
+    if (ImGui::Button("+##key_created")) {
+      result = EditorResult::KeyCreated;
     }
   }
+  ImGui::PopID();
 
   return { node_open && !is_leaf, result };
 }
@@ -522,15 +539,23 @@ JsonGui::ShowSelector(float indent)
   }
 }
 
-void
+EditorResult
 JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
                   std::u8string& jsonpath,
                   const JsonProp& prop)
 {
   auto [isOpen, result] = Enter(item, jsonpath, prop);
   switch (result) {
+    case EditorResult::None:
+      break;
     case EditorResult::Updated:
       ClearCache(jsonpath);
+      break;
+    case EditorResult::KeyCreated:
+      break;
+    case EditorResult::ArrayAppended:
+      break;
+    case EditorResult::Removed:
       break;
   }
   if (isOpen) {
@@ -544,7 +569,12 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
           jsonpath += prop.Key;
           used.insert(prop.Key);
           if (auto child = item->Get(prop.Key)) {
-            Traverse(child, jsonpath, prop);
+            auto child_result = Traverse(child, jsonpath, prop);
+            if (child_result == EditorResult::Removed) {
+              PLOG_DEBUG << "prop.key remove: " << gltfjson::from_u8(jsonpath);
+              item->Remove(prop.Key);
+              result = EditorResult::Updated;
+            }
           } else {
             Traverse(nullptr, jsonpath, prop);
           }
@@ -552,27 +582,48 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
         }
       }
 
-      for (auto [k, v] : *object) {
-        if (used.find(k) == used.end()) {
-          jsonpath += k;
-          Traverse(
-            v,
+      for (auto it = object->begin(); it != object->end();) {
+        auto child_result = EditorResult::None;
+        jsonpath += it->first;
+        if (used.find(it->first) == used.end()) {
+          child_result = Traverse(
+            it->second,
             jsonpath,
             { jsonpath.substr(size), u8"❔", {}, JsonPropFlags::Unknown });
-          jsonpath.resize(size);
         }
+
+        if (child_result == EditorResult::Removed) {
+          PLOG_DEBUG << "unknown key remove: " << gltfjson::from_u8(jsonpath);
+          it = object->erase(it);
+          result = EditorResult::Updated;
+        } else {
+          ++it;
+        }
+        jsonpath.resize(size);
       }
     } else if (auto array = item->Array()) {
       int i = 0;
-      for (auto& v : *array) {
-        gltfjson::tree::concat_int(jsonpath, i++);
-        Traverse(
-          v,
+      std::optional<int> removed;
+      for (auto& child : *array) {
+        gltfjson::tree::concat_int(jsonpath, i);
+        auto child_result = Traverse(
+          child,
           jsonpath,
-          { jsonpath.substr(size), prop.Icon, {}, JsonPropFlags::Unknown });
+          { jsonpath.substr(size), prop.Icon, {}, JsonPropFlags::ArrayChild });
+        if (child_result == EditorResult::Removed) {
+          removed = i;
+        }
         jsonpath.resize(size);
+        ++i;
+      }
+      if (removed) {
+        PLOG_DEBUG << "array remove: " << gltfjson::from_u8(jsonpath) << " at "
+                   << *removed;
+        result = EditorResult::Updated;
+        array->erase(std::next(array->begin(), *removed));
       }
     }
     ImGui::TreePop();
   }
+  return result;
 }
