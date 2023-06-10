@@ -303,8 +303,31 @@ JsonGui::JsonGui()
           { u8"emissiveTexture", u8"🖼" },
           { u8"emissiveFactor", u8"🎨", RgbPicker{ .Default = { 0, 0, 0 } } },
           { u8"alphaMode", u8"📄" },
-          { u8"alphaCutoff", u8"🎚️" },
+          {
+            u8"alphaCutoff",
+            u8"🎚️",
+            FloatSlider{},
+          },
           { u8"doubleSided", u8"✅" },
+        } },
+      },
+      {
+        // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.pbrMetallicRoughness.schema.json
+        u8"/materials/*/pbrMetallicRoughness",
+        { {
+          { u8"baseColorFactor", u8"🎨", RgbaPicker{} },
+          { u8"baseColorTexture", u8"🖼" },
+          {
+            u8"metallicFactor",
+            u8"🎚️",
+            FloatSlider{ .Default = 1.0f },
+          },
+          {
+            u8"roughnessFactor",
+            u8"🎚️",
+            FloatSlider{ .Default = 1.0f },
+          },
+          { u8"metallicRoughnessTexture", u8"🖼" },
         } },
       },
       {
@@ -339,18 +362,6 @@ JsonGui::JsonGui()
       },
     })
 {
-
-  // m_inspector->OnUpdated([](auto jsonpath) {
-  //   gltfjson::JsonPath path(jsonpath);
-  //   auto [childOfRoot, i] = path.GetChildOfRootIndex();
-  //   if (childOfRoot == u8"materials") {
-  //     glr::ReleaseMaterial(i);
-  //   }
-  // });
-
-  // m_inspector->OnUpdated(std::bind(&JsonGuiFactoryManager::ClearJsonPath,
-  //                                  m_inspector.get(),
-  //                                  std::placeholders::_1));
 }
 
 void
@@ -429,7 +440,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
     auto inserted =
       m_cacheMap.insert({ jsonpath, { prop.Label(), prop.Value(item) } });
     cache = &inserted.first->second;
-    cache->Editor = prop.EditorOrDefault(jsonpath);
+    cache->Editor = prop.EditorOrDefault(item, jsonpath);
   }
   auto node_open = ImGui::TreeNodeEx(
     (void*)(intptr_t)id, node_flags, "%s", (const char*)cache->Label.data());

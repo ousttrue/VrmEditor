@@ -7,7 +7,8 @@ using ShowGuiFunc = std::function<bool(const gltfjson::Root& root,
                                        const gltfjson::Bin& bin,
                                        const gltfjson::tree::NodePtr&)>;
 
-using CreateGuiFunc = std::function<ShowGuiFunc(std::u8string_view jsonpath)>;
+using CreateGuiFunc = std::function<ShowGuiFunc(const gltfjson::tree::NodePtr&,
+                                                std::u8string_view jsonpath)>;
 
 struct JsonGuiItem
 {
@@ -49,7 +50,8 @@ struct JsonProp
   JsonPropFlags Flags = JsonPropFlags::None;
   std::u8string Label() const { return Icon + Key; }
   std::u8string Value(const gltfjson::tree::NodePtr& item) const;
-  ShowGuiFunc EditorOrDefault(std::u8string_view jsonpath) const;
+  ShowGuiFunc EditorOrDefault(const gltfjson::tree::NodePtr& item,
+                              std::u8string_view jsonpath) const;
 };
 
 struct JsonObjectDefinition

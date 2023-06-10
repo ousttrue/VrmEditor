@@ -51,10 +51,11 @@ struct NodeTypeEditVisitor
 };
 
 ShowGuiFunc
-JsonProp::EditorOrDefault(std::u8string_view jsonpath) const
+JsonProp::EditorOrDefault(const gltfjson::tree::NodePtr& item,
+                          std::u8string_view jsonpath) const
 {
   if (Factory) {
-    return Factory(jsonpath);
+    return Factory(item, jsonpath);
   }
 
   return [](const gltfjson::Root& root,
