@@ -4,6 +4,13 @@
 #include <gltfjson.h>
 #include <grapho/imgui/widgets.h>
 
+bool
+InputU8Text(const char* label,
+            std::u8string* str,
+            ImGuiInputTextFlags flags = 0,
+            ImGuiInputTextCallback callback = nullptr,
+            void* user_data = nullptr);
+
 template<size_t N>
 static std::array<float, N>
 FillArray(const gltfjson::tree::NodePtr& node,

@@ -1,5 +1,5 @@
 #include "type_gui_vrm0.h"
-#include "../json_widgets.h"
+#include "json_widgets.h"
 
 bool
 ShowGui(const gltfjson::Root& root,

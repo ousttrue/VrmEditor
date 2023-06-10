@@ -49,6 +49,7 @@ struct JsonProp
   JsonPropFlags Flags = JsonPropFlags::None;
   std::u8string Label() const { return Icon + Key; }
   std::u8string Value(const gltfjson::tree::NodePtr& item) const;
+  ShowGuiFunc EditorOrDefault(std::u8string_view jsonpath) const;
 };
 
 struct JsonObjectDefinition

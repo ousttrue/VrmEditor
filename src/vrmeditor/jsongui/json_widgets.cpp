@@ -30,12 +30,12 @@ InputTextCallback(ImGuiInputTextCallbackData* data)
   return 0;
 }
 
-static bool
+bool
 InputU8Text(const char* label,
             std::u8string* str,
-            ImGuiInputTextFlags flags = 0,
-            ImGuiInputTextCallback callback = nullptr,
-            void* user_data = nullptr)
+            ImGuiInputTextFlags flags,
+            ImGuiInputTextCallback callback,
+            void* user_data)
 {
   IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
   flags |= ImGuiInputTextFlags_CallbackResize;

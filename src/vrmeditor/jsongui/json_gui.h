@@ -7,6 +7,14 @@
 #include <string>
 #include <vrm/gltfroot.h>
 
+enum class EditorResult
+{
+  None,
+  Updated,
+  Created,
+  Removed,
+};
+
 struct JsonGui
 {
   std::shared_ptr<libvrm::GltfRoot> m_root;
@@ -17,17 +25,17 @@ struct JsonGui
   struct Cache
   {
     std::u8string Label;
-    std::u8string value;
+    std::u8string Value;
     ShowGuiFunc Editor;
   };
   std::unordered_map<std::u8string, Cache> m_cacheMap;
 
   JsonGui();
-  void ClearCache();
+  void ClearCache(const std::u8string& jsonpath = {});
   void SetScene(const std::shared_ptr<libvrm::GltfRoot>& root);
-  bool Enter(const gltfjson::tree::NodePtr& item,
-             const std::u8string& jsonpath,
-             const JsonProp& prop);
+  std::tuple<bool, EditorResult> Enter(const gltfjson::tree::NodePtr& item,
+                                       const std::u8string& jsonpath,
+                                       const JsonProp& prop);
   void ShowSelector(float indent);
 
 private:

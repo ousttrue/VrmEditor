@@ -354,9 +354,21 @@ JsonGui::JsonGui()
 }
 
 void
-JsonGui::ClearCache()
+JsonGui::ClearCache(const std::u8string& jsonpath)
 {
-  m_cacheMap.clear();
+  if (jsonpath.size()) {
+    // clear all descendants
+    for (auto it = m_cacheMap.begin(); it != m_cacheMap.end();) {
+      if (it->first.starts_with(jsonpath)) {
+        // clear all descendants
+        it = m_cacheMap.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  } else {
+    m_cacheMap.clear();
+  }
 }
 
 void
@@ -366,11 +378,13 @@ JsonGui::SetScene(const std::shared_ptr<libvrm::GltfRoot>& root)
   ClearCache();
 }
 
-bool
+std::tuple<bool, EditorResult>
 JsonGui::Enter(const gltfjson::tree::NodePtr& item,
                const std::u8string& jsonpath,
                const JsonProp& prop)
 {
+  auto result = EditorResult::None;
+
   static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow |
                                          ImGuiTreeNodeFlags_OpenOnDoubleClick |
                                          ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -415,9 +429,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
     auto inserted =
       m_cacheMap.insert({ jsonpath, { prop.Label(), prop.Value(item) } });
     cache = &inserted.first->second;
-    if (prop.Factory) {
-      cache->Editor = prop.Factory(jsonpath);
-    }
+    cache->Editor = prop.EditorOrDefault(jsonpath);
   }
   auto node_open = ImGui::TreeNodeEx(
     (void*)(intptr_t)id, node_flags, "%s", (const char*)cache->Label.data());
@@ -429,10 +441,12 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
 
   // 1
   ImGui::TableNextColumn();
-  if (isSelected && cache->Editor) {
-    cache->Editor(m_root->m_gltf->m_json, m_root->m_bin, item);
+  if (isSelected && item) {
+    if (cache->Editor(m_root->m_gltf->m_json, m_root->m_bin, item)) {
+      result = EditorResult::Updated;
+    }
   } else {
-    ImGui::TextUnformatted((const char*)cache->value.c_str());
+    ImGui::TextUnformatted((const char*)cache->Value.c_str());
   }
 
   // 2
@@ -445,17 +459,21 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   } else if (item) {
     if (item->Array()) {
       if (ImGui::Button("+")) {
+        // item->Append();
+        result = EditorResult::Updated;
       }
     } else {
       if (ImGui::Button("-")) {
+        result = EditorResult::Removed;
       }
     }
   } else {
     if (ImGui::Button("+")) {
+      result = EditorResult::Created;
     }
   }
 
-  return node_open && !is_leaf;
+  return { node_open && !is_leaf, result };
 }
 
 void
@@ -498,7 +516,13 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
                   std::u8string& jsonpath,
                   const JsonProp& prop)
 {
-  if (Enter(item, jsonpath, prop)) {
+  auto [isOpen, result] = Enter(item, jsonpath, prop);
+  switch (result) {
+    case EditorResult::Updated:
+      ClearCache(jsonpath);
+      break;
+  }
+  if (isOpen) {
     gltfjson::tree::AddDelimiter(jsonpath);
     auto size = jsonpath.size();
     if (auto object = item->Object()) {
