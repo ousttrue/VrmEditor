@@ -234,6 +234,7 @@ JsonGui::JsonGui()
           { u8"generator", u8"📄", { {}, U8Q("") } },
         } },
       },
+      // buffer/bufferView/accessor
       {
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
         u8"/buffers/*",
@@ -300,6 +301,7 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.schema.json
         u8"/materials/*",
         { {
+          { u8"extensions", u8"⭐", { {}, u8"{}" } },
           { u8"pbrMetallicRoughness", u8"💎", { {}, u8"{}" } },
           { u8"normalTexture", u8"🖼", { {}, u8"{}" } },
           { u8"occlusionTexture", u8"🖼", { {}, u8"{}" } },
@@ -308,6 +310,12 @@ JsonGui::JsonGui()
           { u8"alphaMode", u8"📄" },
           { u8"alphaCutoff", u8"🎚️", { FloatSlider{}, u8"0.5" } },
           { u8"doubleSided", u8"✅", { {}, u8"false" } },
+        } },
+      },
+      {
+        u8"/materials/*/extensions",
+        { {
+          { u8"KHR_materials_unlit", u8"🏛️", { {}, u8"{}" } },
         } },
       },
       {
@@ -403,7 +411,14 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
                                          ImGuiTreeNodeFlags_OpenOnDoubleClick |
                                          ImGuiTreeNodeFlags_SpanAvailWidth;
   ImGuiTreeNodeFlags node_flags = base_flags;
-  auto is_leaf = (!item || item->Size() == 0);
+  bool is_leaf = !item;
+  if (item) {
+    if (auto array = item->Array()) {
+      if (array->size() == 0) {
+        is_leaf = true;
+      }
+    }
+  }
   if (is_leaf) {
     node_flags |=
       ImGuiTreeNodeFlags_Leaf |
@@ -555,6 +570,7 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
       ClearCache(jsonpath);
       break;
     case EditorResult::KeyCreated:
+      ClearCache(jsonpath);
       break;
     case EditorResult::ArrayAppended:
       break;
@@ -580,7 +596,16 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
               result = EditorResult::Updated;
             }
           } else {
-            Traverse(nullptr, jsonpath, prop);
+            auto child_result = Traverse(nullptr, jsonpath, prop);
+            if (child_result == EditorResult::KeyCreated) {
+              gltfjson::tree::Parser parser(prop.Value.DefaultJson);
+              if (auto new_child = parser.ParseExpected()) {
+                object->insert({ prop.Key, *new_child });
+                result = EditorResult::Updated;
+              } else {
+                PLOG_ERROR << gltfjson::from_u8(new_child.error());
+              }
+            }
           }
           jsonpath.resize(size);
         }
