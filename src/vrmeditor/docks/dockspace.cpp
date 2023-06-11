@@ -41,11 +41,11 @@ DockSpaceManager::DockSpaceManager()
   // }));
   // Docks.back().IsOpen = false;
 
-  ImGuiFileDialog::Instance()->SetFileStyle(
-    IGFD_FileStyleByTypeDir,
-    nullptr,
-    ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
-    (const char*)u8" "); // for all dirs
+  // ImGuiFileDialog::Instance()->SetFileStyle(
+  //   IGFD_FileStyleByTypeDir,
+  //   nullptr,
+  //   ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
+  //   (const char*)u8" "); // for all dirs
 
 #if _WIN32
   std::filesystem::path user_home = std::getenv("USERPROFILE");
