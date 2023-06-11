@@ -1,5 +1,5 @@
 #include "app.h"
-#include "assetdir.h"
+#include "docks/asset_view.h"
 #include "docks/export_dock.h"
 #include "docks/gl3renderer_gui.h"
 #include "docks/gui.h"
@@ -50,7 +50,6 @@ std::filesystem::path g_ini;
 
 class App
 {
-  std::list<std::shared_ptr<AssetDir>> m_assets;
   std::shared_ptr<HierarchyGui> m_hierarchy;
 
   std::shared_ptr<libvrm::Timeline> m_timeline;
@@ -415,21 +414,14 @@ public:
       return false;
     }
 
-    auto asset = std::make_shared<AssetDir>(name, path);
-    asset->Update();
-    m_assets.push_back(asset);
+    auto asset = std::make_shared<AssetView>(name, path);
+    asset->Reload();
 
-    auto callback = [this](const std::filesystem::path& path) {
-      if (LoadPath(path)) {
-        Platform::Instance().SetTitle(path.string());
-      } else {
-      }
-    };
+    auto title = std::string("🎁") + std::string{ name.data(), name.size() };
+    DockSpaceManager::Instance().AddDock(
+      { title, [asset]() { asset->ShowGui(); } });
 
-    auto dock = m_assets.back()->CreateDock(callback);
-    DockSpaceManager::Instance().AddDock(dock);
-
-    PLOG_INFO << name << " => " << path.string();
+    PLOG_INFO << title << " => " << path.string();
     return true;
   }
 };
