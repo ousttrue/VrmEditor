@@ -109,7 +109,6 @@ public:
     auto addDock = [](const grapho::imgui::Dock& dock) {
       DockSpaceManager::Instance().AddDock(dock);
     };
-    auto indent = Gui::Instance().FontSize * 0.5f;
 
     {
       m_json->SetScene(gltf);
@@ -136,10 +135,10 @@ public:
       VrmDock::CreateVrm(addDock, "vrm", m_runtime);
 
 #ifndef NDEBUG
-      ExportDock::Create(addDock, "[debug] export", m_runtime, indent);
+      ExportDock::Create(addDock, "[debug] export", m_runtime);
 #endif
 
-      m_hierarchy->SetRuntimeScene(m_runtime, indent);
+      m_hierarchy->SetRuntimeScene(m_runtime);
     }
 
     return m_runtime;
@@ -230,10 +229,9 @@ public:
     ViewDock::CreateSetting(
       addDock, "view-settings", m_env, m_runtimeView, m_settings);
 
-    auto indent = Gui::Instance().FontSize * 0.5f;
     addDock({
       "Json",
-      [json = m_json, indent]() mutable { json->ShowSelector(indent); },
+      [json = m_json]() mutable { json->ShowSelector(); },
     });
     addDock({ "3D-View" });
 

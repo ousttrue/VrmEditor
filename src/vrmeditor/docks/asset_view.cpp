@@ -1,97 +1,113 @@
 #include "asset_view.h"
 #include "app.h"
 #include "fs_util.h"
+#include "gui.h"
 #include <algorithm>
 #include <array>
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <plog/Log.h>
 
-// using AssetEnter =
-//   std::function<bool(const std::filesystem::path& path, uint64_t id)>;
-// using AssetLeave = std::function<void()>;
-//
-// using LoadFunc = std::function<void(const std::filesystem::path& path)>;
-//
-//
+static bool
+IsAncestorOf(const std::filesystem::path& lhs, const std::filesystem::path& rhs)
+{
+  if (!std::filesystem::is_directory(lhs)) {
+    return false;
+  }
+  for (auto current = rhs.parent_path();; current = current.parent_path()) {
+    if (current == lhs) {
+      return true;
+    }
+    if (current == current.parent_path()) {
+      break;
+    }
+  }
+  return false;
+}
+
 struct Asset
 {
   std::filesystem::path Path;
   std::u8string Type;
   std::u8string Label;
   ImVec4 Color;
+  std::list<std::shared_ptr<Asset>> Children;
 
-  static std::optional<Asset> FromPath(const std::filesystem::path& path)
+  Asset(const std::filesystem::path& path)
+    : Path(path)
+    , Label(path.filename().u8string())
   {
-    auto extension = path.extension().string();
-    std::transform(
-      extension.begin(), extension.end(), extension.begin(), tolower);
-
-    if (extension == ".gltf") {
-      return Asset{
-        .Path = path,
-        .Type = std::u8string(u8"GLTF"),
-        .Label = path.filename().u8string(),
-        .Color = (ImVec4)ImColor::HSV(2 / 7.0f, 0.8f, 0.6f),
-      };
-    }
-    if (extension == ".glb") {
-      return Asset{
-        .Path = path,
-        .Type = std::u8string(u8"GLB"),
-        .Label = path.filename().u8string(),
-        .Color = (ImVec4)ImColor::HSV(2 / 7.0f, 0.8f, 0.6f),
-      };
-    }
-    if (extension == ".vrm") {
-      return Asset{
-        .Path = path,
-        .Type = std::u8string(u8"VRM"),
-        .Label = path.filename().u8string(),
-        .Color = (ImVec4)ImColor::HSV(4 / 7.0f, 0.8f, 0.6f),
-      };
-    }
-    if (extension == ".vrma") {
-      return Asset{
-        .Path = path,
-        .Type = std::u8string(u8"VRMA"),
-        .Label = path.filename().u8string(),
-        .Color = (ImVec4)ImColor::HSV(5 / 7.0f, 0.8f, 0.6f),
-      };
-    }
-    if (extension == ".fbx") {
-      return Asset{
-        .Path = path,
-        .Type = std::u8string(u8"FBX"),
-        .Label = path.filename().u8string(),
-        .Color = (ImVec4)ImColor::HSV(6 / 7.0f, 0.8f, 0.6f),
-      };
-    }
-    if (extension == ".bvh") {
-      return Asset{
-        .Path = path,
-        .Type = std::u8string(u8"BVH"),
-        .Label = path.filename().u8string(),
-        .Color = (ImVec4)ImColor::HSV(0 / 7.0f, 0.8f, 0.6f),
-      };
-    }
-
-    return {};
   }
 
-  bool Show() const
+  void Add(const std::shared_ptr<Asset>& asset)
+  {
+    if (asset->Path.parent_path() == Path) {
+      Children.push_back(asset);
+      return;
+    }
+
+    for (auto& child : Children) {
+      if (std::filesystem::is_directory(child->Path) &&
+          IsAncestorOf(child->Path, asset->Path)) {
+        child->Add(asset);
+        return;
+      }
+    }
+
+    for (auto current = asset->Path.parent_path();;
+         current = current.parent_path()) {
+      if (current.parent_path() == Path) {
+        // found
+        auto folder = std::make_shared<Asset>(current);
+        Children.push_back(folder);
+        Children.back()->Add(asset);
+        return;
+      }
+
+      if (current == current.parent_path()) {
+        break;
+      }
+    }
+    PLOG_ERROR << asset->Path.string() << " not found";
+  }
+
+  void ShowGui()
   {
     ImGui::TableNextRow();
+
+    static ImGuiTreeNodeFlags base_flags =
+      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+      ImGuiTreeNodeFlags_SpanAvailWidth;
+    ImGuiTreeNodeFlags node_flags = base_flags;
+    if (Children.empty()) {
+      node_flags |=
+        ImGuiTreeNodeFlags_Leaf |
+        ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+    }
+
+    // 0
+    ImGui::TableNextColumn();
+    // auto id = this);
+    auto node_open = ImGui::TreeNodeEx(
+      (void*)this, node_flags, "%s", (const char*)Label.c_str());
+
+    // ImGui::PushID((const char*)Path.c_str());
+
+    // 1
     ImGui::TableNextColumn();
     ImGui::TextUnformatted((const char*)Type.c_str());
-    ImGui::TableNextColumn();
-    ImGui::TextUnformatted(
-      (const char*)Path.parent_path().filename().string().c_str());
-    ImGui::TableNextColumn();
-    ImGui::PushStyleColor(ImGuiCol_Button, Color);
-    auto result = ImGui::Button((const char*)Label.c_str(), { -1, 0 });
-    ImGui::PopStyleColor();
-    return result;
+
+    // if (ImGui::Button((const char*)Label.c_str(), { -1, 0 })) {
+    // }
+    // ImGui::PopID();
+
+    if (Children.size() && node_open) {
+      for (auto& child : Children) {
+        child->ShowGui();
+      }
+
+      ImGui::TreePop();
+    }
   }
 
   bool operator<(const Asset& b) const noexcept { return Path < b.Path; }
@@ -99,38 +115,36 @@ struct Asset
 
 struct AssetViewImpl
 {
-  // grapho::imgui::Dock CreateDock(const LoadFunc& callback);
   std::string Name;
-  std::filesystem::path Dir;
-  std::vector<Asset> Assets;
+  std::shared_ptr<Asset> Root;
 
   AssetViewImpl(std::string_view name, const std::filesystem::path& path)
     : Name(name)
-    , Dir(path)
+    , Root(new Asset(path))
   {
   }
 
   void Reload()
   {
-    Assets.clear();
-    if (!std::filesystem::is_directory(Dir)) {
+    Root->Children.clear();
+    if (!std::filesystem::is_directory(Root->Path)) {
       return;
     }
 
-    for (auto e : std::filesystem::recursive_directory_iterator(Dir)) {
-      if (auto asset = Asset::FromPath(e.path())) {
-        Assets.push_back(*asset);
+    for (auto e : std::filesystem::recursive_directory_iterator(Root->Path)) {
+      if (auto asset = std::make_shared<Asset>(e.path())) {
+        Root->Add(asset);
       }
     }
 
-    std::sort(Assets.begin(), Assets.end());
+    // std::sort(Assets.begin(), Assets.end());
   }
 
   void ShowGui()
   {
     if (ImGui::Button("📁Open")) {
-      PLOG_INFO << "open: " << (const char*)Dir.u8string().c_str();
-      shell_open(Dir);
+      PLOG_INFO << "open: " << (const char*)Root->Path.u8string().c_str();
+      shell_open(Root->Path);
     }
     ImGui::SameLine();
     if (ImGui::Button("🔄Reload")) {
@@ -138,17 +152,22 @@ struct AssetViewImpl
     }
     ImGui::Separator();
 
-    std::array<const char*, 3> cols = {
-      "Type",
-      "Dir",
+    std::array<const char*, 2> cols = {
       "Name",
+      "Type",
     };
+
     if (grapho::imgui::BeginTableColumns("##assetdir", cols)) {
-      for (auto& asset : Assets) {
-        if (asset.Show()) {
-          app::TaskLoadPath(asset.Path);
-        }
+      // tree
+      ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing,
+                          Gui::Instance().Indent());
+
+      for (auto& child : Root->Children) {
+        child->ShowGui();
       }
+
+      ImGui::PopStyleVar();
+
       ImGui::EndTable();
     }
   }
@@ -175,12 +194,3 @@ AssetView::ShowGui()
 {
   m_impl->ShowGui();
 }
-
-// grapho::imgui::Dock
-// AssetView::CreateDock(const LoadFunc& callback)
-// {
-//   return {
-//     std::string("🎁") + Name,
-//     [this, callback]() { this->ShowGui(callback); },
-//   };
-// }

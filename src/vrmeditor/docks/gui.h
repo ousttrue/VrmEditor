@@ -15,6 +15,7 @@ class Gui
   std::filesystem::path m_baseFont;
   std::filesystem::path m_japanseseFont;
   std::filesystem::path m_iconFont;
+  int FontSize = 20;
 
   Gui();
 
@@ -29,8 +30,8 @@ public:
     static Gui s_instance;
     return s_instance;
   }
-
-  int FontSize = 20;
+  void SetFontSize(int size) { FontSize = size; }
+  float Indent() const { return FontSize * 0.5f; }
   void DarkMode();
 
   bool SetFont(const std::filesystem::path& path);

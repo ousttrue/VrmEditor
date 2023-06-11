@@ -66,7 +66,7 @@ struct LuaEngineImpl
         }) },
       // font settings
       { "set_font_size", MakeLuaFunc([](int font_size) {
-          Gui::Instance().FontSize = font_size;
+          Gui::Instance().SetFontSize(font_size);
         }) },
       { "set_font", MakeLuaFunc([](const std::filesystem::path& path) {
           return Gui::Instance().SetFont(path);

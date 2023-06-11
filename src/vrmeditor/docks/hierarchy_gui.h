@@ -12,6 +12,6 @@ class HierarchyGui
 public:
   HierarchyGui();
   ~HierarchyGui();
-  void SetRuntimeScene(const std::shared_ptr<libvrm::RuntimeScene>& scene, float indent);
+  void SetRuntimeScene(const std::shared_ptr<libvrm::RuntimeScene>& scene);
   void ShowGui();
 };

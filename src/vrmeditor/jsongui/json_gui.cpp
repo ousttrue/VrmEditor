@@ -1,4 +1,5 @@
 #include "json_gui.h"
+#include "../docks/gui.h"
 #include "json_widgets.h"
 #include <array>
 #include <charconv>
@@ -528,7 +529,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
 }
 
 void
-JsonGui::ShowSelector(float indent)
+JsonGui::ShowSelector()
 {
   if (!m_root) {
     return;
@@ -551,7 +552,7 @@ JsonGui::ShowSelector(float indent)
   if (grapho::imgui::BeginTableColumns("##JsonGui::ShowSelector", cols)) {
 
     // tree
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, Gui::Instance().Indent());
 
     std::u8string jsonpath(u8"/");
     Traverse(m_root->m_gltf->m_json,

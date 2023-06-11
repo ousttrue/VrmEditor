@@ -37,7 +37,7 @@ struct JsonGui
   std::tuple<bool, EditorResult> Enter(const gltfjson::tree::NodePtr& item,
                                        const std::u8string& jsonpath,
                                        const JsonProp& prop);
-  void ShowSelector(float indent);
+  void ShowSelector();
 
 private:
   EditorResult Traverse(const gltfjson::tree::NodePtr& item,

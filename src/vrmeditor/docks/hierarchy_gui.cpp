@@ -1,5 +1,6 @@
 #include "hierarchy_gui.h"
 #include "../printfbuffer.h"
+#include "gui.h"
 #include <imgui.h>
 
 #include <grapho/imgui/widgets.h>
@@ -10,15 +11,12 @@
 struct HierarchyGuiImpl
 {
   std::shared_ptr<libvrm::RuntimeScene> m_scene;
-  float m_indent = 5;
   PrintfBuffer m_print;
   libvrm::RuntimeNode* m_selected = nullptr;
 
-  void SetScene(const std::shared_ptr<libvrm::RuntimeScene>& scene,
-                float indent)
+  void SetScene(const std::shared_ptr<libvrm::RuntimeScene>& scene)
   {
     m_scene = scene;
-    m_indent = indent;
   }
 
   void Enter(const std::shared_ptr<libvrm::RuntimeNode>& node)
@@ -75,7 +73,8 @@ struct HierarchyGuiImpl
 
     if (grapho::imgui::BeginTableColumns("##JsonGui::ShowSelector", cols)) {
       // tree
-      ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, m_indent);
+      ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing,
+                          Gui::Instance().Indent());
 
       for (auto& root : m_scene->m_roots) {
         Enter(root);
@@ -99,10 +98,9 @@ HierarchyGui::~HierarchyGui()
 
 void
 HierarchyGui::SetRuntimeScene(
-  const std::shared_ptr<libvrm::RuntimeScene>& scene,
-  float indent)
+  const std::shared_ptr<libvrm::RuntimeScene>& scene)
 {
-  m_impl->SetScene(scene, indent);
+  m_impl->SetScene(scene);
 }
 
 void
