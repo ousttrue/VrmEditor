@@ -318,11 +318,9 @@ struct FloatSlider
                   const gltfjson::Bin& bin,
                   const gltfjson::tree::NodePtr& node)
   {
-    if (ShowGuiSliderFloat("##_FloatSLider", node, Min, Max, Default)) {
-      return true;
-    } else {
-      return false;
-    }
+    return ShowGuiSliderFloat("##_FloatSLider", node, Min, Max, Default)
+             ? true
+             : false;
   }
 };
 
@@ -334,11 +332,7 @@ struct RgbPicker
                   const gltfjson::Bin& bin,
                   const gltfjson::tree::NodePtr& node)
   {
-    if (ShowGuiColor3("##_RgbPicker", node, Default)) {
-      return true;
-    } else {
-      return false;
-    }
+    return ShowGuiColor3("##_RgbPicker", node, Default) ? true : false;
   }
 };
 
@@ -350,31 +344,18 @@ struct RgbaPicker
                   const gltfjson::Bin& bin,
                   const gltfjson::tree::NodePtr& node)
   {
-    if (ShowGuiColor4("##_RgbaPicker", node, Default)) {
-      return true;
-    } else {
-      return false;
-    }
+    return ShowGuiColor4("##_RgbaPicker", node, Default) ? true : false;
   }
 };
 
-// struct StringEnum
-// {
-//   std::vector<const char*> Values;
-//
-//   ShowGuiFunc operator()(std::u8string_view jsonpath)
-//   {
-//     auto view = gltfjson::JsonPath(jsonpath).Back();
-//     std::u8string label{ view.begin(), view.end() };
-//     // std::span<const char*> values = Values;
-//     return [label, &values = Values](const gltfjson::Root& root,
-//                                      const gltfjson::Bin& bin,
-//                                      const gltfjson::tree::NodePtr& node) {
-//       if (ShowGuiStringEnum((const char*)label.c_str(), node, values)) {
-//         return true;
-//       } else {
-//         return false;
-//       }
-//     };
-//   }
-// };
+struct StringEnum
+{
+  std::vector<const char*> Values;
+
+  bool operator()(const gltfjson::Root& root,
+                  const gltfjson::Bin& bin,
+                  const gltfjson::tree::NodePtr& node)
+  {
+    return ShowGuiStringEnum("##_StringEnum", node, Values) ? true : false;
+  }
+};

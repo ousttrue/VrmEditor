@@ -1,5 +1,6 @@
 #pragma once
 #include <plog/Log.h>
+#include <regex>
 #include <vector>
 
 class ImLogger
@@ -11,7 +12,7 @@ class ImLogger
   };
   std::vector<Msg> Logs;
   bool AutoScroll = true;
-  std::string m_home;
+  std::regex m_home;
   ImLogger();
 
 public:

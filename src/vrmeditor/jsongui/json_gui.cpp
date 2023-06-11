@@ -283,6 +283,7 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/sampler.schema.json
         u8"/samplers/*",
         { {
+          { u8"name", u8"📄", { {}, U8Q("") } },
           { u8"magFilter", u8"🔢" },
           { u8"minFilter", u8"🔢" },
           { u8"wrapS", u8"🔢" },
@@ -293,6 +294,7 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/texture.schema.json
         u8"/textures/*",
         { {
+          { u8"name", u8"📄", { {}, U8Q("") } },
           { u8"source", u8"🆔" },
           { u8"sampler", u8"🆔" },
         } },
@@ -301,14 +303,17 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.schema.json
         u8"/materials/*",
         { {
+          { u8"name", u8"📄", { {}, U8Q("") } },
           { u8"extensions", u8"⭐", { {}, u8"{}" } },
           { u8"pbrMetallicRoughness", u8"💎", { {}, u8"{}" } },
           { u8"normalTexture", u8"🖼", { {}, u8"{}" } },
           { u8"occlusionTexture", u8"🖼", { {}, u8"{}" } },
           { u8"emissiveTexture", u8"🖼", { {}, u8"{}" } },
           { u8"emissiveFactor", u8"🎨", { RgbPicker{}, u8"[0,0,0]" } },
-          { u8"alphaMode", u8"📄" },
-          { u8"alphaCutoff", u8"🎚️", { FloatSlider{}, u8"0.5" } },
+          { u8"alphaMode",
+            u8"👻",
+            { StringEnum{ { "OPAQUE", "MASK", "BLEND" } }, U8Q("OPAQUE") } },
+          { u8"alphaCutoff", u8"👻", { FloatSlider{}, u8"0.5" } },
           { u8"doubleSided", u8"✅", { {}, u8"false" } },
         } },
       },
@@ -327,14 +332,14 @@ JsonGui::JsonGui()
           {
             u8"metallicFactor",
             u8"🎚️",
-            { FloatSlider{ .Default = 1.0f } },
+            { FloatSlider{}, u8"1" },
           },
           {
             u8"roughnessFactor",
             u8"🎚️",
-            { FloatSlider{ .Default = 1.0f } },
+            { FloatSlider{}, u8"1" },
           },
-          { u8"metallicRoughnessTexture", u8"🖼" },
+          { u8"metallicRoughnessTexture", u8"🖼", { {}, u8"{}" } },
         } },
       },
       // mesh/skin
@@ -540,6 +545,8 @@ JsonGui::ShowSelector(float indent)
     "Value",
     "✅",
   };
+
+  // auto size = ImGui::GetContentRegionAvail();
 
   if (grapho::imgui::BeginTableColumns("##JsonGui::ShowSelector", cols)) {
 

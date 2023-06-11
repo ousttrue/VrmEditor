@@ -63,6 +63,14 @@ Platform::WindowCreate(const char* title)
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
+  if(Width==0)
+  {
+    Width=640;
+  }
+  if(Height==0)
+  {
+    Height=480;
+  }
   m_window = glfwCreateWindow(Width, Height, title, NULL, NULL);
   if (!m_window) {
     return nullptr;
