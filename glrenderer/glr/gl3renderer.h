@@ -24,6 +24,7 @@ namespace libvrm {
 struct BaseMesh;
 struct DeformedMesh;
 struct DrawItem;
+class Image;
 }
 
 namespace glr {
@@ -118,5 +119,8 @@ RenderSkybox(const DirectX::XMFLOAT4X4& projection,
 
 std::vector<std::shared_ptr<Material>>&
 MaterialMap();
+
+std::shared_ptr<grapho::gl3::Texture>
+CreateTexture(const std::shared_ptr<libvrm::Image>& image);
 
 } // namespace

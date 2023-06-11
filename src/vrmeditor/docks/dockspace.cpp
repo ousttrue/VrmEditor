@@ -64,8 +64,13 @@ DockSpaceManager::DockSpaceManager()
 }
 
 void
-DockSpaceManager::AddDock(const grapho::imgui::Dock& dock)
+DockSpaceManager::AddDock(const grapho::imgui::Dock& dock, bool tmporary)
 {
+  if (tmporary) {
+    TmpDocks.push_back(dock);
+    return;
+  }
+
   bool visible = true;
   auto found = std::find_if(Docks.begin(), Docks.end(), [&dock](auto& d) {
     return d.Name == dock.Name;
@@ -165,6 +170,15 @@ DockSpaceManager::ShowGui()
         for (auto& dock : Docks) {
           ImGui::MenuItem(dock.Name.c_str(), nullptr, &dock.IsOpen);
         }
+        ImGui::Separator();
+        for (auto it = TmpDocks.begin(); it != TmpDocks.end();) {
+          if (!it->IsOpen) {
+            it = TmpDocks.erase(it);
+          } else {
+            ImGui::MenuItem(it->Name.c_str(), nullptr, &it->IsOpen);
+            ++it;
+          }
+        }
         ImGui::EndMenu();
       }
       ImGui::EndMenuBar();
@@ -208,6 +222,9 @@ DockSpaceManager::ShowGui()
 
   // docks
   for (auto& dock : Docks) {
+    dock.Show();
+  }
+  for (auto& dock : TmpDocks) {
     dock.Show();
   }
 }

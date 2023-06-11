@@ -1,3 +1,5 @@
+#include <GL/glew.h>
+
 #include "app.h"
 #include "docks/asset_view.h"
 #include "docks/export_dock.h"
@@ -26,12 +28,14 @@
 #include <gltfjson.h>
 #include <gltfjson/glb.h>
 #include <gltfjson/json_tree_exporter.h>
+#include <grapho/gl3/texture.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
 #include <queue>
 #include <vrm/animation_update.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
+#include <vrm/image.h>
 #include <vrm/importer.h>
 #include <vrm/timeline.h>
 #ifdef _WIN32
@@ -346,7 +350,71 @@ public:
     if (extension == ".hdr") {
       return LoadPbr(path);
     }
+    if (extension == ".png" || extension == ".jpg" || extension == ".gif") {
+      return LoadImage(path);
+    }
+    if (extension == ".txt" || extension == ".md") {
+      return LoadText(path);
+    }
+
+    PLOG_WARNING << "unknown tpe: " << path.string();
     return false;
+  }
+
+  bool LoadImage(const std::filesystem::path& path)
+  {
+    auto bytes = libvrm::ReadAllBytes(path);
+    if (bytes.empty()) {
+      return false;
+    }
+
+    auto image = std::make_shared<libvrm::Image>(path.filename().string());
+    if (!image->Load(bytes)) {
+      return false;
+    }
+
+    auto texture = glr::CreateTexture(image);
+    if (!texture) {
+      return false;
+    }
+    DockSpaceManager::Instance().AddDock(
+      { std::string("🖼") + path.filename().string(),
+        [texture, width = image->Width(), height = image->Height()]() {
+          auto size = ImGui::GetContentRegionAvail();
+          auto w = size.x;
+          auto x = size.x / width;
+          auto y = size.y / height;
+          if (x < y) {
+            // fit horizontal
+            size.y = height * x;
+          } else {
+            // fit vertical
+            size.x = width * y;
+          }
+          //
+          ImGui::SetCursorPosX((w - size.x) / 2);
+          ImGui::Image((ImTextureID)(intptr_t)texture->Handle(), size);
+        } },
+      true);
+
+    return true;
+  }
+
+  bool LoadText(const std::filesystem::path& path)
+  {
+    auto bytes = libvrm::ReadAllBytes(path);
+    if (bytes.empty()) {
+      return false;
+    }
+
+    DockSpaceManager::Instance().AddDock(
+      { std::string("📄") + path.filename().string(),
+        [text = std::string((const char*)bytes.data(), bytes.size())]() {
+          //
+          ImGui::TextWrapped("%s", text.c_str());
+        } },
+      true);
+    return true;
   }
 
   bool LoadModel(const std::filesystem::path& path)
@@ -417,7 +485,7 @@ public:
 
     auto title = std::string("🎁") + std::string{ name.data(), name.size() };
     DockSpaceManager::Instance().AddDock(
-      { title, [asset]() { asset->ShowGui(); } });
+      { title, [asset]() { asset->ShowGui(); } }, true);
 
     PLOG_INFO << title << " => " << path.string();
     return true;

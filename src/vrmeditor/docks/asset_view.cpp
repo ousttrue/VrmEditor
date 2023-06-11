@@ -25,18 +25,47 @@ IsAncestorOf(const std::filesystem::path& lhs, const std::filesystem::path& rhs)
   return false;
 }
 
+std::unordered_map<std::string, std::u8string> g_iconMap = {
+  // image
+  { ".png", u8"🖼" },
+  { ".jpg", u8"🖼" },
+  { ".gif", u8"🖼" },
+  // model
+  { ".gltf", u8"📦" },
+  { ".glb", u8"📦" },
+  { ".vrm", u8"📦" },
+  { ".fbx", u8"📦" },
+  // animation
+  { ".bvh", u8"🏃" },
+  { ".vrma", u8"🏃" },
+  // text
+  { ".txt", u8"📄" },
+  { ".md", u8"📄" },
+};
+
 struct Asset
 {
   std::filesystem::path Path;
-  std::u8string Type;
+  std::string Type;
   std::u8string Label;
   ImVec4 Color;
   std::list<std::shared_ptr<Asset>> Children;
 
   Asset(const std::filesystem::path& path)
     : Path(path)
-    , Label(path.filename().u8string())
   {
+    Type = path.extension().string();
+    std::transform(Type.cbegin(), Type.cend(), Type.begin(), tolower);
+    if (std::filesystem::is_directory(path)) {
+      Label = std::u8string(u8"📁") + path.stem().u8string();
+    } else {
+      auto found = g_iconMap.find(Type);
+      if (found != g_iconMap.end()) {
+        Label = found->second + path.stem().u8string();
+      } else {
+        Label = std::u8string(u8"🟩") + path.stem().u8string();
+      }
+    }
   }
 
   void Add(const std::shared_ptr<Asset>& asset)
@@ -87,19 +116,17 @@ struct Asset
 
     // 0
     ImGui::TableNextColumn();
-    // auto id = this);
     auto node_open = ImGui::TreeNodeEx(
       (void*)this, node_flags, "%s", (const char*)Label.c_str());
-
-    // ImGui::PushID((const char*)Path.c_str());
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+      if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+        app::TaskLoadPath(Path);
+      }
+    }
 
     // 1
     ImGui::TableNextColumn();
-    ImGui::TextUnformatted((const char*)Type.c_str());
-
-    // if (ImGui::Button((const char*)Label.c_str(), { -1, 0 })) {
-    // }
-    // ImGui::PopID();
+    ImGui::TextUnformatted(Type.c_str());
 
     if (Children.size() && node_open) {
       for (auto& child : Children) {
@@ -143,7 +170,7 @@ struct AssetViewImpl
   void ShowGui()
   {
     if (ImGui::Button("📁Open")) {
-      PLOG_INFO << "open: " << (const char*)Root->Path.u8string().c_str();
+      PLOG_INFO << "open: " << Root->Path.string().c_str();
       shell_open(Root->Path);
     }
     ImGui::SameLine();
@@ -154,7 +181,7 @@ struct AssetViewImpl
 
     std::array<const char*, 2> cols = {
       "Name",
-      "Type",
+      "Ext",
     };
 
     if (grapho::imgui::BeginTableColumns("##assetdir", cols)) {
