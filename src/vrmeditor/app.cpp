@@ -571,6 +571,8 @@ Run(std::span<const char*> args)
     } else {
       // viewermode
       TaskLoadModel(arg);
+      std::filesystem::path path(arg);
+      AddAssetDir("current", path.parent_path());
     }
     // LoadPath(arg);
   }

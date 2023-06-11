@@ -14,7 +14,8 @@ get_home()
 void
 shell_open(const std::filesystem::path& path)
 {
-  auto str = path.wstring();
+  auto absolute = std::filesystem::absolute(path);
+  auto str = absolute.wstring();
   SHELLEXECUTEINFOW info{
     .cbSize = sizeof(SHELLEXECUTEINFOW),
     .fMask = NULL,

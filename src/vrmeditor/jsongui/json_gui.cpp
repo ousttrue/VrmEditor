@@ -446,7 +446,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   int push = 0;
   if (item) {
     if (Has(prop.Flags, JsonPropFlags::Unknown)) {
-      ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::yellow);
+      ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::orange);
       ++push;
     }
   } else {
