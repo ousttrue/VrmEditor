@@ -25,10 +25,10 @@ Name: "glb"; Description: "Extension association"; Types: custom
 Name: "vrm"; Description: "Extension association"; Types: custom
 
 [Files]
-Source: "prefix/bin/vrmeditor.exe"; DestDir: "{app}/bin"
-Source: "prefix/bin/*.dll"; DestDir: "{app}/bin"
-Source: "prefix/shaders/*"; DestDir: "{app}/shaders"
-Source: "prefix/threejs_shader_chunks/*"; DestDir: "{app}/threejs_shader_chunks"
+Source: "prefix\bin\vrmeditor.exe"; DestDir: "{app}\bin"
+Source: "prefix\bin\*.dll"; DestDir: "{app}\bin"
+Source: "prefix\shaders\*"; DestDir: "{app}\shaders"
+Source: "prefix\threejs_shader_chunks\*"; DestDir: "{app}\threejs_shader_chunks"
 
 [Registry]
 Root: HKCR; Subkey: "{#MyAppName}"; ValueType: string; ValueName: ""; ValueData: "Vrm Editor"; Flags: uninsdeletekey
