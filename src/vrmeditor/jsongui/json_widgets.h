@@ -49,31 +49,6 @@ FillArray(const gltfjson::tree::NodePtr& node,
   return values;
 }
 
-template<typename T>
-bool
-ParentKey(const char* label,
-          const gltfjson::tree::NodePtr& parentNode,
-          const std::u8string_view key,
-          const T& showGui)
-{
-  if (!parentNode) {
-    return false;
-  }
-
-  auto node = parentNode->Get(key);
-
-  auto updated = showGui(label, node);
-  if (updated) {
-    if (node) {
-      node->Set(*updated);
-    } else {
-      parentNode->Add(key, *updated);
-    }
-  }
-
-  return updated ? true : false;
-}
-
 bool
 ShowGuiString(const char* label,
               const gltfjson::tree::NodePtr& parentNode,
@@ -95,20 +70,6 @@ ShowGuiSliderFloat(const char* label,
                    float min,
                    float max,
                    float defalutValue);
-
-inline bool
-ShowGuiSliderFloat(const char* label,
-                   const gltfjson::tree::NodePtr& parentNode,
-                   std::u8string_view key,
-                   float min,
-                   float max,
-                   float defalutValue)
-{
-  return ParentKey(
-    label, parentNode, key, [min, max, defalutValue](auto label, auto node) {
-      return ShowGuiSliderFloat(label, node, min, max, defalutValue);
-    });
-}
 
 template<typename T>
 inline bool
@@ -147,52 +108,17 @@ ShowGuiStringEnum(const char* label,
                   // std::u8string_view key,
                   std::span<const char*> items);
 
-inline bool
-ShowGuiStringEnum(const char* label,
-                  const gltfjson::tree::NodePtr& parentNode,
-                  std::u8string_view key,
-                  std::span<const char*> items)
-{
-  return ParentKey(label, parentNode, key, [items](auto label, auto node) {
-    return ShowGuiStringEnum(label, node, items);
-  });
-}
-
 // emissive
 std::optional<std::array<float, 3>>
 ShowGuiColor3(const char* label,
               const gltfjson::tree::NodePtr& node,
               const std::array<float, 3>& defaultColor);
 
-inline bool
-ShowGuiColor3(const char* label,
-              const gltfjson::tree::NodePtr& parentNode,
-              std::u8string_view key,
-              const std::array<float, 3>& defaultColor)
-{
-  return ParentKey(
-    label, parentNode, key, [defaultColor](auto label, auto node) {
-      return ShowGuiColor3(label, node, defaultColor);
-    });
-}
-
 // baseColor
 std::optional<std::array<float, 4>>
 ShowGuiColor4(const char* label,
               const gltfjson::tree::NodePtr& node,
               const std::array<float, 4>& defaultValue);
-
-inline bool
-ShowGuiColor4(const char* label,
-              const gltfjson::tree::NodePtr& parentNode,
-              std::u8string_view key,
-              const std::array<float, 4>& defaultColor)
-{
-  return ParentKey(
-    label, parentNode, key, [defaultColor](auto label, auto node) {
-      return ShowGuiColor4(label, node, defaultColor);
-    });
-}
 
 bool
 ShowGuiFloat3(const char* label,
@@ -214,19 +140,6 @@ std::optional<uint32_t>
 SelectId(const char* label,
          const gltfjson::tree::NodePtr& node,
          const gltfjson::tree::NodePtr& arrayNode);
-
-inline bool
-SelectId(const char* label,
-         const gltfjson::tree::NodePtr& idParent,
-         std::u8string_view key,
-         const gltfjson::tree::NodePtr& arrayNode)
-{
-  return ParentKey(label, idParent, key, [arrayNode](auto label, auto node) {
-    return SelectId(label, node, arrayNode).transform([](auto x) {
-      return (float)x;
-    });
-  });
-}
 
 template<typename T>
 bool
