@@ -14,7 +14,6 @@ enum class JsonPropFlags : uint32_t
   // ReadOnly = 0x02,
   Unknown = 0x04,
   ArrayChild = 0x08,
-  DictObject = 0x10,
 };
 inline JsonPropFlags
 operator|(JsonPropFlags lhs, JsonPropFlags rhs)
@@ -32,13 +31,21 @@ Has(JsonPropFlags lhs, JsonPropFlags rhs)
   return (int)lhs & (int)rhs;
 }
 
+enum class JsonValueFlags: uint32_t
+{
+  None = 0,
+  FixedArray= 0x01,
+  DictObject = 0x02,
+  DefaultIfNone = 0x04,
+};
+
 struct JsonValue
 {
   // active node editor
   ShowGuiFunc Editor;
   // default json node for add
   std::u8string DefaultJson;
-  bool IsFixedArray = false;
+  JsonValueFlags Flags = JsonValueFlags::None;
   // texture represents or default value
 
   std::u8string TextOrDeault(const gltfjson::tree::NodePtr& item) const;
