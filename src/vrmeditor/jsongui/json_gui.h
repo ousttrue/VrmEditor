@@ -19,7 +19,7 @@ enum class EditorResult
 struct JsonGui
 {
   std::shared_ptr<libvrm::GltfRoot> m_root;
-  gltfjson::JsonPathMap<JsonObjectDefinition> m_definitionMap;
+  gltfjson::JsonPathMap<JsonSchema> m_definitionMap;
   PrintfBuffer m_buf;
   std::u8string m_jsonpath;
 

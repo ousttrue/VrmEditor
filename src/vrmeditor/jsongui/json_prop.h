@@ -63,7 +63,7 @@ struct JsonProp
   //                             std::u8string_view jsonpath) const;
 };
 
-struct JsonObjectDefinition
+struct JsonSchema
 {
   std::vector<JsonProp> Props;
 };
