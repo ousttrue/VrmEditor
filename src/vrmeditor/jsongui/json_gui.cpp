@@ -32,24 +32,24 @@ JsonGui::JsonGui()
           { u8"asset", u8"📄", { {}, u8"{}" }, JsonPropFlags::Required },
           //
           { u8"extensions", u8"⭐", { {}, u8"{}" } },
-          { u8"extensionsUsed", u8"⭐", { {}, u8"[]" } },
-          { u8"extensionsRequired", u8"⭐", { {}, u8"[]" } },
+          { u8"extensionsUsed", u8"⭐", { {}, u8"📄" } },
+          { u8"extensionsRequired", u8"⭐", { {}, u8"📄" } },
           { u8"extras", u8"⭐", { {}, u8"{}" } },
           //
-          { u8"buffers", u8"📦", { {}, u8"[]" } },
-          { u8"bufferViews", u8"📦", { {}, u8"[]" } },
-          { u8"accessors", u8"📦", { {}, u8"[]" } },
+          { u8"buffers", u8"📦", { {}, u8"📦" } },
+          { u8"bufferViews", u8"📦", { {}, u8"📦" } },
+          { u8"accessors", u8"📦", { {}, u8"📦" } },
           //
-          { u8"images", u8"🖼", { {}, u8"[]" } },
-          { u8"samplers", u8"🖼", { {}, u8"[]" } },
-          { u8"textures", u8"🖼", { {}, u8"[]" } },
-          { u8"materials", u8"💎", { {}, u8"[]" } },
+          { u8"images", u8"🖼", { {}, u8"🖼" } },
+          { u8"samplers", u8"🖼", { {}, u8"🖼" } },
+          { u8"textures", u8"🖼", { {}, u8"🖼" } },
+          { u8"materials", u8"💎", { {}, u8"💎" } },
           //
-          { u8"meshes", u8"📐", { {}, u8"[]" } },
-          { u8"skins", u8"📐", { {}, u8"[]" } },
+          { u8"meshes", u8"📐", { {}, u8"📐" } },
+          { u8"skins", u8"📐", { {}, u8"📐" } },
           //
-          { u8"nodes", u8"🛞", { {}, u8"[]" } },
-          { u8"scenes", u8"🛞", { {}, u8"[]" } },
+          { u8"nodes", u8"🛞", { {}, u8"🛞" } },
+          { u8"scenes", u8"🛞", { {}, u8"🛞" } },
           { u8"scene", u8"🆔", { {}, u8"0" } },
         } },
       },
@@ -363,8 +363,8 @@ JsonGui::JsonGui()
         u8"/meshes/*",
         { {
           { u8"name", u8"📄", { {}, U8Q("") } },
-          { u8"primitives", u8"[]", {}, JsonPropFlags::Required },
-          { u8"weights", u8"[]" },
+          { u8"primitives", u8"📐", {}, JsonPropFlags::Required },
+          { u8"weights", u8"🔢" },
         } },
       },
       // node
@@ -373,12 +373,18 @@ JsonGui::JsonGui()
         u8"/nodes/*",
         { {
           { u8"name", u8"📄", { {}, U8Q("") } },
-          { u8"mesh", u8"🆔", { SelectMesh, u8"0"}},
-          { u8"children", u8"[]" },
-          { u8"translation", u8"[T]" },
-          { u8"rotation", u8"[R]" },
-          { u8"scale", u8"[S]" },
-          { u8"matrix", u8"[M]" },
+          { u8"mesh", u8"🆔", { SelectMesh, u8"0" } },
+          { u8"children", u8"🆔" },
+          { u8"translation", u8"🔢", { {}, u8"{0,0,0}" } },
+          { u8"rotation", u8"🔢", { {}, u8"{0,0,0,1}" } },
+          { u8"scale", u8"🔢", { {}, u8"{1,1,1}" } },
+          { u8"matrix",
+            u8"🔢",
+            { {},
+              u8"{1,0,0,0"
+              u8",0,1,0,0"
+              u8",0,0,1,0"
+              u8",0,0,0,1}" } },
         } },
       },
       {
@@ -441,6 +447,9 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
       if (array->size() == 0) {
         is_leaf = true;
       }
+    } else if (item->Object()) {
+    } else {
+      is_leaf = true;
     }
   }
   if (is_leaf) {
@@ -608,6 +617,9 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
     gltfjson::tree::AddDelimiter(jsonpath);
     auto size = jsonpath.size();
     if (auto object = item->Object()) {
+      //
+      // object
+      //
       std::unordered_set<std::u8string> used;
       // used.clear();
       if (auto definition = m_definitionMap.Match(jsonpath)) {
@@ -657,6 +669,9 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
         jsonpath.resize(size);
       }
     } else if (auto array = item->Array()) {
+      //
+      // array
+      //
       int i = 0;
       std::optional<int> removed;
       for (auto& child : *array) {
