@@ -294,6 +294,18 @@ SelectSampler(std::u8string_view jsonpath)
   };
 }
 
+inline bool
+SelectMesh(const gltfjson::Root& root,
+           const gltfjson::Bin& bin,
+           const gltfjson::tree::NodePtr& node)
+{
+  if (SelectId("##_SelectMesh", node, root.Meshes.m_json)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 inline ShowGuiFunc
 SelectTexture(std::u8string_view jsonpath)
 {

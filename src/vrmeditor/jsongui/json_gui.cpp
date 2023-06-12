@@ -240,6 +240,7 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
         u8"/buffers/*",
         { {
+          { u8"name", u8"📄", { {}, U8Q("") } },
           {
             u8"byteLength",
             u8"🔢",
@@ -257,6 +258,7 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json
         u8"/bufferViews/*",
         { {
+          { u8"name", u8"📄", { {}, U8Q("") } },
           { u8"buffer", u8"🆔", {}, JsonPropFlags::Required },
           { u8"byteLength", u8"📄", {}, JsonPropFlags::Required },
         } },
@@ -265,6 +267,7 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.schema.json
         u8"/accessors/*",
         { {
+          { u8"name", u8"📄", { {}, U8Q("") } },
           { u8"componentType", u8"🔢", {}, JsonPropFlags::Required },
           { u8"type", u8"📄", {}, JsonPropFlags::Required },
           { u8"count", u8"🔢", {}, JsonPropFlags::Required },
@@ -275,6 +278,7 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/image.schema.json
         u8"/images/*",
         { {
+          { u8"name", u8"📄", { {}, U8Q("") } },
           { u8"uri", u8"📄" },
           { u8"mimeType", u8"📄" },
           { u8"bufferView", u8"🆔" },
@@ -358,6 +362,7 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.schema.json
         u8"/meshes/*",
         { {
+          { u8"name", u8"📄", { {}, U8Q("") } },
           { u8"primitives", u8"[]", {}, JsonPropFlags::Required },
           { u8"weights", u8"[]" },
         } },
@@ -367,7 +372,20 @@ JsonGui::JsonGui()
         // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
         u8"/nodes/*",
         { {
-          { u8"mesh", u8"🆔" },
+          { u8"name", u8"📄", { {}, U8Q("") } },
+          { u8"mesh", u8"🆔", { SelectMesh, u8"0"}},
+          { u8"children", u8"[]" },
+          { u8"translation", u8"[T]" },
+          { u8"rotation", u8"[R]" },
+          { u8"scale", u8"[S]" },
+          { u8"matrix", u8"[M]" },
+        } },
+      },
+      {
+        // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/skin.schema.json
+        u8"/skins/*",
+        { {
+          { u8"name", u8"📄", { {}, U8Q("") } },
         } },
       },
     })
