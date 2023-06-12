@@ -17,7 +17,7 @@ srcs = [
     'docks/hierarchy_gui.cpp',
     'docks/im_fbo.cpp',
     'jsongui/json_gui.cpp',
-    'jsongui/json_prop.cpp',
+    'jsongui/jsonschema/json_prop.cpp',
     'jsongui/json_widgets.cpp',
     'humanpose/humanpose_stream.cpp',
     'humanpose/udp_receiver.cpp',

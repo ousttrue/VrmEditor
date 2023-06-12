@@ -1,6 +1,6 @@
 #pragma once
 #include "../printfbuffer.h"
-#include "json_prop.h"
+#include "jsonschema/json_prop.h"
 #include <functional>
 #include <gltfjson.h>
 #include <gltfjson/jsonpath.h>

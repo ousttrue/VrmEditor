@@ -67,3 +67,12 @@ struct JsonSchema
 {
   std::vector<JsonProp> Props;
 };
+
+inline const std::u8string
+U8Q(const char* str)
+{
+  return std::u8string(u8"\"") + std::u8string((const char8_t*)str) +
+         std::u8string(u8"\"");
+}
+
+

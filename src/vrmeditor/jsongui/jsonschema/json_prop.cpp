@@ -1,5 +1,5 @@
 #include "json_prop.h"
-#include "json_widgets.h"
+#include "../json_widgets.h"
 
 static std::u8string
 ToStr(const gltfjson::tree::ArrayValue& array)
