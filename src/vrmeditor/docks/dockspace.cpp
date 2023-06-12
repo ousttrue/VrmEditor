@@ -1,5 +1,6 @@
 #include "dockspace.h"
 #include "app.h"
+#include "config.h"
 #include <ImGuiFileDialog.h>
 #include <filesystem>
 #include <imgui.h>
@@ -181,6 +182,12 @@ DockSpaceManager::ShowGui()
         }
         ImGui::EndMenu();
       }
+
+      if (ImGui::BeginMenu("Help")) {
+        ImGui::MenuItem("Version", PACKAGE_VERSION);
+        ImGui::EndMenu();
+      }
+
       ImGui::EndMenuBar();
     }
     ImGui::End();

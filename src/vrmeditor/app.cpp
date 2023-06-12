@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 
 #include "app.h"
+#include "config.h"
 #include "docks/asset_view.h"
 #include "docks/export_dock.h"
 #include "docks/gl3renderer_gui.h"
@@ -46,7 +47,7 @@
 FileWatcher g_watcher;
 std::filesystem::path g_shaderDir;
 
-const auto WINDOW_TITLE = "VrmEditor";
+const auto WINDOW_TITLE = "VrmEditor - " PACKAGE_VERSION;
 
 std::queue<app::Task> g_tasks;
 

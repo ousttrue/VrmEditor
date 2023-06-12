@@ -63,7 +63,7 @@ struct Asset
       if (found != g_iconMap.end()) {
         Label = found->second + path.stem().u8string();
       } else {
-        Label = std::u8string(u8"🟩") + path.stem().u8string();
+        Label = std::u8string(u8"⬜") + path.stem().u8string();
       }
     }
   }

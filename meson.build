@@ -1,10 +1,22 @@
 project(
     'VrmEditor',
-    'cpp',
-    version: '1.3.5',
+    ['cpp', 'c'],
+    version: '1.4.0',
     license: 'MIT',
     default_options: [],
 )
+
+cdata = configuration_data()
+cdata.set_quoted('PACKAGE', meson.project_name())
+cdata.set_quoted('PACKAGE_VERSION', meson.project_version())
+configure_file(
+    output: 'config.h',
+    configuration: cdata,
+)
+config_dep = declare_dependency(
+    include_directories: include_directories('.'),
+)
+
 # add_global_arguments('/experimental:module', language: 'cpp')
 
 glew_dep = dependency('glew', default_options: ['default_library=static'])
