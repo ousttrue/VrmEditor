@@ -14,11 +14,26 @@
 #include <sstream>
 #include <string_view>
 #include <unordered_set>
+#include "jsonschema/vrm0.h"
+#include "jsonschema/vrm1.h"
+#include "jsonschema/extensions.h"
 #include "jsonschema/gltf.h"
 
 JsonGui::JsonGui()
 {
+  for(auto &kv: jsonschema::VRMC_vrm)
+  {
+    m_definitionMap.m_map.push_back(kv);
+  }
+  for(auto &kv: jsonschema::VRM)
+  {
+    m_definitionMap.m_map.push_back(kv);
+  }
   for(auto &kv: jsonschema::Gltf)
+  {
+    m_definitionMap.m_map.push_back(kv);
+  }
+  for(auto &kv: jsonschema::Extensions)
   {
     m_definitionMap.m_map.push_back(kv);
   }
