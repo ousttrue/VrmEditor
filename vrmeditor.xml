@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="7EA3973E-BC6C-49E2-B7A6-DA05649A1243" Name="VrmEditor" Language="1033" Version="1.4.9.0" Manufacturer="VrmEditor" UpgradeCode="C548F05A-7FE6-4ABD-8396-047D79DC5426">
+    <Product Id="7EA3973E-BC6C-49E2-B7A6-DA05649A1243" Name="VrmEditor" Language="1033" Version="1.4.10.0" Manufacturer="VrmEditor" UpgradeCode="C548F05A-7FE6-4ABD-8396-047D79DC5426">
         <Package Description="Test file in a VrmEditor" Comments="Simple" InstallerVersion="200" Compressed="yes" Platform="x64" />
         <Media Id="1" Cabinet="simple.cab" EmbedCab="yes" />
         <Directory Id="TARGETDIR" Name="SourceDir">
@@ -422,6 +422,12 @@
                 </Directory>
             </Directory>
         </Directory>
+        <DirectoryRef Id="TARGETDIR">
+            <Component Id="RegistryEntries" Guid="53A51444-9B09-4574-9C04-19B7890C2F93">
+                <RegistryValue Id="VrmEditor" Root="HKCR" Key="VrmEditor\shell\open\command" Type="string" Value="&quot;[#VRMEDITOR.EXE]&quot; &quot;%1&quot;" />
+                <RegistryValue Id="ExtVrm" Root="HKCR" Key=".vrm" Type="string" Value="VrmEditor" />
+            </Component>
+        </DirectoryRef>
         <Feature Id="DefaultFeature" Title="Main Feature" Level="1">
             <ComponentRef Id="FREETYPE_6.DLL" />
             <ComponentRef Id="PNG16_16.DLL" />
@@ -558,6 +564,7 @@
             <ComponentRef Id="UV_PARS_VERTEX.GLSL.JS" />
             <ComponentRef Id="UV_VERTEX.GLSL.JS" />
             <ComponentRef Id="WORLDPOS_VERTEX.GLSL.JS" />
+            <ComponentRef Id="RegistryEntries" />
         </Feature>
         <UI />
     </Product>
