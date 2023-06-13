@@ -1,8 +1,9 @@
 #include "vrm1.h"
+#include "../json_widgets.h"
 
 namespace jsonschema {
 
-const std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue>&
+std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue>
 VRMC_vrm()
 {
   static std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> s_map{
@@ -27,7 +28,7 @@ VRMC_vrm()
         { u8"angry", u8"😠" },
         { u8"sad", u8"😥" },
         { u8"relaxed", u8"🙂" },
-        { u8"surprised", u8"😲" },
+        { u8"surprised", u8"😯" },
         { u8"aa", u8"👄" },
         { u8"ih", u8"👄" },
         { u8"ou", u8"👄" },

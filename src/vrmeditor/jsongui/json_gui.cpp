@@ -25,15 +25,15 @@ JsonGui::JsonGui()
   {
     m_definitionMap.m_map.push_back(kv);
   }
-  for(auto &kv: jsonschema::VRM)
+  for(auto &kv: jsonschema::VRM())
   {
     m_definitionMap.m_map.push_back(kv);
   }
-  for(auto &kv: jsonschema::Gltf)
+  for(auto &kv: jsonschema::Gltf())
   {
     m_definitionMap.m_map.push_back(kv);
   }
-  for(auto &kv: jsonschema::Extensions)
+  for(auto &kv: jsonschema::Extensions())
   {
     m_definitionMap.m_map.push_back(kv);
   }
