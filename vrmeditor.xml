@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="7EA3973E-BC6C-49E2-B7A6-DA05649A1243" Name="VrmEditor" Language="1033" Version="1.4.5.0" Manufacturer="VrmEditor" UpgradeCode="C548F05A-7FE6-4ABD-8396-047D79DC5426">
+    <Product Id="7EA3973E-BC6C-49E2-B7A6-DA05649A1243" Name="VrmEditor" Language="1033" Version="1.4.6.0" Manufacturer="VrmEditor" UpgradeCode="C548F05A-7FE6-4ABD-8396-047D79DC5426">
         <Package Description="Test file in a VrmEditor" Comments="Simple" InstallerVersion="200" Compressed="yes" Platform="x64" />
         <Media Id="1" Cabinet="simple.cab" EmbedCab="yes" />
         <Directory Id="TARGETDIR" Name="SourceDir">
