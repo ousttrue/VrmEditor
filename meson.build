@@ -1,7 +1,7 @@
 project(
     'VrmEditor',
     ['cpp', 'c'],
-    version: '1.4.0',
+    version: '1.4.1',
     license: 'MIT',
     default_options: [],
 )
@@ -10,6 +10,7 @@ cdata = configuration_data()
 cdata.set_quoted('PACKAGE', meson.project_name())
 cdata.set_quoted('PACKAGE_VERSION', meson.project_version())
 configure_file(
+    input: 'config.h.in',
     output: 'config.h',
     configuration: cdata,
 )
