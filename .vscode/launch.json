@@ -23,7 +23,7 @@
             "justMyCode": true
         },
         {
-            "name": "(Windows) 起動",
+            "name": "project.lua",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
@@ -40,7 +40,21 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "(Windows) 起動 empty",
+            "name": "vrm",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
+            "args": [
+                // "${workspaceFolder}/example/project.lua",
+                "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "empty",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",

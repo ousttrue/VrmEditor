@@ -9,6 +9,7 @@
 #include <misc/freetype/imgui_freetype.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <ImGuiFileDialog.h>
 #include <imnodes.h>
 #include <iostream>
 
@@ -65,6 +66,21 @@ Gui::Gui()
     style.WindowRounding = 0.0f;
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
+
+#if _WIN32
+  std::filesystem::path user_home = std::getenv("USERPROFILE");
+#else
+  std::filesystem::path user_home = std::getenv("HOME");
+#endif
+
+  ImGuiFileDialog::Instance()->prBookmarks.push_back({
+    .name = "Home",
+    .path = (const char*)user_home.u8string().c_str(),
+  });
+  ImGuiFileDialog::Instance()->prBookmarks.push_back({
+    .name = "Desktop",
+    .path = (const char*)(user_home / "Desktop").u8string().c_str(),
+  });
 }
 
 Gui::~Gui()

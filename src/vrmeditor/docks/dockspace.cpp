@@ -47,21 +47,6 @@ DockSpaceManager::DockSpaceManager()
   //   nullptr,
   //   ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
   //   (const char*)u8" "); // for all dirs
-
-#if _WIN32
-  std::filesystem::path user_home = std::getenv("USERPROFILE");
-#else
-  std::filesystem::path user_home = std::getenv("HOME");
-#endif
-
-  ImGuiFileDialog::Instance()->prBookmarks.push_back({
-    .name = "Home",
-    .path = (const char*)user_home.u8string().c_str(),
-  });
-  ImGuiFileDialog::Instance()->prBookmarks.push_back({
-    .name = "Desktop",
-    .path = (const char*)(user_home / "Desktop").u8string().c_str(),
-  });
 }
 
 void
