@@ -19,9 +19,9 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
       { u8"extensionsRequired", u8"⭐", { {}, u8"[]" } },
       { u8"extras", u8"⭐", { {}, u8"{}" } },
       //
-      { u8"buffers", u8"📦", { {}, u8"📦" } },
-      { u8"bufferViews", u8"📦", { {}, u8"📦" } },
-      { u8"accessors", u8"📦", { {}, u8"📦" } },
+      { u8"buffers", u8"🫙", { {}, u8"🫙" } },
+      { u8"bufferViews", u8"🫙", { {}, u8"🫙" } },
+      { u8"accessors", u8"🫙", { {}, u8"🫙" } },
       //
       { u8"images", u8"🖼", { {}, u8"🖼" } },
       { u8"samplers", u8"🖼", { {}, u8"🖼" } },
@@ -52,17 +52,8 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
     u8"/buffers/*",
     { {
       { u8"name", u8"📄", { {}, U8Q("") } },
-      {
-        u8"byteLength",
-        u8"🔢",
-        {},
-        JsonPropFlags::Required,
-      },
-      {
-        u8"uri",
-        u8"📄",
-        {},
-      },
+      { u8"uri", u8"📄", { {}, U8Q("") } },
+      { u8"byteLength", u8"🔢", { {}, u8"0" }, JsonPropFlags::Required },
     } },
   },
   {
@@ -70,8 +61,11 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
     u8"/bufferViews/*",
     { {
       { u8"name", u8"📄", { {}, U8Q("") } },
-      { u8"buffer", u8"🆔", {}, JsonPropFlags::Required },
-      { u8"byteLength", u8"📄", {}, JsonPropFlags::Required },
+      { u8"buffer", u8"🆔", { {}, u8"0" }, JsonPropFlags::Required },
+      { u8"byteLength", u8"🔢", { {}, u8"0" }, JsonPropFlags::Required },
+      { u8"byteOffset", u8"🔢", { {}, u8"0" } },
+      { u8"byteStride", u8"🔢", { {}, u8"0" } },
+      { u8"target", u8"🔢", { {}, u8"0" } },
     } },
   },
   {
@@ -79,9 +73,15 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
     u8"/accessors/*",
     { {
       { u8"name", u8"📄", { {}, U8Q("") } },
+      { u8"bufferView", u8"🆔", { {}, u8"0" } },
+      { u8"byteOffset", u8"🔢", { {}, u8"0" } },
       { u8"componentType", u8"🔢", {}, JsonPropFlags::Required },
       { u8"type", u8"📄", {}, JsonPropFlags::Required },
       { u8"count", u8"🔢", {}, JsonPropFlags::Required },
+      { u8"normalized", u8"✅", { {}, u8"false" } },
+      { u8"max", u8"🔢", { {}, u8"[]" } },
+      { u8"min", u8"🔢", { {}, u8"[]" } },
+      { u8"sparse", u8"🫙", { {}, u8"{}" } },
     } },
   },
   // image/sampler/texture/material
@@ -90,9 +90,9 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
     u8"/images/*",
     { {
       { u8"name", u8"📄", { {}, U8Q("") } },
-      { u8"uri", u8"📄" },
-      { u8"mimeType", u8"📄" },
-      { u8"bufferView", u8"🆔" },
+      { u8"uri", u8"📄", { {}, U8Q("") } },
+      { u8"mimeType", u8"📄", { {}, U8Q("") } },
+      { u8"bufferView", u8"🆔", { {}, u8"0" } },
     } },
   },
   {
