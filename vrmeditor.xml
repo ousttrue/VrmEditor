@@ -425,7 +425,11 @@
         <DirectoryRef Id="TARGETDIR">
             <Component Id="RegistryEntries" Guid="53A51444-9B09-4574-9C04-19B7890C2F93">
                 <RegistryValue Id="VrmEditor" Root="HKCR" Key="VrmEditor\shell\open\command" Type="string" Value="&quot;[#VRMEDITOR.EXE]&quot; &quot;%1&quot;" />
+            </Component>
+            <Component Id="Extensions" Guid="76DA9997-2C4E-418D-B2FA-7E91B0A2A8B0">
                 <RegistryValue Id="ExtVrm" Root="HKCR" Key=".vrm" Type="string" Value="VrmEditor" />
+                <RegistryValue Id="ExtGlb" Root="HKCR" Type="string" Value="VrmEditor" Key=".glb" />
+                <RegistryValue Id="ExtGltf" Key=".gltf" Root="HKCR" Type="string" Value="VrmEditor" />
             </Component>
         </DirectoryRef>
         <Feature Id="DefaultFeature" Title="Main Feature" Level="1">
@@ -565,6 +569,9 @@
             <ComponentRef Id="UV_VERTEX.GLSL.JS" />
             <ComponentRef Id="WORLDPOS_VERTEX.GLSL.JS" />
             <ComponentRef Id="RegistryEntries" />
+        </Feature>
+        <Feature Id="ExtensionFeature" Level="1000">
+            <ComponentRef Id="Extensions" />
         </Feature>
         <UI />
     </Product>
