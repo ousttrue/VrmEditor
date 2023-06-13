@@ -31,6 +31,8 @@ srcs = [
 
 if host_machine.system() == 'windows'
     srcs += ['fs_util_win32.cpp']
+    windows = import('windows')
+    srcs += windows.compile_resources('icon.rc')
 else
     srcs += ['fs_util_posix.cpp']
 endif

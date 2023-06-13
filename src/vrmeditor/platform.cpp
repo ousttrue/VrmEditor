@@ -5,6 +5,9 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#include <Windows.h>
 
 int Platform::Width = 2000;
 int Platform::Height = 1200;
@@ -63,18 +66,22 @@ Platform::WindowCreate(const char* title)
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-  if(Width==0)
-  {
-    Width=640;
+  if (Width == 0) {
+    Width = 640;
   }
-  if(Height==0)
-  {
-    Height=480;
+  if (Height == 0) {
+    Height = 480;
   }
   m_window = glfwCreateWindow(Width, Height, title, NULL, NULL);
   if (!m_window) {
     return nullptr;
   }
+
+  auto hWnd = glfwGetWin32Window(m_window);
+  HICON hIcon = LoadIcon(GetModuleHandle(nullptr), "APPICON");
+  SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+  SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+
   glfwSetWindowUserPointer(m_window, this);
 
   if (IsMaximized) {
