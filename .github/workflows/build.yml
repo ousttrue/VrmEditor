@@ -35,15 +35,9 @@ jobs:
     name: create release from tag
     runs-on: ubuntu-20.04
     permissions: write-all
+    needs: build_windows
 
     steps:
-      - name: Wait for build_windows
-        uses: fountainhead/action-wait-for-check@v1.1.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: build for Windows
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
       - uses: actions/download-artifact@v3
         with:
           name: artifact_windows
