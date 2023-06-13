@@ -1,0 +1,6 @@
+<Project Sdk="WixToolset.Sdk/4.0.1">
+    <PropertyGroup>
+       <InstallerPlatform>x64</InstallerPlatform>
+       <Configuration>Release</Configuration>
+    </PropertyGroup>
+</Project>

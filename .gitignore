@@ -42,3 +42,6 @@ debug.frag
 _build
 
 /Output
+/obj
+/bin
+/vrmeditor.wxs

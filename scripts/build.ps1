@@ -3,5 +3,11 @@ meson install -C builddir --tags runtime
 
 # Compress-Archive -Path "$(pwd)/vrmeditor" -DestinationPath "vrmeditor.zip"
 
-iscc vrmeditor.iss /Fvrmeditor
+# iscc vrmeditor.iss /Fvrmeditor
+# => Output/vrmeditor.exe
+
+copy vrmeditor.xml vrmeditor.wxs
+wix convert
+msbuild vrmeditor.wixproj /p:Configuration=Release
+# => obj/Release/vrmeditor.msi
 

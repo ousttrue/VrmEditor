@@ -27,7 +27,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: artifact_windows
-          path: Output/vrmeditor.exe
+          path: bin/Relase/vrmeditor.msi
 
   create_release:
     name: create release from tag
@@ -55,4 +55,4 @@ jobs:
           # title: "Release ${{ github.ref }}"
           prerelease: false
           files: |
-            vrmeditor.exe
+            vrmeditor.msi

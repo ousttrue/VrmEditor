@@ -27,6 +27,7 @@ Name: "vrm"; Description: ".vrm Extension association"; Types: custom
 Source: "prefix\bin\vrmeditor.exe"; DestDir: "{app}\bin"
 Source: "prefix\bin\*.dll"; DestDir: "{app}\bin"
 Source: "prefix\shaders\*"; DestDir: "{app}\shaders"
+Source: "prefix\shaders\khronos\*"; DestDir: "{app}\shaders\khronos"
 Source: "prefix\threejs_shader_chunks\*"; DestDir: "{app}\threejs_shader_chunks"
 
 [Registry]
