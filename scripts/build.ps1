@@ -8,6 +8,7 @@ meson install -C builddir --tags runtime
 
 copy vrmeditor.xml vrmeditor.wxs
 wix convert vrmeditor.wxs
+msbuild /restore
 msbuild vrmeditor.wixproj /p:Configuration=Release
 # => obj/Release/vrmeditor.msi
 
