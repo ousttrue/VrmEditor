@@ -31,10 +31,10 @@ Has(JsonPropFlags lhs, JsonPropFlags rhs)
   return (int)lhs & (int)rhs;
 }
 
-enum class JsonValueFlags: uint32_t
+enum class JsonValueFlags : uint32_t
 {
   None = 0,
-  FixedArray= 0x01,
+  FixedArray = 0x01,
   DictObject = 0x02,
   DefaultIfNone = 0x04,
 };
@@ -50,7 +50,28 @@ struct JsonValue
 
   std::u8string TextOrDeault(const gltfjson::tree::NodePtr& item) const;
   ShowGuiFunc EditorOrDefault() const;
+
+  const static JsonValue True;
+  const static JsonValue False;
+  const static JsonValue Number;
+  const static JsonValue String;
+  const static JsonValue Array;
+  const static JsonValue Object;
 };
+
+inline const std::u8string
+U8Q(const char* str)
+{
+  return std::u8string(u8"\"") + std::u8string((const char8_t*)str) +
+         std::u8string(u8"\"");
+}
+
+inline const JsonValue JsonValue::True{ {}, u8"true" };
+inline const JsonValue JsonValue::False{ {}, u8"false" };
+inline const JsonValue JsonValue::Number{ {}, u8"0" };
+inline const JsonValue JsonValue::String{ {}, U8Q("") };
+inline const JsonValue JsonValue::Array{ {}, u8"[]" };
+inline const JsonValue JsonValue::Object{ {}, u8"{}" };
 
 struct JsonProp
 {
@@ -67,12 +88,3 @@ struct JsonSchema
 {
   std::vector<JsonProp> Props;
 };
-
-inline const std::u8string
-U8Q(const char* str)
-{
-  return std::u8string(u8"\"") + std::u8string((const char8_t*)str) +
-         std::u8string(u8"\"");
-}
-
-

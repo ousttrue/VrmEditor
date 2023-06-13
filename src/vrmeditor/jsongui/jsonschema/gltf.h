@@ -12,28 +12,28 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
     // github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json
     u8"/",
     { {
-      { u8"asset", u8"📄", { {}, u8"{}" }, JsonPropFlags::Required },
+      { u8"asset", u8"📄", JsonValue::Object, JsonPropFlags::Required },
       //
-      { u8"extensions", u8"⭐", { {}, u8"{}" } },
-      { u8"extensionsUsed", u8"⭐", { {}, u8"[]" } },
-      { u8"extensionsRequired", u8"⭐", { {}, u8"[]" } },
-      { u8"extras", u8"⭐", { {}, u8"{}" } },
+      { u8"extensions", u8"⭐", JsonValue::Object },
+      { u8"extensionsUsed", u8"⭐", JsonValue::Array },
+      { u8"extensionsRequired", u8"⭐", JsonValue::Array },
+      { u8"extras", u8"⭐", JsonValue::Object },
       //
-      { u8"buffers", u8"🫙", { {}, u8"🫙" } },
-      { u8"bufferViews", u8"🫙", { {}, u8"🫙" } },
-      { u8"accessors", u8"🫙", { {}, u8"🫙" } },
+      { u8"buffers", u8"🫙", JsonValue::Array },
+      { u8"bufferViews", u8"🫙", JsonValue::Array },
+      { u8"accessors", u8"🫙", JsonValue::Array },
       //
-      { u8"images", u8"🖼", { {}, u8"🖼" } },
-      { u8"samplers", u8"🖼", { {}, u8"🖼" } },
-      { u8"textures", u8"🖼", { {}, u8"🖼" } },
-      { u8"materials", u8"💎", { {}, u8"💎" } },
+      { u8"images", u8"🖼", JsonValue::Array },
+      { u8"samplers", u8"🖼", JsonValue::Array },
+      { u8"textures", u8"🖼", JsonValue::Array },
+      { u8"materials", u8"💎", JsonValue::Array },
       //
-      { u8"meshes", u8"📐", { {}, u8"📐" } },
-      { u8"skins", u8"📐", { {}, u8"📐" } },
+      { u8"meshes", u8"📐", JsonValue::Array },
+      { u8"skins", u8"📐", JsonValue::Array },
       //
-      { u8"nodes", u8"🛞", { {}, u8"🛞" } },
-      { u8"scenes", u8"🛞", { {}, u8"🛞" } },
-      { u8"scene", u8"🆔", { {}, u8"0" } },
+      { u8"nodes", u8"🛞", JsonValue::Array },
+      { u8"scenes", u8"🛞", JsonValue::Array },
+      { u8"scene", u8"🆔", JsonValue::Number },
     } },
   },
   {
@@ -79,9 +79,9 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
       { u8"type", u8"📄", {}, JsonPropFlags::Required },
       { u8"count", u8"🔢", {}, JsonPropFlags::Required },
       { u8"normalized", u8"✅", { {}, u8"false" } },
-      { u8"max", u8"🔢", { {}, u8"[]" } },
-      { u8"min", u8"🔢", { {}, u8"[]" } },
-      { u8"sparse", u8"🫙", { {}, u8"{}" } },
+      { u8"max", u8"🔢", JsonValue::Array },
+      { u8"min", u8"🔢", JsonValue::Array },
+      { u8"sparse", u8"🫙", JsonValue::Object },
     } },
   },
   // image/sampler/texture/material
@@ -120,11 +120,11 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
     u8"/materials/*",
     { {
       { u8"name", u8"📄", { {}, U8Q("") } },
-      { u8"extensions", u8"⭐", { {}, u8"{}" } },
-      { u8"pbrMetallicRoughness", u8"💎", { {}, u8"{}" } },
-      { u8"normalTexture", u8"🖼", { {}, u8"{}" } },
-      { u8"occlusionTexture", u8"🖼", { {}, u8"{}" } },
-      { u8"emissiveTexture", u8"🖼", { {}, u8"{}" } },
+      { u8"extensions", u8"⭐", JsonValue::Object },
+      { u8"pbrMetallicRoughness", u8"💎", JsonValue::Object },
+      { u8"normalTexture", u8"🖼", JsonValue::Object },
+      { u8"occlusionTexture", u8"🖼", JsonValue::Object },
+      { u8"emissiveTexture", u8"🖼", JsonValue::Object },
       { u8"emissiveFactor", u8"🎨", { RgbPicker{}, u8"[0,0,0]" } },
       { u8"alphaMode",
         u8"👻",
@@ -136,7 +136,7 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
   {
     u8"/materials/*/extensions",
     { {
-      { u8"KHR_materials_unlit", u8"🏛️", { {}, u8"{}" } },
+      { u8"KHR_materials_unlit", u8"🏛️", JsonValue::Object },
     } },
   },
   {
@@ -155,7 +155,7 @@ inline std::list<gltfjson::JsonPathMap<JsonSchema>::KeyValue> Gltf = {
         u8"🎚️",
         { FloatSlider{}, u8"1" },
       },
-      { u8"metallicRoughnessTexture", u8"🖼", { {}, u8"{}" } },
+      { u8"metallicRoughnessTexture", u8"🖼", JsonValue::Object },
     } },
   },
   // mesh/skin

@@ -21,7 +21,7 @@
 
 JsonGui::JsonGui()
 {
-  for(auto &kv: jsonschema::VRMC_vrm)
+  for(auto &kv: jsonschema::VRMC_vrm())
   {
     m_definitionMap.m_map.push_back(kv);
   }
