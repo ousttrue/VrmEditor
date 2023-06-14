@@ -105,7 +105,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
 
   ImGui::TableNextRow();
 
-  // 0
+  // 0: name
   ImGui::TableNextColumn();
   if (ShouldOpen(jsonpath)) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
@@ -130,9 +130,12 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
     cache = &found->second;
   } else {
     auto inserted = m_cacheMap.insert(
-      { jsonpath, { prop.Label(), prop.Value.TextOrDeault(item) } });
+      { jsonpath, { prop.Name.Label(), prop.Value.TextOrDeault(item) } });
     cache = &inserted.first->second;
     cache->Editor = prop.Value.EditorOrDefault();
+    if(prop.Tag){
+      cache->ShowTag = prop.Tag(m_root->m_gltf->m_json, m_root->m_bin, item); 
+    }
   }
   auto node_open = ImGui::TreeNodeEx(
     (void*)(intptr_t)id, node_flags, "%s", (const char*)cache->Label.data());
@@ -144,7 +147,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
     m_jsonpath = jsonpath;
   }
 
-  // 1
+  // 1: value
   ImGui::TableNextColumn();
 
   if (item) {
@@ -265,13 +268,13 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
       // used.clear();
       if (auto definition = m_definitionMap.Match(jsonpath)) {
         for (auto prop : definition->Props) {
-          jsonpath += prop.Key;
-          used.insert(prop.Key);
-          if (auto child = item->Get(prop.Key)) {
+          jsonpath += prop.Name.Key;
+          used.insert(prop.Name.Key);
+          if (auto child = item->Get(prop.Name.Key)) {
             auto child_result = Traverse(child, jsonpath, prop);
             if (child_result == EditorResult::Removed) {
               PLOG_DEBUG << "prop.key remove: " << gltfjson::from_u8(jsonpath);
-              item->Remove(prop.Key);
+              item->Remove(prop.Name.Key);
               result = EditorResult::Updated;
             }
           } else {
@@ -279,7 +282,7 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
             if (child_result == EditorResult::KeyCreated) {
               gltfjson::tree::Parser parser(prop.Value.DefaultJson);
               if (auto new_child = parser.ParseExpected()) {
-                object->insert({ prop.Key, *new_child });
+                object->insert({ prop.Name.Key, *new_child });
                 result = EditorResult::Updated;
               } else {
                 PLOG_ERROR << gltfjson::from_u8(new_child.error());
@@ -320,7 +323,7 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
         auto child_result = Traverse(
           child,
           jsonpath,
-          { jsonpath.substr(size), prop.Icon, {}, JsonPropFlags::ArrayChild });
+          { jsonpath.substr(size), prop.Name.Icon, {}, JsonPropFlags::ArrayChild });
         if (child_result == EditorResult::Removed) {
           removed = i;
         }

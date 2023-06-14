@@ -23,6 +23,7 @@ srcs = [
     'jsongui/jsonschema/vrm1.cpp',
     'jsongui/jsonschema/extensions.cpp',
     'jsongui/json_widgets.cpp',
+    'jsongui/jsonschema/tag.cpp',
     'humanpose/humanpose_stream.cpp',
     'humanpose/udp_receiver.cpp',
     'humanpose/bvhnode.cpp',

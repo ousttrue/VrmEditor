@@ -7,6 +7,19 @@ using ShowGuiFunc = std::function<bool(const gltfjson::Root& root,
                                        const gltfjson::Bin& bin,
                                        const gltfjson::tree::NodePtr&)>;
 
+using ShowTagFunc = std::function<void()>;
+using TagFunc = std::function<ShowTagFunc(const gltfjson::Root& root,
+                                   const gltfjson::Bin& bin,
+                                   const gltfjson::tree::NodePtr& item)>;
+
+
+struct NameObject
+{
+  std::u8string Icon;
+  std::u8string Key;
+  std::u8string Label() const { return Icon + Key; }
+};
+
 enum class JsonPropFlags : uint32_t
 {
   None = 0,
@@ -41,13 +54,9 @@ enum class JsonValueFlags : uint32_t
 
 struct JsonValue
 {
-  // active node editor
   ShowGuiFunc Editor;
-  // default json node for add
   std::u8string DefaultJson;
   JsonValueFlags Flags = JsonValueFlags::None;
-  // texture represents or default value
-
   std::u8string TextOrDeault(const gltfjson::tree::NodePtr& item) const;
   ShowGuiFunc EditorOrDefault() const;
 
@@ -75,13 +84,10 @@ inline const JsonValue JsonValue::Object{ {}, u8"{}" };
 
 struct JsonProp
 {
-  std::u8string Key;
-  std::u8string Icon;
+  NameObject Name;
   JsonValue Value;
   JsonPropFlags Flags = JsonPropFlags::None;
-  std::u8string Label() const { return Icon + Key; }
-  // ShowGuiFunc EditorOrDefault(const gltfjson::tree::NodePtr& item,
-  //                             std::u8string_view jsonpath) const;
+  TagFunc Tag;
 };
 
 struct JsonSchema

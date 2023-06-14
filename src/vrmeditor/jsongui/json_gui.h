@@ -28,6 +28,7 @@ struct JsonGui
     std::u8string Label;
     std::u8string Value;
     ShowGuiFunc Editor;
+    std::function<void()> ShowTag;
   };
   std::unordered_map<std::u8string, Cache> m_cacheMap;
 
