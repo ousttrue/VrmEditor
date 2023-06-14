@@ -97,15 +97,20 @@ VRM()
       } },
     },
     {
-      // https : //
-      // github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.blendshape.group.schema.json
+      // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.blendshape.group.schema.json
+      u8"/extensions/VRM/blendShapeMaster/blendShapeGroups",
+      { {
+        { { u8"😀", u8"" }, JsonValue::Object },
+      } },
+    },
+    {
       u8"/extensions/VRM/blendShapeMaster/blendShapeGroups/*",
       { {
-        { { u8"📄", u8"name" } },
-        { { u8"😀", u8"presetName" } },
-        { { u8"😀", u8"binds" } },
-        { { u8"💎", u8"materialValues" } },
-        { { u8"✅", u8"isBinary" } },
+        { { u8"📄", u8"name" }, JsonValue::String },
+        { { u8"😀", u8"presetName" }, JsonValue::String },
+        { { u8"😀", u8"binds" }, JsonValue::Array },
+        { { u8"💎", u8"materialValues" }, JsonValue::Array },
+        { { u8"✅", u8"isBinary" }, JsonValue::False },
       } },
     },
     {

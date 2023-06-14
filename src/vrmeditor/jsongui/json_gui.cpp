@@ -38,13 +38,13 @@ JsonGui::JsonGui()
 void
 JsonGui::ClearCache(const std::u8string& jsonpath)
 {
-  PLOG_DEBUG << "ClearCache: " << gltfjson::from_u8(jsonpath);
+  // PLOG_DEBUG << "ClearCache: " << gltfjson::from_u8(jsonpath);
   if (jsonpath.size()) {
     // clear all descendants
     for (auto it = m_cacheMap.begin(); it != m_cacheMap.end();) {
       if (it->first.starts_with(jsonpath)) {
         // clear all descendants
-        PLOG_DEBUG << "  ClearCache: " << gltfjson::from_u8(it->first);
+        // PLOG_DEBUG << "  ClearCache: " << gltfjson::from_u8(it->first);
         it = m_cacheMap.erase(it);
       } else {
         ++it;
@@ -308,7 +308,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
       ImGui::EndDisabled();
     } else {
       ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::orange);
-      ImGui::TextUnformatted("no default");
+      ImGui::TextUnformatted("no definition");
       ImGui::PopStyleColor();
     }
   }
