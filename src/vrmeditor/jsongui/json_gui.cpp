@@ -38,11 +38,13 @@ JsonGui::JsonGui()
 void
 JsonGui::ClearCache(const std::u8string& jsonpath)
 {
+  PLOG_DEBUG << "ClearCache: " << gltfjson::from_u8(jsonpath);
   if (jsonpath.size()) {
     // clear all descendants
     for (auto it = m_cacheMap.begin(); it != m_cacheMap.end();) {
       if (it->first.starts_with(jsonpath)) {
         // clear all descendants
+        PLOG_DEBUG << "  ClearCache: " << gltfjson::from_u8(it->first);
         it = m_cacheMap.erase(it);
       } else {
         ++it;
@@ -67,6 +69,147 @@ JsonGui::SetScene(const std::shared_ptr<libvrm::GltfRoot>& root)
   ClearCache();
 }
 
+void
+JsonGui::ShowSelector()
+{
+  if (!m_root) {
+    return;
+  }
+  if (!m_root->m_gltf) {
+    return;
+  }
+  if (!m_root->m_gltf->m_json) {
+    return;
+  }
+
+  std::array<const char*, 4> cols = {
+    "Name",
+    "Tag",
+    "Value",
+    "✅",
+  };
+
+  // auto size = ImGui::GetContentRegionAvail();
+
+  if (grapho::imgui::BeginTableColumns("##JsonGui::ShowSelector", cols)) {
+
+    // tree
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, Gui::Instance().Indent());
+
+    std::u8string jsonpath(u8"/");
+    Traverse(
+      m_root->m_gltf->m_json, jsonpath, JsonProp{ { u8"", u8"glTF" }, {} });
+
+    ImGui::PopStyleVar();
+
+    ImGui::EndTable();
+  }
+}
+
+EditorResult
+JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
+                  std::u8string& jsonpath,
+                  const JsonProp& prop)
+{
+  auto [isOpen, result] = Enter(item, jsonpath, prop);
+  if (isOpen) {
+    gltfjson::tree::AddDelimiter(jsonpath);
+    auto size = jsonpath.size();
+    if (auto object = item->Object()) {
+      //
+      // object
+      //
+      std::unordered_set<std::u8string> used;
+      if (auto definition = m_definitionMap.Match(jsonpath)) {
+        for (auto prop : definition->Props) {
+          jsonpath += prop.Name.Key;
+          used.insert(prop.Name.Key);
+          EditorResult child_result = {};
+          gltfjson::tree::NodePtr child = {};
+          if ((child = item->Get(prop.Name.Key))) {
+            child_result = Traverse(child, jsonpath, prop);
+          } else {
+            child_result = Traverse(nullptr, jsonpath, prop);
+          }
+          if (OnEdit(item, child, jsonpath, prop, child_result)) {
+            result = EditorResult::Updated;
+          }
+          jsonpath.resize(size);
+        }
+      }
+      std::function<void()> removeAfter;
+      for (auto it = object->begin(); it != object->end(); ++it) {
+        auto child_result = EditorResult::None;
+        jsonpath += it->first;
+        if (used.find(it->first) == used.end()) {
+          JsonProp prop{ { u8"❔", jsonpath.substr(size) } };
+          child_result = Traverse(it->second, jsonpath, prop);
+          if (child_result != EditorResult::None) {
+            removeAfter = [=, jp = jsonpath, p = &result]() {
+              if (OnEdit(item, it->second, jp, prop, child_result)) {
+                *p = EditorResult::Updated;
+              }
+            };
+          }
+        }
+        jsonpath.resize(size);
+      }
+      if (removeAfter) {
+        removeAfter();
+      }
+    } else if (auto array = item->Array()) {
+      //
+      // array
+      //
+      bool hasProp = false;
+      JsonProp child_prop;
+      if (auto definition = m_definitionMap.Match(jsonpath)) {
+        if (definition->Props.size()) {
+          child_prop = definition->Props.front();
+          hasProp = true;
+        }
+      }
+      if (!hasProp) {
+        child_prop = { { prop.Name.Icon }, {} };
+      }
+
+      int i = 0;
+      std::function<void()> removeAfter;
+      for (auto& child : *array) {
+        gltfjson::tree::concat_int(jsonpath, i);
+        child_prop.Name.Key = jsonpath.substr(size);
+        auto child_result = Traverse(child, jsonpath, child_prop);
+        if (child_result != EditorResult::None) {
+          removeAfter = [=, jp = jsonpath, p = &result]() mutable {
+            if (OnEdit(item, child, jp, child_prop, child_result)) {
+              *p = EditorResult::Updated;
+            }
+          };
+        }
+        jsonpath.resize(size);
+        ++i;
+      }
+      {
+        // add array child
+        gltfjson::tree::concat_int(jsonpath, i);
+        child_prop.Name.Key = jsonpath.substr(size);
+        auto child_result = Traverse(nullptr, jsonpath, child_prop);
+        if (OnEdit(item, nullptr, jsonpath, child_prop, child_result)) {
+          result = EditorResult::Updated;
+        }
+        jsonpath.resize(size);
+      }
+      if (removeAfter) {
+        removeAfter();
+      }
+    }
+    // remove delimiter
+    jsonpath.pop_back();
+    ImGui::TreePop();
+  }
+  return result;
+}
+
 std::tuple<bool, EditorResult>
 JsonGui::Enter(const gltfjson::tree::NodePtr& item,
                const std::u8string& jsonpath,
@@ -80,10 +223,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   ImGuiTreeNodeFlags node_flags = base_flags;
   bool is_leaf = !item;
   if (item) {
-    if (auto array = item->Array()) {
-      if (array->size() == 0) {
-        is_leaf = true;
-      }
+    if (item->Array()) {
     } else if (item->Object()) {
     } else {
       is_leaf = true;
@@ -109,10 +249,10 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
 
   int push = 0;
   if (item) {
-    if (Has(prop.Flags, JsonPropFlags::Unknown)) {
-      ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::orange);
-      ++push;
-    }
+    // if (Has(prop.Flags, JsonPropFlags::Unknown)) {
+    //   ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::orange);
+    //   ++push;
+    // }
   } else {
     ImGui::PushStyleColor(ImGuiCol_Text, grapho::imcolor::gray);
     ++push;
@@ -176,21 +316,15 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   // 3 add/remove
   ImGui::TableNextColumn();
   if (jsonpath == u8"/") {
-  } else if (Has(prop.Flags, JsonPropFlags::Unknown)) {
-    if (ImGui::Button("-##unknown")) {
-      result = EditorResult::Removed;
-    }
+    // } else if (Has(prop.Flags, JsonPropFlags::Unknown)) {
+    //   if (ImGui::Button("-##unknown")) {
+    //     result = EditorResult::Removed;
+    //   }
   } else if (Has(prop.Flags, JsonPropFlags::Required)) {
     ImGui::TextUnformatted("📍");
   } else if (item) {
-    if (item->Array()) {
-      if (ImGui::Button("+##array_append")) {
-        result = EditorResult::ArrayAppended;
-      }
-    } else {
-      if (ImGui::Button("-##removed")) {
-        result = EditorResult::Removed;
-      }
+    if (ImGui::Button("-##removed")) {
+      result = EditorResult::Removed;
     }
   } else {
     if (ImGui::Button("+##key_created")) {
@@ -202,160 +336,63 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   return { node_open && !is_leaf, result };
 }
 
-void
-JsonGui::ShowSelector()
+bool
+JsonGui::OnEdit(const gltfjson::tree::NodePtr& parent,
+                const gltfjson::tree::NodePtr& item,
+                const std::u8string& jsonpath,
+                const JsonProp& prop,
+                EditorResult result)
 {
-  if (!m_root) {
-    return;
-  }
-  if (!m_root->m_gltf) {
-    return;
-  }
-  if (!m_root->m_gltf->m_json) {
-    return;
-  }
-
-  std::array<const char*, 4> cols = {
-    "Name",
-    "Tag",
-    "Value",
-    "✅",
-  };
-
-  // auto size = ImGui::GetContentRegionAvail();
-
-  if (grapho::imgui::BeginTableColumns("##JsonGui::ShowSelector", cols)) {
-
-    // tree
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, Gui::Instance().Indent());
-
-    std::u8string jsonpath(u8"/");
-    Traverse(m_root->m_gltf->m_json,
-             jsonpath,
-             JsonProp{ { u8"", u8"glTF" }, {}, JsonPropFlags::Unknown });
-
-    ImGui::PopStyleVar();
-
-    ImGui::EndTable();
-  }
-}
-
-EditorResult
-JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
-                  std::u8string& jsonpath,
-                  const JsonProp& prop)
-{
-  auto [isOpen, result] = Enter(item, jsonpath, prop);
   switch (result) {
     case EditorResult::None:
       break;
+
     case EditorResult::Updated:
       ClearCache(jsonpath);
       break;
-    case EditorResult::KeyCreated:
+
+    case EditorResult::KeyCreated: {
+      assert(!item);
       ClearCache(jsonpath);
+      gltfjson::tree::Parser parser(prop.Value.DefaultJson);
+      if (auto new_child = parser.ParseExpected()) {
+        if (auto object = parent->Object()) {
+          object->insert({ prop.Name.Key, *new_child });
+          return true;
+        } else if (auto array = parent->Array()) {
+          array->push_back(*new_child);
+          return true;
+        }
+      } else {
+        PLOG_ERROR << gltfjson::from_u8(new_child.error());
+        return false;
+      }
       break;
-    case EditorResult::ArrayAppended:
-      break;
+    }
+
     case EditorResult::Removed:
       ClearCache(jsonpath);
+      if (auto array = parent->Array()) {
+        int i = 0;
+        for (auto it = array->begin(); it != array->end(); ++it, ++i) {
+          if (*it == item) {
+            PLOG_DEBUG << "array remove: " << gltfjson::from_u8(jsonpath)
+                       << " at" << i;
+            array->erase(it);
+            return true;
+          }
+        }
+      } else if (auto object = parent->Object()) {
+        for (auto it = object->begin(); it != object->end(); ++it) {
+          if (it->second == item) {
+            PLOG_DEBUG << "prop.key remove: " << gltfjson::from_u8(jsonpath);
+            object->erase(it);
+            return true;
+          }
+        }
+      }
       break;
   }
-  if (isOpen) {
-    gltfjson::tree::AddDelimiter(jsonpath);
-    auto size = jsonpath.size();
-    if (auto object = item->Object()) {
-      //
-      // object
-      //
-      std::unordered_set<std::u8string> used;
-      // used.clear();
-      if (auto definition = m_definitionMap.Match(jsonpath)) {
-        for (auto prop : definition->Props) {
-          jsonpath += prop.Name.Key;
-          used.insert(prop.Name.Key);
-          if (auto child = item->Get(prop.Name.Key)) {
-            auto child_result = Traverse(child, jsonpath, prop);
-            if (child_result == EditorResult::Removed) {
-              PLOG_DEBUG << "prop.key remove: " << gltfjson::from_u8(jsonpath);
-              item->Remove(prop.Name.Key);
-              result = EditorResult::Updated;
-            }
-          } else {
-            auto child_result = Traverse(nullptr, jsonpath, prop);
-            if (child_result == EditorResult::KeyCreated) {
-              gltfjson::tree::Parser parser(prop.Value.DefaultJson);
-              if (auto new_child = parser.ParseExpected()) {
-                object->insert({ prop.Name.Key, *new_child });
-                result = EditorResult::Updated;
-              } else {
-                PLOG_ERROR << gltfjson::from_u8(new_child.error());
-              }
-            }
-          }
-          jsonpath.resize(size);
-        }
-      }
 
-      for (auto it = object->begin(); it != object->end();) {
-        auto child_result = EditorResult::None;
-        jsonpath += it->first;
-        if (used.find(it->first) == used.end()) {
-          child_result = Traverse(
-            it->second,
-            jsonpath,
-            { { u8"❔", jsonpath.substr(size) }, {}, JsonPropFlags::Unknown });
-        }
-
-        if (child_result == EditorResult::Removed) {
-          PLOG_DEBUG << "unknown key remove: " << gltfjson::from_u8(jsonpath);
-          it = object->erase(it);
-          result = EditorResult::Updated;
-        } else {
-          ++it;
-        }
-        jsonpath.resize(size);
-      }
-    } else if (auto array = item->Array()) {
-      //
-      // array
-      //
-      bool hasProp = false;
-      JsonProp child_prop;
-      if (auto definition = m_definitionMap.Match(jsonpath)) {
-        if (definition->Props.size()) {
-          child_prop = definition->Props.front();
-          hasProp = true;
-        }
-      }
-      if (!hasProp) {
-        child_prop = {
-          { prop.Name.Icon },
-          {},
-          JsonPropFlags::ArrayChild,
-        };
-      }
-
-      int i = 0;
-      std::optional<int> removed;
-      for (auto& child : *array) {
-        gltfjson::tree::concat_int(jsonpath, i);
-        child_prop.Name.Key = jsonpath.substr(size);
-        auto child_result = Traverse(child, jsonpath, child_prop);
-        if (child_result == EditorResult::Removed) {
-          removed = i;
-        }
-        jsonpath.resize(size);
-        ++i;
-      }
-      if (removed) {
-        PLOG_DEBUG << "array remove: " << gltfjson::from_u8(jsonpath) << " at "
-                   << *removed;
-        result = EditorResult::Updated;
-        array->erase(std::next(array->begin(), *removed));
-      }
-    }
-    ImGui::TreePop();
-  }
-  return result;
+  return false;
 }

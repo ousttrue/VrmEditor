@@ -23,7 +23,7 @@
             "justMyCode": true
         },
         {
-            "name": "project.lua",
+            "name": "vrmeditor: project.lua",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
@@ -40,7 +40,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "vrm",
+            "name": "vrmeditor: vrm",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
@@ -54,7 +54,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "empty",
+            "name": "vrmeditor: empty",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",

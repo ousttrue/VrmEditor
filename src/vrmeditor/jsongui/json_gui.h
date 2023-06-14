@@ -12,7 +12,6 @@ enum class EditorResult
   None,
   Updated,
   KeyCreated,
-  ArrayAppended,
   Removed,
 };
 
@@ -35,15 +34,22 @@ struct JsonGui
   JsonGui();
   void ClearCache(const std::u8string& jsonpath = {});
   void SetScene(const std::shared_ptr<libvrm::GltfRoot>& root);
-  std::tuple<bool, EditorResult> Enter(const gltfjson::tree::NodePtr& item,
-                                       const std::u8string& jsonpath,
-                                       const JsonProp& prop);
   void ShowSelector();
 
 private:
   EditorResult Traverse(const gltfjson::tree::NodePtr& item,
                         std::u8string& jsonpath,
                         const JsonProp& prop);
+
+  std::tuple<bool, EditorResult> Enter(const gltfjson::tree::NodePtr& item,
+                                       const std::u8string& jsonpath,
+                                       const JsonProp& prop);
+
+  bool OnEdit(const gltfjson::tree::NodePtr& parent,
+              const gltfjson::tree::NodePtr& item,
+              const std::u8string& jsonpath,
+              const JsonProp& prop,
+              EditorResult result);
 
   bool ShouldOpen(std::u8string_view jsonpath) const
   {

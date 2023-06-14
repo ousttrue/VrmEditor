@@ -30,8 +30,11 @@ struct ScenePreviewImpl
     , m_settings(new glr::ViewSettings)
   {
     m_renderer = std::make_shared<glr::SceneRenderer>(m_env, m_settings);
-    m_fbo = ImFbo::Create(m_view,
-                          [=](const grapho::OrbitView& view) { m_show(view); });
+    m_fbo = ImFbo::Create(m_view, [=](const grapho::OrbitView& view) {
+      if (m_show) {
+        m_show(view);
+      }
+    });
   }
 
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root)

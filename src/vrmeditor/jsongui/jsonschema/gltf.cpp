@@ -121,9 +121,9 @@ Gltf()
       u8"/materials",
       { {
         {
-          { u8"📄" },
+          { u8"💎" },
           { {}, U8Q("") },
-          JsonPropFlags::ArrayChild,
+          {},
           MaterialTag,
         },
       } },
@@ -207,6 +207,17 @@ Gltf()
             u8",0,1,0,0"
             u8",0,0,1,0"
             u8",0,0,0,1}" } },
+      } },
+    },
+    {
+      // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/scene.schema.json
+      u8"/scenes",
+      { {
+        {
+          { u8"🛞" },
+          { {}, u8"{}" },
+          {},
+        },
       } },
     },
     {

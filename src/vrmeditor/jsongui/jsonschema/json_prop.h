@@ -25,8 +25,8 @@ enum class JsonPropFlags : uint32_t
   None = 0,
   Required = 0x01,
   // ReadOnly = 0x02,
-  Unknown = 0x04,
-  ArrayChild = 0x08,
+  // Unknown = 0x04,
+  // ArrayChild = 0x08,
 };
 inline JsonPropFlags
 operator|(JsonPropFlags lhs, JsonPropFlags rhs)
