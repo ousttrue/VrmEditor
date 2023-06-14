@@ -1,6 +1,10 @@
 #include "json_gui.h"
 #include "../docks/gui.h"
 #include "json_widgets.h"
+#include "jsonschema/extensions.h"
+#include "jsonschema/gltf.h"
+#include "jsonschema/vrm0.h"
+#include "jsonschema/vrm1.h"
 #include <array>
 #include <charconv>
 #include <glr/gl3renderer.h>
@@ -14,27 +18,19 @@
 #include <sstream>
 #include <string_view>
 #include <unordered_set>
-#include "jsonschema/vrm0.h"
-#include "jsonschema/vrm1.h"
-#include "jsonschema/extensions.h"
-#include "jsonschema/gltf.h"
 
 JsonGui::JsonGui()
 {
-  for(auto &kv: jsonschema::VRMC_vrm())
-  {
+  for (auto& kv : jsonschema::VRMC_vrm()) {
     m_definitionMap.m_map.push_back(kv);
   }
-  for(auto &kv: jsonschema::VRM())
-  {
+  for (auto& kv : jsonschema::VRM()) {
     m_definitionMap.m_map.push_back(kv);
   }
-  for(auto &kv: jsonschema::Gltf())
-  {
+  for (auto& kv : jsonschema::Gltf()) {
     m_definitionMap.m_map.push_back(kv);
   }
-  for(auto &kv: jsonschema::Extensions())
-  {
+  for (auto& kv : jsonschema::Extensions()) {
     m_definitionMap.m_map.push_back(kv);
   }
 }
@@ -105,7 +101,7 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
 
   ImGui::TableNextRow();
 
-  // 0: name
+  // 0: tree
   ImGui::TableNextColumn();
   if (ShouldOpen(jsonpath)) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
@@ -133,8 +129,8 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
       { jsonpath, { prop.Name.Label(), prop.Value.TextOrDeault(item) } });
     cache = &inserted.first->second;
     cache->Editor = prop.Value.EditorOrDefault();
-    if(prop.Tag){
-      cache->ShowTag = prop.Tag(m_root->m_gltf->m_json, m_root->m_bin, item); 
+    if (prop.Tag) {
+      cache->ShowTag = prop.Tag(m_root->m_gltf->m_json, m_root->m_bin, item);
     }
   }
   auto node_open = ImGui::TreeNodeEx(
@@ -147,7 +143,13 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
     m_jsonpath = jsonpath;
   }
 
-  // 1: value
+  // 1: tag
+  ImGui::TableNextColumn();
+  if (cache->ShowTag) {
+    cache->ShowTag();
+  }
+
+  // 2: value
   ImGui::TableNextColumn();
 
   if (item) {
@@ -171,9 +173,10 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
     }
   }
 
-  // 2 add/remove
+  // 3 add/remove
   ImGui::TableNextColumn();
-  if (Has(prop.Flags, JsonPropFlags::Unknown)) {
+  if (jsonpath == u8"/") {
+  } else if (Has(prop.Flags, JsonPropFlags::Unknown)) {
     if (ImGui::Button("-##unknown")) {
       result = EditorResult::Removed;
     }
@@ -212,8 +215,9 @@ JsonGui::ShowSelector()
     return;
   }
 
-  std::array<const char*, 3> cols = {
+  std::array<const char*, 4> cols = {
     "Name",
+    "Tag",
     "Value",
     "✅",
   };
@@ -228,7 +232,7 @@ JsonGui::ShowSelector()
     std::u8string jsonpath(u8"/");
     Traverse(m_root->m_gltf->m_json,
              jsonpath,
-             JsonProp{ u8"glTF", u8"", {}, JsonPropFlags::Unknown });
+             JsonProp{ { u8"", u8"glTF" }, {}, JsonPropFlags::Unknown });
 
     ImGui::PopStyleVar();
 
@@ -300,7 +304,7 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
           child_result = Traverse(
             it->second,
             jsonpath,
-            { jsonpath.substr(size), u8"❔", {}, JsonPropFlags::Unknown });
+            { { u8"❔", jsonpath.substr(size) }, {}, JsonPropFlags::Unknown });
         }
 
         if (child_result == EditorResult::Removed) {
@@ -316,14 +320,28 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
       //
       // array
       //
+      bool hasProp = false;
+      JsonProp child_prop;
+      if (auto definition = m_definitionMap.Match(jsonpath)) {
+        if (definition->Props.size()) {
+          child_prop = definition->Props.front();
+          hasProp = true;
+        }
+      }
+      if (!hasProp) {
+        child_prop = {
+          { prop.Name.Icon },
+          {},
+          JsonPropFlags::ArrayChild,
+        };
+      }
+
       int i = 0;
       std::optional<int> removed;
       for (auto& child : *array) {
         gltfjson::tree::concat_int(jsonpath, i);
-        auto child_result = Traverse(
-          child,
-          jsonpath,
-          { jsonpath.substr(size), prop.Name.Icon, {}, JsonPropFlags::ArrayChild });
+        child_prop.Name.Key = jsonpath.substr(size);
+        auto child_result = Traverse(child, jsonpath, child_prop);
         if (child_result == EditorResult::Removed) {
           removed = i;
         }

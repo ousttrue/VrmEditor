@@ -116,18 +116,18 @@ Gltf()
         { { u8"🆔", u8"sampler" } },
       } },
     },
-    // {
-    //   //
-    //   https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.schema.json
-    //   u8"/materials",
-    //   { {
-    //     { MaterialItem,
-    //       u8"📄",
-    //       { {}, U8Q("") },
-    //       JsonPropFlags::ArrayChild
-    //       },
-    //   } },
-    // },
+    {
+      // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.schema.json
+      u8"/materials",
+      { {
+        {
+          { u8"📄" },
+          { {}, U8Q("") },
+          JsonPropFlags::ArrayChild,
+          MaterialTag,
+        },
+      } },
+    },
     {
       u8"/materials/*",
       { {
