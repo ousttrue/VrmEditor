@@ -101,10 +101,10 @@ Gltf()
       u8"/samplers/*",
       { {
         { { u8"📄", u8"name" }, { {}, U8Q("") } },
-        { u8"magFilter", u8"🔢" },
-        { u8"minFilter", u8"🔢" },
-        { u8"wrapS", u8"🔢" },
-        { u8"wrapT", u8"🔢" },
+        { { u8"🔢", u8"magFilter" } },
+        { { u8"🔢", u8"minFilter" } },
+        { { u8"🔢", u8"wrapS" } },
+        { { u8"🔢", u8"wrapT" } },
       } },
     },
     {
@@ -112,8 +112,8 @@ Gltf()
       u8"/textures/*",
       { {
         { { u8"📄", u8"name" }, { {}, U8Q("") } },
-        { u8"source", u8"🆔" },
-        { u8"sampler", u8"🆔" },
+        { { u8"🆔", u8"source" } },
+        { { u8"🆔", u8"sampler" } },
       } },
     },
     // {
@@ -138,8 +138,7 @@ Gltf()
         { { u8"🖼", u8"occlusionTexture" }, JsonValue::Object },
         { { u8"🖼", u8"emissiveTexture" }, JsonValue::Object },
         { { u8"🎨", u8"emissiveFactor" }, { RgbPicker{}, u8"[0,0,0]" } },
-        { u8"alphaMode",
-          u8"👻",
+        { { u8"👻", u8"alphaMode" },
           { StringEnum{ { "OPAQUE", "MASK", "BLEND" } }, U8Q("OPAQUE") } },
         { { u8"👻", u8"alphaCutoff" }, { FloatSlider{}, u8"0.5" } },
         { { u8"✅", u8"doubleSided" }, { {}, u8"false" } },
@@ -156,15 +155,13 @@ Gltf()
       u8"/materials/*/pbrMetallicRoughness",
       { {
         { { u8"🎨", u8"baseColorFactor" }, { RgbaPicker{} } },
-        { u8"baseColorTexture", u8"🖼" },
+        { { u8"🖼", u8"baseColorTexture" } },
         {
-          u8"metallicFactor",
-          u8"🎚️",
+          { u8"🎚️", u8"metallicFactor" },
           { FloatSlider{}, u8"1" },
         },
         {
-          u8"roughnessFactor",
-          u8"🎚️",
+          { u8"🎚️", u8"roughnessFactor" },
           { FloatSlider{}, u8"1" },
         },
         { { u8"🖼", u8"metallicRoughnessTexture" }, JsonValue::Object },
@@ -178,7 +175,7 @@ Gltf()
       { {
         { { u8"📄", u8"attributes" }, {}, JsonPropFlags::Required },
         { { u8"📄", u8"indices" }, {} },
-        { u8"material", u8"🆔" },
+        { { u8"🆔", u8"material" } },
       } },
     },
     {
@@ -187,7 +184,7 @@ Gltf()
       { {
         { { u8"📄", u8"name" }, { {}, U8Q("") } },
         { { u8"📐", u8"primitives" }, {}, JsonPropFlags::Required },
-        { u8"weights", u8"🔢" },
+        { { u8"🔢", u8"weights" } },
       } },
     },
     // node
@@ -197,18 +194,14 @@ Gltf()
       { {
         { { u8"📄", u8"name" }, { {}, U8Q("") } },
         { { u8"🆔", u8"mesh" }, { SelectMesh, u8"0" } },
-        { u8"children", u8"🆔" },
-        { u8"translation",
-          u8"🔢",
+        { { u8"🆔", u8"children" } },
+        { { u8"🔢", u8"translation" },
           { {}, u8"{0,0,0}", JsonValueFlags::DefaultIfNone } },
-        { u8"rotation",
-          u8"🔢",
+        { { u8"🔢", u8"rotation" },
           { {}, u8"{0,0,0,1}", JsonValueFlags::DefaultIfNone } },
-        { u8"scale",
-          u8"🔢",
+        { { u8"🔢", u8"scale" },
           { {}, u8"{1,1,1}", JsonValueFlags::DefaultIfNone } },
-        { u8"matrix",
-          u8"🔢",
+        { { u8"🔢", u8"matrix" },
           { {},
             u8"{1,0,0,0"
             u8",0,1,0,0"
