@@ -18,8 +18,8 @@ BvhNode::BvhNode(int id, std::string_view name)
   auto table = std::make_shared<libvrm::GltfRoot>();
   m_scene = std::make_shared<libvrm::RuntimeScene>(table);
 
-  // update preview
-  m_preview = ScenePreview::Create(m_scene);
+  m_preview = std::make_shared<ScenePreview>();
+  m_preview->SetRuntime(m_scene);
 }
 
 void

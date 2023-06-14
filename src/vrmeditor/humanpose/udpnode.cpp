@@ -17,7 +17,8 @@ UdpNode::UdpNode(int id, std::string_view name)
   m_scene->m_table->m_title = "UDP";
 
   // update preview
-  m_preview = ScenePreview::Create(m_scene);
+  m_preview = std::make_shared<ScenePreview>();
+  m_preview->SetRuntime(m_scene);
 
   m_udp = std::make_shared<UdpReceiver>();
 

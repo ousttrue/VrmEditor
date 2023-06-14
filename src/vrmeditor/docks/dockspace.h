@@ -14,6 +14,9 @@ struct DockSpaceManager
   std::filesystem::path m_fileDialogCurrent;
 
   std::list<grapho::imgui::Dock> TmpDocks;
+  std::list<grapho::imgui::Dock> DebugDocks;
+
+  std::list<std::function<void()>> OnResetCallbacks;
 
 private:
   DockSpaceManager();
@@ -28,6 +31,7 @@ public:
     return s_instance;
   }
 
+  void Reset();
   void AddDock(const grapho::imgui::Dock& dock, bool tmporary = false);
   void SetDockVisible(std::string_view name, bool visible);
   void ShowGui();

@@ -11,30 +11,6 @@ const auto DOCK_SPACE = "VRDocksPACE";
 
 DockSpaceManager::DockSpaceManager()
 {
-#ifndef NDEBUG
-  Docks.push_back({
-    .Name = "[debug] demo",
-    .Begin =
-      [](auto, auto popen, auto) {
-        ImGui::ShowDemoWindow(popen);
-        return false;
-      },
-    .End = {},
-  });
-  Docks.back().IsOpen = false;
-
-  Docks.push_back({
-    .Name = "[debug] metrics",
-    .Begin =
-      [](const char*, bool* p_open, auto) {
-        ImGui::ShowMetricsWindow(p_open);
-        return false;
-      },
-    .End = {},
-  });
-  Docks.back().IsOpen = false;
-#endif
-
   // Docks.push_back(grapho::imgui::Dock("[setting] font", [this]() {
   //   if (ImGui::SliderInt("fontSize", &FontSize, 10, 50)) {
   //     app::PostTask([=]() { Shutdown(); });
@@ -47,6 +23,40 @@ DockSpaceManager::DockSpaceManager()
   //   nullptr,
   //   ImVec4(0.0f, 0.0f, 0.0f, 1.0f),
   //   (const char*)u8" "); // for all dirs
+
+#ifndef NDEBUG
+  DebugDocks.push_back({
+    .Name = "🚧demo",
+    .Begin =
+      [](auto, auto popen, auto) {
+        ImGui::ShowDemoWindow(popen);
+        return false;
+      },
+    .End = {},
+  });
+  DebugDocks.back().IsOpen = false;
+
+  DebugDocks.push_back({
+    .Name = "🚧metrics",
+    .Begin =
+      [](const char*, bool* p_open, auto) {
+        ImGui::ShowMetricsWindow(p_open);
+        return false;
+      },
+    .End = {},
+  });
+  DebugDocks.back().IsOpen = false;
+#endif
+}
+
+void
+DockSpaceManager::Reset()
+{
+  Docks.clear();
+
+  for (auto& callback : OnResetCallbacks) {
+    callback();
+  }
 }
 
 void
@@ -83,6 +93,22 @@ DockSpaceManager::SetDockVisible(std::string_view name, bool visible)
   Docks.push_back({ .Name = { name.begin(), name.end() }, .IsOpen = visible });
 }
 
+static void
+ShowDocks(std::list<grapho::imgui::Dock>& docks)
+{
+  for (auto& dock : docks) {
+    dock.Show();
+  }
+}
+
+static void
+MenuDocks(std::list<grapho::imgui::Dock>& docks)
+{
+  for (auto& dock : docks) {
+    ImGui::MenuItem(dock.Name.c_str(), nullptr, &dock.IsOpen);
+  }
+}
+
 void
 DockSpaceManager::ShowGui()
 {
@@ -90,14 +116,7 @@ DockSpaceManager::ShowGui()
     grapho::imgui::BeginDockSpace(DOCK_SPACE);
 
     if (m_resetLayout) {
-      for (auto& dock : Docks) {
-        if (dock.Name == "Json" || dock.Name == "Json-Inspector" ||
-            dock.Name == "3D-View") {
-          dock.IsOpen = true;
-        } else {
-          dock.IsOpen = false;
-        }
-      }
+      Reset();
 
       grapho::imgui::DockSpaceLayout(DOCK_SPACE, []() {
         auto root = ImGui::GetID(DOCK_SPACE);
@@ -108,13 +127,13 @@ DockSpaceManager::ShowGui()
         ImGui::DockBuilderSplitNode(
           root, ImGuiDir_Left, 0.3f, &left_id, &right_id);
         // ImGui::DockBuilderDockWindow("Json", left_id);
-        ImGui::DockBuilderDockWindow("3D-View", right_id);
+        ImGui::DockBuilderDockWindow(app::DOCKNAME_VIEW, right_id);
+        ImGui::DockBuilderDockWindow(app::DOCKNAME_JSON, left_id);
 
-        ImGuiID top_id, bottom_id;
-        ImGui::DockBuilderSplitNode(
-          left_id, ImGuiDir_Up, 0.4f, &top_id, &bottom_id);
-        ImGui::DockBuilderDockWindow("Json", top_id);
-        ImGui::DockBuilderDockWindow("Json-Inspector", bottom_id);
+        // ImGuiID top_id, bottom_id;
+        // ImGui::DockBuilderSplitNode(
+        //   left_id, ImGuiDir_Up, 0.4f, &top_id, &bottom_id);
+        // ImGui::DockBuilderDockWindow("Json-Inspector", bottom_id);
       });
 
       m_resetLayout = false;
@@ -150,21 +169,15 @@ DockSpaceManager::ShowGui()
           m_resetLayout = true;
         }
         ImGui::Separator();
-        // Disabling fullscreen would allow the window to be moved to the front
-        // of other windows, which we can't undo at the moment without finer
-        // window depth/z control.
-        for (auto& dock : Docks) {
-          ImGui::MenuItem(dock.Name.c_str(), nullptr, &dock.IsOpen);
-        }
+        // Disabling fullscreen would allow the window to be moved to the
+        // front of other windows, which we can't undo at the moment without
+        // finer window depth/z control.
+        MenuDocks(Docks);
         ImGui::Separator();
-        for (auto it = TmpDocks.begin(); it != TmpDocks.end();) {
-          if (!it->IsOpen) {
-            it = TmpDocks.erase(it);
-          } else {
-            ImGui::MenuItem(it->Name.c_str(), nullptr, &it->IsOpen);
-            ++it;
-          }
-        }
+        MenuDocks(TmpDocks);
+        ImGui::Separator();
+        MenuDocks(DebugDocks);
+
         ImGui::EndMenu();
       }
 
@@ -213,10 +226,7 @@ DockSpaceManager::ShowGui()
   }
 
   // docks
-  for (auto& dock : Docks) {
-    dock.Show();
-  }
-  for (auto& dock : TmpDocks) {
-    dock.Show();
-  }
+  ShowDocks(Docks);
+  ShowDocks(TmpDocks);
+  ShowDocks(DebugDocks);
 }
