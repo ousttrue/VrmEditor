@@ -36,6 +36,7 @@ struct ScenePreviewImpl
 
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root)
   {
+    m_title = root->m_title;
     m_show = [root, renderer = m_renderer](const grapho::OrbitView& view) {
       renderer->RenderStatic(root, view);
     };
@@ -43,6 +44,7 @@ struct ScenePreviewImpl
 
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
+    m_title = runtime->m_table->m_title;
     m_show = [runtime, renderer = m_renderer](const grapho::OrbitView& view) {
       renderer->RenderRuntime(runtime, view);
     };

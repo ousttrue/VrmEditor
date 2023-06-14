@@ -103,17 +103,13 @@ public:
 
   void ResetDock()
   {
-    auto addDock = [](const grapho::imgui::Dock& dock) {
-      DockSpaceManager::Instance().AddDock(dock);
-    };
-
     // #ifndef NDEBUG
     //     ImTimeline::Create(addDock, "[animation] timeline", m_timeline);
     //     humanpose::HumanPoseStream::Instance().CreateDock(
     //       addDock, "[animation] input-stream");
     // #endif
 
-    addDock({
+    DockSpaceManager::Instance().AddDock({
       "📜logger",
       []() { ImLogger::Instance().Draw(); },
     });
@@ -199,18 +195,21 @@ public:
     //   }
     // };
 
-    addDock({
+    DockSpaceManager::Instance().AddDock({
       app::DOCKNAME_JSON,
       [json = m_json]() mutable { json->ShowSelector(); },
     });
-    addDock({
+    DockSpaceManager::Instance().AddDock({
       app::DOCKNAME_VIEW,
       [preview = m_preview]() { preview->ShowGui(); },
     });
-    addDock({
-      "🎥Pose",
-      [runtime = m_animationPreview]() { runtime->ShowGui(); },
-    });
+    {
+      auto dock = DockSpaceManager::Instance().AddDock({
+        "🎥Pose",
+        [runtime = m_animationPreview]() { runtime->ShowGui(); },
+      });
+      dock->IsOpen = false;
+    }
 
     // addDock({
     //   "hierarchy",
@@ -364,6 +363,7 @@ public:
     // You need only do this once per program.
     // Remotery* rmt;
     // rmt_CreateGlobalInstance(&rmt);
+    ResetDock();
 
     GL_ErrorClear("Initialize");
     std::optional<libvrm::Time> lastTime;

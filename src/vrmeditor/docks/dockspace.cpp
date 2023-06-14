@@ -59,12 +59,12 @@ DockSpaceManager::Reset()
   }
 }
 
-void
+grapho::imgui::Dock*
 DockSpaceManager::AddDock(const grapho::imgui::Dock& dock, bool tmporary)
 {
   if (tmporary) {
     TmpDocks.push_back(dock);
-    return;
+    return &TmpDocks.back();
   }
 
   bool visible = true;
@@ -78,6 +78,7 @@ DockSpaceManager::AddDock(const grapho::imgui::Dock& dock, bool tmporary)
 
   Docks.push_back(dock);
   Docks.back().IsOpen = visible;
+  return &Docks.back();
 }
 
 void
