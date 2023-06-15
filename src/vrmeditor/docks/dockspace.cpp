@@ -142,7 +142,7 @@ DockSpaceManager::ShowGui()
 
     if (ImGui::BeginMenuBar()) {
       if (ImGui::BeginMenu("File")) {
-        static auto filters = ".vrm,.glb,.gltf,.fbx,.bvh,.vrma,.hdr,.*";
+        static auto filters = ".*,.vrm,.glb,.gltf,.fbx,.bvh,.vrma,.hdr";
         if (ImGui::MenuItem("Open", "")) {
           ImGuiFileDialog::Instance()->OpenDialog(
             OPEN_FILE_DIALOG,

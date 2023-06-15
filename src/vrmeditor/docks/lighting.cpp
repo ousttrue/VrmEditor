@@ -26,14 +26,18 @@ struct LightingImpl
   {
     ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
     if (ImGui::CollapsingHeader("KHR_lights_punctual")) {
-      if (auto KHR_lights_punctual =
+      if(!m_root)
+      {
+        ImGui::TextUnformatted("no lights");
+      }
+      else if (auto KHR_lights_punctual =
             m_root->m_gltf->GetExtension<gltfjson::KHR_lights_punctual>()) {
 
         std::array<const char*, 4> cols = {
           "name", "type", "color", "intensity"
         };
 
-        if (grapho::imgui::BeginTableColumns("##_lights", cols)) {
+        if (grapho::imgui::BeginTableColumns("##_lights", cols, {0, 200})) {
           for (auto light : KHR_lights_punctual->Lights) {
             ImGui::PushID(light.m_json.get());
             ImGui::TableNextRow();

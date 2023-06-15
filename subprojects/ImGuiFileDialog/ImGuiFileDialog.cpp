@@ -2451,7 +2451,8 @@ namespace IGFD
 	{
 		if (!puDLGDirectoryMode) // if not directory mode
 		{
-			return vFileDialogInternal.puFilterManager.ReplaceExtentionWithCurrentFilter(std::string(puFileNameBuffer));
+			// return vFileDialogInternal.puFilterManager.ReplaceExtentionWithCurrentFilter(std::string(puFileNameBuffer));
+			return puFileNameBuffer;
 		}
 
 		return ""; // directory mode
