@@ -17,7 +17,7 @@ TaskLoadModel(const std::filesystem::path& path);
 void
 TaskLoadPath(const std::filesystem::path& path);
 void
-TaskLoadPbr(const std::filesystem::path& hdr);
+TaskLoadHdr(const std::filesystem::path& hdr);
 
 void
 SetShaderDir(const std::filesystem::path& path);

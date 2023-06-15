@@ -93,8 +93,8 @@ struct LuaEngineImpl
       { "show_dock", MakeLuaFunc([](const std::string& name, bool visible) {
           DockSpaceManager::Instance().SetDockVisible(name, visible);
         }) },
-      { "load_pbr", MakeLuaFunc([](const std::filesystem::path& path) {
-          app::TaskLoadPbr(path);
+      { "load_hdr", MakeLuaFunc([](const std::filesystem::path& path) {
+          app::TaskLoadHdr(path);
         }) },
       { "set_shaderpath", MakeLuaFunc([](const std::filesystem::path& path) {
           app::SetShaderDir(path);

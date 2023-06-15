@@ -10,6 +10,7 @@
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
+#include "docks/lighting.h"
 #include "docks/scene_selection.h"
 #include "docks/vrm_dock.h"
 #include "fbx_loader.h"
@@ -60,6 +61,7 @@ class App
   std::shared_ptr<libvrm::Timeline> m_timeline;
   std::shared_ptr<ScenePreview> m_preview;
   std::shared_ptr<ScenePreview> m_animationPreview;
+  std::shared_ptr<Lighting> m_lighting;
 
   // std::shared_ptr<HierarchyGui> m_hierarchy;
   // std::shared_ptr<struct SceneNodeSelection> m_selection;
@@ -83,6 +85,7 @@ public:
     m_env = std::make_shared<glr::RenderingEnv>();
     m_preview = std::make_shared<ScenePreview>(m_env);
     m_animationPreview = std::make_shared<ScenePreview>(m_env);
+    m_lighting = std::make_shared<Lighting>();
 
     // m_selection = std::make_shared<SceneNodeSelection>();
     // m_hierarchy = std::make_shared<HierarchyGui>();
@@ -114,11 +117,8 @@ public:
         "📜logger",
         []() { ImLogger::Instance().Draw(); },
       })
-      ->IsOpen = false;
+      .SetVisible(false);
 
-    //   glr::CreateDock(addDock);
-    // void
-    // CreateDock(const AddDockFunc& addDock)
     {
       // addDock(
       //   grapho::imgui::Dock("GL impl", [=]() { m_gl3gui->ShowSelectImpl();
@@ -140,63 +140,6 @@ public:
       // }));
     }
 
-    // ViewDock::CreateSetting(
-    //   addDock, "view-settings", m_env, m_runtimeView, m_settings);
-    // class ViewDock
-    // {
-    // public:
-    //   static void CreateSetting(const AddDockFunc& addDock,
-    //                             std::string_view title,
-    //                             const std::shared_ptr<glr::RenderingEnv>&
-    //                             env, const
-    //                             std::shared_ptr<grapho::OrbitView>& view,
-    //                             const std::shared_ptr<glr::ViewSettings>&
-    //                             settings)
-    //   {
-    //     addDock({
-    //       .Name = { title.begin(), title.end() },
-    //       .OnShow =
-    //         [env, settings, view]() {
-    //           if (ImGui::CollapsingHeader("View")) {
-    //             ImGui::Checkbox("Mesh", &settings->ShowMesh);
-    //             ImGui::SameLine();
-    //             ImGui::Checkbox("Shadow", &settings->ShowShadow);
-    //             ImGui::SameLine();
-    //             ImGui::Checkbox("Gizmo", &settings->ShowLine);
-    //             ImGui::SameLine();
-    //             ImGui::Checkbox("Bone", &settings->ShowCuber);
-    //
-    //             ImGui::ColorEdit4("Clear color", &env->ClearColor.x);
-    //           }
-    //
-    //           if (ImGui::CollapsingHeader("Camera")) {
-    //             ImGui::SliderFloat("Near", &view->NearZ, 0.001f, 1000.0f);
-    //             ImGui::SliderFloat("Far", &view->FarZ, 0.001f, 1000.0f);
-    //             // TODO: reset position
-    //           }
-    //
-    //           if (ImGui::CollapsingHeader("SpringBone")) {
-    //             // 60FPS
-    //             ImGui::Checkbox("Spring", &settings->EnableSpring);
-    //             if (settings->EnableSpring) {
-    //             } else {
-    //               if (ImGui::Button("Spring step")) {
-    //                 settings->NextSpringDelta = libvrm::Time(1.0 / 60);
-    //               }
-    //             }
-    //           }
-    //           if (settings->EnableSpring) {
-    //             settings->NextSpringDelta = libvrm::Time(1.0 / 60);
-    //           }
-    //
-    //           if (ImGui::CollapsingHeader("Pbr Env")) {
-    //             ImGui::Checkbox("Skybox", &settings->Skybox);
-    //           }
-    //         },
-    //     });
-    //   }
-    // };
-
     DockSpaceManager::Instance().AddDock({
       app::DOCKNAME_JSON,
       [json = m_json]() mutable { json->ShowSelector(); },
@@ -205,13 +148,15 @@ public:
       app::DOCKNAME_VIEW,
       [preview = m_preview]() { preview->ShowGui(); },
     });
-    {
-      auto dock = DockSpaceManager::Instance().AddDock({
+    DockSpaceManager::Instance()
+      .AddDock({
         "🎥Pose",
         [runtime = m_animationPreview]() { runtime->ShowGui(); },
-      });
-      dock->IsOpen = false;
-    }
+      })
+      .SetVisible(false);
+
+    DockSpaceManager::Instance().AddDock(
+      { "💡Lighting", [lighting = m_lighting]() { lighting->ShowGui(); } });
 
     // addDock({
     //   "hierarchy",
@@ -238,6 +183,7 @@ public:
       });
 
     m_json->SetScene(gltf);
+    m_lighting->SetGltf(gltf);
     m_preview->SetGltf(gltf);
     m_animationPreview->SetRuntime(m_runtime);
     return m_runtime;
@@ -471,7 +417,7 @@ public:
       return LoadFbx(path);
     }
     if (extension == ".hdr") {
-      return LoadPbr(path);
+      return LoadHdr(path);
     }
     if (extension == ".png" || extension == ".jpg" || extension == ".gif") {
       return LoadImage(path);
@@ -592,9 +538,9 @@ public:
     }
   }
 
-  bool LoadPbr(const std::filesystem::path& hdr)
+  bool LoadHdr(const std::filesystem::path& path)
   {
-    return glr::LoadPbr_LOGL(hdr);
+    return m_lighting->LoadHdr(path);
   }
 
   bool AddAssetDir(std::string_view name, const std::filesystem::path& path)
@@ -637,9 +583,9 @@ TaskLoadPath(const std::filesystem::path& path)
 }
 
 void
-TaskLoadPbr(const std::filesystem::path& hdr)
+TaskLoadHdr(const std::filesystem::path& hdr)
 {
-  PostTask([hdr]() { g_app.LoadPbr(hdr); });
+  PostTask([hdr]() { g_app.LoadHdr(hdr); });
 }
 
 void

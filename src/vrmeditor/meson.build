@@ -13,6 +13,7 @@ srcs = [
     'docks/vrm_dock.cpp',
     'docks/export_dock.cpp',
     'docks/hierarchy_gui.cpp',
+    'docks/lighting.cpp',
     'jsongui/json_gui.cpp',
     'jsongui/jsonschema/json_prop.cpp',
     'jsongui/jsonschema/gltf.cpp',

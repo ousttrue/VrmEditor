@@ -908,18 +908,18 @@ public:
 
   std::shared_ptr<grapho::gl3::PbrEnv> m_pbr;
 
-  bool LoadPbr_LOGL(const std::filesystem::path& path)
+  std::shared_ptr<grapho::gl3::Texture> LoadPbr_LOGL(const std::filesystem::path& path)
   {
     auto bytes = libvrm::ReadAllBytes(path);
     if (bytes.empty()) {
       PLOG_ERROR << "fail to read: " << path.string();
-      return false;
+      return {};
     }
 
     auto hdr = std::make_shared<libvrm::Image>("pbr");
     if (!hdr->LoadHdr(bytes)) {
       PLOG_ERROR << "fail to load: " << path.string();
-      return false;
+      return {};
     }
 
     auto texture = grapho::gl3::Texture::Create(
@@ -932,11 +932,11 @@ public:
       },
       true);
     if (!texture) {
-      return false;
+      return {};
     }
 
     m_pbr = std::make_shared<grapho::gl3::PbrEnv>(texture);
-    return true;
+    return texture;
   }
 
   bool LoadPbr_Khronos(const std::filesystem::path& path) { return false; }
@@ -1079,7 +1079,7 @@ UpdateShader(const std::filesystem::path& path)
   Gl3Renderer::Instance().UpdateShader(path);
 }
 
-bool
+std::shared_ptr<grapho::gl3::Texture>
 LoadPbr_LOGL(const std::filesystem::path& path)
 {
   return Gl3Renderer::Instance().LoadPbr_LOGL(path);

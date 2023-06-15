@@ -98,7 +98,7 @@ UpdateShader(const std::filesystem::path& path);
 void
 SetShaderChunkDir(const std::filesystem::path& path);
 
-bool
+std::shared_ptr<grapho::gl3::Texture>
 LoadPbr_LOGL(const std::filesystem::path& path);
 
 bool

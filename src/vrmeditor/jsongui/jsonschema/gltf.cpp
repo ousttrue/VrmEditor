@@ -145,12 +145,6 @@ Gltf()
       } },
     },
     {
-      u8"/materials/*/extensions",
-      { {
-        { { u8"🏛️", u8"KHR_materials_unlit" }, JsonValue::Object },
-      } },
-    },
-    {
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.pbrMetallicRoughness.schema.json
       u8"/materials/*/pbrMetallicRoughness",
       { {

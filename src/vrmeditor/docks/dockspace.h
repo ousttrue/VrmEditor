@@ -32,7 +32,7 @@ public:
   }
 
   void Reset();
-  grapho::imgui::Dock* AddDock(const grapho::imgui::Dock& dock, bool tmporary = false);
+  grapho::imgui::Dock& AddDock(const grapho::imgui::Dock& dock, bool tmporary = false);
   void SetDockVisible(std::string_view name, bool visible);
   void ShowGui();
 };
