@@ -2,7 +2,6 @@ glr_inc = include_directories('.')
 glr_lib = static_library(
     'glr',
     [
-        'glr/error_check.cpp',
         'glr/gl3renderer.cpp',
         'glr/shader_source.cpp',
         'glr/material_three_vrm0.cpp',

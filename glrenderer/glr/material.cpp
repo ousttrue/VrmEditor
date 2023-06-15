@@ -58,14 +58,14 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
           auto debug = shader->Uniform(u.Name);
           assert(debug->Location == u.Location);
 #endif
-          GL_ErrorCheck("before");
+          assert(!grapho::gl3::TryGetError());
           std::visit(
             [&u, &world, &local, &material](const auto& var) {
               //
               u.Set(var.Update(world, local, material));
             },
             *v);
-          GL_ErrorClear("after");
+          assert(!grapho::gl3::TryGetError());
         }
       }
     }

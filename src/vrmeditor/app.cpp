@@ -24,12 +24,12 @@
 #include <ImGuizmo.h>
 #include <cuber/mesh.h>
 #include <fstream>
-#include <glr/error_check.h>
 #include <glr/gl3renderer.h>
 #include <glr/rendering_env.h>
 #include <gltfjson.h>
 #include <gltfjson/glb.h>
 #include <gltfjson/json_tree_exporter.h>
+#include <grapho/gl3/error_check.h>
 #include <grapho/gl3/texture.h>
 #include <grapho/orbitview.h>
 #include <imgui.h>
@@ -313,7 +313,7 @@ public:
     // rmt_CreateGlobalInstance(&rmt);
     ResetDock();
 
-    GL_ErrorClear("Initialize");
+    assert(!grapho::gl3::TryGetError());
     std::optional<libvrm::Time> lastTime;
     while (true) {
 
@@ -330,9 +330,7 @@ public:
 
       {
         // rmt_ScopedCPUSample(update, 0);
-        GL_ErrorClear("Frame");
-
-        ERROR_CHECK;
+        assert(!grapho::gl3::TryGetError());
 
         g_watcher.Update();
 
@@ -656,7 +654,7 @@ Run(std::span<const char*> args)
   if (!window) {
     throw std::runtime_error("createWindow");
   }
-  GL_ErrorClear("CreateWindow");
+  assert(!grapho::gl3::TryGetError());
   Platform::Instance().OnDrops.push_back(
     [](auto& path) { g_app.LoadPath(path); });
 

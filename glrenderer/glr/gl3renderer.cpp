@@ -903,12 +903,13 @@ public:
     if (isTransparent) {
       glDisable(GL_BLEND);
     }
-    ERROR_CHECK;
+    assert(!grapho::gl3::TryGetError());
   }
 
   std::shared_ptr<grapho::gl3::PbrEnv> m_pbr;
 
-  std::shared_ptr<grapho::gl3::Texture> LoadPbr_LOGL(const std::filesystem::path& path)
+  std::shared_ptr<grapho::gl3::Texture> LoadPbr_LOGL(
+    const std::filesystem::path& path)
   {
     auto bytes = libvrm::ReadAllBytes(path);
     if (bytes.empty()) {

@@ -1,8 +1,8 @@
 #pragma once
-#include "error_check.h"
 #include "gl3renderer.h"
 #include "shader_factory.h"
 #include "shader_source.h"
+#include <grapho/gl3/error_check.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/texture.h>
 #include <list>
