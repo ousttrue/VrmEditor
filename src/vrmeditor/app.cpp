@@ -10,7 +10,6 @@
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
-#include "view/scene_preview.h"
 #include "docks/scene_selection.h"
 #include "docks/vrm_dock.h"
 #include "fbx_loader.h"
@@ -20,6 +19,7 @@
 #include "jsongui/json_gui.h"
 #include "luahost.h"
 #include "platform.h"
+#include "view/scene_preview.h"
 #include <ImGuizmo.h>
 #include <cuber/mesh.h>
 #include <fstream>
@@ -109,10 +109,12 @@ public:
     //       addDock, "[animation] input-stream");
     // #endif
 
-    DockSpaceManager::Instance().AddDock({
-      "📜logger",
-      []() { ImLogger::Instance().Draw(); },
-    });
+    DockSpaceManager::Instance()
+      .AddDock({
+        "📜logger",
+        []() { ImLogger::Instance().Draw(); },
+      })
+      ->IsOpen = false;
 
     //   glr::CreateDock(addDock);
     // void

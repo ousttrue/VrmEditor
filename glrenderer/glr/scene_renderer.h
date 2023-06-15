@@ -24,7 +24,7 @@ struct ViewSettings
   bool ShowShadow = true;
   // gizmo
   bool ShowLine = true;
-  bool ShowCuber = true;
+  bool ShowCuber = false;
 
   float Color[4] = { 0.2f, 0.2f, 0.2f, 1 };
 

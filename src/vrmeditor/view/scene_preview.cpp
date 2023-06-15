@@ -43,6 +43,8 @@ struct ScenePreviewImpl
     m_show = [root, renderer = m_renderer](const grapho::OrbitView& view) {
       renderer->RenderStatic(root, view);
     };
+    auto [min, max] = root->GetBoundingBox();
+    m_view->Fit(min, max);
   }
 
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
@@ -51,6 +53,8 @@ struct ScenePreviewImpl
     m_show = [runtime, renderer = m_renderer](const grapho::OrbitView& view) {
       renderer->RenderRuntime(runtime, view);
     };
+    auto [min, max] = runtime->m_table->GetBoundingBox();
+    m_view->Fit(min, max);
   }
 
   void ShowScreenRect(const char* title,
@@ -77,7 +81,17 @@ struct ScenePreviewImpl
     ShowScreenRect(title, color, pos.x, pos.y, size.x, size.y);
   }
 
-  void ShowGui() { ShowFullWindow(m_title.c_str(), m_clear.data()); }
+  void ShowGui()
+  {
+    ImGui::Checkbox("grid", &m_renderer->m_settings->ShowLine);
+    ImGui::SameLine();
+    ImGui::Checkbox("mesh", &m_renderer->m_settings->ShowMesh);
+    ImGui::SameLine();
+    ImGui::Checkbox("bone", &m_renderer->m_settings->ShowCuber);
+    ImGui::SameLine();
+    ImGui::Checkbox("shadow", &m_renderer->m_settings->ShowShadow);
+    ShowFullWindow(m_title.c_str(), m_clear.data());
+  }
 };
 
 //

@@ -61,6 +61,21 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
   auto drawables = scene->Drawables();
   RenderScene(*m_env, *scene->m_gltf, scene->m_bin, drawables, m_settings);
 
+  if (m_settings->ShowLine) {
+    glr::RenderLine(*m_env, m_gizmo->m_lines);
+  }
+  m_gizmo->Clear();
+
+  if (m_settings->ShowCuber) {
+    m_cuber->Instances.clear();
+    for (auto m : scene->ShapeMatrices()) {
+      m_cuber->Instances.push_back({
+        .Matrix = m,
+      });
+    }
+    m_cuber->Render(*m_env);
+  }
+
   // manipulator
   // if (auto node = m_selection->selected.lock()) {
   //   // TODO: conflict mouse event(left) with ImageButton
