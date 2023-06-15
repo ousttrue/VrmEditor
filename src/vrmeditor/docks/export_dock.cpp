@@ -1,5 +1,5 @@
 #include "export_dock.h"
-#include "scene_preview.h"
+#include "../view/scene_preview.h"
 #include <fstream>
 #include <gltfjson/glb.h>
 #include <grapho/orbitview.h>

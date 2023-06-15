@@ -10,7 +10,7 @@
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
-#include "docks/scene_preview.h"
+#include "view/scene_preview.h"
 #include "docks/scene_selection.h"
 #include "docks/vrm_dock.h"
 #include "fbx_loader.h"

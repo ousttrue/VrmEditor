@@ -1,5 +1,5 @@
 #include "bvhnode.h"
-#include "../docks/scene_preview.h"
+#include "../view/scene_preview.h"
 #include "app.h"
 #include "humanpose_stream.h"
 #include <grapho/orbitview.h>

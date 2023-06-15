@@ -1,5 +1,5 @@
 #include "udpnode.h"
-#include "../docks/scene_preview.h"
+#include "../view/scene_preview.h"
 #include "udp_receiver.h"
 #include <grapho/orbitview.h>
 #include <imgui.h>
