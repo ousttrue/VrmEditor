@@ -5,35 +5,33 @@ read, write, edit and animation test.
 ## features
 
 - [x] glTF-2.0
-  - [ ] animation.linear_interpolation
-  - [ ] animation.cubic_interpolation
 - [x] bvh
 - [ ] fbx
 
 ### glTF Extensions
 
 - [ ] KHR_draco_mesh_compression
-- [ ] KHR_lights_punctual
+- [ ] [KHR_lights_punctual](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_lights_punctual)
 - [ ] KHR_materials_clearcoat
-- [ ] KHR_materials_emissive_strength
+- [ ] [KHR_materials_emissive_strength](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength)
 - [ ] KHR_materials_ior
 - [ ] KHR_materials_iridescence
 - [ ] KHR_materials_sheen
 - [ ] KHR_materials_specular
 - [ ] KHR_materials_transmission
-- [x] KHR_materials_unlit
+- [x] [KHR_materials_unlit](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_unlit)
 - [ ] KHR_materials_variants
 - [ ] KHR_materials_volume
 - [ ] KHR_mesh_quantization
 - [ ] KHR_texture_basisu
-- [ ] KHR_texture_transform
+- [ ] [KHR_texture_transform](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_texture_transform)
 - [ ] KHR_xmp_json_ld
-- [x] vrm-0.x
-- [ ] vrm-1.0
-
-## TODO
-
-- GLTF_SAMPLE_MODELS: BoxInterleaved
+- [x] [VRM](https://github.com/vrm-c/vrm-specification/tree/master/specification/0.0)
+- [x] [VRMC_vrm](https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_vrm-1.0)
+- [x] [VRMC_springBone](https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_springBone-1.0)
+- [x] [VRMC_node_constraint](https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_node_constraint-1.0)
+- [x] [VRMC_materials_mtoon](https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_materials_mtoon-1.0)
+- [ ] [VRMC_vrm_animation](https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_vrm_animation-1.0)
 
 ## Memo
 
@@ -77,20 +75,23 @@ deserialize ^|
 
 ## dependencies
 
-- imgui
-  - ImGuizmo
-  - ImGuiFileDialog
-  - ImNodes
-- glfw3
-- glew
-- DirectXMath
-- lua-jit
-- stb
-- IconFontCppHeaders
-- googletest
-- asio
-- simplefilewatcher
-- plog
+- [imgui](https://github.com/ocornut/imgui)
+  - [ImGuizmo](https://github.com/CedricGuillemet/ImGuizmo)
+  - [ImGuiFileDialog](https://github.com/dfranx/ImFileDialog)
+  - [ImNodes](https://github.com/Nelarius/imnodes)
+- [glfw3](https://www.glfw.org/)
+- [glew](https://github.com/nigels-com/glew)
+- [DirectXMath](https://github.com/microsoft/DirectXMath)
+- [lua-jit](https://luajit.org/)
+- [stb](https://github.com/nothings/stb)
+- [IconFontCppHeaders](https://github.com/juliettef/IconFontCppHeaders)
+- [asio](https://think-async.com/Asio/)
+- [simplefilewatcher](https://code.google.com/archive/p/simplefilewatcher/)
+- [plog](https://github.com/SergiusTheBest/plog)
+
+### test
+
+- [googletest](https://github.com/google/googletest)
 
 ### shaders
 
@@ -99,11 +100,11 @@ deserialize ^|
 - MToon: https://github.com/pixiv/three-vrm
   - depends: https://github.com/mrdoob/three.js/tree/r150 (r150 required)
 
-### external
+### subprojects
 
-- gltfjson(JSON utility)
-- grapho(GPU API wrapper)
-- cuber(bone draw helper)
+- [gltfjson](https://github.com/ousttrue/gltfjson) (JSON utility)
+- [grapho](https://github.com/ousttrue/grapho) (OpenGL/Imgui wrapper)
+- [cuber](https://github.com/ousttrue/cuber) (bone draw helper)
 
 ## build
 
