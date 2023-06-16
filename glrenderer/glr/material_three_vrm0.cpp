@@ -113,24 +113,24 @@ MaterialFactory_MToon0(const gltfjson::Root& root,
       .Codes{ FS_BUIlTIN },
       .MacroGroups{
         {"TEXTURE", {
-          { u8"USE_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{ 
-            gltfjson::vrm0::Material m(json);
+          { u8"USE_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{ 
+            auto m = gltf.VrmMaterial();
             if(auto p=m.MainTexture())
             {
               return std::monostate{};
             }
             return std::nullopt;
           }}},
-          { u8"USE_SHADEMULTIPLYTEXTURE", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
-            gltfjson::vrm0::Material m(json);
+          { u8"USE_SHADEMULTIPLYTEXTURE", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
+            auto m = gltf.VrmMaterial();
             if(auto p=m.ShadeTexture())
             {
               return std::monostate{};
             }
             return std::nullopt;
           }}},
-          { u8"USE_MATCAPTEXTURE", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
-            gltfjson::vrm0::Material m(json);
+          { u8"USE_MATCAPTEXTURE", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
+            auto m = gltf.VrmMaterial();
             if(auto p=m.SphereAddTexture())
             {
               return std::monostate{};
@@ -153,8 +153,8 @@ MaterialFactory_MToon0(const gltfjson::Root& root,
           { u8"isOrthographic", ConstBool(false) },
         }},
         {"Material", {
-          {u8"USE_ALPHATEST", OptVar{[](auto,auto,auto &json)->std::optional<std::monostate>{
-            gltfjson::vrm0::Material m(json);
+          {u8"USE_ALPHATEST", OptVar{[](auto,auto,auto &gltf)->std::optional<std::monostate>{
+            auto m = gltf.VrmMaterial();
             if(auto p = m.BlendMode())
             {
               if(*p == 1){
@@ -180,17 +180,17 @@ MaterialFactory_MToon0(const gltfjson::Root& root,
       { "matcapTexture", ConstInt(5) },
       { "emissiveMap", ConstInt(6)},
       { "uvAnimationMaskTexture", ConstInt(7) },
-    { "litFactor", RgbVar{ [](auto, auto, auto& json) {
-      gltfjson::vrm0::Material m(json);
+    { "litFactor", RgbVar{ [](auto, auto, auto& gltf) {
+      auto m = gltf.VrmMaterial();
       auto c = m.Color();
       return std::array<float, 3>{ c[0], c[1], c[2] };
       } } },
-    { "shadeColorFactor", RgbVar{ [](auto, auto, auto& json) {
-      gltfjson::vrm0::Material m(json);
+    { "shadeColorFactor", RgbVar{ [](auto, auto, auto& gltf) {
+      auto m = gltf.VrmMaterial();
       return m.ShadeColor();
     } } },
-    { "alphaTest", FloatVar{ [](auto, auto, auto& json) {
-      gltfjson::vrm0::Material m(json);
+    { "alphaTest", FloatVar{ [](auto, auto, auto& gltf) {
+      auto m = gltf.VrmMaterial();
       if(auto p=m.Cutoff()){
         return *p;
       }
@@ -224,9 +224,9 @@ MaterialFactory_MToon0(const gltfjson::Root& root,
       Vec3Var{ [](auto, auto, auto) { return DirectX::XMFLOAT3(1, 1, 1); } } },
     }
     ,
-    .UpdateState = [](auto, auto, auto &json)
+    .UpdateState = [](auto, auto, auto &gltf)
     {
-      gltfjson::vrm0::Material m(json);
+      auto m = gltf.VrmMaterial();
 
       // bool *ds;
       // if((ds = m.DoubleSided()) && *ds)

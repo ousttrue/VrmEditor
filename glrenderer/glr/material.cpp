@@ -10,15 +10,15 @@ void
 Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                    const WorldInfo& world,
                    const LocalInfo& local,
-                   const gltfjson::tree::NodePtr& material)
+                   const Gltf& gltf)
 {
   if (!Compiled) {
     auto error = Compiled.error();
     if (error.empty()) {
       // execute mcaro
-      VS.Update(world, local, material);
+      VS.Update(world, local, gltf);
       auto vs = VS.Expand(shaderSource);
-      FS.Update(world, local, material);
+      FS.Update(world, local, gltf);
       auto fs = FS.Expand(shaderSource);
       Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
 
@@ -29,8 +29,8 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
         for (auto& u : shader->Uniforms) {
           auto found = UniformVarMap.find(u.Name);
           if (found != UniformVarMap.end()) {
-            std::visit([&world, &local, &material](
-                         auto& var) { var.Update(world, local, material); },
+            std::visit([&world, &local, &gltf](
+                         auto& var) { var.Update(world, local, gltf); },
                        found->second);
             UniformVars.push_back(found->second);
           } else {
@@ -42,7 +42,7 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
   }
   if (Compiled) {
     if (UpdateState) {
-      UpdateState(world, local, material);
+      UpdateState(world, local, gltf);
     }
 
     auto shader = *Compiled;
@@ -60,9 +60,9 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
 #endif
           assert(!grapho::gl3::TryGetError());
           std::visit(
-            [&u, &world, &local, &material](const auto& var) {
+            [&u, &world, &local, &gltf](const auto& var) {
               //
-              u.Set(var.Update(world, local, material));
+              u.Set(var.Update(world, local, gltf));
             },
             *v);
           assert(!grapho::gl3::TryGetError());

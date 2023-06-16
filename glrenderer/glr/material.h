@@ -50,15 +50,14 @@ struct Material
   std::unordered_map<std::string, UniformVar> UniformVarMap;
   std::vector<std::optional<UniformVar>> UniformVars;
 
-  std::function<void(const WorldInfo& world,
-                     const LocalInfo& local,
-                     const gltfjson::tree::NodePtr& material)>
+  std::function<
+    void(const WorldInfo& world, const LocalInfo& local, const Gltf& gltf)>
     UpdateState;
 
   void Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                 const WorldInfo& world,
                 const LocalInfo& local,
-                const gltfjson::tree::NodePtr& material);
+                const Gltf& gltf);
 };
 
 using MaterialFactoryFunc =

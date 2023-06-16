@@ -881,12 +881,8 @@ public:
     auto material_factory = GetOrCreateMaterial(root, bin, primitive.Material);
     if (material_factory) {
 
-      if (vrm0Material) {
-        // VRM0+MToon
-        material_factory->Activate(m_shaderSource, world, local, vrm0Material);
-      } else {
-        material_factory->Activate(m_shaderSource, world, local, gltfMaterial);
-      }
+      material_factory->Activate(
+        m_shaderSource, world, local, { root.m_json, *primitive.Material });
 
     } else {
       // error

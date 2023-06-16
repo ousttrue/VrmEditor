@@ -51,19 +51,17 @@ struct ShaderFactory
   std::u8string SourceExpanded;
   std::u8string FullSource;
 
-  void Update(const WorldInfo& world,
-              const LocalInfo& local,
-              const gltfjson::tree::NodePtr& material)
+  void Update(const WorldInfo& world, const LocalInfo& local, const Gltf& gltf)
   {
     for (auto& e : Enums) {
-      std::visit([&world, &local, &material](
-                   auto& var) { var.Update(world, local, material); },
-                 e.Selected.Value);
+      std::visit(
+        [&world, &local, &gltf](auto& var) { var.Update(world, local, gltf); },
+        e.Selected.Value);
     }
     for (auto& g : MacroGroups) {
       for (auto& m : g.second) {
-        std::visit([&world, &local, &material](
-                     auto& var) { var.Update(world, local, material); },
+        std::visit([&world, &local, &gltf](
+                     auto& var) { var.Update(world, local, gltf); },
                    m.Value);
       }
     }

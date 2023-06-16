@@ -113,8 +113,8 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
       .Codes{ FS_BUIlTIN },
       .MacroGroups{
         {"TEXTURE", {
-          { u8"USE_MAP", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{ 
-            auto m = gltfjson::Material(json);
+          { u8"USE_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{ 
+            auto m = gltf.Material();
             if(auto pbr = m.PbrMetallicRoughness())
             {
               if(auto texture = pbr->BaseColorTexture())
@@ -124,8 +124,8 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
             }
             return std::nullopt;
           }}},
-          { u8"USE_SHADEMULTIPLYTEXTURE", OptVar{[](auto &root, auto, auto &json)->std::optional<std::monostate>{
-            auto m = gltfjson::Material(json);
+          { u8"USE_SHADEMULTIPLYTEXTURE", OptVar{[](auto &root, auto, auto &gltf)->std::optional<std::monostate>{
+            auto m = gltf.Material();
             if(auto extensions = m.Extensions())
             {
               if(auto ext = extensions->Get(u8"VRMC_materials_mtoon"))
@@ -139,8 +139,8 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
             }
             return std::nullopt;
           }}},
-          { u8"USE_MATCAPTEXTURE", OptVar{[](auto, auto, auto &json)->std::optional<std::monostate>{
-            auto m = gltfjson::Material(json);
+          { u8"USE_MATCAPTEXTURE", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
+            auto m = gltf.Material();
             if(auto extensions = m.Extensions())
             {
               if(auto ext = extensions->Get(u8"VRMC_materials_mtoon"))
@@ -199,8 +199,8 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
       //
       // materials
       //
-      { "litFactor", RgbVar{ [](auto, auto, auto& json) {
-        gltfjson::Material m(json);
+      { "litFactor", RgbVar{ [](auto, auto, auto& gltf) {
+        auto m = gltf.Material();
         if(auto pbr = m.PbrMetallicRoughness())
         {
           auto c = gltfjson::Vec4(pbr->m_json->Get(u8"baseColorFactor"), {1,1,1,1});
@@ -208,8 +208,8 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
         }
         return std::array<float, 3>{1,1,1};
        } } },
-      { "shadeColorFactor", RgbVar{ [](auto, auto, auto& json) {
-        auto m = gltfjson::Material(json);
+      { "shadeColorFactor", RgbVar{ [](auto, auto, auto& gltf) {
+        auto m = gltf.Material();
         if(auto extensions = m.Extensions())
         {
           if(auto ext = extensions->Get(u8"VRMC_materials_mtoon"))
@@ -254,9 +254,9 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
       { "directionalLights[0].color",
         Vec3Var{ [](auto, auto, auto) { return DirectX::XMFLOAT3(1, 1, 1); } } },
     }, 
-    .UpdateState = [](auto, auto, auto &json)
+    .UpdateState = [](auto, auto, auto &gltf)
     {
-      gltfjson::Material m(json);
+      auto m = gltf.Material();
 
       bool *ds;
       if((ds = m.DoubleSided()) && *ds)
