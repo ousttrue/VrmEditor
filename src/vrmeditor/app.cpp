@@ -4,13 +4,11 @@
 #include "config.h"
 #include "docks/asset_view.h"
 #include "docks/export_dock.h"
-#include "docks/gl3renderer_gui.h"
 #include "docks/gui.h"
 #include "docks/hierarchy_gui.h"
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/imtimeline.h"
-#include "docks/lighting.h"
 #include "docks/scene_selection.h"
 #include "docks/vrm_dock.h"
 #include "fbx_loader.h"
@@ -20,6 +18,8 @@
 #include "jsongui/json_gui.h"
 #include "luahost.h"
 #include "platform.h"
+#include "view/gl3renderer_gui.h"
+#include "view/lighting.h"
 #include "view/scene_preview.h"
 #include <ImGuizmo.h>
 #include <cuber/mesh.h>
@@ -69,8 +69,7 @@ class App
   // std::shared_ptr<grapho::OrbitView> m_runtimeView;
   // std::shared_ptr<glr::ViewSettings> m_settings;
   std::shared_ptr<glr::RenderingEnv> m_env;
-
-  // std::shared_ptr<glr::Gl3RendererGui> m_gl3gui;
+  std::shared_ptr<glr::Gl3RendererGui> m_gl3gui;
 
 public:
   App()
@@ -86,6 +85,7 @@ public:
     m_preview = std::make_shared<ScenePreview>(m_env);
     m_animationPreview = std::make_shared<ScenePreview>(m_env);
     m_lighting = std::make_shared<Lighting>();
+    m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
 
     // m_selection = std::make_shared<SceneNodeSelection>();
     // m_hierarchy = std::make_shared<HierarchyGui>();
@@ -93,7 +93,6 @@ public:
     // m_runtimeView = std::make_shared<grapho::OrbitView>();
     // m_settings = std::make_shared<glr::ViewSettings>();
     // m_settings->ShowCuber = false;
-    // m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
 
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
       [=] { ResetDock(); });
@@ -119,27 +118,6 @@ public:
       })
       .SetVisible(false);
 
-    {
-      // addDock(
-      //   grapho::imgui::Dock("GL impl", [=]() { m_gl3gui->ShowSelectImpl();
-      //   }));
-
-      // addDock(grapho::imgui::Dock("GL selector", [=]() {
-      //   //
-      //   m_gl3gui->ShowSelector();
-      // }));
-
-      // addDock(grapho::imgui::Dock("GL selected shader source", [=]() {
-      //   //
-      //   m_gl3gui->ShowSelectedShaderSource();
-      // }));
-      //
-      // addDock(grapho::imgui::Dock("GL selected shader variables", [=]() {
-      //   //
-      //   m_gl3gui->ShowSelectedShaderVariables();
-      // }));
-    }
-
     DockSpaceManager::Instance().AddDock({
       app::DOCKNAME_JSON,
       [json = m_json]() mutable { json->ShowSelector(); },
@@ -155,13 +133,56 @@ public:
       })
       .SetVisible(false);
 
-    DockSpaceManager::Instance().AddDock(
-      { "💡Lighting", [lighting = m_lighting]() { lighting->ShowGui(); } });
-
     // addDock({
     //   "hierarchy",
     //   [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
     // });
+
+    {
+      DockSpaceManager::Instance()
+        .AddDock({
+          "💡Lighting",
+          [lighting = m_lighting]() { lighting->ShowGui(); },
+        })
+        .SetVisible(false);
+
+      DockSpaceManager::Instance()
+        .AddDock(grapho::imgui::Dock{
+          "🔍GL impl",
+          [=]() { m_gl3gui->ShowSelectImpl(); },
+        })
+        .SetVisible(false);
+
+      DockSpaceManager::Instance()
+        .AddDock(grapho::imgui::Dock{
+          "🔍GL selector",
+          [=]() {
+            //
+            m_gl3gui->ShowSelector();
+          },
+        })
+        .SetVisible(false);
+
+      DockSpaceManager::Instance()
+        .AddDock(grapho::imgui::Dock{
+          "🔍GL selected shader source",
+          [=]() {
+            //
+            m_gl3gui->ShowSelectedShaderSource();
+          },
+        })
+        .SetVisible(false);
+
+      DockSpaceManager::Instance()
+        .AddDock(grapho::imgui::Dock{
+          "🔍GL selected shader variables",
+          [=]() {
+            //
+            m_gl3gui->ShowSelectedShaderVariables();
+          },
+        })
+        .SetVisible(false);
+    }
   }
 
   std::shared_ptr<libvrm::RuntimeScene> SetGltf(
@@ -192,27 +213,6 @@ public:
   // HumanoidDock::Create(
   //   addDock, "humanoid-body", "humanoid-finger", m_runtime->m_table);
 
-  // ViewDock::CreateTPose(addDock,
-  //                       "3D-View",
-  //                       m_runtime->m_table,
-  //                       m_env,
-  //                       m_staticView,
-  //                       m_settings,
-  //                       m_selection);
-  // static void CreateTPose(const AddDockFunc& addDock,
-  //                          std::string_view title,
-  //                          const std::shared_ptr<libvrm::GltfRoot>&
-  //                          table, const
-  //                          std::shared_ptr<glr::RenderingEnv>& env, const
-  //                          std::shared_ptr<grapho::OrbitView>& view,
-  //                          const std::shared_ptr<glr::ViewSettings>&
-  //                          settings, const
-  //                          std::shared_ptr<SceneNodeSelection>&
-  //                          selection)
-  //   {
-  //   auto preview =
-  //     ScenePreview::Create(table, env, view, settings, selection);
-  //
   //   addDock({
   //     .Name = { title.begin(), title.end() },
   //     .OnShow =
@@ -226,47 +226,6 @@ public:
   //     .StyleVars = { { ImGuiStyleVar_WindowPadding, { 0, 0 } } },
   //   });
   // }
-
-  //     ViewDock::Create(addDock,
-  //                      "Runtime-View",
-  //                      m_runtime,
-  //                      m_env,
-  //                      m_runtimeView,
-  //                      m_settings,
-  //                      m_selection);
-  // static void Create(const AddDockFunc& addDock,
-  //                    std::string_view title,
-  //                    const std::shared_ptr<libvrm::RuntimeScene>& scene,
-  //                    const std::shared_ptr<glr::RenderingEnv>& env,
-  //                    const std::shared_ptr<grapho::OrbitView>& view,
-  //                    const std::shared_ptr<glr::ViewSettings>& settings,
-  //                    const std::shared_ptr<SceneNodeSelection>&
-  //                    selection)
-  // {
-  //   auto preview = ScenePreview::Create(scene, env, view, settings,
-  //   selection);
-  //
-  //   addDock({
-  //     .Name = { title.begin(), title.end() },
-  //     .OnShow =
-  //       [preview, scene, settings]() {
-  //         preview->ShowFullWindow(scene->m_table->m_title.c_str(),
-  //                                 settings->Color);
-  //       },
-  //     .Flags =
-  //       ImGuiWindowFlags_NoScrollbar |
-  //       ImGuiWindowFlags_NoScrollWithMouse,
-  //     .StyleVars = { { ImGuiStyleVar_WindowPadding, { 0, 0 } } },
-  //   });
-  // }
-
-  // VrmDock::CreateVrm(addDock, "vrm", m_runtime);
-
-  // #ifndef NDEBUG
-  //       ExportDock::Create(addDock, "[debug] export", m_runtime);
-  // #endif
-
-  // m_hierarchy->SetRuntimeScene(m_runtime);
 
   void SaveState()
   {
