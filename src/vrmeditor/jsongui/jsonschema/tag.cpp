@@ -32,18 +32,87 @@ NodeTag(const gltfjson::Root& root,
         const gltfjson::Bin& bin,
         const gltfjson::tree::NodePtr& item)
 {
+  std::list<std::string> tags;
+  auto vrma = root.GetExtension<gltfjson::vrm1::VRMC_vrm_animation>();
+  auto vrm1 = root.GetExtension<gltfjson::vrm1::VRMC_vrm>();
+  auto vrm0 = root.GetExtension<gltfjson::vrm0::VRM>();
   for (int i = 0; i < root.Nodes.size(); ++i) {
     auto node = root.Nodes[i];
     if (node.m_json == item) {
+      if (node.Mesh()) {
+        tags.push_back("mesh");
+      }
+      if (node.Skin()) {
+        tags.push_back("skin");
+      }
       if (auto extensions = node.Extensions()) {
         if (extensions->Get(u8"KHR_lights_punctual")) {
-          return []() { ImGui::SmallButton("light"); };
+          tags.push_back("light");
         }
       }
-
-      return {};
+      if (vrma) {
+        if (auto humanoid = vrma->Humanoid()) {
+          if (auto humanBones = humanoid->HumanBones()) {
+            if (auto obj = humanBones->m_json->Object()) {
+              for (auto kv : *obj) {
+                if (auto node = kv.second->Get(u8"node")) {
+                  if (auto p = node->Ptr<float>()) {
+                    if (*p == i) {
+                      tags.push_back(
+                        { (const char*)kv.first.data(), kv.first.size() });
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if (vrm1) {
+        if (auto humanoid = vrm1->Humanoid()) {
+          if (auto humanBones = humanoid->HumanBones()) {
+            if (auto obj = humanBones->m_json->Object()) {
+              for (auto kv : *obj) {
+                if (auto node = kv.second->Get(u8"node")) {
+                  if (auto p = node->Ptr<float>()) {
+                    if (*p == i) {
+                      tags.push_back(
+                        { (const char*)kv.first.data(), kv.first.size() });
+                    };
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if (vrm0) {
+        if (auto humanoid = vrm0->Humanoid()) {
+          for (auto humanBone : humanoid->HumanBones) {
+            if (auto node = humanBone.Node()) {
+              if (*node == i) {
+                auto bone = humanBone.Bone();
+                tags.push_back({ (const char*)bone.data(), bone.size() });
+              }
+            }
+          }
+        }
+      }
+      break;
     }
   }
 
-  return {};
+  return [tags]() {
+    auto first = true;
+    for (auto& tag : tags) {
+      if(first)
+      {
+        first=false;
+      }
+      else{
+        ImGui::SameLine();
+      }
+      ImGui::SmallButton(tag.c_str());
+    }
+  };
 }

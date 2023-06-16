@@ -18,6 +18,7 @@ enum class ModelType
   Gltf,
   Vrm0,
   Vrm1,
+  VrmA,
 };
 
 struct DrawItem

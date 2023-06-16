@@ -18,6 +18,7 @@
 #include "jsongui/json_gui.h"
 #include "luahost.h"
 #include "platform.h"
+#include "view/animation.h"
 #include "view/gl3renderer_gui.h"
 #include "view/lighting.h"
 #include "view/scene_preview.h"
@@ -62,6 +63,7 @@ class App
   std::shared_ptr<ScenePreview> m_preview;
   std::shared_ptr<ScenePreview> m_animationPreview;
   std::shared_ptr<Lighting> m_lighting;
+  std::shared_ptr<Animation> m_animation;
 
   // std::shared_ptr<HierarchyGui> m_hierarchy;
   // std::shared_ptr<struct SceneNodeSelection> m_selection;
@@ -86,6 +88,7 @@ public:
     m_animationPreview = std::make_shared<ScenePreview>(m_env);
     m_lighting = std::make_shared<Lighting>();
     m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
+    m_animation = std::make_shared<Animation>();
 
     // m_selection = std::make_shared<SceneNodeSelection>();
     // m_hierarchy = std::make_shared<HierarchyGui>();
@@ -145,6 +148,11 @@ public:
         [lighting = m_lighting]() { lighting->ShowGui(); },
       });
 
+      DockSpaceManager::Instance().AddDock({
+        "📼Animation",
+        [animation = m_animation]() { animation->ShowGui(); },
+      });
+
       DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
         "🔍GL impl",
         [=]() { m_gl3gui->ShowSelectImpl(); },
@@ -196,6 +204,7 @@ public:
 
     m_json->SetScene(gltf);
     m_lighting->SetGltf(gltf);
+    m_animation->SetRuntime(m_runtime);
     m_preview->SetGltf(gltf);
     m_animationPreview->SetRuntime(m_runtime);
     return m_runtime;
@@ -241,8 +250,7 @@ public:
     for (auto& dock : DockSpaceManager::Instance().Docks) {
       if (dock.IsOpen) {
         os << "vrmeditor.show_dock('" << dock.Name << "', true)\n";
-      }
-      else{
+      } else {
         os << "vrmeditor.show_dock('" << dock.Name << "', false)\n";
       }
     }

@@ -98,7 +98,28 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   }
 
   // humanoid
-  if (auto VRMC_vrm = scene->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
+  if (auto VRMC_vrm_animation =
+        scene->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm_animation>()) {
+    scene->m_type = ModelType::VrmA;
+    scene->m_title = "vrm-animation";
+    if (auto humanoid = VRMC_vrm_animation->Humanoid()) {
+      if (auto humanBones = humanoid->HumanBones()) {
+        if (auto object = humanBones->m_json->Object()) {
+          for (auto& kv : *object) {
+            auto name = kv.first;
+            if (auto bone = HumanBoneFromName(gltfjson::from_u8(name),
+                                              VrmVersion::_1_0)) {
+              auto index = (uint32_t)*kv.second->Get(u8"node")->Ptr<float>();
+              scene->m_nodes[index]->Humanoid = *bone;
+            } else {
+              std::cout << gltfjson::from_u8(name) << std::endl;
+            }
+          }
+        }
+      }
+    }
+  } else if (auto VRMC_vrm =
+               scene->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
     scene->m_type = ModelType::Vrm1;
     scene->m_title = "vrm-1.0";
     if (auto humanoid = VRMC_vrm->Humanoid()) {

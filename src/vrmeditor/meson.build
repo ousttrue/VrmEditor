@@ -25,6 +25,7 @@ srcs = [
     'view/overlay.cpp',
     'view/lighting.cpp',
     'view/gl3renderer_gui.cpp',
+    'view/animation.cpp',
     'humanpose/humanpose_stream.cpp',
     'humanpose/udp_receiver.cpp',
     'humanpose/bvhnode.cpp',

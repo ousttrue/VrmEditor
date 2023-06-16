@@ -41,6 +41,8 @@ std::unordered_map<std::string, std::u8string> g_iconMap = {
   // text
   { ".txt", u8"📄" },
   { ".md", u8"📄" },
+  // bin
+  { ".bin", u8"🫙" },
 };
 
 struct Asset
@@ -169,7 +171,7 @@ struct AssetViewImpl
 
   void ShowGui()
   {
-    if (ImGui::Button("📁Open")) {
+    if (ImGui::Button("📁Explorer")) {
       PLOG_INFO << "open: " << Root->Path.string().c_str();
       shell_open(Root->Path);
     }

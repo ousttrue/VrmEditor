@@ -22,6 +22,7 @@ Extensions()
         { { u8"🌟", u8"VRM" }, JsonValue::Object },
         { { u8"🌟", u8"VRMC_vrm" }, JsonValue::Object },
         { { u8"🌟", u8"VRMC_springBone" }, JsonValue::Object },
+        { { u8"🌟", u8"VRMC_vrm_animation" }, JsonValue::Object },
         { { u8"🗿", u8"KHR_lights_punctual" }, JsonValue::Object },
       } },
     },

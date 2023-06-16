@@ -274,3 +274,5 @@ local here = concat(splitted, "/")
 -- vrmeditor.set_shaderpath(here .. "/shaders")
 -- vrmeditor.set_shader_chunk_path(here .. "/threejs_shader_chunks")
 vrmeditor.load_hdr(here .. "/../../grapho/subprojects/logl/resources/textures/hdr/newport_loft.hdr")
+vrmeditor.add_asset_dir("models", "D:/Model")
+

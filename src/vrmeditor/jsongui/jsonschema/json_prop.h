@@ -9,9 +9,8 @@ using ShowGuiFunc = std::function<bool(const gltfjson::Root& root,
 
 using ShowTagFunc = std::function<void()>;
 using TagFunc = std::function<ShowTagFunc(const gltfjson::Root& root,
-                                   const gltfjson::Bin& bin,
-                                   const gltfjson::tree::NodePtr& item)>;
-
+                                          const gltfjson::Bin& bin,
+                                          const gltfjson::tree::NodePtr& item)>;
 
 struct NameObject
 {
@@ -24,9 +23,7 @@ enum class JsonPropFlags : uint32_t
 {
   None = 0,
   Required = 0x01,
-  // ReadOnly = 0x02,
-  // Unknown = 0x04,
-  // ArrayChild = 0x08,
+  Lock = 0x02,
 };
 inline JsonPropFlags
 operator|(JsonPropFlags lhs, JsonPropFlags rhs)
@@ -48,8 +45,7 @@ enum class JsonValueFlags : uint32_t
 {
   None = 0,
   FixedArray = 0x01,
-  DictObject = 0x02,
-  DefaultIfNone = 0x04,
+  ShowDefaultIfNone = 0x02,
 };
 
 struct JsonValue
@@ -64,8 +60,11 @@ struct JsonValue
   const static JsonValue False;
   const static JsonValue Number;
   const static JsonValue String;
-  const static JsonValue Array;
   const static JsonValue Object;
+  const static JsonValue Array;
+  const static JsonValue Vec3;
+  const static JsonValue Vec4;
+  const static JsonValue Mat4;
 };
 
 inline const std::u8string
@@ -79,8 +78,20 @@ inline const JsonValue JsonValue::True{ {}, u8"true" };
 inline const JsonValue JsonValue::False{ {}, u8"false" };
 inline const JsonValue JsonValue::Number{ {}, u8"0" };
 inline const JsonValue JsonValue::String{ {}, U8Q("") };
-inline const JsonValue JsonValue::Array{ {}, u8"[]" };
 inline const JsonValue JsonValue::Object{ {}, u8"{}" };
+inline const JsonValue JsonValue::Array{ {}, u8"[]" };
+inline const JsonValue JsonValue::Vec3{ {},
+                                        u8"[0,0,0]",
+                                        JsonValueFlags::FixedArray };
+inline const JsonValue JsonValue::Vec4{ {},
+                                        u8"[0,0,0,0]",
+                                        JsonValueFlags::FixedArray };
+inline const JsonValue JsonValue::Mat4{ {},
+                                        u8"[0,0,0,0"
+                                        u8",0,0,0,0"
+                                        u8",0,0,0,0"
+                                        u8",0,0,0,0]",
+                                        JsonValueFlags::FixedArray };
 
 struct JsonProp
 {

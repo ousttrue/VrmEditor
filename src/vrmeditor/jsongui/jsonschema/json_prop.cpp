@@ -61,17 +61,17 @@ struct NodeTypeEditVisitor
   bool operator()(std::monostate) { return false; }
   bool operator()(bool& value)
   {
-    //
+    ImGui::SetNextItemWidth(-1);
     return ImGui::Checkbox("##_bool", &value);
   }
   bool operator()(float& value)
   {
-    //
+    ImGui::SetNextItemWidth(-1);
     return ImGui::InputFloat("##_float", &value);
   }
   bool operator()(std::u8string& value)
   {
-    //
+    ImGui::SetNextItemWidth(-1);
     return InputU8Text("##_string", &value);
   }
   bool operator()(gltfjson::tree::ArrayValue& value)

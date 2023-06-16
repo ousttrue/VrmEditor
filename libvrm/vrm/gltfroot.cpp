@@ -65,10 +65,12 @@ GltfRoot::GetBoundingBox() const
         }
       }
     }
-  } else {
+  } else if (m_nodes.size()) {
     for (auto& node : m_nodes) {
       bb.Extend(node->WorldInitialTransform.Translation);
     }
+  } else {
+    return { { 0, 0, 0 }, { 0, 0, 0 } };
   }
   return bb;
 }
