@@ -160,18 +160,19 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
         }},
         {"LIGHTING", {
           { u8"USE_PUNCTUAL", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{ 
-            if(gltf.Root().GetExtension<gltfjson::KHR_lights_punctual>())
-            {
-              return std::monostate{};
-            }
-            return {}; 
+            // if(gltf.Root().GetExtension<gltfjson::KHR_lights_punctual>())
+            // {
+            //   return std::monostate{};
+            // }
+            // return {}; 
+            return std::monostate{};
           }}},
           { u8"LIGHT_COUNT", IntVar{[](auto, auto, auto &gltf)->int{
             if(auto light = gltf.Root().GetExtension<gltfjson::KHR_lights_punctual>())
             {
               return light->Lights.size();
             }
-            return 0;
+            return 1;
           }} },
           {u8"USE_IBL" },
         }},
