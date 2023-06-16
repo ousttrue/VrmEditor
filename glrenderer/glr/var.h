@@ -11,18 +11,20 @@ namespace glr {
 
 struct Gltf
 {
-  gltfjson::tree::NodePtr Root;
+  gltfjson::tree::NodePtr m_root;
   uint32_t MaterialIndex = (uint32_t)-1;
+
+  gltfjson::Root Root() const { return gltfjson::Root(m_root); }
 
   gltfjson::Material Material() const
   {
-    return gltfjson::Root(Root).Materials[MaterialIndex];
+    return Root().Materials[MaterialIndex];
   }
 
   gltfjson::vrm0::Material VrmMaterial() const
   {
     return gltfjson::vrm0::Material(
-      gltfjson::vrm0::GetVrmMaterial(gltfjson::Root(Root), MaterialIndex));
+      gltfjson::vrm0::GetVrmMaterial(Root(), MaterialIndex));
   }
 };
 

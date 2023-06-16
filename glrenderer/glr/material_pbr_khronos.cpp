@@ -6,6 +6,7 @@
 #include "shader_source.h"
 #include <DirectXMath.h>
 #include <grapho/gl3/pbr.h>
+#include <sstream>
 
 namespace glr {
 
@@ -158,8 +159,20 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
           {u8"HAS_COLOR_0_VEC4", Disable()},
         }},
         {"LIGHTING", {
-          { u8"USE_PUNCTUAL" },
-          { u8"LIGHT_COUNT", ConstInt(1) },
+          { u8"USE_PUNCTUAL", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{ 
+            if(gltf.Root().GetExtension<gltfjson::KHR_lights_punctual>())
+            {
+              return std::monostate{};
+            }
+            return {}; 
+          }}},
+          { u8"LIGHT_COUNT", IntVar{[](auto, auto, auto &gltf)->int{
+            if(auto light = gltf.Root().GetExtension<gltfjson::KHR_lights_punctual>())
+            {
+              return light->Lights.size();
+            }
+            return 0;
+          }} },
           {u8"USE_IBL" },
         }},
         {"Texture",{
@@ -451,6 +464,41 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
       if (auto emissive = GetOrCreateTexture(
             root, bin, emissiveTexture->Index(), ColorSpace::sRGB)) {
         ptr->Textures.push_back({ 7, emissive });
+      }
+    }
+
+    if (auto light = root.GetExtension<gltfjson::KHR_lights_punctual>()) {
+      for (int i = 0; i < light->Lights.size(); ++i) {
+        std::stringstream ss;
+        ss << "u_Lights[" << i << "]";
+        auto key = ss.str();
+
+        auto l = light->Lights[i];
+        //  "u_Lights[0].type"
+
+        ptr->UniformVarMap[key + ".color"] =
+          Vec3Var{ [i](auto, auto, auto& gltf) {
+            if (auto light =
+                  gltf.Root().GetExtension<gltfjson::KHR_lights_punctual>()) {
+              auto l = light->Lights[i];
+              if (auto c = l.Color()) {
+                return DirectX::XMFLOAT3{ (*c)[0], (*c)[1], (*c)[2] };
+              }
+            }
+            return DirectX::XMFLOAT3{ 1, 1, 1 };
+          } };
+        ptr->UniformVarMap[key + ".intensity"] =
+          FloatVar{ [i](auto, auto, auto& gltf) {
+            if (auto light =
+                  gltf.Root().GetExtension<gltfjson::KHR_lights_punctual>()) {
+              auto l = light->Lights[i];
+              return *l.Intensity();
+            }
+            return 0.0f;
+          } };
+
+        //  "u_Lights[0].direction"
+        //  "u_Lights[0].position"
       }
     }
   }
