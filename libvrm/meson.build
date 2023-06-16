@@ -14,7 +14,7 @@ libvrm_lib = static_library(
         'vrm/image.cpp',
         'vrm/importer.cpp',
         'vrm/runtime_scene.cpp',
-        'vrm/animation_update.cpp',
+        'vrm/animation.cpp',
         'vrm/timeline.cpp',
         'vrm/spring_bone.cpp',
         'vrm/spring_collision.cpp',

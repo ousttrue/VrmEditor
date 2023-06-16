@@ -35,7 +35,7 @@
 #include <grapho/orbitview.h>
 #include <imgui.h>
 #include <queue>
-#include <vrm/animation_update.h>
+#include <vrm/animation.h>
 #include <vrm/fileutil.h>
 #include <vrm/gizmo.h>
 #include <vrm/image.h>
@@ -456,8 +456,7 @@ public:
         std::weak_ptr<libvrm::RuntimeScene> weak = scene;
         track->Callbacks.push_back([animation, weak](auto time, bool repeat) {
           if (auto scene = weak.lock()) {
-            libvrm::AnimationUpdate(
-              *animation, time, scene->m_table->m_nodes, scene, repeat);
+            animation->Update(time, scene->m_table->m_nodes, scene, repeat);
             return true;
           } else {
             return false;

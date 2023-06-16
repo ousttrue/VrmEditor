@@ -1,5 +1,6 @@
 #pragma once
 #include "node.h"
+#include "runtime_scene.h"
 #include "timeline.h"
 #include <span>
 #include <unordered_map>
@@ -14,7 +15,7 @@ enum class AnimationTargets
   SCALE,
   WEIGHTS,
 };
-static const char* AnimationTargetNames[]{
+inline const char* AnimationTargetNames[]{
   "translation",
   "rotation",
   "scale",
@@ -27,7 +28,7 @@ enum class AnimationInterpolationModes
   STEP,
   CUBICSPLINE,
 };
-static const char* AnimationInterpolationModeNames[]{
+inline const char* AnimationInterpolationModeNames[]{
   "LINEAR",
   "STEP",
   "CUBICSPLINE",
@@ -106,84 +107,34 @@ struct Animation
   std::unordered_map<uint32_t, Curve<DirectX::XMFLOAT3>> m_scaleMap;
   std::unordered_map<uint32_t, WeightsCurve> m_weightsMap;
 
-  libvrm::Time Duration() const
-  {
-    float sec = 0;
-    for (auto& [k, v] : m_translationMap) {
-      sec = std::max(sec, v.MaxSeconds());
-    }
-    for (auto& [k, v] : m_rotationMap) {
-      sec = std::max(sec, v.MaxSeconds());
-    }
-    for (auto& [k, v] : m_scaleMap) {
-      sec = std::max(sec, v.MaxSeconds());
-    }
-    for (auto& [k, v] : m_weightsMap) {
-      sec = std::max(sec, v.MaxSeconds());
-    }
-    return libvrm::Time(sec);
-  }
-
-  Animation(std::u8string_view name)
-    : m_name(name)
-  {
-  }
+  Animation(std::u8string_view name);
   Animation(const Animation&) = delete;
   Animation& operator=(const Animation&) = delete;
-
+  Time Duration() const;
   void AddTranslation(uint32_t node_index,
                       std::span<const float> times,
                       std::span<const DirectX::XMFLOAT3> values,
-                      std::u8string_view name)
-  {
-    m_translationMap.emplace(node_index,
-                             Curve<DirectX::XMFLOAT3>{
-                               .Name = { name.begin(), name.end() },
-                               .Times = { times.begin(), times.end() },
-                               .Values = { values.begin(), values.end() },
-                             });
-  }
+                      std::u8string_view name);
 
   void AddRotation(uint32_t node_index,
                    std::span<const float> times,
                    std::span<const DirectX::XMFLOAT4> values,
-                   std::u8string_view name)
-  {
-    m_rotationMap.emplace(node_index,
-                          Curve<DirectX::XMFLOAT4>{
-                            .Name = { name.begin(), name.end() },
-                            .Times = { times.begin(), times.end() },
-                            .Values = { values.begin(), values.end() },
-                          });
-  }
+                   std::u8string_view name);
 
   void AddScale(uint32_t node_index,
                 std::span<const float> times,
                 std::span<const DirectX::XMFLOAT3> values,
-                std::u8string_view name)
-  {
-    m_scaleMap.emplace(node_index,
-                       Curve<DirectX::XMFLOAT3>{
-                         .Name = { name.begin(), name.end() },
-                         .Times = { times.begin(), times.end() },
-                         .Values = { values.begin(), values.end() },
-                       });
-  }
+                std::u8string_view name);
 
   void AddWeights(uint32_t node_index,
                   std::span<const float> times,
                   std::span<const float> values,
-                  std::u8string_view name)
-  {
-    m_weightsMap.emplace(
-      node_index,
-      WeightsCurve{
-        .Name = { name.begin(), name.end() },
-        .Times = { times.begin(), times.end() },
-        .Values = { values.begin(), values.end() },
-        .WeightsCount = static_cast<uint32_t>(values.size() / times.size()),
-      });
-  }
+                  std::u8string_view name);
+
+  void Update(Time time,
+              std::span<std::shared_ptr<Node>> nodes,
+              const std::shared_ptr<RuntimeScene>& runtime,
+              bool repeat = false) const;
 };
 
 }
