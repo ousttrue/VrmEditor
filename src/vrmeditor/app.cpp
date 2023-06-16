@@ -111,27 +111,28 @@ public:
     //       addDock, "[animation] input-stream");
     // #endif
 
-    DockSpaceManager::Instance()
-      .AddDock({
-        "📜logger",
-        []() { ImLogger::Instance().Draw(); },
-      })
-      .SetVisible(false);
+    DockSpaceManager::Instance().AddDock({
+      "📜logger",
+      []() { ImLogger::Instance().Draw(); },
+    });
 
+    DockSpaceManager::Instance().AddDock(
+      {
+        app::DOCKNAME_JSON,
+        [json = m_json]() mutable { json->ShowSelector(); },
+      },
+      { .ShowDefault = true });
+
+    DockSpaceManager::Instance().AddDock(
+      {
+        app::DOCKNAME_VIEW,
+        [preview = m_preview]() { preview->ShowGui(); },
+      },
+      { .ShowDefault = true });
     DockSpaceManager::Instance().AddDock({
-      app::DOCKNAME_JSON,
-      [json = m_json]() mutable { json->ShowSelector(); },
+      "🎥Pose",
+      [runtime = m_animationPreview]() { runtime->ShowGui(); },
     });
-    DockSpaceManager::Instance().AddDock({
-      app::DOCKNAME_VIEW,
-      [preview = m_preview]() { preview->ShowGui(); },
-    });
-    DockSpaceManager::Instance()
-      .AddDock({
-        "🎥Pose",
-        [runtime = m_animationPreview]() { runtime->ShowGui(); },
-      })
-      .SetVisible(false);
 
     // addDock({
     //   "hierarchy",
@@ -139,49 +140,39 @@ public:
     // });
 
     {
-      DockSpaceManager::Instance()
-        .AddDock({
-          "💡Lighting",
-          [lighting = m_lighting]() { lighting->ShowGui(); },
-        })
-        .SetVisible(false);
+      DockSpaceManager::Instance().AddDock({
+        "💡Lighting",
+        [lighting = m_lighting]() { lighting->ShowGui(); },
+      });
 
-      DockSpaceManager::Instance()
-        .AddDock(grapho::imgui::Dock{
-          "🔍GL impl",
-          [=]() { m_gl3gui->ShowSelectImpl(); },
-        })
-        .SetVisible(false);
+      DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+        "🔍GL impl",
+        [=]() { m_gl3gui->ShowSelectImpl(); },
+      });
 
-      DockSpaceManager::Instance()
-        .AddDock(grapho::imgui::Dock{
-          "🔍GL selector",
-          [=]() {
-            //
-            m_gl3gui->ShowSelector();
-          },
-        })
-        .SetVisible(false);
+      DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+        "🔍GL selector",
+        [=]() {
+          //
+          m_gl3gui->ShowSelector();
+        },
+      });
 
-      DockSpaceManager::Instance()
-        .AddDock(grapho::imgui::Dock{
-          "🔍GL selected shader source",
-          [=]() {
-            //
-            m_gl3gui->ShowSelectedShaderSource();
-          },
-        })
-        .SetVisible(false);
+      DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+        "🔍GL selected shader source",
+        [=]() {
+          //
+          m_gl3gui->ShowSelectedShaderSource();
+        },
+      });
 
-      DockSpaceManager::Instance()
-        .AddDock(grapho::imgui::Dock{
-          "🔍GL selected shader variables",
-          [=]() {
-            //
-            m_gl3gui->ShowSelectedShaderVariables();
-          },
-        })
-        .SetVisible(false);
+      DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+        "🔍GL selected shader variables",
+        [=]() {
+          //
+          m_gl3gui->ShowSelectedShaderVariables();
+        },
+      });
     }
   }
 
@@ -248,7 +239,10 @@ public:
 
     // dock visibility
     for (auto& dock : DockSpaceManager::Instance().Docks) {
-      if (!dock.IsOpen) {
+      if (dock.IsOpen) {
+        os << "vrmeditor.show_dock('" << dock.Name << "', true)\n";
+      }
+      else{
         os << "vrmeditor.show_dock('" << dock.Name << "', false)\n";
       }
     }
@@ -421,7 +415,7 @@ public:
           ImGui::SetCursorPosX((w - size.x) / 2);
           ImGui::Image((ImTextureID)(intptr_t)texture->Handle(), size);
         } },
-      true);
+      { .ShowDefault = true, .Temporary = true });
 
     return true;
   }
@@ -439,7 +433,7 @@ public:
           //
           ImGui::TextWrapped("%s", text.c_str());
         } },
-      true);
+      { .ShowDefault = true, .Temporary = true });
     return true;
   }
 
@@ -511,7 +505,8 @@ public:
 
     auto title = std::string("🎁") + std::string{ name.data(), name.size() };
     DockSpaceManager::Instance().AddDock(
-      { title, [asset]() { asset->ShowGui(); } }, true);
+      { title, [asset]() { asset->ShowGui(); } },
+      { .ShowDefault = true, .Temporary = true });
 
     PLOG_INFO << title << " => " << path.string();
     return true;

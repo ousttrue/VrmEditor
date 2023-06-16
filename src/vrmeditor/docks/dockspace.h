@@ -7,6 +7,13 @@
 
 using AddDockFunc = std::function<void(const grapho::imgui::Dock& dock)>;
 
+struct DockOptions
+{
+  bool ShowDefault = false;
+  bool Temporary = false;
+  bool Debug = false;
+};
+
 struct DockSpaceManager
 {
   std::list<grapho::imgui::Dock> Docks;
@@ -32,7 +39,8 @@ public:
   }
 
   void Reset();
-  grapho::imgui::Dock& AddDock(const grapho::imgui::Dock& dock, bool tmporary = false);
+  grapho::imgui::Dock& AddDock(const grapho::imgui::Dock& dock,
+                               const DockOptions& options = {});
   void SetDockVisible(std::string_view name, bool visible);
   void ShowGui();
 };

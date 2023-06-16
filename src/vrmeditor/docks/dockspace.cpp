@@ -60,25 +60,30 @@ DockSpaceManager::Reset()
 }
 
 grapho::imgui::Dock&
-DockSpaceManager::AddDock(const grapho::imgui::Dock& dock, bool tmporary)
+DockSpaceManager::AddDock(const grapho::imgui::Dock& dock,
+                          const DockOptions& options)
 {
-  if (tmporary) {
+  if (options.Temporary) {
     TmpDocks.push_back(dock);
     return TmpDocks.back();
   }
 
-  bool visible = true;
   auto found = std::find_if(Docks.begin(), Docks.end(), [&dock](auto& d) {
     return d.Name == dock.Name;
   });
   if (found != Docks.end()) {
-    visible = found->IsOpen;
-    Docks.erase(found);
+    // found
+    auto isOpen = found->IsOpen;
+    *found = dock;
+    // keep open
+    found->IsOpen = isOpen;
+    return *found;
+  } else {
+    // new dock
+    Docks.push_back(dock);
+    Docks.back().IsOpen = options.ShowDefault ? true : false;
+    return Docks.back();
   }
-
-  Docks.push_back(dock);
-  Docks.back().IsOpen = visible;
-  return Docks.back();
 }
 
 void
