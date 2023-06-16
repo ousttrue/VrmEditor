@@ -88,28 +88,28 @@ Animation::AddWeights(uint32_t node_index,
 void
 Animation::Update(Time time,
                   std::span<std::shared_ptr<Node>> nodes,
-                  const std::shared_ptr<RuntimeScene>& runtime,
+                  RuntimeScene& runtime,
                   bool repeat) const
 {
   float seconds = time.count();
   for (auto& [k, v] : m_translationMap) {
     auto node = nodes[k];
-    runtime->GetRuntimeNode(node)->Transform.Translation =
+    runtime.GetRuntimeNode(node)->Transform.Translation =
       v.GetValue(seconds, repeat);
   }
   for (auto& [k, v] : m_rotationMap) {
     auto node = nodes[k];
-    runtime->GetRuntimeNode(node)->Transform.Rotation =
+    runtime.GetRuntimeNode(node)->Transform.Rotation =
       v.GetValue(seconds, repeat);
   }
   for (auto& [k, v] : m_scaleMap) {
     auto node = nodes[k];
-    runtime->GetRuntimeNode(node)->Scale = v.GetValue(seconds, repeat);
+    runtime.GetRuntimeNode(node)->Scale = v.GetValue(seconds, repeat);
   }
   for (auto& [k, v] : m_weightsMap) {
     auto node = nodes[k];
     auto values = v.GetValue(seconds, repeat);
-    if (auto meshId = runtime->m_table->m_gltf->Nodes[k].Mesh()) {
+    if (auto meshId = runtime.m_table->m_gltf->Nodes[k].Mesh()) {
       // if (auto instance = runtime->GetDeformedMesh(*meshId)) {
       //   instance->Weights.assign(values.begin(), values.end());
       // }

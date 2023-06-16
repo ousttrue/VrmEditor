@@ -18,7 +18,7 @@
 #include "jsongui/json_gui.h"
 #include "luahost.h"
 #include "platform.h"
-#include "view/animation.h"
+#include "view/animation_view.h"
 #include "view/gl3renderer_gui.h"
 #include "view/lighting.h"
 #include "view/scene_preview.h"
@@ -59,11 +59,10 @@ class App
 {
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;
   std::shared_ptr<JsonGui> m_json;
-  std::shared_ptr<libvrm::Timeline> m_timeline;
   std::shared_ptr<ScenePreview> m_preview;
   std::shared_ptr<ScenePreview> m_animationPreview;
   std::shared_ptr<Lighting> m_lighting;
-  std::shared_ptr<Animation> m_animation;
+  std::shared_ptr<AnimationView> m_animation;
 
   // std::shared_ptr<HierarchyGui> m_hierarchy;
   // std::shared_ptr<struct SceneNodeSelection> m_selection;
@@ -77,18 +76,19 @@ public:
   App()
   {
     m_json = std::make_shared<JsonGui>();
-    m_timeline = std::make_shared<libvrm::Timeline>();
-    auto track = m_timeline->AddTrack("PoseStream", {});
-    track->Callbacks.push_back([](auto time, auto repeat) {
-      humanpose::HumanPoseStream::Instance().Update(time);
-      return true;
-    });
+
+    // auto track = m_timeline->AddTrack("PoseStream", {});
+    // track->Callbacks.push_back([](auto time, auto repeat) {
+    //   humanpose::HumanPoseStream::Instance().Update(time);
+    //   return true;
+    // });
+
     m_env = std::make_shared<glr::RenderingEnv>();
     m_preview = std::make_shared<ScenePreview>(m_env);
     m_animationPreview = std::make_shared<ScenePreview>(m_env);
     m_lighting = std::make_shared<Lighting>();
     m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
-    m_animation = std::make_shared<Animation>();
+    m_animation = std::make_shared<AnimationView>();
 
     // m_selection = std::make_shared<SceneNodeSelection>();
     // m_hierarchy = std::make_shared<HierarchyGui>();
@@ -149,7 +149,7 @@ public:
       });
 
       DockSpaceManager::Instance().AddDock({
-        "📼Animation",
+        "🎬Animation",
         [animation = m_animation]() { animation->ShowGui(); },
       });
 
@@ -189,7 +189,6 @@ public:
   {
     glr::Release();
     m_runtime = std::make_shared<libvrm::RuntimeScene>(gltf);
-    m_timeline->Tracks.clear();
 
     std::weak_ptr<libvrm::RuntimeScene> weak = m_runtime;
     humanpose::HumanPoseStream::Instance().HumanPoseChanged.push_back(
@@ -297,11 +296,13 @@ public:
 
         auto time = info->Time;
 
-        if (lastTime) {
-          auto delta = time - *lastTime;
-          m_timeline->SetDeltaTime(delta);
-        } else {
-          m_timeline->SetDeltaTime({}, true);
+        if (m_runtime) {
+          if (lastTime) {
+            auto delta = time - *lastTime;
+            m_runtime->m_timeline->SetDeltaTime(delta);
+          } else {
+            m_runtime->m_timeline->SetDeltaTime({}, true);
+          }
         }
         humanpose::HumanPoseStream::Instance().Update(time);
         lastTime = time;
@@ -449,23 +450,6 @@ public:
   {
     if (auto gltf = libvrm::LoadPath(path)) {
       auto scene = SetGltf(*gltf);
-      // bind time line
-
-      for (auto& animation : scene->m_animations) {
-        auto track = m_timeline->AddTrack("gltf", animation->Duration());
-        std::weak_ptr<libvrm::RuntimeScene> weak = scene;
-        track->Callbacks.push_back([animation, weak](auto time, bool repeat) {
-          if (auto scene = weak.lock()) {
-            animation->Update(time, scene->m_table->m_nodes, scene, repeat);
-            return true;
-          } else {
-            return false;
-          }
-        });
-
-        // first animation only
-        break;
-      }
 
       // update view position
       auto bb = scene->m_table->GetBoundingBox();

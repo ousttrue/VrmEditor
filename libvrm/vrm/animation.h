@@ -133,7 +133,7 @@ struct Animation
 
   void Update(Time time,
               std::span<std::shared_ptr<Node>> nodes,
-              const std::shared_ptr<RuntimeScene>& runtime,
+              RuntimeScene& runtime,
               bool repeat = false) const;
 };
 

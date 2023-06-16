@@ -294,6 +294,7 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
 RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& table)
   : m_table(table)
 {
+  m_timeline = std::make_shared<Timeline>();
   Reset();
 
   if (table->m_gltf) {
@@ -303,7 +304,29 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& table)
     } else if (auto VRM = table->m_gltf->GetExtension<gltfjson::vrm0::VRM>()) {
       ParseVrm0(this, *VRM);
     }
+
+    for (int i = 0; i < table->m_gltf->Animations.size(); ++i) {
+      if (auto animation = ParseAnimation(*table->m_gltf, table->m_bin, i)) {
+        m_animations.push_back(*animation);
+      }
+    }
   }
+}
+
+void
+RuntimeScene::SetActiveAnimation(uint32_t index)
+{
+  if (index >= m_animations.size()) {
+    return;
+  }
+
+  m_timeline->Tracks.clear();
+  auto animation = m_animations[index];
+  auto track = m_timeline->AddTrack("gltf", animation->Duration());
+  track->Callbacks.push_back([animation, scene = this](auto time, bool repeat) {
+    animation->Update(time, scene->m_table->m_nodes, *scene, repeat);
+    return true;
+  });
 }
 
 void

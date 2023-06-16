@@ -29,6 +29,7 @@ struct RuntimeScene
   std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
   std::vector<std::shared_ptr<Animation>> m_animations;
+  std::shared_ptr<Timeline> m_timeline;
 
   // extensions
   std::shared_ptr<Expressions> m_expressions;
@@ -65,6 +66,8 @@ struct RuntimeScene
 
   RuntimeScene(const std::shared_ptr<GltfRoot>& table);
   void Reset();
+
+  void SetActiveAnimation(uint32_t index);
 
   std::shared_ptr<RuntimeNode> GetRuntimeNode(
     const std::shared_ptr<Node>& node);
