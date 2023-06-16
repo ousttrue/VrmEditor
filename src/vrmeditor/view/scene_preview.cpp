@@ -7,6 +7,7 @@
 #include <glr/cuber.h>
 #include <glr/gl3renderer.h>
 #include <glr/line_gizmo.h>
+#include <glr/rendering_env.h>
 #include <glr/scene_renderer.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanoid/humanbones.h>
@@ -26,7 +27,8 @@ struct ScenePreviewImpl
   std::function<void(const grapho::OrbitView& view)> m_show;
 
   ScenePreviewImpl(const std::shared_ptr<glr::RenderingEnv>& env)
-    : m_view(new grapho::OrbitView)
+    : m_env(env)
+    , m_view(new grapho::OrbitView)
     , m_settings(new glr::ViewSettings)
   {
     m_renderer = std::make_shared<glr::SceneRenderer>(m_env, m_settings);
@@ -45,6 +47,9 @@ struct ScenePreviewImpl
     };
     auto [min, max] = root->GetBoundingBox();
     m_view->Fit(min, max);
+    if (m_env) {
+      m_env->SetShadowHeight(min.y);
+    }
   }
 
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
@@ -55,6 +60,9 @@ struct ScenePreviewImpl
     };
     auto [min, max] = runtime->m_table->GetBoundingBox();
     m_view->Fit(min, max);
+    if (m_env) {
+      m_env->SetShadowHeight(min.y);
+    }
   }
 
   void ShowScreenRect(const char* title,
