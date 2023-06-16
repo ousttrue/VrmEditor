@@ -120,12 +120,7 @@ Gltf()
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.schema.json
       u8"/materials",
       { {
-        {
-          { u8"💎" },
-          { {}, U8Q("") },
-          {},
-          MaterialTag,
-        },
+        { { u8"💎" }, JsonValue::Object, {}, MaterialTag },
       } },
     },
     {
@@ -184,6 +179,12 @@ Gltf()
     // node
     {
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
+      u8"/nodes",
+      { {
+        { { u8"🛞", u8"" }, JsonValue::Object, {}, NodeTag },
+      } },
+    },
+    {
       u8"/nodes/*",
       { {
         { { u8"📄", u8"name" }, { {}, U8Q("") } },

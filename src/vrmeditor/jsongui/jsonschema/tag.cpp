@@ -26,3 +26,24 @@ MaterialTag(const gltfjson::Root& root,
 
   return {};
 }
+
+ShowTagFunc
+NodeTag(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        const gltfjson::tree::NodePtr& item)
+{
+  for (int i = 0; i < root.Nodes.size(); ++i) {
+    auto node = root.Nodes[i];
+    if (node.m_json == item) {
+      if (auto extensions = node.Extensions()) {
+        if (extensions->Get(u8"KHR_lights_punctual")) {
+          return []() { ImGui::SmallButton("light"); };
+        }
+      }
+
+      return {};
+    }
+  }
+
+  return {};
+}

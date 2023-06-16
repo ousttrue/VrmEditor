@@ -62,6 +62,12 @@ Extensions()
         { { u8"🗿", u8"KHR_texture_transform" }, JsonValue::Object },
       } },
     },
+    {
+      u8"/nodes/*/extensions",
+      { {
+        { { u8"🗿", u8"KHR_lights_punctual" }, JsonValue::Object },
+      } },
+    },
     //
     //
     //
@@ -86,6 +92,12 @@ Extensions()
         { { u8"📄", u8"type" },
           { StringEnum{ { "directional", "spot", "point" } } } },
         { { u8"🔢", u8"range" }, JsonValue::Number },
+      } },
+    },
+    {
+      u8"/nodes/*/extensions/KHR_lights_punctual",
+      { {
+        { { u8"🆔", u8"light" }, JsonValue::Number },
       } },
     },
     {
