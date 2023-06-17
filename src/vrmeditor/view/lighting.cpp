@@ -12,12 +12,15 @@
 struct LightingImpl
 {
   std::shared_ptr<libvrm::GltfRoot> m_root;
-  std::shared_ptr<grapho::gl3::Texture> m_hdr;
+
+  std::filesystem::path m_hdrPath;
+  std::shared_ptr<grapho::gl3::Texture> m_hdrTexture;
 
   bool LoadHdr(const std::filesystem::path& path)
   {
-    m_hdr = glr::LoadPbr_LOGL(path);
-    return m_hdr != nullptr;
+    m_hdrTexture = glr::LoadPbr_LOGL(path);
+    m_hdrPath = path;
+    return m_hdrTexture != nullptr;
   }
 
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root) { m_root = root; }
@@ -26,8 +29,15 @@ struct LightingImpl
   {
     ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
     if (ImGui::CollapsingHeader("IBR")) {
-      if (m_hdr) {
-        ImGui::Image((ImTextureID)(intptr_t)m_hdr->Handle(), { 300, 300 });
+      if (m_hdrTexture) {
+        ImGui::TextUnformatted(m_hdrPath.filename().string().c_str());
+        auto w = m_hdrTexture->Width();
+        auto h = m_hdrTexture->Height();
+        ImGui::Text("%d x %d", w, h);
+        ImGui::Image((ImTextureID)(intptr_t)m_hdrTexture->Handle(),
+                     { 300.0f / (float)h * (float)w, 300.0f },
+                     { 0, 1 },
+                     { 1, 0 });
       }
     }
 
