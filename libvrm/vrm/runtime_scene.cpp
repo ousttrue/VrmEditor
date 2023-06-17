@@ -347,21 +347,23 @@ RuntimeScene::SetMorphWeights(uint32_t nodeIndex, std::span<const float> values)
 void
 RuntimeScene::Reset()
 {
-  m_nodeMap.clear();
   m_nodes.clear();
   m_roots.clear();
+
+  std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<RuntimeNode>>
+    nodeMap;
 
   // COPY hierarchy
   for (auto& node : m_table->m_nodes) {
     auto runtime = std::make_shared<RuntimeNode>(node);
-    m_nodeMap.insert({ node, runtime });
+    nodeMap.insert({ node, runtime });
     m_nodes.push_back(runtime);
   }
 
   for (auto& node : m_table->m_nodes) {
-    auto runtime = GetRuntimeNode(node);
+    auto runtime = nodeMap[node];
     if (auto parent = node->Parent.lock()) {
-      auto runtimeParent = GetRuntimeNode(parent);
+      auto runtimeParent = nodeMap[parent];
       RuntimeNode::AddChild(runtimeParent, runtime);
     } else {
       m_roots.push_back(runtime);
@@ -370,14 +372,15 @@ RuntimeScene::Reset()
 }
 
 std::shared_ptr<RuntimeNode>
-RuntimeScene::GetRuntimeNode(const std::shared_ptr<Node>& node)
+RuntimeScene::GetBoneNode(HumanBones bone)
 {
-  auto found = m_nodeMap.find(node);
-  if (found != m_nodeMap.end()) {
-    return found->second;
+  for (auto& node : m_nodes) {
+    if (auto humanoid = node->Node->Humanoid) {
+      if (*humanoid == bone) {
+        return node;
+      }
+    }
   }
-
-  assert(false);
   return {};
 }
 
@@ -615,8 +618,8 @@ RuntimeScene::SetHumanPose(const HumanPose& pose)
   assert(pose.Bones.size() == pose.Rotations.size());
 
   for (int i = 0; i < pose.Bones.size(); ++i) {
-    if (auto init = m_table->GetBoneNode(pose.Bones[i])) {
-      auto node = GetRuntimeNode(init);
+    if (auto node = GetBoneNode(pose.Bones[i])) {
+      auto init = node->Node;
       if (i == 0) {
         // hips move
         // TODO: position from Model Root ?

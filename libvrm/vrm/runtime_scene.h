@@ -55,9 +55,6 @@ struct RuntimeScene
   Time NextSpringDelta = libvrm::Time(0.0);
   std::shared_ptr<GltfRoot> m_lastScene;
 
-  std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<RuntimeNode>>
-    m_nodeMap;
-
   std::unordered_map<std::shared_ptr<SpringJoint>,
                      std::shared_ptr<RuntimeSpringJoint>>
     m_jointMap;
@@ -72,8 +69,7 @@ struct RuntimeScene
 
   void SetMorphWeights(uint32_t nodeIndex, std::span<const float> values);
 
-  std::shared_ptr<RuntimeNode> GetRuntimeNode(
-    const std::shared_ptr<Node>& node);
+  std::shared_ptr<RuntimeNode> GetBoneNode(HumanBones bone);
 
   std::shared_ptr<RuntimeSpringJoint> GetRuntimeJoint(
     const std::shared_ptr<SpringJoint>& joint);
