@@ -132,7 +132,6 @@ struct Animation
                   std::u8string_view name);
 
   void Update(Time time,
-              std::span<std::shared_ptr<Node>> nodes,
               RuntimeScene& runtime,
               bool repeat = false) const;
 };

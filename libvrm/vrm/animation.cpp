@@ -86,32 +86,25 @@ Animation::AddWeights(uint32_t node_index,
 }
 
 void
-Animation::Update(Time time,
-                  std::span<std::shared_ptr<Node>> nodes,
-                  RuntimeScene& runtime,
-                  bool repeat) const
+Animation::Update(Time time, RuntimeScene& runtime, bool repeat) const
 {
   float seconds = time.count();
   for (auto& [k, v] : m_translationMap) {
-    auto node = nodes[k];
-    runtime.GetRuntimeNode(node)->Transform.Translation =
-      v.GetValue(seconds, repeat);
+    auto node = runtime.m_nodes[k];
+    node->Transform.Translation = v.GetValue(seconds, repeat);
   }
   for (auto& [k, v] : m_rotationMap) {
-    auto node = nodes[k];
-    runtime.GetRuntimeNode(node)->Transform.Rotation =
-      v.GetValue(seconds, repeat);
+    auto node = runtime.m_nodes[k];
+    node->Transform.Rotation = v.GetValue(seconds, repeat);
   }
   for (auto& [k, v] : m_scaleMap) {
-    auto node = nodes[k];
-    runtime.GetRuntimeNode(node)->Scale = v.GetValue(seconds, repeat);
+    auto node = runtime.m_nodes[k];
+    node->Scale = v.GetValue(seconds, repeat);
   }
   for (auto& [k, v] : m_weightsMap) {
-    auto node = nodes[k];
     auto values = v.GetValue(seconds, repeat);
     runtime.SetMorphWeights(k, values);
   }
-  
 }
 
 } // namespace

@@ -325,7 +325,7 @@ RuntimeScene::SetActiveAnimation(uint32_t index)
   auto animation = m_animations[index];
   auto track = m_timeline->AddTrack("gltf", animation->Duration());
   track->Callbacks.push_back([animation, scene = this](auto time, bool repeat) {
-    animation->Update(time, scene->m_table->m_nodes, *scene, repeat);
+    animation->Update(time, *scene, repeat);
     return true;
   });
 }
@@ -443,8 +443,8 @@ RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
       NodeConstraintProcess(*constraint, node);
     }
   }
-  for (auto& root : m_table->m_roots) {
-    GetRuntimeNode(root)->CalcWorldMatrix(true);
+  for (auto& root : m_roots) {
+    root->CalcWorldMatrix(true);
   }
 
   // springbone
@@ -472,8 +472,7 @@ RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
 
   for (uint32_t i = 0; i < drawables.size(); ++i) {
     // model matrix
-    DirectX::XMStoreFloat4x4(
-      &drawables[i].Matrix, GetRuntimeNode(m_table->m_nodes[i])->WorldMatrix());
+    DirectX::XMStoreFloat4x4(&drawables[i].Matrix, m_nodes[i]->WorldMatrix());
   }
 }
 
@@ -481,11 +480,11 @@ std::span<const DirectX::XMFLOAT4X4>
 RuntimeScene::ShapeMatrices()
 {
   m_shapeMatrices.clear();
-  for (auto& node : m_table->m_nodes) {
+  for (auto& node : m_nodes) {
     m_shapeMatrices.push_back({});
-    auto shape = DirectX::XMLoadFloat4x4(&node->ShapeMatrix);
+    auto shape = DirectX::XMLoadFloat4x4(&node->Node->ShapeMatrix);
     DirectX::XMStoreFloat4x4(&m_shapeMatrices.back(),
-                             shape * GetRuntimeNode(node)->WorldMatrix());
+                             shape * node->WorldMatrix());
   }
   return m_shapeMatrices;
 }
