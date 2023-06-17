@@ -35,6 +35,8 @@ Gltf()
         { { u8"🛞", u8"nodes" }, JsonValue::Array },
         { { u8"🛞", u8"scenes" }, JsonValue::Array },
         { { u8"🆔", u8"scene" }, JsonValue::Number },
+        //
+        { { u8"🎬", u8"animations" }, JsonValue::Array },
       } },
     },
     {
@@ -71,6 +73,12 @@ Gltf()
         { { u8"🔢", u8"byteOffset" }, JsonValue::Number },
         { { u8"🔢", u8"byteStride" }, JsonValue::Number },
         { { u8"🔢", u8"target" }, JsonValue::Number },
+      } },
+    },
+    {
+      u8"/accessors",
+      { {
+        { { u8"🫙" }, JsonValue::Object, {}, AccessorTag },
       } },
     },
     {

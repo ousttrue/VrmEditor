@@ -239,7 +239,8 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
           ptr->AddTranslation(node_index,
                               *times,
                               *values,
-                              root.Nodes[node_index].NameString() + u8"-translation");
+                              root.Nodes[node_index].NameString() +
+                                u8"-translation");
         } else {
           return std::unexpected{ values.error() };
         }
@@ -330,6 +331,20 @@ RuntimeScene::SetActiveAnimation(uint32_t index)
 }
 
 void
+RuntimeScene::SetMorphWeights(uint32_t nodeIndex, std::span<const float> values)
+{
+  auto found = m_moprhWeigts.find(nodeIndex);
+  std::vector<float>* pWeights = nullptr;
+  if (found != m_moprhWeigts.end()) {
+    pWeights = &found->second;
+  } else {
+    auto inserted = m_moprhWeigts.insert({ nodeIndex, {} });
+    pWeights = &inserted.first->second;
+  }
+  pWeights->assign(values.begin(), values.end());
+}
+
+void
 RuntimeScene::Reset()
 {
   m_nodeMap.clear();
@@ -398,6 +413,18 @@ RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
 {
   if (!m_table->m_gltf) {
     return;
+  }
+
+  // glTF morph animation
+  for (int i = 0; i < m_nodes.size(); ++i) {
+    auto found = m_moprhWeigts.find(i);
+    if (found != m_moprhWeigts.end()) {
+      auto& item = drawables[i];
+      auto& weights = found->second;
+      for (int j = 0; j < weights.size(); ++j) {
+        item.MorphMap[j] = weights[j];
+      }
+    }
   }
 
   // update order

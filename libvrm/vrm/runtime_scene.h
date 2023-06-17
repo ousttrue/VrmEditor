@@ -30,6 +30,7 @@ struct RuntimeScene
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
   std::vector<std::shared_ptr<Animation>> m_animations;
   std::shared_ptr<Timeline> m_timeline;
+  std::unordered_map<uint32_t, std::vector<float>> m_moprhWeigts;
 
   // extensions
   std::shared_ptr<Expressions> m_expressions;
@@ -68,6 +69,8 @@ struct RuntimeScene
   void Reset();
 
   void SetActiveAnimation(uint32_t index);
+
+  void SetMorphWeights(uint32_t nodeIndex, std::span<const float> values);
 
   std::shared_ptr<RuntimeNode> GetRuntimeNode(
     const std::shared_ptr<Node>& node);

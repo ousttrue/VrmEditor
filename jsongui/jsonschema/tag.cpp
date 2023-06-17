@@ -3,6 +3,130 @@
 #include <gltfjson/gltf_typing_vrm1.h>
 #include <imgui.h>
 
+static ShowTagFunc
+Tags(const std::list<std::string>& tags)
+{
+  return [tags]() {
+    auto first = true;
+    for (auto& tag : tags) {
+      if (first) {
+        first = false;
+      } else {
+        ImGui::SameLine();
+      }
+      ImGui::SmallButton(tag.c_str());
+    }
+  };
+}
+
+// "SCALAR" "VEC2" "VEC3" "VEC4" "MAT2" "MAT3" "MAT4"
+static std::string
+ComponentName(gltfjson::ComponentTypes component, const std::string& type)
+{
+  std::unordered_map<gltfjson::ComponentTypes, std::string> map{
+    { gltfjson::ComponentTypes::BYTE, "i8" },
+    { gltfjson::ComponentTypes::UNSIGNED_BYTE, "u8" },
+    { gltfjson::ComponentTypes::SHORT, "i16" },
+    { gltfjson::ComponentTypes::UNSIGNED_SHORT, "u16" },
+    { gltfjson::ComponentTypes::UNSIGNED_INT, "u32" },
+    { gltfjson::ComponentTypes::FLOAT, "f32" },
+  };
+  std::unordered_map<std::string, std::string> type_map{
+    { "SCALAR", "" }, { "VEC2", "_2" }, { "VEC3", "_3" },  { "VEC4", "_4" },
+    { "MAT2", "_4" }, { "MAT3", "_9" }, { "MAT4", "_16" },
+  };
+  auto found = map.find(component);
+  if (found != map.end()) {
+    auto found2 = type_map.find(type);
+    if (found2 != type_map.end()) {
+      return found->second + found2->second;
+    }
+  }
+  return "";
+}
+
+static void
+Check(std::list<std::string>& tags,
+      const std::string& tag,
+      std::optional<uint32_t> id,
+      uint32_t target)
+{
+  if (id && *id == target) {
+    tags.push_back(tag);
+  }
+}
+
+static void
+FindUsage(std::list<std::string>& tags,
+          const gltfjson::Root& root,
+          uint32_t accessorId)
+{
+  for (auto mesh : root.Meshes) {
+    for (auto prim : mesh.Primitives) {
+      if (auto attr = prim.Attributes()) {
+        Check(tags, "POS", attr->POSITION_Id(), accessorId);
+        Check(tags, "NOM", attr->NORMAL_Id(), accessorId);
+        Check(tags, "TEX0", attr->TEXCOORD_0_Id(), accessorId);
+        Check(tags, "TEX1", attr->TEXCOORD_1_Id(), accessorId);
+        Check(tags, "TEX2", attr->TEXCOORD_2_Id(), accessorId);
+        Check(tags, "TEX3", attr->TEXCOORD_3_Id(), accessorId);
+        Check(tags, "WEIGHT", attr->WEIGHTS_0_Id(), accessorId);
+        Check(tags, "JOINT", attr->JOINTS_0_Id(), accessorId);
+        Check(tags, "TANGENT", attr->TANGENT_Id(), accessorId);
+        Check(tags, "COLOR", attr->COLOR_0_Id(), accessorId);
+      }
+      Check(tags, "indices", prim.IndicesId(), accessorId);
+      for (int j = 0; j < prim.Targets.size(); ++j) {
+        auto target = prim.Targets[j];
+        std::stringstream ss;
+        ss << "morph#" << j;
+        Check(tags, ss.str() + ".POS", target.POSITION_Id(), accessorId);
+        Check(tags, ss.str() + ".NOM", target.NORMAL_Id(), accessorId);
+      }
+    }
+  }
+  for (int i = 0; i < root.Animations.size(); ++i) {
+    auto animation = root.Animations[i];
+    for (auto sampler : animation.Samplers) {
+      std::stringstream ss;
+      ss << "anim#" << i;
+      Check(tags, ss.str() + ".in", sampler.InputId(), accessorId);
+      Check(tags, ss.str() + ".out", sampler.OutputId(), accessorId);
+    }
+  }
+}
+
+ShowTagFunc
+AccessorTag(const gltfjson::Root& root,
+            const gltfjson::Bin& bin,
+            const gltfjson::tree::NodePtr& item)
+{
+  if (item) {
+    std::list<std::string> tags;
+    for (int i = 0; i < root.Accessors.size(); ++i) {
+      auto accessor = root.Accessors[i];
+      if (accessor.m_json == item) {
+        // scalar, vec2, vec3...
+        if (auto component = accessor.ComponentType()) {
+          auto type = accessor.TypeString();
+          if (type.size()) {
+            auto name = ComponentName((gltfjson::ComponentTypes)*component,
+                                      (const char*)type.c_str());
+            if (name.size()) {
+              tags.push_back(name);
+              // return [name]() { ImGui::SmallButton(name.c_str()); };
+            }
+          }
+        }
+        FindUsage(tags, root, i);
+        break;
+      }
+    }
+    return Tags(tags);
+  }
+  return {};
+}
+
 ShowTagFunc
 ImageTag(const gltfjson::Root& root,
          const gltfjson::Bin& bin,
@@ -131,15 +255,5 @@ NodeTag(const gltfjson::Root& root,
     }
   }
 
-  return [tags]() {
-    auto first = true;
-    for (auto& tag : tags) {
-      if (first) {
-        first = false;
-      } else {
-        ImGui::SameLine();
-      }
-      ImGui::SmallButton(tag.c_str());
-    }
-  };
+  return Tags(tags);
 }
