@@ -20,6 +20,8 @@ glr_lib = static_library(
         plog_dep,
         # remotery_dep,
         boneskin_dep,
+        imguizmo_dep,
+        imgui_dep,
     ],
 )
 glr_dep = declare_dependency(

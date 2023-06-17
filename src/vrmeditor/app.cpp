@@ -64,13 +64,14 @@ class App
   std::shared_ptr<Lighting> m_lighting;
   std::shared_ptr<AnimationView> m_animation;
 
-  // std::shared_ptr<HierarchyGui> m_hierarchy;
   // std::shared_ptr<struct SceneNodeSelection> m_selection;
   // std::shared_ptr<grapho::OrbitView> m_staticView;
   // std::shared_ptr<grapho::OrbitView> m_runtimeView;
   // std::shared_ptr<glr::ViewSettings> m_settings;
+
   std::shared_ptr<glr::RenderingEnv> m_env;
   std::shared_ptr<glr::Gl3RendererGui> m_gl3gui;
+  std::shared_ptr<HierarchyGui> m_hierarchy;
 
 public:
   App()
@@ -89,9 +90,9 @@ public:
     m_lighting = std::make_shared<Lighting>();
     m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
     m_animation = std::make_shared<AnimationView>();
+    m_hierarchy = std::make_shared<HierarchyGui>();
 
     // m_selection = std::make_shared<SceneNodeSelection>();
-    // m_hierarchy = std::make_shared<HierarchyGui>();
     // m_staticView = std::make_shared<grapho::OrbitView>();
     // m_runtimeView = std::make_shared<grapho::OrbitView>();
     // m_settings = std::make_shared<glr::ViewSettings>();
@@ -134,56 +135,55 @@ public:
         [preview = m_preview]() { preview->ShowGui(); },
       },
       { .ShowDefault = true });
+
     DockSpaceManager::Instance().AddDock({
-      "🎥Pose",
+      "🎬Pose",
       [runtime = m_animationPreview]() { runtime->ShowGui(); },
     });
 
-    // addDock({
-    //   "hierarchy",
-    //   [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
-    // });
+    DockSpaceManager::Instance().AddDock({
+      "🎬hierarchy",
+      [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
+    });
 
-    {
-      DockSpaceManager::Instance().AddDock({
-        "💡Lighting",
-        [lighting = m_lighting]() { lighting->ShowGui(); },
-      });
+    DockSpaceManager::Instance().AddDock({
+      "🎬Animation",
+      [animation = m_animation]() { animation->ShowGui(); },
+    });
 
-      DockSpaceManager::Instance().AddDock({
-        "🎬Animation",
-        [animation = m_animation]() { animation->ShowGui(); },
-      });
+    DockSpaceManager::Instance().AddDock({
+      "💡Lighting",
+      [lighting = m_lighting]() { lighting->ShowGui(); },
+    });
 
-      DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
-        "🔍GL impl",
-        [=]() { m_gl3gui->ShowSelectImpl(); },
-      });
+    DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+      "🔍GL impl",
+      [=]() { m_gl3gui->ShowSelectImpl(); },
+    });
 
-      DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
-        "🔍GL selector",
-        [=]() {
-          //
-          m_gl3gui->ShowSelector();
-        },
-      });
+    DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+      "🔍GL selector",
+      [=]() {
+        //
+        m_gl3gui->ShowSelector();
+      },
+    });
 
-      DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
-        "🔍GL selected shader source",
-        [=]() {
-          //
-          m_gl3gui->ShowSelectedShaderSource();
-        },
-      });
+    DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+      "🔍GL selected shader source",
+      [=]() {
+        //
+        m_gl3gui->ShowSelectedShaderSource();
+      },
+    });
 
-      DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
-        "🔍GL selected shader variables",
-        [=]() {
-          //
-          m_gl3gui->ShowSelectedShaderVariables();
-        },
-      });
-    }
+    DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+      "🔍GL selected shader variables",
+      [=]() {
+        //
+        m_gl3gui->ShowSelectedShaderVariables();
+      },
+    });
   }
 
   std::shared_ptr<libvrm::RuntimeScene> SetGltf(
@@ -206,6 +206,7 @@ public:
     m_json->SetScene(gltf);
     m_lighting->SetGltf(gltf);
     m_animation->SetRuntime(m_runtime);
+    m_hierarchy->SetRuntimeScene(m_runtime);
     m_preview->SetGltf(gltf);
     m_animationPreview->SetRuntime(m_runtime);
     return m_runtime;

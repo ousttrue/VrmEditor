@@ -28,6 +28,7 @@ struct RuntimeScene
   std::shared_ptr<GltfRoot> m_table;
   std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
+  std::shared_ptr<RuntimeNode> m_selected;
   std::vector<std::shared_ptr<Animation>> m_animations;
   std::shared_ptr<Timeline> m_timeline;
   std::unordered_map<uint32_t, std::vector<float>> m_moprhWeigts;

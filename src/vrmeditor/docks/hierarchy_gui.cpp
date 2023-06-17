@@ -12,14 +12,13 @@ struct HierarchyGuiImpl
 {
   std::shared_ptr<libvrm::RuntimeScene> m_scene;
   grapho::imgui::PrintfBuffer m_print;
-  libvrm::RuntimeNode* m_selected = nullptr;
 
   void SetScene(const std::shared_ptr<libvrm::RuntimeScene>& scene)
   {
     m_scene = scene;
   }
 
-  void Enter(const std::shared_ptr<libvrm::RuntimeNode>& node)
+  void Traverse(const std::shared_ptr<libvrm::RuntimeNode>& node)
   {
     static ImGuiTreeNodeFlags base_flags =
       ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -31,7 +30,7 @@ struct HierarchyGuiImpl
         ImGuiTreeNodeFlags_Leaf |
         ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
     }
-    if (node.get() == m_selected) {
+    if (node == m_scene->m_selected) {
       node_flags |= ImGuiTreeNodeFlags_Selected;
     }
 
@@ -49,7 +48,7 @@ struct HierarchyGuiImpl
                                        (const char*)node->Node->Name.c_str());
 
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-      m_selected = node.get();
+      m_scene->m_selected = node;
     }
 
     // 1
@@ -58,17 +57,22 @@ struct HierarchyGuiImpl
       ImGui::TextUnformatted(libvrm::HumanBoneToName(*humanoid));
     }
 
-    for (auto& child : node->Children) {
-      Enter(child);
-    }
-
-    if (node_open && !is_leaf) {
-      ImGui::TreePop();
+    if (node_open) {
+      for (auto& child : node->Children) {
+        Traverse(child);
+      }
+      if (!is_leaf) {
+        ImGui::TreePop();
+      }
     }
   }
 
   void ShowGui()
   {
+    if (!m_scene) {
+      return;
+    }
+
     std::array<const char*, 2> cols = { "name", "humanoid" };
 
     if (grapho::imgui::BeginTableColumns("##JsonGui::ShowSelector", cols)) {
@@ -77,7 +81,7 @@ struct HierarchyGuiImpl
                           Gui::Instance().Indent());
 
       for (auto& root : m_scene->m_roots) {
-        Enter(root);
+        Traverse(root);
       }
 
       ImGui::PopStyleVar();

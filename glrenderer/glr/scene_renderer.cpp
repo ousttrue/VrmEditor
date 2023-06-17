@@ -6,7 +6,9 @@
 #include "rendering_env.h"
 #include "rendertarget.h"
 #include "scene_renderer.h"
+#include <ImGuizmo.h>
 #include <vrm/gltfroot.h>
+#include <vrm/runtime_node.h>
 #include <vrm/runtime_scene.h>
 
 namespace glr {
@@ -146,35 +148,34 @@ SceneRenderer::RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
   }
 
   // manipulator
-  // if (auto init = m_selection->selected.lock()) {
-  //   // TODO: conflict mouse event(left) with ImageButton
-  //   auto node = scene->GetRuntimeNode(init);
-  //   DirectX::XMFLOAT4X4 m;
-  //   DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
-  //   ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-  //   ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
-  //   if (auto humanoid = init->Humanoid) {
-  //     if (*humanoid == libvrm::HumanBones::hips) {
-  //       operation = operation | ImGuizmo::TRANSLATE;
-  //     }
-  //   } else {
-  //     operation = operation | ImGuizmo::TRANSLATE;
-  //   }
-  //   if (ImGuizmo::Manipulate(&m_env->ViewMatrix._11,
-  //                            &m_env->ProjectionMatrix._11,
-  //                            operation,
-  //                            ImGuizmo::LOCAL,
-  //                            (float*)&m,
-  //                            nullptr,
-  //                            nullptr,
-  //                            nullptr,
-  //                            nullptr)) {
-  //     // decompose feedback
-  //     node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
-  //     node->CalcWorldMatrix(true);
-  //   }
-  //   ImGuizmo::GetContext().mAllowActiveHoverItem = false;
-  // }
+  if (auto node = scene->m_selected) {
+    //   // TODO: conflict mouse event(left) with ImageButton
+    DirectX::XMFLOAT4X4 m;
+    DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
+    ImGuizmo::GetContext().mAllowActiveHoverItem = true;
+    ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
+    if (auto humanoid = node->Node->Humanoid) {
+      if (*humanoid == libvrm::HumanBones::hips) {
+        operation = operation | ImGuizmo::TRANSLATE;
+      }
+    } else {
+      operation = operation | ImGuizmo::TRANSLATE;
+    }
+    if (ImGuizmo::Manipulate(&m_env->ViewMatrix._11,
+                             &m_env->ProjectionMatrix._11,
+                             operation,
+                             ImGuizmo::LOCAL,
+                             (float*)&m,
+                             nullptr,
+                             nullptr,
+                             nullptr,
+                             nullptr)) {
+      // decompose feedback
+      node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+      node->CalcWorldMatrix(true);
+    }
+    ImGuizmo::GetContext().mAllowActiveHoverItem = false;
+  }
 }
 
 } // namespace
