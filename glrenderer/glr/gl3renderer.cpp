@@ -433,7 +433,7 @@ public:
       m_imageMap.insert({ *id, *image });
       return *image;
     } else {
-      PLOG_ERROR << image.error();
+      PLOG_ERROR << "image#" << *id << ": " << image.error();
       return {};
     }
   }
@@ -476,8 +476,7 @@ public:
     }
 
     auto image = GetOrCreateImage(root, bin, *source);
-    if(!image)
-    {
+    if (!image) {
       return {};
     }
 
