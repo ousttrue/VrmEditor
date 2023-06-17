@@ -476,6 +476,10 @@ public:
     }
 
     auto image = GetOrCreateImage(root, bin, *source);
+    if(!image)
+    {
+      return {};
+    }
 
     auto texture = grapho::gl3::Texture::Create({
       image->Width(),
