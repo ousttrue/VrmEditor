@@ -50,7 +50,7 @@ simplefilewatcher_dep = dependency('simplefilewatcher')
 plog_dep = dependency('plog')
 ufbx_dep = subproject('ufbx').get_variable('ufbx_dep')
 subdir('libvrm')
-subdir('libboneskin')
+subdir('boneskin')
 subdir('glrenderer')
 subdir('jsongui')
 
