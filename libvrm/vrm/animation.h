@@ -8,31 +8,27 @@
 
 namespace libvrm {
 
-enum class AnimationTargets
+inline DirectX::XMFLOAT3
+Lerp(const DirectX::XMFLOAT3& lhs, const DirectX::XMFLOAT3& rhs, float t)
 {
-  TRANSLATION,
-  ROTATION,
-  SCALE,
-  WEIGHTS,
-};
-inline const char* AnimationTargetNames[]{
-  "translation",
-  "rotation",
-  "scale",
-  "weights",
-};
+  DirectX::XMFLOAT3 dst;
+  DirectX::XMStoreFloat3(&dst,
+                         DirectX::XMVectorLerp(DirectX::XMLoadFloat3(&lhs),
+                                               DirectX::XMLoadFloat3(&rhs),
+                                               t));
+  return dst;
+}
 
-enum class AnimationInterpolationModes
+inline DirectX::XMFLOAT4
+Lerp(const DirectX::XMFLOAT4& lhs, const DirectX::XMFLOAT4& rhs, float t)
 {
-  LINEAR,
-  STEP,
-  CUBICSPLINE,
-};
-inline const char* AnimationInterpolationModeNames[]{
-  "LINEAR",
-  "STEP",
-  "CUBICSPLINE",
-};
+  DirectX::XMFLOAT4 dst;
+  DirectX::XMStoreFloat4(&dst,
+                         DirectX::XMQuaternionSlerp(DirectX::XMLoadFloat4(&lhs),
+                                                    DirectX::XMLoadFloat4(&rhs),
+                                                    t));
+  return dst;
+}
 
 template<typename T>
 struct Curve
@@ -40,6 +36,8 @@ struct Curve
   std::u8string Name;
   std::vector<float> Times;
   std::vector<T> Values;
+  gltfjson::AnimationInterpolationModes Interpolation;
+
   float MaxSeconds() const { return Times.empty() ? 0 : Times.back(); }
 
   T GetValue(float time, bool repeat) const
@@ -54,10 +52,32 @@ struct Curve
         time = 0;
       }
     }
+
+    float lastTime = 0;
+    T last = {};
     for (int i = 0; i < Times.size(); ++i) {
-      if (Times[i] > time) {
-        return Values[i];
+      auto current = Times[i];
+      auto value = Values[i];
+      if (current > time) {
+        if (Interpolation == gltfjson::AnimationInterpolationModes::STEP) {
+          if (i) {
+            return last;
+          } else {
+            value;
+          }
+        } else {
+          // use linear
+          // TOOD: cubic
+          if (i == 0) {
+            return value;
+          } else {
+            return Lerp(last, value, (time - lastTime) / (current - lastTime));
+          }
+        }
+        return value;
       }
+      last = value;
+      lastTime = current;
     }
     return Values.back();
   }
@@ -69,6 +89,7 @@ struct WeightsCurve
   std::vector<float> Times;
   std::vector<float> Values;
   const uint32_t WeightsCount;
+  gltfjson::AnimationInterpolationModes Interpolation;
   float MaxSeconds() const { return Times.empty() ? 0 : Times.back(); }
 
   std::span<const float> Span(size_t index) const
@@ -77,26 +98,7 @@ struct WeightsCurve
     return { Values.data() + begin, Values.data() + begin + WeightsCount };
   }
 
-  std::span<const float> GetValue(float time, bool repeat) const
-  {
-    if (!repeat && time > Times.back()) {
-      return Span(Times.size() - 1);
-    }
-
-    while (time > Times.back()) {
-      time -= Times.back();
-      if (time < 0) {
-        time = 0;
-      }
-    }
-    for (int i = 0; i < Times.size(); ++i) {
-      if (Times[i] > time) {
-        return Span(i);
-      }
-    }
-
-    return Span(Times.size() - 1);
-  }
+  std::span<const float> GetValue(float time, bool repeat) const;
 };
 
 struct Animation
@@ -114,26 +116,28 @@ struct Animation
   void AddTranslation(uint32_t node_index,
                       std::span<const float> times,
                       std::span<const DirectX::XMFLOAT3> values,
-                      std::u8string_view name);
+                      std::u8string_view name,
+                      gltfjson::AnimationInterpolationModes interpolation);
 
   void AddRotation(uint32_t node_index,
                    std::span<const float> times,
                    std::span<const DirectX::XMFLOAT4> values,
-                   std::u8string_view name);
+                   std::u8string_view name,
+                   gltfjson::AnimationInterpolationModes interpolation);
 
   void AddScale(uint32_t node_index,
                 std::span<const float> times,
                 std::span<const DirectX::XMFLOAT3> values,
-                std::u8string_view name);
+                std::u8string_view name,
+                gltfjson::AnimationInterpolationModes interpolation);
 
   void AddWeights(uint32_t node_index,
                   std::span<const float> times,
                   std::span<const float> values,
-                  std::u8string_view name);
+                  std::u8string_view name,
+                  gltfjson::AnimationInterpolationModes interpolation);
 
-  void Update(Time time,
-              RuntimeScene& runtime,
-              bool repeat = false) const;
+  void Update(Time time, RuntimeScene& runtime, bool repeat = false) const;
 };
 
 }

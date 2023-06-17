@@ -240,7 +240,8 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
                               *times,
                               *values,
                               root.Nodes[node_index].NameString() +
-                                u8"-translation");
+                                u8"-translation",
+                              sampler.InterpolationEnum());
         } else {
           return std::unexpected{ values.error() };
         }
@@ -250,7 +251,8 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
           ptr->AddRotation(node_index,
                            *times,
                            *values,
-                           root.Nodes[node_index].NameString() + u8"-rotation");
+                           root.Nodes[node_index].NameString() + u8"-rotation",
+                           sampler.InterpolationEnum());
         } else {
           return std::unexpected{ values.error() };
         }
@@ -260,7 +262,8 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
           ptr->AddScale(node_index,
                         *times,
                         *values,
-                        root.Nodes[node_index].NameString() + u8"-scale");
+                        root.Nodes[node_index].NameString() + u8"-scale",
+                        sampler.InterpolationEnum());
         } else {
           return std::unexpected{ values.error() };
         }
@@ -273,8 +276,11 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
                   times->size()) {
               return std::unexpected{ "animation-weights: size not match" };
             }
-            ptr->AddWeights(
-              node_index, *times, *values, node.NameString() + u8"-weights");
+            ptr->AddWeights(node_index,
+                            *times,
+                            *values,
+                            node.NameString() + u8"-weights",
+                            sampler.InterpolationEnum());
           } else {
             return std::unexpected{ "animation-weights: no node.mesh" };
           }

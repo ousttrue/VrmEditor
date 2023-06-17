@@ -3,6 +3,28 @@
 
 namespace libvrm {
 
+std::span<const float>
+WeightsCurve::GetValue(float time, bool repeat) const
+{
+  if (!repeat && time > Times.back()) {
+    return Span(Times.size() - 1);
+  }
+
+  while (time > Times.back()) {
+    time -= Times.back();
+    if (time < 0) {
+      time = 0;
+    }
+  }
+  for (int i = 0; i < Times.size(); ++i) {
+    if (Times[i] > time) {
+      return Span(i);
+    }
+  }
+
+  return Span(Times.size() - 1);
+}
+
 Animation::Animation(std::u8string_view name)
   : m_name(name)
 {
@@ -31,13 +53,15 @@ void
 Animation::AddTranslation(uint32_t node_index,
                           std::span<const float> times,
                           std::span<const DirectX::XMFLOAT3> values,
-                          std::u8string_view name)
+                          std::u8string_view name,
+                          gltfjson::AnimationInterpolationModes interpolation)
 {
   m_translationMap.emplace(node_index,
                            Curve<DirectX::XMFLOAT3>{
                              .Name = { name.begin(), name.end() },
                              .Times = { times.begin(), times.end() },
                              .Values = { values.begin(), values.end() },
+                             .Interpolation = interpolation,
                            });
 }
 
@@ -45,13 +69,15 @@ void
 Animation::AddRotation(uint32_t node_index,
                        std::span<const float> times,
                        std::span<const DirectX::XMFLOAT4> values,
-                       std::u8string_view name)
+                       std::u8string_view name,
+                       gltfjson::AnimationInterpolationModes interpolation)
 {
   m_rotationMap.emplace(node_index,
                         Curve<DirectX::XMFLOAT4>{
                           .Name = { name.begin(), name.end() },
                           .Times = { times.begin(), times.end() },
                           .Values = { values.begin(), values.end() },
+                          .Interpolation = interpolation,
                         });
 }
 
@@ -59,13 +85,15 @@ void
 Animation::AddScale(uint32_t node_index,
                     std::span<const float> times,
                     std::span<const DirectX::XMFLOAT3> values,
-                    std::u8string_view name)
+                    std::u8string_view name,
+                    gltfjson::AnimationInterpolationModes interpolation)
 {
   m_scaleMap.emplace(node_index,
                      Curve<DirectX::XMFLOAT3>{
                        .Name = { name.begin(), name.end() },
                        .Times = { times.begin(), times.end() },
                        .Values = { values.begin(), values.end() },
+                       .Interpolation = interpolation,
                      });
 }
 
@@ -73,7 +101,8 @@ void
 Animation::AddWeights(uint32_t node_index,
                       std::span<const float> times,
                       std::span<const float> values,
-                      std::u8string_view name)
+                      std::u8string_view name,
+                      gltfjson::AnimationInterpolationModes interpolation)
 {
   m_weightsMap.emplace(
     node_index,
@@ -82,6 +111,7 @@ Animation::AddWeights(uint32_t node_index,
       .Times = { times.begin(), times.end() },
       .Values = { values.begin(), values.end() },
       .WeightsCount = static_cast<uint32_t>(values.size() / times.size()),
+      .Interpolation = interpolation,
     });
 }
 

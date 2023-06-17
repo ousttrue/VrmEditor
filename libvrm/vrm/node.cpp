@@ -48,6 +48,10 @@ Node::GetShapeTail()
     return nullptr;
   }
 
+  if (Children.size() == 1) {
+    return Children.front();
+  }
+
   std::shared_ptr<Node> tail;
   for (auto& child : Children) {
     if (auto childHumanBone = child->Humanoid) {
