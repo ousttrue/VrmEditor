@@ -41,14 +41,14 @@ ParseImage(const gltfjson::Root& root,
            const gltfjson::Image& image)
 {
   std::span<const uint8_t> bytes;
-  if (auto bufferView = image.BufferView()) {
+  if (auto bufferView = image.BufferViewId()) {
     if (auto buffer_view = bin.GetBufferViewBytes(root, *bufferView)) {
       bytes = *buffer_view;
     } else {
       return std::unexpected{ buffer_view.error() };
     }
-  } else if (image.Uri().size()) {
-    if (auto buffer_view = bin.Dir->GetBuffer(image.Uri())) {
+  } else if (image.UriString().size()) {
+    if (auto buffer_view = bin.Dir->GetBuffer(image.UriString())) {
       bytes = *buffer_view;
     } else {
       return std::unexpected{ buffer_view.error() };
@@ -56,7 +56,7 @@ ParseImage(const gltfjson::Root& root,
   } else {
     return std::unexpected{ "not bufferView nor uri" };
   }
-  auto name = image.Name();
+  auto name = image.NameString();
   auto ptr = std::make_shared<libvrm::Image>(name);
   if (!ptr->Load(bytes)) {
     return std::unexpected{ "Image: fail to load" };
@@ -69,14 +69,14 @@ ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, uint32_t i)
 {
   auto skin = root.Skins[i];
   auto ptr = std::make_shared<boneskin::Skin>();
-  ptr->Name = gltfjson::from_u8(skin.Name());
+  ptr->Name = gltfjson::from_u8(skin.NameString());
   for (auto joint : skin.Joints) {
     ptr->Joints.push_back(joint);
   }
 
   std::span<const DirectX::XMFLOAT4X4> matrices;
   if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT4X4>(
-        root, *skin.InverseBindMatrices())) {
+        root, *skin.InverseBindMatricesId())) {
     matrices = *accessor;
   } else {
     return std::unexpected{ accessor.error() };
@@ -86,7 +86,7 @@ ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, uint32_t i)
 
   assert(ptr->Joints.size() == ptr->BindMatrices.size());
 
-  ptr->Root = skin.Skeleton();
+  ptr->Root = skin.SkeletonId();
   return ptr;
 }
 
@@ -97,13 +97,13 @@ AddIndices(const gltfjson::Root& root,
            boneskin::BaseMesh* mesh,
            const gltfjson::MeshPrimitive& prim)
 {
-  if (auto indices = prim.Indices()) {
+  if (auto indices = prim.IndicesId()) {
     auto accessor_index = (uint32_t)*indices;
     auto accessor = root.Accessors[accessor_index];
     switch ((gltfjson::ComponentTypes)*accessor.ComponentType()) {
       case gltfjson::ComponentTypes::UNSIGNED_BYTE: {
         if (auto span = bin.GetAccessorBytes<uint8_t>(root, accessor_index)) {
-          mesh->addSubmesh(vertex_offset, *span, prim.Material());
+          mesh->addSubmesh(vertex_offset, *span, prim.MaterialId());
           return true;
         } else {
           return std::unexpected{ span.error() };
@@ -111,7 +111,7 @@ AddIndices(const gltfjson::Root& root,
       } break;
       case gltfjson::ComponentTypes::UNSIGNED_SHORT: {
         if (auto span = bin.GetAccessorBytes<uint16_t>(root, accessor_index)) {
-          mesh->addSubmesh(vertex_offset, *span, prim.Material());
+          mesh->addSubmesh(vertex_offset, *span, prim.MaterialId());
           return true;
         } else {
           return std::unexpected{ span.error() };
@@ -119,7 +119,7 @@ AddIndices(const gltfjson::Root& root,
       } break;
       case gltfjson::ComponentTypes::UNSIGNED_INT: {
         if (auto span = bin.GetAccessorBytes<uint32_t>(root, accessor_index)) {
-          mesh->addSubmesh(vertex_offset, *span, prim.Material());
+          mesh->addSubmesh(vertex_offset, *span, prim.MaterialId());
           return true;
         } else {
           return std::unexpected{ span.error() };
@@ -135,7 +135,7 @@ AddIndices(const gltfjson::Root& root,
     for (int i = 0; i < vertex_count; ++i) {
       indexList.push_back(i);
     }
-    mesh->addSubmesh<uint32_t>(vertex_offset, indexList, prim.Material());
+    mesh->addSubmesh<uint32_t>(vertex_offset, indexList, prim.MaterialId());
     return true;
   }
 }
@@ -145,7 +145,7 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
 {
   auto mesh = root.Meshes[meshIndex];
   auto ptr = std::make_shared<boneskin::BaseMesh>();
-  ptr->Name = mesh.Name();
+  ptr->Name = mesh.NameString();
   std::optional<gltfjson::MeshPrimitiveAttributes> lastAtributes;
 
   for (auto prim : mesh.Primitives) {
@@ -160,7 +160,7 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
       // extend vertex buffer
       std::span<const DirectX::XMFLOAT3> positions;
       if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
-            root, *prim.Attributes()->POSITION())) {
+            root, *prim.Attributes()->POSITION_Id())) {
         positions = *accessor;
       } else {
         return std::unexpected{ accessor.error() };
@@ -175,7 +175,7 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
       // }
       auto offset = ptr->addPosition(positions);
 
-      if (auto normal = prim.Attributes()->NORMAL()) {
+      if (auto normal = prim.Attributes()->NORMAL_Id()) {
         if (auto accessor =
               bin.GetAccessorBytes<DirectX::XMFLOAT3>(root, *normal)) {
           ptr->setNormal(offset, *accessor);
@@ -184,7 +184,7 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
         }
       }
 
-      if (auto tex0 = prim.Attributes()->TEXCOORD_0()) {
+      if (auto tex0 = prim.Attributes()->TEXCOORD_0_Id()) {
         if (auto accessor =
               bin.GetAccessorBytes<DirectX::XMFLOAT2>(root, *tex0)) {
           ptr->setUv(offset, *accessor);
@@ -193,8 +193,8 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
         }
       }
 
-      auto joints0 = prim.Attributes()->JOINTS_0();
-      auto weights0 = prim.Attributes()->WEIGHTS_0();
+      auto joints0 = prim.Attributes()->JOINTS_0_Id();
+      auto weights0 = prim.Attributes()->WEIGHTS_0_Id();
       if (joints0 && weights0) {
         // skinning
         int joint_accessor = *joints0;
@@ -243,7 +243,7 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
           // std::cout << target << std::endl;
           std::span<const DirectX::XMFLOAT3> positions;
           if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
-                root, *target.POSITION())) {
+                root, *target.POSITION_Id())) {
             positions = *accessor;
           } else {
             return std::unexpected{ accessor.error() };
@@ -470,7 +470,7 @@ public:
     }
 
     auto src = root.Textures[*id];
-    auto source = src.Source();
+    auto source = src.SourceId();
     if (!source) {
       return {};
     }
@@ -490,7 +490,7 @@ public:
       image->Pixels(),
     });
 
-    if (auto samplerIndex = src.Sampler()) {
+    if (auto samplerIndex = src.SamplerId()) {
       auto sampler = root.Samplers[*samplerIndex];
       texture->Bind();
       glTexParameteri(
@@ -706,12 +706,12 @@ public:
 
     for (uint32_t i = 0; i < drawables.size(); ++i) {
       auto gltfNode = root.Nodes[i];
-      if (auto meshId = gltfNode.Mesh()) {
+      if (auto meshId = gltfNode.MeshId()) {
         m_meshNodes.push_back({ i, *meshId });
         if (auto baseMesh = GetOrCreateBaseMesh(root, bin, meshId)) {
 
           std::span<const DirectX::XMFLOAT4X4> skinningMatrices;
-          if (auto skin = GetOrCreaeSkin(root, bin, gltfNode.Skin())) {
+          if (auto skin = GetOrCreaeSkin(root, bin, gltfNode.SkinId())) {
             // update skinnning
             // rmt_ScopedCPUSample(SkinningMatrices, 0);
 
@@ -755,7 +755,7 @@ public:
     for (auto pass : passes) {
       for (auto& [nodeId, meshId] : m_meshNodes) {
         auto gltfNode = root.Nodes[nodeId];
-        if (auto meshId = gltfNode.Mesh()) {
+        if (auto meshId = gltfNode.MeshId()) {
           if (auto baseMesh = GetOrCreateBaseMesh(root, bin, meshId)) {
             auto vao = GetOrCreateMesh(*meshId, baseMesh);
             Render(
@@ -839,7 +839,7 @@ public:
       }
     } else if (gltfMaterial) {
       auto m = gltfjson::Material(gltfMaterial);
-      if (m.AlphaMode() == u8"BLEND") {
+      if (m.AlphaModeString() == u8"BLEND") {
         return true;
       }
     }

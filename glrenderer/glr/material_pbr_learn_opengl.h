@@ -49,22 +49,22 @@ MaterialFactory_Pbr_LearnOpenGL(const gltfjson::Root& root,
     if (auto pbr = src.PbrMetallicRoughness()) {
       if (auto baseColorTexture = pbr->BaseColorTexture()) {
         albedo = GetOrCreateTexture(
-          root, bin, baseColorTexture->Index(), ColorSpace::sRGB);
+          root, bin, baseColorTexture->IndexId(), ColorSpace::sRGB);
       }
       if (auto metallicRoughnessTexture = pbr->MetallicRoughnessTexture()) {
         metallic = GetOrCreateTexture(
-          root, bin, metallicRoughnessTexture->Index(), ColorSpace::Linear);
+          root, bin, metallicRoughnessTexture->IndexId(), ColorSpace::Linear);
         roughness = GetOrCreateTexture(
-          root, bin, metallicRoughnessTexture->Index(), ColorSpace::Linear);
+          root, bin, metallicRoughnessTexture->IndexId(), ColorSpace::Linear);
       }
     }
     if (auto normalTexture = src.NormalTexture()) {
       normal = GetOrCreateTexture(
-        root, bin, normalTexture->Index(), ColorSpace::Linear);
+        root, bin, normalTexture->IndexId(), ColorSpace::Linear);
     }
     if (auto occlusionTexture = src.OcclusionTexture()) {
       ao = GetOrCreateTexture(
-        root, bin, occlusionTexture->Index(), ColorSpace::Linear);
+        root, bin, occlusionTexture->IndexId(), ColorSpace::Linear);
     }
   }
 

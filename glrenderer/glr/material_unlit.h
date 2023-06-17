@@ -58,7 +58,7 @@ MaterialFactory_Unlit(const gltfjson::Root& root,
     if (auto pbr = src.PbrMetallicRoughness()) {
       if (auto baseColorTexture = pbr->BaseColorTexture()) {
         if (auto texture = GetOrCreateTexture(
-              root, bin, baseColorTexture->Index(), ColorSpace::sRGB)) {
+              root, bin, baseColorTexture->IndexId(), ColorSpace::sRGB)) {
           ptr->Textures.push_back({ 0, texture });
         }
       }

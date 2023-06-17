@@ -25,7 +25,7 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
           int i,
           const gltfjson::Node& node)
 {
-  auto ptr = std::make_shared<Node>(node.Name());
+  auto ptr = std::make_shared<Node>(node.NameString());
 
   if (node.Matrix.size() == 16) {
     // matrix
@@ -144,9 +144,9 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
     if (auto humanoid = VRM->Humanoid()) {
       // bone & node
       for (auto humanBone : humanoid->HumanBones) {
-        if (auto node = humanBone.Node()) {
+        if (auto node = humanBone.NodeId()) {
           auto index = *node;
-          auto name = humanBone.Bone();
+          auto name = humanBone.BoneString();
           // std::cout << name << ": " << index << std::endl;
           if (auto bone =
                 HumanBoneFromName(gltfjson::from_u8(name), VrmVersion::_0_x)) {

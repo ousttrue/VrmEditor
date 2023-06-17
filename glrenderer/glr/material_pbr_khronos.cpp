@@ -134,7 +134,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
           },
           .Selected = {u8"ALPHAMODE", IntVar{[](auto, auto, auto &gltf){
             auto m = gltf.Material();
-            auto mode = m.AlphaMode();
+            auto mode = m.AlphaModeString();
             if(mode == u8"MASK")
             {
               return 1;
@@ -435,7 +435,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
     if (auto pbr = src.PbrMetallicRoughness()) {
       if (auto baseColorTexture = pbr->BaseColorTexture()) {
         if (auto albedo = GetOrCreateTexture(
-              root, bin, baseColorTexture->Index(), ColorSpace::sRGB)) {
+              root, bin, baseColorTexture->IndexId(), ColorSpace::sRGB)) {
           ptr->Textures.push_back({ 9, albedo });
         }
       }
@@ -443,7 +443,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
         if (auto metallic_roughness =
               GetOrCreateTexture(root,
                                  bin,
-                                 metallicRoughnessTexture->Index(),
+                                 metallicRoughnessTexture->IndexId(),
                                  ColorSpace::Linear)) {
           ptr->Textures.push_back({ 10, metallic_roughness });
         }
@@ -451,19 +451,19 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
     }
     if (auto normalTexture = src.NormalTexture()) {
       if (auto normal = GetOrCreateTexture(
-            root, bin, normalTexture->Index(), ColorSpace::Linear)) {
+            root, bin, normalTexture->IndexId(), ColorSpace::Linear)) {
         ptr->Textures.push_back({ 6, normal });
       }
     }
     if (auto occlusionTexture = src.OcclusionTexture()) {
       if (auto ao = GetOrCreateTexture(
-            root, bin, occlusionTexture->Index(), ColorSpace::Linear)) {
+            root, bin, occlusionTexture->IndexId(), ColorSpace::Linear)) {
         ptr->Textures.push_back({ 8, ao });
       }
     }
     if (auto emissiveTexture = src.EmissiveTexture()) {
       if (auto emissive = GetOrCreateTexture(
-            root, bin, emissiveTexture->Index(), ColorSpace::sRGB)) {
+            root, bin, emissiveTexture->IndexId(), ColorSpace::sRGB)) {
         ptr->Textures.push_back({ 7, emissive });
       }
     }

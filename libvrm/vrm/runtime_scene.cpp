@@ -52,7 +52,7 @@ ParseVrm0(RuntimeScene* scene, const gltfjson::vrm0::VRM& VRM)
   if (auto secondaryAnimation = VRM.SecondaryAnimation()) {
     for (auto colliderGroup : secondaryAnimation->ColliderGroups) {
       auto group = std::make_shared<SpringColliderGroup>();
-      auto node_index = colliderGroup.Node();
+      auto node_index = colliderGroup.NodeId();
       auto colliderNode = scene->m_nodes[*node_index];
       for (auto collider : colliderGroup.Colliders) {
         auto item = std::make_shared<SpringCollider>();
@@ -141,7 +141,7 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
       auto springBone = std::make_shared<SpringBone>();
       std::shared_ptr<RuntimeNode> head;
       for (auto joint : spring.Joints) {
-        auto node_index = (uint32_t)*joint.Node();
+        auto node_index = (uint32_t)*joint.NodeId();
         auto tail = scene->m_nodes[node_index];
         if (head) {
           float stiffness = *joint.Stiffness();
@@ -171,31 +171,31 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
 
         if (auto roll = constraint->Roll()) {
           // roll
-          auto source_index = roll->Source();
+          auto source_index = roll->SourceId();
           ptr->Constraint = NodeConstraint{
             .Type = NodeConstraintTypes::Roll,
             .Source = scene->m_nodes[*source_index],
             .Weight = *roll->Weight(),
           };
-          auto axis = roll->RollAxis();
+          auto axis = roll->RollAxisString();
           ptr->Constraint->RollAxis =
             NodeConstraintRollAxisFromName(gltfjson::from_u8(axis));
           ptr->Node->ShapeColor = s_constraint_color;
         } else if (auto aim = constraint->Aim()) {
           // aim
-          auto source_index = aim->Source();
+          auto source_index = aim->SourceId();
           ptr->Constraint = NodeConstraint{
             .Type = NodeConstraintTypes::Aim,
             .Source = scene->m_nodes[*source_index],
             .Weight = *aim->Weight(),
           };
-          auto axis = aim->AimAxis();
+          auto axis = aim->AimAxisString();
           ptr->Constraint->AimAxis =
             NodeConstraintAimAxisFromName(gltfjson::from_u8(axis));
           ptr->Node->ShapeColor = s_constraint_color;
         } else if (auto rotation = constraint->Rotation()) {
           // rotation
-          auto source_index = rotation->Source();
+          auto source_index = rotation->SourceId();
           ptr->Constraint = NodeConstraint{
             .Type = NodeConstraintTypes::Rotation,
             .Source = scene->m_nodes[*source_index],
@@ -214,7 +214,7 @@ static std::expected<std::shared_ptr<Animation>, std::string>
 ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
 {
   auto animation = root.Animations[i];
-  auto ptr = std::make_shared<Animation>(animation.Name());
+  auto ptr = std::make_shared<Animation>(animation.NameString());
 
   // samplers
   auto& samplers = animation.Samplers;
@@ -222,24 +222,24 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
   // channels
   auto& channels = animation.Channels;
   for (auto channel : channels) {
-    int sampler_index = *channel.Sampler();
+    int sampler_index = *channel.SamplerId();
     auto sampler = samplers[sampler_index];
 
     auto target = channel.Target();
     int node_index = *target->Node();
-    auto path = target->Path();
+    auto path = target->PathString();
 
     // time
-    int input_index = *sampler.Input();
+    int input_index = *sampler.InputId();
     if (auto times = bin.GetAccessorBytes<float>(root, input_index)) {
-      int output_index = *sampler.Output();
+      int output_index = *sampler.OutputId();
       if (path == u8"translation") {
         if (auto values =
               bin.GetAccessorBytes<DirectX::XMFLOAT3>(root, output_index)) {
           ptr->AddTranslation(node_index,
                               *times,
                               *values,
-                              root.Nodes[node_index].Name() + u8"-translation");
+                              root.Nodes[node_index].NameString() + u8"-translation");
         } else {
           return std::unexpected{ values.error() };
         }
@@ -249,7 +249,7 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
           ptr->AddRotation(node_index,
                            *times,
                            *values,
-                           root.Nodes[node_index].Name() + u8"-rotation");
+                           root.Nodes[node_index].NameString() + u8"-rotation");
         } else {
           return std::unexpected{ values.error() };
         }
@@ -259,21 +259,21 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
           ptr->AddScale(node_index,
                         *times,
                         *values,
-                        root.Nodes[node_index].Name() + u8"-scale");
+                        root.Nodes[node_index].NameString() + u8"-scale");
         } else {
           return std::unexpected{ values.error() };
         }
       } else if (path == u8"weights") {
         if (auto values = bin.GetAccessorBytes<float>(root, output_index)) {
           auto node = root.Nodes[node_index];
-          if (auto mesh = node.Mesh()) {
+          if (auto mesh = node.MeshId()) {
             if (values->size() !=
                 root.Meshes[*mesh].Primitives[0].Targets.size() *
                   times->size()) {
               return std::unexpected{ "animation-weights: size not match" };
             }
             ptr->AddWeights(
-              node_index, *times, *values, node.Name() + u8"-weights");
+              node_index, *times, *values, node.NameString() + u8"-weights");
           } else {
             return std::unexpected{ "animation-weights: no node.mesh" };
           }

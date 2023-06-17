@@ -41,10 +41,10 @@ Gltf()
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/asset.schema.json
       u8"/asset",
       { {
-        { { u8"📄", u8"version" }, { {}, U8Q("") }, JsonPropFlags::Required },
-        { { u8"📄", u8"minVersion" }, { {}, U8Q("") } },
-        { { u8"📄", u8"copyright" }, { {}, U8Q("") } },
-        { { u8"📄", u8"generator" }, { {}, U8Q("") } },
+        { { u8"📄", u8"version" }, JsonValue::String, JsonPropFlags::Required },
+        { { u8"📄", u8"minVersion" }, JsonValue::String },
+        { { u8"📄", u8"copyright" }, JsonValue::String },
+        { { u8"📄", u8"generator" }, JsonValue::String },
       } },
     },
     // buffer/bufferView/accessor
@@ -52,30 +52,34 @@ Gltf()
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
       u8"/buffers/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
-        { { u8"📄", u8"uri" }, { {}, U8Q("") } },
-        { { u8"🔢", u8"byteLength" }, { {}, u8"0" }, JsonPropFlags::Required },
+        { { u8"📄", u8"name" }, JsonValue::String },
+        { { u8"📄", u8"uri" }, JsonValue::String },
+        { { u8"🔢", u8"byteLength" },
+          JsonValue::Number,
+          JsonPropFlags::Required },
       } },
     },
     {
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json
       u8"/bufferViews/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
-        { { u8"🆔", u8"buffer" }, { {}, u8"0" }, JsonPropFlags::Required },
-        { { u8"🔢", u8"byteLength" }, { {}, u8"0" }, JsonPropFlags::Required },
-        { { u8"🔢", u8"byteOffset" }, { {}, u8"0" } },
-        { { u8"🔢", u8"byteStride" }, { {}, u8"0" } },
-        { { u8"🔢", u8"target" }, { {}, u8"0" } },
+        { { u8"📄", u8"name" }, JsonValue::String },
+        { { u8"🆔", u8"buffer" }, JsonValue::Number, JsonPropFlags::Required },
+        { { u8"🔢", u8"byteLength" },
+          JsonValue::Number,
+          JsonPropFlags::Required },
+        { { u8"🔢", u8"byteOffset" }, JsonValue::Number },
+        { { u8"🔢", u8"byteStride" }, JsonValue::Number },
+        { { u8"🔢", u8"target" }, JsonValue::Number },
       } },
     },
     {
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.schema.json
       u8"/accessors/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
-        { { u8"🆔", u8"bufferView" }, { {}, u8"0" } },
-        { { u8"🔢", u8"byteOffset" }, { {}, u8"0" } },
+        { { u8"📄", u8"name" }, JsonValue::String },
+        { { u8"🆔", u8"bufferView" }, JsonValue::Number },
+        { { u8"🔢", u8"byteOffset" }, JsonValue::Number },
         { { u8"🔢", u8"componentType" }, {}, JsonPropFlags::Required },
         { { u8"📄", u8"type" }, {}, JsonPropFlags::Required },
         { { u8"🔢", u8"count" }, {}, JsonPropFlags::Required },
@@ -87,20 +91,26 @@ Gltf()
     },
     // image/sampler/texture/material
     {
+      u8"/images",
+      { {
+        { { u8"🖼" }, JsonValue::Object, {}, ImageTag },
+      } },
+    },
+    {
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/image.schema.json
       u8"/images/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
-        { { u8"📄", u8"uri" }, { {}, U8Q("") } },
-        { { u8"📄", u8"mimeType" }, { {}, U8Q("") } },
-        { { u8"🆔", u8"bufferView" }, { {}, u8"0" } },
+        { { u8"📄", u8"name" }, JsonValue::String },
+        { { u8"📄", u8"uri" }, JsonValue::String },
+        { { u8"📄", u8"mimeType" }, JsonValue::String },
+        { { u8"🆔", u8"bufferView" }, JsonValue::Number },
       } },
     },
     {
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/sampler.schema.json
       u8"/samplers/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
+        { { u8"📄", u8"name" }, JsonValue::String },
         { { u8"🔢", u8"magFilter" } },
         { { u8"🔢", u8"minFilter" } },
         { { u8"🔢", u8"wrapS" } },
@@ -111,7 +121,7 @@ Gltf()
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/texture.schema.json
       u8"/textures/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
+        { { u8"📄", u8"name" }, JsonValue::String },
         { { u8"🆔", u8"source" } },
         { { u8"🆔", u8"sampler" } },
       } },
@@ -126,7 +136,7 @@ Gltf()
     {
       u8"/materials/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
+        { { u8"📄", u8"name" }, JsonValue::String },
         { { u8"⭐", u8"extensions" }, JsonValue::Object },
         { { u8"💎", u8"pbrMetallicRoughness" }, JsonValue::Object },
         { { u8"🖼", u8"normalTexture" }, JsonValue::Object },
@@ -171,7 +181,7 @@ Gltf()
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.schema.json
       u8"/meshes/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
+        { { u8"📄", u8"name" }, JsonValue::String },
         { { u8"📐", u8"primitives" }, {}, JsonPropFlags::Required },
         { { u8"🔢", u8"weights" } },
       } },
@@ -187,7 +197,7 @@ Gltf()
     {
       u8"/nodes/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
+        { { u8"📄", u8"name" }, JsonValue::String },
         { { u8"🆔", u8"mesh" }, { SelectMesh, u8"0" } },
         { { u8"🆔", u8"children" } },
         { { u8"🔢", u8"translation" }, { {}, u8"{0,0,0}" } },
@@ -216,7 +226,7 @@ Gltf()
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/skin.schema.json
       u8"/skins/*",
       { {
-        { { u8"📄", u8"name" }, { {}, U8Q("") } },
+        { { u8"📄", u8"name" }, JsonValue::String },
       } },
     },
   };

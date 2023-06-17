@@ -109,7 +109,7 @@ Animation::Update(Time time,
   for (auto& [k, v] : m_weightsMap) {
     auto node = nodes[k];
     auto values = v.GetValue(seconds, repeat);
-    if (auto meshId = runtime.m_table->m_gltf->Nodes[k].Mesh()) {
+    if (auto meshId = runtime.m_table->m_gltf->Nodes[k].MeshId()) {
       // if (auto instance = runtime->GetDeformedMesh(*meshId)) {
       //   instance->Weights.assign(values.begin(), values.end());
       // }

@@ -4,6 +4,16 @@
 #include <imgui.h>
 
 ShowTagFunc
+ImageTag(const gltfjson::Root& root,
+         const gltfjson::Bin& bin,
+         const gltfjson::tree::NodePtr& item)
+{
+  auto image = gltfjson::Image(item);
+
+  return {};
+}
+
+ShowTagFunc
 MaterialTag(const gltfjson::Root& root,
             const gltfjson::Bin& bin,
             const gltfjson::tree::NodePtr& item)
@@ -39,11 +49,14 @@ NodeTag(const gltfjson::Root& root,
   for (int i = 0; i < root.Nodes.size(); ++i) {
     auto node = root.Nodes[i];
     if (node.m_json == item) {
-      if (node.Mesh()) {
+      if (node.MeshId()) {
         tags.push_back("mesh");
       }
-      if (node.Skin()) {
+      if (node.SkinId()) {
         tags.push_back("skin");
+      }
+      if (node.CameraId()) {
+        tags.push_back("camera");
       }
       if (auto extensions = node.Extensions()) {
         if (extensions->Get(u8"KHR_lights_punctual")) {
@@ -89,9 +102,9 @@ NodeTag(const gltfjson::Root& root,
       if (vrm0) {
         if (auto humanoid = vrm0->Humanoid()) {
           for (auto humanBone : humanoid->HumanBones) {
-            if (auto node = humanBone.Node()) {
+            if (auto node = humanBone.NodeId()) {
               if (*node == i) {
-                auto bone = humanBone.Bone();
+                auto bone = humanBone.BoneString();
                 tags.push_back({ (const char*)bone.data(), bone.size() });
               }
             }
@@ -105,11 +118,9 @@ NodeTag(const gltfjson::Root& root,
   return [tags]() {
     auto first = true;
     for (auto& tag : tags) {
-      if(first)
-      {
-        first=false;
-      }
-      else{
+      if (first) {
+        first = false;
+      } else {
         ImGui::SameLine();
       }
       ImGui::SmallButton(tag.c_str());

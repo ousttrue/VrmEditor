@@ -44,10 +44,10 @@ GltfRoot::GetBoundingBox() const
       auto gltfNode = m_gltf->Nodes[i];
       auto node = m_nodes[i];
       bb.Extend(node->WorldInitialTransform.Translation);
-      if (gltfNode.Mesh()) {
-        auto mesh = m_gltf->Meshes[*gltfNode.Mesh()];
+      if (auto meshId = gltfNode.MeshId()) {
+        auto mesh = m_gltf->Meshes[*meshId];
         for (auto prim : mesh.Primitives) {
-          auto position_accessor_index = *prim.Attributes()->POSITION();
+          auto position_accessor_index = *prim.Attributes()->POSITION_Id();
           auto accessor = m_gltf->Accessors[position_accessor_index];
 
           auto& min = accessor.Min;

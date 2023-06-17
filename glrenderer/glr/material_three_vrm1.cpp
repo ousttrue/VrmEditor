@@ -274,7 +274,7 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
   auto mtoon = gltfjson::vrm1::MToon(mtoon1);
   if (auto pbr = m.PbrMetallicRoughness()) {
     if (auto info = pbr->BaseColorTexture()) {
-      if (auto p = info->Index()) {
+      if (auto p = info->IndexId()) {
         if (auto texture =
               GetOrCreateTexture(root, bin, (uint32_t)*p, ColorSpace::Linear)) {
           ptr->Textures.push_back({ 0, texture });
@@ -283,7 +283,7 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
     }
   }
   if (auto info = mtoon.ShadeMultiplyTexture()) {
-    if (auto p = info->Index()) {
+    if (auto p = info->IndexId()) {
       if (auto texture =
             GetOrCreateTexture(root, bin, (uint32_t)*p, ColorSpace::Linear)) {
         ptr->Textures.push_back({ 1, texture });
@@ -291,7 +291,7 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
     }
   }
   if (auto info = mtoon.MatcapTexture()) {
-    if (auto p = info->Index()) {
+    if (auto p = info->IndexId()) {
       if (auto texture =
             GetOrCreateTexture(root, bin, (uint32_t)*p, ColorSpace::Linear)) {
         ptr->Textures.push_back({ 5, texture });

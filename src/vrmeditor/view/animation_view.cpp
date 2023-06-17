@@ -63,7 +63,7 @@ struct AnimationViewImpl
         ImGui::Text("%d", i);
 
         ImGui::TableNextColumn();
-        auto name = a.Name();
+        auto name = a.NameString();
         // ImGui::Text("%s", (const char*)name.c_str());
         if (ImGui::Selectable(
               buf.Printf("%s##_animation_%d", (const char*)name.c_str(), i),
@@ -75,7 +75,7 @@ struct AnimationViewImpl
         ImGui::TableNextColumn();
         float duration = 0;
         for (auto s : a.Samplers) {
-          if (auto input = s.Input()) {
+          if (auto input = s.InputId()) {
             if (auto times = root->m_bin.GetAccessorBytes<float>(*root->m_gltf,
                                                                  (int)*input)) {
               if (times->size()) {

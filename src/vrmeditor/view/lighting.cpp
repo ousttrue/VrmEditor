@@ -50,11 +50,11 @@ struct LightingImpl
 
             // 0
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted((const char*)light.Name().c_str());
+            ImGui::TextUnformatted((const char*)light.NameString().c_str());
 
             // 1
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted((const char*)light.Type().c_str());
+            ImGui::TextUnformatted((const char*)light.TypeString().c_str());
 
             // 2
             ImGui::TableNextColumn();
