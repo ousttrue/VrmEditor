@@ -299,8 +299,34 @@ SkinningManager::GetOrCreaeSkin(const gltfjson::Root& root,
 }
 
 static void
+ApplyMorphTarget(DeformedMesh& deformed,
+                 const BaseMesh& mesh,
+                 const std::unordered_map<uint32_t, float>& morphMap)
+{
+  deformed.Vertices.assign(mesh.m_vertices.begin(), mesh.m_vertices.end());
+  if (morphMap.size()) {
+    for (int j = 0; j < mesh.m_morphTargets.size(); ++j) {
+      auto& morphtarget = mesh.m_morphTargets[j];
+      auto found = morphMap.find(j);
+      if (found != morphMap.end()) {
+        auto weight = found->second;
+        if (weight > 0) {
+          for (int i = 0; i < mesh.m_vertices.size(); ++i) {
+            // auto v = mesh.m_vertices[i];
+            deformed.Vertices[i].Position +=
+              morphtarget->Vertices[i].position * weight;
+          }
+        }
+      }
+    }
+  }
+}
+
+static void
 SkinningVertex(Vertex* dst,
-               const Vertex& src,
+               // const Vertex& src,
+               const DirectX::XMVECTOR& pos,
+               const DirectX::XMVECTOR& normal,
                float w,
                std::span<const DirectX::XMFLOAT4X4> matrices,
                uint16_t matrixIndex)
@@ -309,14 +335,12 @@ SkinningVertex(Vertex* dst,
     if (matrixIndex < matrices.size()) {
       DirectX::XMFLOAT3 store;
       {
-        auto pos = DirectX::XMLoadFloat3(&src.Position);
         auto newPos = DirectX::XMVector3Transform(
           pos, DirectX::XMLoadFloat4x4(&matrices[matrixIndex]));
         DirectX::XMStoreFloat3(&store, newPos);
         dst->Position += (store * w);
       }
       {
-        auto normal = DirectX::XMLoadFloat3(&src.Normal);
         auto newNormal = DirectX::XMVector3Transform(
           normal, DirectX::XMLoadFloat4x4(&matrices[matrixIndex]));
         DirectX::XMStoreFloat3(&store, newNormal);
@@ -329,45 +353,31 @@ SkinningVertex(Vertex* dst,
 }
 
 static void
-ApplyMorphTarget(DeformedMesh& deformed,
-                 const BaseMesh& mesh,
-                 const std::unordered_map<uint32_t, float>& morphMap)
-{
-  deformed.Vertices.assign(mesh.m_vertices.begin(), mesh.m_vertices.end());
-  for (int i = 0; i < mesh.m_vertices.size(); ++i) {
-    // auto v = mesh.m_vertices[i];
-    for (int j = 0; j < mesh.m_morphTargets.size(); ++j) {
-      auto& morphtarget = mesh.m_morphTargets[j];
-      auto found = morphMap.find(j);
-      if (found != morphMap.end()) {
-        deformed.Vertices[i].Position +=
-          morphtarget->Vertices[i].position * found->second;
-      }
-    }
-  }
-}
-
-static void
 ApplySkinning(DeformedMesh& deformed,
               std::span<const JointBinding> bindings,
               std::span<const DirectX::XMFLOAT4X4> skinningMatrices)
 {
-  // calc skinning
   if (skinningMatrices.size()) {
     for (int i = 0; i < deformed.Vertices.size(); ++i) {
       auto src = deformed.Vertices[i];
+      auto pos = DirectX::XMLoadFloat3(&src.Position);
+      auto normal = DirectX::XMLoadFloat3(&src.Normal);
       auto& dst = deformed.Vertices[i];
       dst.Position = { 0, 0, 0 };
       dst.Normal = { 0, 0, 0 };
       auto binding = bindings[i];
       if (auto w = binding.Weights.x)
-        SkinningVertex(&dst, src, w, skinningMatrices, binding.Joints.X);
+        SkinningVertex(
+          &dst, pos, normal, w, skinningMatrices, binding.Joints.X);
       if (auto w = binding.Weights.y)
-        SkinningVertex(&dst, src, w, skinningMatrices, binding.Joints.Y);
+        SkinningVertex(
+          &dst, pos, normal, w, skinningMatrices, binding.Joints.Y);
       if (auto w = binding.Weights.z)
-        SkinningVertex(&dst, src, w, skinningMatrices, binding.Joints.Z);
+        SkinningVertex(
+          &dst, pos, normal, w, skinningMatrices, binding.Joints.Z);
       if (auto w = binding.Weights.w)
-        SkinningVertex(&dst, src, w, skinningMatrices, binding.Joints.W);
+        SkinningVertex(
+          &dst, pos, normal, w, skinningMatrices, binding.Joints.W);
     }
   }
 }
