@@ -8,6 +8,12 @@
 
 namespace libvrm {
 
+inline float
+Lerp(float lhs, float rhs, float t)
+{
+  return lhs + (rhs - lhs) * t;
+}
+
 inline DirectX::XMFLOAT3
 Lerp(const DirectX::XMFLOAT3& lhs, const DirectX::XMFLOAT3& rhs, float t)
 {
@@ -59,20 +65,15 @@ struct Curve
       auto current = Times[i];
       auto value = Values[i];
       if (current > time) {
+        if (i == 0) {
+          return value;
+        }
         if (Interpolation == gltfjson::AnimationInterpolationModes::STEP) {
-          if (i) {
-            return last;
-          } else {
-            value;
-          }
+          return last;
         } else {
           // use linear
           // TOOD: cubic
-          if (i == 0) {
-            return value;
-          } else {
-            return Lerp(last, value, (time - lastTime) / (current - lastTime));
-          }
+          return Lerp(last, value, (time - lastTime) / (current - lastTime));
         }
         return value;
       }
@@ -92,10 +93,25 @@ struct WeightsCurve
   gltfjson::AnimationInterpolationModes Interpolation;
   float MaxSeconds() const { return Times.empty() ? 0 : Times.back(); }
 
+  mutable std::vector<float> m_lerpBuffer;
+
   std::span<const float> Span(size_t index) const
   {
     auto begin = index * WeightsCount;
     return { Values.data() + begin, Values.data() + begin + WeightsCount };
+  }
+
+  std::span<const float> SpanLerp(size_t lhs, size_t rhs, float t) const
+  {
+    auto l = Span(lhs);
+    auto r = Span(rhs);
+    m_lerpBuffer.clear();
+    auto ll = l.begin();
+    auto rr = r.begin();
+    for (; ll != l.end(); ++ll, ++rr) {
+      m_lerpBuffer.push_back(Lerp(*ll, *rr, t));
+    }
+    return m_lerpBuffer;
   }
 
   std::span<const float> GetValue(float time, bool repeat) const;

@@ -16,10 +16,22 @@ WeightsCurve::GetValue(float time, bool repeat) const
       time = 0;
     }
   }
+
+  float lastTime = 0;
   for (int i = 0; i < Times.size(); ++i) {
-    if (Times[i] > time) {
-      return Span(i);
+    auto current = Times[i];
+    if (current > time) {
+      if (i == 0) {
+        return Span(0);
+      }
+      if (Interpolation == gltfjson::AnimationInterpolationModes::STEP) {
+        return Span(i - 1);
+      } else {
+        // TODO: cubic
+        return SpanLerp(i - 1, i, (time - lastTime) / (current - lastTime));
+      }
     }
+    lastTime = current;
   }
 
   return Span(Times.size() - 1);
