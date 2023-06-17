@@ -23,6 +23,7 @@
 #include "view/lighting.h"
 #include "view/scene_preview.h"
 #include <ImGuizmo.h>
+#include <boneskin/skinning_manager.h>
 #include <cuber/mesh.h>
 #include <fstream>
 #include <glr/gl3renderer.h>
@@ -190,6 +191,7 @@ public:
     const std::shared_ptr<libvrm::GltfRoot>& gltf)
   {
     glr::Release();
+    boneskin::SkinningManager::Instance().Release();
     m_runtime = std::make_shared<libvrm::RuntimeScene>(gltf);
 
     std::weak_ptr<libvrm::RuntimeScene> weak = m_runtime;
