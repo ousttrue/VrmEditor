@@ -186,6 +186,12 @@ Gltf()
       } },
     },
     {
+      u8"/meshes",
+      { {
+        { { u8"📐" }, JsonValue::Object, {}, MeshTag },
+      } },
+    },
+    {
       // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.schema.json
       u8"/meshes/*",
       { {

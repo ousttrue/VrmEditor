@@ -19,6 +19,14 @@ Tags(const std::list<std::string>& tags)
   };
 }
 
+static void
+PushIfNot(std::list<std::string>& tags, const char* tag)
+{
+  if (std::find(tags.begin(), tags.end(), tag) == tags.end()) {
+    tags.push_back(tag);
+  }
+}
+
 // "SCALAR" "VEC2" "VEC3" "VEC4" "MAT2" "MAT3" "MAT4"
 static std::string
 ComponentName(gltfjson::ComponentTypes component, const std::string& type)
@@ -172,6 +180,29 @@ MaterialTag(const gltfjson::Root& root,
     }
   }
 
+  return {};
+}
+
+ShowTagFunc
+MeshTag(const gltfjson::Root& root,
+        const gltfjson::Bin& bin,
+        const gltfjson::tree::NodePtr& item)
+{
+  if (item) {
+    std::list<std::string> tags;
+    auto mesh = gltfjson::Mesh(item);
+    for (auto prim : mesh.Primitives) {
+      if (auto attr = prim.Attributes()) {
+        if (attr->JOINTS_0_Id()) {
+          PushIfNot(tags, "skin");
+        }
+      }
+      if (prim.Targets.size()) {
+        PushIfNot(tags, "morph");
+      }
+    }
+    return Tags(tags);
+  }
   return {};
 }
 

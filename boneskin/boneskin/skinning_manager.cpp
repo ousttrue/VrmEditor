@@ -329,6 +329,26 @@ ApplySkinning(Vertex* dst,
 }
 
 static void
+ApplyMorphTarget(DeformedMesh& deformed,
+                 const BaseMesh& mesh,
+                 const std::unordered_map<uint32_t, float>& morphMap)
+{
+  // clear & apply morph target
+  deformed.Vertices.clear();
+  for (int i = 0; i < mesh.m_vertices.size(); ++i) {
+    auto v = mesh.m_vertices[i];
+    for (int j = 0; j < mesh.m_morphTargets.size(); ++j) {
+      auto& morphtarget = mesh.m_morphTargets[j];
+      auto found = morphMap.find(j);
+      if (found != morphMap.end()) {
+        v.Position += morphtarget->Vertices[i].position * found->second;
+      }
+    }
+    deformed.Vertices.push_back(v);
+  }
+}
+
+static void
 ApplyMorphTargetAndSkinning(
   DeformedMesh& deformed,
   const BaseMesh& mesh,
@@ -386,41 +406,43 @@ SkinningManager::ProcessSkin(const gltfjson::Root& root,
             boneskin::SkinningManager::Instance().GetOrCreateBaseMesh(
               root, bin, meshId)) {
 
-        std::span<const DirectX::XMFLOAT4X4> skinningMatrices;
-        if (auto skin = boneskin::SkinningManager::Instance().GetOrCreaeSkin(
-              root, bin, gltfNode.SkinId())) {
-          // update skinnning
-          // rmt_ScopedCPUSample(SkinningMatrices, 0);
-
-          skin->CurrentMatrices.resize(skin->BindMatrices.size());
-
-          auto rootInverse = DirectX::XMMatrixIdentity();
-          if (auto root_index = skin->Root) {
-            rootInverse = DirectX::XMMatrixInverse(
-              nullptr, DirectX::XMLoadFloat4x4(&drawable.Matrix));
-          }
-
-          for (int i = 0; i < skin->Joints.size(); ++i) {
-            auto m = skin->BindMatrices[i];
-            DirectX::XMStoreFloat4x4(
-              &skin->CurrentMatrices[i],
-              DirectX::XMLoadFloat4x4(&m) *
-                DirectX::XMLoadFloat4x4(&drawables[skin->Joints[i]].Matrix) *
-                rootInverse);
-          }
-
-          skinningMatrices = skin->CurrentMatrices;
-        }
-
-        // upload vertices. CPU skinning and morpht target.
         auto deformed =
           boneskin::SkinningManager::Instance().GetOrCreateDeformedMesh(
             *meshId, baseMesh);
         if (deformed->Vertices.size()) {
-          // apply morphtarget & skinning
-          // rmt_ScopedCPUSample(SkinningApply, 0);
-          ApplyMorphTargetAndSkinning(
-            *deformed, *baseMesh, drawable.MorphMap, skinningMatrices);
+          std::span<const DirectX::XMFLOAT4X4> skinningMatrices;
+          if (auto skin = boneskin::SkinningManager::Instance().GetOrCreaeSkin(
+                root, bin, gltfNode.SkinId())) {
+            // update skinnning
+            // rmt_ScopedCPUSample(SkinningMatrices, 0);
+
+            skin->CurrentMatrices.resize(skin->BindMatrices.size());
+
+            auto rootInverse = DirectX::XMMatrixIdentity();
+            if (auto root_index = skin->Root) {
+              rootInverse = DirectX::XMMatrixInverse(
+                nullptr, DirectX::XMLoadFloat4x4(&drawable.Matrix));
+            }
+
+            for (int i = 0; i < skin->Joints.size(); ++i) {
+              auto m = skin->BindMatrices[i];
+              DirectX::XMStoreFloat4x4(
+                &skin->CurrentMatrices[i],
+                DirectX::XMLoadFloat4x4(&m) *
+                  DirectX::XMLoadFloat4x4(&drawables[skin->Joints[i]].Matrix) *
+                  rootInverse);
+            }
+
+            skinningMatrices = skin->CurrentMatrices;
+
+            // upload vertices. CPU skinning and morpht target.
+            // apply morphtarget & skinning
+            // rmt_ScopedCPUSample(SkinningApply, 0);
+            ApplyMorphTargetAndSkinning(
+              *deformed, *baseMesh, drawable.MorphMap, skinningMatrices);
+          } else {
+            ApplyMorphTarget(*deformed, *baseMesh, drawable.MorphMap);
+          }
         }
       }
     }
