@@ -21,6 +21,9 @@ class Image;
 namespace cuber {
 struct LineVertex;
 };
+namespace boneskin {
+struct NodeMesh;
+}
 
 namespace glr {
 
@@ -52,7 +55,7 @@ RenderPasses(std::span<const RenderPass> passes,
              const RenderingEnv& camera,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
-             std::span<const libvrm::DrawItem> drawables);
+             std::span<const boneskin::NodeMesh> meshNodes);
 
 // clear current render target
 void

@@ -7,6 +7,7 @@
 #include "rendertarget.h"
 #include "scene_renderer.h"
 #include <ImGuizmo.h>
+#include <boneskin/skinning_manager.h>
 #include <vrm/gltfroot.h>
 #include <vrm/runtime_node.h>
 #include <vrm/runtime_scene.h>
@@ -26,10 +27,10 @@ static void
 RenderScene(const RenderingEnv& env,
             const gltfjson::Root& root,
             const gltfjson::Bin& bin,
-            std::span<libvrm::DrawItem> drawables,
+            std::span<const boneskin::NodeMesh> nodeMeshes,
             const std::shared_ptr<ViewSettings>& settings)
 {
-  if (drawables.size()) {
+  if (nodeMeshes.size()) {
     glDisable(GL_DEPTH_TEST);
     if (settings->Skybox) {
       glr::RenderSkybox(env.ProjectionMatrix, env.ViewMatrix);
@@ -47,7 +48,8 @@ RenderScene(const RenderingEnv& env,
     if (settings->ShowMesh) {
       m_renderpass.push_back(RenderPass::Transparent);
     }
-    glr::RenderPasses(m_renderpass, env, root, bin, drawables);
+
+    glr::RenderPasses(m_renderpass, env, root, bin, nodeMeshes);
   }
 }
 
@@ -61,7 +63,9 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
   glr::ClearRendertarget(*m_env);
 
   auto drawables = scene->Drawables();
-  RenderScene(*m_env, *scene->m_gltf, scene->m_bin, drawables, m_settings);
+  auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
+    *scene->m_gltf, scene->m_bin, drawables);
+  RenderScene(*m_env, *scene->m_gltf, scene->m_bin, nodeMeshes, m_settings);
 
   if (m_settings->ShowLine) {
     glr::RenderLine(*m_env, m_gizmo->m_lines);
@@ -125,10 +129,12 @@ SceneRenderer::RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
   if (drawables.size()) {
     scene->UpdateDrawables(drawables);
   }
+  auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
+    *scene->m_table->m_gltf, scene->m_table->m_bin, drawables);
   RenderScene(*m_env,
               *scene->m_table->m_gltf,
               scene->m_table->m_bin,
-              drawables,
+              nodeMeshes,
               m_settings);
 
   if (m_settings->ShowLine) {

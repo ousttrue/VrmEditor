@@ -83,13 +83,6 @@ class Gl3Renderer
   std::unordered_map<uint32_t, std::shared_ptr<boneskin::BaseMesh>>
     m_baseMeshMap;
 
-  struct NodeMesh
-  {
-    uint32_t NodeIndex;
-    uint32_t MeshIndex;
-  };
-  std::vector<NodeMesh> m_meshNodes;
-
   std::vector<MaterialFactory> m_pbrFactories{
     { "KHRONOS_GLTF_PBR", MaterialFactory_Pbr_Khronos_GLTF },
     { "LOGL_PBR", MaterialFactory_Pbr_LearnOpenGL },
@@ -395,78 +388,32 @@ public:
                     const RenderingEnv& env,
                     const gltfjson::Root& root,
                     const gltfjson::Bin& bin,
-                    std::span<const libvrm::DrawItem> drawables)
+                    std::span<const boneskin::NodeMesh> meshNodes)
   {
     // rmt_ScopedCPUSample(RenderPasses, 0);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    assert(root.Nodes.size() == drawables.size());
-    m_meshNodes.clear();
-
-    for (uint32_t i = 0; i < drawables.size(); ++i) {
-      auto gltfNode = root.Nodes[i];
-      if (auto meshId = gltfNode.MeshId()) {
-        m_meshNodes.push_back({ i, *meshId });
-        if (auto baseMesh =
-              boneskin::SkinningManager::Instance().GetOrCreateBaseMesh(
-                root, bin, meshId)) {
-
-          std::span<const DirectX::XMFLOAT4X4> skinningMatrices;
-          if (auto skin = boneskin::SkinningManager::Instance().GetOrCreaeSkin(
-                root, bin, gltfNode.SkinId())) {
-            // update skinnning
-            // rmt_ScopedCPUSample(SkinningMatrices, 0);
-
-            skin->CurrentMatrices.resize(skin->BindMatrices.size());
-
-            auto rootInverse = DirectX::XMMatrixIdentity();
-            if (auto root_index = skin->Root) {
-              rootInverse = DirectX::XMMatrixInverse(
-                nullptr, DirectX::XMLoadFloat4x4(&drawables[i].Matrix));
-            }
-
-            for (int i = 0; i < skin->Joints.size(); ++i) {
-              auto m = skin->BindMatrices[i];
-              DirectX::XMStoreFloat4x4(
-                &skin->CurrentMatrices[i],
-                DirectX::XMLoadFloat4x4(&m) *
-                  DirectX::XMLoadFloat4x4(&drawables[skin->Joints[i]].Matrix) *
-                  rootInverse);
-            }
-
-            skinningMatrices = skin->CurrentMatrices;
-          }
-
-          // upload vertices. CPU skinning and morpht target.
-          auto deformed =
-            boneskin::SkinningManager::Instance().GetOrCreateDeformedMesh(
-              *meshId, baseMesh);
-          if (deformed->Vertices.size()) {
-            // apply morphtarget & skinning
-            // rmt_ScopedCPUSample(SkinningApply, 0);
-            deformed->ApplyMorphTargetAndSkinning(
-              *baseMesh, drawables[i].MorphMap, skinningMatrices);
-            auto vao = GetOrCreateMesh(*meshId, baseMesh);
-            vao->slots_[0]->Upload(deformed->Vertices.size() *
-                                     sizeof(boneskin::Vertex),
-                                   deformed->Vertices.data());
-          }
-        }
-      }
-    }
-
     // render
     for (auto pass : passes) {
-      for (auto& [nodeId, meshId] : m_meshNodes) {
+      for (auto& [nodeId, meshId, matrix] : meshNodes) {
         auto gltfNode = root.Nodes[nodeId];
         if (auto meshId = gltfNode.MeshId()) {
           if (auto baseMesh =
                 boneskin::SkinningManager::Instance().GetOrCreateBaseMesh(
                   root, bin, meshId)) {
             auto vao = GetOrCreateMesh(*meshId, baseMesh);
-            Render(
-              pass, env, root, bin, baseMesh, vao, drawables[nodeId].Matrix);
+
+            auto deformed =
+              boneskin::SkinningManager::Instance().GetOrCreateDeformedMesh(
+                *meshId, baseMesh);
+
+            // auto vao = GetOrCreateMesh(*meshId, baseMesh);
+            vao->slots_[0]->Upload(deformed->Vertices.size() *
+                                     sizeof(boneskin::Vertex),
+                                   deformed->Vertices.data());
+
+            Render(pass, env, root, bin, baseMesh, vao, matrix);
           }
         }
       }
@@ -708,9 +655,9 @@ RenderPasses(std::span<const RenderPass> passes,
              const RenderingEnv& env,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
-             std::span<const libvrm::DrawItem> drawables)
+             std::span<const boneskin::NodeMesh> meshNodes)
 {
-  Gl3Renderer::Instance().RenderPasses(passes, env, root, bin, drawables);
+  Gl3Renderer::Instance().RenderPasses(passes, env, root, bin, meshNodes);
 }
 
 void

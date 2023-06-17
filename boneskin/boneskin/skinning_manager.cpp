@@ -1,4 +1,5 @@
 #include "skinning_manager.h"
+#include <vrm/gltfroot.h>
 
 namespace boneskin {
 
@@ -295,6 +296,66 @@ SkinningManager::GetOrCreaeSkin(const gltfjson::Root& root,
   } else {
     return {};
   }
+}
+
+std::span<const NodeMesh>
+SkinningManager::ProcessSkin(const gltfjson::Root& root,
+                             const gltfjson::Bin& bin,
+                             std::span<const libvrm::DrawItem> drawables)
+{
+  assert(root.Nodes.size() == drawables.size());
+  m_meshNodes.clear();
+
+  for (uint32_t i = 0; i < drawables.size(); ++i) {
+    auto gltfNode = root.Nodes[i];
+    auto& drawable = drawables[i];
+    if (auto meshId = gltfNode.MeshId()) {
+      m_meshNodes.push_back({ i, *meshId, drawable.Matrix });
+      if (auto baseMesh =
+            boneskin::SkinningManager::Instance().GetOrCreateBaseMesh(
+              root, bin, meshId)) {
+
+        std::span<const DirectX::XMFLOAT4X4> skinningMatrices;
+        if (auto skin = boneskin::SkinningManager::Instance().GetOrCreaeSkin(
+              root, bin, gltfNode.SkinId())) {
+          // update skinnning
+          // rmt_ScopedCPUSample(SkinningMatrices, 0);
+
+          skin->CurrentMatrices.resize(skin->BindMatrices.size());
+
+          auto rootInverse = DirectX::XMMatrixIdentity();
+          if (auto root_index = skin->Root) {
+            rootInverse = DirectX::XMMatrixInverse(
+              nullptr, DirectX::XMLoadFloat4x4(&drawable.Matrix));
+          }
+
+          for (int i = 0; i < skin->Joints.size(); ++i) {
+            auto m = skin->BindMatrices[i];
+            DirectX::XMStoreFloat4x4(
+              &skin->CurrentMatrices[i],
+              DirectX::XMLoadFloat4x4(&m) *
+                DirectX::XMLoadFloat4x4(&drawables[skin->Joints[i]].Matrix) *
+                rootInverse);
+          }
+
+          skinningMatrices = skin->CurrentMatrices;
+        }
+
+        // upload vertices. CPU skinning and morpht target.
+        auto deformed =
+          boneskin::SkinningManager::Instance().GetOrCreateDeformedMesh(
+            *meshId, baseMesh);
+        if (deformed->Vertices.size()) {
+          // apply morphtarget & skinning
+          // rmt_ScopedCPUSample(SkinningApply, 0);
+          deformed->ApplyMorphTargetAndSkinning(
+            *baseMesh, drawables[i].MorphMap, skinningMatrices);
+        }
+      }
+    }
+  }
+
+  return m_meshNodes;
 }
 
 } // namespace
