@@ -122,7 +122,9 @@ public:
     DockSpaceManager::Instance().AddDock(
       {
         app::DOCKNAME_JSON,
-        [json = m_json]() mutable { json->ShowSelector(); },
+        [json = m_json]() mutable {
+          json->ShowSelector(Gui::Instance().Indent());
+        },
       },
       { .ShowDefault = true });
 

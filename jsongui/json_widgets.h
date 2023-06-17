@@ -1,10 +1,10 @@
 #pragma once
-#include "../printfbuffer.h"
 #include "json_gui.h"
 #include "json_widgets.h"
 #include <array>
 #include <gltfjson.h>
 #include <gltfjson/jsonpath.h>
+#include <grapho/imgui/printfbuffer.h>
 #include <grapho/imgui/widgets.h>
 #include <span>
 #include <vector>
@@ -141,39 +141,40 @@ SelectId(const char* label,
          const gltfjson::tree::NodePtr& node,
          const gltfjson::tree::NodePtr& arrayNode);
 
-template<typename T>
-bool
-ListId(const char* label, std::vector<uint32_t>& list, const T& values)
-{
-  ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-  if (ImGui::CollapsingHeader(label)) {
-    ImGui::Indent();
-    std::stringstream ss;
-    uint32_t i = 0;
-    PrintfBuffer buf;
-    for (auto it = list.begin(); it != list.end(); ++i) {
-      ImGui::TextUnformatted(buf.Printf("%s[%d] %s",
-                                        values.Name.c_str(),
-                                        i,
-                                        (const char*)values[*it].Name.c_str()));
-      ImGui::SameLine();
-
-      if (ImGui::Button(buf.Printf("x##%d", i))) {
-        it = list.erase(it);
-      } else {
-        ++it;
-      }
-    }
-
-    std::optional<uint32_t> new_value;
-    // SelectId("+", &new_value, values);
-    if (new_value) {
-      list.push_back(*new_value);
-    }
-    ImGui::Unindent();
-  }
-  return false;
-}
+// template<typename T>
+// bool
+// ListId(const char* label, std::vector<uint32_t>& list, const T& values)
+// {
+//   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+//   if (ImGui::CollapsingHeader(label)) {
+//     ImGui::Indent();
+//     std::stringstream ss;
+//     uint32_t i = 0;
+//     PrintfBuffer buf;
+//     for (auto it = list.begin(); it != list.end(); ++i) {
+//       ImGui::TextUnformatted(buf.Printf("%s[%d] %s",
+//                                         values.Name.c_str(),
+//                                         i,
+//                                         (const
+//                                         char*)values[*it].Name.c_str()));
+//       ImGui::SameLine();
+//
+//       if (ImGui::Button(buf.Printf("x##%d", i))) {
+//         it = list.erase(it);
+//       } else {
+//         ++it;
+//       }
+//     }
+//
+//     std::optional<uint32_t> new_value;
+//     // SelectId("+", &new_value, values);
+//     if (new_value) {
+//       list.push_back(*new_value);
+//     }
+//     ImGui::Unindent();
+//   }
+//   return false;
+// }
 
 bool
 ShowGuiVectorFloat(const char* label,

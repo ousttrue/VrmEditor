@@ -1,8 +1,8 @@
 #include "hierarchy_gui.h"
-#include "../printfbuffer.h"
 #include "gui.h"
 #include <imgui.h>
 
+#include <grapho/imgui/printfbuffer.h>
 #include <grapho/imgui/widgets.h>
 #include <vrm/humanoid/humanbones.h>
 #include <vrm/runtime_node.h>
@@ -11,7 +11,7 @@
 struct HierarchyGuiImpl
 {
   std::shared_ptr<libvrm::RuntimeScene> m_scene;
-  PrintfBuffer m_print;
+  grapho::imgui::PrintfBuffer m_print;
   libvrm::RuntimeNode* m_selected = nullptr;
 
   void SetScene(const std::shared_ptr<libvrm::RuntimeScene>& scene)

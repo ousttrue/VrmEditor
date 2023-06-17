@@ -1,5 +1,5 @@
 #pragma once
-#include "../printfbuffer.h"
+// #include "../printfbuffer.h"
 #include "jsonschema/json_prop.h"
 #include <functional>
 #include <gltfjson.h>
@@ -19,7 +19,7 @@ struct JsonGui
 {
   std::shared_ptr<libvrm::GltfRoot> m_root;
   gltfjson::JsonPathMap<JsonSchema> m_definitionMap;
-  PrintfBuffer m_buf;
+  // PrintfBuffer m_buf;
   std::u8string m_jsonpath;
 
   struct Cache
@@ -34,7 +34,7 @@ struct JsonGui
   JsonGui();
   void ClearCache(const std::u8string& jsonpath = {});
   void SetScene(const std::shared_ptr<libvrm::GltfRoot>& root);
-  void ShowSelector();
+  void ShowSelector(float indent);
 
 private:
   EditorResult Traverse(const gltfjson::tree::NodePtr& item,

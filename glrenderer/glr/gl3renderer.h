@@ -1,19 +1,11 @@
 #pragma once
 #include "colorspace.h"
-// #include "docks/gui.h"
 #include "renderpass.h"
-#include <cuber/mesh.h>
+#include <DirectXMath.h>
 #include <filesystem>
 #include <gltfjson.h>
 #include <memory>
 
-// namespace libvrm {
-// namespace gltf {
-// struct Mesh;
-// class Image;
-// struct Texture;
-// }
-// }
 namespace grapho {
 namespace gl3 {
 class Texture;
@@ -26,6 +18,9 @@ struct DeformedMesh;
 struct DrawItem;
 class Image;
 }
+namespace cuber {
+struct LineVertex;
+};
 
 namespace glr {
 

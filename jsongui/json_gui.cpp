@@ -1,5 +1,5 @@
 #include "json_gui.h"
-#include "../docks/gui.h"
+// #include "../docks/gui.h"
 #include "json_widgets.h"
 #include "jsonschema/extensions.h"
 #include "jsonschema/gltf.h"
@@ -70,7 +70,7 @@ JsonGui::SetScene(const std::shared_ptr<libvrm::GltfRoot>& root)
 }
 
 void
-JsonGui::ShowSelector()
+JsonGui::ShowSelector(float indent)
 {
   if (!m_root) {
     return;
@@ -94,7 +94,7 @@ JsonGui::ShowSelector()
   if (grapho::imgui::BeginTableColumns("##JsonGui::ShowSelector", cols)) {
 
     // tree
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, Gui::Instance().Indent());
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, indent);
 
     std::u8string jsonpath(u8"/");
     Traverse(

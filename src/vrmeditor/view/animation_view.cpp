@@ -1,6 +1,6 @@
 #include "animation_view.h"
-#include "../../printfbuffer.h"
 #include <gltfjson.h>
+#include <grapho/imgui/printfbuffer.h>
 #include <grapho/imgui/widgets.h>
 
 struct AnimationViewImpl
@@ -53,7 +53,7 @@ struct AnimationViewImpl
       "Duration",
     };
     if (grapho::imgui::BeginTableColumns("##_Animations", cols)) {
-      PrintfBuffer buf;
+      grapho::imgui::PrintfBuffer buf;
       auto root = m_runtime->m_table;
       for (int i = 0; i < root->m_gltf->Animations.size(); ++i) {
         auto a = root->m_gltf->Animations[i];

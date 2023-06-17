@@ -337,7 +337,7 @@ SelectId(const char* label,
   auto selected = (uint32_t)(id ? *id : -1);
   using TUPLE = std::tuple<uint32_t, std::string>;
   std::vector<TUPLE> combo;
-  PrintfBuffer buf;
+  grapho::imgui::PrintfBuffer buf;
   for (int i = 0; i < values->size(); ++i) {
     auto item = (*values)[i];
     const gltfjson::tree::NodePtr name = item->Get(u8"name");
@@ -402,7 +402,7 @@ ShowGuiVectorFloat(const char* label,
   if (ImGui::CollapsingHeader(label)) {
     ImGui::Indent();
     ImGui::PushID(node.get());
-    PrintfBuffer buf;
+    grapho::imgui::PrintfBuffer buf;
     size_t i = 0;
     for (auto it = array->begin(); it != array->end(); ++i) {
       auto p = (*it)->Ptr<float>();
@@ -441,7 +441,7 @@ ShowGuiOptional(
   }
 
   bool updated = false;
-  PrintfBuffer buf;
+  grapho::imgui::PrintfBuffer buf;
   if (auto node = parentNode->Get(key)) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
     bool visible = true;

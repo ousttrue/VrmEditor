@@ -1,12 +1,12 @@
 #include <GL/glew.h>
 
-#include "../printfbuffer.h"
 #include "gl3renderer_gui.h"
 #include <TextEditor.h>
 #include <glr/gl3renderer.h>
 #include <glr/material.h>
 #include <grapho/gl3/glsl_type_name.h>
 #include <grapho/imgui/csscolor.h>
+#include <grapho/imgui/printfbuffer.h>
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
@@ -214,7 +214,7 @@ Gl3RendererGui::ShowShaderVariables(Material& factory)
       "index", "location", "type", "name", "binding"
     };
     if (grapho::imgui::BeginTableColumns("uniforms", cols)) {
-      PrintfBuffer buf;
+      grapho::imgui::PrintfBuffer buf;
       ImGui::PushItemWidth(-1);
       for (int i = 0; i < shader->Uniforms.size(); ++i) {
         ImGui::TableNextRow();
@@ -320,7 +320,7 @@ void
 Gl3RendererGui::ShowSelector()
 {
   for (uint32_t i = 0; i < MaterialMap().size(); ++i) {
-    PrintfBuffer buf;
+    grapho::imgui::PrintfBuffer buf;
     if (ImGui::Selectable(buf.Printf("%d", i), i == m_selected)) {
       Select(i);
     }

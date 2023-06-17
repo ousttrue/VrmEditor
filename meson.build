@@ -52,6 +52,7 @@ ufbx_dep = subproject('ufbx').get_variable('ufbx_dep')
 subdir('libvrm')
 subdir('libboneskin')
 subdir('glrenderer')
+subdir('jsongui')
 
 if get_option('executables')
     subdir('src')
