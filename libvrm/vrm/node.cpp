@@ -9,15 +9,6 @@ Node::Node(std::string_view name)
 {
 }
 
-// void
-// Node::CalcInitialMatrix()
-// {
-//   WorldInitialTransform = WorldTransform;
-//   WorldInitialScale = WorldScale;
-//   InitialTransform = Transform;
-//   InitialScale = Scale;
-// }
-
 void
 Node::AddChild(const std::shared_ptr<Node>& parent,
                const std::shared_ptr<Node>& child)
@@ -29,18 +20,6 @@ Node::AddChild(const std::shared_ptr<Node>& parent,
   parent->Children.push_back(child);
 }
 
-// void
-// Node::Print(int level)
-// {
-//   for (int i = 0; i < level; ++i) {
-//     std::cout << "  ";
-//   }
-//   std::cout << Name << std::endl;
-//   for (auto child : Children) {
-//     child->Print(level + 1);
-//   }
-// }
-
 std::shared_ptr<Node>
 Node::GetShapeTail()
 {
@@ -49,7 +28,9 @@ Node::GetShapeTail()
   }
 
   if (Children.size() == 1) {
-    return Children.front();
+    if (!AnyTail()) {
+      return Children.front();
+    }
   }
 
   std::shared_ptr<Node> tail;
