@@ -147,7 +147,7 @@ SceneRenderer::RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
       m_cuber->Instances.push_back({
         .Matrix = m,
       });
-    }
+    } 
     m_cuber->Render(*m_env);
   }
 

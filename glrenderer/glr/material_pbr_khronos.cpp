@@ -482,7 +482,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
             if (auto light =
                   gltf.Root().GetExtension<gltfjson::KHR_lights_punctual>()) {
               auto l = light->Lights[i];
-              if (auto c = l.Color()) {
+              if (auto c = l.ColorVec3()) {
                 return DirectX::XMFLOAT3{ (*c)[0], (*c)[1], (*c)[2] };
               }
             }

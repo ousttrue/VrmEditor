@@ -11,6 +11,21 @@
 
 namespace libvrm {
 
+static std::shared_ptr<Node>
+FindNode(const std::shared_ptr<libvrm::GltfRoot>& root, uint32_t meshTarget)
+{
+  for (int i = 0; i < root->m_gltf->Nodes.size(); ++i) {
+    auto node = root->m_gltf->Nodes[i];
+    if (auto mesh = node.MeshId()) {
+      if (*mesh == meshTarget) {
+        return root->m_nodes[i];
+      }
+    }
+  }
+  // PLOG_WARN << "node not found";
+  return {};
+}
+
 static void
 ParseVrm0(RuntimeScene* scene, const gltfjson::vrm0::VRM& VRM)
 {
@@ -19,35 +34,21 @@ ParseVrm0(RuntimeScene* scene, const gltfjson::vrm0::VRM& VRM)
   // exporterVersion
   // firstPerson
 
-  // if (has(VRM, "blendShapeMaster")) {
-  //
-  //   scene->m_expressions = std::make_shared<vrm::Expressions>();
-  //
-  //   auto& blendShapeMaster = VRM.at("blendShapeMaster");
-  //   if (has(blendShapeMaster, "blendShapeGroups")) {
-  //     auto& blendShapeGroups = blendShapeMaster.at("blendShapeGroups");
-  //     for (auto& g : blendShapeGroups) {
-  //       //
-  //       {"binds":[],"isBinary":false,"materialValues":[],"name":"Neutral","presetName":"neutral"}
-  //       // std::cout << g << std::endl;
-  //       auto expression = scene->m_expressions->addBlendShape(
-  //         g.at("presetName"), g.at("name"), g.value("isBinary", false));
-  //       if (has(g, "binds")) {
-  //         for (vrm::ExpressionMorphTargetBind bind : g.at("binds")) {
-  //           // [0-100] to [0-1]
-  //           bind.weight *= 0.01f;
-  //           for (auto& node : scene->m_nodes) {
-  //             if (node->Mesh == scene->m_meshes[bind.mesh]) {
-  //               bind.Node = node;
-  //               break;
-  //             }
-  //           }
-  //           expression->morphBinds.push_back(bind);
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+  if (auto expression = VRM.BlendShapeMaster()) {
+    scene->m_expressions = std::make_shared<Expressions>();
+    for (auto g : expression->BlendShapeGroups) {
+      auto expression = scene->m_expressions->addBlendShape(
+        g.PresetString(), g.NameString(), g.IsBinary() && *g.IsBinary());
+      for (auto bind : g.MorphBinds) {
+        expression->morphBinds.push_back({});
+        auto& back = expression->morphBinds.back();
+        back.mesh = *bind.MeshId();
+        back.index = *bind.MorphIndexId();
+        back.weight = *bind.Weight() *= 0.01f;
+        back.Node = FindNode(scene->m_table, back.mesh);
+      }
+    }
+  }
 
   if (auto secondaryAnimation = VRM.SecondaryAnimation()) {
     for (auto colliderGroup : secondaryAnimation->ColliderGroups) {
@@ -101,9 +102,59 @@ ParseVrm0(RuntimeScene* scene, const gltfjson::vrm0::VRM& VRM)
   }
 }
 
+static std::shared_ptr<Expression>
+AddExpression(RuntimeScene* scene,
+              const std::u8string& preset,
+              const std::u8string& name,
+              std::optional<gltfjson::vrm1::Expression> expression)
+{
+  if (expression) {
+    auto added = scene->m_expressions->addBlendShape(
+      preset, name, expression->IsBinary() ? *expression->IsBinary() : false);
+
+    for (auto morph : expression->MorphTargetBinds) {
+      added->morphBinds.push_back({});
+      auto& back = added->morphBinds.back();
+      back.Node = scene->m_table->m_nodes[*morph.NodeId()];
+      back.index = *morph.IndexId();
+      back.weight = *morph.Weight();
+    }
+
+    return added;
+  } else {
+    return {};
+  }
+}
+
 static void
 ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
 {
+  if (auto VRMC_vrm =
+        scene->m_table->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
+    if (auto expressions = VRMC_vrm->Expressions()) {
+      scene->m_expressions = std::make_shared<Expressions>();
+      if (auto preset = expressions->Preset()) {
+        AddExpression(scene, u8"happy", u8"happy", preset->Happy());
+        AddExpression(scene, u8"angry", u8"angry", preset->Angry());
+        AddExpression(scene, u8"sad", u8"sad", preset->Sad());
+        AddExpression(scene, u8"relaxed", u8"relaxed", preset->Relaxed());
+        AddExpression(scene, u8"surprised", u8"surprised", preset->Surprised());
+        AddExpression(scene, u8"a", u8"a", preset->Aa());
+        AddExpression(scene, u8"i", u8"i", preset->Ih());
+        AddExpression(scene, u8"u", u8"u", preset->Ou());
+        AddExpression(scene, u8"e", u8"e", preset->Ee());
+        AddExpression(scene, u8"o", u8"o", preset->Oh());
+        AddExpression(scene, u8"blink", u8"blink", preset->Blink());
+        AddExpression(scene, u8"blink_l", u8"blink_l", preset->BlinkLeft());
+        AddExpression(scene, u8"blink_r", u8"blink_r", preset->BlinkRight());
+        AddExpression(scene, u8"lookup", u8"lookup", preset->LookUp());
+        AddExpression(scene, u8"lookdown", u8"lookdown", preset->LookDown());
+        AddExpression(scene, u8"lookleft", u8"lookleft", preset->LookLeft());
+        AddExpression(scene, u8"lookright", u8"lookright", preset->LookRight());
+      }
+    }
+  }
+
   if (auto VRMC_springBone =
         scene->m_table->m_gltf
           ->GetExtension<gltfjson::vrm1::VRMC_springBone>()) {
@@ -120,8 +171,10 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
     //     } else if (auto capsule = shape->Capsule()) {
     //       ptr->Type = SpringColliderShapeType::Capsule;
     //       ptr->Radius = *capsule->Radius();
-    //       // ptr->Offset = capsule.value("offset", DirectX::XMFLOAT3{ 0, 0, 0
-    //       // }); ptr->Tail = capsule.value("tail", DirectX::XMFLOAT3{ 0, 0, 0
+    //       // ptr->Offset = capsule.value("offset", DirectX::XMFLOAT3{ 0, 0,
+    //       0
+    //       // }); ptr->Tail = capsule.value("tail", DirectX::XMFLOAT3{ 0, 0,
+    //       0
     //       // });
     //     } else {
     //       assert(false);
@@ -133,7 +186,8 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
     //   auto ptr = std::make_shared<SpringColliderGroup>();
     //   // for (auto collider : colliderGroup.Colliders) {
     //   //   auto collider_index =
-    //   // ptr->Colliders.push_back(scene->m_springColliders[collider_index]);
+    //   //
+    //   ptr->Colliders.push_back(scene->m_springColliders[collider_index]);
     //   // }
     //   scene->m_springColliderGroups.push_back(ptr);
     // }

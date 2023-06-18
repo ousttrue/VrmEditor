@@ -7,6 +7,7 @@
 #include "docks/gui.h"
 #include "docks/hierarchy_gui.h"
 #include "docks/imlogger.h"
+#include "docks/vrm_gui.h"
 #include "fbx_loader.h"
 #include "filewatcher.h"
 #include "fs_util.h"
@@ -55,6 +56,7 @@ class App
   std::shared_ptr<glr::RenderingEnv> m_env;
   std::shared_ptr<glr::Gl3RendererGui> m_gl3gui;
   std::shared_ptr<HierarchyGui> m_hierarchy;
+  std::shared_ptr<VrmGui> m_vrm;
 
 public:
   App()
@@ -67,6 +69,7 @@ public:
     m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
     m_animation = std::make_shared<AnimationView>();
     m_hierarchy = std::make_shared<HierarchyGui>();
+    m_vrm = std::make_shared<VrmGui>();
 
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
       [=] { ResetDock(); });
@@ -153,6 +156,12 @@ public:
     DockSpaceManager::Instance().AddDock(
       { "🏃humanoid-pose",
         []() { humanpose::HumanPoseStream::Instance().ShowGui(); } });
+
+    DockSpaceManager::Instance().AddDock(
+      { "🏃expression", [vrm = m_vrm]() { vrm->ShowExpression(); } });
+
+    DockSpaceManager::Instance().AddDock(
+      { "🏃vrm", [vrm = m_vrm]() { vrm->Show(); } });
   }
 
   std::shared_ptr<libvrm::RuntimeScene> SetGltf(
@@ -179,6 +188,7 @@ public:
     m_hierarchy->SetRuntimeScene(m_runtime);
     m_preview->SetGltf(gltf);
     m_animationPreview->SetRuntime(m_runtime);
+    m_vrm->SetRuntime(m_runtime);
     return m_runtime;
   }
 

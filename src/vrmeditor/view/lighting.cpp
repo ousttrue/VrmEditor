@@ -68,7 +68,7 @@ struct LightingImpl
 
             // 2
             ImGui::TableNextColumn();
-            if (auto color = light.Color()) {
+            if (auto color = light.ColorVec3()) {
               ImGui::SetNextItemWidth(-1);
               if (ImGui::ColorEdit3("##_color", color->data())) {
                 light.m_json->Get(u8"color")->Set(*color);

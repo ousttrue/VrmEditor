@@ -9,7 +9,7 @@ srcs = [
     'docks/gui.cpp',
     'docks/dockspace.cpp',
     'docks/imlogger.cpp',
-    'docks/vrm_dock.cpp',
+    'docks/vrm_gui.cpp',
     'docks/export_dock.cpp',
     'docks/hierarchy_gui.cpp',
     'view/scene_preview.cpp',

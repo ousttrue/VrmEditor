@@ -2,6 +2,7 @@
 #include "node.h"
 #include <algorithm>
 #include <functional>
+#include <unordered_map>
 
 namespace libvrm {
 
@@ -114,16 +115,18 @@ struct Expressions
 
   std::vector<std::shared_ptr<Expression>> Expressions;
 
-  Expression createExpression(std::string presetName,
-                              std::string_view name,
+  Expression createExpression(const std::u8string& _presetName,
+                              const std::u8string& name,
                               bool isBinary)
   {
     Expression ex{
-      .name = { name.begin(), name.end() },
+      .name = { (const char*)name.data(), name.size() },
       .isBinary = isBinary,
     };
 
     // tolower
+    std::string presetName{ (const char*)_presetName.data(),
+                            _presetName.size() };
     std::transform(
       presetName.begin(), presetName.end(), presetName.begin(), ::tolower);
 
@@ -145,17 +148,20 @@ struct Expressions
     } else if (presetName == "o") {
       ex.preset = ExpressionPreset::oh;
       ex.label = presetName;
-    } else if (presetName == "joy") {
+    } else if (presetName == "joy" || presetName == "happy") {
       ex.preset = ExpressionPreset::happy;
       ex.label = presetName;
     } else if (presetName == "angry") {
       ex.preset = ExpressionPreset::angry;
       ex.label = presetName;
-    } else if (presetName == "sorrow") {
+    } else if (presetName == "sorrow" || presetName == "sad") {
       ex.preset = ExpressionPreset::sad;
       ex.label = presetName;
-    } else if (presetName == "fun") {
+    } else if (presetName == "fun" || presetName == "relaxed") {
       ex.preset = ExpressionPreset::relaxed;
+      ex.label = presetName;
+    } else if (presetName == "surprised") {
+      ex.preset = ExpressionPreset::surprised;
       ex.label = presetName;
     } else if (presetName == "blink") {
       ex.preset = ExpressionPreset::blink;
@@ -181,12 +187,13 @@ struct Expressions
     } else {
       ex.preset = ExpressionPreset::unknown;
       // TODO: must unique !
-      ex.label = name;
+      ex.label = { (const char*)name.data(), name.size() };
     }
     return ex;
   }
-  std::shared_ptr<Expression> addBlendShape(const std::string& presetName,
-                                            std::string_view name,
+
+  std::shared_ptr<Expression> addBlendShape(const std::u8string& presetName,
+                                            const std::u8string& name,
                                             bool is_binary)
   {
     auto ex = std::make_shared<Expression>();
