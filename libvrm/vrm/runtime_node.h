@@ -21,7 +21,9 @@ struct RuntimeNode
     : Node(node)
   {
     Transform = node->InitialTransform;
+    Scale = node->InitialScale;
     WorldTransform = node->WorldInitialTransform;
+    WorldScale = node->WorldInitialScale;
   }
 
   std::list<std::shared_ptr<RuntimeNode>> Children;
