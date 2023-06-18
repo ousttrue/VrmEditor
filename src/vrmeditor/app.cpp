@@ -273,6 +273,7 @@ public:
           if (lastTime) {
             auto delta = time - *lastTime;
             m_runtime->m_timeline->SetDeltaTime(delta);
+            m_runtime->NextSpringDelta = delta;
           } else {
             m_runtime->m_timeline->SetDeltaTime({}, true);
           }

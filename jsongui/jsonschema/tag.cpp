@@ -269,6 +269,9 @@ NodeTag(const gltfjson::Root& root,
             }
           }
         }
+        if (node.GetExtension<gltfjson::vrm1::VRMC_node_constraint>()) {
+          tags.push_back("constraint");
+        }
         if (vrm0) {
           if (auto humanoid = vrm0->Humanoid()) {
             for (auto humanBone : humanoid->HumanBones) {

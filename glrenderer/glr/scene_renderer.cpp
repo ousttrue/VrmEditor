@@ -122,12 +122,10 @@ SceneRenderer::RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  scene->NextSpringDelta = m_settings->NextSpringDelta;
-  m_settings->NextSpringDelta = {};
-
   auto drawables = scene->m_table->Drawables();
   if (drawables.size()) {
     scene->UpdateDrawables(drawables);
+    m_settings->NextSpringDelta = {};
     auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
       *scene->m_table->m_gltf, scene->m_table->m_bin, drawables);
     RenderScene(*m_env,
