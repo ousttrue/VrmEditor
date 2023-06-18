@@ -128,14 +128,14 @@ SceneRenderer::RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
   auto drawables = scene->m_table->Drawables();
   if (drawables.size()) {
     scene->UpdateDrawables(drawables);
+    auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
+      *scene->m_table->m_gltf, scene->m_table->m_bin, drawables);
+    RenderScene(*m_env,
+                *scene->m_table->m_gltf,
+                scene->m_table->m_bin,
+                nodeMeshes,
+                m_settings);
   }
-  auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
-    *scene->m_table->m_gltf, scene->m_table->m_bin, drawables);
-  RenderScene(*m_env,
-              *scene->m_table->m_gltf,
-              scene->m_table->m_bin,
-              nodeMeshes,
-              m_settings);
 
   if (m_settings->ShowLine) {
     scene->DrawGizmo(m_gizmo.get());

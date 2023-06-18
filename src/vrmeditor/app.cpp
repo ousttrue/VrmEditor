@@ -3,14 +3,10 @@
 #include "app.h"
 #include "config.h"
 #include "docks/asset_view.h"
-#include "docks/export_dock.h"
+#include "docks/dockspace.h"
 #include "docks/gui.h"
 #include "docks/hierarchy_gui.h"
-#include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
-#include "docks/imtimeline.h"
-#include "docks/scene_selection.h"
-#include "docks/vrm_dock.h"
 #include "fbx_loader.h"
 #include "filewatcher.h"
 #include "fs_util.h"
@@ -24,24 +20,16 @@
 #include "view/scene_preview.h"
 #include <ImGuizmo.h>
 #include <boneskin/skinning_manager.h>
-#include <cuber/mesh.h>
-#include <fstream>
-#include <glr/gl3renderer.h>
 #include <glr/rendering_env.h>
 #include <gltfjson.h>
 #include <gltfjson/glb.h>
 #include <gltfjson/json_tree_exporter.h>
 #include <grapho/gl3/error_check.h>
 #include <grapho/gl3/texture.h>
-#include <grapho/orbitview.h>
-#include <imgui.h>
 #include <queue>
-#include <vrm/animation.h>
 #include <vrm/fileutil.h>
-#include <vrm/gizmo.h>
 #include <vrm/image.h>
 #include <vrm/importer.h>
-#include <vrm/timeline.h>
 #ifdef _WIN32
 #include "windows_helper.h"
 #else
@@ -64,12 +52,6 @@ class App
   std::shared_ptr<ScenePreview> m_animationPreview;
   std::shared_ptr<Lighting> m_lighting;
   std::shared_ptr<AnimationView> m_animation;
-
-  // std::shared_ptr<struct SceneNodeSelection> m_selection;
-  // std::shared_ptr<grapho::OrbitView> m_staticView;
-  // std::shared_ptr<grapho::OrbitView> m_runtimeView;
-  // std::shared_ptr<glr::ViewSettings> m_settings;
-
   std::shared_ptr<glr::RenderingEnv> m_env;
   std::shared_ptr<glr::Gl3RendererGui> m_gl3gui;
   std::shared_ptr<HierarchyGui> m_hierarchy;
@@ -78,13 +60,6 @@ public:
   App()
   {
     m_json = std::make_shared<JsonGui>();
-
-    // auto track = m_timeline->AddTrack("PoseStream", {});
-    // track->Callbacks.push_back([](auto time, auto repeat) {
-    //   humanpose::HumanPoseStream::Instance().Update(time);
-    //   return true;
-    // });
-
     m_env = std::make_shared<glr::RenderingEnv>();
     m_preview = std::make_shared<ScenePreview>(m_env);
     m_animationPreview = std::make_shared<ScenePreview>(m_env);
@@ -92,12 +67,6 @@ public:
     m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
     m_animation = std::make_shared<AnimationView>();
     m_hierarchy = std::make_shared<HierarchyGui>();
-
-    // m_selection = std::make_shared<SceneNodeSelection>();
-    // m_staticView = std::make_shared<grapho::OrbitView>();
-    // m_runtimeView = std::make_shared<grapho::OrbitView>();
-    // m_settings = std::make_shared<glr::ViewSettings>();
-    // m_settings->ShowCuber = false;
 
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
       [=] { ResetDock(); });
@@ -110,12 +79,6 @@ public:
 
   void ResetDock()
   {
-    // #ifndef NDEBUG
-    //     ImTimeline::Create(addDock, "[animation] timeline", m_timeline);
-    //     humanpose::HumanPoseStream::Instance().CreateDock(
-    //       addDock, "[animation] input-stream");
-    // #endif
-
     DockSpaceManager::Instance().AddDock({
       "📜logger",
       []() { ImLogger::Instance().Draw(); },
@@ -157,12 +120,12 @@ public:
       [lighting = m_lighting]() { lighting->ShowGui(); },
     });
 
-    DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+    DockSpaceManager::Instance().AddDock({
       "🔍GL impl",
       [=]() { m_gl3gui->ShowSelectImpl(); },
     });
 
-    DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+    DockSpaceManager::Instance().AddDock({
       "🔍GL selector",
       [=]() {
         //
@@ -170,7 +133,7 @@ public:
       },
     });
 
-    DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+    DockSpaceManager::Instance().AddDock({
       "🔍GL selected shader source",
       [=]() {
         //
@@ -178,13 +141,18 @@ public:
       },
     });
 
-    DockSpaceManager::Instance().AddDock(grapho::imgui::Dock{
+    DockSpaceManager::Instance().AddDock({
       "🔍GL selected shader variables",
       [=]() {
         //
         m_gl3gui->ShowSelectedShaderVariables();
       },
     });
+
+    // ImTimeline::Create(addDock, "[animation] timeline", m_timeline);
+    DockSpaceManager::Instance().AddDock(
+      { "🏃humanoid-pose",
+        []() { humanpose::HumanPoseStream::Instance().ShowGui(); } });
   }
 
   std::shared_ptr<libvrm::RuntimeScene> SetGltf(

@@ -149,3 +149,9 @@ ScenePreview::ShowGui()
 {
   m_impl->ShowGui();
 }
+
+
+std::shared_ptr<glr::ViewSettings> ScenePreview::Settings()
+{
+  return m_impl->m_settings;
+}

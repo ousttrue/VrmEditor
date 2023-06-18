@@ -87,7 +87,7 @@ HumanPoseStream::HumanPoseStream()
 
   // sink node
   auto sink = CreateNode<HumanPoseSink>(
-    "HumanPose",
+    "🎬HumanPose",
     "SinkNode",
     std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } },
     {});
@@ -142,30 +142,27 @@ HumanPoseStream::Save()
 }
 
 void
-HumanPoseStream::CreateDock(const AddDockFunc& addDock, const char* title)
+HumanPoseStream::ShowGui()
 {
-  addDock(grapho::imgui::Dock(title, [this]() {
-    //
-    // draw nodes
-    ImNodes::BeginNodeEditor();
-    for (auto& node : m_nodes) {
-      node->Draw();
-    }
-    for (auto& link : Links) {
-      link->Draw();
-    }
-    ImNodes::EndNodeEditor();
+  // draw nodes
+  ImNodes::BeginNodeEditor();
+  for (auto& node : m_nodes) {
+    node->Draw();
+  }
+  for (auto& link : Links) {
+    link->Draw();
+  }
+  ImNodes::EndNodeEditor();
 
-    // update link
-    int start, end;
-    if (ImNodes::IsLinkCreated(&start, &end)) {
-      TryCreateLink(start, end);
-    }
-    int link_id;
-    if (ImNodes::IsLinkDestroyed(&link_id)) {
-      TryRemoveLink(link_id);
-    }
-  }));
+  // update link
+  int start, end;
+  if (ImNodes::IsLinkCreated(&start, &end)) {
+    TryCreateLink(start, end);
+  }
+  int link_id;
+  if (ImNodes::IsLinkDestroyed(&link_id)) {
+    TryRemoveLink(link_id);
+  }
 }
 
 std::tuple<std::shared_ptr<GraphNodeBase>, size_t>

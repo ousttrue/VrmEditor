@@ -104,7 +104,7 @@ public:
 
   bool LoadMotion(const std::filesystem::path& path);
 
-  void CreateDock(const AddDockFunc& addDock, const char* title);
+  void ShowGui();
   void Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node = {});
 };
 }
