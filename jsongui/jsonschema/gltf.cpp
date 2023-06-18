@@ -15,28 +15,28 @@ Gltf()
       { {
         { { u8"📄", u8"asset" }, JsonValue::Object, JsonPropFlags::Required },
         //
-        { { u8"⭐", u8"extensions" }, JsonValue::Object },
-        { { u8"⭐", u8"extensionsUsed" }, JsonValue::Array },
-        { { u8"⭐", u8"extensionsRequired" }, JsonValue::Array },
-        { { u8"⭐", u8"extras" }, JsonValue::Object },
+        { { u8"⭐", u8"extensions" }, JsonValue::Object, JsonPropFlags::NoRemove },
+        { { u8"⭐", u8"extensionsUsed" }, JsonValue::Array, JsonPropFlags::NoRemove },
+        { { u8"⭐", u8"extensionsRequired" }, JsonValue::Array, JsonPropFlags::NoRemove },
+        { { u8"⭐", u8"extras" }, JsonValue::Object, JsonPropFlags::NoRemove },
         //
-        { { u8"🫙", u8"buffers" }, JsonValue::Array },
-        { { u8"🫙", u8"bufferViews" }, JsonValue::Array },
-        { { u8"🫙", u8"accessors" }, JsonValue::Array },
+        { { u8"🫙", u8"buffers" }, JsonValue::Array, JsonPropFlags::NoRemove },
+        { { u8"🫙", u8"bufferViews" }, JsonValue::Array, JsonPropFlags::NoRemove },
+        { { u8"🫙", u8"accessors" }, JsonValue::Array, JsonPropFlags::NoRemove },
         //
-        { { u8"🖼", u8"images" }, JsonValue::Array },
-        { { u8"🖼", u8"samplers" }, JsonValue::Array },
-        { { u8"🖼", u8"textures" }, JsonValue::Array },
-        { { u8"💎", u8"materials" }, JsonValue::Array },
+        { { u8"🖼", u8"images" }, JsonValue::Array, JsonPropFlags::NoRemove },
+        { { u8"🖼", u8"samplers" }, JsonValue::Array, JsonPropFlags::NoRemove },
+        { { u8"🖼", u8"textures" }, JsonValue::Array, JsonPropFlags::NoRemove },
+        { { u8"💎", u8"materials" }, JsonValue::Array, JsonPropFlags::NoRemove },
         //
-        { { u8"📐", u8"meshes" }, JsonValue::Array },
-        { { u8"📐", u8"skins" }, JsonValue::Array },
+        { { u8"📐", u8"meshes" }, JsonValue::Array, JsonPropFlags::NoRemove },
+        { { u8"📐", u8"skins" }, JsonValue::Array, JsonPropFlags::NoRemove },
         //
-        { { u8"🛞", u8"nodes" }, JsonValue::Array },
-        { { u8"🛞", u8"scenes" }, JsonValue::Array },
+        { { u8"🛞", u8"nodes" }, JsonValue::Array, JsonPropFlags::NoRemove },
+        { { u8"🛞", u8"scenes" }, JsonValue::Array, JsonPropFlags::NoRemove },
         { { u8"🆔", u8"scene" }, JsonValue::Number },
         //
-        { { u8"🎬", u8"animations" }, JsonValue::Array },
+        { { u8"🎬", u8"animations" }, JsonValue::Array, JsonPropFlags::NoRemove },
       } },
     },
     {

@@ -162,7 +162,7 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
       // array
       //
       bool hasProp = false;
-      JsonProp child_prop;
+      JsonProp child_prop{};
       if (auto definition = m_definitionMap.Match(jsonpath)) {
         if (definition->Props.size()) {
           child_prop = definition->Props.front();
@@ -172,6 +172,7 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
       if (!hasProp) {
         child_prop = { { prop.Name.Icon }, {} };
       }
+      child_prop.Flags = child_prop.Flags | JsonPropFlags::NoRemove;
 
       int i = 0;
       std::function<void()> removeAfter;
@@ -189,7 +190,8 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
         jsonpath.resize(size);
         ++i;
       }
-      {
+
+      if (Has(prop.Flags, JsonPropFlags::ArrayAdd)) {
         // add array child
         gltfjson::tree::concat_int(jsonpath, i);
         child_prop.Name.Key = jsonpath.substr(size);
@@ -199,6 +201,7 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
         }
         jsonpath.resize(size);
       }
+
       if (removeAfter) {
         removeAfter();
       }
@@ -323,8 +326,10 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   } else if (Has(prop.Flags, JsonPropFlags::Required)) {
     ImGui::TextUnformatted("📍");
   } else if (item) {
-    if (ImGui::Button("-##removed")) {
-      result = EditorResult::Removed;
+    if (!Has(prop.Flags, JsonPropFlags::NoRemove)) {
+      if (ImGui::Button("-##removed")) {
+        result = EditorResult::Removed;
+      }
     }
   } else {
     if (ImGui::Button("+##key_created")) {

@@ -370,7 +370,7 @@ public:
       return LoadText(path);
     }
 
-    PLOG_WARNING << "unknown tpe: " << path.string();
+    PLOG_WARNING << "unknown type: " << gltfjson::from_u8(path.u8string());
     return false;
   }
 
@@ -441,7 +441,8 @@ public:
       // m_runtimeView->Fit(bb.Min, bb.Max);
       // m_env->SetShadowHeight(bb.Min.y);
 
-      PLOG_INFO << path.string();
+      auto u8 = path.u8string();
+      PLOG_INFO << std::string_view{ (const char*)u8.data(), u8.size() };
 
       return true;
     } else {

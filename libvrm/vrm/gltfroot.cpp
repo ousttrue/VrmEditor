@@ -93,8 +93,14 @@ GltfRoot::Drawables()
       auto node = m_nodes[i];
       auto gltfNode = m_gltf->Nodes[i];
       auto& item = m_drawables[i];
-      DirectX::XMStoreFloat4x4(&item.Matrix, node->WorldInitialMatrix());
       item.MorphMap.clear();
+      if (auto meshId = gltfNode.MeshId()) {
+        auto mesh = m_gltf->Meshes[*meshId];
+        for (int i = 0; i < mesh.Weights.size(); ++i) {
+          item.MorphMap[i] = mesh.Weights[i];
+        }
+      }
+      DirectX::XMStoreFloat4x4(&item.Matrix, node->WorldInitialMatrix());
     }
   } else {
     m_drawables.clear();
