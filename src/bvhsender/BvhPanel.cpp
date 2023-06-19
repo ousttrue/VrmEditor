@@ -1,11 +1,11 @@
 #include "BvhPanel.h"
 #include <imgui.h>
 #include <thread>
-#include <vrm/animation/runtime_scene.h>
-#include <vrm/animation/timeline.h>
 #include <vrm/bvh/bvhscene.h>
 #include <vrm/gltfroot.h>
 #include <vrm/network/srht_sender.h>
+#include <vrm/runtime_scene.h>
+#include <vrm/timeline.h>
 
 #ifdef _WIN32
 #define _WIN32_WINNT 0x0601
@@ -23,7 +23,7 @@ class BvhPanelImpl
   bool m_enablePackQuat = false;
 
   std::vector<cuber::Instance> m_instances;
-  std::shared_ptr<runtimescene::RuntimeScene> m_scene;
+  std::shared_ptr<libvrm::RuntimeScene> m_scene;
   std::shared_ptr<libvrm::IntervalTimer> m_clock;
 
 public:
@@ -32,13 +32,13 @@ public:
     , m_sender(m_io)
     , m_ep(asio::ip::address::from_string("127.0.0.1"), 54345)
   {
-    auto scene = std::make_shared<libvrm::gltf::GltfRoot>();
-    m_scene = std::make_shared<runtimescene::RuntimeScene>(scene);
+    auto scene = std::make_shared<libvrm::GltfRoot>();
+    m_scene = std::make_shared<libvrm::RuntimeScene>(scene);
   }
 
   ~BvhPanelImpl() { m_work.reset(); }
 
-  void PushInstance(const runtimescene::Instance& instance)
+  void PushInstance(const libvrm::Instance& instance)
   {
     m_instances.push_back(*((const cuber::Instance*)&instance));
   }

@@ -1,11 +1,13 @@
+#include <GL/glew.h>
+
 #include "GlfwPlatform.h"
+#include <filesystem>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <stdio.h>
-// #include <GL/glew.h>
 
-const char *glsl_version = nullptr;
+const char* glsl_version = nullptr;
 
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -13,11 +15,14 @@ const char *glsl_version = nullptr;
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
-static void glfw_error_callback(int error, const char *description) {
+static void
+glfw_error_callback(int error, const char* description)
+{
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-GlfwPlatform::GlfwPlatform() {
+GlfwPlatform::GlfwPlatform()
+{
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) {
@@ -25,7 +30,8 @@ GlfwPlatform::GlfwPlatform() {
   }
 }
 
-GlfwPlatform::~GlfwPlatform() {
+GlfwPlatform::~GlfwPlatform()
+{
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
 
@@ -33,7 +39,9 @@ GlfwPlatform::~GlfwPlatform() {
   glfwTerminate();
 }
 
-GLFWwindow *GlfwPlatform::Create() {
+GLFWwindow*
+GlfwPlatform::Create()
+{
 
   // GL 3.2 + GLSL 150
   glsl_version = "#version 150";
@@ -45,12 +53,24 @@ GLFWwindow *GlfwPlatform::Create() {
 
   // Create window with graphics context
   window_ =
-      glfwCreateWindow(1280, 720, "CubeR GLFW+OpenGL3 example", NULL, NULL);
+    glfwCreateWindow(1280, 720, "CubeR GLFW+OpenGL3 example", NULL, NULL);
   if (!window_) {
     return nullptr;
   }
   glfwMakeContextCurrent(window_);
   glfwSwapInterval(1); // Enable vsync
+                       //
+  auto drop_callback = +[](GLFWwindow* window, int count, const char** paths) {
+    auto self = (GlfwPlatform*)glfwGetWindowUserPointer(window);
+    for (int i = 0; i < count; i++) {
+      std::filesystem::path drop = paths[i];
+      // PLOG_INFO << "drop_callback[" << i << "]: " << drop.string();
+      for (auto& callback : self->Callbacks) {
+        callback(drop);
+      }
+    }
+  };
+  glfwSetDropCallback(window_, drop_callback);
 
   glewInit();
 
@@ -61,7 +81,9 @@ GLFWwindow *GlfwPlatform::Create() {
   return window_;
 }
 
-std::optional<GlfwTime> GlfwPlatform::NewFrame(const float clear_color[4]) {
+std::optional<GlfwTime>
+GlfwPlatform::NewFrame(const float clear_color[4])
+{
   if (glfwWindowShouldClose(window_)) {
     return {};
   }
@@ -91,7 +113,9 @@ std::optional<GlfwTime> GlfwPlatform::NewFrame(const float clear_color[4]) {
   return GlfwTime(glfwGetTime());
 }
 
-void GlfwPlatform::EndFrame(ImDrawData *data) {
+void
+GlfwPlatform::EndFrame(ImDrawData* data)
+{
   ImGui_ImplOpenGL3_RenderDrawData(data);
   glfwSwapBuffers(window_);
 }

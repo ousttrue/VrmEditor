@@ -4,12 +4,11 @@
 namespace libvrm::bvh {
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void
-UpdateSceneFromBvhFrame(
-  const std::shared_ptr<RuntimeScene>& scene,
-  std::shared_ptr<RuntimeNode>& node,
-  const std::shared_ptr<bvh::Bvh>& bvh,
-  const bvh::Frame& frame,
-  float scaling)
+UpdateSceneFromBvhFrame(const std::shared_ptr<RuntimeScene>& scene,
+                        std::shared_ptr<RuntimeNode>& node,
+                        const std::shared_ptr<bvh::Bvh>& bvh,
+                        const bvh::Frame& frame,
+                        float scaling)
 {
   auto joint = &bvh->joints[*scene->IndexOf(node)];
   auto transform = frame.Resolve(joint->channels);
@@ -24,10 +23,9 @@ UpdateSceneFromBvhFrame(
 }
 
 void
-UpdateSceneFromBvhFrame(
-  const std::shared_ptr<RuntimeScene>& scene,
-  const std::shared_ptr<bvh::Bvh>& bvh,
-  Time time)
+UpdateSceneFromBvhFrame(const std::shared_ptr<RuntimeScene>& scene,
+                        const std::shared_ptr<bvh::Bvh>& bvh,
+                        Time time)
 {
   if (scene->m_roots.empty()) {
     return;
@@ -72,10 +70,12 @@ InitializeSceneFromBvh(const std::shared_ptr<GltfRoot>& scene,
   };
 
   // assign human bone
-  for (auto& node : scene->m_nodes) {
-    auto found = map->NameBoneMap.find(node->Name);
-    if (found != map->NameBoneMap.end()) {
-      node->Humanoid = found->second;
+  if (map) {
+    for (auto& node : scene->m_nodes) {
+      auto found = map->NameBoneMap.find(node->Name);
+      if (found != map->NameBoneMap.end()) {
+        node->Humanoid = found->second;
+      }
     }
   }
 

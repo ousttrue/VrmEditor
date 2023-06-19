@@ -25,6 +25,11 @@ main(int argc, char** argv)
       bvhPanel.SetBvh(*bvh);
     }
   }
+  platform.Callbacks.push_back([&bvhPanel](auto& path) mutable {
+    if (auto bvh = libvrm::bvh::Bvh::FromFile(path)) {
+      bvhPanel.SetBvh(*bvh);
+    }
+  });
 
   // cuber
   cuber::gl3::GlCubeRenderer cubeRenderer;
