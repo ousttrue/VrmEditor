@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 
 #include "app.h"
+#include "asio_task.h"
 #include "config.h"
 #include "docks/asset_view.h"
 #include "docks/dockspace.h"
@@ -27,7 +28,6 @@
 #include <gltfjson/json_tree_exporter.h>
 #include <grapho/gl3/error_check.h>
 #include <grapho/gl3/texture.h>
-#include <queue>
 #include <vrm/fileutil.h>
 #include <vrm/image.h>
 #include <vrm/importer.h>
@@ -40,8 +40,6 @@ FileWatcher g_watcher;
 std::filesystem::path g_shaderDir;
 
 const auto WINDOW_TITLE = "VrmEditor - " PACKAGE_VERSION;
-
-std::queue<app::Task> g_tasks;
 
 std::filesystem::path g_ini;
 
@@ -260,11 +258,7 @@ public:
     std::optional<libvrm::Time> lastTime;
     while (true) {
 
-      if (!g_tasks.empty()) {
-        // dequeue task
-        g_tasks.front()();
-        g_tasks.pop();
-      }
+      AsioTask::Instance().Poll();
 
       auto info = Platform::Instance().NewFrame();
       if (!info) {
@@ -493,27 +487,21 @@ App g_app;
 namespace app {
 
 void
-PostTask(const Task& task)
-{
-  g_tasks.push(task);
-}
-
-void
 TaskLoadModel(const std::filesystem::path& path)
 {
-  PostTask([path]() { g_app.LoadModel(path); });
+  AsioTask::Instance().PostTask([path]() { g_app.LoadModel(path); });
 }
 
 void
 TaskLoadPath(const std::filesystem::path& path)
 {
-  PostTask([path]() { g_app.LoadPath(path); });
+  AsioTask::Instance().PostTask([path]() { g_app.LoadPath(path); });
 }
 
 void
 TaskLoadHdr(const std::filesystem::path& hdr)
 {
-  PostTask([hdr]() { g_app.LoadHdr(hdr); });
+  AsioTask::Instance().PostTask([hdr]() { g_app.LoadHdr(hdr); });
 }
 
 void

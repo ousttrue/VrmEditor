@@ -1,6 +1,5 @@
 #pragma once
 #include <filesystem>
-#include <functional>
 #include <span>
 
 namespace app {
@@ -8,10 +7,6 @@ namespace app {
 inline const auto DOCKNAME_JSON = "🌳Json";
 inline const auto DOCKNAME_VIEW = "🌳3D-View";
 
-using Task = std::function<void()>;
-
-void
-PostTask(const Task& task);
 void
 TaskLoadModel(const std::filesystem::path& path);
 void
