@@ -5,16 +5,12 @@
 
 # VrmEditor
 
-`VrmEditor` は `vrm` にやや特化した `glTF` ビューワー兼エディターです。
+read, write, edit and animation test.
+
+![vrmeditor](vrmeditor.jpg){w=600px align=center}
 
 ```{toctree}
 :maxdepth: 2
 docks/index
 shader/index
 ```
-
-## Indices and tables
-
-* {ref}`genindex`
-* {ref}`modindex`
-* {ref}`search`
