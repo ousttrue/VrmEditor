@@ -2,6 +2,8 @@
 
 read, write, edit and animation test.
 
+![vrmeditor](./docs/vrmeditor.jpg)
+
 ## features
 
 - [x] glTF-2.0
