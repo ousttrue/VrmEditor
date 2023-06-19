@@ -488,6 +488,14 @@ public:
 
     return true;
   }
+
+  std::string CopyVrmPoseText()
+  {
+    if (!m_runtime) {
+      return "";
+    }
+    return m_runtime->CopyVrmPoseText();
+  }
 };
 App g_app;
 
@@ -594,6 +602,12 @@ bool
 AddAssetDir(std::string_view name, const std::filesystem::path& path)
 {
   return g_app.AddAssetDir({ name.begin(), name.end() }, path);
+}
+
+std::string
+CopyVrmPoseText()
+{
+  return g_app.CopyVrmPoseText();
 }
 
 } // namespace

@@ -173,3 +173,9 @@ Platform::SetWindowSize(int width, int height, bool maximize)
     }
   }
 }
+
+void
+Platform::CopyText(const std::string& text)
+{
+  glfwSetClipboardString(m_window, text.c_str());
+}

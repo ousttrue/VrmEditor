@@ -839,4 +839,16 @@ RuntimeScene::NodeConstraintProcess(const NodeConstraint& constraint,
   }
 }
 
+std::string
+RuntimeScene::CopyVrmPoseText()
+{
+  // check humanoid
+
+  // write T-Pose
+
+  // write current-Pose
+
+  return "text";
+}
+
 } // namespace

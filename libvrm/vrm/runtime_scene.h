@@ -102,6 +102,8 @@ struct RuntimeScene
   void SetHumanPose(const HumanPose& pose);
   void SyncHierarchy();
   void DrawGizmo(IGizmoDrawer* gizmo);
+
+  std::string CopyVrmPoseText();
 };
 
 } // namespace

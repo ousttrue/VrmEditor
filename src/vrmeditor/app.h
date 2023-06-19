@@ -26,4 +26,7 @@ WriteScene(const std::filesystem::path& path);
 bool
 AddAssetDir(std::string_view name, const std::filesystem::path& path);
 
+std::string
+CopyVrmPoseText();
+
 } // namespace

@@ -1,6 +1,7 @@
 #include "dockspace.h"
 #include "app.h"
 #include "config.h"
+#include "platform.h"
 #include <ImGuiFileDialog.h>
 #include <filesystem>
 #include <imgui.h>
@@ -184,6 +185,17 @@ DockSpaceManager::ShowGui()
         ImGui::Separator();
         MenuDocks(DebugDocks);
 
+        ImGui::EndMenu();
+      }
+
+      if (ImGui::BeginMenu("HumanPose")) {
+        if (ImGui::MenuItem("Copy")) {
+          auto humanpose = app::CopyVrmPoseText();
+          // static int s_tmp = 0;
+          // std::stringstream ss;
+          // ss << (s_tmp++);
+          Platform::Instance().CopyText(humanpose);
+        }
         ImGui::EndMenu();
       }
 

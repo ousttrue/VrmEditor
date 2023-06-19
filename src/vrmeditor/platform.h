@@ -43,4 +43,5 @@ public:
   std::tuple<int, int> WindowSize() const;
   bool IsWindowMaximized() const;
   void SetWindowSize(int width, int height, bool maximize);
+  void CopyText(const std::string& text);
 };
