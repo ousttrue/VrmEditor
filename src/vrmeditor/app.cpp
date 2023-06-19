@@ -464,21 +464,28 @@ public:
     return m_lighting->LoadHdr(path);
   }
 
-  bool AddAssetDir(std::string_view name, const std::filesystem::path& path)
+  bool AddAssetDir(const std::string& name, const std::filesystem::path& path)
   {
     if (!std::filesystem::is_directory(path)) {
       return false;
     }
 
-    auto asset = std::make_shared<AssetView>(name, path);
-    asset->Reload();
+    AsioTask::Instance().PostThreadTask<std::shared_ptr<AssetView>>(
+      [name, path]() {
+        auto asset = std::make_shared<AssetView>(name, path);
+        asset->Reload();
+        return asset;
+      },
+      [name, path](auto asset) {
+        auto title =
+          std::string("🎁") + std::string{ name.data(), name.size() };
+        DockSpaceManager::Instance().AddDock(
+          { title, [asset]() { asset->ShowGui(); } },
+          { .ShowDefault = true, .Temporary = true });
 
-    auto title = std::string("🎁") + std::string{ name.data(), name.size() };
-    DockSpaceManager::Instance().AddDock(
-      { title, [asset]() { asset->ShowGui(); } },
-      { .ShowDefault = true, .Temporary = true });
+        PLOG_INFO << title << " => " << path.string();
+      });
 
-    PLOG_INFO << title << " => " << path.string();
     return true;
   }
 };
@@ -586,7 +593,7 @@ WriteScene(const std::filesystem::path& path)
 bool
 AddAssetDir(std::string_view name, const std::filesystem::path& path)
 {
-  return g_app.AddAssetDir(name, path);
+  return g_app.AddAssetDir({ name.begin(), name.end() }, path);
 }
 
 } // namespace
