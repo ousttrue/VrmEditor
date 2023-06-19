@@ -20,8 +20,8 @@ struct NodeMesh
 
 class SkinningManager
 {
-  std::unordered_map<uint32_t, std::shared_ptr<DeformedMesh>> m_deformMap;
   std::unordered_map<uint32_t, std::shared_ptr<BaseMesh>> m_baseMap;
+  std::unordered_map<uint32_t, std::shared_ptr<DeformedMesh>> m_deformMap;
   std::unordered_map<uint32_t, std::shared_ptr<Skin>> m_skinMap;
   std::vector<NodeMesh> m_meshNodes;
 
@@ -41,6 +41,11 @@ public:
     m_baseMap.clear();
     m_deformMap.clear();
     m_skinMap.clear();
+  }
+
+  void PushBaseMesh(const std::shared_ptr<BaseMesh>& mesh)
+  {
+    m_baseMap.insert({ m_baseMap.size(), mesh });
   }
 
   std::shared_ptr<BaseMesh> GetOrCreateBaseMesh(const gltfjson::Root& root,

@@ -54,40 +54,43 @@ struct AnimationViewImpl
     };
     if (grapho::imgui::BeginTableColumns("##_Animations", cols)) {
       grapho::imgui::PrintfBuffer buf;
-      auto root = m_runtime->m_table;
-      for (int i = 0; i < root->m_gltf->Animations.size(); ++i) {
-        auto a = root->m_gltf->Animations[i];
-        ImGui::TableNextRow();
+      if (auto root = m_runtime->m_table) {
+        if (auto gltf = root->m_gltf) {
+          for (int i = 0; i < gltf->Animations.size(); ++i) {
+            auto a = gltf->Animations[i];
+            ImGui::TableNextRow();
 
-        ImGui::TableNextColumn();
-        ImGui::Text("%d", i);
+            ImGui::TableNextColumn();
+            ImGui::Text("%d", i);
 
-        ImGui::TableNextColumn();
-        auto name = a.NameString();
-        // ImGui::Text("%s", (const char*)name.c_str());
-        if (ImGui::Selectable(
-              buf.Printf("%s##_animation_%d", (const char*)name.c_str(), i),
-              i == m_selected)) {
-          m_selected = i;
-          m_runtime->SetActiveAnimation(i);
-        }
+            ImGui::TableNextColumn();
+            auto name = a.NameString();
+            // ImGui::Text("%s", (const char*)name.c_str());
+            if (ImGui::Selectable(
+                  buf.Printf("%s##_animation_%d", (const char*)name.c_str(), i),
+                  i == m_selected)) {
+              m_selected = i;
+              m_runtime->SetActiveAnimation(i);
+            }
 
-        ImGui::TableNextColumn();
-        float duration = 0;
-        for (auto s : a.Samplers) {
-          if (auto input = s.InputId()) {
-            if (auto times = root->m_bin.GetAccessorBytes<float>(*root->m_gltf,
-                                                                 (int)*input)) {
-              if (times->size()) {
-                auto last = times->back();
-                if (last > duration) {
-                  duration = last;
+            ImGui::TableNextColumn();
+            float duration = 0;
+            for (auto s : a.Samplers) {
+              if (auto input = s.InputId()) {
+                if (auto times = root->m_bin.GetAccessorBytes<float>(
+                      *gltf, (int)*input)) {
+                  if (times->size()) {
+                    auto last = times->back();
+                    if (last > duration) {
+                      duration = last;
+                    }
+                  }
                 }
               }
             }
+            ImGui::Text("%f", duration);
           }
         }
-        ImGui::Text("%f", duration);
       }
       ImGui::EndTable();
     }
