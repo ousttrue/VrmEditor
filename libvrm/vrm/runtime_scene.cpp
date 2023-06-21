@@ -3,6 +3,7 @@
 #include "dmath.h"
 #include "expression.h"
 #include "gizmo.h"
+#include "node_state.h"
 #include "runtime_node.h"
 #include "spring_collision.h"
 #include <gltfjson.h>
@@ -45,7 +46,7 @@ ParseVrm0(RuntimeScene* scene, const gltfjson::vrm0::VRM& VRM)
         back.mesh = *bind.MeshId();
         back.index = *bind.MorphIndexId();
         back.weight = *bind.Weight() *= 0.01f;
-        back.Node = FindNode(scene->m_table, back.mesh);
+        back.Node = FindNode(scene->m_base, back.mesh);
       }
     }
   }
@@ -115,7 +116,7 @@ AddExpression(RuntimeScene* scene,
     for (auto morph : expression->MorphTargetBinds) {
       added->morphBinds.push_back({});
       auto& back = added->morphBinds.back();
-      back.Node = scene->m_table->m_nodes[*morph.NodeId()];
+      back.Node = scene->m_base->m_nodes[*morph.NodeId()];
       back.index = *morph.IndexId();
       back.weight = *morph.Weight();
     }
@@ -130,7 +131,7 @@ static void
 ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
 {
   if (auto VRMC_vrm =
-        scene->m_table->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
+        scene->m_base->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
     if (auto expressions = VRMC_vrm->Expressions()) {
       scene->m_expressions = std::make_shared<Expressions>();
       if (auto preset = expressions->Preset()) {
@@ -156,7 +157,7 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
   }
 
   if (auto VRMC_springBone =
-        scene->m_table->m_gltf
+        scene->m_base->m_gltf
           ->GetExtension<gltfjson::vrm1::VRMC_springBone>()) {
     // for (auto collider : VRMC_springBone->Colliders) {
     //   auto ptr = std::make_shared<SpringCollider>();
@@ -214,7 +215,7 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
     }
   }
 
-  auto& nodes = scene->m_table->m_gltf->Nodes;
+  auto& nodes = scene->m_base->m_gltf->Nodes;
   for (size_t i = 0; i < nodes.size(); ++i) {
     auto node = nodes[i];
     auto ptr = scene->m_nodes[i];
@@ -353,7 +354,7 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
 }
 
 RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& table)
-  : m_table(table)
+  : m_base(table)
 {
   m_timeline = std::make_shared<Timeline>();
   Reset();
@@ -414,13 +415,13 @@ RuntimeScene::Reset()
     nodeMap;
 
   // COPY hierarchy
-  for (auto& node : m_table->m_nodes) {
+  for (auto& node : m_base->m_nodes) {
     auto runtime = std::make_shared<RuntimeNode>(node);
     nodeMap.insert({ node, runtime });
     m_nodes.push_back(runtime);
   }
 
-  for (auto& node : m_table->m_nodes) {
+  for (auto& node : m_base->m_nodes) {
     auto runtime = nodeMap[node];
     if (auto parent = node->Parent.lock()) {
       auto runtimeParent = nodeMap[parent];
@@ -472,9 +473,9 @@ RuntimeScene::GetRuntimeSpringCollision(
 }
 
 void
-RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
+RuntimeScene::UpdateNodeStates(std::span<NodeState> nodestates)
 {
-  if (!m_table->m_gltf) {
+  if (!m_base->m_gltf) {
     return;
   }
 
@@ -482,7 +483,7 @@ RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
   for (int i = 0; i < m_nodes.size(); ++i) {
     auto found = m_moprhWeigts.find(i);
     if (found != m_moprhWeigts.end()) {
-      auto& item = drawables[i];
+      auto& item = nodestates[i];
       auto& weights = found->second;
       for (int j = 0; j < weights.size(); ++j) {
         item.MorphMap[j] = weights[j];
@@ -518,7 +519,7 @@ RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
 
   if (m_expressions) {
     // VRM0 expression to morphTarget
-    auto nodeToIndex = [nodes = m_table->m_nodes, expressions = m_expressions](
+    auto nodeToIndex = [nodes = m_base->m_nodes, expressions = m_expressions](
                          const std::shared_ptr<Node>& node) {
       for (uint32_t i = 0; i < nodes.size(); ++i) {
         if (node == nodes[i]) {
@@ -528,14 +529,14 @@ RuntimeScene::UpdateDrawables(std::span<DrawItem> drawables)
       return (uint32_t)-1;
     };
     for (auto& [k, v] : m_expressions->EvalMorphTargetMap(nodeToIndex)) {
-      auto& item = drawables[k.NodeIndex];
+      auto& item = nodestates[k.NodeIndex];
       item.MorphMap[k.MorphIndex] = v;
     }
   }
 
-  for (uint32_t i = 0; i < drawables.size(); ++i) {
+  for (uint32_t i = 0; i < nodestates.size(); ++i) {
     // model matrix
-    DirectX::XMStoreFloat4x4(&drawables[i].Matrix, m_nodes[i]->WorldMatrix());
+    DirectX::XMStoreFloat4x4(&nodestates[i].Matrix, m_nodes[i]->WorldMatrix());
   }
 }
 

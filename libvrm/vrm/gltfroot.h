@@ -21,12 +21,6 @@ enum class ModelType
   VrmA,
 };
 
-struct DrawItem
-{
-  DirectX::XMFLOAT4X4 Matrix;
-  std::unordered_map<uint32_t, float> MorphMap;
-};
-
 struct BoundingBox
 {
   DirectX::XMFLOAT3 Min{
@@ -51,6 +45,8 @@ struct BoundingBox
   }
 };
 
+struct NodeState;
+
 struct GltfRoot
 {
   ModelType m_type = ModelType::Gltf;
@@ -61,8 +57,9 @@ struct GltfRoot
   std::vector<std::shared_ptr<Node>> m_nodes;
   std::vector<std::shared_ptr<Node>> m_roots;
   std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
+
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
-  std::vector<DrawItem> m_drawables;
+  std::vector<NodeState> m_drawables;
 
   GltfRoot();
   ~GltfRoot();
@@ -87,7 +84,7 @@ struct GltfRoot
   std::shared_ptr<Node> GetBoneNode(HumanBones bone);
   BoundingBox GetBoundingBox() const;
   void InitializeNodes();
-  std::span<DrawItem> Drawables();
+  std::span<NodeState> NodeStates();
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
 };
 

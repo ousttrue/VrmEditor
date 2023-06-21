@@ -54,11 +54,11 @@ struct ScenePreviewImpl
 
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
-    m_title = runtime->m_table->m_title;
+    m_title = runtime->m_base->m_title;
     m_show = [runtime, renderer = m_renderer](const grapho::OrbitView& view) {
       renderer->RenderRuntime(runtime, view);
     };
-    auto [min, max] = runtime->m_table->GetBoundingBox();
+    auto [min, max] = runtime->m_base->GetBoundingBox();
     m_view->Fit(min, max);
     if (m_env) {
       m_env->SetShadowHeight(min.y);

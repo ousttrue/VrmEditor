@@ -50,7 +50,7 @@ public:
       return;
     }
 
-    libvrm::bvh::InitializeSceneFromBvh(m_scene->m_table, m_bvh);
+    libvrm::bvh::InitializeSceneFromBvh(m_scene->m_base, m_bvh);
     m_scene->Reset();
     m_scene->m_roots[0]->UpdateShapeInstanceRecursive(
       DirectX::XMMatrixIdentity(),

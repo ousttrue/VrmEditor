@@ -14,7 +14,7 @@ UdpNode::UdpNode(int id, std::string_view name)
 {
   auto table = std::make_shared<libvrm::GltfRoot>();
   m_scene = std::make_shared<libvrm::RuntimeScene>(table);
-  m_scene->m_table->m_title = "UDP";
+  m_scene->m_base->m_title = "UDP";
 
   // update preview
   m_preview = std::make_shared<ScenePreview>();
@@ -25,7 +25,7 @@ UdpNode::UdpNode(int id, std::string_view name)
 
   // update scene
   auto callback = [this](std::span<const uint8_t> data) {
-    libvrm::srht::UpdateScene(m_scene->m_table, data);
+    libvrm::srht::UpdateScene(m_scene->m_base, data);
   };
 
   m_udp->Start(54345, callback);
@@ -54,7 +54,7 @@ UdpNode::DrawContent()
   };
   auto sc = ImGui::GetCursorScreenPos();
   m_preview->ShowScreenRect(
-    m_scene->m_table->m_title.c_str(), color, sc.x, sc.y, 300, 300);
+    m_scene->m_base->m_title.c_str(), color, sc.x, sc.y, 300, 300);
 }
 
 }

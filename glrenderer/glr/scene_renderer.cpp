@@ -62,9 +62,9 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  auto drawables = scene->Drawables();
+  auto nodestates = scene->NodeStates();
   auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
-    *scene->m_gltf, scene->m_bin, drawables);
+    *scene->m_gltf, scene->m_bin, nodestates);
   RenderScene(*m_env, *scene->m_gltf, scene->m_bin, nodeMeshes, m_settings);
 
   if (m_settings->ShowLine) {
@@ -122,15 +122,15 @@ SceneRenderer::RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  auto drawables = scene->m_table->Drawables();
-  if (drawables.size()) {
-    scene->UpdateDrawables(drawables);
+  auto nodestates = scene->m_base->NodeStates();
+  if (nodestates.size()) {
+    scene->UpdateNodeStates(nodestates);
     m_settings->NextSpringDelta = {};
     auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
-      *scene->m_table->m_gltf, scene->m_table->m_bin, drawables);
+      *scene->m_base->m_gltf, scene->m_base->m_bin, nodestates);
     RenderScene(*m_env,
-                *scene->m_table->m_gltf,
-                scene->m_table->m_bin,
+                *scene->m_base->m_gltf,
+                scene->m_base->m_bin,
                 nodeMeshes,
                 m_settings);
   }
@@ -147,7 +147,7 @@ SceneRenderer::RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
       m_cuber->Instances.push_back({
         .Matrix = m,
       });
-    } 
+    }
     m_cuber->Render(*m_env);
   }
 

@@ -35,7 +35,7 @@ BvhNode::SetBvh(const std::shared_ptr<libvrm::bvh::Bvh>& bvh,
     PLOG_WARNING << "humanoid map not found";
   }
 
-  libvrm::bvh::InitializeSceneFromBvh(m_scene->m_table, bvh, map);
+  libvrm::bvh::InitializeSceneFromBvh(m_scene->m_base, bvh, map);
   m_scene->Reset();
 }
 
@@ -67,7 +67,7 @@ BvhNode::DrawContent()
   };
 
   m_preview->ShowScreenRect(
-    m_scene->m_table->m_title.c_str(), color, sc.x, sc.y, 300, 300);
+    m_scene->m_base->m_title.c_str(), color, sc.x, sc.y, 300, 300);
 }
 
 }

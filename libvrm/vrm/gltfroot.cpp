@@ -1,6 +1,7 @@
 #include "gltfroot.h"
 #include "dmath.h"
 #include "node.h"
+#include "node_state.h"
 #include "spring_bone.h"
 #include <DirectXMath.h>
 #include <array>
@@ -84,8 +85,8 @@ GltfRoot::InitializeNodes()
   }
 }
 
-std::span<DrawItem>
-GltfRoot::Drawables()
+std::span<NodeState>
+GltfRoot::NodeStates()
 {
   if (m_gltf) {
     m_drawables.resize(m_nodes.size());

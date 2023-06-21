@@ -321,7 +321,7 @@ public:
       ss.write(src.data(), src.size());
     };
     gltfjson::tree::Exporter exporter{ write };
-    exporter.Export(m_runtime->m_table->m_gltf->m_json);
+    exporter.Export(m_runtime->m_base->m_gltf->m_json);
     auto str = ss.str();
 
     std::ofstream os(path, std::ios::binary);
@@ -331,7 +331,7 @@ public:
 
     return gltfjson::Glb{
       .JsonChunk = { (const uint8_t*)str.data(), str.size() },
-      .BinChunk = m_runtime->m_table->m_bin.Bytes,
+      .BinChunk = m_runtime->m_base->m_bin.Bytes,
     }
       .WriteTo(os);
     return true;
@@ -430,7 +430,7 @@ public:
       auto scene = SetGltf(*gltf);
 
       // update view position
-      auto bb = scene->m_table->GetBoundingBox();
+      auto bb = scene->m_base->GetBoundingBox();
       // m_staticView->Fit(bb.Min, bb.Max);
       // m_runtimeView->Fit(bb.Min, bb.Max);
       // m_env->SetShadowHeight(bb.Min.y);

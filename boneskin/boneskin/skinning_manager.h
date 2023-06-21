@@ -6,7 +6,7 @@
 #include <span>
 
 namespace libvrm {
-struct DrawItem;
+struct NodeState;
 }
 
 namespace boneskin {
@@ -63,7 +63,7 @@ public:
   std::span<const NodeMesh> ProcessSkin(
     const gltfjson::Root& root,
     const gltfjson::Bin& bin,
-    std::span<const libvrm::DrawItem> drawables);
+    std::span<const libvrm::NodeState> drawables);
 };
 
 } // namespace

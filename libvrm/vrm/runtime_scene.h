@@ -25,7 +25,7 @@ _IndexOf(std::span<const T> values, const T& target)
 
 struct RuntimeScene
 {
-  std::shared_ptr<GltfRoot> m_table;
+  std::shared_ptr<GltfRoot> m_base;
   std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
   std::shared_ptr<RuntimeNode> m_selected;
@@ -77,7 +77,7 @@ struct RuntimeScene
   std::shared_ptr<RuntimeSpringCollision> GetRuntimeSpringCollision(
     const std::shared_ptr<SpringBone>& springBone);
 
-  void UpdateDrawables(std::span<DrawItem> drawables);
+  void UpdateNodeStates(std::span<NodeState> nodestates);
 
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();

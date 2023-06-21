@@ -15,7 +15,7 @@ class Cubemap;
 namespace libvrm {
 struct BaseMesh;
 struct DeformedMesh;
-struct DrawItem;
+struct NodeState;
 class Image;
 }
 namespace cuber {

@@ -54,7 +54,7 @@ struct AnimationViewImpl
     };
     if (grapho::imgui::BeginTableColumns("##_Animations", cols)) {
       grapho::imgui::PrintfBuffer buf;
-      if (auto root = m_runtime->m_table) {
+      if (auto root = m_runtime->m_base) {
         if (auto gltf = root->m_gltf) {
           for (int i = 0; i < gltf->Animations.size(); ++i) {
             auto a = gltf->Animations[i];
