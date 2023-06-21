@@ -876,13 +876,51 @@ RuntimeScene::CopyVrmPoseText()
       }
       gltf.Nodes.push_back(node);
     }
-    // for (size_t i = 0; i < skeleton->Bones.size(); ++i) {
-    //   // parent TRS
-    // }
+
+    // VRMC_vrm_animation
+    auto VRMC_vrm_animation =
+      gltf.GetOrCreateExtension<gltfjson::vrm1::VRMC_vrm_animation>();
+    auto vrmaHumanoid = VRMC_vrm_animation.m_json->Add(
+      u8"humanoid", gltfjson::tree::ObjectValue());
+    {
+      auto vrmaHumanBones =
+        vrmaHumanoid->Add(u8"humanBones", gltfjson::tree::ObjectValue());
+
+      for (int i = 0; i < skeleton->Bones.size(); ++i) {
+        auto& bone = skeleton->Bones[i];
+        auto name = HumanBoneToName(bone.HumanBone);
+        auto vrmaHumanBone = vrmaHumanBones->Add((const char8_t*)name,
+                                                 gltfjson::tree::ObjectValue());
+        vrmaHumanBone->Add(u8"node", (float)i);
+      }
+    }
 
     auto pose = UpdateHumanPose();
     if (pose.Bones.size()) {
-      // current pose
+      // {
+      //   "translation": [x, y, z],
+      //   "hips": [x, y, z, w],
+      //   "spine": [x, y, z, w],
+      //   "chest": [x, y, z, w],
+      //   ...
+      // }
+      auto vrmaFrame =
+        vrmaHumanoid->Add(u8"frame", gltfjson::tree::ObjectValue());
+
+      auto base = m_base->GetBoneNode(HumanBones::hips)
+                    ->WorldInitialTransform.Translation;
+      std::array<float, 3> pos = {
+        pose.RootPosition.x + base.x,
+        pose.RootPosition.y + base.y,
+        pose.RootPosition.z + base.z,
+      };
+
+      vrmaFrame->Add(u8"translation", false)->Set(pos);
+      for (int i = 0; i < pose.Bones.size(); ++i) {
+        auto name = HumanBoneToName(pose.Bones[i]);
+        vrmaFrame->Add((const char8_t*)name, false)
+          ->Set(*((const std::array<float, 4>*)&pose.Rotations[i]));
+      }
     }
 
     std::stringstream ss;
