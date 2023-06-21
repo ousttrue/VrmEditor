@@ -84,20 +84,23 @@ struct ScenePreviewImpl
   void ShowFullWindow(const char* title, const float color[4])
   {
     auto pos = ImGui::GetWindowPos();
-    pos.y += ImGui::GetFrameHeight();
+    // pos.y += ImGui::GetFrameHeight();
     auto size = ImGui::GetContentRegionAvail();
     ShowScreenRect(title, color, pos.x, pos.y, size.x, size.y);
   }
 
   void ShowGui()
   {
-    ImGui::Checkbox("grid", &m_renderer->m_settings->ShowLine);
-    ImGui::SameLine();
-    ImGui::Checkbox("mesh", &m_renderer->m_settings->ShowMesh);
-    ImGui::SameLine();
-    ImGui::Checkbox("bone", &m_renderer->m_settings->ShowCuber);
-    ImGui::SameLine();
-    ImGui::Checkbox("shadow", &m_renderer->m_settings->ShowShadow);
+    // if (ImGui::BeginMenuBar()) {
+      ImGui::Checkbox("grid", &m_renderer->m_settings->ShowLine);
+      ImGui::SameLine();
+      ImGui::Checkbox("mesh", &m_renderer->m_settings->ShowMesh);
+      ImGui::SameLine();
+      ImGui::Checkbox("bone", &m_renderer->m_settings->ShowCuber);
+      ImGui::SameLine();
+      ImGui::Checkbox("shadow", &m_renderer->m_settings->ShowShadow);
+      // ImGui::EndMenuBar();
+    // }
     ShowFullWindow(m_title.c_str(), m_clear.data());
   }
 };
@@ -150,8 +153,8 @@ ScenePreview::ShowGui()
   m_impl->ShowGui();
 }
 
-
-std::shared_ptr<glr::ViewSettings> ScenePreview::Settings()
+std::shared_ptr<glr::ViewSettings>
+ScenePreview::Settings()
 {
   return m_impl->m_settings;
 }

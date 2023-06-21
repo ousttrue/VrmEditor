@@ -85,46 +85,60 @@ public:
       []() { ImLogger::Instance().Draw(); },
     });
 
-    DockSpaceManager::Instance().AddDock(
-      {
-        app::DOCKNAME_JSON,
-        [json = m_json]() mutable {
-          json->ShowSelector(Gui::Instance().Indent());
+    DockSpaceManager::Instance()
+      .AddDock(
+        {
+          app::DOCKNAME_JSON,
+          [json = m_json]() mutable {
+            json->ShowSelector(Gui::Instance().Indent());
+          },
         },
-      },
-      { .ShowDefault = true });
+        { .ShowDefault = true })
+      .NoPadding();
 
-    DockSpaceManager::Instance().AddDock(
-      {
-        app::DOCKNAME_VIEW,
-        [preview = m_preview]() { preview->ShowGui(); },
-      },
-      { .ShowDefault = true });
+    DockSpaceManager::Instance()
+      .AddDock(
+        {
+          app::DOCKNAME_VIEW,
+          [preview = m_preview]() { preview->ShowGui(); },
+        },
+        { .ShowDefault = true })
+      .NoScrollBar()
+      .NoPadding();
 
-    DockSpaceManager::Instance().AddDock({
-      "🎬Pose",
-      [runtime = m_animationPreview]() { runtime->ShowGui(); },
-    });
+    DockSpaceManager::Instance()
+      .AddDock({
+        "🎬Pose",
+        [runtime = m_animationPreview]() { runtime->ShowGui(); },
+      })
+      .NoScrollBar()
+      .NoPadding();
 
-    DockSpaceManager::Instance().AddDock({
-      "🎬hierarchy",
-      [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
-    });
+    DockSpaceManager::Instance()
+      .AddDock({
+        "🎬hierarchy",
+        [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
+      })
+      .NoPadding();
 
-    DockSpaceManager::Instance().AddDock({
-      "🎬Animation",
-      [animation = m_animation]() { animation->ShowGui(); },
-    });
+    DockSpaceManager::Instance()
+      .AddDock({
+        "🎬Animation",
+        [animation = m_animation]() { animation->ShowGui(); },
+      })
+      .NoPadding();
 
-    DockSpaceManager::Instance().AddDock({
-      "💡Lighting",
-      [lighting = m_lighting]() { lighting->ShowGui(); },
-    });
+    DockSpaceManager::Instance()
+      .AddDock({
+        "💡Lighting",
+        [lighting = m_lighting]() { lighting->ShowGui(); },
+      })
+      .NoPadding();
 
-    DockSpaceManager::Instance().AddDock({
-      "🔍GL impl",
-      [=]() { m_gl3gui->ShowSelectImpl(); },
-    });
+    // DockSpaceManager::Instance().AddDock({
+    //   "🔍GL impl",
+    //   [=]() { m_gl3gui->ShowSelectImpl(); },
+    // });
 
     DockSpaceManager::Instance().AddDock({
       "🔍GL selector",
@@ -155,8 +169,8 @@ public:
       { "🏃humanoid-pose",
         []() { humanpose::HumanPoseStream::Instance().ShowGui(); } });
 
-    DockSpaceManager::Instance().AddDock(
-      { "🏃expression", [vrm = m_vrm]() { vrm->ShowExpression(); } });
+    // DockSpaceManager::Instance().AddDock(
+    //   { "🏃expression", [vrm = m_vrm]() { vrm->ShowExpression(); } });
 
     DockSpaceManager::Instance().AddDock(
       { "🏃vrm", [vrm = m_vrm]() { vrm->Show(); } });
