@@ -3,12 +3,14 @@
 #include "dmath.h"
 #include "expression.h"
 #include "gizmo.h"
+#include "humanoid/humanskeleton.h"
 #include "node_state.h"
 #include "runtime_node.h"
 #include "spring_collision.h"
 #include <gltfjson.h>
 #include <gltfjson/gltf_typing_vrm0.h>
 #include <gltfjson/gltf_typing_vrm1.h>
+#include <gltfjson/json_tree_exporter.h>
 
 namespace libvrm {
 
@@ -843,13 +845,57 @@ RuntimeScene::NodeConstraintProcess(const NodeConstraint& constraint,
 std::string
 RuntimeScene::CopyVrmPoseText()
 {
-  // check humanoid
+  if (auto skeleton = m_base->GetHumanSkeleton()) {
+    auto gltf = gltfjson::gltf::CreateEmpty();
 
-  // write T-Pose
+    // T-pose
+    for (size_t i = 0; i < skeleton->Bones.size(); ++i) {
+      auto& bone = skeleton->Bones[i];
+      auto name = HumanBoneToName(bone.HumanBone);
+      auto node = gltfjson::gltf::CreateNode();
+      node.m_json->Add(u8"name", std::u8string((const char8_t*)name));
+      if (i == 0) {
+        // root
+        if (auto ptr = node.m_json->Add(u8"translation", false)) {
+          ptr->Set(bone.WorldPosition);
+        }
+        if (auto ptr = node.m_json->Add(u8"rotation", false)) {
+          ptr->Set(bone.WorldRotation);
+        }
+        gltf.Scenes[0].Nodes.m_json->Add((float)0);
+      } else {
+        gltf.Nodes[bone.ParentIndex].Children.m_json->Add((float)i);
+        auto& parent = skeleton->Bones[bone.ParentIndex];
+        auto [pos, rot] = bone.ToLocal(parent);
+        if (auto ptr = node.m_json->Add(u8"translation", false)) {
+          ptr->Set(pos);
+        }
+        if (auto ptr = node.m_json->Add(u8"rotation", false)) {
+          ptr->Set(rot);
+        }
+      }
+      gltf.Nodes.push_back(node);
+    }
+    // for (size_t i = 0; i < skeleton->Bones.size(); ++i) {
+    //   // parent TRS
+    // }
 
-  // write current-Pose
+    auto pose = UpdateHumanPose();
+    if (pose.Bones.size()) {
+      // current pose
+    }
 
-  return "text";
+    std::stringstream ss;
+    gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+      ss.write(src.data(), src.size());
+    };
+    gltfjson::tree::Exporter exporter{ write };
+    exporter.Export(gltf.m_json);
+
+    return ss.str();
+  }
+
+  return {};
 }
 
 } // namespace

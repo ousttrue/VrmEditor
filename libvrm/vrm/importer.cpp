@@ -90,7 +90,8 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
       }
     }
   }
-  {
+
+  if (scene->m_gltf->Scenes.size()) {
     auto _scene = scene->m_gltf->Scenes[0];
     for (auto node : _scene.Nodes) {
       scene->m_roots.push_back(scene->m_nodes[node]);

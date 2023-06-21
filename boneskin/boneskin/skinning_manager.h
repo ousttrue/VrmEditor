@@ -45,7 +45,7 @@ public:
 
   void PushBaseMesh(const std::shared_ptr<BaseMesh>& mesh)
   {
-    m_baseMap.insert({ m_baseMap.size(), mesh });
+    m_baseMap.insert({ (uint32_t)m_baseMap.size(), mesh });
   }
 
   std::shared_ptr<BaseMesh> GetOrCreateBaseMesh(const gltfjson::Root& root,

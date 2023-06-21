@@ -24,6 +24,7 @@ libvrm_lib = static_library(
         'vrm/bvh/bvh.cpp',
         'vrm/bvh/bvhframe.cpp',
         'vrm/bvh/bvhscene.cpp',
+        'vrm/humanoid/humanskeleton.cpp',
     ],
     include_directories: libvrm_inc,
     dependencies: libvrm_deps,

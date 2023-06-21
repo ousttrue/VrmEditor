@@ -1,5 +1,6 @@
 #include "gltfroot.h"
 #include "dmath.h"
+#include "humanoid/humanskeleton.h"
 #include "node.h"
 #include "node_state.h"
 #include "spring_bone.h"
@@ -120,6 +121,33 @@ GltfRoot::ShapeMatrices()
                              shape * node->WorldInitialMatrix());
   }
   return m_shapeMatrices;
+}
+
+std::shared_ptr<HumanSkeleton>
+GltfRoot::GetHumanSkeleton()
+{
+  auto skeleton = std::make_shared<HumanSkeleton>();
+  std::unordered_map<std::shared_ptr<Node>, uint32_t> indexMap;
+  for (auto& node : m_nodes) {
+    if (auto humanoid = node->Humanoid) {
+      auto index = (uint32_t)skeleton->Bones.size();
+      indexMap.insert({ node, index });
+      skeleton->Bones.push_back({
+        *humanoid,
+        node->WorldInitialTransform.Translation,
+        node->WorldInitialTransform.Rotation,
+      });
+      for (auto parent = node->Parent.lock(); parent;
+           parent = parent->Parent.lock()) {
+        auto found = indexMap.find(parent);
+        if (found != indexMap.end()) {
+          skeleton->Bones.back().ParentIndex = found->second;
+          break;
+        }
+      }
+    }
+  }
+  return skeleton;
 }
 
 } // namespace
