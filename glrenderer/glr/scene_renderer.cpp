@@ -83,67 +83,71 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
   }
 
   // manipulator
-  // if (auto node = m_selection->selected.lock()) {
-  //   // TODO: conflict mouse event(left) with ImageButton
-  //   DirectX::XMFLOAT4X4 m;
-  //   DirectX::XMStoreFloat4x4(&m, node->WorldInitialMatrix());
-  //   ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-  //   ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
-  //   if (auto humanoid = node->Humanoid) {
-  //     if (*humanoid == libvrm::HumanBones::hips) {
-  //       operation = operation | ImGuizmo::TRANSLATE;
-  //     }
-  //   } else {
-  //     operation = operation | ImGuizmo::TRANSLATE;
-  //   }
-  //   if (ImGuizmo::Manipulate(&m_env->ViewMatrix._11,
-  //                            &m_env->ProjectionMatrix._11,
-  //                            operation,
-  //                            ImGuizmo::LOCAL,
-  //                            (float*)&m,
-  //                            nullptr,
-  //                            nullptr,
-  //                            nullptr,
-  //                            nullptr)) {
-  //     // decompose feedback
-  //     node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
-  //     node->CalcWorldInitialMatrix(true);
-  //   }
-  //   ImGuizmo::GetContext().mAllowActiveHoverItem = false;
-  // }
+  if (auto node = scene->m_selected) {
+    // TODO: conflict mouse event(left) with ImageButton
+    ImGuizmo::SetID((int)node.get());
+    DirectX::XMFLOAT4X4 m;
+    DirectX::XMStoreFloat4x4(&m, node->WorldInitialMatrix());
+    ImGuizmo::GetContext().mAllowActiveHoverItem = true;
+    ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
+    if (auto humanoid = node->Humanoid) {
+      if (*humanoid == libvrm::HumanBones::hips) {
+        operation = operation | ImGuizmo::TRANSLATE;
+      }
+    } else {
+      operation = operation | ImGuizmo::TRANSLATE;
+    }
+    if (ImGuizmo::Manipulate(&m_env->ViewMatrix._11,
+                             &m_env->ProjectionMatrix._11,
+                             operation,
+                             ImGuizmo::LOCAL,
+                             (float*)&m,
+                             nullptr,
+                             nullptr,
+                             nullptr,
+                             nullptr)) {
+      // decompose feedback
+      node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
+      node->CalcWorldInitialMatrix(true);
+
+      scene->RaiseSceneUpdated();
+    }
+    ImGuizmo::GetContext().mAllowActiveHoverItem = false;
+  }
 }
 
 void
-SceneRenderer::RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
-                             const grapho::OrbitView& view) const
+SceneRenderer::RenderRuntime(
+  const std::shared_ptr<libvrm::RuntimeScene>& runtime,
+  const grapho::OrbitView& view) const
 {
   view.Update(&m_env->ProjectionMatrix._11, &m_env->ViewMatrix._11);
   m_env->CameraPosition = view.Position;
   m_env->Resize(view.Viewport.Width, view.Viewport.Height);
   glr::ClearRendertarget(*m_env);
 
-  auto nodestates = scene->m_base->NodeStates();
+  auto nodestates = runtime->m_base->NodeStates();
   if (nodestates.size()) {
-    scene->UpdateNodeStates(nodestates);
+    runtime->UpdateNodeStates(nodestates);
     m_settings->NextSpringDelta = {};
     auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
-      *scene->m_base->m_gltf, scene->m_base->m_bin, nodestates);
+      *runtime->m_base->m_gltf, runtime->m_base->m_bin, nodestates);
     RenderScene(*m_env,
-                *scene->m_base->m_gltf,
-                scene->m_base->m_bin,
+                *runtime->m_base->m_gltf,
+                runtime->m_base->m_bin,
                 nodeMeshes,
                 m_settings);
   }
 
   if (m_settings->ShowLine) {
-    scene->DrawGizmo(m_gizmo.get());
+    runtime->DrawGizmo(m_gizmo.get());
     glr::RenderLine(*m_env, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
 
   if (m_settings->ShowCuber) {
     m_cuber->Instances.clear();
-    for (auto m : scene->ShapeMatrices()) {
+    for (auto m : runtime->ShapeMatrices()) {
       m_cuber->Instances.push_back({
         .Matrix = m,
       });
@@ -152,8 +156,9 @@ SceneRenderer::RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
   }
 
   // manipulator
-  if (auto node = scene->m_selected) {
+  if (auto node = runtime->m_selected) {
     //   // TODO: conflict mouse event(left) with ImageButton
+    ImGuizmo::SetID((int)node.get());
     DirectX::XMFLOAT4X4 m;
     DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
     ImGuizmo::GetContext().mAllowActiveHoverItem = true;

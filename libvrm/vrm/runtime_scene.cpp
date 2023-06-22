@@ -375,6 +375,13 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& table)
       }
     }
   }
+
+  table->m_sceneUpdated.push_back([=](const auto&) {
+    for (auto& root : m_roots) {
+      root->CalcWorldMatrix(true);
+    }
+    // Reset();
+  });
 }
 
 void
@@ -412,6 +419,7 @@ RuntimeScene::Reset()
 {
   m_nodes.clear();
   m_roots.clear();
+  m_selected = nullptr;
 
   std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<RuntimeNode>>
     nodeMap;

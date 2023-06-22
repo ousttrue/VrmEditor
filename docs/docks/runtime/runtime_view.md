@@ -1,4 +1,4 @@
-# 🎬Pose
+# 🎬RuntimeView
 
 アニメーションの動作確認です。
 

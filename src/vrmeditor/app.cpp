@@ -81,7 +81,7 @@ public:
   void ResetDock()
   {
     DockSpaceManager::Instance().AddDock({
-      "📜logger",
+      "📜Log",
       []() { ImLogger::Instance().Draw(); },
     });
 
@@ -108,17 +108,17 @@ public:
 
     DockSpaceManager::Instance()
       .AddDock({
-        "🎬Pose",
-        [runtime = m_animationPreview]() { runtime->ShowGui(); },
+        "🌳Hierarchy",
+        [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
       })
-      .NoScrollBar()
       .NoPadding();
 
     DockSpaceManager::Instance()
       .AddDock({
-        "🎬hierarchy",
-        [hierarchy = m_hierarchy]() { hierarchy->ShowGui(); },
+        "🎬RuntimeView",
+        [runtime = m_animationPreview]() { runtime->ShowGui(); },
       })
+      .NoScrollBar()
       .NoPadding();
 
     DockSpaceManager::Instance()
@@ -166,14 +166,14 @@ public:
 
     // ImTimeline::Create(addDock, "[animation] timeline", m_timeline);
     DockSpaceManager::Instance().AddDock(
-      { "🏃humanoid-pose",
+      { "🏃Humanoid-Input",
         []() { humanpose::HumanPoseStream::Instance().ShowGui(); } });
 
     // DockSpaceManager::Instance().AddDock(
     //   { "🏃expression", [vrm = m_vrm]() { vrm->ShowExpression(); } });
 
     DockSpaceManager::Instance().AddDock(
-      { "🏃vrm", [vrm = m_vrm]() { vrm->Show(); } });
+      { "🏃Vrm", [vrm = m_vrm]() { vrm->Show(); } });
   }
 
   std::shared_ptr<libvrm::RuntimeScene> SetGltf(

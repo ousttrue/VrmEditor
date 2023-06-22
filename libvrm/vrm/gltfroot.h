@@ -34,6 +34,7 @@ struct GltfRoot
   gltfjson::Bin m_bin;
 
   std::vector<std::shared_ptr<Node>> m_nodes;
+  std::shared_ptr<Node> m_selected;
   std::vector<std::shared_ptr<Node>> m_roots;
 
   std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;

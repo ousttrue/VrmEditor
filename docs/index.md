@@ -10,7 +10,6 @@ read, write, edit and animation test.
 ![vrmeditor](vrmeditor.jpg){w=600px align=center}
 
 ```{toctree}
-:maxdepth: 2
 docks/index
 shader/index
 ```

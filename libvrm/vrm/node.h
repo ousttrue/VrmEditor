@@ -21,7 +21,10 @@ struct Node
 {
   // uint32_t Index;
   std::string Name;
+  const char* GetLabel() const { return Name.c_str(); }
+
   std::optional<HumanBones> Humanoid;
+  std::optional<HumanBones> GetHumanBone() const { return Humanoid; }
 
   std::list<std::shared_ptr<Node>> Children;
   std::weak_ptr<Node> Parent;
@@ -51,6 +54,10 @@ struct Node
                            t);
     return true;
   }
+  DirectX::XMFLOAT3& GetTranslation() { return InitialTransform.Translation; }
+  DirectX::XMFLOAT4& GetRotation() { return InitialTransform.Rotation; }
+  DirectX::XMFLOAT3& GetScale() { return InitialScale; }
+  void Calc(bool rec) { CalcWorldInitialMatrix(rec); }
 
   // initial world
   EuclideanTransform WorldInitialTransform = {};

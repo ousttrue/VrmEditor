@@ -11,19 +11,12 @@
 ![docks](docks_menu.jpg){w=300px align=center}
 
 ```{toctree}
-:maxdepth: 2
 logger.md
-json.md
-3D-view.md
-pose.md
+asset/index.md
+runtime/index.md
 hierarchy.md
-animation.md
 lighting.md
-GL_impl.md
 GL_selector.md
 GL_source.md
 GL_variable.md
-humanoid_pose.md
-expression.md
-vrm.md
 ```

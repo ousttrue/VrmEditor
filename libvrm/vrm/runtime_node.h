@@ -15,6 +15,12 @@ using PushInstance = std::function<void(const Instance&)>;
 struct RuntimeNode
 {
   std::shared_ptr<libvrm::Node> Node;
+  const char* GetLabel() const { return Node->GetLabel(); }
+  std::optional<HumanBones> GetHumanBone() const
+  {
+    return Node->GetHumanBone();
+  }
+
   std::optional<NodeConstraint> Constraint;
 
   RuntimeNode(const std::shared_ptr<libvrm::Node>& node)
@@ -30,9 +36,6 @@ struct RuntimeNode
   std::weak_ptr<RuntimeNode> Parent;
   static void AddChild(const std::shared_ptr<RuntimeNode>& parent,
                        const std::shared_ptr<RuntimeNode>& child)
-  // void
-  // Node::AddChild(const std::shared_ptr<Node>& parent,
-  //                const std::shared_ptr<Node>& child)
   {
     if (auto current_parent = child->Parent.lock()) {
       current_parent->Children.remove(child);
@@ -49,6 +52,10 @@ struct RuntimeNode
     return DirectX::XMMatrixMultiply(
       DirectX::XMMatrixScaling(Scale.x, Scale.y, Scale.z), Transform.Matrix());
   }
+  DirectX::XMFLOAT3& GetTranslation() { return Transform.Translation; }
+  DirectX::XMFLOAT4& GetRotation() { return Transform.Rotation; }
+  DirectX::XMFLOAT3& GetScale() { return Scale; }
+  void Calc(bool rec) { CalcWorldMatrix(rec); }
 
   // world
   libvrm::EuclideanTransform WorldTransform = {};
@@ -65,7 +72,6 @@ struct RuntimeNode
   }
 
   void CalcWorldMatrix(bool recursive = false)
-  // void Node::CalcWorldMatrix(bool recursive)
   {
     auto world = Matrix() * ParentWorldMatrix();
 
@@ -85,7 +91,6 @@ struct RuntimeNode
   }
 
   bool SetLocalMatrix(const DirectX::XMMATRIX& local)
-  // bool Node::SetLocalMatrix(const DirectX::XMMATRIX& local)
   {
     DirectX::XMVECTOR s;
     DirectX::XMVECTOR r;
@@ -100,7 +105,6 @@ struct RuntimeNode
   }
 
   bool SetWorldMatrix(const DirectX::XMMATRIX& world)
-  // bool Node::SetWorldMatrix(const DirectX::XMMATRIX& world)
   {
     DirectX::XMVECTOR s;
     DirectX::XMVECTOR r;
@@ -128,8 +132,6 @@ struct RuntimeNode
 
   void SetWorldRotation(const DirectX::XMFLOAT4X4& world,
                         bool recursive = false)
-  // void Node::SetWorldRotation(const DirectX::XMFLOAT4X4& world, bool
-  // recursive)
   {
     auto parentMatrix = ParentWorldMatrix();
     auto inv = DirectX::XMMatrixInverse(nullptr, parentMatrix);
@@ -172,9 +174,6 @@ struct RuntimeNode
 
   void UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
                                     const PushInstance& pushInstance)
-  // void
-  // Node::UpdateShapeInstanceRecursive(DirectX::XMMATRIX parent,
-  //                                    const PushInstance& pushInstance)
   {
     auto m = Transform.Matrix() * parent;
     auto shape = DirectX::XMLoadFloat4x4(&Node->ShapeMatrix);
