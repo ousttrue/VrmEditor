@@ -74,4 +74,6 @@ public:
   }
 
   void Poll() { m_io.poll_one(); }
+
+  asio::io_context& Executor() { return m_io; }
 };
