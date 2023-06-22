@@ -9,5 +9,6 @@ struct AssetView
   AssetView(std::string_view name, const std::filesystem::path& path);
   ~AssetView();
   void ShowGui();
-  void Reload();
+  // void Reload();
+  void ReloadAsync();
 };

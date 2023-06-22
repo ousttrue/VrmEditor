@@ -484,21 +484,22 @@ public:
       return false;
     }
 
-    AsioTask::Instance().PostThreadTask<std::shared_ptr<AssetView>>(
-      [name, path]() {
-        auto asset = std::make_shared<AssetView>(name, path);
-        asset->Reload();
-        return asset;
-      },
-      [name, path](auto asset) {
-        auto title =
-          std::string("🎁") + std::string{ name.data(), name.size() };
-        DockSpaceManager::Instance().AddDock(
-          { title, [asset]() { asset->ShowGui(); } },
-          { .ShowDefault = true, .Temporary = true });
+    auto asset = std::make_shared<AssetView>(name, path);
+    auto title = std::string("🎁") + std::string{ name.data(), name.size() };
+    DockSpaceManager::Instance().AddDock(
+      { title, [asset]() { asset->ShowGui(); } },
+      { .ShowDefault = true, .Temporary = true });
 
-        PLOG_INFO << title << " => " << path.string();
-      });
+    PLOG_INFO << title << " => " << path.string();
+
+    asset->ReloadAsync();
+
+    // AsioTask::Instance().PostThreadTask<std::shared_ptr<AssetView>>(
+    //   [name, path]() {
+    //     return asset;
+    //   },
+    //   [name, path](auto asset) {
+    //   });
 
     return true;
   }
