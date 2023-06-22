@@ -174,7 +174,64 @@ constexpr const char* HumanBonesNames[] = {
   "rightLittleIntermediate",
   "rightLittleDistal",
 };
-
+constexpr const char* HumanBonesNamesWithIcon[] = {
+  "🦴unknown",
+  "🦴hips",
+  "🦴spine",
+  "🦴chest",
+  "🦴upperChest",
+  "🦴neck",
+  "🦴head",
+  "👀leftEye",
+  "👀rightEye",
+  "🐲jaw",
+  "💪leftShoulder",
+  "💪leftUpperArm",
+  "💪leftLowerArm",
+  "💪leftHand",
+  "💪rightShoulder",
+  "💪rightUpperArm",
+  "💪rightLowerArm",
+  "💪rightHand",
+  "🦵leftUpperLeg",
+  "🦵leftLowerLeg",
+  "🦵leftFoot",
+  "🦵leftToes",
+  "🦵rightUpperLeg",
+  "🦵rightLowerLeg",
+  "🦵rightFoot",
+  "🦵rightToes",
+  "🖐leftThumbMetacarpal",
+  "🖐leftThumbProximal",
+  "🖐leftThumbDistal",
+  "🖐leftIndexProximal",
+  "🖐leftIndexIntermediate",
+  "🖐leftIndexDistal",
+  "🖐leftMiddleProximal",
+  "🖐leftMiddleIntermediate",
+  "🖐leftMiddleDistal",
+  "🖐leftRingProximal",
+  "🖐leftRingIntermediate",
+  "🖐leftRingDistal",
+  "🖐leftLittleProximal",
+  "🖐leftLittleIntermediate",
+  "🖐leftLittleDistal",
+  "🖐rightThumbMetacarpal",
+  "🖐rightThumbProximal",
+  "🖐rightThumbDistal",
+  "🖐rightIndexProximal",
+  "🖐rightIndexIntermediate",
+  "🖐rightIndexDistal",
+  "🖐rightMiddleProximal",
+  "🖐rightMiddleIntermediate",
+  "🖐rightMiddleDistal",
+  "🖐rightRingProximal",
+  "🖐rightRingIntermediate",
+  "🖐rightRingDistal",
+  "🖐rightLittleProximal",
+  "🖐rightLittleIntermediate",
+  "🖐rightLittleDistal",
+};
 inline std::optional<HumanBones>
 HumanBoneFromName(std::string_view boneName, VrmVersion version)
 {
@@ -208,6 +265,11 @@ inline const char*
 HumanBoneToName(HumanBones bone)
 {
   return HumanBonesNames[(int)bone];
+}
+inline const char*
+HumanBoneToNameWithIcon(HumanBones bone)
+{
+  return HumanBonesNamesWithIcon[(int)bone];
 }
 
 inline DirectX::XMFLOAT4

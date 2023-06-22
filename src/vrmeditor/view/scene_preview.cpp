@@ -2,13 +2,13 @@
 #include "im_fbo.h"
 #include "overlay.h"
 #include <DirectXMath.h>
-#include <ImGuizmo.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <glr/cuber.h>
 #include <glr/gl3renderer.h>
 #include <glr/line_gizmo.h>
 #include <glr/rendering_env.h>
 #include <glr/scene_renderer.h>
+#include <imgui.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanoid/humanbones.h>
 #include <vrm/runtime_node.h>
@@ -83,8 +83,9 @@ struct ScenePreviewImpl
 
   void ShowFullWindow(const char* title, const float color[4])
   {
-    auto pos = ImGui::GetWindowPos();
+    // auto pos = ImGui::GetWindowPos();
     // pos.y += ImGui::GetFrameHeight();
+    auto pos = ImGui::GetCursorScreenPos();
     auto size = ImGui::GetContentRegionAvail();
     ShowScreenRect(title, color, pos.x, pos.y, size.x, size.y);
   }
@@ -92,14 +93,14 @@ struct ScenePreviewImpl
   void ShowGui()
   {
     // if (ImGui::BeginMenuBar()) {
-      ImGui::Checkbox("grid", &m_renderer->m_settings->ShowLine);
-      ImGui::SameLine();
-      ImGui::Checkbox("mesh", &m_renderer->m_settings->ShowMesh);
-      ImGui::SameLine();
-      ImGui::Checkbox("bone", &m_renderer->m_settings->ShowCuber);
-      ImGui::SameLine();
-      ImGui::Checkbox("shadow", &m_renderer->m_settings->ShowShadow);
-      // ImGui::EndMenuBar();
+    ImGui::Checkbox("grid", &m_renderer->m_settings->ShowLine);
+    ImGui::SameLine();
+    ImGui::Checkbox("mesh", &m_renderer->m_settings->ShowMesh);
+    ImGui::SameLine();
+    ImGui::Checkbox("bone", &m_renderer->m_settings->ShowCuber);
+    ImGui::SameLine();
+    ImGui::Checkbox("shadow", &m_renderer->m_settings->ShowShadow);
+    // ImGui::EndMenuBar();
     // }
     ShowFullWindow(m_title.c_str(), m_clear.data());
   }

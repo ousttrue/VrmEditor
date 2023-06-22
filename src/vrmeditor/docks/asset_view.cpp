@@ -235,6 +235,7 @@ struct AssetViewImpl
 
   asio::awaitable<void> ReloadAsync()
   {
+    Assets.clear();
     m_loading = true;
     co_await TraverseAsync(Path);
     m_loading = false;
