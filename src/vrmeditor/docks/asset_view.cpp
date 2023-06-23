@@ -8,12 +8,15 @@
 #include <asio/use_awaitable.hpp>
 #include <asio_task.h>
 #include <functional>
+#include <gltfjson.h>
+#include <gltfjson/glb.h>
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <memory>
 #include <plog/Log.h>
+#include <vrm/fileutil.h>
 
-static const char* s_supportedTypes[]{
+static std::string s_supportedTypes[]{
   ".glb", ".gltf", ".vrm", ".bvh", ".fbx", ".obj", ".hdr", ".vrma",
 };
 
@@ -60,6 +63,7 @@ struct Asset
   std::string Type;
   std::u8string Label;
   ImVec4 Color;
+  std::vector<std::u8string> Tags;
   // std::list<std::shared_ptr<Asset>> Children;
 
   Asset(const std::filesystem::path& path)
@@ -81,19 +85,20 @@ struct Asset
 
   void ShowGui()
   {
-    ImGui::TableNextRow();
+    ImGui::PushID(this);
 
-    ImGui::TableNextColumn();
-    ImGui::Selectable((const char*)Label.c_str());
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-      if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-        app::TaskLoadPath(Path);
-      }
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::Button((const char*)Label.c_str())) {
+      app::TaskLoadPath(Path);
     }
 
-    // 1
-    ImGui::TableNextColumn();
-    ImGui::TextUnformatted(Type.c_str());
+    ImGui::SmallButton(Type.c_str());
+    for (int i = 0; i < Tags.size(); ++i) {
+      ImGui::SameLine();
+      ImGui::SmallButton((const char*)Tags[i].c_str());
+    }
+
+    ImGui::PopID();
   }
 
   bool operator<(const Asset& b) const noexcept { return Path < b.Path; }
@@ -126,32 +131,80 @@ struct AssetViewImpl
     ImGui::EndDisabled();
     ImGui::Separator();
 
-    std::array<const char*, 2> cols = {
-      "Name",
-      "Ext",
-    };
-
-    if (grapho::imgui::BeginTableColumns("##assetdir", cols)) {
+    // std::array<const char*, 2> cols = {
+    //   "Name",
+    //   "Ext",
+    // };
+    //
+    // if (grapho::imgui::BeginTableColumns("##assetdir", cols))
+    {
       // tree
-      ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing,
-                          Gui::Instance().Indent());
+      // ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing,
+      //                     Gui::Instance().Indent());
 
-      // for (auto& child : Root->Children) {
-      //   child->ShowGui();
-      // }
+      bool first = true;
       for (auto& item : Assets) {
+        if (first) {
+          first = false;
+        } else {
+          ImGui::Separator();
+        }
         item->ShowGui();
       }
 
-      ImGui::PopStyleVar();
+      // ImGui::PopStyleVar();
 
-      ImGui::EndTable();
+      // ImGui::EndTable();
     }
   }
 
   // asio::awaitable<void> TraverseAsync(const std::filesystem::path& dir)
   // {
   // }
+
+  bool Load(const std::filesystem::path& path)
+  {
+    for (auto& ext : s_supportedTypes) {
+      if (path.extension().string() != ext) {
+        continue;
+      }
+      auto asset = std::make_shared<Asset>(path);
+      if (ext == ".gltf") {
+        auto bytes = libvrm::ReadAllBytes(path);
+        gltfjson::tree::Parser parser(bytes);
+        if (auto result = parser.Parse()) {
+          auto gltf = gltfjson::Root(result);
+          if (auto used = gltf.ExtensionsUsed()) {
+            if (auto array = used->Array()) {
+              for (auto& ex : *array) {
+                asset->Tags.push_back(ex->U8String());
+              }
+            }
+          }
+        }
+      } else if (ext == ".glb" || ext == ".vrm") {
+        // load thumbnail
+        auto bytes = libvrm::ReadAllBytes(path);
+        if (auto glb = gltfjson::Glb::Parse(bytes)) {
+          gltfjson::tree::Parser parser(glb->JsonChunk);
+          if (auto result = parser.Parse()) {
+            auto gltf = gltfjson::Root(result);
+            if (auto used = gltf.ExtensionsUsed()) {
+              if (auto array = used->Array()) {
+                for (auto& ex : *array) {
+                  asset->Tags.push_back(ex->U8String());
+                }
+              }
+            }
+          }
+        }
+      }
+      Assets.push_back(asset);
+      return true;
+    }
+
+    return false;
+  }
 
   asio::awaitable<void> ReloadAsync()
   {
@@ -160,16 +213,8 @@ struct AssetViewImpl
 
     // co_await TraverseAsync(Path);
     for (auto e : std::filesystem::recursive_directory_iterator(Path)) {
-      for (auto& ext : s_supportedTypes) {
-        if (e.path().extension().string() == ext) {
-          auto asset = std::make_shared<Asset>(e.path());
-          if (ext == ".vrm") {
-            // load thumbnail
-          }
-          Assets.push_back(asset);
-          co_await asio::this_coro::executor;
-          break;
-        }
+      if (Load(e.path())) {
+        co_await asio::this_coro::executor;
       }
     }
 
