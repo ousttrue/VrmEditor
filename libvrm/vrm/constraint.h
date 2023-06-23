@@ -41,7 +41,7 @@ NodeConstraintAimAxisFromName(std::string_view axis)
   } else if (axis == "NegativeZ") {
     return NodeConstraintAimAxis::NegativeZ;
   } else {
-    assert(false);
+    // assert(false);
     return {};
   }
 }

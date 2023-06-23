@@ -16,7 +16,5 @@ asset/index.md
 runtime/index.md
 hierarchy.md
 lighting.md
-GL_selector.md
-GL_source.md
-GL_variable.md
+humanoid.md
 ```

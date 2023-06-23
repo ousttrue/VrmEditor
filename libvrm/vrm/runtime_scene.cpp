@@ -130,6 +130,65 @@ AddExpression(RuntimeScene* scene,
 }
 
 static void
+ParseConstraint(RuntimeScene* scene)
+{
+  auto& nodes = scene->m_base->m_gltf->Nodes;
+  for (size_t i = 0; i < nodes.size(); ++i) {
+    auto node = nodes[i];
+    auto ptr = scene->m_nodes[i];
+    if (auto VRMC_node_constraint =
+          node.GetExtension<gltfjson::vrm1::VRMC_node_constraint>()) {
+      if (auto constraint = VRMC_node_constraint->Constraint()) {
+        static DirectX::XMFLOAT4 s_constraint_color{ 1, 0.6f, 1, 1 };
+
+        if (auto roll = constraint->Roll()) {
+          // roll
+          auto source_index = roll->SourceId();
+          ptr->Constraint = NodeConstraint{
+            .Type = NodeConstraintTypes::Roll,
+            .Source = scene->m_nodes[*source_index],
+          };
+          if (auto p = roll->Weight()) {
+            ptr->Constraint->Weight = *p;
+          }
+          auto axis = roll->RollAxisString();
+          ptr->Constraint->RollAxis =
+            NodeConstraintRollAxisFromName(gltfjson::from_u8(axis));
+          ptr->Node->ShapeColor = s_constraint_color;
+        } else if (auto aim = constraint->Aim()) {
+          // aim
+          auto source_index = aim->SourceId();
+          ptr->Constraint = NodeConstraint{
+            .Type = NodeConstraintTypes::Aim,
+            .Source = scene->m_nodes[*source_index],
+          };
+          if (auto p = aim->Weight()) {
+            ptr->Constraint->Weight = *p;
+          }
+          auto axis = aim->AimAxisString();
+          ptr->Constraint->AimAxis =
+            NodeConstraintAimAxisFromName(gltfjson::from_u8(axis));
+          ptr->Node->ShapeColor = s_constraint_color;
+        } else if (auto rotation = constraint->Rotation()) {
+          // rotation
+          auto source_index = rotation->SourceId();
+          ptr->Constraint = NodeConstraint{
+            .Type = NodeConstraintTypes::Rotation,
+            .Source = scene->m_nodes[*source_index],
+          };
+          if (auto p = rotation->Weight()) {
+            ptr->Constraint->Weight = *p;
+          }
+          ptr->Node->ShapeColor = s_constraint_color;
+        } else {
+          assert(false);
+        }
+      }
+    }
+  }
+}
+
+static void
 ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
 {
   if (auto VRMC_vrm =
@@ -214,55 +273,6 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
         head = tail;
       }
       scene->m_springBones.push_back(springBone);
-    }
-  }
-
-  auto& nodes = scene->m_base->m_gltf->Nodes;
-  for (size_t i = 0; i < nodes.size(); ++i) {
-    auto node = nodes[i];
-    auto ptr = scene->m_nodes[i];
-    if (auto VRMC_node_constraint =
-          node.GetExtension<gltfjson::vrm1::VRMC_node_constraint>()) {
-      if (auto constraint = VRMC_node_constraint->Constraint()) {
-        static DirectX::XMFLOAT4 s_constraint_color{ 1, 0.6f, 1, 1 };
-
-        if (auto roll = constraint->Roll()) {
-          // roll
-          auto source_index = roll->SourceId();
-          ptr->Constraint = NodeConstraint{
-            .Type = NodeConstraintTypes::Roll,
-            .Source = scene->m_nodes[*source_index],
-            .Weight = *roll->Weight(),
-          };
-          auto axis = roll->RollAxisString();
-          ptr->Constraint->RollAxis =
-            NodeConstraintRollAxisFromName(gltfjson::from_u8(axis));
-          ptr->Node->ShapeColor = s_constraint_color;
-        } else if (auto aim = constraint->Aim()) {
-          // aim
-          auto source_index = aim->SourceId();
-          ptr->Constraint = NodeConstraint{
-            .Type = NodeConstraintTypes::Aim,
-            .Source = scene->m_nodes[*source_index],
-            .Weight = *aim->Weight(),
-          };
-          auto axis = aim->AimAxisString();
-          ptr->Constraint->AimAxis =
-            NodeConstraintAimAxisFromName(gltfjson::from_u8(axis));
-          ptr->Node->ShapeColor = s_constraint_color;
-        } else if (auto rotation = constraint->Rotation()) {
-          // rotation
-          auto source_index = rotation->SourceId();
-          ptr->Constraint = NodeConstraint{
-            .Type = NodeConstraintTypes::Rotation,
-            .Source = scene->m_nodes[*source_index],
-            .Weight = *rotation->Weight(),
-          };
-          ptr->Node->ShapeColor = s_constraint_color;
-        } else {
-          assert(false);
-        }
-      }
     }
   }
 }
@@ -368,6 +378,8 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& table)
     } else if (auto VRM = table->m_gltf->GetExtension<gltfjson::vrm0::VRM>()) {
       ParseVrm0(this, *VRM);
     }
+
+    ParseConstraint(this);
 
     for (int i = 0; i < table->m_gltf->Animations.size(); ++i) {
       if (auto animation = ParseAnimation(*table->m_gltf, table->m_bin, i)) {

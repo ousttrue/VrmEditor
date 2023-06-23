@@ -53,6 +53,9 @@ struct Curve
     }
 
     while (time > Times.back()) {
+      if (Times.back() <= 0) {
+        break;
+      }
       time -= Times.back();
       if (time < 0) {
         time = 0;
