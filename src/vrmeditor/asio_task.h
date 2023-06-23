@@ -8,8 +8,12 @@ using Task = std::function<void()>;
 class AsioTask
 {
   asio::io_context m_io;
+  asio::executor_work_guard<asio::io_context::executor_type> m_work;
 
-  AsioTask() {}
+  AsioTask()
+    : m_work(asio::make_work_guard(m_io))
+  {
+  }
 
 public:
   ~AsioTask() {}
