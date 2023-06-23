@@ -57,7 +57,7 @@ public:
                   // Dispatch the completion handler through the handler's
                   // associated executor, using the handler's associated
                   // allocator.
-                  asio::dispatch(
+                  asio::post(
                     work.get_executor(),
                     asio::bind_allocator(
                       alloc, [handler = std::move(handler), result]() mutable {
@@ -66,7 +66,7 @@ public:
                 });
       };
 
-      asio::async_initiate<CompletionToken, void(T)>(init, token);
+      return asio::async_initiate<CompletionToken, void(T)>(init, token);
     }
   };
 

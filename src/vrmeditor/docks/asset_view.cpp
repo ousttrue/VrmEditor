@@ -199,7 +199,7 @@ struct AssetViewImpl
     ImGui::PopStyleVar();
   }
 
-  bool Load(const std::filesystem::path& path)
+  static std::shared_ptr<Asset> Load(const std::filesystem::path& path)
   {
     for (auto& ext : s_supportedTypes) {
       if (path.extension().string() != ext) {
@@ -259,11 +259,11 @@ struct AssetViewImpl
           }
         }
       }
-      Assets.push_back(asset);
-      return true;
+      // Assets.push_back(asset);
+      return asset;
     }
 
-    return false;
+    return {};
   }
 
   asio::awaitable<void> _ReloadAsync()
@@ -274,9 +274,14 @@ struct AssetViewImpl
     auto executor = co_await asio::this_coro::executor;
 
     for (auto e : std::filesystem::recursive_directory_iterator(Path)) {
-      if (Load(e.path())) {
-        co_await asio::steady_timer(executor, asio::chrono::seconds(0))
-          .async_wait(asio::use_awaitable);
+
+      auto asset =
+        co_await AsioTask::ThreadTask<std::shared_ptr<Asset>>::AsyncThredTask(
+          [path = e.path()]() { return Load(path); }, asio::use_awaitable);
+      if (asset) {
+        Assets.push_back(asset);
+        // co_await asio::steady_timer(executor, asio::chrono::seconds(0))
+        //   .async_wait(asio::use_awaitable);
       }
     }
 
