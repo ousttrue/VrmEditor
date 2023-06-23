@@ -19,6 +19,25 @@ Image::IsPng(std::span<const uint8_t> data)
   };
   return *((uint64_t*)data.data()) == *((uint64_t*)PNG);
 }
+
+bool
+Image::IsGif(std::span<const uint8_t> data)
+{
+  if (data.size() < 3) {
+    return false;
+  }
+  if (data[0] != 'G') {
+    return false;
+  }
+  if (data[1] != 'I') {
+    return false;
+  }
+  if (data[2] != 'F') {
+    return false;
+  }
+  return true;
+}
+
 std::string Name;
 std::optional<EncodedImage> Encoded;
 Image::Image(std::string_view name)
@@ -41,6 +60,11 @@ Image::Load(std::span<const uint8_t> data)
     } else if (IsPng(data)) {
       Encoded = EncodedImage{
         .Type = ImageType::Png,
+        .Bytes = data,
+      };
+    } else if (IsGif(data)) {
+      Encoded = EncodedImage{
+        .Type = ImageType::Gif,
         .Bytes = data,
       };
     } else {

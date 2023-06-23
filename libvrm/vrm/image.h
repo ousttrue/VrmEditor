@@ -11,6 +11,7 @@ enum class ImageType
 {
   Jpeg,
   Png,
+  Gif,
 };
 struct EncodedImage
 {
@@ -28,6 +29,7 @@ class Image
 public:
   static bool IsJpeg(std::span<const uint8_t> data);
   static bool IsPng(std::span<const uint8_t> data);
+  static bool IsGif(std::span<const uint8_t> data);
   std::string Type() const
   {
     if (Encoded) {
@@ -37,6 +39,9 @@ public:
 
         case ImageType::Png:
           return "png";
+
+        case ImageType::Gif:
+          return "gif";
 
         default:
           return "unknown";

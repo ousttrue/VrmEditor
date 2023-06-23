@@ -190,14 +190,14 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::Texture> CreateTexture(
-    const std::shared_ptr<libvrm::Image>& image)
+    const libvrm::Image& image)
   {
     auto texture = grapho::gl3::Texture::Create({
-      image->Width(),
-      image->Height(),
+      image.Width(),
+      image.Height(),
       grapho::PixelFormat::u8_RGBA,
       grapho::ColorSpace::Linear,
-      image->Pixels(),
+      image.Pixels(),
     });
     return texture;
   }
@@ -778,7 +778,7 @@ MaterialMap()
 }
 
 std::shared_ptr<grapho::gl3::Texture>
-CreateTexture(const std::shared_ptr<libvrm::Image>& image)
+CreateTexture(const libvrm::Image& image)
 {
   return Gl3Renderer::Instance().CreateTexture(image);
 }

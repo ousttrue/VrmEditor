@@ -119,6 +119,6 @@ std::vector<std::shared_ptr<Material>>&
 MaterialMap();
 
 std::shared_ptr<grapho::gl3::Texture>
-CreateTexture(const std::shared_ptr<libvrm::Image>& image);
+CreateTexture(const libvrm::Image& image);
 
 } // namespace

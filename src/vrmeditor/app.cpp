@@ -389,8 +389,8 @@ public:
       return false;
     }
 
-    auto image = std::make_shared<libvrm::Image>(path.filename().string());
-    if (!image->Load(bytes)) {
+    libvrm::Image image(path.filename().string());
+    if (!image.Load(bytes)) {
       return false;
     }
 
@@ -400,7 +400,7 @@ public:
     }
     DockSpaceManager::Instance().AddDock(
       { std::string("🖼") + path.filename().string(),
-        [texture, width = image->Width(), height = image->Height()]() {
+        [texture, width = image.Width(), height = image.Height()]() {
           auto size = ImGui::GetContentRegionAvail();
           auto w = size.x;
           auto x = size.x / width;
