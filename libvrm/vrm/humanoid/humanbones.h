@@ -14,7 +14,7 @@ enum class VrmVersion
 
 enum class HumanBones
 {
-  hips,
+  hips = 1,
   spine,
   chest,
   upperChest,
@@ -73,8 +73,41 @@ enum class HumanBones
   rightLittleIntermediate,
   rightLittleDistal,
   tip,
-  VRM_BONE_COUNT = tip,
+  // VRM_BONE_COUNT = tip,
 };
+
+struct HumanBonesRange
+{
+  class Iterator
+  {
+    int m_value;
+
+  public:
+    Iterator(HumanBones value)
+      : m_value((int)value)
+    {
+    }
+    HumanBones operator*(void) const { return (HumanBones)m_value; }
+    void operator++(void) { ++m_value; }
+    bool operator!=(Iterator rhs) { return m_value != rhs.m_value; }
+  };
+
+  struct Range
+  {
+    HumanBones m_begin;
+    HumanBones m_end;
+    Iterator begin() const { return { m_begin }; }
+    Iterator end() const { return { m_end }; }
+  };
+  constexpr static Range All{ HumanBones::hips, HumanBones::tip };
+  constexpr static Range Body{ HumanBones::hips,
+                               HumanBones::leftThumbMetacarpal };
+  constexpr static Range LeftFingers{ HumanBones::leftThumbMetacarpal,
+                                      HumanBones::rightThumbMetacarpal };
+  constexpr static Range RightFingers{ HumanBones::rightThumbMetacarpal,
+                                       HumanBones::tip };
+};
+
 inline bool
 HumanBoneIsFinger(HumanBones bone)
 {

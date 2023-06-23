@@ -10,8 +10,9 @@ namespace libvrm::srht {
 
 enum class HumanoidBones : uint16_t
 {
+  UNKNOWN = 0,
   // body: 6
-  HIPS = 0,
+  HIPS = 1,
   SPINE,
   CHEST,
   UPPER_CHEST,
@@ -66,7 +67,6 @@ enum class HumanoidBones : uint16_t
   RIGHT_LITTLE_PROXIMAL,
   RIGHT_LITTLE_INTERMEDIATE,
   RIGHT_LITTLE_DISTAL,
-  UNKNOWN = std::numeric_limits<unsigned short>::max(),
 };
 inline std::optional<HumanBones>
 ToVrmBone(srht::HumanoidBones src)

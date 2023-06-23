@@ -65,17 +65,17 @@ struct ImHumanoid
       ImGui::TableSetupColumn("Bone", ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("Node", ImGuiTableColumnFlags_WidthStretch);
       ImGui::TableHeadersRow();
-      for (int i = 0; i < (int)libvrm::HumanBones::leftThumbMetacarpal; ++i) {
+      for (auto bone : libvrm::HumanBonesRange::Body) {
         ImGui::TableNextRow();
 
         // 0
         ImGui::TableNextColumn();
-        ImGui::Text("%s", libvrm::HumanBonesNamesWithIcon[i]);
+        ImGui::Text("%s", libvrm::HumanBonesNamesWithIcon[(int)bone]);
 
         // 1
         ImGui::TableNextColumn();
         ImGui::SetNextItemWidth(-FLT_MIN);
-        BoneNodeSelector((libvrm::HumanBones)i);
+        BoneNodeSelector(bone);
       }
       ImGui::EndTable();
     }
@@ -90,25 +90,23 @@ struct ImHumanoid
       ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch);
       ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch);
       ImGui::TableHeadersRow();
-      for (int i = (int)libvrm::HumanBones::leftThumbMetacarpal;
-           i < (int)libvrm::HumanBones::rightThumbMetacarpal;
-           ++i) {
+      for (auto bone : libvrm::HumanBonesRange::LeftFingers) {
         ImGui::TableNextRow();
 
         // 0
         ImGui::TableNextColumn();
         // skip "Left" 4
-        ImGui::Text("🖐%s", libvrm::HumanBonesNames[i] + 4);
+        ImGui::Text("🖐%s", libvrm::HumanBonesNames[(int)bone] + 4);
 
         // 1
         ImGui::TableNextColumn();
         ImGui::SetNextItemWidth(-FLT_MIN);
-        BoneNodeSelector((libvrm::HumanBones)i);
+        BoneNodeSelector(bone);
 
         // 2
         ImGui::TableNextColumn();
         ImGui::SetNextItemWidth(-FLT_MIN);
-        BoneNodeSelector((libvrm::HumanBones)(i + 15));
+        BoneNodeSelector((libvrm::HumanBones)((int)bone + 15));
       }
       ImGui::EndTable();
     }

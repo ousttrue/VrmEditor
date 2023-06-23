@@ -10,28 +10,29 @@
 static std::optional<libvrm::HumanBones>
 BoneSelector(const char* label, std::optional<libvrm::HumanBones> bone)
 {
-  uint32_t index = -1;
+  auto index = (libvrm::HumanBones)-1;
   const char* combo_preview_value = "--";
   if (bone) {
-    index = (int)*bone;
-    combo_preview_value = libvrm::HumanBonesNamesWithIcon[index];
+    index = *bone;
+    combo_preview_value = libvrm::HumanBonesNamesWithIcon[(int)index];
   }
 
   // char key[64];
   // snprintf(key, sizeof(key), "##humanbone%d", (int)bone);
   auto ret = bone;
   if (ImGui::BeginCombo(label, combo_preview_value, 0)) {
-    for (int i = 0; i < (int)libvrm::HumanBones::VRM_BONE_COUNT; i++) {
-      bool is_selected = i == index;
+    for (auto bone : libvrm::HumanBonesRange::All) {
+      bool is_selected = bone == index;
       // auto& node = scene->m_nodes[n];
-      if (ImGui::Selectable(libvrm::HumanBonesNamesWithIcon[i], is_selected)) {
+      if (ImGui::Selectable(libvrm::HumanBonesNamesWithIcon[(int)bone],
+                            is_selected)) {
         // for (auto& node : scene->m_nodes) {
         //   if (node->Humanoid == bone) {
         //     // clear old bone
         //     node->Humanoid = std::nullopt;
         //   }
         // }
-        ret = (libvrm::HumanBones)i;
+        ret = bone;
       }
 
       // Set the initial focus when opening the combo (scrolling +
