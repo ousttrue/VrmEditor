@@ -1,12 +1,49 @@
 #include "hierarchy_gui.h"
 #include "gui.h"
-#include <imgui.h>
-
 #include <grapho/imgui/printfbuffer.h>
 #include <grapho/imgui/widgets.h>
+#include <imgui.h>
 #include <vrm/humanoid/humanbones.h>
 #include <vrm/runtime_node.h>
 #include <vrm/runtime_scene.h>
+
+static std::optional<libvrm::HumanBones>
+BoneSelector(const char* label, std::optional<libvrm::HumanBones> bone)
+{
+  uint32_t index = -1;
+  const char* combo_preview_value = "--";
+  if (bone) {
+    index = (int)*bone;
+    combo_preview_value = libvrm::HumanBonesNamesWithIcon[index];
+  }
+
+  // char key[64];
+  // snprintf(key, sizeof(key), "##humanbone%d", (int)bone);
+  auto ret = bone;
+  if (ImGui::BeginCombo(label, combo_preview_value, 0)) {
+    for (int i = 0; i < (int)libvrm::HumanBones::VRM_BONE_COUNT; i++) {
+      bool is_selected = i == index;
+      // auto& node = scene->m_nodes[n];
+      if (ImGui::Selectable(libvrm::HumanBonesNamesWithIcon[i], is_selected)) {
+        // for (auto& node : scene->m_nodes) {
+        //   if (node->Humanoid == bone) {
+        //     // clear old bone
+        //     node->Humanoid = std::nullopt;
+        //   }
+        // }
+        ret = (libvrm::HumanBones)i;
+      }
+
+      // Set the initial focus when opening the combo (scrolling +
+      // keyboard navigation focus)
+      if (is_selected) {
+        ImGui::SetItemDefaultFocus();
+      }
+    }
+    ImGui::EndCombo();
+  }
+  return ret;
+}
 
 static bool
 DescendantHasHumanoid(const std::shared_ptr<libvrm::Node>& node)
@@ -65,29 +102,26 @@ Traverse(const std::shared_ptr<T>& scene, const std::shared_ptr<N>& node)
 
   // 1
   ImGui::TableNextColumn();
-  if (auto humanoid = node->GetHumanBone()) {
-    ImGui::TextUnformatted(libvrm::HumanBoneToNameWithIcon(*humanoid));
-  }
+  ImGui::SetNextItemWidth(-1);
+  // ImGui::TextUnformatted(libvrm::HumanBoneToNameWithIcon(*humanoid));
+  node->SetHumanBone(BoneSelector("##bone", node->GetHumanBone()));
 
   // T
   ImGui::TableNextColumn();
   ImGui::SetNextItemWidth(-1);
-  if(ImGui::InputFloat3("##translation", &node->GetTranslation().x))
-  {
+  if (ImGui::InputFloat3("##translation", &node->GetTranslation().x)) {
     node->Calc(true);
   }
   // R
   ImGui::TableNextColumn();
   ImGui::SetNextItemWidth(-1);
-  if(ImGui::InputFloat4("##rotation", &node->GetRotation().x))
-  {
+  if (ImGui::InputFloat4("##rotation", &node->GetRotation().x)) {
     node->Calc(true);
   }
   // S
   ImGui::TableNextColumn();
   ImGui::SetNextItemWidth(-1);
-  if(ImGui::InputFloat3("##scale", &node->GetScale().x))
-  {
+  if (ImGui::InputFloat3("##scale", &node->GetScale().x)) {
     node->Calc(true);
   }
 

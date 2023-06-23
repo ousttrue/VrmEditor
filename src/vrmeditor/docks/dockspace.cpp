@@ -125,17 +125,24 @@ DockSpaceManager::ShowGui()
     if (m_resetLayout) {
       Reset();
 
-      grapho::imgui::DockSpaceLayout(DOCK_SPACE, []() {
+      grapho::imgui::DockSpaceLayout(DOCK_SPACE, [&tmps = TmpDocks]() {
         auto root = ImGui::GetID(DOCK_SPACE);
         // auto json = ImGui::GetID("Json");
         // auto json_i = ImGui::GetID("Json-Inspector");
         // auto view = ImGui::GetID("3D-View");
+        ImGuiID left_side, center_id;
+        ImGui::DockBuilderSplitNode(
+          root, ImGuiDir_Left, 0.3f, &left_side, &center_id);
         ImGuiID left_id, right_id;
         ImGui::DockBuilderSplitNode(
-          root, ImGuiDir_Left, 0.3f, &left_id, &right_id);
+          center_id, ImGuiDir_Left, 0.3f, &left_id, &right_id);
         // ImGui::DockBuilderDockWindow("Json", left_id);
         ImGui::DockBuilderDockWindow(app::DOCKNAME_VIEW, right_id);
         ImGui::DockBuilderDockWindow(app::DOCKNAME_JSON, left_id);
+
+        for (auto& d : tmps) {
+          ImGui::DockBuilderDockWindow(d.Name.c_str(), left_side);
+        }
 
         // ImGuiID top_id, bottom_id;
         // ImGui::DockBuilderSplitNode(

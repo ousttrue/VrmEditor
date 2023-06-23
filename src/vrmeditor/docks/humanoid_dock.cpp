@@ -133,7 +133,7 @@ void
 HumanoidDock::ShowGui()
 {
   if (ImGui::BeginTabBar("HierarchyTabs")) {
-    if (ImGui::BeginTabItem("🏃Bones")) {
+    if (ImGui::BeginTabItem("🦴Bones")) {
       ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
       if (ImGui::CollapsingHeader("Body")) {
         m_humanoid->ShowBody();
@@ -147,7 +147,7 @@ HumanoidDock::ShowGui()
       humanpose::HumanPoseStream::Instance().ShowGui();
       ImGui::EndTabItem();
     }
-    if (ImGui::BeginTabItem("🏃Pose")) {
+    if (ImGui::BeginTabItem("🧍Pose")) {
       if (m_humanoid->m_runtime) {
         if (ImGui::Button("Copy")) {
           auto humanpose = m_humanoid->m_runtime->CopyVrmPoseText();

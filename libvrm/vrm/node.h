@@ -25,6 +25,7 @@ struct Node
 
   std::optional<HumanBones> Humanoid;
   std::optional<HumanBones> GetHumanBone() const { return Humanoid; }
+  void SetHumanBone(std::optional<HumanBones> bone) { Humanoid = bone; }
 
   std::list<std::shared_ptr<Node>> Children;
   std::weak_ptr<Node> Parent;

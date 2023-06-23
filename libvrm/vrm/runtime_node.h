@@ -20,6 +20,7 @@ struct RuntimeNode
   {
     return Node->GetHumanBone();
   }
+  void SetHumanBone(std::optional<HumanBones> bone) { Node->Humanoid = bone; }
 
   std::optional<NodeConstraint> Constraint;
 

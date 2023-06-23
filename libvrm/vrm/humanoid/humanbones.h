@@ -14,7 +14,6 @@ enum class VrmVersion
 
 enum class HumanBones
 {
-  unknown,
   hips,
   spine,
   chest,
@@ -117,7 +116,6 @@ HumanBoneIsFinger(HumanBones bone)
   }
 }
 constexpr const char* HumanBonesNames[] = {
-  "unknown",
   "hips",
   "spine",
   "chest",
@@ -175,7 +173,6 @@ constexpr const char* HumanBonesNames[] = {
   "rightLittleDistal",
 };
 constexpr const char* HumanBonesNamesWithIcon[] = {
-  "  unknown",
   "🦴hips",
   "🦴spine",
   "🦴chest",
