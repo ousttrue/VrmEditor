@@ -211,10 +211,17 @@ struct AssetViewImpl
     Assets.clear();
     m_loading = true;
 
+    auto executor = co_await asio::this_coro::executor;
+
+    auto SUSPEND = [](auto executor) {
+      return asio::steady_timer(executor, asio::chrono::seconds(0))
+        .async_wait(asio::use_awaitable);
+    };
+
     // co_await TraverseAsync(Path);
     for (auto e : std::filesystem::recursive_directory_iterator(Path)) {
       if (Load(e.path())) {
-        co_await asio::this_coro::executor;
+        co_await SUSPEND(executor);
       }
     }
 
