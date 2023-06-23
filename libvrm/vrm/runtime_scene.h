@@ -63,6 +63,8 @@ struct RuntimeScene
                      std::shared_ptr<RuntimeSpringCollision>>
     m_springCollisionMap;
 
+  HumanPose m_pose;
+
   RuntimeScene(const std::shared_ptr<GltfRoot>& table);
   void Reset();
 
@@ -97,8 +99,8 @@ struct RuntimeScene
   // humanpose
   std::vector<HumanBones> m_humanBoneMap;
   std::vector<DirectX::XMFLOAT4> m_rotations;
-  HumanPose m_pose;
   HumanPose UpdateHumanPose();
+  HumanPose CurrentHumanPose() const { return m_pose; }
   void SetHumanPose(const HumanPose& pose);
   void SyncHierarchy();
   void DrawGizmo(IGizmoDrawer* gizmo);

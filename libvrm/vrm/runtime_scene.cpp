@@ -560,6 +560,8 @@ RuntimeScene::UpdateNodeStates(std::span<NodeState> nodestates)
     // model matrix
     DirectX::XMStoreFloat4x4(&nodestates[i].Matrix, m_nodes[i]->WorldMatrix());
   }
+
+  UpdateHumanPose();
 }
 
 std::span<const DirectX::XMFLOAT4X4>
@@ -686,8 +688,14 @@ RuntimeScene::UpdateHumanPose()
           DirectX::XMLoadFloat4(&node->Node->InitialTransform.Rotation)),
         DirectX::XMLoadFloat4(&node->Node->WorldInitialTransform.Rotation));
 
-      m_rotations.push_back({});
-      DirectX::XMStoreFloat4(&m_rotations.back(), normalized);
+      if (*humanoid != HumanBones::hips &&
+          DirectX::XMQuaternionIsIdentity(normalized)) {
+        // skip
+        m_humanBoneMap.pop_back();
+      } else {
+        m_rotations.push_back({});
+        DirectX::XMStoreFloat4(&m_rotations.back(), normalized);
+      }
     }
   }
   m_pose.Bones = m_humanBoneMap;

@@ -79,56 +79,11 @@ struct Asset
     }
   }
 
-  // void Add(const std::shared_ptr<Asset>& asset)
-  // {
-  //   if (asset->Path.parent_path() == Path) {
-  //     Children.push_back(asset);
-  //     return;
-  //   }
-  //
-  //   for (auto& child : Children) {
-  //     if (std::filesystem::is_directory(child->Path) &&
-  //         IsAncestorOf(child->Path, asset->Path)) {
-  //       child->Add(asset);
-  //       return;
-  //     }
-  //   }
-  //
-  //   for (auto current = asset->Path.parent_path();;
-  //        current = current.parent_path()) {
-  //     if (current.parent_path() == Path) {
-  //       // found
-  //       auto folder = std::make_shared<Asset>(current);
-  //       Children.push_back(folder);
-  //       Children.back()->Add(asset);
-  //       return;
-  //     }
-  //
-  //     if (current == current.parent_path()) {
-  //       break;
-  //     }
-  //   }
-  //   PLOG_ERROR << asset->Path.string() << " not found";
-  // }
-
   void ShowGui()
   {
     ImGui::TableNextRow();
 
-    // static ImGuiTreeNodeFlags base_flags =
-    //   ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
-    //   ImGuiTreeNodeFlags_SpanAvailWidth;
-    // ImGuiTreeNodeFlags node_flags = base_flags;
-    // if (Children.empty()) {
-    //   node_flags |=
-    //     ImGuiTreeNodeFlags_Leaf |
-    //     ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-    // }
-
-    // 0
     ImGui::TableNextColumn();
-    // auto node_open = ImGui::TreeNodeEx(
-    //   (void*)this, node_flags, "%s", (const char*)Label.c_str());
     ImGui::Selectable((const char*)Label.c_str());
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
       if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
@@ -139,14 +94,6 @@ struct Asset
     // 1
     ImGui::TableNextColumn();
     ImGui::TextUnformatted(Type.c_str());
-
-    // if (Children.size() && node_open) {
-    //   for (auto& child : Children) {
-    //     child->ShowGui();
-    //   }
-    //
-    //   ImGui::TreePop();
-    // }
   }
 
   bool operator<(const Asset& b) const noexcept { return Path < b.Path; }
@@ -202,42 +149,30 @@ struct AssetViewImpl
     }
   }
 
-  // void Reload()
+  // asio::awaitable<void> TraverseAsync(const std::filesystem::path& dir)
   // {
-  //   Root->Children.clear();
-  //   if (!std::filesystem::is_directory(Root->Path)) {
-  //     return;
-  //   }
-  //
-  //   for (auto e : std::filesystem::recursive_directory_iterator(Root->Path))
-  //   {
-  //     if (auto asset = std::make_shared<Asset>(e.path())) {
-  //       Root->Add(asset);
-  //     }
-  //   }
-  //
-  //   // std::sort(Assets.begin(), Assets.end());
   // }
 
-  asio::awaitable<void> TraverseAsync(const std::filesystem::path& dir)
+  asio::awaitable<void> ReloadAsync()
   {
+    Assets.clear();
+    m_loading = true;
+
+    // co_await TraverseAsync(Path);
     for (auto e : std::filesystem::recursive_directory_iterator(Path)) {
       for (auto& ext : s_supportedTypes) {
         if (e.path().extension().string() == ext) {
           auto asset = std::make_shared<Asset>(e.path());
+          if (ext == ".vrm") {
+            // load thumbnail
+          }
           Assets.push_back(asset);
           co_await asio::this_coro::executor;
           break;
         }
       }
     }
-  }
 
-  asio::awaitable<void> ReloadAsync()
-  {
-    Assets.clear();
-    m_loading = true;
-    co_await TraverseAsync(Path);
     m_loading = false;
     co_return;
   }

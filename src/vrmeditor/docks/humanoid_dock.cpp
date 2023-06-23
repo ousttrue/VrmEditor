@@ -1,8 +1,10 @@
 #include "humanoid_dock.h"
 #include "humanpose/humanpose_stream.h"
 #include "platform.h"
+#include <grapho/imgui/printfbuffer.h>
 #include <imgui.h>
 #include <vrm/gltfroot.h>
+#include <vrm/humanoid/humanbones.h>
 #include <vrm/node.h>
 
 struct ImHumanoid
@@ -111,6 +113,23 @@ struct ImHumanoid
       ImGui::EndTable();
     }
   }
+
+  // std::span<const HumanBones> Bones;
+  // std::span<const DirectX::XMFLOAT4> Rotations;
+  void ShowPose()
+  {
+    if (!m_runtime) {
+      return;
+    }
+    auto pose = m_runtime->CurrentHumanPose();
+    ImGui::BeginDisabled(true);
+    ImGui::InputFloat3("Root Position", &pose.RootPosition.x);
+    for (int i = 0; i < pose.Bones.size(); ++i) {
+      auto label = libvrm::HumanBoneToNameWithIcon(pose.Bones[i]);
+      ImGui::InputFloat4(label, (float*)&pose.Rotations[i].x);
+    }
+    ImGui::EndDisabled();
+  }
 };
 
 HumanoidDock::HumanoidDock()
@@ -154,6 +173,7 @@ HumanoidDock::ShowGui()
           Platform::Instance().CopyText(humanpose);
         }
       }
+      m_humanoid->ShowPose();
       ImGui::EndTabItem();
     }
     ImGui::EndTabBar();

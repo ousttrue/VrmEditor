@@ -177,8 +177,7 @@ Load(const std::shared_ptr<GltfRoot>& scene,
 {
   gltfjson::tree::Parser parser(json_chunk);
   if (auto result = parser.ParseExpected()) {
-    gltfjson::tree::Parser parser(json_chunk);
-    scene->m_gltf = std::make_shared<gltfjson::Root>(parser.Parse());
+    scene->m_gltf = std::make_shared<gltfjson::Root>(*result);
     scene->m_bin = { dir, bin_chunk };
     if (!scene->m_bin.Dir) {
       scene->m_bin.Dir = std::make_shared<gltfjson::Directory>();
