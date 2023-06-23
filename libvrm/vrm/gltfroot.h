@@ -1,6 +1,7 @@
 #pragma once
 #include "boundingbox.h"
 #include "humanoid/humanbones.h"
+#include "node_state.h"
 #include <DirectXMath.h>
 #include <functional>
 #include <gltfjson.h>
@@ -13,7 +14,6 @@
 namespace libvrm {
 
 struct Node;
-struct NodeState;
 struct HumanSkeleton;
 
 enum class ModelType
