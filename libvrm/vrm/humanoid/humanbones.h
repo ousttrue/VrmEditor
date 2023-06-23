@@ -149,6 +149,7 @@ HumanBoneIsFinger(HumanBones bone)
   }
 }
 constexpr const char* HumanBonesNames[] = {
+  "",
   "hips",
   "spine",
   "chest",
@@ -206,6 +207,7 @@ constexpr const char* HumanBonesNames[] = {
   "rightLittleDistal",
 };
 constexpr const char* HumanBonesNamesWithIcon[] = {
+  "",
   "🦴hips",
   "🦴spine",
   "🦴chest",

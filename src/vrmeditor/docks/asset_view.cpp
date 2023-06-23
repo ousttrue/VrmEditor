@@ -156,7 +156,7 @@ struct AssetViewImpl
 {
   std::string Name;
   std::filesystem::path Path;
-  std::list<std::shared_ptr<Asset>> Assets;
+  std::vector<std::shared_ptr<Asset>> Assets;
   bool m_loading = false;
 
   AssetViewImpl(std::string_view name, const std::filesystem::path& path)
@@ -180,16 +180,22 @@ struct AssetViewImpl
     ImGui::Separator();
 
     auto size = ImGui::GetContentRegionAvail();
-    bool first = true;
+    // bool first = true;
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, { 0, 0.5f });
+#if false
     for (auto& item : Assets) {
-      if (first) {
-        first = false;
-      } else {
-        ImGui::Separator();
-      }
       item->ShowGui(size.x);
     }
+#else
+    ImGuiListClipper clipper;
+    clipper.Begin(Assets.size(), 100);
+    while (clipper.Step()) {
+      for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+        Assets[i]->ShowGui(size.x);
+      }
+    }
+#endif
+
     ImGui::PopStyleVar();
   }
 
