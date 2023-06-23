@@ -354,6 +354,10 @@ public:
   // expose to lua
   bool LoadPath(const std::filesystem::path& path)
   {
+    if (std::filesystem::is_directory(path)) {
+      return AddAssetDir(path.stem().string(), path);
+    }
+
     auto extension = path.extension().string();
     std::transform(
       extension.begin(), extension.end(), extension.begin(), tolower);
