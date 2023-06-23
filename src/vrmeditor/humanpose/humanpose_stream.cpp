@@ -87,7 +87,7 @@ HumanPoseStream::HumanPoseStream()
 
   // sink node
   auto sink = CreateNode<HumanPoseSink>(
-    "🎬HumanPose",
+    "🎬RuntimeView",
     "SinkNode",
     std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } },
     {});

@@ -1,4 +1,4 @@
-# 🌳Json
+# 🎁Json
 
 glTF の Json を表示します。
 編集できます。
