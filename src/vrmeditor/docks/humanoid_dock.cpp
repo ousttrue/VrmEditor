@@ -1,26 +1,29 @@
 #include "humanoid_dock.h"
 #include "humanpose/humanpose_stream.h"
+#include "platform.h"
 #include <imgui.h>
 #include <vrm/gltfroot.h>
 #include <vrm/node.h>
 
 struct ImHumanoid
 {
-  std::shared_ptr<libvrm::GltfRoot> m_scene;
+  std::shared_ptr<libvrm::RuntimeScene> m_runtime;
 
-  void SetBase(const std::shared_ptr<libvrm::GltfRoot>& scene)
+  void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
-    m_scene = scene;
+    m_runtime = runtime;
   }
 
   void BoneNodeSelector(libvrm::HumanBones bone)
   {
-    if (!m_scene) {
+    if (!m_runtime) {
       return;
     }
+    auto scene = m_runtime->m_base;
+
     uint32_t index = -1;
     const char* combo_preview_value = "--";
-    auto [node, node_index] = m_scene->GetBoneNode(bone);
+    auto [node, node_index] = scene->GetBoneNode(bone);
     if (node) {
       index = node_index;
       combo_preview_value = node->Name.c_str();
@@ -29,11 +32,11 @@ struct ImHumanoid
     char key[64];
     snprintf(key, sizeof(key), "##humanbone%d", (int)bone);
     if (ImGui::BeginCombo(key, combo_preview_value, 0)) {
-      for (int n = 0; n < m_scene->m_nodes.size(); n++) {
+      for (int n = 0; n < scene->m_nodes.size(); n++) {
         bool is_selected = n == index;
-        auto& node = m_scene->m_nodes[n];
+        auto& node = scene->m_nodes[n];
         if (ImGui::Selectable(node->Name.c_str(), is_selected)) {
-          for (auto& node : m_scene->m_nodes) {
+          for (auto& node : scene->m_nodes) {
             if (node->Humanoid == bone) {
               // clear old bone
               node->Humanoid = std::nullopt;
@@ -121,9 +124,9 @@ HumanoidDock::~HumanoidDock()
 }
 
 void
-HumanoidDock::SetBase(const std::shared_ptr<libvrm::GltfRoot>& base)
+HumanoidDock::SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
 {
-  m_humanoid->SetBase(base);
+  m_humanoid->SetRuntime(runtime);
 }
 
 void
@@ -145,6 +148,12 @@ HumanoidDock::ShowGui()
       ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("🏃Pose")) {
+      if (m_humanoid->m_runtime) {
+        if (ImGui::Button("Copy")) {
+          auto humanpose = m_humanoid->m_runtime->CopyVrmPoseText();
+          Platform::Instance().CopyText(humanpose);
+        }
+      }
       ImGui::EndTabItem();
     }
     ImGui::EndTabBar();

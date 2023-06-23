@@ -1,5 +1,5 @@
 #pragma once
-#include <vrm/gltfroot.h>
+#include <vrm/runtime_scene.h>
 
 class HumanoidDock
 {
@@ -8,6 +8,6 @@ class HumanoidDock
 public:
   HumanoidDock();
   ~HumanoidDock();
-  void SetBase(const std::shared_ptr<libvrm::GltfRoot>& base);
+  void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& base);
   void ShowGui();
 };

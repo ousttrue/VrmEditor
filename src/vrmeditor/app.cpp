@@ -200,7 +200,7 @@ public:
     m_preview->SetGltf(gltf);
     m_animationPreview->SetRuntime(m_runtime);
     m_vrm->SetRuntime(m_runtime);
-    m_humanoid->SetBase(gltf);
+    m_humanoid->SetRuntime(m_runtime);
     return m_runtime;
   }
 

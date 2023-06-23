@@ -188,17 +188,6 @@ DockSpaceManager::ShowGui()
         ImGui::EndMenu();
       }
 
-      if (ImGui::BeginMenu("HumanPose")) {
-        if (ImGui::MenuItem("Copy")) {
-          auto humanpose = app::CopyVrmPoseText();
-          // static int s_tmp = 0;
-          // std::stringstream ss;
-          // ss << (s_tmp++);
-          Platform::Instance().CopyText(humanpose);
-        }
-        ImGui::EndMenu();
-      }
-
       if (ImGui::BeginMenu("Help")) {
         ImGui::MenuItem("Version", PACKAGE_VERSION);
         ImGui::EndMenu();
