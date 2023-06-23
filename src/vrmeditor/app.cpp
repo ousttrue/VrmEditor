@@ -7,6 +7,7 @@
 #include "docks/dockspace.h"
 #include "docks/gui.h"
 #include "docks/hierarchy_gui.h"
+#include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/vrm_gui.h"
 #include "fbx_loader.h"
@@ -55,6 +56,7 @@ class App
   std::shared_ptr<glr::Gl3RendererGui> m_gl3gui;
   std::shared_ptr<HierarchyGui> m_hierarchy;
   std::shared_ptr<VrmGui> m_vrm;
+  std::shared_ptr<HumanoidDock> m_humanoid;
 
 public:
   App()
@@ -68,6 +70,7 @@ public:
     m_animation = std::make_shared<AnimationView>();
     m_hierarchy = std::make_shared<HierarchyGui>();
     m_vrm = std::make_shared<VrmGui>();
+    m_humanoid = std::make_shared<HumanoidDock>();
 
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
       [=] { ResetDock(); });
@@ -166,11 +169,7 @@ public:
 
     // ImTimeline::Create(addDock, "[animation] timeline", m_timeline);
     DockSpaceManager::Instance().AddDock(
-      { "🏃Humanoid-Input",
-        []() { humanpose::HumanPoseStream::Instance().ShowGui(); } });
-
-    // DockSpaceManager::Instance().AddDock(
-    //   { "🏃expression", [vrm = m_vrm]() { vrm->ShowExpression(); } });
+      { "🏃Humanoid", [=]() { m_humanoid->ShowGui(); } });
 
     DockSpaceManager::Instance().AddDock(
       { "🏃Vrm", [vrm = m_vrm]() { vrm->Show(); } });
@@ -201,6 +200,7 @@ public:
     m_preview->SetGltf(gltf);
     m_animationPreview->SetRuntime(m_runtime);
     m_vrm->SetRuntime(m_runtime);
+    m_humanoid->SetBase(gltf);
     return m_runtime;
   }
 

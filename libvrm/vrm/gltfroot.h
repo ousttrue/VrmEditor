@@ -61,7 +61,7 @@ struct GltfRoot
     }
   }
 
-  std::shared_ptr<Node> GetBoneNode(HumanBones bone);
+  std::tuple<std::shared_ptr<Node>, uint32_t> GetBoneNode(HumanBones bone);
   BoundingBox GetBoundingBox() const;
   void InitializeNodes();
   std::span<NodeState> NodeStates();

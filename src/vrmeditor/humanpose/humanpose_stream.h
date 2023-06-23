@@ -107,4 +107,5 @@ public:
   void ShowGui();
   void Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node = {});
 };
-}
+
+} // namespace

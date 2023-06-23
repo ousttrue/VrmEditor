@@ -175,7 +175,7 @@ constexpr const char* HumanBonesNames[] = {
   "rightLittleDistal",
 };
 constexpr const char* HumanBonesNamesWithIcon[] = {
-  "🦴unknown",
+  "  unknown",
   "🦴hips",
   "🦴spine",
   "🦴chest",

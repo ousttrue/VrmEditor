@@ -24,13 +24,14 @@ GltfRoot::GltfRoot() {}
 
 GltfRoot::~GltfRoot() {}
 
-std::shared_ptr<Node>
+std::tuple<std::shared_ptr<Node>, uint32_t>
 GltfRoot::GetBoneNode(HumanBones bone)
 {
-  for (auto& node : m_nodes) {
+  for (uint32_t i = 0; i < m_nodes.size(); ++i) {
+    auto& node = m_nodes[i];
     if (auto humanoid = node->Humanoid) {
       if (*humanoid == bone) {
-        return node;
+        return { node, i };
       }
     }
   }

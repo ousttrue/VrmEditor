@@ -915,8 +915,8 @@ RuntimeScene::CopyVrmPoseText()
       auto vrmaFrame =
         vrmaHumanoid->Add(u8"frame", gltfjson::tree::ObjectValue());
 
-      auto base = m_base->GetBoneNode(HumanBones::hips)
-                    ->WorldInitialTransform.Translation;
+      auto [node, _] = m_base->GetBoneNode(HumanBones::hips);
+      auto base = node->WorldInitialTransform.Translation;
       std::array<float, 3> pos = {
         pose.RootPosition.x + base.x,
         pose.RootPosition.y + base.y,

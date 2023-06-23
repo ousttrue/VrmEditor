@@ -12,6 +12,7 @@ srcs = [
     'docks/vrm_gui.cpp',
     'docks/export_dock.cpp',
     'docks/hierarchy_gui.cpp',
+    'docks/humanoid_dock.cpp',
     'view/scene_preview.cpp',
     'view/im_fbo.cpp',
     'view/overlay.cpp',
