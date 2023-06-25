@@ -5,6 +5,7 @@
 #include "config.h"
 #include "docks/asset_view.h"
 #include "docks/dockspace.h"
+#include "docks/gizmo_settings.h"
 #include "docks/gui.h"
 #include "docks/hierarchy_gui.h"
 #include "docks/humanoid_dock.h"
@@ -57,6 +58,7 @@ class App
   std::shared_ptr<HierarchyGui> m_hierarchy;
   std::shared_ptr<VrmGui> m_vrm;
   std::shared_ptr<HumanoidDock> m_humanoid;
+  std::shared_ptr<GizmoSettings> m_gizmo;
 
 public:
   App()
@@ -71,6 +73,7 @@ public:
     m_hierarchy = std::make_shared<HierarchyGui>();
     m_vrm = std::make_shared<VrmGui>();
     m_humanoid = std::make_shared<HumanoidDock>();
+    m_gizmo = std::make_shared<GizmoSettings>();
 
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
       [=] { ResetDock(); });
@@ -173,6 +176,9 @@ public:
 
     DockSpaceManager::Instance().AddDock(
       { "🏃Vrm", [vrm = m_vrm]() { vrm->Show(); } });
+
+    DockSpaceManager::Instance().AddDock(
+      { "🔧GizmoSettings", [gizmo = m_gizmo]() { gizmo->ShowGui(); } });
   }
 
   std::shared_ptr<libvrm::RuntimeScene> SetGltf(

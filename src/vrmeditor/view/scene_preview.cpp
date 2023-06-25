@@ -2,6 +2,8 @@
 #include "im_fbo.h"
 #include "overlay.h"
 #include <DirectXMath.h>
+#include <ImGuizmo.h>
+#include <ImGuizmoContext.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <glr/cuber.h>
 #include <glr/gl3renderer.h>
@@ -100,6 +102,9 @@ struct ScenePreviewImpl
     ImGui::Checkbox("bone", &m_renderer->m_settings->ShowCuber);
     ImGui::SameLine();
     ImGui::Checkbox("shadow", &m_renderer->m_settings->ShowShadow);
+    ImGui::SameLine();
+    ImGui::SliderFloat(
+      "gizmo size", &ImGuizmo::GetContext().mGizmoSizeClipSpace, 0.01f, 1.0f);
     // ImGui::EndMenuBar();
     // }
     ShowFullWindow(m_title.c_str(), m_clear.data());
