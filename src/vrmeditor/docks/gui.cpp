@@ -9,12 +9,83 @@
 #include <misc/freetype/imgui_freetype.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <IconsFontAwesome5.h>
+#include <IconsMaterialDesign.h>
 #include <ImGuiFileDialog.h>
 #include <imnodes.h>
 #include <iostream>
+#include <plog/Log.h>
 
-#include <IconsFontAwesome5.h>
-#include <IconsMaterialDesign.h>
+void
+FontSetting::AddFont(int i, int size)
+{
+  ImGuiIO& io = ImGui::GetIO();
+  ImFontConfig config;
+  config.SizePixels = static_cast<float>(size);
+  config.PixelSnapH = true;
+  config.OversampleH = 1;
+  config.OversampleV = 1;
+  config.FontBuilderFlags |= Flags;
+  if (i) {
+    PLOG_INFO << "merge_font: " << (const char*)Path.u8string().c_str();
+    config.MergeMode = true;
+  } else {
+    PLOG_INFO << "add_font: " << (const char*)Path.u8string().c_str();
+  }
+  if (IsIcon) {
+    config.GlyphMinAdvanceX = config.SizePixels;
+    // config.GlyphMaxAdvanceX = config.SizePixels;
+  }
+  io.Fonts->AddFontFromFileTTF(
+    Path.string().c_str(), config.SizePixels, &config, Ranges.data());
+}
+
+FontSetting
+FontSetting::JapaneseFont(const std::filesystem::path& _path)
+{
+  auto path = _path;
+  if (path.empty()) {
+    path = "C:/Windows/Fonts/msgothic.ttc";
+  }
+  FontSetting setting{
+    path,
+  };
+  auto range = ImGui::GetIO().Fonts->GetGlyphRangesJapanese();
+  for (auto p = range; *p; ++p) {
+    setting.Ranges.push_back(*p);
+  }
+  setting.Ranges.push_back(0);
+  return setting;
+}
+
+FontSetting
+FontSetting::NerdFont(const std::filesystem::path& path)
+{
+  return {
+    path,
+    { ICON_MIN_FA, ICON_MAX_FA, ICON_MIN_MD, ICON_MAX_MD, 0 },
+    true,
+  };
+}
+
+FontSetting
+FontSetting::EmojiFont(const std::filesystem::path& _path)
+{
+  auto path = _path;
+  if (path.empty()) {
+    path = "c:\\Windows\\Fonts\\seguiemj.ttf";
+  }
+  return {
+    path,
+    {
+      0x1,
+      0x1ffff,
+      0,
+    },
+    true,
+    ImGuiFreeTypeBuilderFlags_LoadColor,
+  };
+}
 
 struct GuiImpl
 {
@@ -126,103 +197,23 @@ Gui::SaveState()
   return { p, p + size };
 }
 
-bool
-Gui::SetFont(const std::filesystem::path& path)
-{
-  if (!std::filesystem::exists(path)) {
-    return false;
-  }
-  m_baseFont = path;
-  return true;
-}
-
-bool
-Gui::AddJapaneseFont(const std::filesystem::path& path)
-{
-  if (!std::filesystem::exists(path)) {
-    return false;
-  }
-  m_japanseseFont = path;
-  return true;
-}
-
-bool
-Gui::AddIconFont(const std::filesystem::path& path)
-{
-  if (!std::filesystem::exists(path)) {
-    return false;
-  }
-  m_iconFont = path;
-  return true;
-}
-
 void
 Gui::Initialize()
 {
-  ImGuiIO& io = ImGui::GetIO();
-
   Shutdown();
-
+  assert(m_impl == nullptr);
   m_impl = new GuiImpl(m_window, m_glsl_version.c_str());
 
-  ImFontConfig config;
-  config.SizePixels = static_cast<float>(FontSize);
-  if (m_baseFont.string().size()) {
-    io.Fonts->AddFontFromFileTTF(m_baseFont.string().c_str(),
-                                 static_cast<float>(FontSize));
-  } else {
-    // default font
-    io.Fonts->AddFontDefault(&config);
+  if (m_fonts.empty()) {
+    m_fonts.push_back(FontSetting::JapaneseFont());
+    m_fonts.push_back(FontSetting::EmojiFont());
   }
 
-  config.MergeMode = true;
-  if (m_japanseseFont.string().size()) {
-    io.Fonts->AddFontFromFileTTF(m_japanseseFont.string().c_str(),
-                                 config.SizePixels,
-                                 &config,
-                                 io.Fonts->GetGlyphRangesJapanese());
+  for (int i = 0; i < m_fonts.size(); ++i) {
+    m_fonts[i].AddFont(i, FontSize);
   }
 
-  if (m_iconFont.string().size()) {
-    // static const ImWchar icons_ranges[] = {0xf000, 0xf3ff, 0};
-    static const ImWchar icons_ranges[] = {
-      //
-      ICON_MIN_FA,
-      ICON_MAX_FA,
-      //
-      ICON_MIN_MD,
-      ICON_MAX_MD,
-      //
-      0,
-    };
-    auto iconFontSize = static_cast<float>(FontSize);
-    config.PixelSnapH = true;
-    config.GlyphMinAdvanceX = iconFontSize;
-    config.SizePixels = iconFontSize;
-    io.Fonts->AddFontFromFileTTF(
-      m_iconFont.string().c_str(), config.SizePixels, &config, icons_ranges);
-  }
-
-  // emoji
-  {
-    auto iconFontSize = static_cast<float>(FontSize);
-    config.PixelSnapH = true;
-    config.SizePixels = iconFontSize;
-    // config.OversampleH = 1;
-    // config.OversampleV = 1;
-    config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
-    static ImWchar const emoji_ranges[] = {
-      0x1,
-      0x1ffff,
-      0,
-    };
-    io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\seguiemj.ttf",
-                                 config.SizePixels,
-                                 &config,
-                                 emoji_ranges);
-  }
-
-  io.Fonts->Build();
+  ImGui::GetIO().Fonts->Build();
 }
 
 bool

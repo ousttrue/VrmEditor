@@ -21,10 +21,8 @@ function vrmeditor.set_window_size(width, height, is_maximized) end
 function vrmeditor.set_font_size(size) end
 
 ---@param path string font file path
-function vrmeditor.add_japanese_font(path) end
-
----@param path string font file path
-function vrmeditor.add_icon_font(path) end
+---@param type string font type
+function vrmeditor.add_font(path, type) end
 
 ---@param path string gltf, glb, vrm, fbx lua
 function vrmeditor.load_model(path) end

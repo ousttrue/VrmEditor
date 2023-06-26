@@ -21,16 +21,6 @@ vrmeditor.set_font_size(is_windows and 22 or 16)
 -- local base_font = "C:/Windows/Fonts/verdana.ttf"
 -- vrmeditor.set_font(base_font)
 
--- local icon_font = home .. "/.fonts/HackGenNerdConsole-Regular.ttf"
-local icon_font = home .. "/.fonts/Symbols-1000-em Nerd Font Complete Mono.ttf"
-local japanese_font = is_windows and "C:/Windows/Fonts/msgothic.ttc" or icon_font
-
-local ok = vrmeditor.add_japanese_font(japanese_font)
-print(ok, japanese_font)
-
-ok = vrmeditor.add_icon_font(icon_font)
-print(ok, icon_font)
-
 --
 -- add assets
 --
@@ -275,4 +265,3 @@ local here = concat(splitted, "/")
 -- vrmeditor.set_shader_chunk_path(here .. "/threejs_shader_chunks")
 vrmeditor.load_hdr(here .. "/../../grapho/subprojects/logl/resources/textures/hdr/newport_loft.hdr")
 vrmeditor.add_asset_dir("models", "D:/Model")
-
