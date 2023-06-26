@@ -224,4 +224,16 @@ LoadPath(const std::filesystem::path& path)
   }
 }
 
+std::expected<std::shared_ptr<GltfRoot>, std::string>
+LoadGltf(const std::string& json)
+{
+  auto ptr = std::make_shared<GltfRoot>();
+  std::span<const uint8_t> bytes{ (const uint8_t*)json.data(), json.size() };
+  if (auto load = LoadBytes(ptr, bytes, nullptr)) {
+    return ptr;
+  } else {
+    return std::unexpected(load.error());
+  }
+}
+
 } // namespace

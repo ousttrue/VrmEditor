@@ -452,20 +452,24 @@ public:
   {
     if (auto gltf = libvrm::LoadPath(path)) {
       auto scene = SetGltf(*gltf);
-
-      // update view position
-      auto bb = scene->m_base->GetBoundingBox();
-      // m_staticView->Fit(bb.Min, bb.Max);
-      // m_runtimeView->Fit(bb.Min, bb.Max);
-      // m_env->SetShadowHeight(bb.Min.y);
-
       auto u8 = path.u8string();
       PLOG_INFO << std::string_view{ (const char*)u8.data(), u8.size() };
-
       return true;
     } else {
       PLOG_ERROR << gltf.error();
       SetGltf(std::make_shared<libvrm::GltfRoot>());
+      return false;
+    }
+  }
+
+  bool LoadGltfString(const std::string& json)
+  {
+    if (auto gltf = libvrm::LoadGltf(json)) {
+      auto scene = SetGltf(*gltf);
+      PLOG_INFO << "paste gltf string";
+      return true;
+    } else {
+      PLOG_ERROR << gltf.error();
       return false;
     }
   }
@@ -542,6 +546,12 @@ void
 TaskLoadHdr(const std::filesystem::path& hdr)
 {
   AsioTask::Instance().PostTask([hdr]() { g_app.LoadHdr(hdr); });
+}
+
+void
+LoadGltfString(const std::string& json)
+{
+  g_app.LoadGltfString(json);
 }
 
 void

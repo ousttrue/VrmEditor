@@ -44,4 +44,5 @@ public:
   bool IsWindowMaximized() const;
   void SetWindowSize(int width, int height, bool maximize);
   void CopyText(const std::string& text);
+  std::string PasteText();
 };

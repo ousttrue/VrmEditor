@@ -21,4 +21,7 @@ LoadBytes(const std::shared_ptr<GltfRoot>& scene,
           std::span<const uint8_t> bytes,
           const std::shared_ptr<gltfjson::Directory>& dir = nullptr);
 
+std::expected<std::shared_ptr<GltfRoot>, std::string>
+LoadGltf(const std::string& json);
+
 } // namespace

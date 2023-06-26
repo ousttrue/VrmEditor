@@ -13,6 +13,8 @@ void
 TaskLoadPath(const std::filesystem::path& path);
 void
 TaskLoadHdr(const std::filesystem::path& hdr);
+void
+LoadGltfString(const std::string& json);
 
 void
 SetShaderDir(const std::filesystem::path& path);

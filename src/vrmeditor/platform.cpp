@@ -179,3 +179,9 @@ Platform::CopyText(const std::string& text)
 {
   glfwSetClipboardString(m_window, text.c_str());
 }
+
+std::string
+Platform::PasteText()
+{
+  return glfwGetClipboardString(m_window);
+}
