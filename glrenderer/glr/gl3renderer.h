@@ -80,6 +80,15 @@ GetOrCreateTextureHandle(const gltfjson::Root& root,
                          std::optional<uint32_t> texture,
                          ColorSpace colorspace);
 
+std::optional<uint32_t>
+GetOrCreateTextureHandle(const std::shared_ptr<libvrm::Image>& image,
+                         ColorSpace colorspace);
+
+std::shared_ptr<libvrm::Image>
+GetOrCreateImage(const gltfjson::Root& root,
+                 const gltfjson::Bin& bin,
+                 std::optional<uint32_t> image);
+
 void
 RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data);
 

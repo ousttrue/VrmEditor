@@ -492,3 +492,121 @@ ShowGuiTexturePreview(const gltfjson::Root& root,
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
   draw_list->AddRect(pos, { pos.x + 150, pos.y + 150 }, ImColor());
 }
+
+bool
+ShowGuiVrm0Meta(const gltfjson::vrm0::Meta& meta)
+{
+  bool updated = false;
+  if (ShowGuiString("title", meta.m_json, u8"title")) {
+    updated = true;
+  }
+  if (ShowGuiString("version", meta.m_json, u8"version")) {
+    updated = true;
+  }
+  if (ShowGuiString("author", meta.m_json, u8"author")) {
+    updated = true;
+  }
+  if (ShowGuiString(
+        "contact information", meta.m_json, u8"contactInformation")) {
+    updated = true;
+  }
+  if (ShowGuiString("reference", meta.m_json, u8"reference")) {
+    updated = true;
+  }
+  if (ShowGuiString("allowed user", meta.m_json, u8"allowedUserName")) {
+    updated = true;
+  }
+  if (ShowGuiString("violent usage", meta.m_json, u8"violentUssageName")) {
+    updated = true;
+  }
+  if (ShowGuiString("sexual usage", meta.m_json, u8"sexualUssageName")) {
+    updated = true;
+  }
+  if (ShowGuiString(
+        "commercial usage", meta.m_json, u8"commercialUssageName")) {
+    updated = true;
+  }
+  if (ShowGuiString(
+        "other permission url", meta.m_json, u8"otherPermissionUrl")) {
+    updated = true;
+  }
+  if (ShowGuiString("license", meta.m_json, u8"licenseName")) {
+    updated = true;
+  }
+  if (ShowGuiString("other license url", meta.m_json, u8"otherLicenseUrl")) {
+    updated = true;
+  }
+  return updated;
+}
+
+bool
+ShowGuiVrm1Meta(const gltfjson::vrm1::Meta& meta)
+{
+  bool updated = false;
+  if (ShowGuiString("name", meta.m_json, u8"name")) {
+    updated = true;
+  }
+  if (ShowGuiString("version", meta.m_json, u8"version")) {
+    updated = true;
+  }
+  // for (auto author : meta.Authors) {
+  //   // InputU8Text("author", author->
+  // }
+  if (ShowGuiString("copyright", meta.m_json, u8"copyrightInformation")) {
+    updated = true;
+  }
+  if (ShowGuiString("contact", meta.m_json, u8"contactInformation")) {
+    updated = true;
+  }
+  // auto References() { return
+  // // m_ptr<tree::ArrayValue, u8"references">(); } auto
+  if (ShowGuiString(
+        "thirdPartyLicenses", meta.m_json, u8"thirdPartyLicenses")) {
+    updated = true;
+  }
+  if (ShowGuiString("LicenseUrl", meta.m_json, u8"licenseUrl")) {
+    updated = true;
+  }
+  if (ShowGuiString("AvatarPermission", meta.m_json, u8"avatarPermission")) {
+    updated = true;
+  }
+  if (ShowGuiBool("AllowExcessivelyViolent",
+                  meta.m_json,
+                  u8"allowExcessivelyViolentUsage")) {
+    updated = true;
+  }
+  if (ShowGuiBool("AllowExcessivelySexualUsage",
+                  meta.m_json,
+                  u8"allowExcessivelySexualUsage")) {
+    updated = true;
+  }
+  if (ShowGuiString("CommercialUsage", meta.m_json, u8"commercialUsage")) {
+    updated = true;
+  }
+  if (ShowGuiBool("AllowPoliticalOrReligiousUsage",
+                  meta.m_json,
+                  u8"allowPoliticalOrReligiousUsage")) {
+    updated = true;
+  }
+  if (ShowGuiBool("AllowAntisocialOrHateUsage",
+                  meta.m_json,
+                  u8"allowAntisocialOrHateUsage")) {
+    updated = true;
+  }
+  if (ShowGuiString("CreditNotationString", meta.m_json, u8"creditNotation")) {
+    updated = true;
+  }
+  if (ShowGuiBool(
+        "AllowRedistribution", meta.m_json, u8"allowRedistribution")) {
+    updated = true;
+  }
+  if (ShowGuiString("ModificationString", meta.m_json, u8"modification")) {
+    updated = true;
+  }
+  if (ShowGuiString(
+        "OtherLicenseUrlString", meta.m_json, u8"otherLicenseUrl")) {
+    updated = true;
+  }
+
+  return updated;
+}

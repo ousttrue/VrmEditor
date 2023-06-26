@@ -1,10 +1,9 @@
-#include <GL/glew.h>
-
 #include "vrm_gui.h"
 #include <glr/gl3renderer.h>
 #include <gltfjson/gltf_typing_vrm0.h>
 #include <gltfjson/gltf_typing_vrm1.h>
 #include <imgui.h>
+#include <json_widgets.h>
 
 struct SliderColor
 {
@@ -69,11 +68,38 @@ Enable(const std::shared_ptr<libvrm::Expression>& ex)
 
 struct VrmImpl
 {
+  ClearJsonPathFunc m_clear;
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;
+  std::shared_ptr<libvrm::Image> m_thumbImage;
+
+  VrmImpl(const ClearJsonPathFunc& clear)
+    : m_clear(clear)
+  {
+  }
 
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
     m_runtime = runtime;
+    if (auto VRMC_vrm =
+          m_runtime->m_base->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
+      if (auto meta = VRMC_vrm->Meta()) {
+        if (auto imgId = meta->ThumbnailImageId()) {
+          m_thumbImage = glr::GetOrCreateImage(
+            *m_runtime->m_base->m_gltf, m_runtime->m_base->m_bin, *imgId);
+        }
+      }
+    } else if (auto VRM = m_runtime->m_base->m_gltf
+                            ->GetExtension<gltfjson::vrm0::VRM>()) {
+      if (auto meta = VRM->Meta()) {
+        if (auto texId = meta->TextureId()) {
+          auto texture = m_runtime->m_base->m_gltf->Textures[*texId];
+          if (auto imgId = texture.SourceId()) {
+            m_thumbImage = glr::GetOrCreateImage(
+              *m_runtime->m_base->m_gltf, m_runtime->m_base->m_bin, *imgId);
+          }
+        }
+      }
+    }
   }
 
   void ShowMeta()
@@ -81,16 +107,28 @@ struct VrmImpl
     if (!m_runtime) {
       return;
     }
+
+    if (m_thumbImage) {
+      auto tex =
+        glr::GetOrCreateTextureHandle(m_thumbImage, glr::ColorSpace::Linear);
+      ImGui::Image((ImTextureID)(intptr_t)tex.value_or(0), { 100, 100 });
+    }
+
     if (auto VRMC_vrm =
           m_runtime->m_base->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
+      ImGui::TextUnformatted("vrm-1.0");
       if (auto meta = VRMC_vrm->Meta()) {
-        if (auto imgId = meta->ThumbnailImageId()) {
-          // if(auto texture = glr::GetOrCreateTextureHandle
+        if (ShowGuiVrm1Meta(*meta)) {
+          m_clear(u8"/extensions/VRMC_vrm/meta");
         }
       }
     } else if (auto VRM = m_runtime->m_base->m_gltf
                             ->GetExtension<gltfjson::vrm0::VRM>()) {
+      ImGui::TextUnformatted("vrm-0.x");
       if (auto meta = VRM->Meta()) {
+        if (ShowGuiVrm0Meta(*meta)) {
+          m_clear(u8"/extensions/VRM/meta");
+        }
       }
     }
   }
@@ -264,21 +302,8 @@ struct VrmImpl
   //
   void ShowGui()
   {
-    // switch (m_scene->m_type) {
-    //   case libvrm::ModelType::Gltf:
-    //     break;
-    //   case libvrm::ModelType::Vrm0:
-    //     ImGui::Text("%s", "vrm-0.x");
-    //     break;
-    //   case libvrm::ModelType::Vrm1:
-    //     ImGui::Text("%s", "vrm-1.0");
-    //     break;
-    // }
-
     if (ImGui::CollapsingHeader("meta", ImGuiTreeNodeFlags_None)) {
       ShowMeta();
-    }
-    if (ImGui::CollapsingHeader("humanoid", ImGuiTreeNodeFlags_None)) {
     }
     if (ImGui::CollapsingHeader("expression", ImGuiTreeNodeFlags_None)) {
       ShowExpression();
@@ -294,8 +319,8 @@ struct VrmImpl
   }
 };
 
-VrmGui::VrmGui()
-  : m_impl(new VrmImpl)
+VrmGui::VrmGui(const ClearJsonPathFunc& clear)
+  : m_impl(new VrmImpl(clear))
 {
 }
 

@@ -71,7 +71,10 @@ public:
     m_gl3gui = std::make_shared<glr::Gl3RendererGui>();
     m_animation = std::make_shared<AnimationView>();
     m_hierarchy = std::make_shared<HierarchyGui>();
-    m_vrm = std::make_shared<VrmGui>();
+    m_vrm =
+      std::make_shared<VrmGui>([json = m_json](const std::u8string& jsonpath) {
+        json->ClearCache(jsonpath);
+      });
     m_humanoid = std::make_shared<HumanoidDock>();
     m_gizmo = std::make_shared<GizmoSettings>();
 

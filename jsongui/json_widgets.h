@@ -3,6 +3,8 @@
 #include "json_widgets.h"
 #include <array>
 #include <gltfjson.h>
+#include <gltfjson/gltf_typing_vrm0.h>
+#include <gltfjson/gltf_typing_vrm1.h>
 #include <gltfjson/jsonpath.h>
 #include <grapho/imgui/printfbuffer.h>
 #include <grapho/imgui/widgets.h>
@@ -285,3 +287,8 @@ struct StringEnum
     return ShowGuiStringEnum("##_StringEnum", node, Values) ? true : false;
   }
 };
+
+bool
+ShowGuiVrm0Meta(const gltfjson::vrm0::Meta& meta);
+bool
+ShowGuiVrm1Meta(const gltfjson::vrm1::Meta& meta);

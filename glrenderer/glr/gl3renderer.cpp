@@ -721,6 +721,24 @@ GetOrCreateTextureHandle(const gltfjson::Root& root,
   return {};
 }
 
+std::optional<uint32_t>
+GetOrCreateTextureHandle(const std::shared_ptr<libvrm::Image>& image,
+                         ColorSpace colorspace)
+{
+  if (auto p = Gl3Renderer::Instance().GetOrCreateTexture(image, colorspace)) {
+    return p->Handle();
+  }
+  return {};
+}
+
+std::shared_ptr<libvrm::Image>
+GetOrCreateImage(const gltfjson::Root& root,
+                 const gltfjson::Bin& bin,
+                 std::optional<uint32_t> image)
+{
+  return Gl3Renderer::Instance().GetOrCreateImage(root, bin, image);
+}
+
 void
 RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data)
 {
