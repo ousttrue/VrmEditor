@@ -62,7 +62,7 @@ DescendantHasHumanoid(const std::shared_ptr<libvrm::Node>& node)
 static bool
 DescendantHasHumanoid(const std::shared_ptr<libvrm::RuntimeNode>& node)
 {
-  return DescendantHasHumanoid(node->Node);
+  return DescendantHasHumanoid(node->Base);
 }
 
 template<typename T, typename N>

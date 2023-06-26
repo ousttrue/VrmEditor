@@ -166,7 +166,7 @@ ParseConstraint(RuntimeScene* scene)
           auto axis = roll->RollAxisString();
           ptr->Constraint->RollAxis =
             NodeConstraintRollAxisFromName(gltfjson::from_u8(axis));
-          ptr->Node->ShapeColor = s_constraint_color;
+          ptr->Base->ShapeColor = s_constraint_color;
         } else if (auto aim = constraint->Aim()) {
           // aim
           auto source_index = aim->SourceId();
@@ -180,7 +180,7 @@ ParseConstraint(RuntimeScene* scene)
           auto axis = aim->AimAxisString();
           ptr->Constraint->AimAxis =
             NodeConstraintAimAxisFromName(gltfjson::from_u8(axis));
-          ptr->Node->ShapeColor = s_constraint_color;
+          ptr->Base->ShapeColor = s_constraint_color;
         } else if (auto rotation = constraint->Rotation()) {
           // rotation
           auto source_index = rotation->SourceId();
@@ -191,7 +191,7 @@ ParseConstraint(RuntimeScene* scene)
           if (auto p = rotation->Weight()) {
             ptr->Constraint->Weight = *p;
           }
-          ptr->Node->ShapeColor = s_constraint_color;
+          ptr->Base->ShapeColor = s_constraint_color;
         } else {
           assert(false);
         }
@@ -279,7 +279,7 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
           float radius = *joint.HitRadius();
           springBone->AddJoint(head,
                                tail,
-                               tail->Node->InitialTransform.Translation,
+                               tail->Base->InitialTransform.Translation,
                                stiffness,
                                dragForce,
                                radius);
@@ -472,7 +472,7 @@ std::shared_ptr<RuntimeNode>
 RuntimeScene::GetBoneNode(HumanBones bone)
 {
   for (auto& node : m_nodes) {
-    if (auto humanoid = node->Node->Humanoid) {
+    if (auto humanoid = node->Base->Humanoid) {
       if (*humanoid == bone) {
         return node;
       }
@@ -584,7 +584,7 @@ RuntimeScene::ShapeMatrices()
   m_shapeMatrices.clear();
   for (auto& node : m_nodes) {
     m_shapeMatrices.push_back({});
-    auto shape = DirectX::XMLoadFloat4x4(&node->Node->ShapeMatrix);
+    auto shape = DirectX::XMLoadFloat4x4(&node->Base->ShapeMatrix);
     DirectX::XMStoreFloat4x4(&m_shapeMatrices.back(),
                              shape * node->WorldMatrix());
   }
@@ -681,7 +681,7 @@ RuntimeScene::UpdateHumanPose()
   m_humanBoneMap.clear();
   m_rotations.clear();
   for (auto& node : m_nodes) {
-    if (auto humanoid = node->Node->Humanoid) {
+    if (auto humanoid = node->Base->Humanoid) {
       m_humanBoneMap.push_back(*humanoid);
       if (m_humanBoneMap.back() == HumanBones::hips) {
         // delta move
@@ -690,17 +690,17 @@ RuntimeScene::UpdateHumanPose()
           DirectX::XMVectorSubtract(
             DirectX::XMLoadFloat3(&node->WorldTransform.Translation),
             DirectX::XMLoadFloat3(
-              &node->Node->WorldInitialTransform.Translation)));
+              &node->Base->WorldInitialTransform.Translation)));
       }
 
       // retarget
       auto normalized = mult4(
         DirectX::XMQuaternionInverse(
-          DirectX::XMLoadFloat4(&node->Node->WorldInitialTransform.Rotation)),
+          DirectX::XMLoadFloat4(&node->Base->WorldInitialTransform.Rotation)),
         DirectX::XMLoadFloat4(&node->Transform.Rotation),
         DirectX::XMQuaternionInverse(
-          DirectX::XMLoadFloat4(&node->Node->InitialTransform.Rotation)),
-        DirectX::XMLoadFloat4(&node->Node->WorldInitialTransform.Rotation));
+          DirectX::XMLoadFloat4(&node->Base->InitialTransform.Rotation)),
+        DirectX::XMLoadFloat4(&node->Base->WorldInitialTransform.Rotation));
 
       if (*humanoid != HumanBones::hips &&
           DirectX::XMQuaternionIsIdentity(normalized)) {
@@ -724,7 +724,7 @@ RuntimeScene::SetHumanPose(const HumanPose& pose)
 
   for (int i = 0; i < pose.Bones.size(); ++i) {
     if (auto node = GetBoneNode(pose.Bones[i])) {
-      auto init = node->Node;
+      auto init = node->Base;
       if (i == 0) {
         // hips move
         // TODO: position from Model Root ?
@@ -771,14 +771,14 @@ Constraint_Rotation(const std::shared_ptr<RuntimeNode>& src,
   auto delta = DirectX::XMQuaternionMultiply(
     DirectX::XMLoadFloat4(&src->Transform.Rotation),
     DirectX::XMQuaternionInverse(
-      DirectX::XMLoadFloat4(&src->Node->InitialTransform.Rotation)));
+      DirectX::XMLoadFloat4(&src->Base->InitialTransform.Rotation)));
 
   DirectX::XMStoreFloat4(
     &dst->Transform.Rotation,
     DirectX::XMQuaternionSlerp(
-      DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+      DirectX::XMLoadFloat4(&dst->Base->InitialTransform.Rotation),
       DirectX::XMQuaternionMultiply(
-        delta, DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation)),
+        delta, DirectX::XMLoadFloat4(&dst->Base->InitialTransform.Rotation)),
       weight));
 }
 
@@ -807,24 +807,24 @@ Constraint_Roll(const std::shared_ptr<RuntimeNode>& src,
   auto deltaSrcQuat = DirectX::XMQuaternionMultiply(
     DirectX::XMLoadFloat4(&src->Transform.Rotation),
     DirectX::XMQuaternionInverse(
-      DirectX::XMLoadFloat4(&src->Node->InitialTransform.Rotation)));
+      DirectX::XMLoadFloat4(&src->Base->InitialTransform.Rotation)));
   auto deltaSrcQuatInParent =
     mul3(DirectX::XMQuaternionInverse(
-           DirectX::XMLoadFloat4(&src->Node->InitialTransform.Rotation)),
+           DirectX::XMLoadFloat4(&src->Base->InitialTransform.Rotation)),
          deltaSrcQuat,
-         DirectX::XMLoadFloat4(&src->Node->InitialTransform.Rotation));
+         DirectX::XMLoadFloat4(&src->Base->InitialTransform.Rotation));
   auto deltaSrcQuatInDst =
-    mul3(DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+    mul3(DirectX::XMLoadFloat4(&dst->Base->InitialTransform.Rotation),
          deltaSrcQuatInParent,
          DirectX::XMQuaternionInverse(
-           DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation)));
+           DirectX::XMLoadFloat4(&dst->Base->InitialTransform.Rotation)));
   auto toVec = DirectX::XMQuaternionMultiply(axis, deltaSrcQuatInDst);
   auto fromToQuat = dmath::rotate_from_to(axis, toVec);
 
   DirectX::XMStoreFloat4(
     &dst->Transform.Rotation,
     DirectX::XMQuaternionSlerp(
-      DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+      DirectX::XMLoadFloat4(&dst->Base->InitialTransform.Rotation),
       DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(fromToQuat),
                                     deltaSrcQuatInDst),
       weight));
@@ -840,7 +840,7 @@ Constraint_Aim(const std::shared_ptr<RuntimeNode>& src,
   auto fromVec = DirectX::XMVector3Rotate(
     axis,
     DirectX::XMQuaternionMultiply(
-      DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+      DirectX::XMLoadFloat4(&dst->Base->InitialTransform.Rotation),
       dstParentWorldQuat));
   auto toVec = DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(
     DirectX::XMLoadFloat3(&src->WorldTransform.Translation),
@@ -850,8 +850,8 @@ Constraint_Aim(const std::shared_ptr<RuntimeNode>& src,
   DirectX::XMStoreFloat4(
     &dst->Transform.Rotation,
     DirectX::XMQuaternionSlerp(
-      DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
-      mul4(DirectX::XMLoadFloat4(&dst->Node->InitialTransform.Rotation),
+      DirectX::XMLoadFloat4(&dst->Base->InitialTransform.Rotation),
+      mul4(DirectX::XMLoadFloat4(&dst->Base->InitialTransform.Rotation),
            dstParentWorldQuat,
            fromToQuat,
            DirectX::XMQuaternionInverse(dstParentWorldQuat)),

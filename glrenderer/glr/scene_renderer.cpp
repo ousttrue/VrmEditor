@@ -163,7 +163,7 @@ SceneRenderer::RenderRuntime(
     DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
     ImGuizmo::GetContext().mAllowActiveHoverItem = true;
     ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
-    if (auto humanoid = node->Node->Humanoid) {
+    if (auto humanoid = node->Base->Humanoid) {
       if (*humanoid == libvrm::HumanBones::hips) {
         operation = operation | ImGuizmo::TRANSLATE;
       }

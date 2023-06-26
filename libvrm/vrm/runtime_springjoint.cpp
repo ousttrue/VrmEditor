@@ -10,7 +10,7 @@ RuntimeSpringJoint::RuntimeSpringJoint(
   const std::shared_ptr<libvrm::SpringJoint>& joint)
   : Joint(joint)
 {
-  auto world = joint->Head->Node->WorldInitialTransformPoint(
+  auto world = joint->Head->Base->WorldInitialTransformPoint(
     DirectX::XMLoadFloat3(&joint->LocalTailPosition));
   DirectX::XMStoreFloat3(&m_currentTailPosotion, world);
   m_lastTailPosotion = m_currentTailPosotion;
@@ -75,7 +75,7 @@ RuntimeSpringJoint::Update(libvrm::Time time, RuntimeSpringCollision* collision)
         DirectX::XMLoadFloat3(&m_initLocalTailDir),
         static_cast<float>(Joint->Stiffness * time.count())),
       DirectX::XMQuaternionMultiply(
-        DirectX::XMLoadFloat4(&Joint->Head->Node->InitialTransform.Rotation),
+        DirectX::XMLoadFloat4(&Joint->Head->Base->InitialTransform.Rotation),
         Joint->Head->ParentWorldRotation())))
     // 外力による移動量
     // + external;
@@ -127,7 +127,7 @@ RuntimeSpringJoint::WorldPosToLocalRotation(
   const DirectX::XMVECTOR& nextTailDir) const
 {
   auto rotation = DirectX::XMQuaternionMultiply(
-    DirectX::XMLoadFloat4(&Joint->Head->Node->InitialTransform.Rotation),
+    DirectX::XMLoadFloat4(&Joint->Head->Base->InitialTransform.Rotation),
     Joint->Head->ParentWorldRotation());
   return DirectX::XMQuaternionMultiply(
     rotation,

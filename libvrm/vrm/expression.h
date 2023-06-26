@@ -367,6 +367,8 @@ struct Expressions
       case ExpressionPreset::lookRight:
         return LookRight;
     }
+
+    assert(false);
   }
 
   // Expression createExpression(const std::u8string& _presetName,

@@ -14,18 +14,18 @@ using PushInstance = std::function<void(const Instance&)>;
 
 struct RuntimeNode
 {
-  std::shared_ptr<libvrm::Node> Node;
-  const char* GetLabel() const { return Node->GetLabel(); }
+  std::shared_ptr<Node> Base;
+  const char* GetLabel() const { return Base->GetLabel(); }
   std::optional<HumanBones> GetHumanBone() const
   {
-    return Node->GetHumanBone();
+    return Base->GetHumanBone();
   }
-  void SetHumanBone(std::optional<HumanBones> bone) { Node->Humanoid = bone; }
+  void SetHumanBone(std::optional<HumanBones> bone) { Base->Humanoid = bone; }
 
   std::optional<NodeConstraint> Constraint;
 
-  RuntimeNode(const std::shared_ptr<libvrm::Node>& node)
-    : Node(node)
+  RuntimeNode(const std::shared_ptr<Node>& node)
+    : Base(node)
   {
     Transform = node->InitialTransform;
     Scale = node->InitialScale;
@@ -46,7 +46,7 @@ struct RuntimeNode
   }
 
   // local
-  libvrm::EuclideanTransform Transform = {};
+  grapho::EuclideanTransform Transform = {};
   DirectX::XMFLOAT3 Scale = { 1, 1, 1 };
   DirectX::XMMATRIX Matrix() const
   {
@@ -59,7 +59,7 @@ struct RuntimeNode
   void Calc(bool rec) { CalcWorldMatrix(rec); }
 
   // world
-  libvrm::EuclideanTransform WorldTransform = {};
+  grapho::EuclideanTransform WorldTransform = {};
   DirectX::XMFLOAT3 WorldScale = { 1, 1, 1 };
   DirectX::XMMATRIX WorldMatrix() const
   {
@@ -177,7 +177,7 @@ struct RuntimeNode
                                     const PushInstance& pushInstance)
   {
     auto m = Transform.Matrix() * parent;
-    auto shape = DirectX::XMLoadFloat4x4(&Node->ShapeMatrix);
+    auto shape = DirectX::XMLoadFloat4x4(&Base->ShapeMatrix);
 
     Instance instance;
     DirectX::XMStoreFloat4x4(&instance.Matrix, shape * m);

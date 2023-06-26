@@ -100,17 +100,17 @@ SpringBone::AddJointRecursive(const std::shared_ptr<RuntimeNode>& node,
     for (auto& child : node->Children) {
       AddJoint(node,
                child,
-               child->Node->InitialTransform.Translation,
+               child->Base->InitialTransform.Translation,
                dragForce,
                stiffiness,
                radius);
       break;
     }
   } else {
-    auto delta = node->Node->WorldInitialTransform.Translation -
-                 node->Node->ParentWorldInitialPosition();
+    auto delta = node->Base->WorldInitialTransform.Translation -
+                 node->Base->ParentWorldInitialPosition();
     auto childPosition = DirectX::XMVectorAdd(
-      DirectX::XMLoadFloat3(&node->Node->WorldInitialTransform.Translation),
+      DirectX::XMLoadFloat3(&node->Base->WorldInitialTransform.Translation),
       DirectX::XMVectorScale(
         DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&delta)), 0.07f));
 
@@ -119,7 +119,7 @@ SpringBone::AddJointRecursive(const std::shared_ptr<RuntimeNode>& node,
       &localTailPosition,
       DirectX::XMVector3Transform(
         childPosition,
-        DirectX::XMMatrixInverse(nullptr, node->Node->WorldInitialMatrix())));
+        DirectX::XMMatrixInverse(nullptr, node->Base->WorldInitialMatrix())));
 
     AddJoint(node, nullptr, localTailPosition, dragForce, stiffiness, radius);
   }

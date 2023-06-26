@@ -1,6 +1,6 @@
 #pragma once
 #include "constraint.h"
-#include "euclidean_transform.h"
+#include <grapho/euclidean_transform.h>
 #include "humanoid/humanbones.h"
 #include <DirectXMath.h>
 #include <assert.h>
@@ -33,7 +33,7 @@ struct Node
                        const std::shared_ptr<Node>& child);
 
   // initial local
-  EuclideanTransform InitialTransform = {};
+  grapho::EuclideanTransform InitialTransform = {};
   DirectX::XMFLOAT3 InitialScale = { 1, 1, 1 };
   DirectX::XMMATRIX InitialMatrix() const
   {
@@ -61,7 +61,7 @@ struct Node
   void Calc(bool rec) { CalcWorldInitialMatrix(rec); }
 
   // initial world
-  EuclideanTransform WorldInitialTransform = {};
+  grapho::EuclideanTransform WorldInitialTransform = {};
   DirectX::XMFLOAT3 WorldInitialScale = { 1, 1, 1 };
   DirectX::XMMATRIX WorldInitialMatrix() const
   {
