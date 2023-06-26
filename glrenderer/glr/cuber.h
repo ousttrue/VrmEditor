@@ -3,6 +3,7 @@
 #include <DirectXMath.h>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
+#include <grapho/camera/camera.h>
 #include <memory>
 #include <vector>
 #include <vrm/node.h>
@@ -17,6 +18,6 @@ class Cuber
 public:
   Cuber();
   std::vector<cuber::Instance> Instances;
-  void Render(const struct RenderingEnv& camera);
+  void Render(const grapho::camera::Camera& camera);
 };
 }

@@ -10,6 +10,7 @@
 #include <glr/line_gizmo.h>
 #include <glr/rendering_env.h>
 #include <glr/scene_renderer.h>
+#include <grapho/camera/camera.h>
 #include <imgui.h>
 #include <vrm/gizmo.h>
 #include <vrm/humanoid/humanbones.h>
@@ -22,21 +23,21 @@ struct ScenePreviewImpl
   std::array<float, 4> m_clear{ 0, 0, 0, 0 };
   std::shared_ptr<ImFbo> m_fbo;
   std::shared_ptr<glr::RenderingEnv> m_env;
-  std::shared_ptr<grapho::camera::OrbitView> m_view;
+  std::shared_ptr<grapho::camera::Camera> m_camera;
   std::shared_ptr<glr::ViewSettings> m_settings;
   std::shared_ptr<glr::SceneRenderer> m_renderer;
 
-  std::function<void(const grapho::camera::OrbitView& view)> m_show;
+  std::function<void(const grapho::camera::Camera& camera)> m_show;
 
   ScenePreviewImpl(const std::shared_ptr<glr::RenderingEnv>& env)
     : m_env(env)
-    , m_view(new grapho::camera::OrbitView)
+    , m_camera(new grapho::camera::Camera)
     , m_settings(new glr::ViewSettings)
   {
     m_renderer = std::make_shared<glr::SceneRenderer>(m_env, m_settings);
-    m_fbo = ImFbo::Create(m_view, [=](const grapho::camera::OrbitView& view) {
+    m_fbo = ImFbo::Create(m_camera, [=](const grapho::camera::Camera& camera) {
       if (m_show) {
-        m_show(view);
+        m_show(camera);
       }
     });
   }
@@ -44,11 +45,12 @@ struct ScenePreviewImpl
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root)
   {
     m_title = root->m_title;
-    m_show = [root, renderer = m_renderer](const grapho::camera::OrbitView& view) {
-      renderer->RenderStatic(root, view);
+    m_show = [root,
+              renderer = m_renderer](const grapho::camera::Camera& camera) {
+      renderer->RenderStatic(root, camera);
     };
     auto [min, max] = root->GetBoundingBox();
-    m_view->Fit(min, max);
+    m_camera->Fit(min, max);
     if (m_env) {
       m_env->SetShadowHeight(min.y);
     }
@@ -57,11 +59,12 @@ struct ScenePreviewImpl
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
     m_title = runtime->m_base->m_title;
-    m_show = [runtime, renderer = m_renderer](const grapho::camera::OrbitView& view) {
-      renderer->RenderRuntime(runtime, view);
+    m_show = [runtime,
+              renderer = m_renderer](const grapho::camera::Camera& camera) {
+      renderer->RenderRuntime(runtime, camera);
     };
     auto [min, max] = runtime->m_base->GetBoundingBox();
-    m_view->Fit(min, max);
+    m_camera->Fit(min, max);
     if (m_env) {
       m_env->SetShadowHeight(min.y);
     }

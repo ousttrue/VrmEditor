@@ -1,6 +1,7 @@
 #pragma once
 #include "constraint.h"
 #include <functional>
+#include <grapho/euclidean_transform.h>
 #include <vrm/node.h>
 
 namespace libvrm {

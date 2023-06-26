@@ -24,7 +24,8 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
 }
 
 static void
-RenderScene(const RenderingEnv& env,
+RenderScene(const grapho::camera::Camera& camera,
+            const RenderingEnv& env,
             const gltfjson::Root& root,
             const gltfjson::Bin& bin,
             std::span<const boneskin::NodeMesh> nodeMeshes,
@@ -33,7 +34,7 @@ RenderScene(const RenderingEnv& env,
   if (nodeMeshes.size()) {
     glDisable(GL_DEPTH_TEST);
     if (settings->Skybox) {
-      glr::RenderSkybox(env.ProjectionMatrix, env.ViewMatrix);
+      glr::RenderSkybox(camera.ProjectionMatrix, camera.ViewMatrix);
     }
 
     static std::vector<RenderPass> m_renderpass;
@@ -49,26 +50,24 @@ RenderScene(const RenderingEnv& env,
       m_renderpass.push_back(RenderPass::Transparent);
     }
 
-    glr::RenderPasses(m_renderpass, env, root, bin, nodeMeshes);
+    glr::RenderPasses(m_renderpass, camera, env, root, bin, nodeMeshes);
   }
 }
 
 void
 SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                            const grapho::camera::OrbitView& view) const
+                            const grapho::camera::Camera& camera) const
 {
-  view.Update(&m_env->ProjectionMatrix._11, &m_env->ViewMatrix._11);
-  m_env->CameraPosition = view.Position;
-  m_env->Resize(view.Viewport.Width, view.Viewport.Height);
-  glr::ClearRendertarget(*m_env);
+  glr::ClearRendertarget(camera, *m_env);
 
   auto nodestates = scene->NodeStates();
   auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
     *scene->m_gltf, scene->m_bin, nodestates);
-  RenderScene(*m_env, *scene->m_gltf, scene->m_bin, nodeMeshes, m_settings);
+  RenderScene(
+    camera, *m_env, *scene->m_gltf, scene->m_bin, nodeMeshes, m_settings);
 
   if (m_settings->ShowLine) {
-    glr::RenderLine(*m_env, m_gizmo->m_lines);
+    glr::RenderLine(camera, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
 
@@ -79,7 +78,7 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
         .Matrix = m,
       });
     }
-    m_cuber->Render(*m_env);
+    m_cuber->Render(camera);
   }
 
   // manipulator
@@ -97,8 +96,9 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
     } else {
       operation = operation | ImGuizmo::TRANSLATE;
     }
-    if (ImGuizmo::Manipulate(&m_env->ViewMatrix._11,
-                             &m_env->ProjectionMatrix._11,
+
+    if (ImGuizmo::Manipulate(&camera.ViewMatrix._11,
+                             &camera.ProjectionMatrix._11,
                              operation,
                              ImGuizmo::LOCAL,
                              (float*)&m,
@@ -119,12 +119,9 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
 void
 SceneRenderer::RenderRuntime(
   const std::shared_ptr<libvrm::RuntimeScene>& runtime,
-  const grapho::camera::OrbitView& view) const
+  const grapho::camera::Camera& camera) const
 {
-  view.Update(&m_env->ProjectionMatrix._11, &m_env->ViewMatrix._11);
-  m_env->CameraPosition = view.Position;
-  m_env->Resize(view.Viewport.Width, view.Viewport.Height);
-  glr::ClearRendertarget(*m_env);
+  glr::ClearRendertarget(camera, *m_env);
 
   auto nodestates = runtime->m_base->NodeStates();
   if (nodestates.size()) {
@@ -132,7 +129,8 @@ SceneRenderer::RenderRuntime(
     m_settings->NextSpringDelta = {};
     auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
       *runtime->m_base->m_gltf, runtime->m_base->m_bin, nodestates);
-    RenderScene(*m_env,
+    RenderScene(camera,
+                *m_env,
                 *runtime->m_base->m_gltf,
                 runtime->m_base->m_bin,
                 nodeMeshes,
@@ -141,7 +139,7 @@ SceneRenderer::RenderRuntime(
 
   if (m_settings->ShowLine) {
     runtime->DrawGizmo(m_gizmo.get());
-    glr::RenderLine(*m_env, m_gizmo->m_lines);
+    glr::RenderLine(camera, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
 
@@ -152,7 +150,7 @@ SceneRenderer::RenderRuntime(
         .Matrix = m,
       });
     }
-    m_cuber->Render(*m_env);
+    m_cuber->Render(camera);
   }
 
   // manipulator
@@ -170,8 +168,9 @@ SceneRenderer::RenderRuntime(
     } else {
       operation = operation | ImGuizmo::TRANSLATE;
     }
-    if (ImGuizmo::Manipulate(&m_env->ViewMatrix._11,
-                             &m_env->ProjectionMatrix._11,
+
+    if (ImGuizmo::Manipulate(&camera.ViewMatrix._11,
+                             &camera.ProjectionMatrix._11,
                              operation,
                              ImGuizmo::LOCAL,
                              (float*)&m,

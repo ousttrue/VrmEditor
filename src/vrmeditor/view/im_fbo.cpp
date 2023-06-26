@@ -4,11 +4,11 @@
 #include <imgui.h>
 
 std::shared_ptr<ImFbo>
-ImFbo::Create(const std::shared_ptr<grapho::camera::OrbitView>& view,
+ImFbo::Create(const std::shared_ptr<grapho::camera::Camera>& camera,
               const glr::RenderFunc& callback)
 {
   auto ptr = std::make_shared<ImFbo>();
-  ptr->m_rt = std::make_shared<glr::RenderTarget>(view);
+  ptr->m_rt = std::make_shared<glr::RenderTarget>(camera);
   ptr->m_rt->render = callback;
   return ptr;
 }

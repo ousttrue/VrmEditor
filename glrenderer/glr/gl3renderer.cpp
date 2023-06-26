@@ -401,6 +401,7 @@ public:
   }
 
   void RenderPasses(std::span<const RenderPass> passes,
+                    const grapho::camera::Camera& camera,
                     const RenderingEnv& env,
                     const gltfjson::Root& root,
                     const gltfjson::Bin& bin,
@@ -429,7 +430,7 @@ public:
                                      sizeof(boneskin::Vertex),
                                    deformed->Vertices.data());
 
-            Render(pass, env, root, bin, baseMesh, vao, matrix);
+            Render(pass, camera, env, root, bin, baseMesh, vao, matrix);
           }
         }
       }
@@ -437,6 +438,7 @@ public:
   }
 
   void Render(RenderPass pass,
+              const grapho::camera::Camera& camera,
               const RenderingEnv& env,
               const gltfjson::Root& root,
               const gltfjson::Bin& bin,
@@ -449,7 +451,7 @@ public:
         uint32_t drawOffset = 0;
         for (auto& primitive : baseMesh->m_primitives) {
           DrawPrimitive(false,
-                        WorldInfo{ env },
+                        WorldInfo{ camera, env },
                         LocalInfo{ modelMatrix },
                         root,
                         bin,
@@ -466,7 +468,7 @@ public:
         uint32_t drawOffset = 0;
         for (auto& primitive : baseMesh->m_primitives) {
           DrawPrimitive(true,
-                        WorldInfo{ env },
+                        WorldInfo{ camera, env },
                         LocalInfo{ modelMatrix },
                         root,
                         bin,
@@ -485,8 +487,10 @@ public:
             m_shadow = *shadow;
           }
         }
-        m_shadow.Activate(
-          m_shaderSource, WorldInfo{ env }, LocalInfo{ modelMatrix }, {});
+        m_shadow.Activate(m_shaderSource,
+                          WorldInfo{ camera, env },
+                          LocalInfo{ modelMatrix },
+                          {});
         uint32_t drawCount = 0;
         for (auto& primitive : baseMesh->m_primitives) {
           drawCount += primitive.DrawCount * 4;
@@ -668,20 +672,22 @@ ClearBackBuffer(int width, int height)
 
 void
 RenderPasses(std::span<const RenderPass> passes,
+             const grapho::camera::Camera& camera,
              const RenderingEnv& env,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
              std::span<const boneskin::NodeMesh> meshNodes)
 {
-  Gl3Renderer::Instance().RenderPasses(passes, env, root, bin, meshNodes);
+  Gl3Renderer::Instance().RenderPasses(
+    passes, camera, env, root, bin, meshNodes);
 }
 
 void
-ClearRendertarget(const RenderingEnv& env)
+ClearRendertarget(const grapho::camera::Camera& camera, const RenderingEnv& env)
 {
   grapho::gl3::ClearViewport({
-    .Width = env.Width(),
-    .Height = env.Height(),
+    .Width = camera.Projection.Viewport.Width,
+    .Height = camera.Projection.Viewport.Height,
     .Color = { env.PremulR(), env.PremulG(), env.PremulB(), env.Alpha() },
     .Depth = 1.0f,
   });
@@ -740,7 +746,8 @@ GetOrCreateImage(const gltfjson::Root& root,
 }
 
 void
-RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data)
+RenderLine(const grapho::camera::Camera& camera,
+           std::span<const cuber::LineVertex> data)
 {
   static cuber::gl3::GlLineRenderer s_liner;
   s_liner.Render(&camera.ProjectionMatrix._11, &camera.ViewMatrix._11, data);

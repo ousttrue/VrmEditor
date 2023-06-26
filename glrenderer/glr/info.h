@@ -1,30 +1,35 @@
 #pragma once
 #include "rendering_env.h"
 #include <DirectXMath.h>
+#include <grapho/camera/camera.h>
 #include <grapho/vars.h>
 
 namespace glr {
 
 struct WorldInfo
 {
+  const grapho::camera::Camera& m_camera;
   const RenderingEnv& m_env;
 
   DirectX::XMFLOAT4X4 ProjectionMatrix() const
   {
-    return m_env.ProjectionMatrix;
+    return m_camera.ProjectionMatrix;
   }
-  DirectX::XMFLOAT4X4 ViewMatrix() const { return m_env.ViewMatrix; }
+  DirectX::XMFLOAT4X4 ViewMatrix() const { return m_camera.ViewMatrix; }
   DirectX::XMFLOAT4X4 ViewProjectionMatrix() const
   {
     DirectX::XMFLOAT4X4 m;
     DirectX::XMStoreFloat4x4(
       &m,
-      DirectX::XMLoadFloat4x4(&m_env.ViewMatrix) *
-        DirectX::XMLoadFloat4x4(&m_env.ProjectionMatrix));
+      DirectX::XMLoadFloat4x4(&m_camera.ViewMatrix) *
+        DirectX::XMLoadFloat4x4(&m_camera.ProjectionMatrix));
     return m;
   }
   DirectX::XMFLOAT4X4 ShadowMatrix() const { return m_env.ShadowMatrix; }
-  DirectX::XMFLOAT3 CameraPosition() const { return m_env.CameraPosition; }
+  DirectX::XMFLOAT3 CameraPosition() const
+  {
+    return m_camera.Transform.Translation;
+  }
 };
 
 struct LocalInfo

@@ -3,16 +3,17 @@
 #include "rendertarget.h"
 #include <functional>
 #include <glr/rendering_env.h>
+#include <grapho/camera/camera.h>
 #include <grapho/gl3/fbo.h>
-#include <grapho/camera/orbitview.h>
 #include <memory>
 
 namespace glr {
-RenderTarget::RenderTarget(const std::shared_ptr<grapho::camera::OrbitView>& view)
-  : View(view)
+RenderTarget::RenderTarget(
+  const std::shared_ptr<grapho::camera::Camera>& camera)
+  : Camera(camera)
 {
-  if (!View) {
-    View = std::make_shared<grapho::camera::OrbitView>();
+  if (!Camera) {
+    Camera = std::make_shared<grapho::camera::Camera>();
   }
 }
 
@@ -65,20 +66,21 @@ RenderTarget::End(bool isActive,
                   int mouseWheel)
 {
   // update camera
-  View->SetSize(m_width, m_height);
+  Camera->Projection.SetSize(m_width, m_height);
   if (isActive) {
     if (isRightDown) {
-      View->YawPitch(mouseDeltaX, mouseDeltaY);
+      Camera->YawPitch(mouseDeltaX, mouseDeltaY);
     }
     if (isMiddleDown) {
-      View->Shift(mouseDeltaX, mouseDeltaY);
+      Camera->Shift(mouseDeltaX, mouseDeltaY);
     }
   }
   if (isHovered) {
-    View->Dolly(mouseWheel);
+    Camera->Dolly(mouseWheel);
   }
+  Camera->Update();
   if (render) {
-    render(*View);
+    render(*Camera);
   }
 
   Fbo->Unbind();

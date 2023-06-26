@@ -7,6 +7,9 @@
 #include <memory>
 
 namespace grapho {
+namespace camera {
+struct Camera;
+}
 namespace gl3 {
 class Texture;
 class Cubemap;
@@ -52,14 +55,16 @@ ClearBackBuffer(int width, int height);
 
 void
 RenderPasses(std::span<const RenderPass> passes,
-             const RenderingEnv& camera,
+             const grapho::camera::Camera& camera,
+             const RenderingEnv& env,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
              std::span<const boneskin::NodeMesh> meshNodes);
 
 // clear current render target
 void
-ClearRendertarget(const RenderingEnv& camera);
+ClearRendertarget(const grapho::camera::Camera& camera,
+                  const RenderingEnv& env);
 
 // release all resource
 void
@@ -90,7 +95,8 @@ GetOrCreateImage(const gltfjson::Root& root,
                  std::optional<uint32_t> image);
 
 void
-RenderLine(const RenderingEnv& camera, std::span<const cuber::LineVertex> data);
+RenderLine(const grapho::camera::Camera& camera,
+           std::span<const cuber::LineVertex> data);
 
 // for local shader
 void

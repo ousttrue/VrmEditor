@@ -5,7 +5,7 @@
 namespace grapho {
 
 namespace camera {
-struct OrbitView;
+struct Camera;
 }
 
 namespace gl3 {
@@ -16,16 +16,16 @@ class Texture;
 } // namespace
 
 namespace glr {
-using RenderFunc = std::function<void(const grapho::camera::OrbitView& view)>;
+using RenderFunc = std::function<void(const grapho::camera::Camera& camera)>;
 
 struct RenderTarget
 {
-  std::shared_ptr<grapho::camera::OrbitView> View;
+  std::shared_ptr<grapho::camera::Camera> Camera;
   std::shared_ptr<grapho::gl3::Fbo> Fbo;
   std::shared_ptr<grapho::gl3::Texture> FboTexture;
   RenderFunc render;
 
-  RenderTarget(const std::shared_ptr<grapho::camera::OrbitView>& view);
+  RenderTarget(const std::shared_ptr<grapho::camera::Camera>& camera);
   int m_width;
   int m_height;
   uint32_t Begin(int width, int height, const float color[4]);
