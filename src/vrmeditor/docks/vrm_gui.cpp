@@ -133,188 +133,131 @@ struct VrmImpl
     }
   }
 
-  void ShowExpression()
+  void ShowExpression(const char* label, libvrm::Expression& expression)
   {
-    if (auto ex = m_runtime->m_expressions) {
-      // ImGui::Text("%s", "expressions");
-      const float spacing = 4;
-      {
-        static std::vector<SliderLabel> s_labels;
-        s_labels.clear();
+    ImGui::BeginDisabled(expression.Empty());
+    ImGui::SliderFloat(label, &expression.weight, 0, 1);
+    ImGui::EndDisabled();
+  }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
-                            ImVec2(spacing, spacing));
-        ImGui::PushID("set1");
-        // 喜怒哀楽驚
-        auto emotion = SliderColor::FromHue(2.0f / 7);
-        auto happy = ex->Get(libvrm::ExpressionPreset::happy);
-        int i = 0;
-        s_labels.push_back({
-          VSlider(
-            i++, "happy", Enable(happy) ? &happy->weight : nullptr, emotion),
-          "喜",
-        });
-        auto angry = ex->Get(libvrm::ExpressionPreset::angry);
-        s_labels.push_back({
-          VSlider(
-            i++, "angry", Enable(angry) ? &angry->weight : nullptr, emotion),
-          "怒",
-        });
-        auto sad = ex->Get(libvrm::ExpressionPreset::sad);
-        s_labels.push_back({
-          VSlider(i++, "sad", Enable(sad) ? &sad->weight : nullptr, emotion),
-          "哀",
-        });
-        auto relaxed = ex->Get(libvrm::ExpressionPreset::relaxed);
-        s_labels.push_back({
-          VSlider(i++,
-                  "relaxed",
-                  Enable(relaxed) ? &relaxed->weight : nullptr,
-                  emotion),
-          "楽",
-        });
-        auto surprised = ex->Get(libvrm::ExpressionPreset::surprised);
-        s_labels.push_back({
-          VSlider(i++,
-                  "surprised",
-                  Enable(surprised) ? &surprised->weight : nullptr,
-                  emotion),
-          "驚",
-        });
-        // lipsync
-        auto lipsync = SliderColor::FromHue(0.0f / 7);
-        auto lip_aa = ex->Get(libvrm::ExpressionPreset::aa);
-        s_labels.push_back({
-          VSlider(
-            i++, "aa", Enable(lip_aa) ? &lip_aa->weight : nullptr, lipsync),
-          "aa",
-        });
-        auto lip_ih = ex->Get(libvrm::ExpressionPreset::ih);
-        s_labels.push_back({
-          VSlider(
-            i++, "ih", Enable(lip_ih) ? &lip_ih->weight : nullptr, lipsync),
-          "ih",
-        });
-        auto lip_ou = ex->Get(libvrm::ExpressionPreset::ou);
-        s_labels.push_back({
-          VSlider(
-            i++, "ou", Enable(lip_ou) ? &lip_ou->weight : nullptr, lipsync),
-          "ou",
-        });
-        auto lip_ee = ex->Get(libvrm::ExpressionPreset::ee);
-        s_labels.push_back({
-          VSlider(
-            i++, "ee", Enable(lip_ee) ? &lip_ee->weight : nullptr, lipsync),
-          "ee",
-        });
-        auto lip_oh = ex->Get(libvrm::ExpressionPreset::oh);
-        s_labels.push_back({
-          VSlider(
-            i++, "oh", Enable(lip_oh) ? &lip_oh->weight : nullptr, lipsync),
-          "oh",
-        });
-        // blink
-        auto blink = SliderColor::FromHue(4.0f / 7);
-        auto blink_LR = ex->Get(libvrm::ExpressionPreset::blink);
-        s_labels.push_back({
-          VSlider(i++,
-                  "blink",
-                  Enable(blink_LR) ? &blink_LR->weight : nullptr,
-                  blink),
-          "--",
-        });
-        auto blink_L = ex->Get(libvrm::ExpressionPreset::blinkLeft);
-        s_labels.push_back({
-          VSlider(i++,
-                  "blinkLeft",
-                  Enable(blink_L) ? &blink_L->weight : nullptr,
-                  blink),
-          "󰈈-",
-        });
-        auto blink_R = ex->Get(libvrm::ExpressionPreset::blinkRight);
-        s_labels.push_back({
-          VSlider(i++,
-                  "blinkRight",
-                  Enable(blink_R) ? &blink_R->weight : nullptr,
-                  blink),
-          "-󰈈",
-        });
-        // lookat
-        auto lookat = SliderColor::FromHue(6.0f / 7);
-        auto look_up = ex->Get(libvrm::ExpressionPreset::lookUp);
-        s_labels.push_back({
-          VSlider(i++,
-                  "lookUp",
-                  Enable(look_up) ? &look_up->weight : nullptr,
-                  lookat),
-          "󰈈",
-        });
-        auto look_down = ex->Get(libvrm::ExpressionPreset::lookDown);
-        s_labels.push_back({
-          VSlider(i++,
-                  "lookDown",
-                  Enable(look_down) ? &look_down->weight : nullptr,
-                  lookat),
-          "󰈈",
-        });
-        auto look_right = ex->Get(libvrm::ExpressionPreset::lookRight);
-        s_labels.push_back({
-          VSlider(i++,
-                  "lookRight",
-                  Enable(look_right) ? &look_right->weight : nullptr,
-                  lookat),
-          "󰈈",
-        });
-        auto look_left = ex->Get(libvrm::ExpressionPreset::lookLeft);
-        s_labels.push_back({
-          VSlider(i++,
-                  "lookLeft",
-                  Enable(look_left) ? &look_left->weight : nullptr,
-                  lookat),
-          "󰈈",
-        });
+  void ShowExpressionEdit(libvrm::Expressions& expressions) {}
 
-        ImGui::PopID();
-        ImGui::PopStyleVar();
-
-        auto drawList = ImGui::GetWindowDrawList();
-        auto cursor = ImGui::GetCursorScreenPos();
-        for (auto& label : s_labels) {
-          drawList->AddText(
-            { label.X, cursor.y }, IM_COL32_WHITE, label.Label, nullptr);
-        }
-
-        auto textSize = ImGui::CalcTextSize(" ");
-        auto lineheight = textSize.y;
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + lineheight);
+  void ShowExpressionRuntime(libvrm::Expressions& expressions)
+  {
+    ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+    if (ImGui::CollapsingHeader("emotion")) {
+      ShowExpression("😆Happy", expressions.Happy);
+      ShowExpression("😠Angry", expressions.Angry);
+      ShowExpression("😥Sad", expressions.Sad);
+      ShowExpression("🙂Relaxed", expressions.Relaxed);
+      ShowExpression("😯Surprised", expressions.Surprised);
+    }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+    if (ImGui::CollapsingHeader("blink")) {
+      ShowExpression("😉Blink", expressions.Blink);
+      ShowExpression("😉BlinkLeft", expressions.BlinkLeft);
+      ShowExpression("😉BlinkRight", expressions.BlinkRight);
+    }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+    if (ImGui::CollapsingHeader("lipsync")) {
+      ShowExpression("👄Aa", expressions.Aa);
+      ShowExpression("👄Ih", expressions.Ih);
+      ShowExpression("👄Ou", expressions.Ou);
+      ShowExpression("👄Ee", expressions.Ee);
+      ShowExpression("👄Oh", expressions.Oh);
+    }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+    if (ImGui::CollapsingHeader("lookat")) {
+      ShowExpression("👀LookUp", expressions.LookUp);
+      ShowExpression("👀LookDown", expressions.LookDown);
+      ShowExpression("👀LookLeft", expressions.LookLeft);
+      ShowExpression("👀LookRight", expressions.LookRight);
+    }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+    if (ImGui::CollapsingHeader("other")) {
+      ShowExpression("😶Neutral", expressions.Neutral);
+    }
+    if (ImGui::CollapsingHeader("custom")) {
+      for (auto& custom : expressions.CustomExpressions) {
+        ShowExpression(custom.name.c_str(), custom);
       }
     }
   }
 
+  // { { u8"😆", u8"happy" } },
+  // { { u8"😠", u8"angry" } },
+  // { { u8"😥", u8"sad" } },
+  // { { u8"🙂", u8"relaxed" } },
+  // { { u8"😯", u8"surprised" } },
+  // { { u8"👄", u8"aa" } },
+  // { { u8"👄", u8"ih" } },
+  // { { u8"👄", u8"ou" } },
+  // { { u8"👄", u8"ee" } },
+  // { { u8"👄", u8"oh" } },
+  // { { u8"😉", u8"blink" } },
+  // { { u8"😉", u8"blinkLeft" } },
+  // { { u8"😉", u8"blinkRight" } },
+  // { { u8"👀", u8"lookUp" } },
+  // { { u8"👀", u8"lookDown" } },
+  // { { u8"👀", u8"lookLeft" } },
+  // { { u8"👀", u8"lookRight" } },
+  // { { u8"😶", u8"neutral" } },
+  void ShowExpression(libvrm::Expressions& expressions)
+  {
+    if (ImGui::BeginTabBar("Expression")) {
+      if (ImGui::BeginTabItem("🎁Asset")) {
+        ShowExpressionEdit(expressions);
+        ImGui::EndTabItem();
+      }
+
+      if (ImGui::BeginTabItem("🎬Runtime")) {
+        ShowExpressionRuntime(expressions);
+        ImGui::EndTabItem();
+      }
+
+      ImGui::EndTabBar();
+    }
+  }
+
   // [vrm]
-  // meta
-  // humanoid
-  // expression
-  // lookat
-  // firstperson
-  // spring
-  // constraint
-  //
+  // { { u8"🪪", u8"meta" } },
+  // { { u8"👤", u8"humanoid" } },
+  // { { u8"👀", u8"firstPerson" } },
+  // { { u8"😀", u8"blendShapeMaster" } },
+  // { { u8"🔗", u8"secondaryAnimation" } },
+  // { { u8"💎", u8"materialProperties" } },
   void ShowGui()
   {
-    if (ImGui::CollapsingHeader("meta", ImGuiTreeNodeFlags_None)) {
-      ShowMeta();
+    if (!m_runtime) {
+      return;
     }
-    if (ImGui::CollapsingHeader("expression", ImGuiTreeNodeFlags_None)) {
-      ShowExpression();
-    }
-    if (ImGui::CollapsingHeader("lookat", ImGuiTreeNodeFlags_None)) {
-    }
-    if (ImGui::CollapsingHeader("firstperson", ImGuiTreeNodeFlags_None)) {
-    }
-    if (ImGui::CollapsingHeader("spring", ImGuiTreeNodeFlags_None)) {
-    }
-    if (ImGui::CollapsingHeader("constraint", ImGuiTreeNodeFlags_None)) {
+
+    if (ImGui::BeginTabBar("Vrm")) {
+      if (ImGui::BeginTabItem("🪪Meta")) {
+        ShowMeta();
+        ImGui::EndTabItem();
+      }
+
+      if (ImGui::BeginTabItem("😀Expression")) {
+        if (auto ex = m_runtime->m_expressions) {
+          ShowExpression(*ex);
+        }
+        ImGui::EndTabItem();
+      }
+
+      if (ImGui::BeginTabItem("👀LookAt")) {
+        ImGui::EndTabItem();
+      }
+
+      if (ImGui::BeginTabItem("🔗Spring")) {
+        ImGui::EndTabItem();
+      }
+
+      if (ImGui::BeginTabItem("Constraint")) {
+        ImGui::EndTabItem();
+      }
+
+      ImGui::EndTabBar();
     }
   }
 };

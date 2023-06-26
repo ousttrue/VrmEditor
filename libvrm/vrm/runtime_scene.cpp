@@ -40,8 +40,18 @@ ParseVrm0(RuntimeScene* scene, const gltfjson::vrm0::VRM& VRM)
   if (auto expression = VRM.BlendShapeMaster()) {
     scene->m_expressions = std::make_shared<Expressions>();
     for (auto g : expression->BlendShapeGroups) {
-      auto expression = scene->m_expressions->addBlendShape(
-        g.PresetString(), g.NameString(), g.IsBinary() && *g.IsBinary());
+      auto preset = libvrm::ExpressionPresetFromVrm0String(g.PresetString());
+      if (!preset) {
+        preset = libvrm::ExpressionPresetFromVrm0String(g.NameString());
+      }
+      Expression* expression = nullptr;
+      if (preset) {
+        expression = &scene->m_expressions->Preset(*preset);
+      } else {
+        scene->m_expressions->CustomExpressions.push_back({});
+        expression = &scene->m_expressions->CustomExpressions.back();
+      }
+      expression->isBinary = g.IsBinaryOrFalse();
       for (auto bind : g.MorphBinds) {
         expression->morphBinds.push_back({});
         auto& back = expression->morphBinds.back();
@@ -105,27 +115,29 @@ ParseVrm0(RuntimeScene* scene, const gltfjson::vrm0::VRM& VRM)
   }
 }
 
-static std::shared_ptr<Expression>
+static void
 AddExpression(RuntimeScene* scene,
-              const std::u8string& preset,
+              const std::u8string& presetName,
               const std::u8string& name,
-              std::optional<gltfjson::vrm1::Expression> expression)
+              std::optional<gltfjson::vrm1::Expression> src)
 {
-  if (expression) {
-    auto added = scene->m_expressions->addBlendShape(
-      preset, name, expression->IsBinary() ? *expression->IsBinary() : false);
-
-    for (auto morph : expression->MorphTargetBinds) {
-      added->morphBinds.push_back({});
-      auto& back = added->morphBinds.back();
+  if (src) {
+    Expression* expression = nullptr;
+    if (auto preset = libvrm::ExpressionPresetFromVrm1String(presetName)) {
+      expression = &scene->m_expressions->Preset(*preset);
+    } else {
+      // custom
+      scene->m_expressions->CustomExpressions.push_back({});
+      expression = &scene->m_expressions->CustomExpressions.back();
+    }
+    expression->isBinary = src->IsBinaryOrFalse();
+    for (auto morph : src->MorphTargetBinds) {
+      expression->morphBinds.push_back({});
+      auto& back = expression->morphBinds.back();
       back.Node = scene->m_base->m_nodes[*morph.NodeId()];
       back.index = *morph.IndexId();
       back.weight = *morph.Weight();
     }
-
-    return added;
-  } else {
-    return {};
   }
 }
 
@@ -201,18 +213,20 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
         AddExpression(scene, u8"sad", u8"sad", preset->Sad());
         AddExpression(scene, u8"relaxed", u8"relaxed", preset->Relaxed());
         AddExpression(scene, u8"surprised", u8"surprised", preset->Surprised());
-        AddExpression(scene, u8"a", u8"a", preset->Aa());
-        AddExpression(scene, u8"i", u8"i", preset->Ih());
-        AddExpression(scene, u8"u", u8"u", preset->Ou());
-        AddExpression(scene, u8"e", u8"e", preset->Ee());
-        AddExpression(scene, u8"o", u8"o", preset->Oh());
+        AddExpression(scene, u8"aa", u8"aa", preset->Aa());
+        AddExpression(scene, u8"ih", u8"ih", preset->Ih());
+        AddExpression(scene, u8"ou", u8"ou", preset->Ou());
+        AddExpression(scene, u8"ee", u8"ee", preset->Ee());
+        AddExpression(scene, u8"oh", u8"oh", preset->Oh());
         AddExpression(scene, u8"blink", u8"blink", preset->Blink());
-        AddExpression(scene, u8"blink_l", u8"blink_l", preset->BlinkLeft());
-        AddExpression(scene, u8"blink_r", u8"blink_r", preset->BlinkRight());
-        AddExpression(scene, u8"lookup", u8"lookup", preset->LookUp());
-        AddExpression(scene, u8"lookdown", u8"lookdown", preset->LookDown());
-        AddExpression(scene, u8"lookleft", u8"lookleft", preset->LookLeft());
-        AddExpression(scene, u8"lookright", u8"lookright", preset->LookRight());
+        AddExpression(scene, u8"blinkLeft", u8"blinkLeft", preset->BlinkLeft());
+        AddExpression(
+          scene, u8"blinkRight", u8"blinkRight", preset->BlinkRight());
+        AddExpression(scene, u8"lookUp", u8"lookUp", preset->LookUp());
+        AddExpression(scene, u8"lookDown", u8"lookDown", preset->LookDown());
+        AddExpression(scene, u8"lookLeft", u8"lookLeft", preset->LookLeft());
+        AddExpression(scene, u8"lookRight", u8"lookRight", preset->LookRight());
+        AddExpression(scene, u8"neutral", u8"neutral", preset->Neutral());
       }
     }
   }

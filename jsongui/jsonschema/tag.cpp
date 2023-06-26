@@ -114,7 +114,7 @@ AccessorTag(const gltfjson::Root& root,
     for (int i = 0; i < root.Accessors.size(); ++i) {
       auto accessor = root.Accessors[i];
       if (accessor.Sparse()) {
-        tags.push_back("sparse");
+        PushIfNot(tags, "sparse");
       }
       if (accessor.m_json == item) {
         // scalar, vec2, vec3...
