@@ -175,7 +175,7 @@ public:
       { "🏃Humanoid", [=]() { m_humanoid->ShowGui(); } });
 
     DockSpaceManager::Instance().AddDock(
-      { "🏃Vrm", [vrm = m_vrm]() { vrm->Show(); } });
+      { "🏃Vrm", [vrm = m_vrm]() { vrm->ShowGui(); } });
 
     DockSpaceManager::Instance().AddDock(
       { "🔧GizmoSettings", [gizmo = m_gizmo]() { gizmo->ShowGui(); } });

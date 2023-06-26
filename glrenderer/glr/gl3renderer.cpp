@@ -68,9 +68,11 @@ class Gl3Renderer
 {
   std::unordered_map<uint32_t, std::shared_ptr<libvrm::Image>> m_imageMap;
 
-  std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
+  std::unordered_map<std::shared_ptr<libvrm::Image>,
+                     std::shared_ptr<grapho::gl3::Texture>>
     m_srgbTextureMap;
-  std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Texture>>
+  std::unordered_map<std::shared_ptr<libvrm::Image>,
+                     std::shared_ptr<grapho::gl3::Texture>>
     m_linearTextureMap;
   std::vector<std::shared_ptr<Material>> m_materialMap;
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
@@ -203,6 +205,35 @@ public:
   }
 
   std::shared_ptr<grapho::gl3::Texture> GetOrCreateTexture(
+    const std::shared_ptr<libvrm::Image>& image,
+    ColorSpace colorspace)
+  {
+    if (!image) {
+      return nullptr;
+    }
+
+    auto& map =
+      colorspace == ColorSpace::sRGB ? m_srgbTextureMap : m_linearTextureMap;
+
+    auto found = map.find(image);
+    if (found != map.end()) {
+      return found->second;
+    }
+
+    auto texture = grapho::gl3::Texture::Create({
+      image->Width(),
+      image->Height(),
+      grapho::PixelFormat::u8_RGBA,
+      colorspace == ColorSpace::sRGB ? grapho::ColorSpace::sRGB
+                                     : grapho::ColorSpace::Linear,
+      image->Pixels(),
+    });
+
+    map.insert(std::make_pair(image, texture));
+    return texture;
+  }
+
+  std::shared_ptr<grapho::gl3::Texture> GetOrCreateTexture(
     const gltfjson::Root& root,
     const gltfjson::Bin& bin,
     std::optional<uint32_t> id,
@@ -210,14 +241,6 @@ public:
   {
     if (!id) {
       return {};
-    }
-
-    auto& map =
-      colorspace == ColorSpace::sRGB ? m_srgbTextureMap : m_linearTextureMap;
-
-    auto found = map.find(*id);
-    if (found != map.end()) {
-      return found->second;
     }
 
     auto src = root.Textures[*id];
@@ -231,43 +254,36 @@ public:
       return {};
     }
 
-    auto texture = grapho::gl3::Texture::Create({
-      image->Width(),
-      image->Height(),
-      grapho::PixelFormat::u8_RGBA,
-      colorspace == ColorSpace::sRGB ? grapho::ColorSpace::sRGB
-                                     : grapho::ColorSpace::Linear,
-      image->Pixels(),
-    });
-
-    if (auto samplerIndex = src.SamplerId()) {
-      auto sampler = root.Samplers[*samplerIndex];
-      texture->Bind();
-      glTexParameteri(
-        GL_TEXTURE_2D,
-        GL_TEXTURE_MAG_FILTER,
-        gltfjson::value_or<int>(sampler.MagFilter(),
-                                (int)gltfjson::TextureMagFilter::LINEAR));
-      glTexParameteri(
-        GL_TEXTURE_2D,
-        GL_TEXTURE_MIN_FILTER,
-        gltfjson::value_or<int>(sampler.MinFilter(),
-                                (int)gltfjson::TextureMinFilter::LINEAR));
-      glTexParameteri(GL_TEXTURE_2D,
-                      GL_TEXTURE_WRAP_S,
-                      gltfjson::value_or<int>(
-                        sampler.WrapS(), (int)gltfjson::TextureWrap::REPEAT));
-      glTexParameteri(GL_TEXTURE_2D,
-                      GL_TEXTURE_WRAP_T,
-                      gltfjson::value_or<int>(
-                        sampler.WrapT(), (int)gltfjson::TextureWrap::REPEAT));
-      texture->Unbind();
+    if (auto texture = GetOrCreateTexture(image, colorspace)) {
+      if (auto samplerIndex = src.SamplerId()) {
+        auto sampler = root.Samplers[*samplerIndex];
+        texture->Bind();
+        glTexParameteri(
+          GL_TEXTURE_2D,
+          GL_TEXTURE_MAG_FILTER,
+          gltfjson::value_or<int>(sampler.MagFilter(),
+                                  (int)gltfjson::TextureMagFilter::LINEAR));
+        glTexParameteri(
+          GL_TEXTURE_2D,
+          GL_TEXTURE_MIN_FILTER,
+          gltfjson::value_or<int>(sampler.MinFilter(),
+                                  (int)gltfjson::TextureMinFilter::LINEAR));
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_WRAP_S,
+                        gltfjson::value_or<int>(
+                          sampler.WrapS(), (int)gltfjson::TextureWrap::REPEAT));
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_WRAP_T,
+                        gltfjson::value_or<int>(
+                          sampler.WrapT(), (int)gltfjson::TextureWrap::REPEAT));
+        texture->Unbind();
+      } else {
+        // TODO: default sampler
+      }
+      return texture;
     } else {
-      // TODO: default sampler
+      return nullptr;
     }
-
-    map.insert(std::make_pair(*id, texture));
-    return texture;
   }
 
   std::shared_ptr<Material> GetOrCreateMaterial(const gltfjson::Root& root,
