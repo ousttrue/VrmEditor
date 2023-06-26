@@ -4,15 +4,15 @@
 #include <functional>
 #include <glr/rendering_env.h>
 #include <grapho/gl3/fbo.h>
-#include <grapho/orbitview.h>
+#include <grapho/camera/orbitview.h>
 #include <memory>
 
 namespace glr {
-RenderTarget::RenderTarget(const std::shared_ptr<grapho::OrbitView>& view)
+RenderTarget::RenderTarget(const std::shared_ptr<grapho::camera::OrbitView>& view)
   : View(view)
 {
   if (!View) {
-    View = std::make_shared<grapho::OrbitView>();
+    View = std::make_shared<grapho::camera::OrbitView>();
   }
 }
 

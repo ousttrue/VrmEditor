@@ -1,5 +1,5 @@
 #pragma once
-#include <grapho/orbitview.h>
+#include <grapho/camera/orbitview.h>
 #include <span>
 #include <vector>
 #include <vrm/timeline.h>
@@ -42,9 +42,9 @@ struct SceneRenderer
                 const std::shared_ptr<ViewSettings>& settings);
 
   void RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                    const grapho::OrbitView& view) const;
+                    const grapho::camera::OrbitView& view) const;
   void RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
-                     const grapho::OrbitView& view) const;
+                     const grapho::camera::OrbitView& view) const;
 };
 
 } // namespace

@@ -1,7 +1,6 @@
 #include "udpnode.h"
 #include "../view/scene_preview.h"
 #include "udp_receiver.h"
-#include <grapho/orbitview.h>
 #include <imgui.h>
 #include <vrm/gltfroot.h>
 #include <vrm/network/srht_update.h>

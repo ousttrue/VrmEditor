@@ -55,7 +55,7 @@ RenderScene(const RenderingEnv& env,
 
 void
 SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                            const grapho::OrbitView& view) const
+                            const grapho::camera::OrbitView& view) const
 {
   view.Update(&m_env->ProjectionMatrix._11, &m_env->ViewMatrix._11);
   m_env->CameraPosition = view.Position;
@@ -119,7 +119,7 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
 void
 SceneRenderer::RenderRuntime(
   const std::shared_ptr<libvrm::RuntimeScene>& runtime,
-  const grapho::OrbitView& view) const
+  const grapho::camera::OrbitView& view) const
 {
   view.Update(&m_env->ProjectionMatrix._11, &m_env->ViewMatrix._11);
   m_env->CameraPosition = view.Position;

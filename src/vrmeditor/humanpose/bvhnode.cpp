@@ -2,7 +2,6 @@
 #include "../view/scene_preview.h"
 #include "app.h"
 #include "humanpose_stream.h"
-#include <grapho/orbitview.h>
 #include <plog/Log.h>
 #include <vrm/bvh/bvhscene.h>
 #include <vrm/humanoid/humanpose.h>

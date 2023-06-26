@@ -2,7 +2,6 @@
 #include "../view/scene_preview.h"
 #include <fstream>
 #include <gltfjson/glb.h>
-#include <grapho/orbitview.h>
 #include <imgui.h>
 #include <vrm/gltfroot.h>
 #include <vrm/importer.h>

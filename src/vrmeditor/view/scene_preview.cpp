@@ -22,19 +22,19 @@ struct ScenePreviewImpl
   std::array<float, 4> m_clear{ 0, 0, 0, 0 };
   std::shared_ptr<ImFbo> m_fbo;
   std::shared_ptr<glr::RenderingEnv> m_env;
-  std::shared_ptr<grapho::OrbitView> m_view;
+  std::shared_ptr<grapho::camera::OrbitView> m_view;
   std::shared_ptr<glr::ViewSettings> m_settings;
   std::shared_ptr<glr::SceneRenderer> m_renderer;
 
-  std::function<void(const grapho::OrbitView& view)> m_show;
+  std::function<void(const grapho::camera::OrbitView& view)> m_show;
 
   ScenePreviewImpl(const std::shared_ptr<glr::RenderingEnv>& env)
     : m_env(env)
-    , m_view(new grapho::OrbitView)
+    , m_view(new grapho::camera::OrbitView)
     , m_settings(new glr::ViewSettings)
   {
     m_renderer = std::make_shared<glr::SceneRenderer>(m_env, m_settings);
-    m_fbo = ImFbo::Create(m_view, [=](const grapho::OrbitView& view) {
+    m_fbo = ImFbo::Create(m_view, [=](const grapho::camera::OrbitView& view) {
       if (m_show) {
         m_show(view);
       }
@@ -44,7 +44,7 @@ struct ScenePreviewImpl
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root)
   {
     m_title = root->m_title;
-    m_show = [root, renderer = m_renderer](const grapho::OrbitView& view) {
+    m_show = [root, renderer = m_renderer](const grapho::camera::OrbitView& view) {
       renderer->RenderStatic(root, view);
     };
     auto [min, max] = root->GetBoundingBox();
@@ -57,7 +57,7 @@ struct ScenePreviewImpl
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
     m_title = runtime->m_base->m_title;
-    m_show = [runtime, renderer = m_renderer](const grapho::OrbitView& view) {
+    m_show = [runtime, renderer = m_renderer](const grapho::camera::OrbitView& view) {
       renderer->RenderRuntime(runtime, view);
     };
     auto [min, max] = runtime->m_base->GetBoundingBox();
