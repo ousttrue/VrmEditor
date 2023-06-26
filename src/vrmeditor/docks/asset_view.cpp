@@ -82,6 +82,13 @@ GetThumbnailImageid(const gltfjson::Root& root)
   return {};
 }
 
+enum class LoadStatus
+{
+  Yet,
+  Loading,
+  Done,
+};
+
 struct Asset
 {
   std::filesystem::path Path;
@@ -90,6 +97,8 @@ struct Asset
   std::vector<std::u8string> Tags;
   std::vector<uint8_t> ImageBytes;
   std::shared_ptr<grapho::gl3::Texture> Texture;
+
+  LoadStatus m_loaded = {};
 
   Asset(const std::filesystem::path& path)
     : Path(path)
@@ -110,8 +119,85 @@ struct Asset
     Label = icon + path.filename().u8string();
   }
 
+  bool Load()
+  {
+    auto ext = Path.extension().string();
+    if (ext == ".gltf") {
+      auto bytes = libvrm::ReadAllBytes(Path);
+      gltfjson::tree::Parser parser(bytes);
+      if (auto result = parser.Parse()) {
+        auto gltf = gltfjson::Root(result);
+        if (auto used = gltf.ExtensionsUsed()) {
+          if (auto array = used->Array()) {
+            for (auto& ex : *array) {
+              Tags.push_back(ex->U8String());
+            }
+          }
+        }
+      }
+
+    } else if (ext == ".glb" || ext == ".vrm" || ext == ".vrma" ||
+               ext == ".vci") {
+
+      // load thumbnail
+      auto bytes = libvrm::ReadAllBytes(Path);
+      if (auto glb = gltfjson::Glb::Parse(bytes)) {
+        gltfjson::tree::Parser parser(glb->JsonChunk);
+        if (auto result = parser.Parse()) {
+          auto gltf = gltfjson::Root(result);
+          if (auto used = gltf.ExtensionsUsed()) {
+            if (auto array = used->Array()) {
+              for (auto& ex : *array) {
+                Tags.push_back(ex->U8String());
+              }
+            }
+          }
+          if (auto imageId = GetThumbnailImageid(gltf)) {
+            gltfjson::Bin bin{ std::make_shared<gltfjson::Directory>(
+                                 Path.parent_path()),
+                               glb->BinChunk };
+            auto image = gltf.Images[*imageId];
+            if (auto viewId = image.BufferViewId()) {
+              if (auto span = bin.GetBufferViewBytes(gltf, *viewId)) {
+                ImageBytes.assign(span->begin(), span->end());
+              }
+            }
+          }
+        }
+      }
+    }
+    if (ImageBytes.empty()) {
+
+      auto ss = Path.parent_path().parent_path() / "screenshot";
+      if (std::filesystem::is_directory(ss)) {
+        for (auto f : std::filesystem::directory_iterator(ss)) {
+          if (f.path().stem().string() == "screenshot") {
+            ImageBytes = libvrm::ReadAllBytes(f);
+            break;
+          }
+        }
+      }
+    }
+
+    m_loaded = LoadStatus::Done;
+    return true;
+  }
+
+  asio::awaitable<void> LoadAsync()
+  {
+    co_await AsioTask::ThreadTask<bool>::AsyncThredTask(
+      [=]() { return Load(); }, asio::use_awaitable);
+  }
+
   void ShowGui(float w)
   {
+    if (m_loaded == LoadStatus::Yet) {
+      m_loaded = LoadStatus::Loading;
+      asio::co_spawn(AsioTask::Instance().Executor(),
+                     std::bind(&Asset::LoadAsync, this),
+                     asio::detached);
+    }
+
     ImGui::PushID(this);
     if (ImageBytes.size()) {
       if (!Texture) {
@@ -206,60 +292,6 @@ struct AssetViewImpl
         continue;
       }
       auto asset = std::make_shared<Asset>(path);
-      if (ext == ".gltf") {
-        auto bytes = libvrm::ReadAllBytes(path);
-        gltfjson::tree::Parser parser(bytes);
-        if (auto result = parser.Parse()) {
-          auto gltf = gltfjson::Root(result);
-          if (auto used = gltf.ExtensionsUsed()) {
-            if (auto array = used->Array()) {
-              for (auto& ex : *array) {
-                asset->Tags.push_back(ex->U8String());
-              }
-            }
-          }
-        }
-      } else if (ext == ".glb" || ext == ".vrm" || ext == ".vrma" ||
-                 ext == ".vci") {
-        // load thumbnail
-        auto bytes = libvrm::ReadAllBytes(path);
-        if (auto glb = gltfjson::Glb::Parse(bytes)) {
-          gltfjson::tree::Parser parser(glb->JsonChunk);
-          if (auto result = parser.Parse()) {
-            auto gltf = gltfjson::Root(result);
-            if (auto used = gltf.ExtensionsUsed()) {
-              if (auto array = used->Array()) {
-                for (auto& ex : *array) {
-                  asset->Tags.push_back(ex->U8String());
-                }
-              }
-            }
-            if (auto imageId = GetThumbnailImageid(gltf)) {
-              gltfjson::Bin bin{ std::make_shared<gltfjson::Directory>(
-                                   path.parent_path()),
-                                 glb->BinChunk };
-              auto image = gltf.Images[*imageId];
-              if (auto viewId = image.BufferViewId()) {
-                if (auto span = bin.GetBufferViewBytes(gltf, *viewId)) {
-                  asset->ImageBytes.assign(span->begin(), span->end());
-                }
-              }
-            }
-          }
-        }
-      }
-      if (asset->ImageBytes.empty()) {
-        auto ss = path.parent_path().parent_path() / "screenshot";
-        if (std::filesystem::is_directory(ss)) {
-          for (auto f : std::filesystem::directory_iterator(ss)) {
-            if (f.path().stem().string() == "screenshot") {
-              asset->ImageBytes = libvrm::ReadAllBytes(f);
-              break;
-            }
-          }
-        }
-      }
-      // Assets.push_back(asset);
       return asset;
     }
 
@@ -275,13 +307,10 @@ struct AssetViewImpl
 
     for (auto e : std::filesystem::recursive_directory_iterator(Path)) {
 
-      auto asset =
-        co_await AsioTask::ThreadTask<std::shared_ptr<Asset>>::AsyncThredTask(
-          [path = e.path()]() { return Load(path); }, asio::use_awaitable);
-      if (asset) {
+      if (auto asset = Load(e.path())) {
         Assets.push_back(asset);
-        // co_await asio::steady_timer(executor, asio::chrono::seconds(0))
-        //   .async_wait(asio::use_awaitable);
+        co_await asio::steady_timer(executor, asio::chrono::seconds(0))
+          .async_wait(asio::use_awaitable);
       }
     }
 
