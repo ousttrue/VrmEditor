@@ -1,2 +1,5 @@
+If:
+  PathMatch: .*\.h
+
 CompileFlags:
-  Add: [/std:c++latest, -std=c++latest]
+  Add: [-xc++-header]
