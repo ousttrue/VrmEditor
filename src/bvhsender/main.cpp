@@ -50,8 +50,12 @@ main(int argc, char** argv)
     // scene
     {
       auto cubes = bvhPanel.GetCubes();
-      cubeRenderer.Render(app.projection, app.view, cubes.data(), cubes.size());
-      lineRenderer.Render(app.projection, app.view, lines);
+      cubeRenderer.Render(&app.camera.ProjectionMatrix._11,
+                          &app.camera.ViewMatrix._11,
+                          cubes.data(),
+                          cubes.size());
+      lineRenderer.Render(
+        &app.camera.ProjectionMatrix._11, &app.camera.ViewMatrix._11, lines);
       platform.EndFrame(data);
     }
   }

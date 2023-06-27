@@ -1,11 +1,12 @@
 #include "GuiApp.h"
 #include <imgui.h>
 
-GuiApp::GuiApp() {
+GuiApp::GuiApp()
+{
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
+  ImGuiIO& io = ImGui::GetIO();
   (void)io;
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
   // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
@@ -44,16 +45,21 @@ GuiApp::GuiApp() {
   // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
 }
 
-GuiApp::~GuiApp() { ImGui::DestroyContext(); }
+GuiApp::~GuiApp()
+{
+  ImGui::DestroyContext();
+}
 
-void GuiApp::UpdateGuiDockspace() {
+void
+GuiApp::UpdateGuiDockspace()
+{
 
   auto flags =
-      (ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
-       ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar |
-       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
-       ImGuiWindowFlags_NoNavFocus);
+    (ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
+     ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar |
+     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
+     ImGuiWindowFlags_NoNavFocus);
 
   auto viewport = ImGui::GetMainViewport();
   auto pos = viewport->Pos;
@@ -74,25 +80,27 @@ void GuiApp::UpdateGuiDockspace() {
   ImGui::End();
 }
 
-void GuiApp::UpdateGui() {
-  ImGuiIO &io = ImGui::GetIO();
+void
+GuiApp::UpdateGui()
+{
+  ImGuiIO& io = ImGui::GetIO();
   ImGui::NewFrame();
 
   // camera
-  turntable_.SetSize(static_cast<int>(io.DisplaySize.x),
-                     static_cast<int>(io.DisplaySize.y));
+  camera.Projection.SetSize(static_cast<int>(io.DisplaySize.x),
+                            static_cast<int>(io.DisplaySize.y));
   if (!io.WantCaptureMouse) {
     if (io.MouseDown[ImGuiMouseButton_Right]) {
-      turntable_.YawPitch(static_cast<int>(io.MouseDelta.x),
-                          static_cast<int>(io.MouseDelta.y));
+      camera.YawPitch(static_cast<int>(io.MouseDelta.x),
+                      static_cast<int>(io.MouseDelta.y));
     }
     if (io.MouseDown[ImGuiMouseButton_Middle]) {
-      turntable_.Shift(static_cast<int>(io.MouseDelta.x),
-                       static_cast<int>(io.MouseDelta.y));
+      camera.Shift(static_cast<int>(io.MouseDelta.x),
+                   static_cast<int>(io.MouseDelta.y));
     }
-    turntable_.Dolly(static_cast<int>(io.MouseWheel));
+    camera.Dolly(static_cast<int>(io.MouseWheel));
   }
-  turntable_.Update(projection, view);
+  camera.Update();
 
   // Widgets
   UpdateGuiDockspace();
@@ -115,15 +123,17 @@ void GuiApp::UpdateGui() {
     ImGui::Text("This is some useful text."); // Display some text (you can
                                               // use a format strings too)
     ImGui::Checkbox(
-        "Demo Window",
-        &show_demo_window); // Edit bools storing our window open/close state
+      "Demo Window",
+      &show_demo_window); // Edit bools storing our window open/close state
     ImGui::Checkbox("Another Window", &show_another_window);
 
-    ImGui::SliderFloat("float", &f, 0.0f,
+    ImGui::SliderFloat("float",
+                       &f,
+                       0.0f,
                        1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
     ImGui::ColorEdit3(
-        "clear color",
-        (float *)&clear_color_); // Edit 3 floats representing a color
+      "clear color",
+      (float*)&clear_color_); // Edit 3 floats representing a color
 
     if (ImGui::Button("Button")) // Buttons return true when clicked (most
                                  // widgets return true when edited/activated)
@@ -132,17 +142,18 @@ void GuiApp::UpdateGui() {
     ImGui::Text("counter = %d", counter);
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                1000.0f / ImGui::GetIO().Framerate,
+                ImGui::GetIO().Framerate);
     ImGui::End();
   }
 
   // 3. Show another simple window.
   if (show_another_window) {
     ImGui::Begin(
-        "Another Window",
-        &show_another_window); // Pass a pointer to our bool variable (the
-                               // window will have a closing button that will
-                               // clear the bool when clicked)
+      "Another Window",
+      &show_another_window); // Pass a pointer to our bool variable (the
+                             // window will have a closing button that will
+                             // clear the bool when clicked)
     ImGui::Text("Hello from another window!");
     if (ImGui::Button("Close Me"))
       show_another_window = false;
@@ -150,7 +161,9 @@ void GuiApp::UpdateGui() {
   }
 }
 
-ImDrawData *GuiApp::RenderGui() {
+ImDrawData*
+GuiApp::RenderGui()
+{
   ImGui::Render();
 
   clear_color[0] = clear_color_[0] * clear_color_[3];
