@@ -2,26 +2,35 @@
 
 光源設定です。
 
-:::{note}
-PBR と MToon で別の Shader を使っているため、
-効き方が異なります。
-:::
-
 ![lighting](lighting.jpg){w=600px align=center}
 
 - hdr 画像をロードできます
 
-## default
+## KHR_lights_punctual 拡張(WIP)
 
-- directional light 一灯
+:::{note}
+`v0.11.0` 現在では PBR と MToon で別の Shader を使っているため、
+光源の効き方が異なります。
+:::
 
-## KHR_lights_punctual 拡張
+伝統的な `directional`, `point`, `spot` ライトです。
 
 https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_lights_punctual/README.md
 
-伝統的な `directional`, `point`, `spot` ライトです。
+### default
+
+- directional light 一灯
+
+### glTF 内に KHR_lights_punctual があった場合
+
 デフォルトの directional light を置き換えます
 
-## hdr 画像
+## hdr 画像による環境光源
 
-- IBL を追加します。PBR (materialのみ有効)
+:::{note}
+`v0.11.0` 現在では PBR と MToon で別の Shader を使っているため、
+光源の効き方が異なります。
+:::
+
+- IBL を追加します。
+- SkyBox を追加します。

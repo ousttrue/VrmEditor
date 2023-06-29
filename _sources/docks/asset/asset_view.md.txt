@@ -1,7 +1,9 @@
-# 🌳3D-View
+# 🎁AssetView
 
 glTF の内容を表示します。
 アニメーションしない状態を表示します。
+
+![json](json.jpg){w=600px align=center}
 
 - [ ] grid 地面グリッドの表示、非表示。1メートル単位
 - [ ] mesh mesh の表示、非表示

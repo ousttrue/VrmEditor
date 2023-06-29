@@ -1,29 +1,20 @@
-# docks
+# 各画面の説明
 
-各画面の説明
+`v1.11.0`
 
-`v1.9.0`
+## menu
 
-## menu-docks
-
-* Reset 配置を初期化します。
+* Reset: 配置を初期化します。画面が変になったときに使用してください。
 
 ![docks](docks_menu.jpg){w=300px align=center}
 
 ```{toctree}
-:maxdepth: 2
 logger.md
-json.md
-3D-view.md
-pose.md
+asset/index.md
 hierarchy.md
-animation.md
+runtime/index.md
 lighting.md
-GL_impl.md
-GL_selector.md
-GL_source.md
-GL_variable.md
-humanoid_pose.md
-expression.md
-vrm.md
+glsl.md
+humanoid/index.md
 ```
+

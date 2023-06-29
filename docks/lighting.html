@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Shader" href="../shader/index.html" /><link rel="prev" title="🎬Animation" href="animation.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="🔍GLSL 動作確認向け" href="glsl.html" /><link rel="prev" title="🎬Animation" href="runtime/animation.html" />
 
     <!-- Generated with Sphinx 6.2.1 and Furo 2023.05.20 -->
         <title>💡Lighting.md - vrmeditor documentation</title>
@@ -155,16 +155,28 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">docks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of docks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="json.html">🌳Json</a></li>
-<li class="toctree-l2"><a class="reference internal" href="3D-view.html">🌳3D-View</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pose.html">🎬Pose</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hierarchy.html">🎬Hierarchy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="animation.html">🎬Animation</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">💡Lighting.md</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">各画面の説明</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of 各画面の説明</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="asset/index.html">🎁Asset系の画面</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of 🎁Asset系の画面</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="asset/json.html">🎁Json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asset/asset_view.html">🎁AssetView</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../shader/index.html">Shader</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Shader</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="hierarchy.html">🌳Hierarchy</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtime/index.html">🎬Runtime系の画面</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of 🎬Runtime系の画面</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtime/runtime_view.html">🎬RuntimeView</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtime/animation.html">🎬Animation</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">💡Lighting.md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="glsl.html">🔍GLSL 動作確認向け</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="humanoid/index.html">🏃Humanoid</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of 🏃Humanoid</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="humanoid/humanoid_bones.html">🦴Bones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="humanoid/humanoid_input.html">🏃Input</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../shader/index.html">Shader</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Shader</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../shader/khronos_shader.html">glTF-Sample-Viewer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../shader/three_vrm_shader.html">Three-vrm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../shader/ibl.html">IBLについて</a></li>
@@ -207,31 +219,40 @@
           <section class="tex2jax_ignore mathjax_ignore" id="lighting-md">
 <h1>💡Lighting.md<a class="headerlink" href="#lighting-md" title="Permalink to this heading">#</a></h1>
 <p>光源設定です。</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>PBR と MToon で別の Shader を使っているため、
-効き方が異なります。</p>
-</div>
 <p><a class="reference internal" href="../_images/lighting.jpg"><img alt="lighting" class="align-center" src="../_images/lighting.jpg" style="width: 600px;" /></a></p>
 <ul class="simple">
 <li><p>hdr 画像をロードできます</p></li>
 </ul>
+<section id="khr-lights-punctual-wip">
+<h2>KHR_lights_punctual 拡張(WIP)<a class="headerlink" href="#khr-lights-punctual-wip" title="Permalink to this heading">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">v0.11.0</span></code> 現在では PBR と MToon で別の Shader を使っているため、
+光源の効き方が異なります。</p>
+</div>
+<p>伝統的な <code class="docutils literal notranslate"><span class="pre">directional</span></code>, <code class="docutils literal notranslate"><span class="pre">point</span></code>, <code class="docutils literal notranslate"><span class="pre">spot</span></code> ライトです。</p>
+<p><a class="reference external" href="https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_lights_punctual/README.md">https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_lights_punctual/README.md</a></p>
 <section id="default">
-<h2>default<a class="headerlink" href="#default" title="Permalink to this heading">#</a></h2>
+<h3>default<a class="headerlink" href="#default" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>directional light 一灯</p></li>
 </ul>
 </section>
-<section id="khr-lights-punctual">
-<h2>KHR_lights_punctual 拡張<a class="headerlink" href="#khr-lights-punctual" title="Permalink to this heading">#</a></h2>
-<p><a class="reference external" href="https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_lights_punctual/README.md">https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_lights_punctual/README.md</a></p>
-<p>伝統的な <code class="docutils literal notranslate"><span class="pre">directional</span></code>, <code class="docutils literal notranslate"><span class="pre">point</span></code>, <code class="docutils literal notranslate"><span class="pre">spot</span></code> ライトです。
-デフォルトの directional light を置き換えます</p>
+<section id="gltf-khr-lights-punctual">
+<h3>glTF 内に KHR_lights_punctual があった場合<a class="headerlink" href="#gltf-khr-lights-punctual" title="Permalink to this heading">#</a></h3>
+<p>デフォルトの directional light を置き換えます</p>
+</section>
 </section>
 <section id="hdr">
-<h2>hdr 画像<a class="headerlink" href="#hdr" title="Permalink to this heading">#</a></h2>
+<h2>hdr 画像による環境光源<a class="headerlink" href="#hdr" title="Permalink to this heading">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">v0.11.0</span></code> 現在では PBR と MToon で別の Shader を使っているため、
+光源の効き方が異なります。</p>
+</div>
 <ul class="simple">
-<li><p>IBL を追加します。PBR (materialのみ有効)</p></li>
+<li><p>IBL を追加します。</p></li>
+<li><p>SkyBox を追加します。</p></li>
 </ul>
 </section>
 </section>
@@ -241,16 +262,16 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../shader/index.html">
+          <a class="next-page" href="glsl.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Shader</div>
+                <div class="title">🔍GLSL 動作確認向け</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="animation.html">
+          <a class="prev-page" href="runtime/animation.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
@@ -292,9 +313,12 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">💡Lighting.md</a><ul>
+<li><a class="reference internal" href="#khr-lights-punctual-wip">KHR_lights_punctual 拡張(WIP)</a><ul>
 <li><a class="reference internal" href="#default">default</a></li>
-<li><a class="reference internal" href="#khr-lights-punctual">KHR_lights_punctual 拡張</a></li>
-<li><a class="reference internal" href="#hdr">hdr 画像</a></li>
+<li><a class="reference internal" href="#gltf-khr-lights-punctual">glTF 内に KHR_lights_punctual があった場合</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#hdr">hdr 画像による環境光源</a></li>
 </ul>
 </li>
 </ul>
