@@ -7,7 +7,27 @@
 
 read, write, edit and animation test.
 
+## download
+
+https://github.com/ousttrue/VrmEditor/releases
+
 ![vrmeditor](vrmeditor.jpg){w=600px align=center}
+
+## 使い方
+
+- 起動引き数に vrm を指定する
+
+`vrmeditor.exe xxx.vrm`
+
+- window にファイルをドロップする
+- menu - File - Open から開く
+
+## 対応フォーマット
+
+- glTF全般(glTF, glb, vrm(0.x & 1.0), vci...etc)
+- bvh
+- fbx(WIP)
+- hdr(skybox)
 
 ```{toctree}
 docks/index

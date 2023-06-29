@@ -1,15 +1,25 @@
 # 🌳Hierarchy
 
+## 🎁Asset tab
+
 ![docks](hierarchy.jpg){w=600px align=center}
 
-## 🎁asset tab
-
+* glTF の node を親子ツリーで表示します。
 * Node を選択できます。
-* glTF ノード(json)の移動・回転・拡縮が表示されます。
+* HumanBone の選択ができます。
+* glTF ノード(json)の移動(Translation)・回転(Rotation)・拡縮(Scale) が表示されます。
+  * 変更結果は Json/AssetView に反映されます。
 
-## 🎬runtime tab
+:::{note}
+正規化済みのモデルでは、回転 = {0,0,0,1} かつ 拡縮 = {1,1,1} になります。
+:::
 
+## 🎬Runtime tab
+
+* glTF の node を親子ツリーで表示します。
 * Node を選択できます。
-* runtime ノード(animation)の移動・回転・拡縮が表示されます。
-* SpringBone が連動します
-* Constraint が連動します
+* Runtime ノード(animation)の移動(Translation)・回転(Rotation)・拡縮(Scale)が表示されます。
+    * 変更結果は RuntimeView に反映されます。
+    * Json には反映されません。
+    * SpringBone が連動します
+    * Constraint が連動します
