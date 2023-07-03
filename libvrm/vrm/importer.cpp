@@ -63,16 +63,19 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
 {
   scene->m_title = "glTF";
 
-  // if (has(scene->m_gltf->Json, "extensionsRequired")) {
-  //   for (auto& ex : scene->m_gltf->Json.at("extensionsRequired")) {
-  //     if (ex == "KHR_draco_mesh_compression") {
-  //       return std::unexpected{ "KHR_draco_mesh_compression" };
-  //     }
-  //     if (ex == "KHR_mesh_quantization") {
-  //       return std::unexpected{ "KHR_mesh_quantization" };
-  //     }
-  //   }
-  // }
+  if (auto required = scene->m_gltf->ExtensionsRequired()) {
+    if (auto array = required->Array()) {
+      for (auto ex : *array) {
+        auto name = ex->U8String();
+        if (name == u8"KHR_draco_mesh_compression") {
+          return std::unexpected{ "KHR_draco_mesh_compression" };
+        }
+        if (name == u8"KHR_mesh_quantization") {
+          return std::unexpected{ "KHR_mesh_quantization" };
+        }
+      }
+    }
+  }
 
   {
     auto& nodes = scene->m_gltf->Nodes;
@@ -117,6 +120,12 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
             }
           }
         }
+      }
+    }
+    if (auto pose =
+          VRMC_vrm_animation->GetExtension<gltfjson::vrm1::VRMC_vrm_pose>()) {
+      if (auto humanoid = pose->Humanoid()) {
+
       }
     }
   } else if (auto VRMC_vrm =

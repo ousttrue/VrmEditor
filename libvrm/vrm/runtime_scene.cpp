@@ -379,30 +379,91 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
   return ptr;
 }
 
-RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& table)
-  : m_base(table)
+static DirectX::XMFLOAT3
+ToVec3(const gltfjson::tree::NodePtr& json)
+{
+  DirectX::XMFLOAT3 v3;
+  if (auto a = json->Array()) {
+    int i = 0;
+    for (auto v : *a) {
+      if (auto p = v->Ptr<float>()) {
+        (&v3.x)[i++] = *p;
+      }
+    }
+  }
+  return v3;
+}
+
+static DirectX::XMFLOAT4
+ToVec4(const gltfjson::tree::NodePtr& json)
+{
+  DirectX::XMFLOAT4 v4;
+  if (auto a = json->Array()) {
+    int i = 0;
+    for (auto v : *a) {
+      if (auto p = v->Ptr<float>()) {
+        (&v4.x)[i++] = *p;
+      }
+    }
+  }
+  return v4;
+}
+
+RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& base)
+  : m_base(base)
 {
   m_timeline = std::make_shared<Timeline>();
   Reset();
 
-  if (table->m_gltf) {
+  if (base->m_gltf) {
     if (auto VRMC_vrm =
-          table->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
+          base->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
       ParseVrm1(this, *VRMC_vrm);
-    } else if (auto VRM = table->m_gltf->GetExtension<gltfjson::vrm0::VRM>()) {
+    } else if (auto VRM = base->m_gltf->GetExtension<gltfjson::vrm0::VRM>()) {
       ParseVrm0(this, *VRM);
     }
 
     ParseConstraint(this);
 
-    for (int i = 0; i < table->m_gltf->Animations.size(); ++i) {
-      if (auto animation = ParseAnimation(*table->m_gltf, table->m_bin, i)) {
+    for (int i = 0; i < base->m_gltf->Animations.size(); ++i) {
+      if (auto animation = ParseAnimation(*base->m_gltf, base->m_bin, i)) {
         m_animations.push_back(*animation);
+      }
+    }
+
+    if (auto VRMC_vrm_animation =
+          base->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm_animation>()) {
+      if (auto VRMC_vrm_pose =
+            VRMC_vrm_animation->GetExtension<gltfjson::vrm1::VRMC_vrm_pose>()) {
+
+        if (auto humanoid = VRMC_vrm_pose->Humanoid()) {
+          for (auto kv : *humanoid) {
+            if (kv.first == u8"translation") {
+              if (auto node = GetBoneNode(HumanBones::hips)) {
+                auto v = ToVec3(kv.second);
+                node->Transform.Translation = v;
+              }
+            }
+            if (kv.first == u8"rotations") {
+              if (auto rotations = kv.second->Object()) {
+                for (auto [key, value] : *rotations) {
+                  if (auto bone = HumanBoneFromName(gltfjson::from_u8(key),
+                                                    VrmVersion::_1_0)) {
+                    if (auto node = GetBoneNode(*bone)) {
+                      DirectX::XMFLOAT4 q = ToVec4(value);
+                      node->Transform.Rotation = q;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
 
-  table->m_sceneUpdated.push_back([=](const auto&) {
+  base->m_sceneUpdated.push_back([=](const auto&) {
     for (auto& root : m_roots) {
       root->CalcWorldMatrix(true);
     }
