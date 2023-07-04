@@ -103,12 +103,27 @@ struct BaseMesh
     return m_indices.size() * sizeof(m_indices[0]);
   }
 
-  size_t addPosition(std::span<const DirectX::XMFLOAT3> values)
+  size_t AddPosition(std::span<const DirectX::XMFLOAT3> values)
   {
     auto offset = m_vertices.size();
     m_vertices.resize(offset + values.size());
     for (size_t i = 0; i < values.size(); ++i) {
       m_vertices[offset + i].Position = values[i];
+    }
+    return offset;
+  }
+
+  size_t AddPosition(const gltfjson::MemoryBlock& block)
+  {
+    auto offset = m_vertices.size();
+    if (block.Stride == 12) {
+      m_vertices.resize(m_vertices.size() + block.Count);
+      auto p = block.Span.data();
+      for (size_t i = 0; i < block.Count; ++i, p += block.Stride) {
+        m_vertices[offset + i].Position = *((const DirectX::XMFLOAT3*)p);
+      }
+    } else {
+      assert(false);
     }
     return offset;
   }

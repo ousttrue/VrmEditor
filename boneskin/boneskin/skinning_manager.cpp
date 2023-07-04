@@ -98,22 +98,15 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
       }
     } else {
       // extend vertex buffer
-      std::span<const DirectX::XMFLOAT3> positions;
-      if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
-            root, *prim.Attributes()->POSITION_Id())) {
-        positions = *accessor;
-      } else {
-        return std::unexpected{ accessor.error() };
-      }
-      // if (scene->m_type == ModelType::Vrm0) {
-      // std::vector<DirectX::XMFLOAT3> copy;
-      //   copy.reserve(positions.size());
-      //   for (auto& p : positions) {
-      //     copy.push_back({ -p.x, p.y, -p.z });
-      //   }
-      //   positions = copy;
+      auto positions = bin.GetAccessorBlock(root, *prim.Attributes()->POSITION_Id());
+      // std::span<const DirectX::XMFLOAT3> positions;
+      // if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
+      //       root, *prim.Attributes()->POSITION_Id())) {
+      //   positions = *accessor;
+      // } else {
+      //   return std::unexpected{ accessor.error() };
       // }
-      auto offset = ptr->addPosition(positions);
+      auto offset = ptr->AddPosition(*positions);
 
       if (auto normal = prim.Attributes()->NORMAL_Id()) {
         if (auto accessor =
