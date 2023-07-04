@@ -103,7 +103,7 @@ public:
   }
 
   bool LoadMotion(const std::filesystem::path& path);
-
+  bool LoadVrmPose(const std::string &json);
   void ShowGui();
   void Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node = {});
 };

@@ -2,12 +2,14 @@
 #include "humanbones.h"
 #include <DirectXMath.h>
 #include <span>
+#include <vector>
 
 namespace libvrm {
 
 struct HumanPose
 {
   DirectX::XMFLOAT3 RootPosition = { 0, 0, 0 };
+  // require external payload
   std::span<const HumanBones> Bones;
   std::span<const DirectX::XMFLOAT4> Rotations;
 
@@ -91,6 +93,29 @@ struct HumanPose
     };
     assert(std::size(s_bones) == std::size(s_rotations));
     return { { 0, 0, 0 }, s_bones, s_rotations };
+  }
+};
+
+struct HumanPosePayload
+{
+  DirectX::XMFLOAT3 RootPosition = { 0, 0, 0 };
+  std::vector<HumanBones> Bones;
+  std::vector<DirectX::XMFLOAT4> Rotations;
+
+  void SetPose(const HumanPose& pose)
+  {
+    RootPosition = pose.RootPosition;
+    Bones.assign(pose.Bones.begin(), pose.Bones.end());
+    Rotations.assign(pose.Rotations.begin(), pose.Rotations.end());
+  }
+
+  HumanPose GetPose() const
+  {
+    return {
+      RootPosition,
+      Bones,
+      Rotations,
+    };
   }
 };
 

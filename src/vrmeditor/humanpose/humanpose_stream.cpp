@@ -1,10 +1,17 @@
 #include "humanpose_stream.h"
 #include "app.h"
 #include "bvhnode.h"
+#include "posenode.h"
 #include "udpnode.h"
+#include <gltfjson/gltf_typing_vrm1.h>
 #include <imnodes.h>
 #include <plog/Log.h>
 #include <vrm/fileutil.h>
+#include <vrm/gltfroot.h>
+#include <vrm/humanoid/humanbones.h>
+#include <vrm/importer.h>
+#include <vrm/runtime_node.h>
+#include <vrm/runtime_scene.h>
 
 namespace humanpose {
 struct HumanPoseSink : public GraphNodeBase
@@ -17,17 +24,6 @@ struct HumanPoseSink : public GraphNodeBase
     // pull upstream data
     assert(inputs.size() == 1);
     Pull(inputs);
-  }
-};
-
-struct InitialPose : public GraphNodeBase
-{
-  // constructor
-  using GraphNodeBase::GraphNodeBase;
-
-  void TimeUpdate(libvrm::Time time) override
-  {
-    Outputs[0].Value = libvrm::HumanPose::Initial();
   }
 };
 
@@ -112,7 +108,7 @@ HumanPoseStream::HumanPoseStream()
     {},
     std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
 
-  CreateNode<InitialPose>(
+  CreateNode<PoseNode>(
     "InitialPose",
     "SrcNode",
     {},
@@ -254,6 +250,60 @@ HumanPoseStream::LoadMotion(const std::filesystem::path& path)
   return true;
 }
 
+bool
+HumanPoseStream::LoadVrmPose(const std::string& json)
+{
+  if (auto loaded = libvrm::LoadGltf(json)) {
+    // auto scene = SetGltf(*gltf);
+    PLOG_INFO << "paste gltf string";
+
+    auto node = CreateNode<PoseNode>(
+      "VRMC_vrm_pose",
+      "SrcNode",
+      {},
+      std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
+    auto runtime = std::make_shared<libvrm::RuntimeScene>(*loaded);
+
+    if (auto VRMC_vrm_animation =
+          runtime->m_base->m_gltf
+            ->GetExtension<gltfjson::vrm1::VRMC_vrm_animation>()) {
+      if (auto VRMC_vrm_pose =
+            VRMC_vrm_animation->GetExtension<gltfjson::vrm1::VRMC_vrm_pose>()) {
+
+        if (auto humanoid = VRMC_vrm_pose->Humanoid()) {
+          for (auto kv : *humanoid) {
+            if (kv.first == u8"translation") {
+              if (auto node = runtime->GetBoneNode(libvrm::HumanBones::hips)) {
+                auto v = libvrm::ToVec3(kv.second);
+                node->Transform.Translation = v;
+              }
+            }
+            if (kv.first == u8"rotations") {
+              if (auto rotations = kv.second->Object()) {
+                for (auto [key, value] : *rotations) {
+                  if (auto bone = libvrm::HumanBoneFromName(
+                        gltfjson::from_u8(key), libvrm::VrmVersion::_1_0)) {
+                    if (auto node = runtime->GetBoneNode(*bone)) {
+                      DirectX::XMFLOAT4 q = libvrm::ToVec4(value);
+                      node->Transform.Rotation = q;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          node->Payload.SetPose(runtime->UpdateHumanPose());
+        }
+      }
+    }
+
+    return true;
+  } else {
+    PLOG_ERROR << loaded.error();
+    return false;
+  }
+}
+
 void
 HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
 {
@@ -283,5 +333,4 @@ HumanPoseStream::Update(libvrm::Time time, std::shared_ptr<GraphNodeBase> node)
   // process
   node->PullData(inputs);
 }
-
 }

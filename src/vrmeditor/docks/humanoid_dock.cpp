@@ -1,4 +1,5 @@
 #include "humanoid_dock.h"
+#include "app.h"
 #include "humanpose/humanpose_stream.h"
 #include "platform.h"
 #include <grapho/imgui/printfbuffer.h>
@@ -6,7 +7,6 @@
 #include <vrm/gltfroot.h>
 #include <vrm/humanoid/humanbones.h>
 #include <vrm/node.h>
-#include "app.h"
 
 struct ImHumanoid
 {
@@ -171,9 +171,13 @@ HumanoidDock::ShowGui()
           auto humanpose = m_humanoid->m_runtime->CopyVrmPoseText();
           Platform::Instance().CopyText(humanpose);
         }
-        if (ImGui::Button("Paste")) {
+        if (ImGui::Button("Paste as scene")) {
           auto json = Platform::Instance().PasteText();
           app::LoadGltfString(json);
+        }
+        if (ImGui::Button("Paste as pose")) {
+          auto json = Platform::Instance().PasteText();
+          humanpose::HumanPoseStream::Instance().LoadVrmPose(json);
         }
       }
       m_humanoid->ShowPose();

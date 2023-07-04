@@ -379,36 +379,6 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
   return ptr;
 }
 
-static DirectX::XMFLOAT3
-ToVec3(const gltfjson::tree::NodePtr& json)
-{
-  DirectX::XMFLOAT3 v3;
-  if (auto a = json->Array()) {
-    int i = 0;
-    for (auto v : *a) {
-      if (auto p = v->Ptr<float>()) {
-        (&v3.x)[i++] = *p;
-      }
-    }
-  }
-  return v3;
-}
-
-static DirectX::XMFLOAT4
-ToVec4(const gltfjson::tree::NodePtr& json)
-{
-  DirectX::XMFLOAT4 v4;
-  if (auto a = json->Array()) {
-    int i = 0;
-    for (auto v : *a) {
-      if (auto p = v->Ptr<float>()) {
-        (&v4.x)[i++] = *p;
-      }
-    }
-  }
-  return v4;
-}
-
 RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& base)
   : m_base(base)
 {
