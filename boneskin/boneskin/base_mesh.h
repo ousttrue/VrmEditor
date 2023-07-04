@@ -103,23 +103,13 @@ struct BaseMesh
     return m_indices.size() * sizeof(m_indices[0]);
   }
 
-  size_t AddPosition(std::span<const DirectX::XMFLOAT3> values)
-  {
-    auto offset = m_vertices.size();
-    m_vertices.resize(offset + values.size());
-    for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[offset + i].Position = values[i];
-    }
-    return offset;
-  }
-
   size_t AddPosition(const gltfjson::MemoryBlock& block)
   {
     auto offset = m_vertices.size();
     if (block.Stride == 12) {
-      m_vertices.resize(m_vertices.size() + block.Count);
+      m_vertices.resize(m_vertices.size() + block.ItemCount);
       auto p = block.Span.data();
-      for (size_t i = 0; i < block.Count; ++i, p += block.Stride) {
+      for (size_t i = 0; i < block.ItemCount; ++i, p += block.Stride) {
         m_vertices[offset + i].Position = *((const DirectX::XMFLOAT3*)p);
       }
     } else {
@@ -128,19 +118,21 @@ struct BaseMesh
     return offset;
   }
 
-  void setNormal(uint32_t offset, std::span<const DirectX::XMFLOAT3> values)
+  void SetNormal(uint32_t offset, const gltfjson::MemoryBlock& block)
   {
-    assert(offset + values.size() == m_vertices.size());
-    for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[offset + i].Normal = values[i];
+    assert(offset + block.ItemCount == m_vertices.size());
+    auto p = block.Span.data();
+    for (size_t i = 0; i < block.ItemCount; ++i, p += block.Stride) {
+      m_vertices[offset + i].Normal = *((const DirectX::XMFLOAT3*)p);
     }
   }
 
-  void setUv(uint32_t offset, std::span<const DirectX::XMFLOAT2> values)
+  void SetUv(uint32_t offset, const gltfjson::MemoryBlock& block)
   {
-    assert(offset + values.size() == m_vertices.size());
-    for (size_t i = 0; i < values.size(); ++i) {
-      m_vertices[offset + i].Uv = values[i];
+    assert(offset + block.ItemCount == m_vertices.size());
+    auto p = block.Span.data();
+    for (size_t i = 0; i < block.ItemCount; ++i, p += block.Stride) {
+      m_vertices[offset + i].Uv = *((const DirectX::XMFLOAT2*)p);
     }
   }
 
@@ -154,21 +146,24 @@ struct BaseMesh
 
   // T=byte4 or ushort4
   template<typename T>
-  void setBoneSkinning(uint32_t offset,
-                       std::span<const T> joints,
-                       std::span<const DirectX::XMFLOAT4> weights)
+  void SetBoneSkinning(uint32_t offset,
+                       const gltfjson::MemoryBlock& joints,
+                       const gltfjson::MemoryBlock& weights)
   {
-    assert(offset + joints.size() == m_vertices.size());
-    assert(offset + weights.size() == m_vertices.size());
+    assert(offset + joints.ItemCount == m_vertices.size());
+    assert(offset + weights.ItemCount == m_vertices.size());
     m_bindings.resize(m_vertices.size());
-    for (size_t i = 0; i < joints.size(); ++i) {
+    auto pJ = joints.Span.data();
+    auto pW = weights.Span.data();
+    for (size_t i = 0; i < joints.ItemCount;
+         ++i, pJ += joints.Stride, pW += weights.Stride) {
       auto& dst = m_bindings[offset + i];
-      auto& src = joints[i];
+      auto& src = (*(const T*)pJ);
       dst.Joints.X = src.X;
       dst.Joints.Y = src.Y;
       dst.Joints.Z = src.Z;
       dst.Joints.W = src.W;
-      dst.Weights = weights[i];
+      dst.Weights = (*(const DirectX::XMFLOAT4*)pW);
     }
   }
 

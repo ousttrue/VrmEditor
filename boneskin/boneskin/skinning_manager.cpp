@@ -98,31 +98,27 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
       }
     } else {
       // extend vertex buffer
-      auto positions = bin.GetAccessorBlock(root, *prim.Attributes()->POSITION_Id());
-      // std::span<const DirectX::XMFLOAT3> positions;
-      // if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(
-      //       root, *prim.Attributes()->POSITION_Id())) {
-      //   positions = *accessor;
-      // } else {
-      //   return std::unexpected{ accessor.error() };
-      // }
-      auto offset = ptr->AddPosition(*positions);
+      uint32_t offset = 0;
+      if (auto positions =
+            bin.GetAccessorBlock(root, *prim.Attributes()->POSITION_Id())) {
+        offset = ptr->AddPosition(*positions);
+      } else {
+        return std::unexpected{ positions.error() };
+      }
 
       if (auto normal = prim.Attributes()->NORMAL_Id()) {
-        if (auto accessor =
-              bin.GetAccessorBytes<DirectX::XMFLOAT3>(root, *normal)) {
-          ptr->setNormal(offset, *accessor);
+        if (auto normals = bin.GetAccessorBlock(root, *normal)) {
+          ptr->SetNormal(offset, *normals);
         } else {
-          return std::unexpected{ accessor.error() };
+          return std::unexpected{ normals.error() };
         }
       }
 
       if (auto tex0 = prim.Attributes()->TEXCOORD_0_Id()) {
-        if (auto accessor =
-              bin.GetAccessorBytes<DirectX::XMFLOAT2>(root, *tex0)) {
-          ptr->setUv(offset, *accessor);
+        if (auto uv = bin.GetAccessorBlock(root, *tex0)) {
+          ptr->SetUv(offset, *uv);
         } else {
-          return std::unexpected{ accessor.error() };
+          return std::unexpected{ uv.error() };
         }
       }
 
@@ -130,40 +126,24 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
       auto weights0 = prim.Attributes()->WEIGHTS_0_Id();
       if (joints0 && weights0) {
         // skinning
-        int joint_accessor = *joints0;
-        auto item_size = root.Accessors[joint_accessor].Stride();
-        switch (item_size) {
-          case 4:
-            if (auto accessor =
-                  bin.GetAccessorBytes<boneskin::byte4>(root, joint_accessor)) {
-              if (auto accessor_w =
-                    bin.GetAccessorBytes<DirectX::XMFLOAT4>(root, *weights0)) {
-                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
-              } else {
-                return std::unexpected{ accessor_w.error() };
-              }
-            } else {
-              return std::unexpected{ accessor.error() };
-            }
-            break;
+        if (auto joints = bin.GetAccessorBlock(root, *joints0)) {
+          if (auto weights = bin.GetAccessorBlock(root, *weights0)) {
+            switch (joints->ItemSize) {
+              case 4:
+                ptr->SetBoneSkinning<boneskin::byte4>(
+                  offset, *joints, *weights);
+                break;
 
-          case 8:
-            if (auto accessor = bin.GetAccessorBytes<boneskin::ushort4>(
-                  root, joint_accessor)) {
-              if (auto accessor_w =
-                    bin.GetAccessorBytes<DirectX::XMFLOAT4>(root, *weights0)) {
-                ptr->setBoneSkinning(offset, *accessor, *accessor_w);
-              } else {
-                return std::unexpected{ accessor_w.error() };
-              }
-            } else {
-              return std::unexpected{ accessor.error() };
-            }
-            break;
+              case 8:
+                ptr->SetBoneSkinning<boneskin::ushort4>(
+                  offset, *joints, *weights);
+                break;
 
-          default:
-            // not implemented
-            return std::unexpected{ "JOINTS_0 is not ushort4" };
+              default:
+                assert(false);
+                return std::unexpected{ "JOINTS_0: not implemented" };
+            }
+          }
         }
       }
 
