@@ -104,9 +104,9 @@ struct RuntimeScene
 
   std::shared_ptr<RuntimeNode> GetBoneNode(HumanBones bone);
 
-  std::shared_ptr<RuntimeSpringJoint> GetRuntimeJoint(
+  std::shared_ptr<RuntimeSpringJoint> GetOrCreateRuntimeJoint(
     const std::shared_ptr<SpringJoint>& joint);
-  std::shared_ptr<RuntimeSpringCollision> GetRuntimeSpringCollision(
+  std::shared_ptr<RuntimeSpringCollision> GetOrCreateRuntimeSpringCollision(
     const std::shared_ptr<SpringBone>& springBone);
 
   void UpdateNodeStates(std::span<NodeState> nodestates);

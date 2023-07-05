@@ -1,9 +1,12 @@
 #include "vrm_gui.h"
+#include "springbone_gui.h"
 #include <glr/gl3renderer.h>
 #include <gltfjson/gltf_typing_vrm0.h>
 #include <gltfjson/gltf_typing_vrm1.h>
+#include <grapho/imgui/printfbuffer.h>
 #include <imgui.h>
 #include <json_widgets.h>
+#include <vrm/runtime_node.h>
 
 struct SliderColor
 {
@@ -71,9 +74,11 @@ struct VrmImpl
   ClearJsonPathFunc m_clear;
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;
   std::shared_ptr<libvrm::Image> m_thumbImage;
+  std::shared_ptr<gui::SpringBoneGui> m_springbone;
 
   VrmImpl(const ClearJsonPathFunc& clear)
     : m_clear(clear)
+    , m_springbone(new gui::SpringBoneGui)
   {
   }
 
@@ -100,6 +105,8 @@ struct VrmImpl
         }
       }
     }
+
+    m_springbone->SetRuntime(runtime);
   }
 
   void ShowMeta()
@@ -250,6 +257,7 @@ struct VrmImpl
       }
 
       if (ImGui::BeginTabItem("🔗Spring")) {
+        m_springbone->ShowGui();
         ImGui::EndTabItem();
       }
 

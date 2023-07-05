@@ -14,6 +14,7 @@ srcs = [
     'docks/hierarchy_gui.cpp',
     'docks/humanoid_dock.cpp',
     'docks/gizmo_settings.cpp',
+    'docks/springbone_gui.cpp',
     'view/scene_preview.cpp',
     'view/im_fbo.cpp',
     'view/overlay.cpp',

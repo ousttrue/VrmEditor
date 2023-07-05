@@ -513,7 +513,7 @@ RuntimeScene::GetBoneNode(HumanBones bone)
 }
 
 std::shared_ptr<RuntimeSpringJoint>
-RuntimeScene::GetRuntimeJoint(const std::shared_ptr<SpringJoint>& joint)
+RuntimeScene::GetOrCreateRuntimeJoint(const std::shared_ptr<SpringJoint>& joint)
 {
   auto found = m_jointMap.find(joint);
   if (found != m_jointMap.end()) {
@@ -526,7 +526,7 @@ RuntimeScene::GetRuntimeJoint(const std::shared_ptr<SpringJoint>& joint)
 }
 
 std::shared_ptr<RuntimeSpringCollision>
-RuntimeScene::GetRuntimeSpringCollision(
+RuntimeScene::GetOrCreateRuntimeSpringCollision(
   const std::shared_ptr<SpringBone>& springBone)
 {
   auto found = m_springCollisionMap.find(springBone);
@@ -642,10 +642,10 @@ RuntimeScene::SpringUpdate(const std::shared_ptr<SpringBone>& spring,
     return;
   }
 
-  auto collision = GetRuntimeSpringCollision(spring);
+  auto collision = GetOrCreateRuntimeSpringCollision(spring);
   for (auto& joint : spring->Joints) {
     collision->Clear();
-    auto runtime = GetRuntimeJoint(joint);
+    auto runtime = GetOrCreateRuntimeJoint(joint);
     runtime->Update(delta, collision.get());
   }
 }
@@ -655,7 +655,7 @@ RuntimeScene::SpringDrawGizmo(const std::shared_ptr<SpringBone>& solver,
                               IGizmoDrawer* gizmo)
 {
   for (auto& joint : solver->Joints) {
-    auto runtime = GetRuntimeJoint(joint);
+    auto runtime = GetOrCreateRuntimeJoint(joint);
     runtime->DrawGizmo(gizmo);
   }
 }
