@@ -18,6 +18,7 @@ ToLabel(const std::shared_ptr<libvrm::RuntimeNode>& node)
 
 struct SpringBoneGuiImpl
 {
+  int m_vrm_version = 0;
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;
   // current selected
   std::shared_ptr<libvrm::SpringBone> m_spring;
@@ -53,7 +54,7 @@ struct SpringBoneGuiImpl
     }
 
     grapho::imgui::PrintfBuffer buf;
-    std::array<const char*, 2> cols = { "index", "RootNode" };
+    std::array<const char*, 3> cols = { "index", "RootNode", "✅" };
     if (grapho::imgui::BeginTableColumns("##_springs", cols)) {
       int i = 0;
       for (auto& spring : m_runtime->m_springBones) {
@@ -68,18 +69,35 @@ struct SpringBoneGuiImpl
 
         // 1
         ImGui::TableNextColumn();
-        // VRM-0.X
         std::shared_ptr<libvrm::RuntimeNode> node =
           spring->Joints.empty() ? nullptr : spring->Joints[0]->Head;
-        if (auto selected =
-              grapho::imgui::SelectVector<std::shared_ptr<libvrm::RuntimeNode>>(
+        if (m_vrm_version == 0) {
+          // VRM-0.X
+          if (auto selected = grapho::imgui::SelectVector<
+                std::shared_ptr<libvrm::RuntimeNode>>(
                 m_runtime->m_nodes, node, &ToLabel)) {
-          // joint->Head = *selected;
+            // joint->Head = *selected;
+          }
+        } else {
+          ImGui::Text("%s", node ? node->Base->Name.c_str() : "--");
+        }
+
+        // 2
+        ImGui::TableNextColumn();
+        if (ImGui::Button("-")) {
+          // TODO: remove
         }
 
         ImGui::PopID();
         ++i;
       }
+
+      // TODO:
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(2);
+      if (ImGui::Button("+")) {
+      }
+
       ImGui::EndTable();
     }
   }
@@ -90,52 +108,118 @@ struct SpringBoneGuiImpl
       return;
     }
 
-    std::array<const char*, 5> cols = {
-      "index", "head", "dragforce", "stiffness", "radius",
+    std::array<const char*, 6> cols = {
+      "index", "head", "dragforce", "stiffness", "radius", "✅",
     };
     if (grapho::imgui::BeginTableColumns("##_springs", cols)) {
       int j = 0;
       for (auto joint : m_spring->Joints) {
-        ImGui::PushID(joint.get());
-        ImGui::TableNextRow();
 
+        if (m_vrm_version == 0 && j > 0) {
+          // VRM-0.x use same setting
+          ImGui::BeginDisabled(true);
+        }
+
+        _EditSpringJoint(
+          j, joint, (j == m_spring->Joints.size() - 1) && m_vrm_version == 1);
+
+        if (m_vrm_version == 0 && j > 0) {
+          ImGui::EndDisabled();
+        }
+
+        ++j;
+      }
+
+      if (m_vrm_version == 0 && m_spring->Joints.size() > 0) {
+        ImGui::TableNextRow();
         // 0
         ImGui::TableNextColumn();
-        ImGui::Text("%d", j);
+        ImGui::TextUnformatted("-1");
 
         // 1
         ImGui::TableNextColumn();
-        if (auto selected =
-              grapho::imgui::SelectVector<std::shared_ptr<libvrm::RuntimeNode>>(
-                m_runtime->m_nodes, joint->Head, &ToLabel)) {
-          joint->Head = *selected;
-        }
-        ImGui::SameLine();
-        ImGui::Text("%s", joint->Head->Base->Name.c_str());
-
-        // 2
-        ImGui::TableNextColumn();
-        ImGui::SetNextItemWidth(-1);
-        ImGui::InputFloat("##_DragForce", &joint->DragForce);
-
-        // 3
-        ImGui::TableNextColumn();
-        ImGui::SetNextItemWidth(-1);
-        ImGui::InputFloat("##_Stiffness", &joint->Stiffness);
-
-        // 4
-        ImGui::TableNextColumn();
-        ImGui::SetNextItemWidth(-1);
-        ImGui::InputFloat("##_Radius", &joint->Radius);
-
-        ImGui::PopID();
-        ++j;
+        ImGui::TextUnformatted("tail offset");
       }
+
+      // TODO: add spring
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(5);
+      if (ImGui::Button("+")) {
+      }
+
       ImGui::EndTable();
     }
   }
 
+  void _EditSpringJoint(int j,
+                        const std::shared_ptr<libvrm::SpringJoint>& joint,
+                        bool notUsed)
+  {
+    ImGui::PushID(joint.get());
+    ImGui::TableNextRow();
+
+    // 0
+    ImGui::TableNextColumn();
+    ImGui::Text("%d", j);
+
+    // 1
+    ImGui::TableNextColumn();
+    if (auto selected =
+          grapho::imgui::SelectVector<std::shared_ptr<libvrm::RuntimeNode>>(
+            m_runtime->m_nodes, joint->Head, &ToLabel)) {
+      joint->Head = *selected;
+    }
+
+    if (notUsed) {
+      ImGui::TableNextColumn();
+      ImGui::TextUnformatted("tail not used");
+    } else {
+
+      // 2
+      ImGui::TableNextColumn();
+      ImGui::SetNextItemWidth(-1);
+      ImGui::InputFloat("##_DragForce", &joint->DragForce);
+
+      // 3
+      ImGui::TableNextColumn();
+      ImGui::SetNextItemWidth(-1);
+      ImGui::InputFloat("##_Stiffness", &joint->Stiffness);
+
+      // 4
+      ImGui::TableNextColumn();
+      ImGui::SetNextItemWidth(-1);
+      ImGui::InputFloat("##_Radius", &joint->Radius);
+    }
+
+    // 5
+    ImGui::TableSetColumnIndex(5);
+    if (m_vrm_version == 1 && ImGui::Button("-")) {
+      // TODO: remove
+    }
+
+    ImGui::PopID();
+  }
+
   void ShowColliders() {}
+
+  void Show()
+  {
+    ImGui::RadioButton("vrm-0.x", &m_vrm_version, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("vrm-1.0", &m_vrm_version, 1);
+
+    if (ImGui::BeginTabBar("Spring")) {
+      if (ImGui::BeginTabItem("Joints")) {
+        ShowJoints();
+        ImGui::EndTabItem();
+      }
+      if (ImGui::BeginTabItem("Colliders")) {
+        ShowColliders();
+        ImGui::EndTabItem();
+      }
+      ImGui::EndTabBar();
+    }
+  }
 };
 
 //
@@ -160,17 +244,7 @@ SpringBoneGui::SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
 void
 SpringBoneGui::ShowGui()
 {
-  if (ImGui::BeginTabBar("Spring")) {
-    if (ImGui::BeginTabItem("Joints")) {
-      m_impl->ShowJoints();
-      ImGui::EndTabItem();
-    }
-    if (ImGui::BeginTabItem("Colliders")) {
-      m_impl->ShowColliders();
-      ImGui::EndTabItem();
-    }
-    ImGui::EndTabBar();
-  }
+  m_impl->Show();
 }
 
 } // namespace
