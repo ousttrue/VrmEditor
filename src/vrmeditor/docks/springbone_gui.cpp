@@ -7,6 +7,15 @@
 
 namespace gui {
 
+static const char*
+ToLabel(const std::shared_ptr<libvrm::RuntimeNode>& node)
+{
+  if (!node) {
+    return "--";
+  }
+  return node->Base->Name.c_str();
+}
+
 struct SpringBoneGuiImpl
 {
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;
@@ -48,6 +57,7 @@ struct SpringBoneGuiImpl
     if (grapho::imgui::BeginTableColumns("##_springs", cols)) {
       int i = 0;
       for (auto& spring : m_runtime->m_springBones) {
+        ImGui::PushID(spring.get());
         ImGui::TableNextRow();
 
         // 0
@@ -58,35 +68,20 @@ struct SpringBoneGuiImpl
 
         // 1
         ImGui::TableNextColumn();
+        // VRM-0.X
+        std::shared_ptr<libvrm::RuntimeNode> node =
+          spring->Joints.empty() ? nullptr : spring->Joints[0]->Head;
+        if (auto selected =
+              grapho::imgui::SelectVector<std::shared_ptr<libvrm::RuntimeNode>>(
+                m_runtime->m_nodes, node, &ToLabel)) {
+          // joint->Head = *selected;
+        }
 
+        ImGui::PopID();
         ++i;
       }
       ImGui::EndTable();
     }
-  }
-
-  std::shared_ptr<libvrm::RuntimeNode> SelectNode(
-    const std::vector<std::shared_ptr<libvrm::RuntimeNode>>& nodes,
-    const std::shared_ptr<libvrm::RuntimeNode>& current)
-  {
-    std::shared_ptr<libvrm::RuntimeNode> selected;
-    ImGui::SetNextItemWidth(-1);
-    if (ImGui::BeginCombo("##_SelectNode",
-                          current ? current->Base->Name.c_str() : "--")) {
-      for (auto& node : nodes) {
-        bool is_selected = (current == node);
-        if (ImGui::Selectable(node->Base->Name.c_str(), is_selected)) {
-          selected = node;
-        }
-        if (is_selected) {
-          // Set the initial focus when opening the combo (scrolling + for
-          // keyboard navigation support in the upcoming navigation branch)
-          ImGui::SetItemDefaultFocus();
-        }
-      }
-      ImGui::EndCombo();
-    }
-    return selected;
   }
 
   void _EditSpring()
@@ -110,8 +105,10 @@ struct SpringBoneGuiImpl
 
         // 1
         ImGui::TableNextColumn();
-        if (auto selected = SelectNode(m_runtime->m_nodes, joint->Head)) {
-          joint->Head = selected;
+        if (auto selected =
+              grapho::imgui::SelectVector<std::shared_ptr<libvrm::RuntimeNode>>(
+                m_runtime->m_nodes, joint->Head, &ToLabel)) {
+          joint->Head = *selected;
         }
         ImGui::SameLine();
         ImGui::Text("%s", joint->Head->Base->Name.c_str());
