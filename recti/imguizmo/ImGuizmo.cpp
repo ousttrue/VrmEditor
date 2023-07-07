@@ -24,14 +24,13 @@
 // SOFTWARE.
 //
 
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif
-#include "ImGuizmo.h"
-#include "imgui.h"
-#include "imgui_internal.h"
-
-namespace ImGuizmo {
+struct RGBA
+{
+  float r;
+  float g;
+  float b;
+  float a;
+};
 
 enum COLOR
 {
@@ -55,25 +54,50 @@ enum COLOR
 
 struct Style
 {
-  IMGUI_API Style();
-  Style(const Style&) = delete;
-  Style& operator=(const Style&) = delete;
+  // Thickness of lines for translation gizmo
+  float TranslationLineThickness = 3.0f;
 
-  float TranslationLineThickness;   // Thickness of lines for translation gizmo
-  float TranslationLineArrowSize;   // Size of arrow at the end of lines for
-                                    // translation gizmo
-  float RotationLineThickness;      // Thickness of lines for rotation gizmo
-  float RotationOuterLineThickness; // Thickness of line surrounding the
-                                    // rotation gizmo
-  float ScaleLineThickness;         // Thickness of lines for scale gizmo
-  float
-    ScaleLineCircleSize; // Size of circle at the end of lines for scale gizmo
-  float HatchedAxisLineThickness; // Thickness of hatched axis lines
-  float CenterCircleSize; // Size of circle at the center of the translate/scale
-                          // gizmo
+  // Size of arrow at the end of lines for translation gizmo
+  float TranslationLineArrowSize = 6.0f;
 
-  ImVec4 Colors[COLOR::COUNT];
+  // Thickness of lines for rotation gizmo
+  float RotationLineThickness = 2.0f;
+
+  // Thickness of line surrounding the rotation gizmo
+  float RotationOuterLineThickness = 3.0f;
+
+  // Thickness of lines for scale gizmo
+  float ScaleLineThickness = 3.0f;
+
+  // Size of circle at the end of lines for scale gizmo
+  float ScaleLineCircleSize = 6.0f;
+
+  // Thickness of hatched axis lines
+  float HatchedAxisLineThickness = 6.0f;
+
+  // Size of circle at the center of the translate/scale gizmo
+  float CenterCircleSize = 6.0f;
+
+  RGBA Colors[COLOR::COUNT] = {
+    { 0.666f, 0.000f, 0.000f, 1.000f }, { 0.000f, 0.666f, 0.000f, 1.000f },
+    { 0.000f, 0.000f, 0.666f, 1.000f }, { 0.666f, 0.000f, 0.000f, 0.380f },
+    { 0.000f, 0.666f, 0.000f, 0.380f }, { 0.000f, 0.000f, 0.666f, 0.380f },
+    { 1.000f, 0.500f, 0.062f, 0.541f }, { 0.600f, 0.600f, 0.600f, 0.600f },
+    { 0.666f, 0.666f, 0.666f, 0.666f }, { 0.250f, 0.250f, 0.250f, 1.000f },
+    { 1.000f, 0.500f, 0.062f, 1.000f }, { 1.000f, 0.500f, 0.062f, 0.500f },
+    { 0.000f, 0.000f, 0.000f, 0.500f }, { 1.000f, 1.000f, 1.000f, 1.000f },
+    { 0.000f, 0.000f, 0.000f, 1.000f },
+  };
 };
+
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
+#include "ImGuizmo.h"
+#include "imgui.h"
+#include "imgui_internal.h"
+
+namespace ImGuizmo {
 
 struct matrix_t;
 struct vec_t
@@ -501,49 +525,49 @@ public:
                       MODE mode);
 };
 
-inline IMGUI_API Context&
+inline Context&
 GetContext()
 {
   return Context::Instance();
 }
 
 // call BeginFrame right after ImGui_XXXX_NewFrame();
-IMGUI_API void
+void
 BeginFrame();
 
 // this is necessary because when imguizmo is compiled into a dll, and imgui
 // into another globals are not shared between them. More details at
 // https://stackoverflow.com/questions/19373061/what-happens-to-global-and-static-variables-in-a-shared-library-when-it-is-dynam
 // expose method to set imgui context
-IMGUI_API void
+void
 SetImGuiContext(ImGuiContext* ctx);
 
 // return true if mouse cursor is over any gizmo control (axis, plan or screen
 // component)
-IMGUI_API bool
+bool
 IsOver();
 
 // return true if mouse IsOver or if the gizmo is in moving state
-IMGUI_API bool
+bool
 IsUsing();
 
 // enable/disable the gizmo. Stay in the state until next call to Enable.
 // gizmo is rendered with gray half transparent color when disabled
-IMGUI_API void
+void
 Enable(bool enable);
 
 // default is false
-IMGUI_API void
+void
 SetOrthographic(bool isOrthographic);
 
 // Render a cube with face color corresponding to face normal. Usefull for
 // debug/tests
-IMGUI_API void
+void
 DrawCubes(const float* view,
           const float* projection,
           const float* matrices,
           int matrixCount);
-IMGUI_API void
+void
 DrawGrid(const float* view,
          const float* projection,
          const float* matrix,
@@ -555,7 +579,7 @@ DrawGrid(const float* view,
 // patent in the US. I don't think it will bring troubles using it as other
 // software are using the same mechanics. But just in case, you are now warned!
 //
-IMGUI_API void
+void
 ViewManipulate(float* view,
                float length,
                ImVec2 position,
@@ -564,7 +588,7 @@ ViewManipulate(float* view,
 
 // use this version if you did not call Manipulate before and you are just using
 // ViewManipulate
-IMGUI_API void
+void
 ViewManipulate(float* view,
                const float* projection,
                OPERATION operation,
@@ -576,19 +600,19 @@ ViewManipulate(float* view,
                ImU32 backgroundColor);
 
 // return true if the cursor is over the operation's gizmo
-IMGUI_API bool
+bool
 IsOver(OPERATION op);
 
-IMGUI_API void
+void
 SetGizmoSizeClipSpace(float value);
 
 // Allow axis to flip
 // When true (default), the guizmo axis flip for better visibility
 // When false, they always stay along the positive world/local axis
-IMGUI_API void
+void
 AllowAxisFlip(bool value);
 
-IMGUI_API Style&
+Style&
 GetStyle();
 
 // helper functions for manualy editing translation/rotation/scale with an input
@@ -604,12 +628,12 @@ GetStyle();
 //
 // These functions have some numerical stability issues for now. Use with
 // caution.
-IMGUI_API void
+void
 DecomposeMatrixToComponents(const float* matrix,
                             float* translation,
                             float* rotation,
                             float* scale);
-IMGUI_API void
+void
 RecomposeMatrixFromComponents(const float* translation,
                               const float* rotation,
                               const float* scale,
@@ -1093,36 +1117,6 @@ static const OPERATION TRANSLATE_PLANS[3] = { TRANSLATE_Y | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Y };
 
-Style::Style()
-{
-  // default values
-  TranslationLineThickness = 3.0f;
-  TranslationLineArrowSize = 6.0f;
-  RotationLineThickness = 2.0f;
-  RotationOuterLineThickness = 3.0f;
-  ScaleLineThickness = 3.0f;
-  ScaleLineCircleSize = 6.0f;
-  HatchedAxisLineThickness = 6.0f;
-  CenterCircleSize = 6.0f;
-
-  // initialize default colors
-  Colors[DIRECTION_X] = ImVec4(0.666f, 0.000f, 0.000f, 1.000f);
-  Colors[DIRECTION_Y] = ImVec4(0.000f, 0.666f, 0.000f, 1.000f);
-  Colors[DIRECTION_Z] = ImVec4(0.000f, 0.000f, 0.666f, 1.000f);
-  Colors[PLANE_X] = ImVec4(0.666f, 0.000f, 0.000f, 0.380f);
-  Colors[PLANE_Y] = ImVec4(0.000f, 0.666f, 0.000f, 0.380f);
-  Colors[PLANE_Z] = ImVec4(0.000f, 0.000f, 0.666f, 0.380f);
-  Colors[SELECTION] = ImVec4(1.000f, 0.500f, 0.062f, 0.541f);
-  Colors[INACTIVE] = ImVec4(0.600f, 0.600f, 0.600f, 0.600f);
-  Colors[TRANSLATION_LINE] = ImVec4(0.666f, 0.666f, 0.666f, 0.666f);
-  Colors[SCALE_LINE] = ImVec4(0.250f, 0.250f, 0.250f, 1.000f);
-  Colors[ROTATION_USING_BORDER] = ImVec4(1.000f, 0.500f, 0.062f, 1.000f);
-  Colors[ROTATION_USING_FILL] = ImVec4(1.000f, 0.500f, 0.062f, 0.500f);
-  Colors[HATCHED_AXIS_LINES] = ImVec4(0.000f, 0.000f, 0.000f, 0.500f);
-  Colors[TEXT] = ImVec4(1.000f, 1.000f, 1.000f, 1.000f);
-  Colors[TEXT_SHADOW] = ImVec4(0.000f, 0.000f, 0.000f, 1.000f);
-}
-
 static const vec_t directionUnary[3] = { makeVect(1.f, 0.f, 0.f),
                                          makeVect(0.f, 1.f, 0.f),
                                          makeVect(0.f, 0.f, 1.f) };
@@ -1169,7 +1163,8 @@ static ImU32
 GetColorU32(int idx)
 {
   IM_ASSERT(idx < COLOR::COUNT);
-  return ImGui::ColorConvertFloat4ToU32(GetContext().mStyle.Colors[idx]);
+  return ImGui::ColorConvertFloat4ToU32(
+    *((ImVec4*)&GetContext().mStyle.Colors[idx]));
 }
 
 static ImVec2
@@ -3754,4 +3749,5 @@ ViewManipulate(float* view,
                               GetContext().mModelSource.m16,
                               GetContext().mMode);
 }
-}; // namespace IMGUIZMO_NAMESPACE
+
+} // namespace
