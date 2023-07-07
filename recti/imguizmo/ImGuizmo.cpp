@@ -361,17 +361,16 @@ private:
     }
   }
 
-  MOVETYPE GetMoveType(OPERATION op,
-                       vec_t* gizmoHitProportion,
-                       const vec_t& screenCoord) const
+  MOVETYPE GetMoveType(OPERATION op, const vec_t& screenCoord) const
   {
     if (!Intersects(op, TRANSLATE) || mbUsing || !mbMouseOver) {
       return MT_NONE;
     }
-    ImGuiIO& io = ImGui::GetIO();
+
     MOVETYPE type = MT_NONE;
 
     // screen
+    ImGuiIO& io = ImGui::GetIO();
     if (io.MousePos.x >= mScreenSquareMin.x &&
         io.MousePos.x <= mScreenSquareMax.x &&
         io.MousePos.y >= mScreenSquareMin.y &&
@@ -424,10 +423,6 @@ private:
           dy >= quadUV[1] && dy <= quadUV[3] &&
           Contains(op, TRANSLATE_PLANS[i])) {
         type = (MOVETYPE)(MT_MOVE_YZ + i);
-      }
-
-      if (gizmoHitProportion) {
-        *gizmoHitProportion = { dx, dy, 0.f };
       }
     }
     return type;
@@ -606,7 +601,7 @@ private:
   bool IsOver() const
   {
     return (Intersects(mOperation, TRANSLATE) &&
-            GetMoveType(mOperation, NULL, screenCoord()) != MT_NONE) ||
+            GetMoveType(mOperation, screenCoord()) != MT_NONE) ||
            (Intersects(mOperation, ROTATE) &&
             GetRotateType(mOperation) != MT_NONE) ||
            (Intersects(mOperation, SCALE) &&
@@ -627,7 +622,7 @@ private:
       return true;
     }
     if (Intersects(op, TRANSLATE) &&
-        GetMoveType(op, NULL, screenCoord()) != MT_NONE) {
+        GetMoveType(op, screenCoord()) != MT_NONE) {
       return true;
     }
     return false;
@@ -1404,10 +1399,9 @@ private:
                                (AnchorBigRadius * AnchorBigRadius);
 
         int type = MT_NONE;
-        vec_t gizmoHitProportion;
 
         if (Intersects(operation, TRANSLATE)) {
-          type = GetMoveType(operation, &gizmoHitProportion, screenCoord());
+          type = GetMoveType(operation, screenCoord());
         }
         if (Intersects(operation, ROTATE) && type == MT_NONE) {
           type = GetRotateType(operation);
@@ -1667,8 +1661,7 @@ private:
       type = mCurrentOperation;
     } else {
       // find new possible way to move
-      vec_t gizmoHitProportion;
-      type = GetMoveType(op, &gizmoHitProportion, screenCoord());
+      type = GetMoveType(op, screenCoord());
       if (type != MT_NONE) {
 #if IMGUI_VERSION_NUM >= 18723
         ImGui::SetNextFrameWantCaptureMouse(true);
