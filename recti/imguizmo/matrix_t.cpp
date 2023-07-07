@@ -267,21 +267,17 @@ LookAt(const float* eye, const float* at, const float* up, float* m16)
 }
 
 ImVec2
-worldToPos(
-  const vec_t& worldPos,
-  const matrix_t& mat,
-  const ImVec2& position /*= ImVec2(GetContext().mX, GetContext().mY)*/,
-  const ImVec2& size /*= ImVec2(GetContext().mWidth, GetContext().mHeight)*/)
+worldToPos(const vec_t& worldPos, const matrix_t& mat, const vec_t& screenRect)
 {
   vec_t trans;
   trans.TransformPoint(worldPos, mat);
   trans *= 0.5f / trans.w;
   trans += makeVect(0.5f, 0.5f);
   trans.y = 1.f - trans.y;
-  trans.x *= size.x;
-  trans.y *= size.y;
-  trans.x += position.x;
-  trans.y += position.y;
+  trans.x *= screenRect.z;
+  trans.y *= screenRect.w;
+  trans.x += screenRect.x;
+  trans.y += screenRect.y;
   return ImVec2(trans.x, trans.y);
 }
 
