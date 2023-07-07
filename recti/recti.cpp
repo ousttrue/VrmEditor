@@ -16,12 +16,6 @@ ToMode(const Operation& o)
 }
 
 void
-BeginFrame()
-{
-  ImGuizmo::BeginFrame();
-}
-
-void
 SetRect(float x, float y, float w, float h)
 {
   ImGuizmo::SetDrawlist();

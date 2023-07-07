@@ -28,7 +28,6 @@
 #include <gltfjson/json_tree_exporter.h>
 #include <grapho/gl3/error_check.h>
 #include <grapho/gl3/texture.h>
-#include <recti.h>
 #include <vrm/fileutil.h>
 #include <vrm/image.h>
 #include <vrm/importer.h>
@@ -306,7 +305,6 @@ public:
         if (Gui::Instance().NewFrame()) {
           SaveState();
         }
-        recti::BeginFrame();
       }
 
       {

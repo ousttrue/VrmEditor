@@ -3,9 +3,6 @@
 namespace recti {
 
 void
-BeginFrame();
-
-void
 SetRect(float x, float y, float width, float height);
 
 struct Operation
