@@ -238,7 +238,6 @@ class ContextImpl
   vec_t mRelativeOrigin;
 
   bool mbEnable;
-  bool mbMouseOver;
   bool mReversed; // reversed projection matrix
 
   // translation
@@ -382,7 +381,7 @@ private:
 
   MOVETYPE GetMoveType(OPERATION op, const vec_t& screenCoord) const
   {
-    if (!Intersects(op, TRANSLATE) || mState.mbUsing || !mbMouseOver) {
+    if (!Intersects(op, TRANSLATE) || mState.mbUsing) {
       return MT_NONE;
     }
 
@@ -690,23 +689,6 @@ private:
     return ::worldToPos(worldPos, mat, { mX, mY, mWidth, mHeight });
   }
 
-  bool IsHoveringWindow()
-  {
-    ImGuiContext& g = *ImGui::GetCurrentContext();
-    ImGuiWindow* window = ImGui::FindWindowByName(mDrawList->_OwnerName);
-    if (g.HoveredWindow == window) // Mouse hovering drawlist window
-      return true;
-    if (g.HoveredWindow != NULL) // Any other window is hovered
-      return false;
-    if (ImGui::IsMouseHoveringRect(
-          window->InnerRect.Min,
-          window->InnerRect.Max,
-          false)) // Hovering drawlist window rect, while no other window is
-                  // hovered (for _NoInputs windows)
-      return true;
-    return false;
-  }
-
   void ComputeContext(const float* view,
                       const float* projection,
                       float* matrix,
@@ -715,7 +697,6 @@ private:
     this->mMode = mode;
     this->mViewMat = *(matrix_t*)view;
     this->mProjectionMat = *(matrix_t*)projection;
-    this->mbMouseOver = IsHoveringWindow();
 
     this->mModelLocal = *(matrix_t*)matrix;
     this->mModelLocal.OrthoNormalize();
@@ -1723,7 +1704,7 @@ private:
                    const float* snap)
   {
     if ((!Intersects(op, SCALE) && !Intersects(op, SCALEU)) ||
-        type != MT_NONE || !mbMouseOver) {
+        type != MT_NONE) {
       return false;
     }
     ImGuiIO& io = ImGui::GetIO();
@@ -1846,7 +1827,7 @@ private:
                       MOVETYPE& type,
                       const float* snap)
   {
-    if (!Intersects(op, ROTATE) || type != MT_NONE || !mbMouseOver) {
+    if (!Intersects(op, ROTATE) || type != MT_NONE) {
       return false;
     }
     ImGuiIO& io = ImGui::GetIO();
