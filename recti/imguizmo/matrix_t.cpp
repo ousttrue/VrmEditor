@@ -1,9 +1,10 @@
 #include "matrix_t.h"
 #include <cfloat>
+#include <imgui.h>
 #include <math.h>
 
 static const float ZPI = 3.14159265358979323846f;
-static const float RAD2DEG = (180.f / ZPI);
+// static const float RAD2DEG = (180.f / ZPI);
 static const float DEG2RAD = (ZPI / 180.f);
 
 inline void
@@ -260,4 +261,23 @@ LookAt(const float* eye, const float* at, const float* up, float* m16)
   m16[13] = -Dot(Y, eye);
   m16[14] = -Dot(Z, eye);
   m16[15] = 1.0f;
+}
+
+ImVec2
+worldToPos(
+  const vec_t& worldPos,
+  const matrix_t& mat,
+  const ImVec2& position /*= ImVec2(GetContext().mX, GetContext().mY)*/,
+  const ImVec2& size /*= ImVec2(GetContext().mWidth, GetContext().mHeight)*/)
+{
+  vec_t trans;
+  trans.TransformPoint(worldPos, mat);
+  trans *= 0.5f / trans.w;
+  trans += makeVect(0.5f, 0.5f);
+  trans.y = 1.f - trans.y;
+  trans.x *= size.x;
+  trans.y *= size.y;
+  trans.x += position.x;
+  trans.y += position.y;
+  return ImVec2(trans.x, trans.y);
 }

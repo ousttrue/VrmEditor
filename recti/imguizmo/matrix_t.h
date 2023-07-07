@@ -134,3 +134,9 @@ Perspective(float fovyInDegrees,
 
 void
 LookAt(const float* eye, const float* at, const float* up, float* m16);
+
+ImVec2
+worldToPos(const vec_t& worldPos,
+           const matrix_t& mat,
+           const ImVec2& position,
+           const ImVec2& size);

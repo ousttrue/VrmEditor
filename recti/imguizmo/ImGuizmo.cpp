@@ -169,6 +169,11 @@ public:
     return false;
   }
 
+  ImVec2 worldToPos(const vec_t& worldPos, const matrix_t& mat) const
+  {
+    return ::worldToPos(worldPos, mat, ImVec2(mX, mY), ImVec2(mWidth, mHeight));
+  }
+
   ImDrawList* mDrawList;
   Style mStyle;
 
@@ -463,24 +468,6 @@ ComputeTripodAxisAndVisibility(const int axisIndex,
   }
 }
 
-static ImVec2
-worldToPos(const vec_t& worldPos,
-           const matrix_t& mat,
-           ImVec2 position = ImVec2(GetContext().mX, GetContext().mY),
-           ImVec2 size = ImVec2(GetContext().mWidth, GetContext().mHeight))
-{
-  vec_t trans;
-  trans.TransformPoint(worldPos, mat);
-  trans *= 0.5f / trans.w;
-  trans += makeVect(0.5f, 0.5f);
-  trans.y = 1.f - trans.y;
-  trans.x *= size.x;
-  trans.y *= size.y;
-  trans.x += position.x;
-  trans.y += position.y;
-  return ImVec2(trans.x, trans.y);
-}
-
 static MOVETYPE
 GetScaleType(OPERATION op)
 {
@@ -522,15 +509,15 @@ GetScaleType(OPERATION op)
     const float endOffset =
       Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.4f : 1.0f;
     const ImVec2 posOnPlanScreen =
-      worldToPos(posOnPlan, GetContext().mViewProjection);
-    const ImVec2 axisStartOnScreen =
-      worldToPos(GetContext().mModelLocal.v.position +
-                   dirAxis * GetContext().mScreenFactor * startOffset,
-                 GetContext().mViewProjection);
-    const ImVec2 axisEndOnScreen =
-      worldToPos(GetContext().mModelLocal.v.position +
-                   dirAxis * GetContext().mScreenFactor * endOffset,
-                 GetContext().mViewProjection);
+      GetContext().worldToPos(posOnPlan, GetContext().mViewProjection);
+    const ImVec2 axisStartOnScreen = GetContext().worldToPos(
+      GetContext().mModelLocal.v.position +
+        dirAxis * GetContext().mScreenFactor * startOffset,
+      GetContext().mViewProjection);
+    const ImVec2 axisEndOnScreen = GetContext().worldToPos(
+      GetContext().mModelLocal.v.position +
+        dirAxis * GetContext().mScreenFactor * endOffset,
+      GetContext().mViewProjection);
 
     vec_t closestPointOnAxis = PointOnSegment(makeVect(posOnPlanScreen),
                                               makeVect(axisStartOnScreen),
@@ -573,9 +560,9 @@ GetScaleType(OPERATION op)
       // GetContext().mScreenFactor, GetContext().mMVPLocal); ImVec2
       // worldDirSSpaceNoScale = worldToPos(dirAxis
       // * markerScale * GetContext().mScreenFactor, GetContext().mMVP);
-      ImVec2 worldDirSSpace =
-        worldToPos((dirAxis * markerScale) * GetContext().mScreenFactor,
-                   GetContext().mMVPLocal);
+      ImVec2 worldDirSSpace = GetContext().worldToPos(
+        (dirAxis * markerScale) * GetContext().mScreenFactor,
+        GetContext().mMVPLocal);
 
       float distance = sqrtf(ImLengthSqr(worldDirSSpace - io.MousePos));
       if (distance < 12.f) {
@@ -639,7 +626,7 @@ GetRotateType(OPERATION op)
     const vec_t localPos = intersectWorldPos - GetContext().mModel.v.position;
     vec_t idealPosOnCircle = Normalized(localPos);
     idealPosOnCircle.TransformVector(GetContext().mModelInverse);
-    const ImVec2 idealPosOnCircleScreen = worldToPos(
+    const ImVec2 idealPosOnCircleScreen = GetContext().worldToPos(
       idealPosOnCircle * ROTATION_DISPLAY_FACTOR * GetContext().mScreenFactor,
       GetContext().mMVP);
 
@@ -696,14 +683,14 @@ GetMoveType(OPERATION op, vec_t* gizmoHitProportion)
     vec_t posOnPlan = GetContext().mRayOrigin + GetContext().mRayVector * len;
 
     const ImVec2 axisStartOnScreen =
-      worldToPos(GetContext().mModel.v.position +
-                   dirAxis * GetContext().mScreenFactor * 0.1f,
-                 GetContext().mViewProjection) -
+      GetContext().worldToPos(GetContext().mModel.v.position +
+                                dirAxis * GetContext().mScreenFactor * 0.1f,
+                              GetContext().mViewProjection) -
       ImVec2(GetContext().mX, GetContext().mY);
     const ImVec2 axisEndOnScreen =
-      worldToPos(GetContext().mModel.v.position +
-                   dirAxis * GetContext().mScreenFactor,
-                 GetContext().mViewProjection) -
+      GetContext().worldToPos(GetContext().mModel.v.position +
+                                dirAxis * GetContext().mScreenFactor,
+                              GetContext().mViewProjection) -
       ImVec2(GetContext().mX, GetContext().mY);
 
     vec_t closestPointOnAxis = PointOnSegment(
@@ -1221,7 +1208,7 @@ DrawRotationGizmo(OPERATION op, int type)
                            axisPos[(axis + 1) % 3],
                            axisPos[(axis + 2) % 3]) *
                   GetContext().mScreenFactor * ROTATION_DISPLAY_FACTOR;
-      circlePos[i] = worldToPos(pos, GetContext().mMVP);
+      circlePos[i] = GetContext().worldToPos(pos, GetContext().mMVP);
     }
     if (!GetContext().mbUsing || usingAxis) {
       drawList->AddPolyline(circlePos,
@@ -1231,20 +1218,21 @@ DrawRotationGizmo(OPERATION op, int type)
                             GetContext().mStyle.RotationLineThickness);
     }
 
-    float radiusAxis = sqrtf((ImLengthSqr(
-      worldToPos(GetContext().mModel.v.position, GetContext().mViewProjection) -
-      circlePos[0])));
+    float radiusAxis =
+      sqrtf((ImLengthSqr(GetContext().worldToPos(GetContext().mModel.v.position,
+                                                 GetContext().mViewProjection) -
+                         circlePos[0])));
     if (radiusAxis > GetContext().mRadiusSquareCenter) {
       GetContext().mRadiusSquareCenter = radiusAxis;
     }
   }
   if (hasRSC && (!GetContext().mbUsing || type == MT_ROTATE_SCREEN)) {
-    drawList->AddCircle(
-      worldToPos(GetContext().mModel.v.position, GetContext().mViewProjection),
-      GetContext().mRadiusSquareCenter,
-      colors[0],
-      64,
-      GetContext().mStyle.RotationOuterLineThickness);
+    drawList->AddCircle(GetContext().worldToPos(GetContext().mModel.v.position,
+                                                GetContext().mViewProjection),
+                        GetContext().mRadiusSquareCenter,
+                        colors[0],
+                        64,
+                        GetContext().mStyle.RotationOuterLineThickness);
   }
 
   if (GetContext().mbUsing &&
@@ -1253,8 +1241,8 @@ DrawRotationGizmo(OPERATION op, int type)
       IsRotateType(type)) {
     ImVec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
 
-    circlePos[0] =
-      worldToPos(GetContext().mModel.v.position, GetContext().mViewProjection);
+    circlePos[0] = GetContext().worldToPos(GetContext().mModel.v.position,
+                                           GetContext().mViewProjection);
     for (unsigned int i = 1; i < HALF_CIRCLE_SEGMENT_COUNT; i++) {
       float ng = GetContext().mRotationAngle *
                  ((float)(i - 1) / (float)(HALF_CIRCLE_SEGMENT_COUNT - 1));
@@ -1264,8 +1252,8 @@ DrawRotationGizmo(OPERATION op, int type)
       pos.TransformPoint(GetContext().mRotationVectorSource,
                          rotateVectorMatrix);
       pos *= GetContext().mScreenFactor * ROTATION_DISPLAY_FACTOR;
-      circlePos[i] = worldToPos(pos + GetContext().mModel.v.position,
-                                GetContext().mViewProjection);
+      circlePos[i] = GetContext().worldToPos(
+        pos + GetContext().mModel.v.position, GetContext().mViewProjection);
     }
     drawList->AddConvexPolyFilled(
       circlePos, HALF_CIRCLE_SEGMENT_COUNT, GetColorU32(ROTATION_USING_FILL));
@@ -1301,12 +1289,12 @@ DrawHatchedAxis(const vec_t& axis)
   }
 
   for (int j = 1; j < 10; j++) {
-    ImVec2 baseSSpace2 =
-      worldToPos(axis * 0.05f * (float)(j * 2) * GetContext().mScreenFactor,
-                 GetContext().mMVP);
-    ImVec2 worldDirSSpace2 =
-      worldToPos(axis * 0.05f * (float)(j * 2 + 1) * GetContext().mScreenFactor,
-                 GetContext().mMVP);
+    ImVec2 baseSSpace2 = GetContext().worldToPos(axis * 0.05f * (float)(j * 2) *
+                                                   GetContext().mScreenFactor,
+                                                 GetContext().mMVP);
+    ImVec2 worldDirSSpace2 = GetContext().worldToPos(
+      axis * 0.05f * (float)(j * 2 + 1) * GetContext().mScreenFactor,
+      GetContext().mMVP);
     GetContext().mDrawList->AddLine(
       baseSSpace2,
       worldDirSSpace2,
@@ -1358,15 +1346,15 @@ DrawScaleGizmo(OPERATION op, int type)
         bool hasTranslateOnAxis =
           Contains(op, static_cast<OPERATION>(TRANSLATE_X << i));
         float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-        ImVec2 baseSSpace = worldToPos(
+        ImVec2 baseSSpace = GetContext().worldToPos(
           dirAxis * 0.1f * GetContext().mScreenFactor, GetContext().mMVP);
-        ImVec2 worldDirSSpaceNoScale =
-          worldToPos(dirAxis * markerScale * GetContext().mScreenFactor,
-                     GetContext().mMVP);
+        ImVec2 worldDirSSpaceNoScale = GetContext().worldToPos(
+          dirAxis * markerScale * GetContext().mScreenFactor,
+          GetContext().mMVP);
         ImVec2 worldDirSSpace =
-          worldToPos((dirAxis * markerScale * scaleDisplay[i]) *
-                       GetContext().mScreenFactor,
-                     GetContext().mMVP);
+          GetContext().worldToPos((dirAxis * markerScale * scaleDisplay[i]) *
+                                    GetContext().mScreenFactor,
+                                  GetContext().mMVP);
 
         if (GetContext().mbUsing &&
             (GetContext().mActualID == -1 ||
@@ -1410,8 +1398,8 @@ DrawScaleGizmo(OPERATION op, int type)
       IsScaleType(type)) {
     // ImVec2 sourcePosOnScreen = worldToPos(GetContext().mMatrixOrigin,
     // GetContext().mViewProjection);
-    ImVec2 destinationPosOnScreen =
-      worldToPos(GetContext().mModel.v.position, GetContext().mViewProjection);
+    ImVec2 destinationPosOnScreen = GetContext().worldToPos(
+      GetContext().mModel.v.position, GetContext().mViewProjection);
     /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
     destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
     *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
@@ -1487,9 +1475,9 @@ DrawScaleUniveralGizmo(OPERATION op, int type)
         // worldDirSSpaceNoScale = worldToPos(dirAxis * markerScale *
         // GetContext().mScreenFactor, GetContext().mMVP);
         ImVec2 worldDirSSpace =
-          worldToPos((dirAxis * markerScale * scaleDisplay[i]) *
-                       GetContext().mScreenFactor,
-                     GetContext().mMVPLocal);
+          GetContext().worldToPos((dirAxis * markerScale * scaleDisplay[i]) *
+                                    GetContext().mScreenFactor,
+                                  GetContext().mMVPLocal);
 
 #if 0
                if (GetContext().mbUsing && (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID))
@@ -1522,8 +1510,8 @@ DrawScaleUniveralGizmo(OPERATION op, int type)
       IsScaleType(type)) {
     // ImVec2 sourcePosOnScreen = worldToPos(GetContext().mMatrixOrigin,
     // GetContext().mViewProjection);
-    ImVec2 destinationPosOnScreen =
-      worldToPos(GetContext().mModel.v.position, GetContext().mViewProjection);
+    ImVec2 destinationPosOnScreen = GetContext().worldToPos(
+      GetContext().mModel.v.position, GetContext().mViewProjection);
     /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
     destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
     *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
@@ -1567,8 +1555,8 @@ DrawTranslationGizmo(OPERATION op, int type)
   ImU32 colors[7];
   ComputeColors(colors, type, TRANSLATE);
 
-  const ImVec2 origin =
-    worldToPos(GetContext().mModel.v.position, GetContext().mViewProjection);
+  const ImVec2 origin = GetContext().worldToPos(GetContext().mModel.v.position,
+                                                GetContext().mViewProjection);
 
   // draw
   bool belowAxisLimit = false;
@@ -1583,10 +1571,10 @@ DrawTranslationGizmo(OPERATION op, int type)
       // draw axis
       if (belowAxisLimit &&
           Intersects(op, static_cast<OPERATION>(TRANSLATE_X << i))) {
-        ImVec2 baseSSpace = worldToPos(
+        ImVec2 baseSSpace = GetContext().worldToPos(
           dirAxis * 0.1f * GetContext().mScreenFactor, GetContext().mMVP);
-        ImVec2 worldDirSSpace =
-          worldToPos(dirAxis * GetContext().mScreenFactor, GetContext().mMVP);
+        ImVec2 worldDirSSpace = GetContext().worldToPos(
+          dirAxis * GetContext().mScreenFactor, GetContext().mMVP);
 
         drawList->AddLine(baseSSpace,
                           worldDirSSpace,
@@ -1622,7 +1610,8 @@ DrawTranslationGizmo(OPERATION op, int type)
           vec_t cornerWorldPos =
             (dirPlaneX * quadUV[j * 2] + dirPlaneY * quadUV[j * 2 + 1]) *
             GetContext().mScreenFactor;
-          screenQuadPts[j] = worldToPos(cornerWorldPos, GetContext().mMVP);
+          screenQuadPts[j] =
+            GetContext().worldToPos(cornerWorldPos, GetContext().mMVP);
         }
         drawList->AddPolyline(
           screenQuadPts, 4, GetColorU32(DIRECTION_X + i), true, 1.0f);
@@ -1642,10 +1631,10 @@ DrawTranslationGizmo(OPERATION op, int type)
       IsTranslateType(type)) {
     ImU32 translationLineColor = GetColorU32(TRANSLATION_LINE);
 
-    ImVec2 sourcePosOnScreen =
-      worldToPos(GetContext().mMatrixOrigin, GetContext().mViewProjection);
-    ImVec2 destinationPosOnScreen =
-      worldToPos(GetContext().mModel.v.position, GetContext().mViewProjection);
+    ImVec2 sourcePosOnScreen = GetContext().worldToPos(
+      GetContext().mMatrixOrigin, GetContext().mViewProjection);
+    ImVec2 destinationPosOnScreen = GetContext().worldToPos(
+      GetContext().mModel.v.position, GetContext().mViewProjection);
     vec_t dif = { destinationPosOnScreen.x - sourcePosOnScreen.x,
                   destinationPosOnScreen.y - sourcePosOnScreen.y,
                   0.f,
@@ -1769,8 +1758,9 @@ HandleAndDrawLocalBounds(const float* bounds,
     matrix_t boundsMVP =
       GetContext().mModelSource * GetContext().mViewProjection;
     for (int i = 0; i < 4; i++) {
-      ImVec2 worldBound1 = worldToPos(aabb[i], boundsMVP);
-      ImVec2 worldBound2 = worldToPos(aabb[(i + 1) % 4], boundsMVP);
+      ImVec2 worldBound1 = GetContext().worldToPos(aabb[i], boundsMVP);
+      ImVec2 worldBound2 =
+        GetContext().worldToPos(aabb[(i + 1) % 4], boundsMVP);
       if (!IsInContextRect(worldBound1) || !IsInContextRect(worldBound2)) {
         continue;
       }
@@ -1791,7 +1781,7 @@ HandleAndDrawLocalBounds(const float* bounds,
                           2.f);
       }
       vec_t midPoint = (aabb[i] + aabb[(i + 1) % 4]) * 0.5f;
-      ImVec2 midBound = worldToPos(midPoint, boundsMVP);
+      ImVec2 midBound = GetContext().worldToPos(midPoint, boundsMVP);
       static const float AnchorBigRadius = 8.f;
       static const float AnchorSmallRadius = 6.f;
       bool overBigAnchor = ImLengthSqr(worldBound1 - io.MousePos) <=
@@ -1937,8 +1927,8 @@ HandleAndDrawLocalBounds(const float* bounds,
 
       // info text
       char tmps[512];
-      ImVec2 destinationPosOnScreen = worldToPos(GetContext().mModel.v.position,
-                                                 GetContext().mViewProjection);
+      ImVec2 destinationPosOnScreen = GetContext().worldToPos(
+        GetContext().mModel.v.position, GetContext().mViewProjection);
       ImFormatString(tmps,
                      sizeof(tmps),
                      "X: %.2f Y: %.2f Z: %.2f",
@@ -2632,7 +2622,7 @@ DrawCubes(const float* view,
       // ImVec2 faceCoordsScreen[4];
       for (unsigned int iCoord = 0; iCoord < 4; iCoord++) {
         cubeFace.faceCoordsScreen[iCoord] =
-          worldToPos(faceCoords[iCoord] * 0.5f * invert, res);
+          GetContext().worldToPos(faceCoords[iCoord] * 0.5f * invert, res);
       }
 
       ImU32 directionColor = GetColorU32(DIRECTION_X + normalIndex);
@@ -2709,8 +2699,10 @@ DrawGrid(const float* view,
         thickness = (fmodf(fabsf(f), 10.f) < FLT_EPSILON) ? 1.5f : thickness;
         thickness = (fabsf(f) < FLT_EPSILON) ? 2.3f : thickness;
 
-        GetContext().mDrawList->AddLine(
-          worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+        GetContext().mDrawList->AddLine(GetContext().worldToPos(ptA, res),
+                                        GetContext().worldToPos(ptB, res),
+                                        col,
+                                        thickness);
       }
     }
   }
