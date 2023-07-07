@@ -181,9 +181,31 @@ IsScaleType(MOVETYPE type)
   return type >= MT_SCALE_X && type <= MT_SCALE_XYZ;
 }
 
+struct State
+{
+  int64_t mActualID = -1;
+  int64_t mEditingID = -1;
+  bool mbUsing = false;
+
+  bool Using() const
+  {
+    if (mbUsing) {
+      if (mActualID == -1) {
+        return true;
+      }
+      if (mActualID == mEditingID) {
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
 class ContextImpl
 {
   Style mStyle;
+
+  State mState = {};
 
   MODE mMode;
   matrix_t mViewMat;
@@ -215,7 +237,6 @@ class ContextImpl
   float mScreenFactor;
   vec_t mRelativeOrigin;
 
-  bool mbUsing;
   bool mbEnable;
   bool mbMouseOver;
   bool mReversed; // reversed projection matrix
@@ -267,8 +288,6 @@ class ContextImpl
 
   bool mIsOrthographic = false;
 
-  int64_t mActualID = -1;
-  int64_t mEditingID = -1;
   OPERATION mOperation = OPERATION(-1);
 
   bool mAllowAxisFlip = true;
@@ -278,26 +297,26 @@ class ContextImpl
 
 public:
   ContextImpl()
-    : mbUsing(false)
-    , mbEnable(true)
+    : mbEnable(true)
     , mbUsingBounds(false)
   {
   }
 
 private:
   void ComputeTripodAxisAndVisibility(const int axisIndex,
+                                      const matrix_t& mvp,
+                                      const State& state,
                                       vec_t& dirAxis,
                                       vec_t& dirPlaneX,
                                       vec_t& dirPlaneY,
                                       bool& belowAxisLimit,
-                                      bool& belowPlaneLimit,
-                                      const matrix_t& mvp) const
+                                      bool& belowPlaneLimit) const
   {
     dirAxis = directionUnary[axisIndex];
     dirPlaneX = directionUnary[(axisIndex + 1) % 3];
     dirPlaneY = directionUnary[(axisIndex + 2) % 3];
 
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID)) {
+    if (state.Using()) {
       // when using, use stored factors so the gizmo doesn't flip when we
       // translate
       belowAxisLimit = mBelowAxisLimit[axisIndex];
@@ -363,7 +382,7 @@ private:
 
   MOVETYPE GetMoveType(OPERATION op, const vec_t& screenCoord) const
   {
-    if (!Intersects(op, TRANSLATE) || mbUsing || !mbMouseOver) {
+    if (!Intersects(op, TRANSLATE) || mState.mbUsing || !mbMouseOver) {
       return MT_NONE;
     }
 
@@ -383,12 +402,13 @@ private:
       vec_t dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
       ComputeTripodAxisAndVisibility(i,
+                                     mMVP,
+                                     mState,
                                      dirAxis,
                                      dirPlaneX,
                                      dirPlaneY,
                                      belowAxisLimit,
-                                     belowPlaneLimit,
-                                     mMVP);
+                                     belowPlaneLimit);
       dirAxis.TransformVector(mModel);
       dirPlaneX.TransformVector(mModel);
       dirPlaneY.TransformVector(mModel);
@@ -431,7 +451,7 @@ private:
   MOVETYPE
   GetRotateType(OPERATION op) const
   {
-    if (mbUsing) {
+    if (mState.mbUsing) {
       return MT_NONE;
     }
     ImGuiIO& io = ImGui::GetIO();
@@ -490,7 +510,7 @@ private:
 
   MOVETYPE GetScaleType(OPERATION op) const
   {
-    if (mbUsing) {
+    if (mState.mbUsing) {
       return MT_NONE;
     }
     ImGuiIO& io = ImGui::GetIO();
@@ -512,12 +532,13 @@ private:
       vec_t dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
       ComputeTripodAxisAndVisibility(i,
+                                     mMVPLocal,
+                                     mState,
                                      dirAxis,
                                      dirPlaneX,
                                      dirPlaneY,
                                      belowAxisLimit,
-                                     belowPlaneLimit,
-                                     mMVPLocal);
+                                     belowPlaneLimit);
       dirAxis.TransformVector(mModelLocal);
       dirPlaneX.TransformVector(mModelLocal);
       dirPlaneY.TransformVector(mModelLocal);
@@ -568,12 +589,13 @@ private:
       vec_t dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
       ComputeTripodAxisAndVisibility(i,
+                                     mMVPLocal,
+                                     mState,
                                      dirAxis,
                                      dirPlaneX,
                                      dirPlaneY,
                                      belowAxisLimit,
-                                     belowPlaneLimit,
-                                     mMVPLocal);
+                                     belowPlaneLimit);
 
       // draw axis
       if (belowAxisLimit) {
@@ -629,11 +651,7 @@ private:
   }
 
   // return true if mouse IsOver or if the gizmo is in moving state
-  bool IsUsing() const
-  {
-    return (mbUsing && (mActualID == -1 || mActualID == mEditingID)) ||
-           mbUsingBounds;
-  }
+  bool IsUsing() const { return mState.Using() || mbUsingBounds; }
 
   bool CanActivate() const
   {
@@ -847,7 +865,7 @@ private:
     // draw
     vec_t scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID)) {
+    if (mState.Using()) {
       scaleDisplay = mScale;
     }
 
@@ -855,17 +873,18 @@ private:
       if (!Intersects(op, static_cast<OPERATION>(SCALE_X << i))) {
         continue;
       }
-      const bool usingAxis = (mbUsing && type == MT_SCALE_X + i);
-      if (!mbUsing || usingAxis) {
+      const bool usingAxis = (mState.mbUsing && type == MT_SCALE_X + i);
+      if (!mState.mbUsing || usingAxis) {
         vec_t dirPlaneX, dirPlaneY, dirAxis;
         bool belowAxisLimit, belowPlaneLimit;
         ComputeTripodAxisAndVisibility(i,
+                                       mMVPLocal,
+                                       mState,
                                        dirAxis,
                                        dirPlaneX,
                                        dirPlaneY,
                                        belowAxisLimit,
-                                       belowPlaneLimit,
-                                       mMVPLocal);
+                                       belowPlaneLimit);
 
         // draw axis
         if (belowAxisLimit) {
@@ -878,7 +897,7 @@ private:
           ImVec2 worldDirSSpace = worldToPos(
             (dirAxis * markerScale * scaleDisplay[i]) * mScreenFactor, mMVP);
 
-          if (mbUsing && (mActualID == -1 || mActualID == mEditingID)) {
+          if (mState.Using()) {
             ImU32 scaleLineColor = GetColorU32(SCALE_LINE);
             drawList->AddLine(baseSSpace,
                               worldDirSSpaceNoScale,
@@ -889,7 +908,7 @@ private:
                                       scaleLineColor);
           }
 
-          if (!hasTranslateOnAxis || mbUsing) {
+          if (!hasTranslateOnAxis || mState.mbUsing) {
             drawList->AddLine(baseSSpace,
                               worldDirSSpace,
                               colors[i + 1],
@@ -909,17 +928,17 @@ private:
     drawList->AddCircleFilled(
       mScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
 
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID) &&
-        IsScaleType(type)) {
+    if (mState.Using() && IsScaleType(type)) {
       // ImVec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
       // mViewProjection);
       ImVec2 destinationPosOnScreen =
         worldToPos(mModel.position(), mViewProjection);
       /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
       destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
-      *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
-      drawList->AddCircle(destinationPosOnScreen, 6.f, translationLineColor);
-      drawList->AddLine(ImVec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y
+      *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f,
+      translationLineColor); drawList->AddCircle(destinationPosOnScreen, 6.f,
+      translationLineColor); drawList->AddLine(ImVec2(sourcePosOnScreen.x +
+      dif.x, sourcePosOnScreen.y
       + dif.y), ImVec2(destinationPosOnScreen.x - dif.x,
       destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
       */
@@ -971,7 +990,7 @@ private:
       if (!Intersects(op, static_cast<OPERATION>(ROTATE_Z >> axis))) {
         continue;
       }
-      const bool usingAxis = (mbUsing && type == MT_ROTATE_Z - axis);
+      const bool usingAxis = (mState.mbUsing && type == MT_ROTATE_Z - axis);
       const int circleMul = (hasRSC && !usingAxis) ? 1 : 2;
 
       ImVec2* circlePos = (ImVec2*)alloca(
@@ -992,7 +1011,7 @@ private:
                     mScreenFactor * ROTATION_DISPLAY_FACTOR;
         circlePos[i] = worldToPos(pos, mMVP);
       }
-      if (!mbUsing || usingAxis) {
+      if (!mState.mbUsing || usingAxis) {
         drawList->AddPolyline(circlePos,
                               circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1,
                               colors[3 - axis],
@@ -1006,7 +1025,7 @@ private:
         mRadiusSquareCenter = radiusAxis;
       }
     }
-    if (hasRSC && (!mbUsing || type == MT_ROTATE_SCREEN)) {
+    if (hasRSC && (!mState.mbUsing || type == MT_ROTATE_SCREEN)) {
       drawList->AddCircle(worldToPos(mModel.position(), mViewProjection),
                           mRadiusSquareCenter,
                           colors[0],
@@ -1014,8 +1033,7 @@ private:
                           mStyle.RotationOuterLineThickness);
     }
 
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID) &&
-        IsRotateType(type)) {
+    if (mState.Using() && IsRotateType(type)) {
       ImVec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
 
       circlePos[0] = worldToPos(mModel.position(), mViewProjection);
@@ -1070,7 +1088,7 @@ private:
     // draw
     vec_t scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID)) {
+    if (mState.Using()) {
       scaleDisplay = mScale;
     }
 
@@ -1078,17 +1096,18 @@ private:
       if (!Intersects(op, static_cast<OPERATION>(SCALE_XU << i))) {
         continue;
       }
-      const bool usingAxis = (mbUsing && type == MT_SCALE_X + i);
-      if (!mbUsing || usingAxis) {
+      const bool usingAxis = (mState.mbUsing && type == MT_SCALE_X + i);
+      if (!mState.mbUsing || usingAxis) {
         vec_t dirPlaneX, dirPlaneY, dirAxis;
         bool belowAxisLimit, belowPlaneLimit;
         ComputeTripodAxisAndVisibility(i,
+                                       mMVPLocal,
+                                       mState,
                                        dirAxis,
                                        dirPlaneX,
                                        dirPlaneY,
                                        belowAxisLimit,
-                                       belowPlaneLimit,
-                                       mMVPLocal);
+                                       belowPlaneLimit);
 
         // draw axis
         if (belowAxisLimit) {
@@ -1125,8 +1144,7 @@ private:
     drawList->AddCircle(
       mScreenSquareCenter, 20.f, colors[0], 32, mStyle.CenterCircleSize);
 
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID) &&
-        IsScaleType(type)) {
+    if (mState.Using() && IsScaleType(type)) {
       // ImVec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
       // mViewProjection);
       ImVec2 destinationPosOnScreen =
@@ -1181,14 +1199,15 @@ private:
     for (int i = 0; i < 3; ++i) {
       vec_t dirPlaneX, dirPlaneY, dirAxis;
       ComputeTripodAxisAndVisibility(i,
+                                     mMVP,
+                                     mState,
                                      dirAxis,
                                      dirPlaneX,
                                      dirPlaneY,
                                      belowAxisLimit,
-                                     belowPlaneLimit,
-                                     mMVP);
+                                     belowPlaneLimit);
 
-      if (!mbUsing || (mbUsing && type == MT_MOVE_X + i)) {
+      if (!mState.mbUsing || (mState.mbUsing && type == MT_MOVE_X + i)) {
         // draw axis
         if (belowAxisLimit &&
             Intersects(op, static_cast<OPERATION>(TRANSLATE_X << i))) {
@@ -1221,7 +1240,7 @@ private:
         }
       }
       // draw plane
-      if (!mbUsing || (mbUsing && type == MT_MOVE_YZ + i)) {
+      if (!mState.mbUsing || (mState.mbUsing && type == MT_MOVE_YZ + i)) {
         if (belowPlaneLimit && Contains(op, TRANSLATE_PLANS[i])) {
           ImVec2 screenQuadPts[4];
           for (int j = 0; j < 4; ++j) {
@@ -1240,8 +1259,7 @@ private:
     drawList->AddCircleFilled(
       mScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
 
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID) &&
-        IsTranslateType(type)) {
+    if (mState.Using() && IsTranslateType(type)) {
       ImU32 translationLineColor = GetColorU32(TRANSLATION_LINE);
 
       ImVec2 sourcePosOnScreen = worldToPos(mMatrixOrigin, mViewProjection);
@@ -1446,7 +1464,7 @@ private:
           mBoundsLocalPivot[thirdAxis] = aabb[oppositeIndex][thirdAxis];
 
           mbUsingBounds = true;
-          mEditingID = mActualID;
+          mState.mEditingID = mState.mActualID;
           mBoundsMatrix = mModelSource;
         }
         // small anchor on middle of segment
@@ -1468,12 +1486,12 @@ private:
                                   // + 1) & 2) ? 1.f : -1.f);
 
           mbUsingBounds = true;
-          mEditingID = mActualID;
+          mState.mEditingID = mState.mActualID;
           mBoundsMatrix = mModelSource;
         }
       }
 
-      if (mbUsingBounds && (mActualID == -1 || mActualID == mEditingID)) {
+      if (mState.Using()) {
         matrix_t scale;
         scale.SetToIdentity();
 
@@ -1546,7 +1564,7 @@ private:
 
       if (!io.MouseDown[0]) {
         mbUsingBounds = false;
-        mEditingID = -1;
+        mState.mEditingID = -1;
       }
       if (mbUsingBounds) {
         break;
@@ -1598,8 +1616,7 @@ private:
     bool modified = false;
 
     // move
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID) &&
-        IsTranslateType(mCurrentOperation)) {
+    if (mState.Using() && IsTranslateType(mCurrentOperation)) {
 #if IMGUI_VERSION_NUM >= 18723
       ImGui::SetNextFrameWantCaptureMouse(true);
 #else
@@ -1655,7 +1672,7 @@ private:
       *(matrix_t*)matrix = res;
 
       if (!io.MouseDown[0]) {
-        mbUsing = false;
+        mState.mbUsing = false;
       }
 
       type = mCurrentOperation;
@@ -1670,8 +1687,8 @@ private:
 #endif
       }
       if (CanActivate() && type != MT_NONE) {
-        mbUsing = true;
-        mEditingID = mActualID;
+        mState.mbUsing = true;
+        mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
         vec_t movePlanNormal[] = { mModel.right(), mModel.up(), mModel.dir(),
                                    mModel.right(), mModel.up(), mModel.dir(),
@@ -1712,7 +1729,7 @@ private:
     ImGuiIO& io = ImGui::GetIO();
     bool modified = false;
 
-    if (!mbUsing) {
+    if (!mState.mbUsing) {
       // find new possible way to scale
       type = GetScaleType(op);
       if (type != MT_NONE) {
@@ -1723,8 +1740,8 @@ private:
 #endif
       }
       if (CanActivate() && type != MT_NONE) {
-        mbUsing = true;
-        mEditingID = mActualID;
+        mState.mbUsing = true;
+        mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
         const vec_t movePlanNormal[] = { mModel.up(),    mModel.dir(),
                                          mModel.right(), mModel.dir(),
@@ -1748,8 +1765,7 @@ private:
       }
     }
     // scale
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID) &&
-        IsScaleType(mCurrentOperation)) {
+    if (mState.Using() && IsScaleType(mCurrentOperation)) {
 #if IMGUI_VERSION_NUM >= 18723
       ImGui::SetNextFrameWantCaptureMouse(true);
 #else
@@ -1815,7 +1831,7 @@ private:
       }
 
       if (!io.MouseDown[0]) {
-        mbUsing = false;
+        mState.mbUsing = false;
         mScale.Set(1.f, 1.f, 1.f);
       }
 
@@ -1837,7 +1853,7 @@ private:
     bool applyRotationLocaly = mMode == LOCAL;
     bool modified = false;
 
-    if (!mbUsing) {
+    if (!mState.mbUsing) {
       type = GetRotateType(op);
 
       if (type != MT_NONE) {
@@ -1853,8 +1869,8 @@ private:
       }
 
       if (CanActivate() && type != MT_NONE) {
-        mbUsing = true;
-        mEditingID = mActualID;
+        mState.mbUsing = true;
+        mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
         const vec_t rotatePlanNormal[] = {
           mModel.right(), mModel.up(), mModel.dir(), -mCameraDir
@@ -1877,8 +1893,7 @@ private:
     }
 
     // rotation
-    if (mbUsing && (mActualID == -1 || mActualID == mEditingID) &&
-        IsRotateType(mCurrentOperation)) {
+    if (mState.Using() && IsRotateType(mCurrentOperation)) {
 #if IMGUI_VERSION_NUM >= 18723
       ImGui::SetNextFrameWantCaptureMouse(true);
 #else
@@ -1922,8 +1937,8 @@ private:
       }
 
       if (!io.MouseDown[0]) {
-        mbUsing = false;
-        mEditingID = -1;
+        mState.mbUsing = false;
+        mState.mEditingID = -1;
       }
       type = mCurrentOperation;
     }
@@ -1974,7 +1989,7 @@ public:
                   const float* localBounds,
                   const float* boundsSnap)
   {
-    mActualID = (int64_t)id;
+    mState.mActualID = (int64_t)id;
     // Scope scope;
 
     // Scale is always local or matrix will be skewed when applying world scale
@@ -2006,7 +2021,7 @@ public:
       }
     }
 
-    if (localBounds && !mbUsing) {
+    if (localBounds && !mState.mbUsing) {
       HandleAndDrawLocalBounds(
         localBounds, (matrix_t*)matrix, boundsSnap, operation);
     }
