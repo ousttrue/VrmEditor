@@ -105,7 +105,7 @@ Contains(OPERATION lhs, OPERATION rhs)
 
 class Context
 {
-  struct ContextImpl* m_impl;
+  class ContextImpl* m_impl;
 
 public:
   Context();
