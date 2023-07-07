@@ -2,6 +2,10 @@
 #include <cfloat>
 #include <math.h>
 
+static const float ZPI = 3.14159265358979323846f;
+static const float RAD2DEG = (180.f / ZPI);
+static const float DEG2RAD = (ZPI / 180.f);
+
 inline void
 FPU_MatrixF_x_MatrixF(const float* a, const float* b, float* r)
 {
@@ -210,4 +214,50 @@ matrix_t::RotationAxis(const vec_t& axis, float angle)
   m[3][1] = 0.f;
   m[3][2] = 0.f;
   m[3][3] = 1.f;
+}
+
+void
+Perspective(float fovyInDegrees,
+            float aspectRatio,
+            float znear,
+            float zfar,
+            float* m16)
+{
+  float ymax, xmax;
+  ymax = znear * tanf(fovyInDegrees * DEG2RAD);
+  xmax = ymax * aspectRatio;
+  Frustum(-xmax, xmax, -ymax, ymax, znear, zfar, m16);
+}
+
+void
+LookAt(const float* eye, const float* at, const float* up, float* m16)
+{
+  float X[3], Y[3], Z[3], tmp[3];
+
+  tmp[0] = eye[0] - at[0];
+  tmp[1] = eye[1] - at[1];
+  tmp[2] = eye[2] - at[2];
+  Normalize(tmp, Z);
+  Normalize(up, Y);
+  Cross(Y, Z, tmp);
+  Normalize(tmp, X);
+  Cross(Z, X, tmp);
+  Normalize(tmp, Y);
+
+  m16[0] = X[0];
+  m16[1] = Y[0];
+  m16[2] = Z[0];
+  m16[3] = 0.0f;
+  m16[4] = X[1];
+  m16[5] = Y[1];
+  m16[6] = Z[1];
+  m16[7] = 0.0f;
+  m16[8] = X[2];
+  m16[9] = Y[2];
+  m16[10] = Z[2];
+  m16[11] = 0.0f;
+  m16[12] = -Dot(X, eye);
+  m16[13] = -Dot(Y, eye);
+  m16[14] = -Dot(Z, eye);
+  m16[15] = 1.0f;
 }

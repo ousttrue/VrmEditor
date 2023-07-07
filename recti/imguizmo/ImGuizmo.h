@@ -78,6 +78,31 @@ operator|=(OPERATION& lhs, OPERATION rhs)
   return lhs;
 }
 
+inline OPERATION
+operator&(OPERATION lhs, OPERATION rhs)
+{
+  return static_cast<OPERATION>(static_cast<int>(lhs) & static_cast<int>(rhs));
+}
+
+inline bool
+operator!=(OPERATION lhs, int rhs)
+{
+  return static_cast<int>(lhs) != rhs;
+}
+
+inline bool
+Intersects(OPERATION lhs, OPERATION rhs)
+{
+  return (lhs & rhs) != 0;
+}
+
+// True if lhs contains rhs
+inline bool
+Contains(OPERATION lhs, OPERATION rhs)
+{
+  return (lhs & rhs) == rhs;
+}
+
 void
 SetRect(float x, float y, float width, float height);
 

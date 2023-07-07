@@ -103,3 +103,48 @@ vec_t::TransformVector(const matrix_t& matrix)
   z = out.z;
   w = out.w;
 }
+
+void
+Normalize(const float* a, float* r)
+{
+  float il = 1.f / (sqrtf(Dot(a, a)) + FLT_EPSILON);
+  r[0] = a[0] * il;
+  r[1] = a[1] * il;
+  r[2] = a[2] * il;
+}
+
+float
+IntersectRayPlane(const vec_t& rOrigin, const vec_t& rVector, const vec_t& plan)
+{
+  const float numer = plan.Dot3(rOrigin) - plan.w;
+  const float denom = plan.Dot3(rVector);
+
+  if (fabsf(denom) <
+      FLT_EPSILON) // normal is orthogonal to vector, cant intersect
+  {
+    return -1.0f;
+  }
+
+  return -(numer / denom);
+}
+
+vec_t
+PointOnSegment(const vec_t& point, const vec_t& vertPos1, const vec_t& vertPos2)
+{
+  vec_t c = point - vertPos1;
+  vec_t V;
+
+  V.Normalize(vertPos2 - vertPos1);
+  float d = (vertPos2 - vertPos1).Length();
+  float t = V.Dot3(c);
+
+  if (t < 0.f) {
+    return vertPos1;
+  }
+
+  if (t > d) {
+    return vertPos2;
+  }
+
+  return vertPos1 + V * t;
+}
