@@ -155,6 +155,20 @@ public:
   Context(const Context&) = delete;
   Context& operator=(const Context&) = delete;
 
+  bool CanActivate() const
+  {
+    if (ImGui::IsMouseClicked(0)) {
+      if (mAllowActiveHoverItem) {
+        return true;
+      } else {
+        if (!ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   ImDrawList* mDrawList;
   Style mStyle;
 
@@ -246,8 +260,10 @@ public:
   bool mAllowAxisFlip = true;
   float mGizmoSizeClipSpace = 0.1f;
 
-  bool mAllowActiveHoverItem = false;
+private:
+  bool mAllowActiveHoverItem = true;
 
+public:
   void ComputeContext(const float* view,
                       const float* projection,
                       float* matrix,
@@ -1666,21 +1682,6 @@ DrawTranslationGizmo(OPERATION op, int type)
   }
 }
 
-static bool
-CanActivate()
-{
-  if (ImGui::IsMouseClicked(0)) {
-    if (GetContext().mAllowActiveHoverItem) {
-      return true;
-    } else {
-      if (!ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive()) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 static void
 HandleAndDrawLocalBounds(const float* bounds,
                          matrix_t* matrix,
@@ -1835,7 +1836,7 @@ HandleAndDrawLocalBounds(const float* bounds,
       int oppositeIndex = (i + 2) % 4;
       // big anchor on corners
       if (!GetContext().mbUsingBounds && GetContext().mbEnable &&
-          overBigAnchor && CanActivate()) {
+          overBigAnchor && GetContext().CanActivate()) {
         GetContext().mBoundsPivot.TransformPoint(aabb[(i + 2) % 4],
                                                  GetContext().mModelSource);
         GetContext().mBoundsAnchor.TransformPoint(aabb[i],
@@ -1858,7 +1859,7 @@ HandleAndDrawLocalBounds(const float* bounds,
       }
       // small anchor on middle of segment
       if (!GetContext().mbUsingBounds && GetContext().mbEnable &&
-          overSmallAnchor && CanActivate()) {
+          overSmallAnchor && GetContext().CanActivate()) {
         vec_t midPointOpposite = (aabb[(i + 2) % 4] + aabb[(i + 3) % 4]) * 0.5f;
         GetContext().mBoundsPivot.TransformPoint(midPointOpposite,
                                                  GetContext().mModelSource);
@@ -2069,7 +2070,7 @@ HandleTranslation(float* matrix,
       ImGui::CaptureMouseFromApp();
 #endif
     }
-    if (CanActivate() && type != MT_NONE) {
+    if (GetContext().CanActivate() && type != MT_NONE) {
       GetContext().mbUsing = true;
       GetContext().mEditingID = GetContext().mActualID;
       GetContext().mCurrentOperation = type;
@@ -2129,7 +2130,7 @@ HandleScale(float* matrix,
       ImGui::CaptureMouseFromApp();
 #endif
     }
-    if (CanActivate() && type != MT_NONE) {
+    if (GetContext().CanActivate() && type != MT_NONE) {
       GetContext().mbUsing = true;
       GetContext().mEditingID = GetContext().mActualID;
       GetContext().mCurrentOperation = type;
@@ -2273,7 +2274,7 @@ HandleRotation(float* matrix,
       applyRotationLocaly = true;
     }
 
-    if (CanActivate() && type != MT_NONE) {
+    if (GetContext().CanActivate() && type != MT_NONE) {
       GetContext().mbUsing = true;
       GetContext().mEditingID = GetContext().mActualID;
       GetContext().mCurrentOperation = type;
@@ -2430,11 +2431,11 @@ AllowAxisFlip(bool value)
   GetContext().mAllowAxisFlip = value;
 }
 
-struct Scope
-{
-  Scope() { ImGuizmo::GetContext().mAllowActiveHoverItem = true; }
-  ~Scope() { ImGuizmo::GetContext().mAllowActiveHoverItem = false; }
-};
+// struct Scope
+// {
+//   Scope() { ImGuizmo::GetContext().mAllowActiveHoverItem = true; }
+//   ~Scope() { ImGuizmo::GetContext().mAllowActiveHoverItem = false; }
+// };
 
 bool
 Manipulate(void* id,
@@ -2449,7 +2450,7 @@ Manipulate(void* id,
            const float* boundsSnap)
 {
   GetContext().mActualID = (int64_t)id;
-  Scope scope;
+  // Scope scope;
 
   // Scale is always local or matrix will be skewed when applying world scale or
   // oriented matrix
