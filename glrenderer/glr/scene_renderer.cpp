@@ -96,6 +96,8 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
       enableTranslation = true;
     }
 
+    auto& vp = camera.Projection.Viewport;
+    recti::SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
     if (recti::Manipulate(node.get(),
                           &camera.ViewMatrix._11,
                           &camera.ProjectionMatrix._11,
@@ -166,6 +168,8 @@ SceneRenderer::RenderRuntime(
       enableTranslation = true;
     }
 
+    auto& vp = camera.Projection.Viewport;
+    recti::SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
     if (recti::Manipulate(node.get(),
                           &camera.ViewMatrix._11,
                           &camera.ProjectionMatrix._11,
