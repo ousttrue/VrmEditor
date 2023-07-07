@@ -33,7 +33,6 @@ struct ScreenImpl
 {
   void SetRect(float x, float y, float w, float h)
   {
-    ImGuizmo::SetDrawlist();
     ImGuizmo::SetRect(x, y, w, h);
   }
 
@@ -47,8 +46,7 @@ struct ScreenImpl
                   const float* localBounds,
                   const float* boundsSnap)
   {
-    ImGuizmo::SetID((int64_t)id);
-    return ImGuizmo::Manipulate(view,
+    return ImGuizmo::Manipulate(id, view,
                                 projection,
                                 ToOperation(operation),
                                 ToMode(operation),

@@ -24,6 +24,7 @@
 // SOFTWARE.
 //
 #pragma once
+#include <stdint.h>
 
 struct ImDrawList;
 
@@ -77,18 +78,12 @@ operator|=(OPERATION& lhs, OPERATION rhs)
   return lhs;
 }
 
-
-void
-SetDrawlist(ImDrawList* drawlist = nullptr);
-
 void
 SetRect(float x, float y, float width, float height);
 
-void
-SetID(int id);
-
 bool
-Manipulate(const float* view,
+Manipulate(void* id,
+           const float* view,
            const float* projection,
            OPERATION operation,
            MODE mode,

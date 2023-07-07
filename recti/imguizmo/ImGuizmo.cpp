@@ -486,8 +486,8 @@ public:
 
   bool mIsOrthographic = false;
 
-  int mActualID = -1;
-  int mEditingID = -1;
+  int64_t mActualID = -1;
+  int64_t mEditingID = -1;
   OPERATION mOperation = OPERATION(-1);
 
   bool mAllowAxisFlip = true;
@@ -1338,8 +1338,15 @@ IsHoveringWindow()
 }
 
 void
+SetDrawlist(ImDrawList* drawlist)
+{
+  GetContext().mDrawList = drawlist ? drawlist : ImGui::GetWindowDrawList();
+}
+
+void
 SetRect(float x, float y, float width, float height)
 {
+  SetDrawlist(nullptr);
   GetContext().mX = x;
   GetContext().mY = y;
   GetContext().mWidth = width;
@@ -1353,12 +1360,6 @@ void
 SetOrthographic(bool isOrthographic)
 {
   GetContext().mIsOrthographic = isOrthographic;
-}
-
-void
-SetDrawlist(ImDrawList* drawlist)
-{
-  GetContext().mDrawList = drawlist ? drawlist : ImGui::GetWindowDrawList();
 }
 
 void
@@ -3218,7 +3219,8 @@ struct Scope
 };
 
 bool
-Manipulate(const float* view,
+Manipulate(void* id,
+           const float* view,
            const float* projection,
            OPERATION operation,
            MODE mode,
@@ -3228,6 +3230,7 @@ Manipulate(const float* view,
            const float* localBounds,
            const float* boundsSnap)
 {
+  GetContext().mActualID = (int64_t)id;
   Scope scope;
 
   // Scale is always local or matrix will be skewed when applying world scale or
