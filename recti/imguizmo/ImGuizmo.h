@@ -103,19 +103,24 @@ Contains(OPERATION lhs, OPERATION rhs)
   return (lhs & rhs) == rhs;
 }
 
-void
-SetRect(float x, float y, float width, float height);
+class Context
+{
+  struct ContextImpl* m_impl;
 
-bool
-Manipulate(void* id,
-           const float* view,
-           const float* projection,
-           OPERATION operation,
-           MODE mode,
-           float* matrix,
-           float* deltaMatrix = nullptr,
-           const float* snap = nullptr,
-           const float* localBounds = nullptr,
-           const float* boundsSnap = nullptr);
+public:
+  Context();
+  ~Context();
+  void SetRect(float x, float y, float width, float height);
+  bool Manipulate(void* id,
+                  const float* view,
+                  const float* projection,
+                  OPERATION operation,
+                  MODE mode,
+                  float* matrix,
+                  float* deltaMatrix = nullptr,
+                  const float* snap = nullptr,
+                  const float* localBounds = nullptr,
+                  const float* boundsSnap = nullptr);
+};
 
 } // namespace

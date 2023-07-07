@@ -1,5 +1,6 @@
 #include "recti.h"
 #include "imguizmo/ImGuizmo.h"
+#include <memory>
 #include <stdint.h>
 
 namespace recti {
@@ -31,9 +32,13 @@ ToMode(const Operation& o)
 //
 struct ScreenImpl
 {
+  std::shared_ptr<ImGuizmo::Context> m_im_gizmo;
+
+  ScreenImpl() { m_im_gizmo = std::make_shared<ImGuizmo::Context>(); }
+
   void SetRect(float x, float y, float w, float h)
   {
-    ImGuizmo::SetRect(x, y, w, h);
+    m_im_gizmo->SetRect(x, y, w, h);
   }
 
   bool Manipulate(void* id,
@@ -46,15 +51,16 @@ struct ScreenImpl
                   const float* localBounds,
                   const float* boundsSnap)
   {
-    return ImGuizmo::Manipulate(id, view,
-                                projection,
-                                ToOperation(operation),
-                                ToMode(operation),
-                                matrix,
-                                deltaMatrix,
-                                snap,
-                                localBounds,
-                                boundsSnap);
+    return m_im_gizmo->Manipulate(id,
+                                  view,
+                                  projection,
+                                  ToOperation(operation),
+                                  ToMode(operation),
+                                  matrix,
+                                  deltaMatrix,
+                                  snap,
+                                  localBounds,
+                                  boundsSnap);
   }
 };
 
