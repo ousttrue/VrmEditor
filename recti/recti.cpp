@@ -15,25 +15,42 @@ ToMode(const Operation& o)
   return ImGuizmo::LOCAL;
 }
 
+//
+// ScreenImpl
+//
+struct ScreenImpl
+{};
+
+//
+// Screen
+//
+Screen::Screen()
+  : m_impl(new ScreenImpl)
+{
+}
+
+Screen::~Screen()
+{
+  delete m_impl;
+}
+
 void
-SetRect(float x, float y, float w, float h)
+Screen::SetRect(float x, float y, float w, float h)
 {
   ImGuizmo::SetDrawlist();
   ImGuizmo::SetRect(x, y, w, h);
 }
 
 bool
-Manipulate(void* id,
-           const float* view,
-           const float* projection,
-           // OPERATION operation,
-           // MODE mode,
-           const Operation& operation,
-           float* matrix,
-           float* deltaMatrix,
-           const float* snap,
-           const float* localBounds,
-           const float* boundsSnap)
+Screen::Manipulate(void* id,
+                   const float* view,
+                   const float* projection,
+                   const Operation& operation,
+                   float* matrix,
+                   float* deltaMatrix,
+                   const float* snap,
+                   const float* localBounds,
+                   const float* boundsSnap)
 {
   ImGuizmo::SetID((int64_t)id);
   // ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;

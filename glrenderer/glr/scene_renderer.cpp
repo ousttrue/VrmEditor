@@ -20,6 +20,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
   , m_settings(settings ? settings : std::make_shared<ViewSettings>())
   , m_cuber(new Cuber)
   , m_gizmo(new LineGizmo)
+  , m_screen(new recti::Screen)
 {
 }
 
@@ -97,16 +98,16 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
     }
 
     auto& vp = camera.Projection.Viewport;
-    recti::SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
-    if (recti::Manipulate(node.get(),
-                          &camera.ViewMatrix._11,
-                          &camera.ProjectionMatrix._11,
-                          { enableTranslation, true, false, true },
-                          (float*)&m,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr)) {
+    m_screen->SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
+    if (m_screen->Manipulate(node.get(),
+                             &camera.ViewMatrix._11,
+                             &camera.ProjectionMatrix._11,
+                             { enableTranslation, true, false, true },
+                             (float*)&m,
+                             nullptr,
+                             nullptr,
+                             nullptr,
+                             nullptr)) {
       // decompose feedback
       node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldInitialMatrix(true);
@@ -169,16 +170,16 @@ SceneRenderer::RenderRuntime(
     }
 
     auto& vp = camera.Projection.Viewport;
-    recti::SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
-    if (recti::Manipulate(node.get(),
-                          &camera.ViewMatrix._11,
-                          &camera.ProjectionMatrix._11,
-                          { enableTranslation, true, false, true },
-                          (float*)&m,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr)) {
+    m_screen->SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
+    if (m_screen->Manipulate(node.get(),
+                             &camera.ViewMatrix._11,
+                             &camera.ProjectionMatrix._11,
+                             { enableTranslation, true, false, true },
+                             (float*)&m,
+                             nullptr,
+                             nullptr,
+                             nullptr,
+                             nullptr)) {
       // decompose feedback
       node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldMatrix(true);

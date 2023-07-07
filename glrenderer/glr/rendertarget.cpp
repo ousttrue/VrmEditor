@@ -18,7 +18,11 @@ RenderTarget::RenderTarget(
 }
 
 uint32_t
-RenderTarget::Begin(int x, int y, int width, int height, const float color[4])
+RenderTarget::Begin(float x,
+                    float y,
+                    float width,
+                    float height,
+                    const float color[4])
 {
   if (width == 0 || height == 0) {
     return 0;
@@ -34,13 +38,13 @@ RenderTarget::Begin(int x, int y, int width, int height, const float color[4])
   }
   if (!FboTexture) {
     FboTexture = grapho::gl3::Texture::Create({
-      width,
-      height,
+      static_cast<int>(width),
+      static_cast<int>(height),
       grapho::PixelFormat::u8_RGB,
       grapho::ColorSpace::Linear,
     });
     Fbo->AttachTexture2D(FboTexture->Handle());
-    Fbo->AttachDepth(width, height);
+    Fbo->AttachDepth(static_cast<int>(width), static_cast<int>(height));
   }
 
   Fbo->Bind();

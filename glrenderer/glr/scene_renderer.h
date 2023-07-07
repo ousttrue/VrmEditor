@@ -9,6 +9,10 @@ struct GltfRoot;
 struct RuntimeScene;
 }
 
+namespace recti {
+class Screen;
+}
+
 namespace glr {
 class Cuber;
 struct LineGizmo;
@@ -37,6 +41,7 @@ struct SceneRenderer
   std::shared_ptr<ViewSettings> m_settings;
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<LineGizmo> m_gizmo;
+  std::shared_ptr<recti::Screen> m_screen;
 
   SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
                 const std::shared_ptr<ViewSettings>& settings);
