@@ -148,3 +148,66 @@ PointOnSegment(const vec_t& point, const vec_t& vertPos1, const vec_t& vertPos2)
 
   return vertPos1 + V * t;
 }
+
+static const float snapTension = 0.5f;
+void
+ComputeSnap(float* value, float snap)
+{
+  if (snap <= FLT_EPSILON) {
+    return;
+  }
+
+  float modulo = fmodf(*value, snap);
+  float moduloRatio = fabsf(modulo) / snap;
+  if (moduloRatio < snapTension) {
+    *value -= modulo;
+  } else if (moduloRatio > (1.f - snapTension)) {
+    *value = *value - modulo + snap * ((*value < 0.f) ? -1.f : 1.f);
+  }
+}
+void
+ComputeSnap(vec_t& value, const float* snap)
+{
+  for (int i = 0; i < 3; i++) {
+    ComputeSnap(&value[i], snap[i]);
+  }
+}
+
+void
+ComputeFrustumPlanes(vec_t* frustum, const float* clip)
+{
+  frustum[0].x = clip[3] - clip[0];
+  frustum[0].y = clip[7] - clip[4];
+  frustum[0].z = clip[11] - clip[8];
+  frustum[0].w = clip[15] - clip[12];
+
+  frustum[1].x = clip[3] + clip[0];
+  frustum[1].y = clip[7] + clip[4];
+  frustum[1].z = clip[11] + clip[8];
+  frustum[1].w = clip[15] + clip[12];
+
+  frustum[2].x = clip[3] + clip[1];
+  frustum[2].y = clip[7] + clip[5];
+  frustum[2].z = clip[11] + clip[9];
+  frustum[2].w = clip[15] + clip[13];
+
+  frustum[3].x = clip[3] - clip[1];
+  frustum[3].y = clip[7] - clip[5];
+  frustum[3].z = clip[11] - clip[9];
+  frustum[3].w = clip[15] - clip[13];
+
+  frustum[4].x = clip[3] - clip[2];
+  frustum[4].y = clip[7] - clip[6];
+  frustum[4].z = clip[11] - clip[10];
+  frustum[4].w = clip[15] - clip[14];
+
+  frustum[5].x = clip[3] + clip[2];
+  frustum[5].y = clip[7] + clip[6];
+  frustum[5].z = clip[11] + clip[10];
+  frustum[5].w = clip[15] + clip[14];
+
+  for (int i = 0; i < 6; i++) {
+    frustum[i].Normalize();
+  }
+}
+

@@ -4,8 +4,11 @@
 #include <math.h>
 
 static const float ZPI = 3.14159265358979323846f;
-// static const float RAD2DEG = (180.f / ZPI);
+static const float RAD2DEG = (180.f / ZPI);
 static const float DEG2RAD = (ZPI / 180.f);
+static const vec_t directionUnary[3] = { { 1.f, 0.f, 0.f, 0 },
+                                         { 0.f, 1.f, 0.f, 0 },
+                                         { 0.f, 0.f, 1.f, 0 } };
 
 inline void
 FPU_MatrixF_x_MatrixF(const float* a, const float* b, float* r)
@@ -280,4 +283,59 @@ worldToPos(
   trans.x += position.x;
   trans.y += position.y;
   return ImVec2(trans.x, trans.y);
+}
+
+void
+DecomposeMatrixToComponents(const float* matrix,
+                            float* translation,
+                            float* rotation,
+                            float* scale)
+{
+  matrix_t mat = *(matrix_t*)matrix;
+
+  scale[0] = mat.v.right.Length();
+  scale[1] = mat.v.up.Length();
+  scale[2] = mat.v.dir.Length();
+
+  mat.OrthoNormalize();
+
+  rotation[0] = RAD2DEG * atan2f(mat.m[1][2], mat.m[2][2]);
+  rotation[1] =
+    RAD2DEG *
+    atan2f(-mat.m[0][2],
+           sqrtf(mat.m[1][2] * mat.m[1][2] + mat.m[2][2] * mat.m[2][2]));
+  rotation[2] = RAD2DEG * atan2f(mat.m[0][1], mat.m[0][0]);
+
+  translation[0] = mat.v.position.x;
+  translation[1] = mat.v.position.y;
+  translation[2] = mat.v.position.z;
+}
+
+void
+RecomposeMatrixFromComponents(const float* translation,
+                              const float* rotation,
+                              const float* scale,
+                              float* matrix)
+{
+  matrix_t& mat = *(matrix_t*)matrix;
+
+  matrix_t rot[3];
+  for (int i = 0; i < 3; i++) {
+    rot[i].RotationAxis(directionUnary[i], rotation[i] * DEG2RAD);
+  }
+
+  mat = rot[0] * rot[1] * rot[2];
+
+  float validScale[3];
+  for (int i = 0; i < 3; i++) {
+    if (fabsf(scale[i]) < FLT_EPSILON) {
+      validScale[i] = 0.001f;
+    } else {
+      validScale[i] = scale[i];
+    }
+  }
+  mat.v.right *= validScale[0];
+  mat.v.up *= validScale[1];
+  mat.v.dir *= validScale[2];
+  mat.v.position.Set(translation[0], translation[1], translation[2], 1.f);
 }

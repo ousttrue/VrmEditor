@@ -248,6 +248,11 @@ BuildPlan(const vec_t& p_point1, const vec_t& p_normal)
   res.z = normal.z;
   return res;
 }
+inline float
+DistanceToPlane(const vec_t& point, const vec_t& plan)
+{
+  return plan.Dot3(point) + plan.w;
+}
 
 float
 IntersectRayPlane(const vec_t& rOrigin,
@@ -258,3 +263,11 @@ vec_t
 PointOnSegment(const vec_t& point,
                const vec_t& vertPos1,
                const vec_t& vertPos2);
+
+void
+ComputeSnap(float* value, float snap);
+void
+ComputeSnap(vec_t& value, const float* snap);
+
+void
+ComputeFrustumPlanes(vec_t* frustum, const float* clip);
