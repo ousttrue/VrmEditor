@@ -58,6 +58,13 @@ operator|(OPERATION lhs, OPERATION rhs)
   return static_cast<OPERATION>(static_cast<int>(lhs) | static_cast<int>(rhs));
 }
 
+inline OPERATION&
+operator|=(OPERATION& lhs, OPERATION rhs)
+{
+  lhs = lhs | rhs;
+  return lhs;
+}
+
 enum COLOR
 {
   DIRECTION_X,      // directionColor[0]

@@ -6,7 +6,17 @@ namespace recti {
 static ImGuizmo::OPERATION
 ToOperation(const Operation& o)
 {
-  return ImGuizmo::ROTATE;
+  ImGuizmo::OPERATION operation = {};
+  if (o.EnableT) {
+    operation |= ImGuizmo::TRANSLATE;
+  }
+  if (o.EnableR) {
+    operation |= ImGuizmo::ROTATE;
+  }
+  if (o.EnableS) {
+    operation |= ImGuizmo::SCALE;
+  }
+  return operation;
 }
 
 static ImGuizmo::MODE
@@ -19,7 +29,35 @@ ToMode(const Operation& o)
 // ScreenImpl
 //
 struct ScreenImpl
-{};
+{
+  void SetRect(float x, float y, float w, float h)
+  {
+    ImGuizmo::SetDrawlist();
+    ImGuizmo::SetRect(x, y, w, h);
+  }
+
+  bool Manipulate(void* id,
+                  const float* view,
+                  const float* projection,
+                  const Operation& operation,
+                  float* matrix,
+                  float* deltaMatrix,
+                  const float* snap,
+                  const float* localBounds,
+                  const float* boundsSnap)
+  {
+    ImGuizmo::SetID((int64_t)id);
+    return ImGuizmo::Manipulate(view,
+                                projection,
+                                ToOperation(operation),
+                                ToMode(operation),
+                                matrix,
+                                deltaMatrix,
+                                snap,
+                                localBounds,
+                                boundsSnap);
+  }
+};
 
 //
 // Screen
@@ -37,8 +75,7 @@ Screen::~Screen()
 void
 Screen::SetRect(float x, float y, float w, float h)
 {
-  ImGuizmo::SetDrawlist();
-  ImGuizmo::SetRect(x, y, w, h);
+  m_impl->SetRect(x, y, w, h);
 }
 
 bool
@@ -52,17 +89,15 @@ Screen::Manipulate(void* id,
                    const float* localBounds,
                    const float* boundsSnap)
 {
-  ImGuizmo::SetID((int64_t)id);
-  // ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
-  return ImGuizmo::Manipulate(view,
-                              projection,
-                              ToOperation(operation),
-                              ToMode(operation),
-                              matrix,
-                              deltaMatrix,
-                              snap,
-                              localBounds,
-                              boundsSnap);
+  return m_impl->Manipulate(id,
+                            view,
+                            projection,
+                            operation,
+                            matrix,
+                            deltaMatrix,
+                            snap,
+                            localBounds,
+                            boundsSnap);
 }
 
 } // namespace
