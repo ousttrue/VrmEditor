@@ -18,7 +18,7 @@ RenderTarget::RenderTarget(
 }
 
 uint32_t
-RenderTarget::Begin(int width, int height, const float color[4])
+RenderTarget::Begin(int x, int y, int width, int height, const float color[4])
 {
   if (width == 0 || height == 0) {
     return 0;
@@ -51,8 +51,8 @@ RenderTarget::Begin(int width, int height, const float color[4])
     .Depth = 1.0f,
   });
 
-  m_width = width;
-  m_height = height;
+  Camera->Projection.SetRect(x, y, width, height);
+
   return FboTexture->Handle();
 }
 
@@ -66,7 +66,6 @@ RenderTarget::End(bool isActive,
                   int mouseWheel)
 {
   // update camera
-  Camera->Projection.SetSize(m_width, m_height);
   if (isActive) {
     if (isRightDown) {
       Camera->YawPitch(mouseDeltaX, mouseDeltaY);

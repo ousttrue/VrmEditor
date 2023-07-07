@@ -22,7 +22,7 @@ ImFbo::ShowFbo(float x, float y, float w, float h, const float color[4])
 
   recti::SetRect(x, y, w, h);
 
-  if (auto texture = m_rt->Begin((int)w, (int)h, color)) {
+  if (auto texture = m_rt->Begin((int)x, (int)y, (int)w, (int)h, color)) {
     auto [isActive, isHovered] =
       grapho::imgui::DraggableImage((ImTextureID)(uint64_t)texture, { w, h });
 

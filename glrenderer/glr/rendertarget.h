@@ -26,9 +26,7 @@ struct RenderTarget
   RenderFunc render;
 
   RenderTarget(const std::shared_ptr<grapho::camera::Camera>& camera);
-  int m_width;
-  int m_height;
-  uint32_t Begin(int width, int height, const float color[4]);
+  uint32_t Begin(int x, int y, int width, int height, const float color[4]);
   void End(bool isActive,
            bool isHovered,
            bool isRightDown,
