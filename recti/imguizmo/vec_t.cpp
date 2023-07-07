@@ -27,7 +27,7 @@ vec_t::operator!=(const vec_t& other) const
 vec_t
 vec_t::Abs() const
 {
-  return makeVect(fabsf(x), fabsf(y), fabsf(z));
+  return { fabsf(x), fabsf(y), fabsf(z) };
 }
 
 vec_t
@@ -45,16 +45,10 @@ void
 vec_t::Transform(const matrix_t& matrix)
 {
   vec_t out;
-
-  out.x = x * matrix.m[0][0] + y * matrix.m[1][0] + z * matrix.m[2][0] +
-          w * matrix.m[3][0];
-  out.y = x * matrix.m[0][1] + y * matrix.m[1][1] + z * matrix.m[2][1] +
-          w * matrix.m[3][1];
-  out.z = x * matrix.m[0][2] + y * matrix.m[1][2] + z * matrix.m[2][2] +
-          w * matrix.m[3][2];
-  out.w = x * matrix.m[0][3] + y * matrix.m[1][3] + z * matrix.m[2][3] +
-          w * matrix.m[3][3];
-
+  out.x = x * matrix.m00 + y * matrix.m10 + z * matrix.m20 + w * matrix.m30;
+  out.y = x * matrix.m01 + y * matrix.m11 + z * matrix.m21 + w * matrix.m31;
+  out.z = x * matrix.m02 + y * matrix.m12 + z * matrix.m22 + w * matrix.m32;
+  out.w = x * matrix.m03 + y * matrix.m13 + z * matrix.m23 + w * matrix.m33;
   x = out.x;
   y = out.y;
   z = out.z;
@@ -72,16 +66,10 @@ void
 vec_t::TransformPoint(const matrix_t& matrix)
 {
   vec_t out;
-
-  out.x = x * matrix.m[0][0] + y * matrix.m[1][0] + z * matrix.m[2][0] +
-          matrix.m[3][0];
-  out.y = x * matrix.m[0][1] + y * matrix.m[1][1] + z * matrix.m[2][1] +
-          matrix.m[3][1];
-  out.z = x * matrix.m[0][2] + y * matrix.m[1][2] + z * matrix.m[2][2] +
-          matrix.m[3][2];
-  out.w = x * matrix.m[0][3] + y * matrix.m[1][3] + z * matrix.m[2][3] +
-          matrix.m[3][3];
-
+  out.x = x * matrix.m00 + y * matrix.m10 + z * matrix.m20 + matrix.m30;
+  out.y = x * matrix.m01 + y * matrix.m11 + z * matrix.m21 + matrix.m31;
+  out.z = x * matrix.m02 + y * matrix.m12 + z * matrix.m22 + matrix.m32;
+  out.w = x * matrix.m03 + y * matrix.m13 + z * matrix.m23 + matrix.m33;
   x = out.x;
   y = out.y;
   z = out.z;
@@ -92,12 +80,10 @@ void
 vec_t::TransformVector(const matrix_t& matrix)
 {
   vec_t out;
-
-  out.x = x * matrix.m[0][0] + y * matrix.m[1][0] + z * matrix.m[2][0];
-  out.y = x * matrix.m[0][1] + y * matrix.m[1][1] + z * matrix.m[2][1];
-  out.z = x * matrix.m[0][2] + y * matrix.m[1][2] + z * matrix.m[2][2];
-  out.w = x * matrix.m[0][3] + y * matrix.m[1][3] + z * matrix.m[2][3];
-
+  out.x = x * matrix.m00 + y * matrix.m10 + z * matrix.m20;
+  out.y = x * matrix.m01 + y * matrix.m11 + z * matrix.m21;
+  out.z = x * matrix.m02 + y * matrix.m12 + z * matrix.m22;
+  out.w = x * matrix.m03 + y * matrix.m13 + z * matrix.m23;
   x = out.x;
   y = out.y;
   z = out.z;
@@ -210,4 +196,3 @@ ComputeFrustumPlanes(vec_t* frustum, const float* clip)
     frustum[i].Normalize();
   }
 }
-

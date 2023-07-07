@@ -1,4 +1,5 @@
 #include "matrix_t.h"
+#include <DirectXMath.h>
 #include <cfloat>
 #include <imgui.h>
 #include <math.h>
@@ -35,6 +36,14 @@ FPU_MatrixF_x_MatrixF(const float* a, const float* b, float* r)
 }
 
 void
+matrix_t::Transpose()
+{
+  DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)this,
+                           DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(
+                             (const DirectX::XMFLOAT4X4*)this)));
+}
+
+void
 matrix_t::Multiply(const matrix_t& matrix)
 {
   matrix_t tmp;
@@ -57,47 +66,26 @@ matrix_t::Inverse(const matrix_t& srcMatrix, bool affine)
   if (affine) {
     det = GetDeterminant();
     float s = 1 / det;
-    m[0][0] = (srcMatrix.m[1][1] * srcMatrix.m[2][2] -
-               srcMatrix.m[1][2] * srcMatrix.m[2][1]) *
-              s;
-    m[0][1] = (srcMatrix.m[2][1] * srcMatrix.m[0][2] -
-               srcMatrix.m[2][2] * srcMatrix.m[0][1]) *
-              s;
-    m[0][2] = (srcMatrix.m[0][1] * srcMatrix.m[1][2] -
-               srcMatrix.m[0][2] * srcMatrix.m[1][1]) *
-              s;
-    m[1][0] = (srcMatrix.m[1][2] * srcMatrix.m[2][0] -
-               srcMatrix.m[1][0] * srcMatrix.m[2][2]) *
-              s;
-    m[1][1] = (srcMatrix.m[2][2] * srcMatrix.m[0][0] -
-               srcMatrix.m[2][0] * srcMatrix.m[0][2]) *
-              s;
-    m[1][2] = (srcMatrix.m[0][2] * srcMatrix.m[1][0] -
-               srcMatrix.m[0][0] * srcMatrix.m[1][2]) *
-              s;
-    m[2][0] = (srcMatrix.m[1][0] * srcMatrix.m[2][1] -
-               srcMatrix.m[1][1] * srcMatrix.m[2][0]) *
-              s;
-    m[2][1] = (srcMatrix.m[2][0] * srcMatrix.m[0][1] -
-               srcMatrix.m[2][1] * srcMatrix.m[0][0]) *
-              s;
-    m[2][2] = (srcMatrix.m[0][0] * srcMatrix.m[1][1] -
-               srcMatrix.m[0][1] * srcMatrix.m[1][0]) *
-              s;
-    m[3][0] = -(m[0][0] * srcMatrix.m[3][0] + m[1][0] * srcMatrix.m[3][1] +
-                m[2][0] * srcMatrix.m[3][2]);
-    m[3][1] = -(m[0][1] * srcMatrix.m[3][0] + m[1][1] * srcMatrix.m[3][1] +
-                m[2][1] * srcMatrix.m[3][2]);
-    m[3][2] = -(m[0][2] * srcMatrix.m[3][0] + m[1][2] * srcMatrix.m[3][1] +
-                m[2][2] * srcMatrix.m[3][2]);
+    m00 = (srcMatrix.m11 * srcMatrix.m22 - srcMatrix.m12 * srcMatrix.m21) * s;
+    m01 = (srcMatrix.m21 * srcMatrix.m02 - srcMatrix.m22 * srcMatrix.m01) * s;
+    m02 = (srcMatrix.m01 * srcMatrix.m12 - srcMatrix.m02 * srcMatrix.m11) * s;
+    m10 = (srcMatrix.m12 * srcMatrix.m20 - srcMatrix.m10 * srcMatrix.m22) * s;
+    m11 = (srcMatrix.m22 * srcMatrix.m00 - srcMatrix.m20 * srcMatrix.m02) * s;
+    m12 = (srcMatrix.m02 * srcMatrix.m10 - srcMatrix.m00 * srcMatrix.m12) * s;
+    m20 = (srcMatrix.m10 * srcMatrix.m21 - srcMatrix.m11 * srcMatrix.m20) * s;
+    m21 = (srcMatrix.m20 * srcMatrix.m01 - srcMatrix.m21 * srcMatrix.m00) * s;
+    m22 = (srcMatrix.m00 * srcMatrix.m11 - srcMatrix.m01 * srcMatrix.m10) * s;
+    m30 = -(m00 * srcMatrix.m30 + m10 * srcMatrix.m31 + m20 * srcMatrix.m32);
+    m31 = -(m01 * srcMatrix.m30 + m11 * srcMatrix.m31 + m21 * srcMatrix.m32);
+    m32 = -(m02 * srcMatrix.m30 + m12 * srcMatrix.m31 + m22 * srcMatrix.m32);
   } else {
     // transpose matrix
     float src[16];
     for (int i = 0; i < 4; ++i) {
-      src[i] = srcMatrix.m16[i * 4];
-      src[i + 4] = srcMatrix.m16[i * 4 + 1];
-      src[i + 8] = srcMatrix.m16[i * 4 + 2];
-      src[i + 12] = srcMatrix.m16[i * 4 + 3];
+      src[i] = srcMatrix[i * 4];
+      src[i + 4] = srcMatrix[i * 4 + 1];
+      src[i + 8] = srcMatrix[i * 4 + 2];
+      src[i + 12] = srcMatrix[i * 4 + 3];
     }
 
     // calculate pairs for first 8 elements (cofactors)
@@ -116,22 +104,22 @@ matrix_t::Inverse(const matrix_t& srcMatrix, bool affine)
     tmp[11] = src[9] * src[12];
 
     // calculate first 8 elements (cofactors)
-    m16[0] = (tmp[0] * src[5] + tmp[3] * src[6] + tmp[4] * src[7]) -
-             (tmp[1] * src[5] + tmp[2] * src[6] + tmp[5] * src[7]);
-    m16[1] = (tmp[1] * src[4] + tmp[6] * src[6] + tmp[9] * src[7]) -
-             (tmp[0] * src[4] + tmp[7] * src[6] + tmp[8] * src[7]);
-    m16[2] = (tmp[2] * src[4] + tmp[7] * src[5] + tmp[10] * src[7]) -
-             (tmp[3] * src[4] + tmp[6] * src[5] + tmp[11] * src[7]);
-    m16[3] = (tmp[5] * src[4] + tmp[8] * src[5] + tmp[11] * src[6]) -
-             (tmp[4] * src[4] + tmp[9] * src[5] + tmp[10] * src[6]);
-    m16[4] = (tmp[1] * src[1] + tmp[2] * src[2] + tmp[5] * src[3]) -
-             (tmp[0] * src[1] + tmp[3] * src[2] + tmp[4] * src[3]);
-    m16[5] = (tmp[0] * src[0] + tmp[7] * src[2] + tmp[8] * src[3]) -
-             (tmp[1] * src[0] + tmp[6] * src[2] + tmp[9] * src[3]);
-    m16[6] = (tmp[3] * src[0] + tmp[6] * src[1] + tmp[11] * src[3]) -
-             (tmp[2] * src[0] + tmp[7] * src[1] + tmp[10] * src[3]);
-    m16[7] = (tmp[4] * src[0] + tmp[9] * src[1] + tmp[10] * src[2]) -
-             (tmp[5] * src[0] + tmp[8] * src[1] + tmp[11] * src[2]);
+    (*this)[0] = (tmp[0] * src[5] + tmp[3] * src[6] + tmp[4] * src[7]) -
+                 (tmp[1] * src[5] + tmp[2] * src[6] + tmp[5] * src[7]);
+    (*this)[1] = (tmp[1] * src[4] + tmp[6] * src[6] + tmp[9] * src[7]) -
+                 (tmp[0] * src[4] + tmp[7] * src[6] + tmp[8] * src[7]);
+    (*this)[2] = (tmp[2] * src[4] + tmp[7] * src[5] + tmp[10] * src[7]) -
+                 (tmp[3] * src[4] + tmp[6] * src[5] + tmp[11] * src[7]);
+    (*this)[3] = (tmp[5] * src[4] + tmp[8] * src[5] + tmp[11] * src[6]) -
+                 (tmp[4] * src[4] + tmp[9] * src[5] + tmp[10] * src[6]);
+    (*this)[4] = (tmp[1] * src[1] + tmp[2] * src[2] + tmp[5] * src[3]) -
+                 (tmp[0] * src[1] + tmp[3] * src[2] + tmp[4] * src[3]);
+    (*this)[5] = (tmp[0] * src[0] + tmp[7] * src[2] + tmp[8] * src[3]) -
+                 (tmp[1] * src[0] + tmp[6] * src[2] + tmp[9] * src[3]);
+    (*this)[6] = (tmp[3] * src[0] + tmp[6] * src[1] + tmp[11] * src[3]) -
+                 (tmp[2] * src[0] + tmp[7] * src[1] + tmp[10] * src[3]);
+    (*this)[7] = (tmp[4] * src[0] + tmp[9] * src[1] + tmp[10] * src[2]) -
+                 (tmp[5] * src[0] + tmp[8] * src[1] + tmp[11] * src[2]);
 
     // calculate pairs for second 8 elements (cofactors)
     tmp[0] = src[2] * src[7];
@@ -148,30 +136,31 @@ matrix_t::Inverse(const matrix_t& srcMatrix, bool affine)
     tmp[11] = src[1] * src[4];
 
     // calculate second 8 elements (cofactors)
-    m16[8] = (tmp[0] * src[13] + tmp[3] * src[14] + tmp[4] * src[15]) -
-             (tmp[1] * src[13] + tmp[2] * src[14] + tmp[5] * src[15]);
-    m16[9] = (tmp[1] * src[12] + tmp[6] * src[14] + tmp[9] * src[15]) -
-             (tmp[0] * src[12] + tmp[7] * src[14] + tmp[8] * src[15]);
-    m16[10] = (tmp[2] * src[12] + tmp[7] * src[13] + tmp[10] * src[15]) -
-              (tmp[3] * src[12] + tmp[6] * src[13] + tmp[11] * src[15]);
-    m16[11] = (tmp[5] * src[12] + tmp[8] * src[13] + tmp[11] * src[14]) -
-              (tmp[4] * src[12] + tmp[9] * src[13] + tmp[10] * src[14]);
-    m16[12] = (tmp[2] * src[10] + tmp[5] * src[11] + tmp[1] * src[9]) -
-              (tmp[4] * src[11] + tmp[0] * src[9] + tmp[3] * src[10]);
-    m16[13] = (tmp[8] * src[11] + tmp[0] * src[8] + tmp[7] * src[10]) -
-              (tmp[6] * src[10] + tmp[9] * src[11] + tmp[1] * src[8]);
-    m16[14] = (tmp[6] * src[9] + tmp[11] * src[11] + tmp[3] * src[8]) -
-              (tmp[10] * src[11] + tmp[2] * src[8] + tmp[7] * src[9]);
-    m16[15] = (tmp[10] * src[10] + tmp[4] * src[8] + tmp[9] * src[9]) -
-              (tmp[8] * src[9] + tmp[11] * src[10] + tmp[5] * src[8]);
+    (*this)[8] = (tmp[0] * src[13] + tmp[3] * src[14] + tmp[4] * src[15]) -
+                 (tmp[1] * src[13] + tmp[2] * src[14] + tmp[5] * src[15]);
+    (*this)[9] = (tmp[1] * src[12] + tmp[6] * src[14] + tmp[9] * src[15]) -
+                 (tmp[0] * src[12] + tmp[7] * src[14] + tmp[8] * src[15]);
+    (*this)[10] = (tmp[2] * src[12] + tmp[7] * src[13] + tmp[10] * src[15]) -
+                  (tmp[3] * src[12] + tmp[6] * src[13] + tmp[11] * src[15]);
+    (*this)[11] = (tmp[5] * src[12] + tmp[8] * src[13] + tmp[11] * src[14]) -
+                  (tmp[4] * src[12] + tmp[9] * src[13] + tmp[10] * src[14]);
+    (*this)[12] = (tmp[2] * src[10] + tmp[5] * src[11] + tmp[1] * src[9]) -
+                  (tmp[4] * src[11] + tmp[0] * src[9] + tmp[3] * src[10]);
+    (*this)[13] = (tmp[8] * src[11] + tmp[0] * src[8] + tmp[7] * src[10]) -
+                  (tmp[6] * src[10] + tmp[9] * src[11] + tmp[1] * src[8]);
+    (*this)[14] = (tmp[6] * src[9] + tmp[11] * src[11] + tmp[3] * src[8]) -
+                  (tmp[10] * src[11] + tmp[2] * src[8] + tmp[7] * src[9]);
+    (*this)[15] = (tmp[10] * src[10] + tmp[4] * src[8] + tmp[9] * src[9]) -
+                  (tmp[8] * src[9] + tmp[11] * src[10] + tmp[5] * src[8]);
 
     // calculate determinant
-    det = src[0] * m16[0] + src[1] * m16[1] + src[2] * m16[2] + src[3] * m16[3];
+    det = src[0] * (*this)[0] + src[1] * (*this)[1] + src[2] * (*this)[2] +
+          src[3] * (*this)[3];
 
     // calculate matrix inverse
     float invdet = 1 / det;
     for (int j = 0; j < 16; ++j) {
-      m16[j] *= invdet;
+      (*this)[j] *= invdet;
     }
   }
 
@@ -202,22 +191,22 @@ matrix_t::RotationAxis(const vec_t& axis, float angle)
   float ys = n.y * s;
   float zs = n.z * s;
 
-  m[0][0] = xx;
-  m[0][1] = xy + zs;
-  m[0][2] = zx - ys;
-  m[0][3] = 0.f;
-  m[1][0] = xy - zs;
-  m[1][1] = yy;
-  m[1][2] = yz + xs;
-  m[1][3] = 0.f;
-  m[2][0] = zx + ys;
-  m[2][1] = yz - xs;
-  m[2][2] = zz;
-  m[2][3] = 0.f;
-  m[3][0] = 0.f;
-  m[3][1] = 0.f;
-  m[3][2] = 0.f;
-  m[3][3] = 1.f;
+  m00 = xx;
+  m01 = xy + zs;
+  m02 = zx - ys;
+  m03 = 0.f;
+  m10 = xy - zs;
+  m11 = yy;
+  m12 = yz + xs;
+  m13 = 0.f;
+  m20 = zx + ys;
+  m21 = yz - xs;
+  m22 = zz;
+  m23 = 0.f;
+  m30 = 0.f;
+  m31 = 0.f;
+  m32 = 0.f;
+  m33 = 1.f;
 }
 
 void
@@ -272,7 +261,7 @@ worldToPos(const vec_t& worldPos, const matrix_t& mat, const vec_t& screenRect)
   vec_t trans;
   trans.TransformPoint(worldPos, mat);
   trans *= 0.5f / trans.w;
-  trans += makeVect(0.5f, 0.5f);
+  trans += { 0.5f, 0.5f };
   trans.y = 1.f - trans.y;
   trans.x *= screenRect.z;
   trans.y *= screenRect.w;
@@ -289,22 +278,20 @@ DecomposeMatrixToComponents(const float* matrix,
 {
   matrix_t mat = *(matrix_t*)matrix;
 
-  scale[0] = mat.v.right.Length();
-  scale[1] = mat.v.up.Length();
-  scale[2] = mat.v.dir.Length();
+  scale[0] = mat.right().Length();
+  scale[1] = mat.up().Length();
+  scale[2] = mat.dir().Length();
 
   mat.OrthoNormalize();
 
-  rotation[0] = RAD2DEG * atan2f(mat.m[1][2], mat.m[2][2]);
+  rotation[0] = RAD2DEG * atan2f(mat.m12, mat.m22);
   rotation[1] =
-    RAD2DEG *
-    atan2f(-mat.m[0][2],
-           sqrtf(mat.m[1][2] * mat.m[1][2] + mat.m[2][2] * mat.m[2][2]));
-  rotation[2] = RAD2DEG * atan2f(mat.m[0][1], mat.m[0][0]);
+    RAD2DEG * atan2f(-mat.m02, sqrtf(mat.m12 * mat.m12 + mat.m22 * mat.m22));
+  rotation[2] = RAD2DEG * atan2f(mat.m01, mat.m00);
 
-  translation[0] = mat.v.position.x;
-  translation[1] = mat.v.position.y;
-  translation[2] = mat.v.position.z;
+  translation[0] = mat.position().x;
+  translation[1] = mat.position().y;
+  translation[2] = mat.position().z;
 }
 
 void
@@ -330,8 +317,8 @@ RecomposeMatrixFromComponents(const float* translation,
       validScale[i] = scale[i];
     }
   }
-  mat.v.right *= validScale[0];
-  mat.v.up *= validScale[1];
-  mat.v.dir *= validScale[2];
-  mat.v.position.Set(translation[0], translation[1], translation[2], 1.f);
+  mat.right() *= validScale[0];
+  mat.up() *= validScale[1];
+  mat.dir() *= validScale[2];
+  mat.position() = { translation[0], translation[1], translation[2], 1.f };
 }

@@ -249,7 +249,7 @@ public:
     vec_t segB = pts[2] - pts[0];
     segA.y /= mDisplayRatio;
     segB.y /= mDisplayRatio;
-    vec_t segAOrtho = makeVect(-segA.y, segA.x);
+    vec_t segAOrtho = { -segA.y, segA.x };
     segAOrtho.Normalize();
     float dt = segAOrtho.Dot3(segB);
     float surface = sqrtf(segA.x * segA.x + segA.y * segA.y) * fabsf(dt);
@@ -279,20 +279,20 @@ public:
       dirPlaneY *= mAxisFactor[(axisIndex + 2) % 3];
     } else {
       // new method
-      float lenDir = GetSegmentLengthClipSpace(
-        makeVect(0.f, 0.f, 0.f), dirAxis, localCoordinates);
+      float lenDir =
+        GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f }, dirAxis, localCoordinates);
       float lenDirMinus = GetSegmentLengthClipSpace(
-        makeVect(0.f, 0.f, 0.f), -dirAxis, localCoordinates);
+        { 0.f, 0.f, 0.f }, -dirAxis, localCoordinates);
 
       float lenDirPlaneX = GetSegmentLengthClipSpace(
-        makeVect(0.f, 0.f, 0.f), dirPlaneX, localCoordinates);
+        { 0.f, 0.f, 0.f }, dirPlaneX, localCoordinates);
       float lenDirMinusPlaneX = GetSegmentLengthClipSpace(
-        makeVect(0.f, 0.f, 0.f), -dirPlaneX, localCoordinates);
+        { 0.f, 0.f, 0.f }, -dirPlaneX, localCoordinates);
 
       float lenDirPlaneY = GetSegmentLengthClipSpace(
-        makeVect(0.f, 0.f, 0.f), dirPlaneY, localCoordinates);
+        { 0.f, 0.f, 0.f }, dirPlaneY, localCoordinates);
       float lenDirMinusPlaneY = GetSegmentLengthClipSpace(
-        makeVect(0.f, 0.f, 0.f), -dirPlaneY, localCoordinates);
+        { 0.f, 0.f, 0.f }, -dirPlaneY, localCoordinates);
 
       // For readability
       float mulAxis = (mAllowAxisFlip && lenDir < lenDirMinus &&
@@ -313,9 +313,9 @@ public:
 
       // for axis
       float axisLengthInClipSpace = GetSegmentLengthClipSpace(
-        makeVect(0.f, 0.f, 0.f), dirAxis * mScreenFactor, localCoordinates);
+        { 0.f, 0.f, 0.f }, dirAxis * mScreenFactor, localCoordinates);
 
-      float paraSurf = GetParallelogram(makeVect(0.f, 0.f, 0.f),
+      float paraSurf = GetParallelogram({ 0.f, 0.f, 0.f },
                                         dirPlaneX * mScreenFactor,
                                         dirPlaneY * mScreenFactor);
       belowPlaneLimit = (paraSurf > 0.0025f);
@@ -359,15 +359,15 @@ public:
       dirPlaneY.TransformVector(mModel);
 
       const float len = IntersectRayPlane(
-        mRayOrigin, mRayVector, BuildPlan(mModel.v.position, dirAxis));
+        mRayOrigin, mRayVector, BuildPlan(mModel.position(), dirAxis));
       vec_t posOnPlan = mRayOrigin + mRayVector * len;
 
       const ImVec2 axisStartOnScreen =
-        worldToPos(mModel.v.position + dirAxis * mScreenFactor * 0.1f,
+        worldToPos(mModel.position() + dirAxis * mScreenFactor * 0.1f,
                    mViewProjection) -
         leftTop();
       const ImVec2 axisEndOnScreen =
-        worldToPos(mModel.v.position + dirAxis * mScreenFactor,
+        worldToPos(mModel.position() + dirAxis * mScreenFactor,
                    mViewProjection) -
         leftTop();
 
@@ -381,9 +381,9 @@ public:
       }
 
       const float dx =
-        dirPlaneX.Dot3((posOnPlan - mModel.v.position) * (1.f / mScreenFactor));
+        dirPlaneX.Dot3((posOnPlan - mModel.position()) * (1.f / mScreenFactor));
       const float dy =
-        dirPlaneY.Dot3((posOnPlan - mModel.v.position) * (1.f / mScreenFactor));
+        dirPlaneY.Dot3((posOnPlan - mModel.position()) * (1.f / mScreenFactor));
       if (belowPlaneLimit && dx >= quadUV[0] && dx <= quadUV[4] &&
           dy >= quadUV[1] && dy <= quadUV[3] &&
           Contains(op, TRANSLATE_PLANS[i])) {
@@ -391,7 +391,7 @@ public:
       }
 
       if (gizmoHitProportion) {
-        *gizmoHitProportion = makeVect(dx, dy, 0.f);
+        *gizmoHitProportion = { dx, dy, 0.f };
       }
     }
     return type;
@@ -416,17 +416,17 @@ public:
       type = MT_ROTATE_SCREEN;
     }
 
-    const vec_t planNormals[] = { mModel.v.right, mModel.v.up, mModel.v.dir };
+    const vec_t planNormals[] = { mModel.right(), mModel.up(), mModel.dir() };
 
     vec_t modelViewPos;
-    modelViewPos.TransformPoint(mModel.v.position, mViewMat);
+    modelViewPos.TransformPoint(mModel.position(), mViewMat);
 
     for (int i = 0; i < 3 && type == MT_NONE; i++) {
       if (!Intersects(op, static_cast<OPERATION>(ROTATE_X << i))) {
         continue;
       }
       // pickup plan
-      vec_t pickupPlan = BuildPlan(mModel.v.position, planNormals[i]);
+      vec_t pickupPlan = BuildPlan(mModel.position(), planNormals[i]);
 
       const float len = IntersectRayPlane(mRayOrigin, mRayVector, pickupPlan);
       const vec_t intersectWorldPos = mRayOrigin + mRayVector * len;
@@ -437,7 +437,7 @@ public:
         continue;
       }
 
-      const vec_t localPos = intersectWorldPos - mModel.v.position;
+      const vec_t localPos = intersectWorldPos - mModel.position();
       vec_t idealPosOnCircle = Normalized(localPos);
       idealPosOnCircle.TransformVector(mModelInverse);
       const ImVec2 idealPosOnCircleScreen = worldToPos(
@@ -492,7 +492,7 @@ public:
       dirPlaneY.TransformVector(mModelLocal);
 
       const float len = IntersectRayPlane(
-        mRayOrigin, mRayVector, BuildPlan(mModelLocal.v.position, dirAxis));
+        mRayOrigin, mRayVector, BuildPlan(mModelLocal.position(), dirAxis));
       vec_t posOnPlan = mRayOrigin + mRayVector * len;
 
       const float startOffset =
@@ -501,10 +501,10 @@ public:
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.4f : 1.0f;
       const ImVec2 posOnPlanScreen = worldToPos(posOnPlan, mViewProjection);
       const ImVec2 axisStartOnScreen = worldToPos(
-        mModelLocal.v.position + dirAxis * mScreenFactor * startOffset,
+        mModelLocal.position() + dirAxis * mScreenFactor * startOffset,
         mViewProjection);
       const ImVec2 axisEndOnScreen =
-        worldToPos(mModelLocal.v.position + dirAxis * mScreenFactor * endOffset,
+        worldToPos(mModelLocal.position() + dirAxis * mScreenFactor * endOffset,
                    mViewProjection);
 
       vec_t closestPointOnAxis = PointOnSegment(makeVect(posOnPlanScreen),
@@ -784,12 +784,12 @@ public:
     if (mode == LOCAL) {
       this->mModel = this->mModelLocal;
     } else {
-      this->mModel.Translation(((matrix_t*)matrix)->v.position);
+      this->mModel.Translation(((matrix_t*)matrix)->position());
     }
     this->mModelSource = *(matrix_t*)matrix;
-    this->mModelScaleOrigin.Set(this->mModelSource.v.right.Length(),
-                                this->mModelSource.v.up.Length(),
-                                this->mModelSource.v.dir.Length());
+    this->mModelScaleOrigin.Set(this->mModelSource.right().Length(),
+                                this->mModelSource.up().Length(),
+                                this->mModelSource.dir().Length());
 
     this->mModelInverse.Inverse(this->mModel);
     this->mModelSourceInverse.Inverse(this->mModelSource);
@@ -799,34 +799,34 @@ public:
 
     matrix_t viewInverse;
     viewInverse.Inverse(this->mViewMat);
-    this->mCameraDir = viewInverse.v.dir;
-    this->mCameraEye = viewInverse.v.position;
-    this->mCameraRight = viewInverse.v.right;
-    this->mCameraUp = viewInverse.v.up;
+    this->mCameraDir = viewInverse.dir();
+    this->mCameraEye = viewInverse.position();
+    this->mCameraRight = viewInverse.right();
+    this->mCameraUp = viewInverse.up();
 
     // projection reverse
     vec_t nearPos, farPos;
-    nearPos.Transform(makeVect(0, 0, 1.f, 1.f), this->mProjectionMat);
-    farPos.Transform(makeVect(0, 0, 2.f, 1.f), this->mProjectionMat);
+    nearPos.Transform({ 0, 0, 1.f, 1.f }, this->mProjectionMat);
+    farPos.Transform({ 0, 0, 2.f, 1.f }, this->mProjectionMat);
 
     this->mReversed = (nearPos.z / nearPos.w) > (farPos.z / farPos.w);
 
     // compute scale from the size of camera right vector projected on screen at
     // the matrix position
-    vec_t pointRight = viewInverse.v.right;
+    vec_t pointRight = viewInverse.right();
     pointRight.TransformPoint(this->mViewProjection);
 
     this->mScreenFactor = this->mGizmoSizeClipSpace /
                           (pointRight.x / pointRight.w -
-                           this->mMVP.v.position.x / this->mMVP.v.position.w);
+                           this->mMVP.position().x / this->mMVP.position().w);
 
-    vec_t rightViewInverse = viewInverse.v.right;
+    vec_t rightViewInverse = viewInverse.right();
     rightViewInverse.TransformVector(this->mModelInverse);
     float rightLength =
-      GetSegmentLengthClipSpace(makeVect(0.f, 0.f), rightViewInverse);
+      GetSegmentLengthClipSpace({ 0.f, 0.f }, rightViewInverse);
     this->mScreenFactor = this->mGizmoSizeClipSpace / rightLength;
 
-    ImVec2 centerSSpace = worldToPos(makeVect(0.f, 0.f), this->mMVP);
+    ImVec2 centerSSpace = worldToPos({ 0.f, 0.f }, this->mMVP);
     this->mScreenSquareCenter = centerSSpace;
     this->mScreenSquareMin =
       ImVec2(centerSSpace.x - 10.f, centerSSpace.y - 10.f);
@@ -993,7 +993,7 @@ public:
       // ImVec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
       // mViewProjection);
       ImVec2 destinationPosOnScreen =
-        worldToPos(mModel.v.position, mViewProjection);
+        worldToPos(mModel.position(), mViewProjection);
       /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
       destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
       *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
@@ -1003,7 +1003,7 @@ public:
       destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
       */
       char tmps[512];
-      // vec_t deltaInfo = mModel.v.position -
+      // vec_t deltaInfo = mModel.position() -
       // mMatrixOrigin;
       int componentInfoIndex = (type - MT_SCALE_X) * 3;
       ImFormatString(tmps,
@@ -1036,9 +1036,9 @@ public:
     if (mIsOrthographic) {
       matrix_t viewInverse;
       viewInverse.Inverse(*(matrix_t*)&mViewMat);
-      cameraToModelNormalized = -viewInverse.v.dir;
+      cameraToModelNormalized = -viewInverse.dir();
     } else {
-      cameraToModelNormalized = Normalized(mModel.v.position - mCameraEye);
+      cameraToModelNormalized = Normalized(mModel.position() - mCameraEye);
     }
 
     cameraToModelNormalized.TransformVector(mModelInverse);
@@ -1064,10 +1064,10 @@ public:
       for (int i = 0; i < circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1; i++) {
         float ng = angleStart + (float)circleMul * std::numbers::pi *
                                   ((float)i / (float)HALF_CIRCLE_SEGMENT_COUNT);
-        vec_t axisPos = makeVect(cosf(ng), sinf(ng), 0.f);
-        vec_t pos = makeVect(axisPos[axis],
-                             axisPos[(axis + 1) % 3],
-                             axisPos[(axis + 2) % 3]) *
+        vec_t axisPos = { cosf(ng), sinf(ng), 0.f };
+        vec_t pos = vec_t{ axisPos[axis],
+                           axisPos[(axis + 1) % 3],
+                           axisPos[(axis + 2) % 3] } *
                     mScreenFactor * ROTATION_DISPLAY_FACTOR;
         circlePos[i] = worldToPos(pos, mMVP);
       }
@@ -1080,13 +1080,13 @@ public:
       }
 
       float radiusAxis = sqrtf((ImLengthSqr(
-        worldToPos(mModel.v.position, mViewProjection) - circlePos[0])));
+        worldToPos(mModel.position(), mViewProjection) - circlePos[0])));
       if (radiusAxis > mRadiusSquareCenter) {
         mRadiusSquareCenter = radiusAxis;
       }
     }
     if (hasRSC && (!mbUsing || type == MT_ROTATE_SCREEN)) {
-      drawList->AddCircle(worldToPos(mModel.v.position, mViewProjection),
+      drawList->AddCircle(worldToPos(mModel.position(), mViewProjection),
                           mRadiusSquareCenter,
                           colors[0],
                           64,
@@ -1097,7 +1097,7 @@ public:
         IsRotateType(type)) {
       ImVec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
 
-      circlePos[0] = worldToPos(mModel.v.position, mViewProjection);
+      circlePos[0] = worldToPos(mModel.position(), mViewProjection);
       for (unsigned int i = 1; i < HALF_CIRCLE_SEGMENT_COUNT; i++) {
         float ng = mRotationAngle *
                    ((float)(i - 1) / (float)(HALF_CIRCLE_SEGMENT_COUNT - 1));
@@ -1106,7 +1106,7 @@ public:
         vec_t pos;
         pos.TransformPoint(mRotationVectorSource, rotateVectorMatrix);
         pos *= mScreenFactor * ROTATION_DISPLAY_FACTOR;
-        circlePos[i] = worldToPos(pos + mModel.v.position, mViewProjection);
+        circlePos[i] = worldToPos(pos + mModel.position(), mViewProjection);
       }
       drawList->AddConvexPolyFilled(
         circlePos, HALF_CIRCLE_SEGMENT_COUNT, GetColorU32(ROTATION_USING_FILL));
@@ -1209,7 +1209,7 @@ public:
       // ImVec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
       // mViewProjection);
       ImVec2 destinationPosOnScreen =
-        worldToPos(mModel.v.position, mViewProjection);
+        worldToPos(mModel.position(), mViewProjection);
       /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
       destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
       *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
@@ -1219,7 +1219,7 @@ public:
       destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
       */
       char tmps[512];
-      // vec_t deltaInfo = mModel.v.position -
+      // vec_t deltaInfo = mModel.position() -
       // mMatrixOrigin;
       int componentInfoIndex = (type - MT_SCALE_X) * 3;
       ImFormatString(tmps,
@@ -1252,7 +1252,7 @@ public:
     ImU32 colors[7];
     ComputeColors(colors, type, TRANSLATE);
 
-    const ImVec2 origin = worldToPos(mModel.v.position, mViewProjection);
+    const ImVec2 origin = worldToPos(mModel.position(), mViewProjection);
 
     // draw
     bool belowAxisLimit = false;
@@ -1320,7 +1320,7 @@ public:
 
       ImVec2 sourcePosOnScreen = worldToPos(mMatrixOrigin, mViewProjection);
       ImVec2 destinationPosOnScreen =
-        worldToPos(mModel.v.position, mViewProjection);
+        worldToPos(mModel.position(), mViewProjection);
       vec_t dif = { destinationPosOnScreen.x - sourcePosOnScreen.x,
                     destinationPosOnScreen.y - sourcePosOnScreen.y,
                     0.f,
@@ -1337,7 +1337,7 @@ public:
         2.f);
 
       char tmps[512];
-      vec_t deltaInfo = mModel.v.position - mMatrixOrigin;
+      vec_t deltaInfo = mModel.position() - mMatrixOrigin;
       int componentInfoIndex = (type - MT_MOVE_X) * 3;
       ImFormatString(tmps,
                      sizeof(tmps),
@@ -1379,7 +1379,7 @@ public:
         dirPlaneNormalWorld.TransformVector(directionUnary[i], mModelSource);
         dirPlaneNormalWorld.Normalize();
 
-        float dt = fabsf(Dot(Normalized(mCameraEye - mModelSource.v.position),
+        float dt = fabsf(Dot(Normalized(mCameraEye - mModelSource.position()),
                              dirPlaneNormalWorld));
         if (dt >= bestDot) {
           bestDot = dt;
@@ -1570,7 +1570,7 @@ public:
           }
 
           float ratioAxis = 1.f;
-          vec_t axisDir = mBoundsMatrix.component[axisIndex1].Abs();
+          vec_t axisDir = mBoundsMatrix.component(axisIndex1).Abs();
 
           float dtAxis = axisDir.Dot(referenceVector);
           float boundSize = bounds[axisIndex1 + 3] - bounds[axisIndex1];
@@ -1585,7 +1585,7 @@ public:
               ratioAxis = length / boundSize;
             }
           }
-          scale.component[axisIndex1] *= ratioAxis;
+          scale.component(axisIndex1) *= ratioAxis;
         }
 
         // transform matrix
@@ -1598,17 +1598,17 @@ public:
         // info text
         char tmps[512];
         ImVec2 destinationPosOnScreen =
-          worldToPos(mModel.v.position, mViewProjection);
+          worldToPos(mModel.position(), mViewProjection);
         ImFormatString(
           tmps,
           sizeof(tmps),
           "X: %.2f Y: %.2f Z: %.2f",
-          (bounds[3] - bounds[0]) * mBoundsMatrix.component[0].Length() *
-            scale.component[0].Length(),
-          (bounds[4] - bounds[1]) * mBoundsMatrix.component[1].Length() *
-            scale.component[1].Length(),
-          (bounds[5] - bounds[2]) * mBoundsMatrix.component[2].Length() *
-            scale.component[2].Length());
+          (bounds[3] - bounds[0]) * mBoundsMatrix.component(0).Length() *
+            scale.component(0).Length(),
+          (bounds[4] - bounds[1]) * mBoundsMatrix.component(1).Length() *
+            scale.component(1).Length(),
+          (bounds[5] - bounds[2]) * mBoundsMatrix.component(2).Length() *
+            scale.component(2).Length());
         drawList->AddText(
           ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
           GetColorU32(TEXT_SHADOW),
@@ -1646,10 +1646,10 @@ public:
     const float zNear = mReversed ? (1.f - FLT_EPSILON) : 0.f;
     const float zFar = mReversed ? 0.f : (1.f - FLT_EPSILON);
 
-    rayOrigin.Transform(makeVect(mox, moy, zNear, 1.f), mViewProjInverse);
+    rayOrigin.Transform({ mox, moy, zNear, 1.f }, mViewProjInverse);
     rayOrigin *= 1.f / rayOrigin.w;
     vec_t rayEnd;
-    rayEnd.Transform(makeVect(mox, moy, zFar, 1.f), mViewProjInverse);
+    rayEnd.Transform({ mox, moy, zFar, 1.f }, mViewProjInverse);
     rayEnd *= 1.f / rayEnd.w;
     rayDir = Normalized(rayEnd - rayOrigin);
   }
@@ -1687,19 +1687,19 @@ public:
 
       // compute delta
       const vec_t newOrigin = newPos - mRelativeOrigin * mScreenFactor;
-      vec_t delta = newOrigin - mModel.v.position;
+      vec_t delta = newOrigin - mModel.position();
 
       // 1 axis constraint
       if (mCurrentOperation >= MT_MOVE_X && mCurrentOperation <= MT_MOVE_Z) {
         const int axisIndex = mCurrentOperation - MT_MOVE_X;
-        const vec_t& axisValue = *(vec_t*)&mModel.m[axisIndex];
+        const vec_t& axisValue = mModel.component(axisIndex);
         const float lengthOnAxis = Dot(axisValue, delta);
         delta = axisValue * lengthOnAxis;
       }
 
       // snap
       if (snap) {
-        vec_t cumulativeDelta = mModel.v.position + delta - mMatrixOrigin;
+        vec_t cumulativeDelta = mModel.position() + delta - mMatrixOrigin;
         if (applyRotationLocaly) {
           matrix_t modelSourceNormalized = mModelSource;
           modelSourceNormalized.OrthoNormalize();
@@ -1711,7 +1711,7 @@ public:
         } else {
           ComputeSnap(cumulativeDelta, snap);
         }
-        delta = mMatrixOrigin + cumulativeDelta - mModel.v.position;
+        delta = mMatrixOrigin + cumulativeDelta - mModel.position();
       }
 
       if (delta != mTranslationLastDelta) {
@@ -1723,7 +1723,7 @@ public:
       matrix_t deltaMatrixTranslation;
       deltaMatrixTranslation.Translation(delta);
       if (deltaMatrix) {
-        memcpy(deltaMatrix, deltaMatrixTranslation.m16, sizeof(float) * 16);
+        memcpy(deltaMatrix, &deltaMatrixTranslation.m00, sizeof(float) * 16);
       }
 
       const matrix_t res = mModelSource * deltaMatrixTranslation;
@@ -1749,12 +1749,12 @@ public:
         mbUsing = true;
         mEditingID = mActualID;
         mCurrentOperation = type;
-        vec_t movePlanNormal[] = { mModel.v.right, mModel.v.up, mModel.v.dir,
-                                   mModel.v.right, mModel.v.up, mModel.v.dir,
+        vec_t movePlanNormal[] = { mModel.right(), mModel.up(), mModel.dir(),
+                                   mModel.right(), mModel.up(), mModel.dir(),
                                    -mCameraDir };
 
         vec_t cameraToModelNormalized =
-          Normalized(mModel.v.position - mCameraEye);
+          Normalized(mModel.position() - mCameraEye);
         for (unsigned int i = 0; i < 3; i++) {
           vec_t orthoVector = Cross(movePlanNormal[i], cameraToModelNormalized);
           movePlanNormal[i].Cross(orthoVector);
@@ -1762,14 +1762,14 @@ public:
         }
         // pickup plan
         mTranslationPlan =
-          BuildPlan(mModel.v.position, movePlanNormal[type - MT_MOVE_X]);
+          BuildPlan(mModel.position(), movePlanNormal[type - MT_MOVE_X]);
         const float len =
           IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
         mTranslationPlanOrigin = mRayOrigin + mRayVector * len;
-        mMatrixOrigin = mModel.v.position;
+        mMatrixOrigin = mModel.position();
 
         mRelativeOrigin =
-          (mTranslationPlanOrigin - mModel.v.position) * (1.f / mScreenFactor);
+          (mTranslationPlanOrigin - mModel.position()) * (1.f / mScreenFactor);
       }
     }
     return modified;
@@ -1802,24 +1802,24 @@ public:
         mbUsing = true;
         mEditingID = mActualID;
         mCurrentOperation = type;
-        const vec_t movePlanNormal[] = { mModel.v.up,    mModel.v.dir,
-                                         mModel.v.right, mModel.v.dir,
-                                         mModel.v.up,    mModel.v.right,
+        const vec_t movePlanNormal[] = { mModel.up(),    mModel.dir(),
+                                         mModel.right(), mModel.dir(),
+                                         mModel.up(),    mModel.right(),
                                          -mCameraDir };
         // pickup plan
 
         mTranslationPlan =
-          BuildPlan(mModel.v.position, movePlanNormal[type - MT_SCALE_X]);
+          BuildPlan(mModel.position(), movePlanNormal[type - MT_SCALE_X]);
         const float len =
           IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
         mTranslationPlanOrigin = mRayOrigin + mRayVector * len;
-        mMatrixOrigin = mModel.v.position;
+        mMatrixOrigin = mModel.position();
         mScale.Set(1.f, 1.f, 1.f);
         mRelativeOrigin =
-          (mTranslationPlanOrigin - mModel.v.position) * (1.f / mScreenFactor);
-        mScaleValueOrigin = makeVect(mModelSource.v.right.Length(),
-                                     mModelSource.v.up.Length(),
-                                     mModelSource.v.dir.Length());
+          (mTranslationPlanOrigin - mModel.position()) * (1.f / mScreenFactor);
+        mScaleValueOrigin = { mModelSource.right().Length(),
+                              mModelSource.up().Length(),
+                              mModelSource.dir().Length() };
         mSaveMousePosx = io.MousePos.x;
       }
     }
@@ -1835,16 +1835,16 @@ public:
         IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
       vec_t newPos = mRayOrigin + mRayVector * len;
       vec_t newOrigin = newPos - mRelativeOrigin * mScreenFactor;
-      vec_t delta = newOrigin - mModelLocal.v.position;
+      vec_t delta = newOrigin - mModelLocal.position();
 
       // 1 axis constraint
       if (mCurrentOperation >= MT_SCALE_X && mCurrentOperation <= MT_SCALE_Z) {
         int axisIndex = mCurrentOperation - MT_SCALE_X;
-        const vec_t& axisValue = *(vec_t*)&mModelLocal.m[axisIndex];
+        const vec_t& axisValue = mModelLocal.component(axisIndex);
         float lengthOnAxis = Dot(axisValue, delta);
         delta = axisValue * lengthOnAxis;
 
-        vec_t baseVector = mTranslationPlanOrigin - mModelLocal.v.position;
+        vec_t baseVector = mTranslationPlanOrigin - mModelLocal.position();
         float ratio =
           Dot(axisValue, baseVector + delta) / Dot(axisValue, baseVector);
 
@@ -1887,7 +1887,7 @@ public:
         deltaScale = deltaScale * originalScaleDivider;
 
         deltaMatrixScale.Scale(deltaScale);
-        memcpy(deltaMatrix, deltaMatrixScale.m16, sizeof(float) * 16);
+        memcpy(deltaMatrix, &deltaMatrixScale.m00, sizeof(float) * 16);
       }
 
       if (!io.MouseDown[0]) {
@@ -1933,20 +1933,20 @@ public:
         mEditingID = mActualID;
         mCurrentOperation = type;
         const vec_t rotatePlanNormal[] = {
-          mModel.v.right, mModel.v.up, mModel.v.dir, -mCameraDir
+          mModel.right(), mModel.up(), mModel.dir(), -mCameraDir
         };
         // pickup plan
         if (applyRotationLocaly) {
           mTranslationPlan =
-            BuildPlan(mModel.v.position, rotatePlanNormal[type - MT_ROTATE_X]);
+            BuildPlan(mModel.position(), rotatePlanNormal[type - MT_ROTATE_X]);
         } else {
-          mTranslationPlan = BuildPlan(mModelSource.v.position,
+          mTranslationPlan = BuildPlan(mModelSource.position(),
                                        directionUnary[type - MT_ROTATE_X]);
         }
 
         const float len =
           IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
-        vec_t localPos = mRayOrigin + mRayVector * len - mModel.v.position;
+        vec_t localPos = mRayOrigin + mRayVector * len - mModel.position();
         mRotationVectorSource = Normalized(localPos);
         mRotationAngleOrigin = ComputeAngleOnPlan();
       }
@@ -1968,8 +1968,7 @@ public:
       vec_t rotationAxisLocalSpace;
 
       rotationAxisLocalSpace.TransformVector(
-        makeVect(
-          mTranslationPlan.x, mTranslationPlan.y, mTranslationPlan.z, 0.f),
+        { mTranslationPlan.x, mTranslationPlan.y, mTranslationPlan.z, 0.f },
         mModelInverse);
       rotationAxisLocalSpace.Normalize();
 
@@ -1988,10 +1987,10 @@ public:
         *(matrix_t*)matrix = scaleOrigin * deltaRotation * mModelLocal;
       } else {
         matrix_t res = mModelSource;
-        res.v.position.Set(0.f);
+        res.position().Set(0.f);
 
         *(matrix_t*)matrix = res * deltaRotation;
-        ((matrix_t*)matrix)->v.position = mModelSource.v.position;
+        ((matrix_t*)matrix)->position() = mModelSource.position();
       }
 
       if (deltaMatrix) {
@@ -2012,7 +2011,7 @@ public:
     const float len =
       IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
     vec_t localPos =
-      Normalized(mRayOrigin + mRayVector * len - mModel.v.position);
+      Normalized(mRayOrigin + mRayVector * len - mModel.position());
 
     vec_t perpendicularVector;
     perpendicularVector.Cross(mRotationVectorSource, mTranslationPlan);
@@ -2049,7 +2048,7 @@ public:
 
     // behind camera
     vec_t camSpacePosition;
-    camSpacePosition.TransformPoint(makeVect(0.f, 0.f, 0.f), mMVP);
+    camSpacePosition.TransformPoint({ 0.f, 0.f, 0.f }, mMVP);
     if (!mIsOrthographic && camSpacePosition.z < 0.001f) {
       return false;
     }
@@ -2103,7 +2102,7 @@ public:
 
     vec_t frustum[6];
     matrix_t viewProjection = *(matrix_t*)view * *(matrix_t*)projection;
-    ComputeFrustumPlanes(frustum, viewProjection.m16);
+    ComputeFrustumPlanes(frustum, &viewProjection.m00);
 
     int cubeFaceCount = 0;
     for (int cube = 0; cube < matrixCount; cube++) {
@@ -2209,13 +2208,13 @@ public:
   {
     matrix_t viewProjection = *(matrix_t*)view * *(matrix_t*)projection;
     vec_t frustum[6];
-    ComputeFrustumPlanes(frustum, viewProjection.m16);
+    ComputeFrustumPlanes(frustum, &viewProjection.m00);
     matrix_t res = *(matrix_t*)matrix * viewProjection;
 
     for (float f = -gridSize; f <= gridSize; f += 1.f) {
       for (int dir = 0; dir < 2; dir++) {
-        vec_t ptA = makeVect(dir ? -gridSize : f, 0.f, dir ? f : -gridSize);
-        vec_t ptB = makeVect(dir ? gridSize : f, 0.f, dir ? f : gridSize);
+        vec_t ptA = { dir ? -gridSize : f, 0.f, dir ? f : -gridSize };
+        vec_t ptB = { dir ? gridSize : f, 0.f, dir ? f : gridSize };
         bool visible = true;
         for (int i = 0; i < 6; i++) {
           float dA = DistanceToPlane(ptA, frustum[i]);

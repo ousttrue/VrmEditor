@@ -3,40 +3,45 @@
 
 struct matrix_t
 {
-public:
-  union
-  {
-    float m[4][4];
-    float m16[16];
-    struct
-    {
-      vec_t right, up, dir, position;
-    } v;
-    vec_t component[4];
-  };
+  float m00, m01, m02, m03;
+  float m10, m11, m12, m13;
+  float m20, m21, m22, m23;
+  float m30, m31, m32, m33;
 
-  operator float*() { return m16; }
-  operator const float*() const { return m16; }
-  void Translation(float _x, float _y, float _z)
-  {
-    this->Translation(makeVect(_x, _y, _z));
-  }
+  float& operator[](size_t index) { return (&m00)[index]; }
+  float operator[](size_t index) const { return (&m00)[index]; }
+  vec_t& right() { return *((vec_t*)&m00); }
+  vec_t& up() { return *((vec_t*)&m10); }
+  vec_t& dir() { return *((vec_t*)&m20); }
+  vec_t& position() { return *((vec_t*)&m30); }
+  const vec_t& right() const { return *((vec_t*)&m00); }
+  const vec_t& up() const { return *((vec_t*)&m10); }
+  const vec_t& dir() const { return *((vec_t*)&m20); }
+  const vec_t& position() const { return *((vec_t*)&m30); }
+  vec_t& component(size_t index) { return ((vec_t*)&m00)[index]; }
+  const vec_t& component(size_t index) const { return ((vec_t*)&m00)[index]; }
+
+  operator float*() { return &m11; }
+  operator const float*() const { return &m11; }
 
   void Translation(const vec_t& vt)
   {
-    v.right.Set(1.f, 0.f, 0.f, 0.f);
-    v.up.Set(0.f, 1.f, 0.f, 0.f);
-    v.dir.Set(0.f, 0.f, 1.f, 0.f);
-    v.position.Set(vt.x, vt.y, vt.z, 1.f);
+    *this = { 1.f,  0.f,  0.f,  0.f, //
+              0.f,  1.f,  0.f,  0.f, //
+              0.f,  0.f,  1.f,  0.f, //
+              vt.x, vt.y, vt.z, 1.f };
   }
 
   void Scale(float _x, float _y, float _z)
   {
-    v.right.Set(_x, 0.f, 0.f, 0.f);
-    v.up.Set(0.f, _y, 0.f, 0.f);
-    v.dir.Set(0.f, 0.f, _z, 0.f);
-    v.position.Set(0.f, 0.f, 0.f, 1.f);
+    *this = {
+      _x,  0.f, 0.f, 0.f, //
+      0.f, _y,  0.f, 0.f, //
+      0.f, 0.f, _z,  0.f, //
+      0.f, 0.f, 0.f, 1.f,
+    };
   }
+
   void Scale(const vec_t& s) { Scale(s.x, s.y, s.z); }
 
   matrix_t& operator*=(const matrix_t& mat)
@@ -47,6 +52,7 @@ public:
     *this = tmpMat;
     return *this;
   }
+
   matrix_t operator*(const matrix_t& mat) const
   {
     matrix_t matT;
@@ -59,37 +65,29 @@ public:
 
   float GetDeterminant() const
   {
-    return m[0][0] * m[1][1] * m[2][2] + m[0][1] * m[1][2] * m[2][0] +
-           m[0][2] * m[1][0] * m[2][1] - m[0][2] * m[1][1] * m[2][0] -
-           m[0][1] * m[1][0] * m[2][2] - m[0][0] * m[1][2] * m[2][1];
+    return m00 * m11 * m22 + m01 * m12 * m20 + m02 * m10 * m21 -
+           m02 * m11 * m20 - m01 * m10 * m22 - m00 * m12 * m21;
   }
 
   float Inverse(const matrix_t& srcMatrix, bool affine = false);
   void SetToIdentity()
   {
-    v.right.Set(1.f, 0.f, 0.f, 0.f);
-    v.up.Set(0.f, 1.f, 0.f, 0.f);
-    v.dir.Set(0.f, 0.f, 1.f, 0.f);
-    v.position.Set(0.f, 0.f, 0.f, 1.f);
+    *this = {
+      1.f, 0.f, 0.f, 0.f, //
+      0.f, 1.f, 0.f, 0.f, //
+      0.f, 0.f, 1.f, 0.f, //
+      0.f, 0.f, 0.f, 1.f,
+    };
   }
-  void Transpose()
-  {
-    matrix_t tmpm;
-    for (int l = 0; l < 4; l++) {
-      for (int c = 0; c < 4; c++) {
-        tmpm.m[l][c] = m[c][l];
-      }
-    }
-    (*this) = tmpm;
-  }
+  void Transpose();
 
   void RotationAxis(const vec_t& axis, float angle);
 
   void OrthoNormalize()
   {
-    v.right.Normalize();
-    v.up.Normalize();
-    v.dir.Normalize();
+    right().Normalize();
+    up().Normalize();
+    dir().Normalize();
   }
 };
 
@@ -136,6 +134,4 @@ void
 LookAt(const float* eye, const float* at, const float* up, float* m16);
 
 ImVec2
-worldToPos(const vec_t& worldPos,
-           const matrix_t& mat,
-           const vec_t& screenRect);
+worldToPos(const vec_t& worldPos, const matrix_t& mat, const vec_t& screenRect);

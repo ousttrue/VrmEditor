@@ -4,7 +4,10 @@ struct matrix_t;
 struct ImVec2;
 struct vec_t
 {
-  float x, y, z, w;
+  float x = 0;
+  float y = 0;
+  float z = 0;
+  float w = 0;
 
   void Lerp(const vec_t& v, float t)
   {
@@ -123,48 +126,37 @@ struct vec_t
   bool operator!=(const vec_t& other) const;
 };
 
-inline vec_t
-makeVect(float _x, float _y, float _z = 0.f, float _w = 0.f)
-{
-  vec_t res;
-  res.x = _x;
-  res.y = _y;
-  res.z = _z;
-  res.w = _w;
-  return res;
-}
-
 vec_t
 makeVect(const ImVec2& v);
 
 inline vec_t
 vec_t::operator*(float f) const
 {
-  return makeVect(x * f, y * f, z * f, w * f);
+  return { x * f, y * f, z * f, w * f };
 }
 
 inline vec_t
 vec_t::operator-() const
 {
-  return makeVect(-x, -y, -z, -w);
+  return { -x, -y, -z, -w };
 }
 
 inline vec_t
 vec_t::operator-(const vec_t& v) const
 {
-  return makeVect(x - v.x, y - v.y, z - v.z, w - v.w);
+  return { x - v.x, y - v.y, z - v.z, w - v.w };
 }
 
 inline vec_t
 vec_t::operator+(const vec_t& v) const
 {
-  return makeVect(x + v.x, y + v.y, z + v.z, w + v.w);
+  return { x + v.x, y + v.y, z + v.z, w + v.w };
 }
 
 inline vec_t
 vec_t::operator*(const vec_t& v) const
 {
-  return makeVect(x * v.x, y * v.y, z * v.z, w * v.w);
+  return { x * v.x, y * v.y, z * v.z, w * v.w };
 }
 
 // utility and math
