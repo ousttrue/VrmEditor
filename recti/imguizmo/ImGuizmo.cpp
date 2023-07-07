@@ -155,6 +155,8 @@ public:
   Context(const Context&) = delete;
   Context& operator=(const Context&) = delete;
 
+  float height() const { return mHeight; }
+
   bool CanActivate() const
   {
     if (ImGui::IsMouseClicked(0)) {
@@ -167,6 +169,30 @@ public:
       }
     }
     return false;
+  }
+
+  void setRect(float x, float y, float width, float height)
+  {
+    mX = x;
+    mY = y;
+    mWidth = width;
+    mHeight = height;
+    mXMax = mX + mWidth;
+    mYMax = mY + mXMax;
+    mDisplayRatio = width / height;
+  }
+
+  ImVec2 leftTop() const { return { mX, mY }; }
+  ImVec2 size() const { return { mWidth, mHeight }; }
+  bool IsInContextRect(const ImVec2& p) const
+  {
+    return IsWithin(p.x, mX, mXMax) && IsWithin(p.y, mY, mYMax);
+  }
+
+  vec_t screenCoord() const
+  {
+    ImGuiIO& io = ImGui::GetIO();
+    return makeVect(io.MousePos - leftTop());
   }
 
   ImVec2 worldToPos(const vec_t& worldPos, const matrix_t& mat) const
@@ -248,10 +274,13 @@ public:
   //
   int mCurrentOperation;
 
+private:
   float mX = 0.f;
   float mY = 0.f;
   float mWidth = 0.f;
   float mHeight = 0.f;
+
+public:
   float mXMax = 0.f;
   float mYMax = 0.f;
   float mDisplayRatio = 1.f;
@@ -645,7 +674,7 @@ GetRotateType(OPERATION op)
 }
 
 static int
-GetMoveType(OPERATION op, vec_t* gizmoHitProportion)
+GetMoveType(OPERATION op, vec_t* gizmoHitProportion, const vec_t& screenCoord)
 {
   if (!Intersects(op, TRANSLATE) || GetContext().mbUsing ||
       !GetContext().mbMouseOver) {
@@ -662,9 +691,6 @@ GetMoveType(OPERATION op, vec_t* gizmoHitProportion)
       Contains(op, TRANSLATE)) {
     type = MT_MOVE_SCREEN;
   }
-
-  const vec_t screenCoord =
-    makeVect(io.MousePos - ImVec2(GetContext().mX, GetContext().mY));
 
   // compute
   for (int i = 0; i < 3 && type == MT_NONE; i++) {
@@ -686,12 +712,12 @@ GetMoveType(OPERATION op, vec_t* gizmoHitProportion)
       GetContext().worldToPos(GetContext().mModel.v.position +
                                 dirAxis * GetContext().mScreenFactor * 0.1f,
                               GetContext().mViewProjection) -
-      ImVec2(GetContext().mX, GetContext().mY);
+      GetContext().leftTop();
     const ImVec2 axisEndOnScreen =
       GetContext().worldToPos(GetContext().mModel.v.position +
                                 dirAxis * GetContext().mScreenFactor,
                               GetContext().mViewProjection) -
-      ImVec2(GetContext().mX, GetContext().mY);
+      GetContext().leftTop();
 
     vec_t closestPointOnAxis = PointOnSegment(
       screenCoord, makeVect(axisStartOnScreen), makeVect(axisEndOnScreen));
@@ -733,7 +759,8 @@ IsOver(OPERATION op)
   if (Intersects(op, ROTATE) && GetRotateType(op) != MT_NONE) {
     return true;
   }
-  if (Intersects(op, TRANSLATE) && GetMoveType(op, NULL) != MT_NONE) {
+  if (Intersects(op, TRANSLATE) &&
+      GetMoveType(op, NULL, GetContext().screenCoord()) != MT_NONE) {
     return true;
   }
   return false;
@@ -894,9 +921,8 @@ GetColorU32(int idx)
 static void
 ComputeCameraRay(vec_t& rayOrigin,
                  vec_t& rayDir,
-                 ImVec2 position = ImVec2(GetContext().mX, GetContext().mY),
-                 ImVec2 size = ImVec2(GetContext().mWidth,
-                                      GetContext().mHeight))
+                 ImVec2 position = GetContext().leftTop(),
+                 ImVec2 size = GetContext().size())
 {
   ImGuiIO& io = ImGui::GetIO();
 
@@ -921,13 +947,6 @@ static float
 DistanceToPlane(const vec_t& point, const vec_t& plan)
 {
   return plan.Dot3(point) + plan.w;
-}
-
-static bool
-IsInContextRect(ImVec2 p)
-{
-  return IsWithin(p.x, GetContext().mX, GetContext().mXMax) &&
-         IsWithin(p.y, GetContext().mY, GetContext().mYMax);
 }
 
 static bool
@@ -959,13 +978,7 @@ void
 SetRect(float x, float y, float width, float height)
 {
   SetDrawlist(nullptr);
-  GetContext().mX = x;
-  GetContext().mY = y;
-  GetContext().mWidth = width;
-  GetContext().mHeight = height;
-  GetContext().mXMax = GetContext().mX + GetContext().mWidth;
-  GetContext().mYMax = GetContext().mY + GetContext().mXMax;
-  GetContext().mDisplayRatio = width / height;
+  GetContext().setRect(x, y, width, height);
 }
 
 void
@@ -978,7 +991,9 @@ bool
 IsOver()
 {
   return (Intersects(GetContext().mOperation, TRANSLATE) &&
-          GetMoveType(GetContext().mOperation, NULL) != MT_NONE) ||
+          GetMoveType(GetContext().mOperation,
+                      NULL,
+                      GetContext().screenCoord()) != MT_NONE) ||
          (Intersects(GetContext().mOperation, ROTATE) &&
           GetRotateType(GetContext().mOperation) != MT_NONE) ||
          (Intersects(GetContext().mOperation, SCALE) &&
@@ -1182,7 +1197,7 @@ DrawRotationGizmo(OPERATION op, int type)
 
   cameraToModelNormalized.TransformVector(GetContext().mModelInverse);
 
-  GetContext().mRadiusSquareCenter = screenRotateSize * GetContext().mHeight;
+  GetContext().mRadiusSquareCenter = screenRotateSize * GetContext().height();
 
   bool hasRSC = Intersects(op, ROTATE_SCREEN);
   for (int axis = 0; axis < 3; axis++) {
@@ -1761,7 +1776,8 @@ HandleAndDrawLocalBounds(const float* bounds,
       ImVec2 worldBound1 = GetContext().worldToPos(aabb[i], boundsMVP);
       ImVec2 worldBound2 =
         GetContext().worldToPos(aabb[(i + 1) % 4], boundsMVP);
-      if (!IsInContextRect(worldBound1) || !IsInContextRect(worldBound2)) {
+      if (!GetContext().IsInContextRect(worldBound1) ||
+          !GetContext().IsInContextRect(worldBound2)) {
         continue;
       }
       float boundDistance = sqrtf(ImLengthSqr(worldBound1 - worldBound2));
@@ -1793,7 +1809,8 @@ HandleAndDrawLocalBounds(const float* bounds,
       vec_t gizmoHitProportion;
 
       if (Intersects(operation, TRANSLATE)) {
-        type = GetMoveType(operation, &gizmoHitProportion);
+        type = GetMoveType(
+          operation, &gizmoHitProportion, GetContext().screenCoord());
       }
       if (Intersects(operation, ROTATE) && type == MT_NONE) {
         type = GetRotateType(operation);
@@ -2052,7 +2069,7 @@ HandleTranslation(float* matrix,
   } else {
     // find new possible way to move
     vec_t gizmoHitProportion;
-    type = GetMoveType(op, &gizmoHitProportion);
+    type = GetMoveType(op, &gizmoHitProportion, GetContext().screenCoord());
     if (type != MT_NONE) {
 #if IMGUI_VERSION_NUM >= 18723
       ImGui::SetNextFrameWantCaptureMouse(true);
