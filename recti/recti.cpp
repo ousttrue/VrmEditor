@@ -1,5 +1,6 @@
 #include "recti.h"
 #include "imguizmo/ImGuizmo.h"
+#include <stdint.h>
 
 namespace recti {
 
