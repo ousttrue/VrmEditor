@@ -65,7 +65,6 @@ static const float quadMax = 0.8f;
 static const float quadUV[8] = { quadMin, quadMin, quadMin, quadMax,
                                  quadMax, quadMax, quadMax, quadMin };
 static const float ZPI = 3.14159265358979323846f;
-static const float RAD2DEG = (180.f / ZPI);
 static const float DEG2RAD = (ZPI / 180.f);
 
 struct RGBA
@@ -192,34 +191,6 @@ struct ContextImpl
   }
 
 private:
-  float height() const { return mHeight; }
-
-  float GetParallelogram(const vec_t& ptO,
-                         const vec_t& ptA,
-                         const vec_t& ptB) const
-  {
-    vec_t pts[] = { ptO, ptA, ptB };
-    for (unsigned int i = 0; i < 3; i++) {
-      pts[i].TransformPoint(mMVP);
-      if (fabsf(pts[i].w) >
-          FLT_EPSILON) // check for axis aligned with camera direction
-      {
-        pts[i] *= 1.f / pts[i].w;
-      }
-    }
-    vec_t segA = pts[1] - pts[0];
-    vec_t segB = pts[2] - pts[0];
-    segA.y /= mDisplayRatio;
-    segB.y /= mDisplayRatio;
-    vec_t segAOrtho = { -segA.y, segA.x };
-    segAOrtho.Normalize();
-    float dt = segAOrtho.Dot3(segB);
-    float surface = sqrtf(segA.x * segA.x + segA.y * segA.y) * fabsf(dt);
-    return surface;
-  }
-
-  // const matrix_t& mvp = localCoordinates ? mMVPLocal : mMVP;
-
   void ComputeTripodAxisAndVisibility(const int axisIndex,
                                       vec_t& dirAxis,
                                       vec_t& dirPlaneX,
@@ -281,7 +252,9 @@ private:
 
       float paraSurf = GetParallelogram({ 0.f, 0.f, 0.f },
                                         dirPlaneX * mScreenFactor,
-                                        dirPlaneY * mScreenFactor);
+                                        dirPlaneY * mScreenFactor,
+                                        mMVP,
+                                        mDisplayRatio);
       belowPlaneLimit = (paraSurf > 0.0025f);
       belowAxisLimit = (axisLengthInClipSpace > 0.02f);
 
@@ -995,7 +968,7 @@ private:
 
     cameraToModelNormalized.TransformVector(mModelInverse);
 
-    mRadiusSquareCenter = screenRotateSize * height();
+    mRadiusSquareCenter = screenRotateSize * mHeight;
 
     bool hasRSC = Intersects(op, ROTATE_SCREEN);
     for (int axis = 0; axis < 3; axis++) {

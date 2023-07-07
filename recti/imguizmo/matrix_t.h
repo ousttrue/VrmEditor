@@ -141,3 +141,10 @@ GetSegmentLengthClipSpace(const vec_t& start,
                           const vec_t& end,
                           const matrix_t& mvp,
                           float mDisplayRatio);
+
+float
+GetParallelogram(const vec_t& ptO,
+                 const vec_t& ptA,
+                 const vec_t& ptB,
+                 const matrix_t& mMVP,
+                 float mDisplayRatio);

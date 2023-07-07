@@ -351,3 +351,30 @@ GetSegmentLengthClipSpace(const vec_t& start,
                                          clipSpaceAxis.y * clipSpaceAxis.y);
   return segmentLengthInClipSpace;
 }
+
+float
+GetParallelogram(const vec_t& ptO,
+                 const vec_t& ptA,
+                 const vec_t& ptB,
+                 const matrix_t& mMVP,
+                 float mDisplayRatio)
+{
+  vec_t pts[] = { ptO, ptA, ptB };
+  for (unsigned int i = 0; i < 3; i++) {
+    pts[i].TransformPoint(mMVP);
+    if (fabsf(pts[i].w) >
+        FLT_EPSILON) // check for axis aligned with camera direction
+    {
+      pts[i] *= 1.f / pts[i].w;
+    }
+  }
+  vec_t segA = pts[1] - pts[0];
+  vec_t segB = pts[2] - pts[0];
+  segA.y /= mDisplayRatio;
+  segB.y /= mDisplayRatio;
+  vec_t segAOrtho = { -segA.y, segA.x };
+  segAOrtho.Normalize();
+  float dt = segAOrtho.Dot3(segB);
+  float surface = sqrtf(segA.x * segA.x + segA.y * segA.y) * fabsf(dt);
+  return surface;
+}
