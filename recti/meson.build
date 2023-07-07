@@ -6,6 +6,8 @@ recti_lib = static_library(
     [
         'recti.cpp',
         'imguizmo/ImGuizmo.cpp',
+        'imguizmo/vec_t.cpp',
+        'imguizmo/matrix_t.cpp',
     ],
     include_directories: recti_inc,
     dependencies: [imgui_dep],
