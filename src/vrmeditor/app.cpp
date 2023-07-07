@@ -5,7 +5,6 @@
 #include "config.h"
 #include "docks/asset_view.h"
 #include "docks/dockspace.h"
-#include "docks/gizmo_settings.h"
 #include "docks/gui.h"
 #include "docks/hierarchy_gui.h"
 #include "docks/humanoid_dock.h"
@@ -22,7 +21,6 @@
 #include "view/gl3renderer_gui.h"
 #include "view/lighting.h"
 #include "view/scene_preview.h"
-#include <ImGuizmo.h>
 #include <boneskin/skinning_manager.h>
 #include <glr/rendering_env.h>
 #include <gltfjson.h>
@@ -30,6 +28,7 @@
 #include <gltfjson/json_tree_exporter.h>
 #include <grapho/gl3/error_check.h>
 #include <grapho/gl3/texture.h>
+#include <recti.h>
 #include <vrm/fileutil.h>
 #include <vrm/image.h>
 #include <vrm/importer.h>
@@ -58,7 +57,6 @@ class App
   std::shared_ptr<HierarchyGui> m_hierarchy;
   std::shared_ptr<VrmGui> m_vrm;
   std::shared_ptr<HumanoidDock> m_humanoid;
-  std::shared_ptr<GizmoSettings> m_gizmo;
 
 public:
   App()
@@ -76,7 +74,6 @@ public:
         json->ClearCache(jsonpath);
       });
     m_humanoid = std::make_shared<HumanoidDock>();
-    m_gizmo = std::make_shared<GizmoSettings>();
 
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
       [=] { ResetDock(); });
@@ -179,9 +176,6 @@ public:
 
     DockSpaceManager::Instance().AddDock(
       { "🏃Vrm", [vrm = m_vrm]() { vrm->ShowGui(); } });
-
-    DockSpaceManager::Instance().AddDock(
-      { "🔧GizmoSettings", [gizmo = m_gizmo]() { gizmo->ShowGui(); } });
   }
 
   std::shared_ptr<libvrm::RuntimeScene> SetGltf(
@@ -312,7 +306,7 @@ public:
         if (Gui::Instance().NewFrame()) {
           SaveState();
         }
-        ImGuizmo::BeginFrame();
+        recti::BeginFrame();
       }
 
       {

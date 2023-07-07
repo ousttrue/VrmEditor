@@ -6,8 +6,8 @@
 #include "rendering_env.h"
 #include "rendertarget.h"
 #include "scene_renderer.h"
-#include <ImGuizmo.h>
 #include <boneskin/skinning_manager.h>
+#include <recti.h>
 #include <vrm/gltfroot.h>
 #include <vrm/runtime_node.h>
 #include <vrm/runtime_scene.h>
@@ -84,35 +84,33 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
   // manipulator
   if (auto node = scene->m_selected) {
     // TODO: conflict mouse event(left) with ImageButton
-    ImGuizmo::SetID((int)node.get());
     DirectX::XMFLOAT4X4 m;
     DirectX::XMStoreFloat4x4(&m, node->WorldInitialMatrix());
-    ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-    ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
+
+    bool enableTranslation = false;
     if (auto humanoid = node->Humanoid) {
       if (*humanoid == libvrm::HumanBones::hips) {
-        operation = operation | ImGuizmo::TRANSLATE;
+        enableTranslation = true;
       }
     } else {
-      operation = operation | ImGuizmo::TRANSLATE;
+      enableTranslation = true;
     }
 
-    if (ImGuizmo::Manipulate(&camera.ViewMatrix._11,
-                             &camera.ProjectionMatrix._11,
-                             operation,
-                             ImGuizmo::LOCAL,
-                             (float*)&m,
-                             nullptr,
-                             nullptr,
-                             nullptr,
-                             nullptr)) {
+    if (recti::Manipulate(node.get(),
+                          &camera.ViewMatrix._11,
+                          &camera.ProjectionMatrix._11,
+                          { enableTranslation, true, false, true },
+                          (float*)&m,
+                          nullptr,
+                          nullptr,
+                          nullptr,
+                          nullptr)) {
       // decompose feedback
       node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldInitialMatrix(true);
 
       scene->RaiseSceneUpdated();
     }
-    ImGuizmo::GetContext().mAllowActiveHoverItem = false;
   }
 }
 
@@ -156,33 +154,31 @@ SceneRenderer::RenderRuntime(
   // manipulator
   if (auto node = runtime->m_selected) {
     //   // TODO: conflict mouse event(left) with ImageButton
-    ImGuizmo::SetID((int)node.get());
     DirectX::XMFLOAT4X4 m;
     DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
-    ImGuizmo::GetContext().mAllowActiveHoverItem = true;
-    ImGuizmo::OPERATION operation = ImGuizmo::ROTATE;
+
+    bool enableTranslation = false;
     if (auto humanoid = node->Base->Humanoid) {
       if (*humanoid == libvrm::HumanBones::hips) {
-        operation = operation | ImGuizmo::TRANSLATE;
+        enableTranslation = true;
       }
     } else {
-      operation = operation | ImGuizmo::TRANSLATE;
+      enableTranslation = true;
     }
 
-    if (ImGuizmo::Manipulate(&camera.ViewMatrix._11,
-                             &camera.ProjectionMatrix._11,
-                             operation,
-                             ImGuizmo::LOCAL,
-                             (float*)&m,
-                             nullptr,
-                             nullptr,
-                             nullptr,
-                             nullptr)) {
+    if (recti::Manipulate(node.get(),
+                          &camera.ViewMatrix._11,
+                          &camera.ProjectionMatrix._11,
+                          { enableTranslation, true, false, true },
+                          (float*)&m,
+                          nullptr,
+                          nullptr,
+                          nullptr,
+                          nullptr)) {
       // decompose feedback
       node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldMatrix(true);
     }
-    ImGuizmo::GetContext().mAllowActiveHoverItem = false;
   }
 }
 

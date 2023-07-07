@@ -623,7 +623,8 @@ static void
 ComputeCameraRay(vec_t& rayOrigin,
                  vec_t& rayDir,
                  ImVec2 position = ImVec2(GetContext().mX, GetContext().mY),
-                 ImVec2 size = ImVec2(GetContext().mWidth, GetContext().mHeight))
+                 ImVec2 size = ImVec2(GetContext().mWidth,
+                                      GetContext().mHeight))
 {
   ImGuiIO& io = ImGui::GetIO();
 
@@ -650,7 +651,8 @@ GetSegmentLengthClipSpace(const vec_t& start,
                           const bool localCoordinates = false)
 {
   vec_t startOfSegment = start;
-  const matrix_t& mvp = localCoordinates ? GetContext().mMVPLocal : GetContext().mMVP;
+  const matrix_t& mvp =
+    localCoordinates ? GetContext().mMVPLocal : GetContext().mMVP;
   startOfSegment.TransformPoint(mvp);
   if (fabsf(startOfSegment.w) >
       FLT_EPSILON) // check for axis aligned with camera direction
@@ -749,7 +751,8 @@ static bool
 IsHoveringWindow()
 {
   ImGuiContext& g = *ImGui::GetCurrentContext();
-  ImGuiWindow* window = ImGui::FindWindowByName(GetContext().mDrawList->_OwnerName);
+  ImGuiWindow* window =
+    ImGui::FindWindowByName(GetContext().mDrawList->_OwnerName);
   if (g.HoveredWindow == window) // Mouse hovering drawlist window
     return true;
   if (g.HoveredWindow != NULL) // Any other window is hovered
@@ -825,8 +828,9 @@ BeginFrame()
 bool
 IsUsing()
 {
-  return (GetContext().mbUsing && (GetContext().mActualID == -1 ||
-                               GetContext().mActualID == GetContext().mEditingID)) ||
+  return (GetContext().mbUsing &&
+          (GetContext().mActualID == -1 ||
+           GetContext().mActualID == GetContext().mEditingID)) ||
          GetContext().mbUsingBounds;
 }
 
@@ -1002,7 +1006,8 @@ ComputeTripodAxisAndVisibility(const int axisIndex,
   dirPlaneY = directionUnary[(axisIndex + 2) % 3];
 
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID)) {
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID)) {
     // when using, use stored factors so the gizmo doesn't flip when we
     // translate
     belowAxisLimit = GetContext().mBelowAxisLimit[axisIndex];
@@ -1093,10 +1098,12 @@ ComputeSnap(vec_t& value, const float* snap)
 static float
 ComputeAngleOnPlan()
 {
-  const float len = IntersectRayPlane(
-    GetContext().mRayOrigin, GetContext().mRayVector, GetContext().mTranslationPlan);
-  vec_t localPos = Normalized(GetContext().mRayOrigin + GetContext().mRayVector * len -
-                              GetContext().mModel.v.position);
+  const float len = IntersectRayPlane(GetContext().mRayOrigin,
+                                      GetContext().mRayVector,
+                                      GetContext().mTranslationPlan);
+  vec_t localPos =
+    Normalized(GetContext().mRayOrigin + GetContext().mRayVector * len -
+               GetContext().mModel.v.position);
 
   vec_t perpendicularVector;
   perpendicularVector.Cross(GetContext().mRotationVectorSource,
@@ -1186,7 +1193,8 @@ DrawRotationGizmo(OPERATION op, int type)
   }
 
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID) &&
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID) &&
       IsRotateType(type)) {
     ImVec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
 
@@ -1198,10 +1206,11 @@ DrawRotationGizmo(OPERATION op, int type)
       matrix_t rotateVectorMatrix;
       rotateVectorMatrix.RotationAxis(GetContext().mTranslationPlan, ng);
       vec_t pos;
-      pos.TransformPoint(GetContext().mRotationVectorSource, rotateVectorMatrix);
+      pos.TransformPoint(GetContext().mRotationVectorSource,
+                         rotateVectorMatrix);
       pos *= GetContext().mScreenFactor * ROTATION_DISPLAY_FACTOR;
-      circlePos[i] =
-        worldToPos(pos + GetContext().mModel.v.position, GetContext().mViewProjection);
+      circlePos[i] = worldToPos(pos + GetContext().mModel.v.position,
+                                GetContext().mViewProjection);
     }
     drawList->AddConvexPolyFilled(
       circlePos, HALF_CIRCLE_SEGMENT_COUNT, GetColorU32(ROTATION_USING_FILL));
@@ -1237,15 +1246,17 @@ DrawHatchedAxis(const vec_t& axis)
   }
 
   for (int j = 1; j < 10; j++) {
-    ImVec2 baseSSpace2 = worldToPos(
-      axis * 0.05f * (float)(j * 2) * GetContext().mScreenFactor, GetContext().mMVP);
+    ImVec2 baseSSpace2 =
+      worldToPos(axis * 0.05f * (float)(j * 2) * GetContext().mScreenFactor,
+                 GetContext().mMVP);
     ImVec2 worldDirSSpace2 =
       worldToPos(axis * 0.05f * (float)(j * 2 + 1) * GetContext().mScreenFactor,
                  GetContext().mMVP);
-    GetContext().mDrawList->AddLine(baseSSpace2,
-                                worldDirSSpace2,
-                                GetColorU32(HATCHED_AXIS_LINES),
-                                GetContext().mStyle.HatchedAxisLineThickness);
+    GetContext().mDrawList->AddLine(
+      baseSSpace2,
+      worldDirSSpace2,
+      GetColorU32(HATCHED_AXIS_LINES),
+      GetContext().mStyle.HatchedAxisLineThickness);
   }
 }
 
@@ -1266,7 +1277,8 @@ DrawScaleGizmo(OPERATION op, int type)
   vec_t scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID)) {
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID)) {
     scaleDisplay = GetContext().mScale;
   }
 
@@ -1291,16 +1303,19 @@ DrawScaleGizmo(OPERATION op, int type)
         bool hasTranslateOnAxis =
           Contains(op, static_cast<OPERATION>(TRANSLATE_X << i));
         float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-        ImVec2 baseSSpace =
-          worldToPos(dirAxis * 0.1f * GetContext().mScreenFactor, GetContext().mMVP);
-        ImVec2 worldDirSSpaceNoScale = worldToPos(
-          dirAxis * markerScale * GetContext().mScreenFactor, GetContext().mMVP);
-        ImVec2 worldDirSSpace = worldToPos(
-          (dirAxis * markerScale * scaleDisplay[i]) * GetContext().mScreenFactor,
-          GetContext().mMVP);
+        ImVec2 baseSSpace = worldToPos(
+          dirAxis * 0.1f * GetContext().mScreenFactor, GetContext().mMVP);
+        ImVec2 worldDirSSpaceNoScale =
+          worldToPos(dirAxis * markerScale * GetContext().mScreenFactor,
+                     GetContext().mMVP);
+        ImVec2 worldDirSSpace =
+          worldToPos((dirAxis * markerScale * scaleDisplay[i]) *
+                       GetContext().mScreenFactor,
+                     GetContext().mMVP);
 
-        if (GetContext().mbUsing && (GetContext().mActualID == -1 ||
-                                 GetContext().mActualID == GetContext().mEditingID)) {
+        if (GetContext().mbUsing &&
+            (GetContext().mActualID == -1 ||
+             GetContext().mActualID == GetContext().mEditingID)) {
           ImU32 scaleLineColor = GetColorU32(SCALE_LINE);
           drawList->AddLine(baseSSpace,
                             worldDirSSpaceNoScale,
@@ -1317,8 +1332,9 @@ DrawScaleGizmo(OPERATION op, int type)
                             colors[i + 1],
                             GetContext().mStyle.ScaleLineThickness);
         }
-        drawList->AddCircleFilled(
-          worldDirSSpace, GetContext().mStyle.ScaleLineCircleSize, colors[i + 1]);
+        drawList->AddCircleFilled(worldDirSSpace,
+                                  GetContext().mStyle.ScaleLineCircleSize,
+                                  colors[i + 1]);
 
         if (GetContext().mAxisFactor[i] < 0.f) {
           DrawHatchedAxis(dirAxis * scaleDisplay[i]);
@@ -1334,7 +1350,8 @@ DrawScaleGizmo(OPERATION op, int type)
                             32);
 
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID) &&
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID) &&
       IsScaleType(type)) {
     // ImVec2 sourcePosOnScreen = worldToPos(GetContext().mMatrixOrigin,
     // GetContext().mViewProjection);
@@ -1349,7 +1366,8 @@ DrawScaleGizmo(OPERATION op, int type)
     dif.y), translationLineColor, 2.f);
     */
     char tmps[512];
-    // vec_t deltaInfo = GetContext().mModel.v.position - GetContext().mMatrixOrigin;
+    // vec_t deltaInfo = GetContext().mModel.v.position -
+    // GetContext().mMatrixOrigin;
     int componentInfoIndex = (type - MT_SCALE_X) * 3;
     ImFormatString(tmps,
                    sizeof(tmps),
@@ -1383,7 +1401,8 @@ DrawScaleUniveralGizmo(OPERATION op, int type)
   vec_t scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID)) {
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID)) {
     scaleDisplay = GetContext().mScale;
   }
 
@@ -1412,9 +1431,10 @@ DrawScaleUniveralGizmo(OPERATION op, int type)
         // GetContext().mScreenFactor, GetContext().mMVPLocal); ImVec2
         // worldDirSSpaceNoScale = worldToPos(dirAxis * markerScale *
         // GetContext().mScreenFactor, GetContext().mMVP);
-        ImVec2 worldDirSSpace = worldToPos(
-          (dirAxis * markerScale * scaleDisplay[i]) * GetContext().mScreenFactor,
-          GetContext().mMVPLocal);
+        ImVec2 worldDirSSpace =
+          worldToPos((dirAxis * markerScale * scaleDisplay[i]) *
+                       GetContext().mScreenFactor,
+                     GetContext().mMVPLocal);
 
 #if 0
                if (GetContext().mbUsing && (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID))
@@ -1442,7 +1462,8 @@ DrawScaleUniveralGizmo(OPERATION op, int type)
                       GetContext().mStyle.CenterCircleSize);
 
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID) &&
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID) &&
       IsScaleType(type)) {
     // ImVec2 sourcePosOnScreen = worldToPos(GetContext().mMatrixOrigin,
     // GetContext().mViewProjection);
@@ -1457,7 +1478,8 @@ DrawScaleUniveralGizmo(OPERATION op, int type)
     dif.y), translationLineColor, 2.f);
     */
     char tmps[512];
-    // vec_t deltaInfo = GetContext().mModel.v.position - GetContext().mMatrixOrigin;
+    // vec_t deltaInfo = GetContext().mModel.v.position -
+    // GetContext().mMatrixOrigin;
     int componentInfoIndex = (type - MT_SCALE_X) * 3;
     ImFormatString(tmps,
                    sizeof(tmps),
@@ -1501,12 +1523,13 @@ DrawTranslationGizmo(OPERATION op, int type)
     ComputeTripodAxisAndVisibility(
       i, dirAxis, dirPlaneX, dirPlaneY, belowAxisLimit, belowPlaneLimit);
 
-    if (!GetContext().mbUsing || (GetContext().mbUsing && type == MT_MOVE_X + i)) {
+    if (!GetContext().mbUsing ||
+        (GetContext().mbUsing && type == MT_MOVE_X + i)) {
       // draw axis
       if (belowAxisLimit &&
           Intersects(op, static_cast<OPERATION>(TRANSLATE_X << i))) {
-        ImVec2 baseSSpace =
-          worldToPos(dirAxis * 0.1f * GetContext().mScreenFactor, GetContext().mMVP);
+        ImVec2 baseSSpace = worldToPos(
+          dirAxis * 0.1f * GetContext().mScreenFactor, GetContext().mMVP);
         ImVec2 worldDirSSpace =
           worldToPos(dirAxis * GetContext().mScreenFactor, GetContext().mMVP);
 
@@ -1536,7 +1559,8 @@ DrawTranslationGizmo(OPERATION op, int type)
       }
     }
     // draw plane
-    if (!GetContext().mbUsing || (GetContext().mbUsing && type == MT_MOVE_YZ + i)) {
+    if (!GetContext().mbUsing ||
+        (GetContext().mbUsing && type == MT_MOVE_YZ + i)) {
       if (belowPlaneLimit && Contains(op, TRANSLATE_PLANS[i])) {
         ImVec2 screenQuadPts[4];
         for (int j = 0; j < 4; ++j) {
@@ -1558,7 +1582,8 @@ DrawTranslationGizmo(OPERATION op, int type)
                             32);
 
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID) &&
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID) &&
       IsTranslateType(type)) {
     ImU32 translationLineColor = GetColorU32(TRANSLATION_LINE);
 
@@ -1582,7 +1607,8 @@ DrawTranslationGizmo(OPERATION op, int type)
       2.f);
 
     char tmps[512];
-    vec_t deltaInfo = GetContext().mModel.v.position - GetContext().mMatrixOrigin;
+    vec_t deltaInfo =
+      GetContext().mModel.v.position - GetContext().mMatrixOrigin;
     int componentInfoIndex = (type - MT_MOVE_X) * 3;
     ImFormatString(tmps,
                    sizeof(tmps),
@@ -1641,9 +1667,9 @@ HandleAndDrawLocalBounds(const float* bounds,
                                           GetContext().mModelSource);
       dirPlaneNormalWorld.Normalize();
 
-      float dt = fabsf(
-        Dot(Normalized(GetContext().mCameraEye - GetContext().mModelSource.v.position),
-            dirPlaneNormalWorld));
+      float dt = fabsf(Dot(Normalized(GetContext().mCameraEye -
+                                      GetContext().mModelSource.v.position),
+                           dirPlaneNormalWorld));
       if (dt >= bestDot) {
         bestDot = dt;
         bestAxis = i;
@@ -1700,7 +1726,8 @@ HandleAndDrawLocalBounds(const float* bounds,
     unsigned int anchorAlpha =
       GetContext().mbEnable ? IM_COL32_BLACK : IM_COL32(0, 0, 0, 0x80);
 
-    matrix_t boundsMVP = GetContext().mModelSource * GetContext().mViewProjection;
+    matrix_t boundsMVP =
+      GetContext().mModelSource * GetContext().mViewProjection;
     for (int i = 0; i < 4; i++) {
       ImVec2 worldBound1 = worldToPos(aabb[i], boundsMVP);
       ImVec2 worldBound2 = worldToPos(aabb[(i + 1) % 4], boundsMVP);
@@ -1768,11 +1795,12 @@ HandleAndDrawLocalBounds(const float* bounds,
         midBound, AnchorSmallRadius - 1.2f, smallAnchorColor);
       int oppositeIndex = (i + 2) % 4;
       // big anchor on corners
-      if (!GetContext().mbUsingBounds && GetContext().mbEnable && overBigAnchor &&
-          CanActivate()) {
+      if (!GetContext().mbUsingBounds && GetContext().mbEnable &&
+          overBigAnchor && CanActivate()) {
         GetContext().mBoundsPivot.TransformPoint(aabb[(i + 2) % 4],
-                                             GetContext().mModelSource);
-        GetContext().mBoundsAnchor.TransformPoint(aabb[i], GetContext().mModelSource);
+                                                 GetContext().mModelSource);
+        GetContext().mBoundsAnchor.TransformPoint(aabb[i],
+                                                  GetContext().mModelSource);
         GetContext().mBoundsPlan =
           BuildPlan(GetContext().mBoundsAnchor, bestAxisWorldDirection);
         GetContext().mBoundsBestAxis = bestAxis;
@@ -1782,19 +1810,21 @@ HandleAndDrawLocalBounds(const float* bounds,
         GetContext().mBoundsLocalPivot.Set(0.f);
         GetContext().mBoundsLocalPivot[secondAxis] =
           aabb[oppositeIndex][secondAxis];
-        GetContext().mBoundsLocalPivot[thirdAxis] = aabb[oppositeIndex][thirdAxis];
+        GetContext().mBoundsLocalPivot[thirdAxis] =
+          aabb[oppositeIndex][thirdAxis];
 
         GetContext().mbUsingBounds = true;
         GetContext().mEditingID = GetContext().mActualID;
         GetContext().mBoundsMatrix = GetContext().mModelSource;
       }
       // small anchor on middle of segment
-      if (!GetContext().mbUsingBounds && GetContext().mbEnable && overSmallAnchor &&
-          CanActivate()) {
+      if (!GetContext().mbUsingBounds && GetContext().mbEnable &&
+          overSmallAnchor && CanActivate()) {
         vec_t midPointOpposite = (aabb[(i + 2) % 4] + aabb[(i + 3) % 4]) * 0.5f;
         GetContext().mBoundsPivot.TransformPoint(midPointOpposite,
-                                             GetContext().mModelSource);
-        GetContext().mBoundsAnchor.TransformPoint(midPoint, GetContext().mModelSource);
+                                                 GetContext().mModelSource);
+        GetContext().mBoundsAnchor.TransformPoint(midPoint,
+                                                  GetContext().mModelSource);
         GetContext().mBoundsPlan =
           BuildPlan(GetContext().mBoundsAnchor, bestAxisWorldDirection);
         GetContext().mBoundsBestAxis = bestAxis;
@@ -1805,8 +1835,8 @@ HandleAndDrawLocalBounds(const float* bounds,
         GetContext().mBoundsLocalPivot.Set(0.f);
         GetContext().mBoundsLocalPivot[GetContext().mBoundsAxis[0]] =
           aabb[oppositeIndex]
-              [indices[i % 2]]; // bounds[GetContext().mBoundsAxis[0]] * (((i + 1)
-                                // & 2) ? 1.f : -1.f);
+              [indices[i % 2]]; // bounds[GetContext().mBoundsAxis[0]] * (((i +
+                                // 1) & 2) ? 1.f : -1.f);
 
         GetContext().mbUsingBounds = true;
         GetContext().mEditingID = GetContext().mActualID;
@@ -1814,14 +1844,16 @@ HandleAndDrawLocalBounds(const float* bounds,
       }
     }
 
-    if (GetContext().mbUsingBounds && (GetContext().mActualID == -1 ||
-                                   GetContext().mActualID == GetContext().mEditingID)) {
+    if (GetContext().mbUsingBounds &&
+        (GetContext().mActualID == -1 ||
+         GetContext().mActualID == GetContext().mEditingID)) {
       matrix_t scale;
       scale.SetToIdentity();
 
       // compute projected mouse position on plan
-      const float len = IntersectRayPlane(
-        GetContext().mRayOrigin, GetContext().mRayVector, GetContext().mBoundsPlan);
+      const float len = IntersectRayPlane(GetContext().mRayOrigin,
+                                          GetContext().mRayVector,
+                                          GetContext().mBoundsPlan);
       vec_t newPos = GetContext().mRayOrigin + GetContext().mRayVector * len;
 
       // compute a reference and delta vectors base on mouse move
@@ -1865,18 +1897,20 @@ HandleAndDrawLocalBounds(const float* bounds,
 
       // info text
       char tmps[512];
-      ImVec2 destinationPosOnScreen =
-        worldToPos(GetContext().mModel.v.position, GetContext().mViewProjection);
-      ImFormatString(
-        tmps,
-        sizeof(tmps),
-        "X: %.2f Y: %.2f Z: %.2f",
-        (bounds[3] - bounds[0]) * GetContext().mBoundsMatrix.component[0].Length() *
-          scale.component[0].Length(),
-        (bounds[4] - bounds[1]) * GetContext().mBoundsMatrix.component[1].Length() *
-          scale.component[1].Length(),
-        (bounds[5] - bounds[2]) * GetContext().mBoundsMatrix.component[2].Length() *
-          scale.component[2].Length());
+      ImVec2 destinationPosOnScreen = worldToPos(GetContext().mModel.v.position,
+                                                 GetContext().mViewProjection);
+      ImFormatString(tmps,
+                     sizeof(tmps),
+                     "X: %.2f Y: %.2f Z: %.2f",
+                     (bounds[3] - bounds[0]) *
+                       GetContext().mBoundsMatrix.component[0].Length() *
+                       scale.component[0].Length(),
+                     (bounds[4] - bounds[1]) *
+                       GetContext().mBoundsMatrix.component[1].Length() *
+                       scale.component[1].Length(),
+                     (bounds[5] - bounds[2]) *
+                       GetContext().mBoundsMatrix.component[2].Length() *
+                       scale.component[2].Length());
       drawList->AddText(
         ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
         GetColorU32(TEXT_SHADOW),
@@ -1930,10 +1964,10 @@ GetScaleType(OPERATION op)
     dirPlaneX.TransformVector(GetContext().mModelLocal);
     dirPlaneY.TransformVector(GetContext().mModelLocal);
 
-    const float len =
-      IntersectRayPlane(GetContext().mRayOrigin,
-                        GetContext().mRayVector,
-                        BuildPlan(GetContext().mModelLocal.v.position, dirAxis));
+    const float len = IntersectRayPlane(
+      GetContext().mRayOrigin,
+      GetContext().mRayVector,
+      BuildPlan(GetContext().mModelLocal.v.position, dirAxis));
     vec_t posOnPlan = GetContext().mRayOrigin + GetContext().mRayVector * len;
 
     const float startOffset =
@@ -1988,11 +2022,13 @@ GetScaleType(OPERATION op)
       bool hasTranslateOnAxis =
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i));
       float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-      // ImVec2 baseSSpace = worldToPos(dirAxis * 0.1f * GetContext().mScreenFactor,
-      // GetContext().mMVPLocal); ImVec2 worldDirSSpaceNoScale = worldToPos(dirAxis
+      // ImVec2 baseSSpace = worldToPos(dirAxis * 0.1f *
+      // GetContext().mScreenFactor, GetContext().mMVPLocal); ImVec2
+      // worldDirSSpaceNoScale = worldToPos(dirAxis
       // * markerScale * GetContext().mScreenFactor, GetContext().mMVP);
-      ImVec2 worldDirSSpace = worldToPos(
-        (dirAxis * markerScale) * GetContext().mScreenFactor, GetContext().mMVPLocal);
+      ImVec2 worldDirSSpace =
+        worldToPos((dirAxis * markerScale) * GetContext().mScreenFactor,
+                   GetContext().mMVPLocal);
 
       float distance = sqrtf(ImLengthSqr(worldDirSSpace - io.MousePos));
       if (distance < 12.f) {
@@ -2028,17 +2064,19 @@ GetRotateType(OPERATION op)
                                 GetContext().mModel.v.dir };
 
   vec_t modelViewPos;
-  modelViewPos.TransformPoint(GetContext().mModel.v.position, GetContext().mViewMat);
+  modelViewPos.TransformPoint(GetContext().mModel.v.position,
+                              GetContext().mViewMat);
 
   for (int i = 0; i < 3 && type == MT_NONE; i++) {
     if (!Intersects(op, static_cast<OPERATION>(ROTATE_X << i))) {
       continue;
     }
     // pickup plan
-    vec_t pickupPlan = BuildPlan(GetContext().mModel.v.position, planNormals[i]);
+    vec_t pickupPlan =
+      BuildPlan(GetContext().mModel.v.position, planNormals[i]);
 
-    const float len =
-      IntersectRayPlane(GetContext().mRayOrigin, GetContext().mRayVector, pickupPlan);
+    const float len = IntersectRayPlane(
+      GetContext().mRayOrigin, GetContext().mRayVector, pickupPlan);
     const vec_t intersectWorldPos =
       GetContext().mRayOrigin + GetContext().mRayVector * len;
     vec_t intersectViewPos;
@@ -2072,7 +2110,8 @@ GetRotateType(OPERATION op)
 static int
 GetMoveType(OPERATION op, vec_t* gizmoHitProportion)
 {
-  if (!Intersects(op, TRANSLATE) || GetContext().mbUsing || !GetContext().mbMouseOver) {
+  if (!Intersects(op, TRANSLATE) || GetContext().mbUsing ||
+      !GetContext().mbMouseOver) {
     return MT_NONE;
   }
   ImGuiIO& io = ImGui::GetIO();
@@ -2082,7 +2121,8 @@ GetMoveType(OPERATION op, vec_t* gizmoHitProportion)
   if (io.MousePos.x >= GetContext().mScreenSquareMin.x &&
       io.MousePos.x <= GetContext().mScreenSquareMax.x &&
       io.MousePos.y >= GetContext().mScreenSquareMin.y &&
-      io.MousePos.y <= GetContext().mScreenSquareMax.y && Contains(op, TRANSLATE)) {
+      io.MousePos.y <= GetContext().mScreenSquareMax.y &&
+      Contains(op, TRANSLATE)) {
     type = MT_MOVE_SCREEN;
   }
 
@@ -2111,7 +2151,8 @@ GetMoveType(OPERATION op, vec_t* gizmoHitProportion)
                  GetContext().mViewProjection) -
       ImVec2(GetContext().mX, GetContext().mY);
     const ImVec2 axisEndOnScreen =
-      worldToPos(GetContext().mModel.v.position + dirAxis * GetContext().mScreenFactor,
+      worldToPos(GetContext().mModel.v.position +
+                   dirAxis * GetContext().mScreenFactor,
                  GetContext().mViewProjection) -
       ImVec2(GetContext().mX, GetContext().mY);
 
@@ -2123,10 +2164,12 @@ GetMoveType(OPERATION op, vec_t* gizmoHitProportion)
       type = MT_MOVE_X + i;
     }
 
-    const float dx = dirPlaneX.Dot3((posOnPlan - GetContext().mModel.v.position) *
-                                    (1.f / GetContext().mScreenFactor));
-    const float dy = dirPlaneY.Dot3((posOnPlan - GetContext().mModel.v.position) *
-                                    (1.f / GetContext().mScreenFactor));
+    const float dx =
+      dirPlaneX.Dot3((posOnPlan - GetContext().mModel.v.position) *
+                     (1.f / GetContext().mScreenFactor));
+    const float dy =
+      dirPlaneY.Dot3((posOnPlan - GetContext().mModel.v.position) *
+                     (1.f / GetContext().mScreenFactor));
     if (belowPlaneLimit && dx >= quadUV[0] && dx <= quadUV[4] &&
         dy >= quadUV[1] && dy <= quadUV[3] &&
         Contains(op, TRANSLATE_PLANS[i])) {
@@ -2157,17 +2200,20 @@ HandleTranslation(float* matrix,
 
   // move
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID) &&
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID) &&
       IsTranslateType(GetContext().mCurrentOperation)) {
 #if IMGUI_VERSION_NUM >= 18723
     ImGui::SetNextFrameWantCaptureMouse(true);
 #else
     ImGui::CaptureMouseFromApp();
 #endif
-    const float signedLength = IntersectRayPlane(
-      GetContext().mRayOrigin, GetContext().mRayVector, GetContext().mTranslationPlan);
+    const float signedLength = IntersectRayPlane(GetContext().mRayOrigin,
+                                                 GetContext().mRayVector,
+                                                 GetContext().mTranslationPlan);
     const float len = fabsf(signedLength); // near plan
-    const vec_t newPos = GetContext().mRayOrigin + GetContext().mRayVector * len;
+    const vec_t newPos =
+      GetContext().mRayOrigin + GetContext().mRayVector * len;
 
     // compute delta
     const vec_t newOrigin =
@@ -2198,8 +2244,8 @@ HandleTranslation(float* matrix,
       } else {
         ComputeSnap(cumulativeDelta, snap);
       }
-      delta =
-        GetContext().mMatrixOrigin + cumulativeDelta - GetContext().mModel.v.position;
+      delta = GetContext().mMatrixOrigin + cumulativeDelta -
+              GetContext().mModel.v.position;
     }
 
     if (delta != GetContext().mTranslationLastDelta) {
@@ -2238,8 +2284,9 @@ HandleTranslation(float* matrix,
       GetContext().mEditingID = GetContext().mActualID;
       GetContext().mCurrentOperation = type;
       vec_t movePlanNormal[] = {
-        GetContext().mModel.v.right, GetContext().mModel.v.up, GetContext().mModel.v.dir,
-        GetContext().mModel.v.right, GetContext().mModel.v.up, GetContext().mModel.v.dir,
+        GetContext().mModel.v.right, GetContext().mModel.v.up,
+        GetContext().mModel.v.dir,   GetContext().mModel.v.right,
+        GetContext().mModel.v.up,    GetContext().mModel.v.dir,
         -GetContext().mCameraDir
       };
 
@@ -2251,10 +2298,11 @@ HandleTranslation(float* matrix,
         movePlanNormal[i].Normalize();
       }
       // pickup plan
-      GetContext().mTranslationPlan =
-        BuildPlan(GetContext().mModel.v.position, movePlanNormal[type - MT_MOVE_X]);
-      const float len = IntersectRayPlane(
-        GetContext().mRayOrigin, GetContext().mRayVector, GetContext().mTranslationPlan);
+      GetContext().mTranslationPlan = BuildPlan(
+        GetContext().mModel.v.position, movePlanNormal[type - MT_MOVE_X]);
+      const float len = IntersectRayPlane(GetContext().mRayOrigin,
+                                          GetContext().mRayVector,
+                                          GetContext().mTranslationPlan);
       GetContext().mTranslationPlanOrigin =
         GetContext().mRayOrigin + GetContext().mRayVector * len;
       GetContext().mMatrixOrigin = GetContext().mModel.v.position;
@@ -2296,16 +2344,18 @@ HandleScale(float* matrix,
       GetContext().mEditingID = GetContext().mActualID;
       GetContext().mCurrentOperation = type;
       const vec_t movePlanNormal[] = {
-        GetContext().mModel.v.up,  GetContext().mModel.v.dir, GetContext().mModel.v.right,
-        GetContext().mModel.v.dir, GetContext().mModel.v.up,  GetContext().mModel.v.right,
+        GetContext().mModel.v.up,    GetContext().mModel.v.dir,
+        GetContext().mModel.v.right, GetContext().mModel.v.dir,
+        GetContext().mModel.v.up,    GetContext().mModel.v.right,
         -GetContext().mCameraDir
       };
       // pickup plan
 
-      GetContext().mTranslationPlan = BuildPlan(GetContext().mModel.v.position,
-                                            movePlanNormal[type - MT_SCALE_X]);
-      const float len = IntersectRayPlane(
-        GetContext().mRayOrigin, GetContext().mRayVector, GetContext().mTranslationPlan);
+      GetContext().mTranslationPlan = BuildPlan(
+        GetContext().mModel.v.position, movePlanNormal[type - MT_SCALE_X]);
+      const float len = IntersectRayPlane(GetContext().mRayOrigin,
+                                          GetContext().mRayVector,
+                                          GetContext().mTranslationPlan);
       GetContext().mTranslationPlanOrigin =
         GetContext().mRayOrigin + GetContext().mRayVector * len;
       GetContext().mMatrixOrigin = GetContext().mModel.v.position;
@@ -2322,15 +2372,17 @@ HandleScale(float* matrix,
   }
   // scale
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID) &&
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID) &&
       IsScaleType(GetContext().mCurrentOperation)) {
 #if IMGUI_VERSION_NUM >= 18723
     ImGui::SetNextFrameWantCaptureMouse(true);
 #else
     ImGui::CaptureMouseFromApp();
 #endif
-    const float len = IntersectRayPlane(
-      GetContext().mRayOrigin, GetContext().mRayVector, GetContext().mTranslationPlan);
+    const float len = IntersectRayPlane(GetContext().mRayOrigin,
+                                        GetContext().mRayVector,
+                                        GetContext().mTranslationPlan);
     vec_t newPos = GetContext().mRayOrigin + GetContext().mRayVector * len;
     vec_t newOrigin =
       newPos - GetContext().mRelativeOrigin * GetContext().mScreenFactor;
@@ -2344,8 +2396,8 @@ HandleScale(float* matrix,
       float lengthOnAxis = Dot(axisValue, delta);
       delta = axisValue * lengthOnAxis;
 
-      vec_t baseVector =
-        GetContext().mTranslationPlanOrigin - GetContext().mModelLocal.v.position;
+      vec_t baseVector = GetContext().mTranslationPlanOrigin -
+                         GetContext().mModelLocal.v.position;
       float ratio =
         Dot(axisValue, baseVector + delta) / Dot(axisValue, baseVector);
 
@@ -2372,7 +2424,8 @@ HandleScale(float* matrix,
 
     // compute matrix & delta
     matrix_t deltaMatrixScale;
-    deltaMatrixScale.Scale(GetContext().mScale * GetContext().mScaleValueOrigin);
+    deltaMatrixScale.Scale(GetContext().mScale *
+                           GetContext().mScaleValueOrigin);
 
     matrix_t res = deltaMatrixScale * GetContext().mModelLocal;
     *(matrix_t*)matrix = res;
@@ -2443,12 +2496,14 @@ HandleRotation(float* matrix,
         GetContext().mTranslationPlan = BuildPlan(
           GetContext().mModel.v.position, rotatePlanNormal[type - MT_ROTATE_X]);
       } else {
-        GetContext().mTranslationPlan = BuildPlan(
-          GetContext().mModelSource.v.position, directionUnary[type - MT_ROTATE_X]);
+        GetContext().mTranslationPlan =
+          BuildPlan(GetContext().mModelSource.v.position,
+                    directionUnary[type - MT_ROTATE_X]);
       }
 
-      const float len = IntersectRayPlane(
-        GetContext().mRayOrigin, GetContext().mRayVector, GetContext().mTranslationPlan);
+      const float len = IntersectRayPlane(GetContext().mRayOrigin,
+                                          GetContext().mRayVector,
+                                          GetContext().mTranslationPlan);
       vec_t localPos = GetContext().mRayOrigin + GetContext().mRayVector * len -
                        GetContext().mModel.v.position;
       GetContext().mRotationVectorSource = Normalized(localPos);
@@ -2458,7 +2513,8 @@ HandleRotation(float* matrix,
 
   // rotation
   if (GetContext().mbUsing &&
-      (GetContext().mActualID == -1 || GetContext().mActualID == GetContext().mEditingID) &&
+      (GetContext().mActualID == -1 ||
+       GetContext().mActualID == GetContext().mEditingID) &&
       IsRotateType(GetContext().mCurrentOperation)) {
 #if IMGUI_VERSION_NUM >= 18723
     ImGui::SetNextFrameWantCaptureMouse(true);
@@ -2472,11 +2528,12 @@ HandleRotation(float* matrix,
     }
     vec_t rotationAxisLocalSpace;
 
-    rotationAxisLocalSpace.TransformVector(makeVect(GetContext().mTranslationPlan.x,
-                                                    GetContext().mTranslationPlan.y,
-                                                    GetContext().mTranslationPlan.z,
-                                                    0.f),
-                                           GetContext().mModelInverse);
+    rotationAxisLocalSpace.TransformVector(
+      makeVect(GetContext().mTranslationPlan.x,
+               GetContext().mTranslationPlan.y,
+               GetContext().mTranslationPlan.z,
+               0.f),
+      GetContext().mModelInverse);
     rotationAxisLocalSpace.Normalize();
 
     matrix_t deltaRotation;
@@ -2492,7 +2549,8 @@ HandleRotation(float* matrix,
     scaleOrigin.Scale(GetContext().mModelScaleOrigin);
 
     if (applyRotationLocaly) {
-      *(matrix_t*)matrix = scaleOrigin * deltaRotation * GetContext().mModelLocal;
+      *(matrix_t*)matrix =
+        scaleOrigin * deltaRotation * GetContext().mModelLocal;
     } else {
       matrix_t res = GetContext().mModelSource;
       res.v.position.Set(0.f);
@@ -2582,6 +2640,12 @@ AllowAxisFlip(bool value)
   GetContext().mAllowAxisFlip = value;
 }
 
+struct Scope
+{
+  Scope() { ImGuizmo::GetContext().mAllowActiveHoverItem = true; }
+  ~Scope() { ImGuizmo::GetContext().mAllowActiveHoverItem = false; }
+};
+
 bool
 Manipulate(const float* view,
            const float* projection,
@@ -2593,6 +2657,8 @@ Manipulate(const float* view,
            const float* localBounds,
            const float* boundsSnap)
 {
+  Scope scope;
+
   // Scale is always local or matrix will be skewed when applying world scale or
   // oriented matrix
   GetContext().ComputeContext(
@@ -2895,7 +2961,8 @@ ViewManipulate(float* view,
   svgProjection = GetContext().mProjectionMat;
 
   ImGuiIO& io = ImGui::GetIO();
-  GetContext().mDrawList->AddRectFilled(position, position + size, backgroundColor);
+  GetContext().mDrawList->AddRectFilled(
+    position, position + size, backgroundColor);
   matrix_t viewInverse;
   viewInverse.Inverse(*(matrix_t*)view);
 
@@ -2919,7 +2986,8 @@ ViewManipulate(float* view,
   // set context
   GetContext().mViewMat = cubeView;
   GetContext().mProjectionMat = cubeProjection;
-  ComputeCameraRay(GetContext().mRayOrigin, GetContext().mRayVector, position, size);
+  ComputeCameraRay(
+    GetContext().mRayOrigin, GetContext().mRayVector, position, size);
 
   const matrix_t res = cubeView * cubeProjection;
 
@@ -2967,8 +3035,8 @@ ViewManipulate(float* view,
 
       const vec_t facePlan = BuildPlan(n * 0.5f, n);
 
-      const float len =
-        IntersectRayPlane(GetContext().mRayOrigin, GetContext().mRayVector, facePlan);
+      const float len = IntersectRayPlane(
+        GetContext().mRayOrigin, GetContext().mRayVector, facePlan);
       vec_t posOnPlan =
         GetContext().mRayOrigin + GetContext().mRayVector * len - (n * 0.5f);
 
@@ -3107,7 +3175,9 @@ ViewManipulate(float* view,
   }
 
   // restore view/projection because it was used to compute ray
-  GetContext().ComputeContext(
-    svgView.m16, svgProjection.m16, GetContext().mModelSource.m16, GetContext().mMode);
+  GetContext().ComputeContext(svgView.m16,
+                              svgProjection.m16,
+                              GetContext().mModelSource.m16,
+                              GetContext().mMode);
 }
 }; // namespace IMGUIZMO_NAMESPACE

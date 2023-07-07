@@ -31,7 +31,6 @@ luajit_dep = subproject(
     default_options: ['default_library=static'],
 ).get_variable('lua_dep')
 cuber_dep = dependency('cuber')
-# imguizmo_dep = subproject('ImGuizmo').get_variable('imguizmo_dep')
 imgui_filedialog_dep = subproject(
     'ImGuiFileDialog',
 ).get_variable('imgui_filedialog_dep')
@@ -49,7 +48,7 @@ simplefilewatcher_dep = dependency('simplefilewatcher')
 # plog_dep = subproject('sergiusthebest-plog').get_variable('plog_dep')
 plog_dep = dependency('plog')
 ufbx_dep = subproject('ufbx').get_variable('ufbx_dep')
-subdir('imgui_libs')
+subdir('recti')
 subdir('libvrm')
 subdir('boneskin')
 subdir('glrenderer')

@@ -20,7 +20,7 @@ glr_lib = static_library(
         plog_dep,
         # remotery_dep,
         boneskin_dep,
-        imguizmo_dep,
+        recti_dep,
         imgui_dep,
     ],
 )
