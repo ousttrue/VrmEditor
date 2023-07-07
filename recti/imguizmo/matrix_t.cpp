@@ -322,3 +322,32 @@ RecomposeMatrixFromComponents(const float* translation,
   mat.dir() *= validScale[2];
   mat.position() = { translation[0], translation[1], translation[2], 1.f };
 }
+
+float
+GetSegmentLengthClipSpace(const vec_t& start,
+                          const vec_t& end,
+                          const matrix_t& mvp,
+                          float mDisplayRatio)
+{
+  vec_t startOfSegment = start;
+  startOfSegment.TransformPoint(mvp);
+  if (fabsf(startOfSegment.w) >
+      FLT_EPSILON) // check for axis aligned with camera direction
+  {
+    startOfSegment *= 1.f / startOfSegment.w;
+  }
+
+  vec_t endOfSegment = end;
+  endOfSegment.TransformPoint(mvp);
+  if (fabsf(endOfSegment.w) >
+      FLT_EPSILON) // check for axis aligned with camera direction
+  {
+    endOfSegment *= 1.f / endOfSegment.w;
+  }
+
+  vec_t clipSpaceAxis = endOfSegment - startOfSegment;
+  clipSpaceAxis.y /= mDisplayRatio;
+  float segmentLengthInClipSpace = sqrtf(clipSpaceAxis.x * clipSpaceAxis.x +
+                                         clipSpaceAxis.y * clipSpaceAxis.y);
+  return segmentLengthInClipSpace;
+}

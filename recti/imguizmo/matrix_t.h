@@ -135,3 +135,9 @@ LookAt(const float* eye, const float* at, const float* up, float* m16);
 
 ImVec2
 worldToPos(const vec_t& worldPos, const matrix_t& mat, const vec_t& screenRect);
+
+float
+GetSegmentLengthClipSpace(const vec_t& start,
+                          const vec_t& end,
+                          const matrix_t& mvp,
+                          float mDisplayRatio);

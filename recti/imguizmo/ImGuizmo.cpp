@@ -194,34 +194,6 @@ struct ContextImpl
 private:
   float height() const { return mHeight; }
 
-  float GetSegmentLengthClipSpace(const vec_t& start,
-                                  const vec_t& end,
-                                  const bool localCoordinates = false) const
-  {
-    vec_t startOfSegment = start;
-    const matrix_t& mvp = localCoordinates ? mMVPLocal : mMVP;
-    startOfSegment.TransformPoint(mvp);
-    if (fabsf(startOfSegment.w) >
-        FLT_EPSILON) // check for axis aligned with camera direction
-    {
-      startOfSegment *= 1.f / startOfSegment.w;
-    }
-
-    vec_t endOfSegment = end;
-    endOfSegment.TransformPoint(mvp);
-    if (fabsf(endOfSegment.w) >
-        FLT_EPSILON) // check for axis aligned with camera direction
-    {
-      endOfSegment *= 1.f / endOfSegment.w;
-    }
-
-    vec_t clipSpaceAxis = endOfSegment - startOfSegment;
-    clipSpaceAxis.y /= mDisplayRatio;
-    float segmentLengthInClipSpace = sqrtf(clipSpaceAxis.x * clipSpaceAxis.x +
-                                           clipSpaceAxis.y * clipSpaceAxis.y);
-    return segmentLengthInClipSpace;
-  }
-
   float GetParallelogram(const vec_t& ptO,
                          const vec_t& ptA,
                          const vec_t& ptB) const
@@ -246,13 +218,15 @@ private:
     return surface;
   }
 
+  // const matrix_t& mvp = localCoordinates ? mMVPLocal : mMVP;
+
   void ComputeTripodAxisAndVisibility(const int axisIndex,
                                       vec_t& dirAxis,
                                       vec_t& dirPlaneX,
                                       vec_t& dirPlaneY,
                                       bool& belowAxisLimit,
                                       bool& belowPlaneLimit,
-                                      const bool localCoordinates = false) const
+                                      const matrix_t& mvp) const
   {
     dirAxis = directionUnary[axisIndex];
     dirPlaneX = directionUnary[(axisIndex + 1) % 3];
@@ -269,20 +243,20 @@ private:
       dirPlaneY *= mAxisFactor[(axisIndex + 2) % 3];
     } else {
       // new method
-      float lenDir =
-        GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f }, dirAxis, localCoordinates);
+      float lenDir = GetSegmentLengthClipSpace(
+        { 0.f, 0.f, 0.f }, dirAxis, mvp, mDisplayRatio);
       float lenDirMinus = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, -dirAxis, localCoordinates);
+        { 0.f, 0.f, 0.f }, -dirAxis, mvp, mDisplayRatio);
 
       float lenDirPlaneX = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirPlaneX, localCoordinates);
+        { 0.f, 0.f, 0.f }, dirPlaneX, mvp, mDisplayRatio);
       float lenDirMinusPlaneX = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, -dirPlaneX, localCoordinates);
+        { 0.f, 0.f, 0.f }, -dirPlaneX, mvp, mDisplayRatio);
 
       float lenDirPlaneY = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirPlaneY, localCoordinates);
+        { 0.f, 0.f, 0.f }, dirPlaneY, mvp, mDisplayRatio);
       float lenDirMinusPlaneY = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, -dirPlaneY, localCoordinates);
+        { 0.f, 0.f, 0.f }, -dirPlaneY, mvp, mDisplayRatio);
 
       // For readability
       float mulAxis = (mAllowAxisFlip && lenDir < lenDirMinus &&
@@ -303,7 +277,7 @@ private:
 
       // for axis
       float axisLengthInClipSpace = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirAxis * mScreenFactor, localCoordinates);
+        { 0.f, 0.f, 0.f }, dirAxis * mScreenFactor, mvp, mDisplayRatio);
 
       float paraSurf = GetParallelogram({ 0.f, 0.f, 0.f },
                                         dirPlaneX * mScreenFactor,
@@ -342,8 +316,13 @@ private:
     for (int i = 0; i < 3 && type == MT_NONE; i++) {
       vec_t dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
-      ComputeTripodAxisAndVisibility(
-        i, dirAxis, dirPlaneX, dirPlaneY, belowAxisLimit, belowPlaneLimit);
+      ComputeTripodAxisAndVisibility(i,
+                                     dirAxis,
+                                     dirPlaneX,
+                                     dirPlaneY,
+                                     belowAxisLimit,
+                                     belowPlaneLimit,
+                                     mMVP);
       dirAxis.TransformVector(mModel);
       dirPlaneX.TransformVector(mModel);
       dirPlaneY.TransformVector(mModel);
@@ -476,7 +455,7 @@ private:
                                      dirPlaneY,
                                      belowAxisLimit,
                                      belowPlaneLimit,
-                                     true);
+                                     mMVPLocal);
       dirAxis.TransformVector(mModelLocal);
       dirPlaneX.TransformVector(mModelLocal);
       dirPlaneY.TransformVector(mModelLocal);
@@ -532,7 +511,7 @@ private:
                                      dirPlaneY,
                                      belowAxisLimit,
                                      belowPlaneLimit,
-                                     true);
+                                     mMVPLocal);
 
       // draw axis
       if (belowAxisLimit) {
@@ -795,8 +774,8 @@ private:
 
     vec_t rightViewInverse = viewInverse.right();
     rightViewInverse.TransformVector(this->mModelInverse);
-    float rightLength =
-      GetSegmentLengthClipSpace({ 0.f, 0.f }, rightViewInverse);
+    float rightLength = GetSegmentLengthClipSpace(
+      { 0.f, 0.f }, rightViewInverse, mMVP, mDisplayRatio);
     this->mScreenFactor = this->mGizmoSizeClipSpace / rightLength;
 
     ImVec2 centerSSpace = worldToPos({ 0.f, 0.f }, this->mMVP);
@@ -917,7 +896,7 @@ private:
                                        dirPlaneY,
                                        belowAxisLimit,
                                        belowPlaneLimit,
-                                       true);
+                                       mMVPLocal);
 
         // draw axis
         if (belowAxisLimit) {
@@ -1140,7 +1119,7 @@ private:
                                        dirPlaneY,
                                        belowAxisLimit,
                                        belowPlaneLimit,
-                                       true);
+                                       mMVPLocal);
 
         // draw axis
         if (belowAxisLimit) {
@@ -1232,8 +1211,13 @@ private:
     bool belowPlaneLimit = false;
     for (int i = 0; i < 3; ++i) {
       vec_t dirPlaneX, dirPlaneY, dirAxis;
-      ComputeTripodAxisAndVisibility(
-        i, dirAxis, dirPlaneX, dirPlaneY, belowAxisLimit, belowPlaneLimit);
+      ComputeTripodAxisAndVisibility(i,
+                                     dirAxis,
+                                     dirPlaneX,
+                                     dirPlaneY,
+                                     belowAxisLimit,
+                                     belowPlaneLimit,
+                                     mMVP);
 
       if (!mbUsing || (mbUsing && type == MT_MOVE_X + i)) {
         // draw axis
