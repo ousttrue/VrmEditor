@@ -1,6 +1,5 @@
 #include "recti.h"
 #include "imguizmo/ImGuizmo.h"
-#include <imgui.h>
 #include <memory>
 #include <stdint.h>
 
@@ -47,6 +46,8 @@ struct ScreenImpl
                   const float* projection,
                   const Operation& operation,
                   float* matrix,
+                  const Vec2& mousePos,
+                  bool mouseLeftDown,
                   float* deltaMatrix,
                   const float* snap,
                   const float* localBounds,
@@ -58,6 +59,8 @@ struct ScreenImpl
                                   ToOperation(operation),
                                   ToMode(operation),
                                   matrix,
+                                  mousePos,
+                                  mouseLeftDown,
                                   deltaMatrix,
                                   snap,
                                   localBounds,
@@ -92,6 +95,8 @@ Screen::Manipulate(void* id,
                    const float* projection,
                    const Operation& operation,
                    float* matrix,
+                   const Vec2& mousePos,
+                   bool mouseLeftDown,
                    float* deltaMatrix,
                    const float* snap,
                    const float* localBounds,
@@ -102,6 +107,8 @@ Screen::Manipulate(void* id,
                             projection,
                             operation,
                             matrix,
+                            mousePos,
+                            mouseLeftDown,
                             deltaMatrix,
                             snap,
                             localBounds,

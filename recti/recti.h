@@ -26,6 +26,8 @@ public:
                   const float* projection,
                   const Operation& operation,
                   float* matrix,
+                  const Vec2& mousePos,
+                  bool mouseLeftDown,
                   float* deltaMatrix = nullptr,
                   const float* snap = nullptr,
                   const float* localBounds = nullptr,

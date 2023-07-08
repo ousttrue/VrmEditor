@@ -97,6 +97,7 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
       enableTranslation = true;
     }
 
+    auto& io = ImGui::GetIO();
     auto& vp = camera.Projection.Viewport;
     m_screen->SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
     if (m_screen->Manipulate(node.get(),
@@ -104,6 +105,8 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
                              &camera.ProjectionMatrix._11,
                              { enableTranslation, true, false, true },
                              (float*)&m,
+                             io.MousePos,
+                             io.MouseDown[0],
                              nullptr,
                              nullptr,
                              nullptr,
@@ -175,6 +178,7 @@ SceneRenderer::RenderRuntime(
       enableTranslation = true;
     }
 
+    auto& io = ImGui::GetIO();
     auto& vp = camera.Projection.Viewport;
     m_screen->SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
     if (m_screen->Manipulate(node.get(),
@@ -182,6 +186,8 @@ SceneRenderer::RenderRuntime(
                              &camera.ProjectionMatrix._11,
                              { enableTranslation, true, false, true },
                              (float*)&m,
+                             io.MousePos,
+                             io.MouseDown[0],
                              nullptr,
                              nullptr,
                              nullptr,

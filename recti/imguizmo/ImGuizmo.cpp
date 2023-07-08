@@ -24,8 +24,10 @@
 // SOFTWARE.
 //
 
+#include "../vec2.h"
 #include "matrix_t.h"
 #include "vec_t.h"
+#include <assert.h>
 #include <cfloat>
 #include <memory>
 #include <numbers>
@@ -33,6 +35,36 @@
 #include <string>
 #include <variant>
 #include <vector>
+
+static inline float
+ImSaturate(float f)
+{
+  return (f < 0.0f) ? 0.0f : (f > 1.0f) ? 1.0f : f;
+}
+#define IM_F32_TO_INT8_SAT(_VAL)                                               \
+  ((int)(ImSaturate(_VAL) * 255.0f + 0.5f)) // Saturated, always output 0..255
+uint32_t
+ColorConvertFloat4ToU32(const vec_t& in)
+{
+  uint32_t out;
+  out = ((uint32_t)IM_F32_TO_INT8_SAT(in.x)) << 0;
+  out |= ((uint32_t)IM_F32_TO_INT8_SAT(in.y)) << 8;
+  out |= ((uint32_t)IM_F32_TO_INT8_SAT(in.z)) << 16;
+  out |= ((uint32_t)IM_F32_TO_INT8_SAT(in.w)) << 24;
+  return out;
+}
+
+#define IM_COL32_R_SHIFT 0
+#define IM_COL32_G_SHIFT 8
+#define IM_COL32_B_SHIFT 16
+#define IM_COL32_A_SHIFT 24
+#define IM_COL32_A_MASK 0xFF000000
+#define IM_COL32(R, G, B, A)                                                   \
+  (((uint32_t)(A) << IM_COL32_A_SHIFT) | ((uint32_t)(B) << IM_COL32_B_SHIFT) | \
+   ((uint32_t)(G) << IM_COL32_G_SHIFT) | ((uint32_t)(R) << IM_COL32_R_SHIFT))
+
+const auto IM_COL32_WHITE = ColorConvertFloat4ToU32({ 1, 1, 1, 1 });
+const auto IM_COL32_BLACK = ColorConvertFloat4ToU32({ 0, 0, 0, 1 });
 
 // Matches MT_MOVE_AB order
 static const char* translationInfoMask[] = { "X : %5.3f",
@@ -126,7 +158,7 @@ struct Style
   // Size of circle at the center of the translate/scale gizmo
   float CenterCircleSize = 6.0f;
 
-  RGBA Colors[COLOR::COUNT] = {
+  vec_t Colors[COLOR::COUNT] = {
     { 0.666f, 0.000f, 0.000f, 1.000f }, { 0.000f, 0.666f, 0.000f, 1.000f },
     { 0.000f, 0.000f, 0.666f, 1.000f }, { 0.666f, 0.000f, 0.000f, 0.380f },
     { 0.000f, 0.666f, 0.000f, 0.380f }, { 0.000f, 0.000f, 0.666f, 0.380f },
@@ -138,12 +170,7 @@ struct Style
   };
 };
 
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif
 #include "ImGuizmo.h"
-#include "imgui.h"
-#include "imgui_internal.h"
 
 namespace ImGuizmo {
 
@@ -236,9 +263,9 @@ class ContextImpl
   vec_t mRayVector;
 
   float mRadiusSquareCenter;
-  ImVec2 mScreenSquareCenter;
-  ImVec2 mScreenSquareMin;
-  ImVec2 mScreenSquareMax;
+  recti::Vec2 mScreenSquareCenter;
+  recti::Vec2 mScreenSquareMin;
+  recti::Vec2 mScreenSquareMax;
 
   float mScreenFactor;
   vec_t mRelativeOrigin;
@@ -386,7 +413,9 @@ private:
     }
   }
 
-  MOVETYPE GetMoveType(OPERATION op, const vec_t& screenCoord) const
+  MOVETYPE GetMoveType(OPERATION op,
+                       const vec_t& screenCoord,
+                       const recti::Vec2& mousePos) const
   {
     if (!Intersects(op, TRANSLATE) || mState.mbUsing) {
       return MT_NONE;
@@ -395,11 +424,10 @@ private:
     MOVETYPE type = MT_NONE;
 
     // screen
-    ImGuiIO& io = ImGui::GetIO();
-    if (io.MousePos.x >= mScreenSquareMin.x &&
-        io.MousePos.x <= mScreenSquareMax.x &&
-        io.MousePos.y >= mScreenSquareMin.y &&
-        io.MousePos.y <= mScreenSquareMax.y && Contains(op, TRANSLATE)) {
+    // ImGuiIO& io = ImGui::GetIO();
+    if (mousePos.X >= mScreenSquareMin.X && mousePos.X <= mScreenSquareMax.X &&
+        mousePos.Y >= mScreenSquareMin.Y && mousePos.Y <= mScreenSquareMax.Y &&
+        Contains(op, TRANSLATE)) {
       type = MT_MOVE_SCREEN;
     }
 
@@ -423,19 +451,19 @@ private:
         mRayOrigin, mRayVector, BuildPlan(mModel.position(), dirAxis));
       vec_t posOnPlan = mRayOrigin + mRayVector * len;
 
-      const ImVec2 axisStartOnScreen =
+      const recti::Vec2 axisStartOnScreen =
         worldToPos(mModel.position() + dirAxis * mScreenFactor * 0.1f,
                    mViewProjection) -
         leftTop();
-      const ImVec2 axisEndOnScreen =
+      const recti::Vec2 axisEndOnScreen =
         worldToPos(mModel.position() + dirAxis * mScreenFactor,
                    mViewProjection) -
         leftTop();
 
       vec_t closestPointOnAxis =
         PointOnSegment(screenCoord,
-                       { axisStartOnScreen.x, axisStartOnScreen.y },
-                       { axisEndOnScreen.x, axisEndOnScreen.y });
+                       { axisStartOnScreen.X, axisStartOnScreen.Y },
+                       { axisEndOnScreen.X, axisEndOnScreen.Y });
       if ((closestPointOnAxis - screenCoord).Length() < 12.f &&
           Intersects(op,
                      static_cast<OPERATION>(TRANSLATE_X << i))) // pixel size
@@ -457,16 +485,16 @@ private:
   }
 
   MOVETYPE
-  GetRotateType(OPERATION op) const
+  GetRotateType(OPERATION op, const recti::Vec2& mousePos) const
   {
     if (mState.mbUsing) {
       return MT_NONE;
     }
-    ImGuiIO& io = ImGui::GetIO();
+    // ImGuiIO& io = ImGui::GetIO();
     MOVETYPE type = MT_NONE;
 
-    vec_t deltaScreen = { io.MousePos.x - mScreenSquareCenter.x,
-                          io.MousePos.y - mScreenSquareCenter.y,
+    vec_t deltaScreen = { mousePos.X - mScreenSquareCenter.X,
+                          mousePos.Y - mScreenSquareCenter.Y,
                           0.f,
                           0.f };
     float dist = deltaScreen.Length();
@@ -492,20 +520,20 @@ private:
       vec_t intersectViewPos;
       intersectViewPos.TransformPoint(intersectWorldPos, mViewMat);
 
-      if (ImAbs(modelViewPos.z) - ImAbs(intersectViewPos.z) < -FLT_EPSILON) {
+      if (fabs(modelViewPos.z) - fabs(intersectViewPos.z) < -FLT_EPSILON) {
         continue;
       }
 
       const vec_t localPos = intersectWorldPos - mModel.position();
       vec_t idealPosOnCircle = Normalized(localPos);
       idealPosOnCircle.TransformVector(mModelInverse);
-      const ImVec2 idealPosOnCircleScreen = worldToPos(
+      const recti::Vec2 idealPosOnCircleScreen = worldToPos(
         idealPosOnCircle * ROTATION_DISPLAY_FACTOR * mScreenFactor, mMVP);
 
-      const ImVec2 distanceOnScreen = idealPosOnCircleScreen - io.MousePos;
+      const recti::Vec2 distanceOnScreen = idealPosOnCircleScreen - mousePos;
 
       const float distance =
-        vec_t{ distanceOnScreen.x, distanceOnScreen.y }.Length();
+        vec_t{ distanceOnScreen.X, distanceOnScreen.Y }.Length();
       if (distance < 8.f) // pixel size
       {
         type = (MOVETYPE)(MT_ROTATE_X + i);
@@ -515,19 +543,18 @@ private:
     return type;
   }
 
-  MOVETYPE GetScaleType(OPERATION op) const
+  MOVETYPE GetScaleType(OPERATION op, const recti::Vec2& mousePos) const
   {
     if (mState.mbUsing) {
       return MT_NONE;
     }
-    ImGuiIO& io = ImGui::GetIO();
+    // ImGuiIO& io = ImGui::GetIO();
     MOVETYPE type = MT_NONE;
 
     // screen
-    if (io.MousePos.x >= mScreenSquareMin.x &&
-        io.MousePos.x <= mScreenSquareMax.x &&
-        io.MousePos.y >= mScreenSquareMin.y &&
-        io.MousePos.y <= mScreenSquareMax.y && Contains(op, SCALE)) {
+    if (mousePos.X >= mScreenSquareMin.X && mousePos.X <= mScreenSquareMax.X &&
+        mousePos.Y >= mScreenSquareMin.Y && mousePos.Y <= mScreenSquareMax.Y &&
+        Contains(op, SCALE)) {
       type = MT_SCALE_XYZ;
     }
 
@@ -558,20 +585,21 @@ private:
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.0f : 0.1f;
       const float endOffset =
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.4f : 1.0f;
-      const ImVec2 posOnPlanScreen = worldToPos(posOnPlan, mViewProjection);
-      const ImVec2 axisStartOnScreen = worldToPos(
+      const recti::Vec2 posOnPlanScreen =
+        worldToPos(posOnPlan, mViewProjection);
+      const recti::Vec2 axisStartOnScreen = worldToPos(
         mModelLocal.position() + dirAxis * mScreenFactor * startOffset,
         mViewProjection);
-      const ImVec2 axisEndOnScreen =
+      const recti::Vec2 axisEndOnScreen =
         worldToPos(mModelLocal.position() + dirAxis * mScreenFactor * endOffset,
                    mViewProjection);
 
       vec_t closestPointOnAxis =
-        PointOnSegment({ posOnPlanScreen.x, posOnPlanScreen.y },
-                       { axisStartOnScreen.x, axisStartOnScreen.y },
-                       { axisEndOnScreen.x, axisEndOnScreen.y });
+        PointOnSegment({ posOnPlanScreen.X, posOnPlanScreen.Y },
+                       { axisStartOnScreen.X, axisStartOnScreen.Y },
+                       { axisEndOnScreen.X, axisEndOnScreen.Y });
 
-      if ((closestPointOnAxis - vec_t{ posOnPlanScreen.x, posOnPlanScreen.y })
+      if ((closestPointOnAxis - vec_t{ posOnPlanScreen.X, posOnPlanScreen.Y })
             .Length() < 12.f) // pixel size
       {
         type = (MOVETYPE)(MT_SCALE_X + i);
@@ -580,8 +608,8 @@ private:
 
     // universal
 
-    vec_t deltaScreen = { io.MousePos.x - mScreenSquareCenter.x,
-                          io.MousePos.y - mScreenSquareCenter.y,
+    vec_t deltaScreen = { mousePos.X - mScreenSquareCenter.X,
+                          mousePos.Y - mScreenSquareCenter.Y,
                           0.f,
                           0.f };
     float dist = deltaScreen.Length();
@@ -610,14 +638,14 @@ private:
         bool hasTranslateOnAxis =
           Contains(op, static_cast<OPERATION>(TRANSLATE_X << i));
         float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-        // ImVec2 baseSSpace = worldToPos(dirAxis * 0.1f *
-        // mScreenFactor, mMVPLocal); ImVec2
+        // recti::Vec2 baseSSpace = worldToPos(dirAxis * 0.1f *
+        // mScreenFactor, mMVPLocal); recti::Vec2
         // worldDirSSpaceNoScale = worldToPos(dirAxis
         // * markerScale * mScreenFactor, mMVP);
-        ImVec2 worldDirSSpace =
+        recti::Vec2 worldDirSSpace =
           worldToPos((dirAxis * markerScale) * mScreenFactor, mMVPLocal);
 
-        float distance = sqrtf(ImLengthSqr(worldDirSSpace - io.MousePos));
+        float distance = sqrtf((worldDirSSpace - mousePos).SqrLength());
         if (distance < 12.f) {
           type = (MOVETYPE)(MT_SCALE_X + i);
         }
@@ -628,31 +656,32 @@ private:
 
   // return true if mouse cursor is over any gizmo control (axis, plan or screen
   // component)
-  bool IsOver() const
+  bool IsOver(const recti::Vec2& mousePos) const
   {
     return (Intersects(mOperation, TRANSLATE) &&
-            GetMoveType(mOperation, screenCoord()) != MT_NONE) ||
+            GetMoveType(mOperation, screenCoord(mousePos), mousePos) !=
+              MT_NONE) ||
            (Intersects(mOperation, ROTATE) &&
-            GetRotateType(mOperation) != MT_NONE) ||
+            GetRotateType(mOperation, mousePos) != MT_NONE) ||
            (Intersects(mOperation, SCALE) &&
-            GetScaleType(mOperation) != MT_NONE) ||
+            GetScaleType(mOperation, mousePos) != MT_NONE) ||
            IsUsing();
   }
 
   // return true if the cursor is over the operation's gizmo
-  bool IsOver(OPERATION op) const
+  bool IsOver(OPERATION op, const recti::Vec2& mousePos) const
   {
     if (IsUsing()) {
       return true;
     }
-    if (Intersects(op, SCALE) && GetScaleType(op) != MT_NONE) {
+    if (Intersects(op, SCALE) && GetScaleType(op, mousePos) != MT_NONE) {
       return true;
     }
-    if (Intersects(op, ROTATE) && GetRotateType(op) != MT_NONE) {
+    if (Intersects(op, ROTATE) && GetRotateType(op, mousePos) != MT_NONE) {
       return true;
     }
     if (Intersects(op, TRANSLATE) &&
-        GetMoveType(op, screenCoord()) != MT_NONE) {
+        GetMoveType(op, screenCoord(mousePos), mousePos) != MT_NONE) {
       return true;
     }
     return false;
@@ -661,35 +690,36 @@ private:
   // return true if mouse IsOver or if the gizmo is in moving state
   bool IsUsing() const { return mState.Using() || mbUsingBounds; }
 
-  bool CanActivate() const
+  bool CanActivate(bool mouseLeftDown) const
   {
-    if (ImGui::IsMouseClicked(0)) {
-      if (mAllowActiveHoverItem) {
-        return true;
-      } else {
-        if (!ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive()) {
-          return true;
-        }
-      }
-    }
-    return false;
+    // if (mouseLeftDown /*ImGui::IsMouseClicked(0)*/) {
+    //   if (mAllowActiveHoverItem) {
+    //     return true;
+    //   } else {
+    //     if (!ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive()) {
+    //       return true;
+    //     }
+    //   }
+    // }
+    // return false;
+    return mouseLeftDown;
   }
 
-  ImVec2 leftTop() const { return { mX, mY }; }
-  ImVec2 size() const { return { mWidth, mHeight }; }
-  bool IsInContextRect(const ImVec2& p) const
+  recti::Vec2 leftTop() const { return { mX, mY }; }
+  recti::Vec2 size() const { return { mWidth, mHeight }; }
+  bool IsInContextRect(const recti::Vec2& p) const
   {
-    return IsWithin(p.x, mX, mXMax) && IsWithin(p.y, mY, mYMax);
+    return IsWithin(p.X, mX, mXMax) && IsWithin(p.Y, mY, mYMax);
   }
 
-  vec_t screenCoord() const
+  vec_t screenCoord(const recti::Vec2& mousePos) const
   {
-    ImGuiIO& io = ImGui::GetIO();
-    auto rel = io.MousePos - leftTop();
-    return { rel.x, rel.y };
+    // ImGuiIO& io = ImGui::GetIO();
+    auto rel = mousePos - leftTop();
+    return { rel.X, rel.Y };
   }
 
-  ImVec2 worldToPos(const vec_t& worldPos, const matrix_t& mat) const
+  recti::Vec2 worldToPos(const vec_t& worldPos, const matrix_t& mat) const
   {
     auto [x, y] = ::worldToPos(worldPos, mat, { mX, mY, mWidth, mHeight });
     return { x, y };
@@ -698,7 +728,8 @@ private:
   void ComputeContext(const float* view,
                       const float* projection,
                       float* matrix,
-                      MODE mode)
+                      MODE mode,
+                      const recti::Vec2& mousePos)
   {
     this->mMode = mode;
     this->mViewMat = *(matrix_t*)view;
@@ -752,19 +783,18 @@ private:
       { 0.f, 0.f }, rightViewInverse, mMVP, mDisplayRatio);
     this->mScreenFactor = this->mGizmoSizeClipSpace / rightLength;
 
-    ImVec2 centerSSpace = worldToPos({ 0.f, 0.f }, this->mMVP);
+    recti::Vec2 centerSSpace = worldToPos({ 0.f, 0.f }, this->mMVP);
     this->mScreenSquareCenter = centerSSpace;
-    this->mScreenSquareMin =
-      ImVec2(centerSSpace.x - 10.f, centerSSpace.y - 10.f);
-    this->mScreenSquareMax =
-      ImVec2(centerSSpace.x + 10.f, centerSSpace.y + 10.f);
+    this->mScreenSquareMin = centerSSpace - recti::Vec2{ 10.f, 10.f };
+    this->mScreenSquareMax = centerSSpace + recti::Vec2{ 10.f, 10.f };
 
-    ComputeCameraRay(this->mRayOrigin, this->mRayVector);
+    ComputeCameraRay(this->mRayOrigin, this->mRayVector, mousePos);
   }
-  void ComputeColors(ImU32* colors, int type, OPERATION operation)
+
+  void ComputeColors(uint32_t* colors, int type, OPERATION operation)
   {
     if (mbEnable) {
-      ImU32 selectionColor = GetColorU32(SELECTION);
+      uint32_t selectionColor = GetColorU32(SELECTION);
 
       switch (operation) {
         case TRANSLATE:
@@ -805,17 +835,17 @@ private:
           break;
       }
     } else {
-      ImU32 inactiveColor = GetColorU32(INACTIVE);
+      uint32_t inactiveColor = GetColorU32(INACTIVE);
       for (int i = 0; i < 7; i++) {
         colors[i] = inactiveColor;
       }
     }
   }
 
-  ImU32 GetColorU32(int idx) const
+  uint32_t GetColorU32(int idx) const
   {
-    IM_ASSERT(idx < COLOR::COUNT);
-    return ImGui::ColorConvertFloat4ToU32(*((ImVec4*)&mStyle.Colors[idx]));
+    assert(idx < COLOR::COUNT);
+    return ColorConvertFloat4ToU32(mStyle.Colors[idx]);
   }
 
   void DrawHatchedAxis(const vec_t& axis)
@@ -825,9 +855,9 @@ private:
     }
 
     for (int j = 1; j < 10; j++) {
-      ImVec2 baseSSpace2 =
+      recti::Vec2 baseSSpace2 =
         worldToPos(axis * 0.05f * (float)(j * 2) * mScreenFactor, mMVP);
-      ImVec2 worldDirSSpace2 =
+      recti::Vec2 worldDirSSpace2 =
         worldToPos(axis * 0.05f * (float)(j * 2 + 1) * mScreenFactor, mMVP);
       mDrawList->AddLine(baseSSpace2,
                          worldDirSSpace2,
@@ -845,7 +875,7 @@ private:
     }
 
     // colors
-    ImU32 colors[7];
+    uint32_t colors[7];
     ComputeColors(colors, type, SCALE);
 
     // draw
@@ -877,14 +907,15 @@ private:
           bool hasTranslateOnAxis =
             Contains(op, static_cast<OPERATION>(TRANSLATE_X << i));
           float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-          ImVec2 baseSSpace = worldToPos(dirAxis * 0.1f * mScreenFactor, mMVP);
-          ImVec2 worldDirSSpaceNoScale =
+          recti::Vec2 baseSSpace =
+            worldToPos(dirAxis * 0.1f * mScreenFactor, mMVP);
+          recti::Vec2 worldDirSSpaceNoScale =
             worldToPos(dirAxis * markerScale * mScreenFactor, mMVP);
-          ImVec2 worldDirSSpace = worldToPos(
+          recti::Vec2 worldDirSSpace = worldToPos(
             (dirAxis * markerScale * scaleDisplay[i]) * mScreenFactor, mMVP);
 
           if (mState.Using()) {
-            ImU32 scaleLineColor = GetColorU32(SCALE_LINE);
+            uint32_t scaleLineColor = GetColorU32(SCALE_LINE);
             drawList->AddLine(baseSSpace,
                               worldDirSSpaceNoScale,
                               scaleLineColor,
@@ -915,35 +946,35 @@ private:
       mScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
 
     if (mState.Using() && IsScaleType(type)) {
-      // ImVec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
+      // recti::Vec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
       // mViewProjection);
-      ImVec2 destinationPosOnScreen =
+      recti::Vec2 destinationPosOnScreen =
         worldToPos(mModel.position(), mViewProjection);
       /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
       destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
       *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f,
       translationLineColor); drawList->AddCircle(destinationPosOnScreen, 6.f,
-      translationLineColor); drawList->AddLine(ImVec2(sourcePosOnScreen.x +
+      translationLineColor); drawList->AddLine(recti::Vec2(sourcePosOnScreen.x +
       dif.x, sourcePosOnScreen.y
-      + dif.y), ImVec2(destinationPosOnScreen.x - dif.x,
+      + dif.y), recti::Vec2(destinationPosOnScreen.x - dif.x,
       destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
       */
       char tmps[512];
       // vec_t deltaInfo = mModel.position() -
       // mMatrixOrigin;
       int componentInfoIndex = (type - MT_SCALE_X) * 3;
-      ImFormatString(tmps,
-                     sizeof(tmps),
-                     scaleInfoMask[type - MT_SCALE_X],
-                     scaleDisplay[translationInfoIndex[componentInfoIndex]]);
-      drawList->AddText(
-        ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
-        GetColorU32(TEXT_SHADOW),
-        tmps);
-      drawList->AddText(
-        ImVec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
-        GetColorU32(TEXT),
-        tmps);
+      snprintf(tmps,
+               sizeof(tmps),
+               scaleInfoMask[type - MT_SCALE_X],
+               scaleDisplay[translationInfoIndex[componentInfoIndex]]);
+      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
+                                    destinationPosOnScreen.Y + 15),
+                        GetColorU32(TEXT_SHADOW),
+                        tmps);
+      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
+                                    destinationPosOnScreen.Y + 14),
+                        GetColorU32(TEXT),
+                        tmps);
     }
   }
 
@@ -955,7 +986,7 @@ private:
     auto drawList = mDrawList;
 
     // colors
-    ImU32 colors[7];
+    uint32_t colors[7];
     ComputeColors(colors, type, ROTATE);
 
     vec_t cameraToModelNormalized;
@@ -979,8 +1010,8 @@ private:
       const bool usingAxis = (mState.mbUsing && type == MT_ROTATE_Z - axis);
       const int circleMul = (hasRSC && !usingAxis) ? 1 : 2;
 
-      ImVec2* circlePos = (ImVec2*)alloca(
-        sizeof(ImVec2) * (circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1));
+      recti::Vec2* circlePos = (recti::Vec2*)alloca(
+        sizeof(recti::Vec2) * (circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1));
 
       float angleStart = atan2f(cameraToModelNormalized[(4 - axis) % 3],
                                 cameraToModelNormalized[(3 - axis) % 3]) +
@@ -1005,8 +1036,9 @@ private:
                               mStyle.RotationLineThickness);
       }
 
-      float radiusAxis = sqrtf((ImLengthSqr(
-        worldToPos(mModel.position(), mViewProjection) - circlePos[0])));
+      float radiusAxis =
+        sqrtf((worldToPos(mModel.position(), mViewProjection) - circlePos[0])
+                .SqrLength());
       if (radiusAxis > mRadiusSquareCenter) {
         mRadiusSquareCenter = radiusAxis;
       }
@@ -1020,7 +1052,7 @@ private:
     }
 
     if (mState.Using() && IsRotateType(type)) {
-      ImVec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
+      recti::Vec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
 
       circlePos[0] = worldToPos(mModel.position(), mViewProjection);
       for (unsigned int i = 1; i < HALF_CIRCLE_SEGMENT_COUNT; i++) {
@@ -1042,21 +1074,21 @@ private:
                             true,
                             mStyle.RotationLineThickness);
 
-      ImVec2 destinationPosOnScreen = circlePos[1];
+      recti::Vec2 destinationPosOnScreen = circlePos[1];
       char tmps[512];
-      ImFormatString(tmps,
-                     sizeof(tmps),
-                     rotationInfoMask[type - MT_ROTATE_X],
-                     (mRotationAngle / std::numbers::pi) * 180.f,
-                     mRotationAngle);
-      drawList->AddText(
-        ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
-        GetColorU32(TEXT_SHADOW),
-        tmps);
-      drawList->AddText(
-        ImVec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
-        GetColorU32(TEXT),
-        tmps);
+      snprintf(tmps,
+               sizeof(tmps),
+               rotationInfoMask[type - MT_ROTATE_X],
+               (mRotationAngle / std::numbers::pi) * 180.f,
+               mRotationAngle);
+      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
+                                    destinationPosOnScreen.Y + 15),
+                        GetColorU32(TEXT_SHADOW),
+                        tmps);
+      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
+                                    destinationPosOnScreen.Y + 14),
+                        GetColorU32(TEXT),
+                        tmps);
     }
   }
 
@@ -1069,7 +1101,7 @@ private:
     }
 
     // colors
-    ImU32 colors[7];
+    uint32_t colors[7];
     ComputeColors(colors, type, SCALEU);
 
     // draw
@@ -1101,11 +1133,11 @@ private:
           bool hasTranslateOnAxis =
             Contains(op, static_cast<OPERATION>(TRANSLATE_X << i));
           float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-          // ImVec2 baseSSpace = worldToPos(dirAxis * 0.1f *
-          // mScreenFactor, mMVPLocal); ImVec2
+          // recti::Vec2 baseSSpace = worldToPos(dirAxis * 0.1f *
+          // mScreenFactor, mMVPLocal); recti::Vec2
           // worldDirSSpaceNoScale = worldToPos(dirAxis * markerScale *
           // mScreenFactor, mMVP);
-          ImVec2 worldDirSSpace = worldToPos(
+          recti::Vec2 worldDirSSpace = worldToPos(
             (dirAxis * markerScale * scaleDisplay[i]) * mScreenFactor,
             mMVPLocal);
 
@@ -1132,34 +1164,35 @@ private:
       mScreenSquareCenter, 20.f, colors[0], 32, mStyle.CenterCircleSize);
 
     if (mState.Using() && IsScaleType(type)) {
-      // ImVec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
+      // recti::Vec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
       // mViewProjection);
-      ImVec2 destinationPosOnScreen =
+      recti::Vec2 destinationPosOnScreen =
         worldToPos(mModel.position(), mViewProjection);
       /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
       destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
       *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
       drawList->AddCircle(destinationPosOnScreen, 6.f, translationLineColor);
-      drawList->AddLine(ImVec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y
-      + dif.y), ImVec2(destinationPosOnScreen.x - dif.x,
+      drawList->AddLine(recti::Vec2(sourcePosOnScreen.x + dif.x,
+      sourcePosOnScreen.y
+      + dif.y), recti::Vec2(destinationPosOnScreen.x - dif.x,
       destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
       */
       char tmps[512];
       // vec_t deltaInfo = mModel.position() -
       // mMatrixOrigin;
       int componentInfoIndex = (type - MT_SCALE_X) * 3;
-      ImFormatString(tmps,
-                     sizeof(tmps),
-                     scaleInfoMask[type - MT_SCALE_X],
-                     scaleDisplay[translationInfoIndex[componentInfoIndex]]);
-      drawList->AddText(
-        ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
-        GetColorU32(TEXT_SHADOW),
-        tmps);
-      drawList->AddText(
-        ImVec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
-        GetColorU32(TEXT),
-        tmps);
+      snprintf(tmps,
+               sizeof(tmps),
+               scaleInfoMask[type - MT_SCALE_X],
+               scaleDisplay[translationInfoIndex[componentInfoIndex]]);
+      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
+                                    destinationPosOnScreen.Y + 15),
+                        GetColorU32(TEXT_SHADOW),
+                        tmps);
+      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
+                                    destinationPosOnScreen.Y + 14),
+                        GetColorU32(TEXT),
+                        tmps);
     }
   }
 
@@ -1175,10 +1208,10 @@ private:
     }
 
     // colors
-    ImU32 colors[7];
+    uint32_t colors[7];
     ComputeColors(colors, type, TRANSLATE);
 
-    const ImVec2 origin = worldToPos(mModel.position(), mViewProjection);
+    const recti::Vec2 origin = worldToPos(mModel.position(), mViewProjection);
 
     // draw
     bool belowAxisLimit = false;
@@ -1198,8 +1231,10 @@ private:
         // draw axis
         if (belowAxisLimit &&
             Intersects(op, static_cast<OPERATION>(TRANSLATE_X << i))) {
-          ImVec2 baseSSpace = worldToPos(dirAxis * 0.1f * mScreenFactor, mMVP);
-          ImVec2 worldDirSSpace = worldToPos(dirAxis * mScreenFactor, mMVP);
+          recti::Vec2 baseSSpace =
+            worldToPos(dirAxis * 0.1f * mScreenFactor, mMVP);
+          recti::Vec2 worldDirSSpace =
+            worldToPos(dirAxis * mScreenFactor, mMVP);
 
           drawList->AddLine(baseSSpace,
                             worldDirSSpace,
@@ -1207,14 +1242,14 @@ private:
                             mStyle.TranslationLineThickness);
 
           // Arrow head begin
-          ImVec2 dir(origin - worldDirSSpace);
+          recti::Vec2 dir(origin - worldDirSSpace);
 
-          float d = sqrtf(ImLengthSqr(dir));
+          float d = sqrtf(dir.SqrLength());
           dir /= d; // Normalize
           dir *= mStyle.TranslationLineArrowSize;
 
-          ImVec2 ortogonalDir(dir.y, -dir.x); // Perpendicular vector
-          ImVec2 a(worldDirSSpace + dir);
+          recti::Vec2 ortogonalDir(dir.Y, -dir.X); // Perpendicular vector
+          recti::Vec2 a(worldDirSSpace + dir);
           drawList->AddTriangleFilled(worldDirSSpace - dir,
                                       a + ortogonalDir,
                                       a - ortogonalDir,
@@ -1229,7 +1264,7 @@ private:
       // draw plane
       if (!mState.mbUsing || (mState.mbUsing && type == MT_MOVE_YZ + i)) {
         if (belowPlaneLimit && Contains(op, TRANSLATE_PLANS[i])) {
-          ImVec2 screenQuadPts[4];
+          recti::Vec2 screenQuadPts[4];
           for (int j = 0; j < 4; ++j) {
             vec_t cornerWorldPos =
               (dirPlaneX * quadUV[j * 2] + dirPlaneY * quadUV[j * 2 + 1]) *
@@ -1251,13 +1286,14 @@ private:
       mScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
 
     if (mState.Using() && IsTranslateType(type)) {
-      ImU32 translationLineColor = GetColorU32(TRANSLATION_LINE);
+      uint32_t translationLineColor = GetColorU32(TRANSLATION_LINE);
 
-      ImVec2 sourcePosOnScreen = worldToPos(mMatrixOrigin, mViewProjection);
-      ImVec2 destinationPosOnScreen =
+      recti::Vec2 sourcePosOnScreen =
+        worldToPos(mMatrixOrigin, mViewProjection);
+      recti::Vec2 destinationPosOnScreen =
         worldToPos(mModel.position(), mViewProjection);
-      vec_t dif = { destinationPosOnScreen.x - sourcePosOnScreen.x,
-                    destinationPosOnScreen.y - sourcePosOnScreen.y,
+      vec_t dif = { destinationPosOnScreen.X - sourcePosOnScreen.X,
+                    destinationPosOnScreen.Y - sourcePosOnScreen.Y,
                     0.f,
                     0.f };
       dif.Normalize();
@@ -1265,38 +1301,40 @@ private:
       drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
       drawList->AddCircle(destinationPosOnScreen, 6.f, translationLineColor);
       drawList->AddLine(
-        ImVec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y + dif.y),
-        ImVec2(destinationPosOnScreen.x - dif.x,
-               destinationPosOnScreen.y - dif.y),
+        recti::Vec2(sourcePosOnScreen.X + dif.x, sourcePosOnScreen.Y + dif.y),
+        recti::Vec2(destinationPosOnScreen.X - dif.x,
+                    destinationPosOnScreen.Y - dif.y),
         translationLineColor,
         2.f);
 
       char tmps[512];
       vec_t deltaInfo = mModel.position() - mMatrixOrigin;
       int componentInfoIndex = (type - MT_MOVE_X) * 3;
-      ImFormatString(tmps,
-                     sizeof(tmps),
-                     translationInfoMask[type - MT_MOVE_X],
-                     deltaInfo[translationInfoIndex[componentInfoIndex]],
-                     deltaInfo[translationInfoIndex[componentInfoIndex + 1]],
-                     deltaInfo[translationInfoIndex[componentInfoIndex + 2]]);
-      drawList->AddText(
-        ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
-        GetColorU32(TEXT_SHADOW),
-        tmps);
-      drawList->AddText(
-        ImVec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
-        GetColorU32(TEXT),
-        tmps);
+      snprintf(tmps,
+               sizeof(tmps),
+               translationInfoMask[type - MT_MOVE_X],
+               deltaInfo[translationInfoIndex[componentInfoIndex]],
+               deltaInfo[translationInfoIndex[componentInfoIndex + 1]],
+               deltaInfo[translationInfoIndex[componentInfoIndex + 2]]);
+      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
+                                    destinationPosOnScreen.Y + 15),
+                        GetColorU32(TEXT_SHADOW),
+                        tmps);
+      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
+                                    destinationPosOnScreen.Y + 14),
+                        GetColorU32(TEXT),
+                        tmps);
     }
   }
 
   void HandleAndDrawLocalBounds(const float* bounds,
                                 matrix_t* matrix,
                                 const float* snapValues,
-                                OPERATION operation)
+                                OPERATION operation,
+                                const recti::Vec2& mousePos,
+                                bool mouseLeftDown)
   {
-    ImGuiIO& io = ImGui::GetIO();
+    // ImGuiIO& io = ImGui::GetIO();
     auto drawList = mDrawList;
 
     // compute best projection axis
@@ -1374,22 +1412,22 @@ private:
 
       matrix_t boundsMVP = mModelSource * mViewProjection;
       for (int i = 0; i < 4; i++) {
-        ImVec2 worldBound1 = worldToPos(aabb[i], boundsMVP);
-        ImVec2 worldBound2 = worldToPos(aabb[(i + 1) % 4], boundsMVP);
+        recti::Vec2 worldBound1 = worldToPos(aabb[i], boundsMVP);
+        recti::Vec2 worldBound2 = worldToPos(aabb[(i + 1) % 4], boundsMVP);
         if (!IsInContextRect(worldBound1) || !IsInContextRect(worldBound2)) {
           continue;
         }
-        float boundDistance = sqrtf(ImLengthSqr(worldBound1 - worldBound2));
+        float boundDistance = sqrtf((worldBound1 - worldBound2).SqrLength());
         int stepCount = (int)(boundDistance / 10.f);
         stepCount = min(stepCount, 1000);
         for (int j = 0; j < stepCount; j++) {
           float stepLength = 1.f / (float)stepCount;
           float t1 = (float)j * stepLength;
           float t2 = (float)j * stepLength + stepLength * 0.5f;
-          ImVec2 worldBoundSS1 =
-            ImLerp(worldBound1, worldBound2, ImVec2(t1, t1));
-          ImVec2 worldBoundSS2 =
-            ImLerp(worldBound1, worldBound2, ImVec2(t2, t2));
+          recti::Vec2 worldBoundSS1 =
+            Lerp(worldBound1, worldBound2, recti::Vec2(t1, t1));
+          recti::Vec2 worldBoundSS2 =
+            Lerp(worldBound1, worldBound2, recti::Vec2(t2, t2));
           // drawList->AddLine(worldBoundSS1, worldBoundSS2, IM_COL32(0, 0, 0,
           // 0)
           // + anchorAlpha, 3.f);
@@ -1399,24 +1437,24 @@ private:
                             2.f);
         }
         vec_t midPoint = (aabb[i] + aabb[(i + 1) % 4]) * 0.5f;
-        ImVec2 midBound = worldToPos(midPoint, boundsMVP);
+        recti::Vec2 midBound = worldToPos(midPoint, boundsMVP);
         static const float AnchorBigRadius = 8.f;
         static const float AnchorSmallRadius = 6.f;
-        bool overBigAnchor = ImLengthSqr(worldBound1 - io.MousePos) <=
+        bool overBigAnchor = (worldBound1 - mousePos).SqrLength() <=
                              (AnchorBigRadius * AnchorBigRadius);
-        bool overSmallAnchor = ImLengthSqr(midBound - io.MousePos) <=
+        bool overSmallAnchor = (midBound - mousePos).SqrLength() <=
                                (AnchorBigRadius * AnchorBigRadius);
 
         int type = MT_NONE;
 
         if (Intersects(operation, TRANSLATE)) {
-          type = GetMoveType(operation, screenCoord());
+          type = GetMoveType(operation, screenCoord(mousePos), mousePos);
         }
         if (Intersects(operation, ROTATE) && type == MT_NONE) {
-          type = GetRotateType(operation);
+          type = GetRotateType(operation, mousePos);
         }
         if (Intersects(operation, SCALE) && type == MT_NONE) {
-          type = GetScaleType(operation);
+          type = GetScaleType(operation, mousePos);
         }
 
         if (type != MT_NONE) {
@@ -1424,7 +1462,7 @@ private:
           overSmallAnchor = false;
         }
 
-        ImU32 selectionColor = GetColorU32(SELECTION);
+        uint32_t selectionColor = GetColorU32(SELECTION);
 
         unsigned int bigAnchorColor =
           overBigAnchor ? selectionColor
@@ -1442,7 +1480,8 @@ private:
           midBound, AnchorSmallRadius - 1.2f, smallAnchorColor);
         int oppositeIndex = (i + 2) % 4;
         // big anchor on corners
-        if (!mbUsingBounds && mbEnable && overBigAnchor && CanActivate()) {
+        if (!mbUsingBounds && mbEnable && overBigAnchor &&
+            CanActivate(mouseLeftDown)) {
           mBoundsPivot.TransformPoint(aabb[(i + 2) % 4], mModelSource);
           mBoundsAnchor.TransformPoint(aabb[i], mModelSource);
           mBoundsPlan = BuildPlan(mBoundsAnchor, bestAxisWorldDirection);
@@ -1459,7 +1498,8 @@ private:
           mBoundsMatrix = mModelSource;
         }
         // small anchor on middle of segment
-        if (!mbUsingBounds && mbEnable && overSmallAnchor && CanActivate()) {
+        if (!mbUsingBounds && mbEnable && overSmallAnchor &&
+            CanActivate(mouseLeftDown)) {
           vec_t midPointOpposite =
             (aabb[(i + 2) % 4] + aabb[(i + 3) % 4]) * 0.5f;
           mBoundsPivot.TransformPoint(midPointOpposite, mModelSource);
@@ -1531,29 +1571,28 @@ private:
 
         // info text
         char tmps[512];
-        ImVec2 destinationPosOnScreen =
+        recti::Vec2 destinationPosOnScreen =
           worldToPos(mModel.position(), mViewProjection);
-        ImFormatString(
-          tmps,
-          sizeof(tmps),
-          "X: %.2f Y: %.2f Z: %.2f",
-          (bounds[3] - bounds[0]) * mBoundsMatrix.component(0).Length() *
-            scale.component(0).Length(),
-          (bounds[4] - bounds[1]) * mBoundsMatrix.component(1).Length() *
-            scale.component(1).Length(),
-          (bounds[5] - bounds[2]) * mBoundsMatrix.component(2).Length() *
-            scale.component(2).Length());
-        drawList->AddText(
-          ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
-          GetColorU32(TEXT_SHADOW),
-          tmps);
-        drawList->AddText(
-          ImVec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
-          GetColorU32(TEXT),
-          tmps);
+        snprintf(tmps,
+                 sizeof(tmps),
+                 "X: %.2f Y: %.2f Z: %.2f",
+                 (bounds[3] - bounds[0]) * mBoundsMatrix.component(0).Length() *
+                   scale.component(0).Length(),
+                 (bounds[4] - bounds[1]) * mBoundsMatrix.component(1).Length() *
+                   scale.component(1).Length(),
+                 (bounds[5] - bounds[2]) * mBoundsMatrix.component(2).Length() *
+                   scale.component(2).Length());
+        drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
+                                      destinationPosOnScreen.Y + 15),
+                          GetColorU32(TEXT_SHADOW),
+                          tmps);
+        drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
+                                      destinationPosOnScreen.Y + 14),
+                          GetColorU32(TEXT),
+                          tmps);
       }
 
-      if (!io.MouseDown[0]) {
+      if (!mouseLeftDown) {
         mbUsingBounds = false;
         mState.mEditingID = -1;
       }
@@ -1565,17 +1604,17 @@ private:
 
   void ComputeCameraRay(vec_t& rayOrigin,
                         vec_t& rayDir,
-                        ImVec2 position,
-                        ImVec2 size)
+                        recti::Vec2 position,
+                        recti::Vec2 size,
+                        const recti::Vec2& mousePos)
   {
-    ImGuiIO& io = ImGui::GetIO();
+    // ImGuiIO& io = ImGui::GetIO();
 
     matrix_t mViewProjInverse;
     mViewProjInverse.Inverse(mViewMat * mProjectionMat);
 
-    const float mox = ((io.MousePos.x - position.x) / size.x) * 2.f - 1.f;
-    const float moy =
-      (1.f - ((io.MousePos.y - position.y) / size.y)) * 2.f - 1.f;
+    const float mox = ((mousePos.X - position.X) / size.X) * 2.f - 1.f;
+    const float moy = (1.f - ((mousePos.Y - position.Y) / size.Y)) * 2.f - 1.f;
 
     const float zNear = mReversed ? (1.f - FLT_EPSILON) : 0.f;
     const float zFar = mReversed ? 0.f : (1.f - FLT_EPSILON);
@@ -1588,31 +1627,34 @@ private:
     rayDir = Normalized(rayEnd - rayOrigin);
   }
 
-  void ComputeCameraRay(vec_t& rayOrigin, vec_t& rayDir)
+  void ComputeCameraRay(vec_t& rayOrigin,
+                        vec_t& rayDir,
+                        const recti::Vec2& mousePos)
   {
-    ComputeCameraRay(rayOrigin, rayDir, leftTop(), size());
+    ComputeCameraRay(rayOrigin, rayDir, leftTop(), size(), mousePos);
   }
 
   bool HandleTranslation(float* matrix,
                          float* deltaMatrix,
                          OPERATION op,
                          MOVETYPE& type,
-                         const float* snap)
+                         const float* snap,
+                         const recti::Vec2& mousePos,
+                         bool mouseLeftDown)
   {
     if (!Intersects(op, TRANSLATE) || type != MT_NONE) {
       return false;
     }
-    const ImGuiIO& io = ImGui::GetIO();
     const bool applyRotationLocaly = mMode == LOCAL || type == MT_MOVE_SCREEN;
     bool modified = false;
 
     // move
     if (mState.Using() && IsTranslateType(mCurrentOperation)) {
-#if IMGUI_VERSION_NUM >= 18723
-      ImGui::SetNextFrameWantCaptureMouse(true);
-#else
-      ImGui::CaptureMouseFromApp();
-#endif
+      // #if IMGUI_VERSION_NUM >= 18723
+      //       ImGui::SetNextFrameWantCaptureMouse(true);
+      // #else
+      //       ImGui::CaptureMouseFromApp();
+      // #endif
       const float signedLength =
         IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
       const float len = fabsf(signedLength); // near plan
@@ -1662,22 +1704,17 @@ private:
       const matrix_t res = mModelSource * deltaMatrixTranslation;
       *(matrix_t*)matrix = res;
 
-      if (!io.MouseDown[0]) {
+      if (!mouseLeftDown) {
         mState.mbUsing = false;
       }
 
       type = mCurrentOperation;
     } else {
       // find new possible way to move
-      type = GetMoveType(op, screenCoord());
+      type = GetMoveType(op, screenCoord(mousePos), mousePos);
       if (type != MT_NONE) {
-#if IMGUI_VERSION_NUM >= 18723
-        ImGui::SetNextFrameWantCaptureMouse(true);
-#else
-        ImGui::CaptureMouseFromApp();
-#endif
       }
-      if (CanActivate() && type != MT_NONE) {
+      if (CanActivate(mouseLeftDown) && type != MT_NONE) {
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
@@ -1711,26 +1748,22 @@ private:
                    float* deltaMatrix,
                    OPERATION op,
                    MOVETYPE& type,
-                   const float* snap)
+                   const float* snap,
+                   const recti::Vec2& mousePos,
+                   bool mouseLeftDown)
   {
     if ((!Intersects(op, SCALE) && !Intersects(op, SCALEU)) ||
         type != MT_NONE) {
       return false;
     }
-    ImGuiIO& io = ImGui::GetIO();
     bool modified = false;
 
     if (!mState.mbUsing) {
       // find new possible way to scale
-      type = GetScaleType(op);
+      type = GetScaleType(op, mousePos);
       if (type != MT_NONE) {
-#if IMGUI_VERSION_NUM >= 18723
-        ImGui::SetNextFrameWantCaptureMouse(true);
-#else
-        ImGui::CaptureMouseFromApp();
-#endif
       }
-      if (CanActivate() && type != MT_NONE) {
+      if (CanActivate(mouseLeftDown) && type != MT_NONE) {
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
@@ -1752,16 +1785,11 @@ private:
         mScaleValueOrigin = { mModelSource.right().Length(),
                               mModelSource.up().Length(),
                               mModelSource.dir().Length() };
-        mSaveMousePosx = io.MousePos.x;
+        mSaveMousePosx = mousePos.X;
       }
     }
     // scale
     if (mState.Using() && IsScaleType(mCurrentOperation)) {
-#if IMGUI_VERSION_NUM >= 18723
-      ImGui::SetNextFrameWantCaptureMouse(true);
-#else
-      ImGui::CaptureMouseFromApp();
-#endif
       const float len =
         IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
       vec_t newPos = mRayOrigin + mRayVector * len;
@@ -1781,7 +1809,7 @@ private:
 
         mScale[axisIndex] = max(ratio, 0.001f);
       } else {
-        float scaleDelta = (io.MousePos.x - mSaveMousePosx) * 0.01f;
+        float scaleDelta = (mousePos.X - mSaveMousePosx) * 0.01f;
         mScale.Set(max(1.f + scaleDelta, 0.001f));
       }
 
@@ -1821,7 +1849,7 @@ private:
         memcpy(deltaMatrix, &deltaMatrixScale.m00, sizeof(float) * 16);
       }
 
-      if (!io.MouseDown[0]) {
+      if (!mouseLeftDown) {
         mState.mbUsing = false;
         mScale.Set(1.f, 1.f, 1.f);
       }
@@ -1835,31 +1863,27 @@ private:
                       float* deltaMatrix,
                       OPERATION op,
                       MOVETYPE& type,
-                      const float* snap)
+                      const float* snap,
+                      const recti::Vec2& mousePos,
+                      bool mouseLeftDown)
   {
     if (!Intersects(op, ROTATE) || type != MT_NONE) {
       return false;
     }
-    ImGuiIO& io = ImGui::GetIO();
     bool applyRotationLocaly = mMode == LOCAL;
     bool modified = false;
 
     if (!mState.mbUsing) {
-      type = GetRotateType(op);
+      type = GetRotateType(op, mousePos);
 
       if (type != MT_NONE) {
-#if IMGUI_VERSION_NUM >= 18723
-        ImGui::SetNextFrameWantCaptureMouse(true);
-#else
-        ImGui::CaptureMouseFromApp();
-#endif
       }
 
       if (type == MT_ROTATE_SCREEN) {
         applyRotationLocaly = true;
       }
 
-      if (CanActivate() && type != MT_NONE) {
+      if (CanActivate(mouseLeftDown) && type != MT_NONE) {
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
@@ -1885,11 +1909,6 @@ private:
 
     // rotation
     if (mState.Using() && IsRotateType(mCurrentOperation)) {
-#if IMGUI_VERSION_NUM >= 18723
-      ImGui::SetNextFrameWantCaptureMouse(true);
-#else
-      ImGui::CaptureMouseFromApp();
-#endif
       mRotationAngle = ComputeAngleOnPlan();
       if (snap) {
         float snapInRadian = snap[0] * DEG2RAD;
@@ -1927,7 +1946,7 @@ private:
         *(matrix_t*)deltaMatrix = mModelInverse * deltaRotation * mModel;
       }
 
-      if (!io.MouseDown[0]) {
+      if (!mouseLeftDown) {
         mState.mbUsing = false;
         mState.mEditingID = -1;
       }
@@ -1974,6 +1993,8 @@ public:
                   OPERATION operation,
                   MODE mode,
                   float* matrix,
+                  const recti::Vec2& mousePos,
+                  bool mouseLeftDown,
                   float* deltaMatrix,
                   const float* snap,
                   const float* localBounds,
@@ -1985,7 +2006,7 @@ public:
     // Scale is always local or matrix will be skewed when applying world scale
     // or oriented matrix
     ComputeContext(
-      view, projection, matrix, (operation & SCALE) ? LOCAL : mode);
+      view, projection, matrix, (operation & SCALE) ? LOCAL : mode, mousePos);
 
     // set delta to identity
     if (deltaMatrix) {
@@ -2004,16 +2025,37 @@ public:
     bool manipulated = false;
     if (mbEnable) {
       if (!mbUsingBounds) {
-        manipulated =
-          HandleTranslation(matrix, deltaMatrix, operation, type, snap) ||
-          HandleScale(matrix, deltaMatrix, operation, type, snap) ||
-          HandleRotation(matrix, deltaMatrix, operation, type, snap);
+        manipulated = HandleTranslation(matrix,
+                                        deltaMatrix,
+                                        operation,
+                                        type,
+                                        snap,
+                                        mousePos,
+                                        mouseLeftDown) ||
+                      HandleScale(matrix,
+                                  deltaMatrix,
+                                  operation,
+                                  type,
+                                  snap,
+                                  mousePos,
+                                  mouseLeftDown) ||
+                      HandleRotation(matrix,
+                                     deltaMatrix,
+                                     operation,
+                                     type,
+                                     snap,
+                                     mousePos,
+                                     mouseLeftDown);
       }
     }
 
     if (localBounds && !mState.mbUsing) {
-      HandleAndDrawLocalBounds(
-        localBounds, (matrix_t*)matrix, boundsSnap, operation);
+      HandleAndDrawLocalBounds(localBounds,
+                               (matrix_t*)matrix,
+                               boundsSnap,
+                               operation,
+                               mousePos,
+                               mouseLeftDown);
     }
 
     mOperation = operation;
@@ -2055,6 +2097,8 @@ Context::Manipulate(void* id,
                     OPERATION operation,
                     MODE mode,
                     float* matrix,
+                    const recti::Vec2 &mousePos,
+                    bool mouseLeftDown,
                     float* deltaMatrix,
                     const float* snap,
                     const float* localBounds,
@@ -2066,6 +2110,8 @@ Context::Manipulate(void* id,
                             operation,
                             mode,
                             matrix,
+                            mousePos,
+                            mouseLeftDown,
                             deltaMatrix,
                             snap,
                             localBounds,

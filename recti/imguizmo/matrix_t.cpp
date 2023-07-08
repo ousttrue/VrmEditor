@@ -1,7 +1,6 @@
 #include "matrix_t.h"
 #include <DirectXMath.h>
 #include <cfloat>
-#include <imgui.h>
 #include <math.h>
 
 static const float ZPI = 3.14159265358979323846f;

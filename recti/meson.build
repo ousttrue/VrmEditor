@@ -10,7 +10,7 @@ recti_lib = static_library(
         'imguizmo/matrix_t.cpp',
     ],
     include_directories: recti_inc,
-    dependencies: [imgui_dep, directxmath_dep],
+    dependencies: [directxmath_dep],
 )
 recti_dep = declare_dependency(
     link_with: recti_lib,
