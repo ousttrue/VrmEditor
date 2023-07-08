@@ -54,6 +54,13 @@ public:
     auto [x, y] = Mouse.Position - Camera.LeftTop();
     return { x, y };
   }
+
+  // to window pixel coords
+  recti::Vec2 WorldToPos(const recti::Vec4& worldPos) const
+  {
+    auto [x, y] = recti::worldToPos(worldPos, mViewProjection, Camera.Viewport);
+    return { x, y };
+  }
 };
 
 } // namespace

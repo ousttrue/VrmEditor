@@ -428,13 +428,15 @@ private:
       auto posOnPlan =
         mCameraMouse.Ray.IntersectPlane(BuildPlan(mModel.position(), dirAxis));
 
+      // screen
       const recti::Vec2 axisStartOnScreen =
-        worldToPos(mModel.position() + dirAxis * mScreenFactor * 0.1f,
-                   mCameraMouse.mViewProjection) -
+        mCameraMouse.WorldToPos(mModel.position() +
+                                dirAxis * mScreenFactor * 0.1f) -
         mCameraMouse.Camera.LeftTop();
+
+      // screen
       const recti::Vec2 axisEndOnScreen =
-        worldToPos(mModel.position() + dirAxis * mScreenFactor,
-                   mCameraMouse.mViewProjection) -
+        mCameraMouse.WorldToPos(mModel.position() + dirAxis * mScreenFactor) -
         mCameraMouse.Camera.LeftTop();
 
       recti::Vec4 closestPointOnAxis =
@@ -556,14 +558,11 @@ private:
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.0f : 0.1f;
       const float endOffset =
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.4f : 1.0f;
-      const recti::Vec2 posOnPlanScreen =
-        worldToPos(posOnPlan, mCameraMouse.mViewProjection);
-      const recti::Vec2 axisStartOnScreen = worldToPos(
-        mModelLocal.position() + dirAxis * mScreenFactor * startOffset,
-        mCameraMouse.mViewProjection);
-      const recti::Vec2 axisEndOnScreen =
-        worldToPos(mModelLocal.position() + dirAxis * mScreenFactor * endOffset,
-                   mCameraMouse.mViewProjection);
+      const recti::Vec2 posOnPlanScreen = mCameraMouse.WorldToPos(posOnPlan);
+      const recti::Vec2 axisStartOnScreen = mCameraMouse.WorldToPos(
+        mModelLocal.position() + dirAxis * mScreenFactor * startOffset);
+      const recti::Vec2 axisEndOnScreen = mCameraMouse.WorldToPos(
+        mModelLocal.position() + dirAxis * mScreenFactor * endOffset);
 
       recti::Vec4 closestPointOnAxis =
         recti::PointOnSegment({ posOnPlanScreen.X, posOnPlanScreen.Y },
@@ -610,10 +609,6 @@ private:
         bool hasTranslateOnAxis =
           Contains(op, static_cast<OPERATION>(TRANSLATE_X << i));
         float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-        // recti::Vec2 baseSSpace = worldToPos(dirAxis * 0.1f *
-        // mScreenFactor, mMVPLocal); recti::Vec2
-        // worldDirSSpaceNoScale = worldToPos(dirAxis
-        // * markerScale * mScreenFactor, mMVP);
         recti::Vec2 worldDirSSpace =
           worldToPos((dirAxis * markerScale) * mScreenFactor, mMVPLocal);
 
@@ -865,19 +860,8 @@ private:
       mScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
 
     if (mState.Using() && IsScaleType(type)) {
-      // recti::Vec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
-      // mViewProjection);
       recti::Vec2 destinationPosOnScreen =
         worldToPos(mModel.position(), mCameraMouse.mViewProjection);
-      /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
-      destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
-      *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f,
-      translationLineColor); drawList->AddCircle(destinationPosOnScreen, 6.f,
-      translationLineColor); drawList->AddLine(recti::Vec2(sourcePosOnScreen.x +
-      dif.x, sourcePosOnScreen.y
-      + dif.y), recti::Vec2(destinationPosOnScreen.x - dif.x,
-      destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
-      */
       char tmps[512];
       // vec_t deltaInfo = mModel.position() -
       // mMatrixOrigin;
@@ -955,27 +939,24 @@ private:
       }
 
       float radiusAxis =
-        sqrtf((worldToPos(mModel.position(), mCameraMouse.mViewProjection) -
-               circlePos[0])
+        sqrtf((mCameraMouse.WorldToPos(mModel.position()) - circlePos[0])
                 .SqrLength());
       if (radiusAxis > mRadiusSquareCenter) {
         mRadiusSquareCenter = radiusAxis;
       }
     }
     if (hasRSC && (!mState.mbUsing || type == MT_ROTATE_SCREEN)) {
-      drawList->AddCircle(
-        worldToPos(mModel.position(), mCameraMouse.mViewProjection),
-        mRadiusSquareCenter,
-        colors[0],
-        64,
-        mStyle.RotationOuterLineThickness);
+      drawList->AddCircle(mCameraMouse.WorldToPos(mModel.position()),
+                          mRadiusSquareCenter,
+                          colors[0],
+                          64,
+                          mStyle.RotationOuterLineThickness);
     }
 
     if (mState.Using() && IsRotateType(type)) {
       recti::Vec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
 
-      circlePos[0] =
-        worldToPos(mModel.position(), mCameraMouse.mViewProjection);
+      circlePos[0] = mCameraMouse.WorldToPos(mModel.position());
       for (unsigned int i = 1; i < HALF_CIRCLE_SEGMENT_COUNT; i++) {
         float ng = mRotationAngle *
                    ((float)(i - 1) / (float)(HALF_CIRCLE_SEGMENT_COUNT - 1));
@@ -984,8 +965,7 @@ private:
         recti::Vec4 pos;
         pos.TransformPoint(mRotationVectorSource, rotateVectorMatrix);
         pos *= mScreenFactor * ROTATION_DISPLAY_FACTOR;
-        circlePos[i] =
-          worldToPos(pos + mModel.position(), mCameraMouse.mViewProjection);
+        circlePos[i] = mCameraMouse.WorldToPos(pos + mModel.position());
       }
       drawList->AddConvexPolyFilled((const recti::VEC2*)circlePos,
                                     HALF_CIRCLE_SEGMENT_COUNT,
@@ -1055,10 +1035,6 @@ private:
           bool hasTranslateOnAxis =
             Contains(op, static_cast<OPERATION>(TRANSLATE_X << i));
           float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-          // recti::Vec2 baseSSpace = worldToPos(dirAxis * 0.1f *
-          // mScreenFactor, mMVPLocal); recti::Vec2
-          // worldDirSSpaceNoScale = worldToPos(dirAxis * markerScale *
-          // mScreenFactor, mMVP);
           recti::Vec2 worldDirSSpace = worldToPos(
             (dirAxis * markerScale * scaleDisplay[i]) * mScreenFactor,
             mMVPLocal);
@@ -1086,19 +1062,9 @@ private:
       mScreenSquareCenter, 20.f, colors[0], 32, mStyle.CenterCircleSize);
 
     if (mState.Using() && IsScaleType(type)) {
-      // recti::Vec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
-      // mViewProjection);
       recti::Vec2 destinationPosOnScreen =
-        worldToPos(mModel.position(), mCameraMouse.mViewProjection);
-      /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
-      destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
-      *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
-      drawList->AddCircle(destinationPosOnScreen, 6.f, translationLineColor);
-      drawList->AddLine(recti::Vec2(sourcePosOnScreen.x + dif.x,
-      sourcePosOnScreen.y
-      + dif.y), recti::Vec2(destinationPosOnScreen.x - dif.x,
-      destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
-      */
+        mCameraMouse.WorldToPos(mModel.position());
+
       char tmps[512];
       // vec_t deltaInfo = mModel.position() -
       // mMatrixOrigin;
@@ -1133,8 +1099,7 @@ private:
     uint32_t colors[7];
     ComputeColors(colors, type, TRANSLATE);
 
-    const recti::Vec2 origin =
-      worldToPos(mModel.position(), mCameraMouse.mViewProjection);
+    const recti::Vec2 origin = mCameraMouse.WorldToPos(mModel.position());
 
     // draw
     bool belowAxisLimit = false;
@@ -1211,10 +1176,9 @@ private:
     if (mState.Using() && IsTranslateType(type)) {
       uint32_t translationLineColor = GetColorU32(TRANSLATION_LINE);
 
-      recti::Vec2 sourcePosOnScreen =
-        worldToPos(mMatrixOrigin, mCameraMouse.mViewProjection);
+      recti::Vec2 sourcePosOnScreen = mCameraMouse.WorldToPos(mMatrixOrigin);
       recti::Vec2 destinationPosOnScreen =
-        worldToPos(mModel.position(), mCameraMouse.mViewProjection);
+        mCameraMouse.WorldToPos(mModel.position());
       recti::Vec4 dif = { destinationPosOnScreen.X - sourcePosOnScreen.X,
                           destinationPosOnScreen.Y - sourcePosOnScreen.Y,
                           0.f,
@@ -1493,7 +1457,7 @@ private:
         // info text
         char tmps[512];
         recti::Vec2 destinationPosOnScreen =
-          worldToPos(mModel.position(), mCameraMouse.mViewProjection);
+          mCameraMouse.WorldToPos(mModel.position());
         snprintf(tmps,
                  sizeof(tmps),
                  "X: %.2f Y: %.2f Z: %.2f",
