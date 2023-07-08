@@ -650,7 +650,7 @@ private:
   bool IsOver(const recti::Vec2& mousePos) const
   {
     return (Intersects(mOperation, TRANSLATE) &&
-            GetMoveType(mOperation, screenCoord(mousePos), mousePos) !=
+            GetMoveType(mOperation, mCameraMouse.ScreenMousePos(), mousePos) !=
               MT_NONE) ||
            (Intersects(mOperation, ROTATE) &&
             GetRotateType(mOperation, mousePos) != MT_NONE) ||
@@ -672,7 +672,7 @@ private:
       return true;
     }
     if (Intersects(op, TRANSLATE) &&
-        GetMoveType(op, screenCoord(mousePos), mousePos) != MT_NONE) {
+        GetMoveType(op, mCameraMouse.ScreenMousePos(), mousePos) != MT_NONE) {
       return true;
     }
     return false;
@@ -694,13 +694,6 @@ private:
     // }
     // return false;
     return mouseLeftDown;
-  }
-
-  recti::Vec4 screenCoord(const recti::Vec2& mousePos) const
-  {
-    // ImGuiIO& io = ImGui::GetIO();
-    auto rel = mousePos - mCameraMouse.Camera.LeftTop();
-    return { rel.X, rel.Y };
   }
 
   recti::Vec2 worldToPos(const recti::Vec4& worldPos,
@@ -1416,7 +1409,7 @@ private:
 
         if (Intersects(operation, TRANSLATE)) {
           type =
-            GetMoveType(operation, screenCoord(mouse.Position), mouse.Position);
+            GetMoveType(operation, mCameraMouse.ScreenMousePos(), mouse.Position);
         }
         if (Intersects(operation, ROTATE) && type == MT_NONE) {
           type = GetRotateType(operation, mouse.Position);
@@ -1637,7 +1630,7 @@ private:
       type = mCurrentOperation;
     } else {
       // find new possible way to move
-      type = GetMoveType(op, screenCoord(mouse.Position), mouse.Position);
+      type = GetMoveType(op, mCameraMouse.ScreenMousePos(), mouse.Position);
       if (type != MT_NONE) {
       }
       if (CanActivate(mouse.LeftDown) && type != MT_NONE) {

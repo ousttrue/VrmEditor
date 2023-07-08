@@ -9,6 +9,7 @@ struct Camera
 {
   Mat4 ViewMatrix;
   Mat4 ProjectionMatrix;
+  // WindowViewport
   Vec4 Viewport;
   Vec2 LeftTop() const { return { Viewport.x, Viewport.y }; }
   Vec2 Size() const { return { Viewport.z, Viewport.w }; }
@@ -26,6 +27,7 @@ struct Camera
 
 struct Mouse
 {
+  // WindowMousePositin
   Vec2 Position;
   bool LeftDown;
 };
@@ -46,6 +48,12 @@ public:
   const Vec4& CameraUp() const { return mViewInverse.up(); }
 
   void Initialize(const struct Camera& camera, const struct Mouse& mouse);
+
+  recti::Vec4 ScreenMousePos() const
+  {
+    auto [x, y] = Mouse.Position - Camera.LeftTop();
+    return { x, y };
+  }
 };
 
 } // namespace
