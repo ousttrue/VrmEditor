@@ -242,8 +242,7 @@ class ContextImpl
   // float mXMax = 0.f;
   // float mYMax = 0.f;
   // float mDisplayRatio = 1.f;
-  recti::Camera mCamera;
-  recti::Mouse mMouse;
+  recti::CameraMouse mCameraMouse;
 
   std::shared_ptr<recti::DrawList> mDrawList;
   Style mStyle;
@@ -363,19 +362,19 @@ private:
     } else {
       // new method
       float lenDir = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirAxis, mvp, mCamera.DisplayRatio());
+        { 0.f, 0.f, 0.f }, dirAxis, mvp, mCameraMouse.Camera.DisplayRatio());
       float lenDirMinus = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, -dirAxis, mvp, mCamera.DisplayRatio());
+        { 0.f, 0.f, 0.f }, -dirAxis, mvp, mCameraMouse.Camera.DisplayRatio());
 
       float lenDirPlaneX = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirPlaneX, mvp, mCamera.DisplayRatio());
+        { 0.f, 0.f, 0.f }, dirPlaneX, mvp, mCameraMouse.Camera.DisplayRatio());
       float lenDirMinusPlaneX = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, -dirPlaneX, mvp, mCamera.DisplayRatio());
+        { 0.f, 0.f, 0.f }, -dirPlaneX, mvp, mCameraMouse.Camera.DisplayRatio());
 
       float lenDirPlaneY = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirPlaneY, mvp, mCamera.DisplayRatio());
+        { 0.f, 0.f, 0.f }, dirPlaneY, mvp, mCameraMouse.Camera.DisplayRatio());
       float lenDirMinusPlaneY = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, -dirPlaneY, mvp, mCamera.DisplayRatio());
+        { 0.f, 0.f, 0.f }, -dirPlaneY, mvp, mCameraMouse.Camera.DisplayRatio());
 
       // For readability
       float mulAxis = (mAllowAxisFlip && lenDir < lenDirMinus &&
@@ -396,13 +395,13 @@ private:
 
       // for axis
       float axisLengthInClipSpace = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirAxis * mScreenFactor, mvp, mCamera.DisplayRatio());
+        { 0.f, 0.f, 0.f }, dirAxis * mScreenFactor, mvp, mCameraMouse.Camera.DisplayRatio());
 
       float paraSurf = GetParallelogram({ 0.f, 0.f, 0.f },
                                         dirPlaneX * mScreenFactor,
                                         dirPlaneY * mScreenFactor,
                                         mMVP,
-                                        mCamera.DisplayRatio());
+                                        mCameraMouse.Camera.DisplayRatio());
       belowPlaneLimit = (paraSurf > 0.0025f);
       belowAxisLimit = (axisLengthInClipSpace > 0.02f);
 
@@ -456,11 +455,11 @@ private:
       const recti::Vec2 axisStartOnScreen =
         worldToPos(mModel.position() + dirAxis * mScreenFactor * 0.1f,
                    mViewProjection) -
-        mCamera.LeftTop();
+        mCameraMouse.Camera.LeftTop();
       const recti::Vec2 axisEndOnScreen =
         worldToPos(mModel.position() + dirAxis * mScreenFactor,
                    mViewProjection) -
-        mCamera.LeftTop();
+        mCameraMouse.Camera.LeftTop();
 
       recti::Vec4 closestPointOnAxis =
         PointOnSegment(screenCoord,
@@ -713,14 +712,14 @@ private:
   recti::Vec4 screenCoord(const recti::Vec2& mousePos) const
   {
     // ImGuiIO& io = ImGui::GetIO();
-    auto rel = mousePos - mCamera.LeftTop();
+    auto rel = mousePos - mCameraMouse.Camera.LeftTop();
     return { rel.X, rel.Y };
   }
 
   recti::Vec2 worldToPos(const recti::Vec4& worldPos,
                          const recti::Mat4& mat) const
   {
-    auto [x, y] = recti::worldToPos(worldPos, mat, mCamera.Viewport);
+    auto [x, y] = recti::worldToPos(worldPos, mat, mCameraMouse.Camera.Viewport);
     return { x, y };
   }
 
@@ -758,7 +757,7 @@ private:
     recti::Vec4 rightViewInverse = mViewInverse.right();
     rightViewInverse.TransformVector(this->mModelInverse);
     float rightLength = GetSegmentLengthClipSpace(
-      { 0.f, 0.f }, rightViewInverse, mMVP, mCamera.DisplayRatio());
+      { 0.f, 0.f }, rightViewInverse, mMVP, mCameraMouse.Camera.DisplayRatio());
     this->mScreenFactor = this->mGizmoSizeClipSpace / rightLength;
 
     recti::Vec2 centerSSpace = worldToPos({ 0.f, 0.f }, this->mMVP);
@@ -976,7 +975,7 @@ private:
 
     cameraToModelNormalized.TransformVector(mModelInverse);
 
-    mRadiusSquareCenter = screenRotateSize * mCamera.Height();
+    mRadiusSquareCenter = screenRotateSize * mCameraMouse.Camera.Height();
 
     bool hasRSC = Intersects(op, ROTATE_SCREEN);
     for (int axis = 0; axis < 3; axis++) {
@@ -1389,8 +1388,8 @@ private:
       for (int i = 0; i < 4; i++) {
         recti::Vec2 worldBound1 = worldToPos(aabb[i], boundsMVP);
         recti::Vec2 worldBound2 = worldToPos(aabb[(i + 1) % 4], boundsMVP);
-        if (!mCamera.IsInContextRect(worldBound1) ||
-            !mCamera.IsInContextRect(worldBound2)) {
+        if (!mCameraMouse.Camera.IsInContextRect(worldBound1) ||
+            !mCameraMouse.Camera.IsInContextRect(worldBound2)) {
           continue;
         }
         float boundDistance = sqrtf((worldBound1 - worldBound2).SqrLength());
@@ -1609,7 +1608,7 @@ private:
                         const recti::Vec2& mousePos)
   {
     ComputeCameraRay(
-      rayOrigin, rayDir, mCamera.LeftTop(), mCamera.Size(), mousePos);
+      rayOrigin, rayDir, mCameraMouse.Camera.LeftTop(), mCameraMouse.Camera.Size(), mousePos);
   }
 
   bool HandleTranslation(float* matrix,
@@ -1958,8 +1957,7 @@ public:
   void Begin(const recti::Camera& camera, const recti::Mouse& mouse)
   {
     mDrawList->m_commands.clear();
-    mCamera = camera;
-    mMouse = mouse;
+    mCameraMouse.Initialize(camera, mouse);
 
     this->mViewMat = camera.ViewMatrix;
     mViewInverse.Inverse(this->mViewMat);
@@ -2013,15 +2011,15 @@ public:
       if (!mbUsingBounds) {
         manipulated =
           HandleTranslation(
-            matrix, deltaMatrix, operation, type, snap, mMouse) ||
-          HandleScale(matrix, deltaMatrix, operation, type, snap, mMouse) ||
-          HandleRotation(matrix, deltaMatrix, operation, type, snap, mMouse);
+            matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse) ||
+          HandleScale(matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse) ||
+          HandleRotation(matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse);
       }
     }
 
     if (localBounds && !mState.mbUsing) {
       HandleAndDrawLocalBounds(
-        localBounds, (recti::Mat4*)matrix, boundsSnap, operation, mMouse);
+        localBounds, (recti::Mat4*)matrix, boundsSnap, operation, mCameraMouse.Mouse);
     }
 
     mOperation = operation;

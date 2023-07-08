@@ -29,4 +29,17 @@ struct Mouse
   bool LeftDown;
 };
 
+struct CameraMouse
+{
+  Camera Camera;
+  Mouse Mouse;
+private:
+public:
+  void Initialize(const struct Camera &camera, const struct Mouse &mouse)
+  {
+    Camera = camera;
+    Mouse = mouse;
+  }
+};
+
 } // namespace
