@@ -24,6 +24,7 @@
 // SOFTWARE.
 //
 #pragma once
+#include "../camera_mouse.h"
 #include "../drawcommand.h"
 #include <stdint.h>
 
@@ -111,14 +112,7 @@ class Context
 public:
   Context();
   ~Context();
-  void Begin(const float* view,
-             const float* projection,
-             float x,
-             float y,
-             float width,
-             float height,
-             const recti::Vec2& mousePos,
-             bool mouseLeftDown);
+  void Begin(const recti::Camera& camera, const recti::Mouse& mouse);
   bool Manipulate(void* id,
                   OPERATION operation,
                   MODE mode,

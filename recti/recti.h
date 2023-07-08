@@ -1,4 +1,5 @@
 #pragma once
+#include "camera_mouse.h"
 #include "drawcommand.h"
 
 struct Vec2;
@@ -20,14 +21,7 @@ class Screen
 public:
   Screen();
   ~Screen();
-  void Begin(const float* view,
-             const float* projection,
-             float x,
-             float y,
-             float width,
-             float height,
-             const recti::Vec2& mousePos,
-             bool mouseLeftDown);
+  void Begin(const Camera& camera, const Mouse& mouse);
   bool Manipulate(void* id,
                   const Operation& operation,
                   float* matrix,

@@ -4,7 +4,7 @@
 
 namespace recti {
 
-struct mat4
+struct Mat4
 {
   float m00, m01, m02, m03;
   float m10, m11, m12, m13;
@@ -13,21 +13,21 @@ struct mat4
 
   float& operator[](size_t index) { return (&m00)[index]; }
   float operator[](size_t index) const { return (&m00)[index]; }
-  vec4& right() { return *((vec4*)&m00); }
-  vec4& up() { return *((vec4*)&m10); }
-  vec4& dir() { return *((vec4*)&m20); }
-  vec4& position() { return *((vec4*)&m30); }
-  const vec4& right() const { return *((vec4*)&m00); }
-  const vec4& up() const { return *((vec4*)&m10); }
-  const vec4& dir() const { return *((vec4*)&m20); }
-  const vec4& position() const { return *((vec4*)&m30); }
-  vec4& component(size_t index) { return ((vec4*)&m00)[index]; }
-  const vec4& component(size_t index) const { return ((vec4*)&m00)[index]; }
+  Vec4& right() { return *((Vec4*)&m00); }
+  Vec4& up() { return *((Vec4*)&m10); }
+  Vec4& dir() { return *((Vec4*)&m20); }
+  Vec4& position() { return *((Vec4*)&m30); }
+  const Vec4& right() const { return *((Vec4*)&m00); }
+  const Vec4& up() const { return *((Vec4*)&m10); }
+  const Vec4& dir() const { return *((Vec4*)&m20); }
+  const Vec4& position() const { return *((Vec4*)&m30); }
+  Vec4& component(size_t index) { return ((Vec4*)&m00)[index]; }
+  const Vec4& component(size_t index) const { return ((Vec4*)&m00)[index]; }
 
   operator float*() { return &m11; }
   operator const float*() const { return &m11; }
 
-  void Translation(const vec4& vt)
+  void Translation(const Vec4& vt)
   {
     *this = { 1.f,  0.f,  0.f,  0.f, //
               0.f,  1.f,  0.f,  0.f, //
@@ -45,26 +45,26 @@ struct mat4
     };
   }
 
-  void Scale(const vec4& s) { Scale(s.x, s.y, s.z); }
+  void Scale(const Vec4& s) { Scale(s.x, s.y, s.z); }
 
-  mat4& operator*=(const mat4& mat)
+  Mat4& operator*=(const Mat4& mat)
   {
-    mat4 tmpMat;
+    Mat4 tmpMat;
     tmpMat = *this;
     tmpMat.Multiply(mat);
     *this = tmpMat;
     return *this;
   }
 
-  mat4 operator*(const mat4& mat) const
+  Mat4 operator*(const Mat4& mat) const
   {
-    mat4 matT;
+    Mat4 matT;
     matT.Multiply(*this, mat);
     return matT;
   }
 
-  void Multiply(const mat4& matrix);
-  void Multiply(const mat4& m1, const mat4& m2);
+  void Multiply(const Mat4& matrix);
+  void Multiply(const Mat4& m1, const Mat4& m2);
 
   float GetDeterminant() const
   {
@@ -72,7 +72,7 @@ struct mat4
            m02 * m11 * m20 - m01 * m10 * m22 - m00 * m12 * m21;
   }
 
-  float Inverse(const mat4& srcMatrix, bool affine = false);
+  float Inverse(const Mat4& srcMatrix, bool affine = false);
   void SetToIdentity()
   {
     *this = {
@@ -84,7 +84,7 @@ struct mat4
   }
   void Transpose();
 
-  void RotationAxis(const vec4& axis, float angle);
+  void RotationAxis(const Vec4& axis, float angle);
 
   void OrthoNormalize()
   {
@@ -137,19 +137,19 @@ void
 LookAt(const float* eye, const float* at, const float* up, float* m16);
 
 std::tuple<float, float>
-worldToPos(const vec4& worldPos, const mat4& mat, const vec4& screenRect);
+worldToPos(const Vec4& worldPos, const Mat4& mat, const Vec4& screenRect);
 
 float
-GetSegmentLengthClipSpace(const vec4& start,
-                          const vec4& end,
-                          const mat4& mvp,
+GetSegmentLengthClipSpace(const Vec4& start,
+                          const Vec4& end,
+                          const Mat4& mvp,
                           float mDisplayRatio);
 
 float
-GetParallelogram(const vec4& ptO,
-                 const vec4& ptA,
-                 const vec4& ptB,
-                 const mat4& mMVP,
+GetParallelogram(const Vec4& ptO,
+                 const Vec4& ptA,
+                 const Vec4& ptB,
+                 const Mat4& mMVP,
                  float mDisplayRatio);
 
 }

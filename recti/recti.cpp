@@ -36,17 +36,9 @@ struct ScreenImpl
 
   ScreenImpl() { m_im_gizmo = std::make_shared<ImGuizmo::Context>(); }
 
-  void Begin(const float* view,
-             const float* projection,
-             float x,
-             float y,
-             float width,
-             float height,
-             const recti::Vec2& mousePos,
-             bool mouseLeftDown)
+  void Begin(const Camera& camera, const Mouse& mouse)
   {
-    m_im_gizmo->Begin(
-      view, projection, x, y, width, height, mousePos, mouseLeftDown);
+    m_im_gizmo->Begin(camera, mouse);
   }
 
   bool Manipulate(void* id,
@@ -84,16 +76,9 @@ Screen::~Screen()
 }
 
 void
-Screen::Begin(const float* view,
-              const float* projection,
-              float x,
-              float y,
-              float width,
-              float height,
-              const recti::Vec2& mousePos,
-              bool mouseLeftDown)
+Screen::Begin(const Camera& camera, const Mouse& mouse)
 {
-  m_impl->Begin(view, projection, x, y, width, height, mousePos, mouseLeftDown);
+  m_impl->Begin(camera, mouse);
 }
 
 bool

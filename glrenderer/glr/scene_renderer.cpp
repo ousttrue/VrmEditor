@@ -97,16 +97,16 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
       enableTranslation = true;
     }
 
+    recti::Camera gizmo_camera{
+      *((const recti::Mat4*)&camera.ViewMatrix),
+      *((const recti::Mat4*)&camera.ProjectionMatrix),
+      *((const recti::Vec4*)&camera.Projection.Viewport),
+    };
+
     auto& io = ImGui::GetIO();
-    auto& vp = camera.Projection.Viewport;
-    m_screen->Begin(&camera.ViewMatrix._11,
-                    &camera.ProjectionMatrix._11,
-                    vp.Left,
-                    vp.Top,
-                    vp.Width,
-                    vp.Height,
-                    io.MousePos,
-                    io.MouseDown[0]);
+    recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
+
+    m_screen->Begin(gizmo_camera, mouse);
     if (m_screen->Manipulate(node.get(),
                              { enableTranslation, true, false, true },
                              (float*)&m,
@@ -177,16 +177,16 @@ SceneRenderer::RenderRuntime(
       enableTranslation = true;
     }
 
+    recti::Camera gizmo_camera{
+      *((const recti::Mat4*)&camera.ViewMatrix),
+      *((const recti::Mat4*)&camera.ProjectionMatrix),
+      *((const recti::Vec4*)&camera.Projection.Viewport),
+    };
+
     auto& io = ImGui::GetIO();
-    auto& vp = camera.Projection.Viewport;
-    m_screen->Begin(&camera.ViewMatrix._11,
-                    &camera.ProjectionMatrix._11,
-                    vp.Left,
-                    vp.Top,
-                    vp.Width,
-                    vp.Height,
-                    io.MousePos,
-                    io.MouseDown[0]);
+    recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
+
+    m_screen->Begin(gizmo_camera, mouse);
     if (m_screen->Manipulate(node.get(),
                              { enableTranslation, true, false, true },
                              (float*)&m,
