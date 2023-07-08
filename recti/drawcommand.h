@@ -1,4 +1,5 @@
 #pragma once
+#include "vec2.h"
 #include <array>
 #include <optional>
 #include <stdint.h>
@@ -6,23 +7,9 @@
 #include <variant>
 #include <vector>
 
-struct ImVec2;
-
 namespace recti {
 
-struct VEC2
-{
-  float X = 0;
-  float Y = 0;
-
-  VEC2() {}
-  VEC2(float x, float y)
-    : X(x)
-    , Y(y)
-  {
-  }
-  VEC2(const ImVec2& v);
-};
+using VEC2 = Vec2;
 
 struct DrawList
 {

@@ -6,7 +6,7 @@ struct ImDrawList;
 
 namespace recti {
 
-VEC2::VEC2(const ImVec2& v)
+Vec2::Vec2(const ImVec2& v)
   : X(v.x)
   , Y(v.y)
 {
