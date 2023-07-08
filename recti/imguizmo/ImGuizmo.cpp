@@ -24,9 +24,9 @@
 // SOFTWARE.
 //
 
+#include "../mat4.h"
 #include "../vec2.h"
-#include "matrix_t.h"
-#include "vec_t.h"
+#include "../vec4.h"
 #include <assert.h>
 #include <cfloat>
 #include <memory>
@@ -44,7 +44,7 @@ ImSaturate(float f)
 #define IM_F32_TO_INT8_SAT(_VAL)                                               \
   ((int)(ImSaturate(_VAL) * 255.0f + 0.5f)) // Saturated, always output 0..255
 uint32_t
-ColorConvertFloat4ToU32(const vec_t& in)
+ColorConvertFloat4ToU32(const recti::vec4& in)
 {
   uint32_t out;
   out = ((uint32_t)IM_F32_TO_INT8_SAT(in.x)) << 0;
@@ -90,9 +90,9 @@ static const char* scaleInfoMask[] = { "X : %5.2f",
 static const int translationInfoIndex[] = { 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 2,
                                             0, 0, 2, 0, 0, 1, 0, 0, 1, 2 };
 
-static const vec_t directionUnary[3] = { { 1.f, 0.f, 0.f, 0 },
-                                         { 0.f, 1.f, 0.f, 0 },
-                                         { 0.f, 0.f, 1.f, 0 } };
+static const recti::vec4 directionUnary[3] = { { 1.f, 0.f, 0.f, 0 },
+                                               { 0.f, 1.f, 0.f, 0 },
+                                               { 0.f, 0.f, 1.f, 0 } };
 
 // scale a bit so translate axis do not touch when in universal
 const float ROTATION_DISPLAY_FACTOR = 1.2f;
@@ -158,7 +158,7 @@ struct Style
   // Size of circle at the center of the translate/scale gizmo
   float CenterCircleSize = 6.0f;
 
-  vec_t Colors[COLOR::COUNT] = {
+  recti::vec4 Colors[COLOR::COUNT] = {
     { 0.666f, 0.000f, 0.000f, 1.000f }, { 0.000f, 0.666f, 0.000f, 1.000f },
     { 0.000f, 0.000f, 0.666f, 1.000f }, { 0.666f, 0.000f, 0.000f, 0.380f },
     { 0.000f, 0.666f, 0.000f, 0.380f }, { 0.000f, 0.000f, 0.666f, 0.380f },
@@ -249,27 +249,27 @@ class ContextImpl
   State mState = {};
 
   MODE mMode;
-  matrix_t mViewMat;
-  matrix_t mViewInverse;
-  matrix_t mProjectionMat;
-  matrix_t mModel;
-  matrix_t mModelLocal; // orthonormalized model
-  matrix_t mModelInverse;
-  matrix_t mModelSource;
-  matrix_t mModelSourceInverse;
-  matrix_t mMVP;
-  matrix_t
-    mMVPLocal; // MVP with full model matrix whereas mMVP's model matrix might
-               // only be translation in case of World space edition
-  matrix_t mViewProjection;
+  recti::mat4 mViewMat;
+  recti::mat4 mViewInverse;
+  recti::mat4 mProjectionMat;
+  recti::mat4 mModel;
+  recti::mat4 mModelLocal; // orthonormalized model
+  recti::mat4 mModelInverse;
+  recti::mat4 mModelSource;
+  recti::mat4 mModelSourceInverse;
+  recti::mat4 mMVP;
+  recti::mat4
+    mMVPLocal; // MVP with full model matrix whereas mMVP's model matrix
+               // might only be translation in case of World space edition
+  recti::mat4 mViewProjection;
 
-  vec_t mModelScaleOrigin;
-  vec_t mCameraEye;
-  vec_t mCameraRight;
-  vec_t mCameraDir;
-  vec_t mCameraUp;
-  vec_t mRayOrigin;
-  vec_t mRayVector;
+  recti::vec4 mModelScaleOrigin;
+  recti::vec4 mCameraEye;
+  recti::vec4 mCameraRight;
+  recti::vec4 mCameraDir;
+  recti::vec4 mCameraUp;
+  recti::vec4 mRayOrigin;
+  recti::vec4 mRayVector;
 
   float mRadiusSquareCenter;
   recti::Vec2 mScreenSquareCenter;
@@ -277,27 +277,27 @@ class ContextImpl
   recti::Vec2 mScreenSquareMax;
 
   float mScreenFactor;
-  vec_t mRelativeOrigin;
+  recti::vec4 mRelativeOrigin;
 
   bool mbEnable;
   bool mReversed; // reversed projection matrix
 
   // translation
-  vec_t mTranslationPlan;
-  vec_t mTranslationPlanOrigin;
-  vec_t mMatrixOrigin;
-  vec_t mTranslationLastDelta;
+  recti::vec4 mTranslationPlan;
+  recti::vec4 mTranslationPlanOrigin;
+  recti::vec4 mMatrixOrigin;
+  recti::vec4 mTranslationLastDelta;
 
   // rotation
-  vec_t mRotationVectorSource;
+  recti::vec4 mRotationVectorSource;
   float mRotationAngle;
   float mRotationAngleOrigin;
   // vec_t mWorldToLocalAxis;
 
   // scale
-  vec_t mScale;
-  vec_t mScaleValueOrigin;
-  vec_t mScaleLast;
+  recti::vec4 mScale;
+  recti::vec4 mScaleValueOrigin;
+  recti::vec4 mScaleLast;
   float mSaveMousePosx;
 
   // save axis factor when using gizmo
@@ -306,14 +306,14 @@ class ContextImpl
   mutable float mAxisFactor[3];
 
   // bounds stretching
-  vec_t mBoundsPivot;
-  vec_t mBoundsAnchor;
-  vec_t mBoundsPlan;
-  vec_t mBoundsLocalPivot;
+  recti::vec4 mBoundsPivot;
+  recti::vec4 mBoundsAnchor;
+  recti::vec4 mBoundsPlan;
+  recti::vec4 mBoundsLocalPivot;
   int mBoundsBestAxis;
   int mBoundsAxis[2];
   bool mbUsingBounds;
-  matrix_t mBoundsMatrix;
+  recti::mat4 mBoundsMatrix;
 
   //
   MOVETYPE mCurrentOperation;
@@ -346,11 +346,11 @@ public:
 
 private:
   void ComputeTripodAxisAndVisibility(const int axisIndex,
-                                      const matrix_t& mvp,
+                                      const recti::mat4& mvp,
                                       const State& state,
-                                      vec_t& dirAxis,
-                                      vec_t& dirPlaneX,
-                                      vec_t& dirPlaneY,
+                                      recti::vec4& dirAxis,
+                                      recti::vec4& dirPlaneX,
+                                      recti::vec4& dirPlaneY,
                                       bool& belowAxisLimit,
                                       bool& belowPlaneLimit) const
   {
@@ -423,7 +423,7 @@ private:
   }
 
   MOVETYPE GetMoveType(OPERATION op,
-                       const vec_t& screenCoord,
+                       const recti::vec4& screenCoord,
                        const recti::Vec2& mousePos) const
   {
     if (!Intersects(op, TRANSLATE) || mState.mbUsing) {
@@ -442,7 +442,7 @@ private:
 
     // compute
     for (int i = 0; i < 3 && type == MT_NONE; i++) {
-      vec_t dirPlaneX, dirPlaneY, dirAxis;
+      recti::vec4 dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
       ComputeTripodAxisAndVisibility(i,
                                      mMVP,
@@ -458,7 +458,7 @@ private:
 
       const float len = IntersectRayPlane(
         mRayOrigin, mRayVector, BuildPlan(mModel.position(), dirAxis));
-      vec_t posOnPlan = mRayOrigin + mRayVector * len;
+      recti::vec4 posOnPlan = mRayOrigin + mRayVector * len;
 
       const recti::Vec2 axisStartOnScreen =
         worldToPos(mModel.position() + dirAxis * mScreenFactor * 0.1f,
@@ -469,7 +469,7 @@ private:
                    mViewProjection) -
         leftTop();
 
-      vec_t closestPointOnAxis =
+      recti::vec4 closestPointOnAxis =
         PointOnSegment(screenCoord,
                        { axisStartOnScreen.X, axisStartOnScreen.Y },
                        { axisEndOnScreen.X, axisEndOnScreen.Y });
@@ -502,19 +502,21 @@ private:
     // ImGuiIO& io = ImGui::GetIO();
     MOVETYPE type = MT_NONE;
 
-    vec_t deltaScreen = { mousePos.X - mScreenSquareCenter.X,
-                          mousePos.Y - mScreenSquareCenter.Y,
-                          0.f,
-                          0.f };
+    recti::vec4 deltaScreen = { mousePos.X - mScreenSquareCenter.X,
+                                mousePos.Y - mScreenSquareCenter.Y,
+                                0.f,
+                                0.f };
     float dist = deltaScreen.Length();
     if (Intersects(op, ROTATE_SCREEN) && dist >= (mRadiusSquareCenter - 4.0f) &&
         dist < (mRadiusSquareCenter + 4.0f)) {
       type = MT_ROTATE_SCREEN;
     }
 
-    const vec_t planNormals[] = { mModel.right(), mModel.up(), mModel.dir() };
+    const recti::vec4 planNormals[] = { mModel.right(),
+                                        mModel.up(),
+                                        mModel.dir() };
 
-    vec_t modelViewPos;
+    recti::vec4 modelViewPos;
     modelViewPos.TransformPoint(mModel.position(), mViewMat);
 
     for (int i = 0; i < 3 && type == MT_NONE; i++) {
@@ -522,19 +524,19 @@ private:
         continue;
       }
       // pickup plan
-      vec_t pickupPlan = BuildPlan(mModel.position(), planNormals[i]);
+      recti::vec4 pickupPlan = BuildPlan(mModel.position(), planNormals[i]);
 
       const float len = IntersectRayPlane(mRayOrigin, mRayVector, pickupPlan);
-      const vec_t intersectWorldPos = mRayOrigin + mRayVector * len;
-      vec_t intersectViewPos;
+      const recti::vec4 intersectWorldPos = mRayOrigin + mRayVector * len;
+      recti::vec4 intersectViewPos;
       intersectViewPos.TransformPoint(intersectWorldPos, mViewMat);
 
       if (fabs(modelViewPos.z) - fabs(intersectViewPos.z) < -FLT_EPSILON) {
         continue;
       }
 
-      const vec_t localPos = intersectWorldPos - mModel.position();
-      vec_t idealPosOnCircle = Normalized(localPos);
+      const recti::vec4 localPos = intersectWorldPos - mModel.position();
+      recti::vec4 idealPosOnCircle = Normalized(localPos);
       idealPosOnCircle.TransformVector(mModelInverse);
       const recti::Vec2 idealPosOnCircleScreen = worldToPos(
         idealPosOnCircle * ROTATION_DISPLAY_FACTOR * mScreenFactor, mMVP);
@@ -542,7 +544,7 @@ private:
       const recti::Vec2 distanceOnScreen = idealPosOnCircleScreen - mousePos;
 
       const float distance =
-        vec_t{ distanceOnScreen.X, distanceOnScreen.Y }.Length();
+        recti::vec4{ distanceOnScreen.X, distanceOnScreen.Y }.Length();
       if (distance < 8.f) // pixel size
       {
         type = (MOVETYPE)(MT_ROTATE_X + i);
@@ -572,7 +574,7 @@ private:
       if (!Intersects(op, static_cast<OPERATION>(SCALE_X << i))) {
         continue;
       }
-      vec_t dirPlaneX, dirPlaneY, dirAxis;
+      recti::vec4 dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
       ComputeTripodAxisAndVisibility(i,
                                      mMVPLocal,
@@ -588,7 +590,7 @@ private:
 
       const float len = IntersectRayPlane(
         mRayOrigin, mRayVector, BuildPlan(mModelLocal.position(), dirAxis));
-      vec_t posOnPlan = mRayOrigin + mRayVector * len;
+      recti::vec4 posOnPlan = mRayOrigin + mRayVector * len;
 
       const float startOffset =
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.0f : 0.1f;
@@ -603,12 +605,13 @@ private:
         worldToPos(mModelLocal.position() + dirAxis * mScreenFactor * endOffset,
                    mViewProjection);
 
-      vec_t closestPointOnAxis =
-        PointOnSegment({ posOnPlanScreen.X, posOnPlanScreen.Y },
-                       { axisStartOnScreen.X, axisStartOnScreen.Y },
-                       { axisEndOnScreen.X, axisEndOnScreen.Y });
+      recti::vec4 closestPointOnAxis =
+        recti::PointOnSegment({ posOnPlanScreen.X, posOnPlanScreen.Y },
+                              { axisStartOnScreen.X, axisStartOnScreen.Y },
+                              { axisEndOnScreen.X, axisEndOnScreen.Y });
 
-      if ((closestPointOnAxis - vec_t{ posOnPlanScreen.X, posOnPlanScreen.Y })
+      if ((closestPointOnAxis -
+           recti::vec4{ posOnPlanScreen.X, posOnPlanScreen.Y })
             .Length() < 12.f) // pixel size
       {
         type = (MOVETYPE)(MT_SCALE_X + i);
@@ -617,10 +620,10 @@ private:
 
     // universal
 
-    vec_t deltaScreen = { mousePos.X - mScreenSquareCenter.X,
-                          mousePos.Y - mScreenSquareCenter.Y,
-                          0.f,
-                          0.f };
+    recti::vec4 deltaScreen = { mousePos.X - mScreenSquareCenter.X,
+                                mousePos.Y - mScreenSquareCenter.Y,
+                                0.f,
+                                0.f };
     float dist = deltaScreen.Length();
     if (Contains(op, SCALEU) && dist >= 17.0f && dist < 23.0f) {
       type = MT_SCALE_XYZ;
@@ -631,7 +634,7 @@ private:
         continue;
       }
 
-      vec_t dirPlaneX, dirPlaneY, dirAxis;
+      recti::vec4 dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
       ComputeTripodAxisAndVisibility(i,
                                      mMVPLocal,
@@ -718,19 +721,20 @@ private:
   recti::Vec2 size() const { return { mWidth, mHeight }; }
   bool IsInContextRect(const recti::Vec2& p) const
   {
-    return IsWithin(p.X, mX, mXMax) && IsWithin(p.Y, mY, mYMax);
+    return recti::IsWithin(p.X, mX, mXMax) && recti::IsWithin(p.Y, mY, mYMax);
   }
 
-  vec_t screenCoord(const recti::Vec2& mousePos) const
+  recti::vec4 screenCoord(const recti::Vec2& mousePos) const
   {
     // ImGuiIO& io = ImGui::GetIO();
     auto rel = mousePos - leftTop();
     return { rel.X, rel.Y };
   }
 
-  recti::Vec2 worldToPos(const vec_t& worldPos, const matrix_t& mat) const
+  recti::Vec2 worldToPos(const recti::vec4& worldPos,
+                         const recti::mat4& mat) const
   {
-    auto [x, y] = ::worldToPos(worldPos, mat, { mX, mY, mWidth, mHeight });
+    auto [x, y] = recti::worldToPos(worldPos, mat, { mX, mY, mWidth, mHeight });
     return { x, y };
   }
 
@@ -738,15 +742,15 @@ private:
   {
     this->mMode = mode;
 
-    this->mModelLocal = *(matrix_t*)matrix;
+    this->mModelLocal = *(recti::mat4*)matrix;
     this->mModelLocal.OrthoNormalize();
 
     if (mode == LOCAL) {
       this->mModel = this->mModelLocal;
     } else {
-      this->mModel.Translation(((matrix_t*)matrix)->position());
+      this->mModel.Translation(((recti::mat4*)matrix)->position());
     }
-    this->mModelSource = *(matrix_t*)matrix;
+    this->mModelSource = *(recti::mat4*)matrix;
     this->mModelScaleOrigin.Set(this->mModelSource.right().Length(),
                                 this->mModelSource.up().Length(),
                                 this->mModelSource.dir().Length());
@@ -759,13 +763,13 @@ private:
 
     // compute scale from the size of camera right vector projected on screen at
     // the matrix position
-    vec_t pointRight = mViewInverse.right();
+    recti::vec4 pointRight = mViewInverse.right();
     pointRight.TransformPoint(this->mViewProjection);
 
     this->mScreenFactor = this->mGizmoSizeClipSpace /
                           (pointRight.x / pointRight.w -
                            this->mMVP.position().x / this->mMVP.position().w);
-    vec_t rightViewInverse = mViewInverse.right();
+    recti::vec4 rightViewInverse = mViewInverse.right();
     rightViewInverse.TransformVector(this->mModelInverse);
     float rightLength = GetSegmentLengthClipSpace(
       { 0.f, 0.f }, rightViewInverse, mMVP, mDisplayRatio);
@@ -834,7 +838,7 @@ private:
     return ColorConvertFloat4ToU32(mStyle.Colors[idx]);
   }
 
-  void DrawHatchedAxis(const vec_t& axis)
+  void DrawHatchedAxis(const recti::vec4& axis)
   {
     if (mStyle.HatchedAxisLineThickness <= 0.0f) {
       return;
@@ -865,7 +869,7 @@ private:
     ComputeColors(colors, type, SCALE);
 
     // draw
-    vec_t scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
+    recti::vec4 scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
     if (mState.Using()) {
       scaleDisplay = mScale;
@@ -877,7 +881,7 @@ private:
       }
       const bool usingAxis = (mState.mbUsing && type == MT_SCALE_X + i);
       if (!mState.mbUsing || usingAxis) {
-        vec_t dirPlaneX, dirPlaneY, dirAxis;
+        recti::vec4 dirPlaneX, dirPlaneY, dirAxis;
         bool belowAxisLimit, belowPlaneLimit;
         ComputeTripodAxisAndVisibility(i,
                                        mMVPLocal,
@@ -975,10 +979,10 @@ private:
     uint32_t colors[7];
     ComputeColors(colors, type, ROTATE);
 
-    vec_t cameraToModelNormalized;
+    recti::vec4 cameraToModelNormalized;
     if (mIsOrthographic) {
-      matrix_t viewInverse;
-      viewInverse.Inverse(*(matrix_t*)&mViewMat);
+      recti::mat4 viewInverse;
+      viewInverse.Inverse(*(recti::mat4*)&mViewMat);
       cameraToModelNormalized = -viewInverse.dir();
     } else {
       cameraToModelNormalized = Normalized(mModel.position() - mCameraEye);
@@ -1007,11 +1011,11 @@ private:
       for (int i = 0; i < circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1; i++) {
         float ng = angleStart + (float)circleMul * std::numbers::pi *
                                   ((float)i / (float)HALF_CIRCLE_SEGMENT_COUNT);
-        vec_t axisPos = { cosf(ng), sinf(ng), 0.f };
-        vec_t pos = vec_t{ axisPos[axis],
-                           axisPos[(axis + 1) % 3],
-                           axisPos[(axis + 2) % 3] } *
-                    mScreenFactor * ROTATION_DISPLAY_FACTOR;
+        recti::vec4 axisPos = { cosf(ng), sinf(ng), 0.f };
+        recti::vec4 pos = recti::vec4{ axisPos[axis],
+                                       axisPos[(axis + 1) % 3],
+                                       axisPos[(axis + 2) % 3] } *
+                          mScreenFactor * ROTATION_DISPLAY_FACTOR;
         circlePos[i] = worldToPos(pos, mMVP);
       }
       if (!mState.mbUsing || usingAxis) {
@@ -1044,9 +1048,9 @@ private:
       for (unsigned int i = 1; i < HALF_CIRCLE_SEGMENT_COUNT; i++) {
         float ng = mRotationAngle *
                    ((float)(i - 1) / (float)(HALF_CIRCLE_SEGMENT_COUNT - 1));
-        matrix_t rotateVectorMatrix;
+        recti::mat4 rotateVectorMatrix;
         rotateVectorMatrix.RotationAxis(mTranslationPlan, ng);
-        vec_t pos;
+        recti::vec4 pos;
         pos.TransformPoint(mRotationVectorSource, rotateVectorMatrix);
         pos *= mScreenFactor * ROTATION_DISPLAY_FACTOR;
         circlePos[i] = worldToPos(pos + mModel.position(), mViewProjection);
@@ -1091,7 +1095,7 @@ private:
     ComputeColors(colors, type, SCALEU);
 
     // draw
-    vec_t scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
+    recti::vec4 scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
     if (mState.Using()) {
       scaleDisplay = mScale;
@@ -1103,7 +1107,7 @@ private:
       }
       const bool usingAxis = (mState.mbUsing && type == MT_SCALE_X + i);
       if (!mState.mbUsing || usingAxis) {
-        vec_t dirPlaneX, dirPlaneY, dirAxis;
+        recti::vec4 dirPlaneX, dirPlaneY, dirAxis;
         bool belowAxisLimit, belowPlaneLimit;
         ComputeTripodAxisAndVisibility(i,
                                        mMVPLocal,
@@ -1203,7 +1207,7 @@ private:
     bool belowAxisLimit = false;
     bool belowPlaneLimit = false;
     for (int i = 0; i < 3; ++i) {
-      vec_t dirPlaneX, dirPlaneY, dirAxis;
+      recti::vec4 dirPlaneX, dirPlaneY, dirAxis;
       ComputeTripodAxisAndVisibility(i,
                                      mMVP,
                                      mState,
@@ -1252,7 +1256,7 @@ private:
         if (belowPlaneLimit && Contains(op, TRANSLATE_PLANS[i])) {
           recti::Vec2 screenQuadPts[4];
           for (int j = 0; j < 4; ++j) {
-            vec_t cornerWorldPos =
+            recti::vec4 cornerWorldPos =
               (dirPlaneX * quadUV[j * 2] + dirPlaneY * quadUV[j * 2 + 1]) *
               mScreenFactor;
             screenQuadPts[j] = worldToPos(cornerWorldPos, mMVP);
@@ -1278,10 +1282,10 @@ private:
         worldToPos(mMatrixOrigin, mViewProjection);
       recti::Vec2 destinationPosOnScreen =
         worldToPos(mModel.position(), mViewProjection);
-      vec_t dif = { destinationPosOnScreen.X - sourcePosOnScreen.X,
-                    destinationPosOnScreen.Y - sourcePosOnScreen.Y,
-                    0.f,
-                    0.f };
+      recti::vec4 dif = { destinationPosOnScreen.X - sourcePosOnScreen.X,
+                          destinationPosOnScreen.Y - sourcePosOnScreen.Y,
+                          0.f,
+                          0.f };
       dif.Normalize();
       dif *= 5.f;
       drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
@@ -1294,7 +1298,7 @@ private:
         2.f);
 
       char tmps[512];
-      vec_t deltaInfo = mModel.position() - mMatrixOrigin;
+      recti::vec4 deltaInfo = mModel.position() - mMatrixOrigin;
       int componentInfoIndex = (type - MT_MOVE_X) * 3;
       snprintf(tmps,
                sizeof(tmps),
@@ -1314,7 +1318,7 @@ private:
   }
 
   void HandleAndDrawLocalBounds(const float* bounds,
-                                matrix_t* matrix,
+                                recti::mat4* matrix,
                                 const float* snapValues,
                                 OPERATION operation,
                                 const recti::Vec2& mousePos,
@@ -1324,8 +1328,8 @@ private:
     auto drawList = mDrawList;
 
     // compute best projection axis
-    vec_t axesWorldDirections[3];
-    vec_t bestAxisWorldDirection = { 0.0f, 0.0f, 0.0f, 0.0f };
+    recti::vec4 axesWorldDirections[3];
+    recti::vec4 bestAxisWorldDirection = { 0.0f, 0.0f, 0.0f, 0.0f };
     int axes[3];
     unsigned int numAxes = 1;
     axes[0] = mBoundsBestAxis;
@@ -1334,7 +1338,7 @@ private:
       numAxes = 0;
       float bestDot = 0.f;
       for (int i = 0; i < 3; i++) {
-        vec_t dirPlaneNormalWorld;
+        recti::vec4 dirPlaneNormalWorld;
         dirPlaneNormalWorld.TransformVector(directionUnary[i], mModelSource);
         dirPlaneNormalWorld.Normalize();
 
@@ -1371,7 +1375,7 @@ private:
       int tempAxis = axes[0];
       axes[0] = axes[bestIndex];
       axes[bestIndex] = tempAxis;
-      vec_t tempDirection = axesWorldDirections[0];
+      recti::vec4 tempDirection = axesWorldDirections[0];
       axesWorldDirections[0] = axesWorldDirections[bestIndex];
       axesWorldDirections[bestIndex] = tempDirection;
     }
@@ -1381,7 +1385,7 @@ private:
       bestAxisWorldDirection = axesWorldDirections[axisIndex];
 
       // corners
-      vec_t aabb[4];
+      recti::vec4 aabb[4];
 
       int secondAxis = (bestAxis + 1) % 3;
       int thirdAxis = (bestAxis + 2) % 3;
@@ -1396,7 +1400,7 @@ private:
       unsigned int anchorAlpha =
         mbEnable ? IM_COL32_BLACK : IM_COL32(0, 0, 0, 0x80);
 
-      matrix_t boundsMVP = mModelSource * mViewProjection;
+      recti::mat4 boundsMVP = mModelSource * mViewProjection;
       for (int i = 0; i < 4; i++) {
         recti::Vec2 worldBound1 = worldToPos(aabb[i], boundsMVP);
         recti::Vec2 worldBound2 = worldToPos(aabb[(i + 1) % 4], boundsMVP);
@@ -1405,7 +1409,7 @@ private:
         }
         float boundDistance = sqrtf((worldBound1 - worldBound2).SqrLength());
         int stepCount = (int)(boundDistance / 10.f);
-        stepCount = min(stepCount, 1000);
+        stepCount = recti::min(stepCount, 1000);
         for (int j = 0; j < stepCount; j++) {
           float stepLength = 1.f / (float)stepCount;
           float t1 = (float)j * stepLength;
@@ -1422,7 +1426,7 @@ private:
                             IM_COL32(0xAA, 0xAA, 0xAA, 0) + anchorAlpha,
                             2.f);
         }
-        vec_t midPoint = (aabb[i] + aabb[(i + 1) % 4]) * 0.5f;
+        recti::vec4 midPoint = (aabb[i] + aabb[(i + 1) % 4]) * 0.5f;
         recti::Vec2 midBound = worldToPos(midPoint, boundsMVP);
         static const float AnchorBigRadius = 8.f;
         static const float AnchorSmallRadius = 6.f;
@@ -1486,7 +1490,7 @@ private:
         // small anchor on middle of segment
         if (!mbUsingBounds && mbEnable && overSmallAnchor &&
             CanActivate(mouseLeftDown)) {
-          vec_t midPointOpposite =
+          recti::vec4 midPointOpposite =
             (aabb[(i + 2) % 4] + aabb[(i + 3) % 4]) * 0.5f;
           mBoundsPivot.TransformPoint(midPointOpposite, mModelSource);
           mBoundsAnchor.TransformPoint(midPoint, mModelSource);
@@ -1509,17 +1513,17 @@ private:
       }
 
       if (mState.Using()) {
-        matrix_t scale;
+        recti::mat4 scale;
         scale.SetToIdentity();
 
         // compute projected mouse position on plan
         const float len =
           IntersectRayPlane(mRayOrigin, mRayVector, mBoundsPlan);
-        vec_t newPos = mRayOrigin + mRayVector * len;
+        recti::vec4 newPos = mRayOrigin + mRayVector * len;
 
         // compute a reference and delta vectors base on mouse move
-        vec_t deltaVector = (newPos - mBoundsPivot).Abs();
-        vec_t referenceVector = (mBoundsAnchor - mBoundsPivot).Abs();
+        recti::vec4 deltaVector = (newPos - mBoundsPivot).Abs();
+        recti::vec4 referenceVector = (mBoundsAnchor - mBoundsPivot).Abs();
 
         // for 1 or 2 axes, compute a ratio that's used for scale and snap it
         // based on resulting length
@@ -1530,7 +1534,7 @@ private:
           }
 
           float ratioAxis = 1.f;
-          vec_t axisDir = mBoundsMatrix.component(axisIndex1).Abs();
+          recti::vec4 axisDir = mBoundsMatrix.component(axisIndex1).Abs();
 
           float dtAxis = axisDir.Dot(referenceVector);
           float boundSize = bounds[axisIndex1 + 3] - bounds[axisIndex1];
@@ -1540,7 +1544,7 @@ private:
 
           if (snapValues) {
             float length = boundSize * ratioAxis;
-            ComputeSnap(&length, snapValues[axisIndex1]);
+            recti::ComputeSnap(&length, snapValues[axisIndex1]);
             if (boundSize > FLT_EPSILON) {
               ratioAxis = length / boundSize;
             }
@@ -1549,10 +1553,10 @@ private:
         }
 
         // transform matrix
-        matrix_t preScale, postScale;
+        recti::mat4 preScale, postScale;
         preScale.Translation(-mBoundsLocalPivot);
         postScale.Translation(mBoundsLocalPivot);
-        matrix_t res = preScale * scale * postScale * mBoundsMatrix;
+        recti::mat4 res = preScale * scale * postScale * mBoundsMatrix;
         *matrix = res;
 
         // info text
@@ -1588,15 +1592,15 @@ private:
     }
   }
 
-  void ComputeCameraRay(vec_t& rayOrigin,
-                        vec_t& rayDir,
+  void ComputeCameraRay(recti::vec4& rayOrigin,
+                        recti::vec4& rayDir,
                         recti::Vec2 position,
                         recti::Vec2 size,
                         const recti::Vec2& mousePos)
   {
     // ImGuiIO& io = ImGui::GetIO();
 
-    matrix_t mViewProjInverse;
+    recti::mat4 mViewProjInverse;
     mViewProjInverse.Inverse(mViewMat * mProjectionMat);
 
     const float mox = ((mousePos.X - position.X) / size.X) * 2.f - 1.f;
@@ -1607,14 +1611,14 @@ private:
 
     rayOrigin.Transform({ mox, moy, zNear, 1.f }, mViewProjInverse);
     rayOrigin *= 1.f / rayOrigin.w;
-    vec_t rayEnd;
+    recti::vec4 rayEnd;
     rayEnd.Transform({ mox, moy, zFar, 1.f }, mViewProjInverse);
     rayEnd *= 1.f / rayEnd.w;
     rayDir = Normalized(rayEnd - rayOrigin);
   }
 
-  void ComputeCameraRay(vec_t& rayOrigin,
-                        vec_t& rayDir,
+  void ComputeCameraRay(recti::vec4& rayOrigin,
+                        recti::vec4& rayDir,
                         const recti::Vec2& mousePos)
   {
     ComputeCameraRay(rayOrigin, rayDir, leftTop(), size(), mousePos);
@@ -1644,27 +1648,27 @@ private:
       const float signedLength =
         IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
       const float len = fabsf(signedLength); // near plan
-      const vec_t newPos = mRayOrigin + mRayVector * len;
+      const recti::vec4 newPos = mRayOrigin + mRayVector * len;
 
       // compute delta
-      const vec_t newOrigin = newPos - mRelativeOrigin * mScreenFactor;
-      vec_t delta = newOrigin - mModel.position();
+      const recti::vec4 newOrigin = newPos - mRelativeOrigin * mScreenFactor;
+      recti::vec4 delta = newOrigin - mModel.position();
 
       // 1 axis constraint
       if (mCurrentOperation >= MT_MOVE_X && mCurrentOperation <= MT_MOVE_Z) {
         const int axisIndex = mCurrentOperation - MT_MOVE_X;
-        const vec_t& axisValue = mModel.component(axisIndex);
+        const recti::vec4& axisValue = mModel.component(axisIndex);
         const float lengthOnAxis = Dot(axisValue, delta);
         delta = axisValue * lengthOnAxis;
       }
 
       // snap
       if (snap) {
-        vec_t cumulativeDelta = mModel.position() + delta - mMatrixOrigin;
+        recti::vec4 cumulativeDelta = mModel.position() + delta - mMatrixOrigin;
         if (applyRotationLocaly) {
-          matrix_t modelSourceNormalized = mModelSource;
+          recti::mat4 modelSourceNormalized = mModelSource;
           modelSourceNormalized.OrthoNormalize();
-          matrix_t modelSourceNormalizedInverse;
+          recti::mat4 modelSourceNormalizedInverse;
           modelSourceNormalizedInverse.Inverse(modelSourceNormalized);
           cumulativeDelta.TransformVector(modelSourceNormalizedInverse);
           ComputeSnap(cumulativeDelta, snap);
@@ -1681,14 +1685,14 @@ private:
       mTranslationLastDelta = delta;
 
       // compute matrix & delta
-      matrix_t deltaMatrixTranslation;
+      recti::mat4 deltaMatrixTranslation;
       deltaMatrixTranslation.Translation(delta);
       if (deltaMatrix) {
         memcpy(deltaMatrix, &deltaMatrixTranslation.m00, sizeof(float) * 16);
       }
 
-      const matrix_t res = mModelSource * deltaMatrixTranslation;
-      *(matrix_t*)matrix = res;
+      const recti::mat4 res = mModelSource * deltaMatrixTranslation;
+      *(recti::mat4*)matrix = res;
 
       if (!mouseLeftDown) {
         mState.mbUsing = false;
@@ -1704,14 +1708,16 @@ private:
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
-        vec_t movePlanNormal[] = { mModel.right(), mModel.up(), mModel.dir(),
-                                   mModel.right(), mModel.up(), mModel.dir(),
-                                   -mCameraDir };
+        recti::vec4 movePlanNormal[] = { mModel.right(), mModel.up(),
+                                         mModel.dir(),   mModel.right(),
+                                         mModel.up(),    mModel.dir(),
+                                         -mCameraDir };
 
-        vec_t cameraToModelNormalized =
+        recti::vec4 cameraToModelNormalized =
           Normalized(mModel.position() - mCameraEye);
         for (unsigned int i = 0; i < 3; i++) {
-          vec_t orthoVector = Cross(movePlanNormal[i], cameraToModelNormalized);
+          recti::vec4 orthoVector =
+            Cross(movePlanNormal[i], cameraToModelNormalized);
           movePlanNormal[i].Cross(orthoVector);
           movePlanNormal[i].Normalize();
         }
@@ -1753,10 +1759,10 @@ private:
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
-        const vec_t movePlanNormal[] = { mModel.up(),    mModel.dir(),
-                                         mModel.right(), mModel.dir(),
-                                         mModel.up(),    mModel.right(),
-                                         -mCameraDir };
+        const recti::vec4 movePlanNormal[] = { mModel.up(),    mModel.dir(),
+                                               mModel.right(), mModel.dir(),
+                                               mModel.up(),    mModel.right(),
+                                               -mCameraDir };
         // pickup plan
 
         mTranslationPlan =
@@ -1778,25 +1784,26 @@ private:
     if (mState.Using() && IsScaleType(mCurrentOperation)) {
       const float len =
         IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
-      vec_t newPos = mRayOrigin + mRayVector * len;
-      vec_t newOrigin = newPos - mRelativeOrigin * mScreenFactor;
-      vec_t delta = newOrigin - mModelLocal.position();
+      recti::vec4 newPos = mRayOrigin + mRayVector * len;
+      recti::vec4 newOrigin = newPos - mRelativeOrigin * mScreenFactor;
+      recti::vec4 delta = newOrigin - mModelLocal.position();
 
       // 1 axis constraint
       if (mCurrentOperation >= MT_SCALE_X && mCurrentOperation <= MT_SCALE_Z) {
         int axisIndex = mCurrentOperation - MT_SCALE_X;
-        const vec_t& axisValue = mModelLocal.component(axisIndex);
+        const recti::vec4& axisValue = mModelLocal.component(axisIndex);
         float lengthOnAxis = Dot(axisValue, delta);
         delta = axisValue * lengthOnAxis;
 
-        vec_t baseVector = mTranslationPlanOrigin - mModelLocal.position();
+        recti::vec4 baseVector =
+          mTranslationPlanOrigin - mModelLocal.position();
         float ratio =
           Dot(axisValue, baseVector + delta) / Dot(axisValue, baseVector);
 
-        mScale[axisIndex] = max(ratio, 0.001f);
+        mScale[axisIndex] = recti::max(ratio, 0.001f);
       } else {
         float scaleDelta = (mousePos.X - mSaveMousePosx) * 0.01f;
-        mScale.Set(max(1.f + scaleDelta, 0.001f));
+        mScale.Set(recti::max(1.f + scaleDelta, 0.001f));
       }
 
       // snap
@@ -1807,7 +1814,7 @@ private:
 
       // no 0 allowed
       for (int i = 0; i < 3; i++)
-        mScale[i] = max(mScale[i], 0.001f);
+        mScale[i] = recti::max(mScale[i], 0.001f);
 
       if (mScaleLast != mScale) {
         modified = true;
@@ -1815,16 +1822,16 @@ private:
       mScaleLast = mScale;
 
       // compute matrix & delta
-      matrix_t deltaMatrixScale;
+      recti::mat4 deltaMatrixScale;
       deltaMatrixScale.Scale(mScale * mScaleValueOrigin);
 
-      matrix_t res = deltaMatrixScale * mModelLocal;
-      *(matrix_t*)matrix = res;
+      recti::mat4 res = deltaMatrixScale * mModelLocal;
+      *(recti::mat4*)matrix = res;
 
       if (deltaMatrix) {
-        vec_t deltaScale = mScale * mScaleValueOrigin;
+        recti::vec4 deltaScale = mScale * mScaleValueOrigin;
 
-        vec_t originalScaleDivider;
+        recti::vec4 originalScaleDivider;
         originalScaleDivider.x = 1 / mModelScaleOrigin.x;
         originalScaleDivider.y = 1 / mModelScaleOrigin.y;
         originalScaleDivider.z = 1 / mModelScaleOrigin.z;
@@ -1873,7 +1880,7 @@ private:
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
-        const vec_t rotatePlanNormal[] = {
+        const recti::vec4 rotatePlanNormal[] = {
           mModel.right(), mModel.up(), mModel.dir(), -mCameraDir
         };
         // pickup plan
@@ -1887,7 +1894,8 @@ private:
 
         const float len =
           IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
-        vec_t localPos = mRayOrigin + mRayVector * len - mModel.position();
+        recti::vec4 localPos =
+          mRayOrigin + mRayVector * len - mModel.position();
         mRotationVectorSource = Normalized(localPos);
         mRotationAngleOrigin = ComputeAngleOnPlan();
       }
@@ -1898,16 +1906,16 @@ private:
       mRotationAngle = ComputeAngleOnPlan();
       if (snap) {
         float snapInRadian = snap[0] * DEG2RAD;
-        ComputeSnap(&mRotationAngle, snapInRadian);
+        recti::ComputeSnap(&mRotationAngle, snapInRadian);
       }
-      vec_t rotationAxisLocalSpace;
+      recti::vec4 rotationAxisLocalSpace;
 
       rotationAxisLocalSpace.TransformVector(
         { mTranslationPlan.x, mTranslationPlan.y, mTranslationPlan.z, 0.f },
         mModelInverse);
       rotationAxisLocalSpace.Normalize();
 
-      matrix_t deltaRotation;
+      recti::mat4 deltaRotation;
       deltaRotation.RotationAxis(rotationAxisLocalSpace,
                                  mRotationAngle - mRotationAngleOrigin);
       if (mRotationAngle != mRotationAngleOrigin) {
@@ -1915,21 +1923,21 @@ private:
       }
       mRotationAngleOrigin = mRotationAngle;
 
-      matrix_t scaleOrigin;
+      recti::mat4 scaleOrigin;
       scaleOrigin.Scale(mModelScaleOrigin);
 
       if (applyRotationLocaly) {
-        *(matrix_t*)matrix = scaleOrigin * deltaRotation * mModelLocal;
+        *(recti::mat4*)matrix = scaleOrigin * deltaRotation * mModelLocal;
       } else {
-        matrix_t res = mModelSource;
+        recti::mat4 res = mModelSource;
         res.position().Set(0.f);
 
-        *(matrix_t*)matrix = res * deltaRotation;
-        ((matrix_t*)matrix)->position() = mModelSource.position();
+        *(recti::mat4*)matrix = res * deltaRotation;
+        ((recti::mat4*)matrix)->position() = mModelSource.position();
       }
 
       if (deltaMatrix) {
-        *(matrix_t*)deltaMatrix = mModelInverse * deltaRotation * mModel;
+        *(recti::mat4*)deltaMatrix = mModelInverse * deltaRotation * mModel;
       }
 
       if (!mouseLeftDown) {
@@ -1945,13 +1953,14 @@ private:
   {
     const float len =
       IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
-    vec_t localPos =
+    recti::vec4 localPos =
       Normalized(mRayOrigin + mRayVector * len - mModel.position());
 
-    vec_t perpendicularVector;
+    recti::vec4 perpendicularVector;
     perpendicularVector.Cross(mRotationVectorSource, mTranslationPlan);
     perpendicularVector.Normalize();
-    float acosAngle = Clamp(Dot(localPos, mRotationVectorSource), -1.f, 1.f);
+    float acosAngle =
+      recti::Clamp(Dot(localPos, mRotationVectorSource), -1.f, 1.f);
     float angle = acosf(acosAngle);
     angle *= (Dot(localPos, perpendicularVector) < 0.f) ? 1.f : -1.f;
     return angle;
@@ -1982,16 +1991,16 @@ public:
     mYMax = mY + mXMax;
     mDisplayRatio = width / height;
 
-    this->mViewMat = *(matrix_t*)view;
+    this->mViewMat = *(recti::mat4*)view;
     mViewInverse.Inverse(this->mViewMat);
     this->mCameraDir = mViewInverse.dir();
     this->mCameraEye = mViewInverse.position();
     this->mCameraRight = mViewInverse.right();
     this->mCameraUp = mViewInverse.up();
 
-    this->mProjectionMat = *(matrix_t*)projection;
+    this->mProjectionMat = *(recti::mat4*)projection;
     // projection reverse
-    vec_t nearPos, farPos;
+    recti::vec4 nearPos, farPos;
     nearPos.Transform({ 0, 0, 1.f, 1.f }, this->mProjectionMat);
     farPos.Transform({ 0, 0, 2.f, 1.f }, this->mProjectionMat);
     this->mReversed = (nearPos.z / nearPos.w) > (farPos.z / farPos.w);
@@ -2017,11 +2026,11 @@ public:
 
     // set delta to identity
     if (deltaMatrix) {
-      ((matrix_t*)deltaMatrix)->SetToIdentity();
+      ((recti::mat4*)deltaMatrix)->SetToIdentity();
     }
 
     // behind camera
-    vec_t camSpacePosition;
+    recti::vec4 camSpacePosition;
     camSpacePosition.TransformPoint({ 0.f, 0.f, 0.f }, mMVP);
     if (!mIsOrthographic && camSpacePosition.z < 0.001f) {
       return false;
@@ -2058,7 +2067,7 @@ public:
 
     if (localBounds && !mState.mbUsing) {
       HandleAndDrawLocalBounds(localBounds,
-                               (matrix_t*)matrix,
+                               (recti::mat4*)matrix,
                                boundsSnap,
                                operation,
                                mFrame.mMousePos,

@@ -1,14 +1,16 @@
 #pragma once
 
-struct matrix_t;
-struct vec_t
+namespace recti {
+
+struct mat4;
+struct vec4
 {
   float x = 0;
   float y = 0;
   float z = 0;
   float w = 0;
 
-  void Lerp(const vec_t& v, float t)
+  void Lerp(const vec4& v, float t)
   {
     x += (v.x - x) * t;
     y += (v.y - y) * t;
@@ -25,7 +27,7 @@ struct vec_t
     w = _w;
   }
 
-  vec_t& operator-=(const vec_t& v)
+  vec4& operator-=(const vec4& v)
   {
     x -= v.x;
     y -= v.y;
@@ -33,7 +35,7 @@ struct vec_t
     w -= v.w;
     return *this;
   }
-  vec_t& operator+=(const vec_t& v)
+  vec4& operator+=(const vec4& v)
   {
     x += v.x;
     y += v.y;
@@ -41,7 +43,7 @@ struct vec_t
     w += v.w;
     return *this;
   }
-  vec_t& operator*=(const vec_t& v)
+  vec4& operator*=(const vec4& v)
   {
     x *= v.x;
     y *= v.y;
@@ -49,7 +51,7 @@ struct vec_t
     w *= v.w;
     return *this;
   }
-  vec_t& operator*=(float v)
+  vec4& operator*=(float v)
   {
     x *= v;
     y *= v;
@@ -58,27 +60,27 @@ struct vec_t
     return *this;
   }
 
-  vec_t operator*(float f) const;
-  vec_t operator-() const;
-  vec_t operator-(const vec_t& v) const;
-  vec_t operator+(const vec_t& v) const;
-  vec_t operator*(const vec_t& v) const;
+  vec4 operator*(float f) const;
+  vec4 operator-() const;
+  vec4 operator-(const vec4& v) const;
+  vec4 operator+(const vec4& v) const;
+  vec4 operator*(const vec4& v) const;
 
-  const vec_t& operator+() const { return (*this); }
+  const vec4& operator+() const { return (*this); }
   float Length() const;
   float LengthSq() const { return (x * x + y * y + z * z); };
-  vec_t Normalize();
-  vec_t Normalize(const vec_t& v)
+  vec4 Normalize();
+  vec4 Normalize(const vec4& v)
   {
     this->Set(v.x, v.y, v.z, v.w);
     this->Normalize();
     return (*this);
   }
-  vec_t Abs() const;
+  vec4 Abs() const;
 
-  void Cross(const vec_t& v)
+  void Cross(const vec4& v)
   {
-    vec_t res;
+    vec4 res;
     res.x = y * v.z - z * v.y;
     res.y = z * v.x - x * v.z;
     res.z = x * v.y - y * v.x;
@@ -89,7 +91,7 @@ struct vec_t
     w = 0.f;
   }
 
-  void Cross(const vec_t& v1, const vec_t& v2)
+  void Cross(const vec4& v1, const vec4& v2)
   {
     x = v1.y * v2.z - v1.z * v2.y;
     y = v1.z * v2.x - v1.x * v2.z;
@@ -97,24 +99,24 @@ struct vec_t
     w = 0.f;
   }
 
-  float Dot(const vec_t& v) const
+  float Dot(const vec4& v) const
   {
     return (x * v.x) + (y * v.y) + (z * v.z) + (w * v.w);
   }
 
-  float Dot3(const vec_t& v) const { return (x * v.x) + (y * v.y) + (z * v.z); }
+  float Dot3(const vec4& v) const { return (x * v.x) + (y * v.y) + (z * v.z); }
 
-  void Transform(const matrix_t& matrix);
-  void Transform(const vec_t& s, const matrix_t& matrix);
+  void Transform(const mat4& matrix);
+  void Transform(const vec4& s, const mat4& matrix);
 
-  void TransformVector(const matrix_t& matrix);
-  void TransformPoint(const matrix_t& matrix);
-  void TransformVector(const vec_t& v, const matrix_t& matrix)
+  void TransformVector(const mat4& matrix);
+  void TransformPoint(const mat4& matrix);
+  void TransformVector(const vec4& v, const mat4& matrix)
   {
     (*this) = v;
     this->TransformVector(matrix);
   }
-  void TransformPoint(const vec_t& v, const matrix_t& matrix)
+  void TransformPoint(const vec4& v, const mat4& matrix)
   {
     (*this) = v;
     this->TransformPoint(matrix);
@@ -122,35 +124,35 @@ struct vec_t
 
   float& operator[](size_t index) { return ((float*)&x)[index]; }
   const float& operator[](size_t index) const { return ((float*)&x)[index]; }
-  bool operator!=(const vec_t& other) const;
+  bool operator!=(const vec4& other) const;
 };
 
-inline vec_t
-vec_t::operator*(float f) const
+inline vec4
+vec4::operator*(float f) const
 {
   return { x * f, y * f, z * f, w * f };
 }
 
-inline vec_t
-vec_t::operator-() const
+inline vec4
+vec4::operator-() const
 {
   return { -x, -y, -z, -w };
 }
 
-inline vec_t
-vec_t::operator-(const vec_t& v) const
+inline vec4
+vec4::operator-(const vec4& v) const
 {
   return { x - v.x, y - v.y, z - v.z, w - v.w };
 }
 
-inline vec_t
-vec_t::operator+(const vec_t& v) const
+inline vec4
+vec4::operator+(const vec4& v) const
 {
   return { x + v.x, y + v.y, z + v.z, w + v.w };
 }
 
-inline vec_t
-vec_t::operator*(const vec_t& v) const
+inline vec4
+vec4::operator*(const vec4& v) const
 {
   return { x * v.x, y * v.y, z * v.z, w * v.w };
 }
@@ -199,19 +201,19 @@ IsWithin(T x, T y, T z)
   return (x >= y) && (x <= z);
 }
 
-inline vec_t
-Normalized(const vec_t& v)
+inline vec4
+Normalized(const vec4& v)
 {
-  vec_t res;
+  vec4 res;
   res = v;
   res.Normalize();
   return res;
 }
 
-inline vec_t
-Cross(const vec_t& v1, const vec_t& v2)
+inline vec4
+Cross(const vec4& v1, const vec4& v2)
 {
-  vec_t res;
+  vec4 res;
   res.x = v1.y * v2.z - v1.z * v2.y;
   res.y = v1.z * v2.x - v1.x * v2.z;
   res.z = v1.x * v2.y - v1.y * v2.x;
@@ -220,15 +222,15 @@ Cross(const vec_t& v1, const vec_t& v2)
 }
 
 inline float
-Dot(const vec_t& v1, const vec_t& v2)
+Dot(const vec4& v1, const vec4& v2)
 {
   return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
 }
 
-inline vec_t
-BuildPlan(const vec_t& p_point1, const vec_t& p_normal)
+inline vec4
+BuildPlan(const vec4& p_point1, const vec4& p_normal)
 {
-  vec_t normal, res;
+  vec4 normal, res;
   normal.Normalize(p_normal);
   res.w = normal.Dot(p_point1);
   res.x = normal.x;
@@ -237,25 +239,23 @@ BuildPlan(const vec_t& p_point1, const vec_t& p_normal)
   return res;
 }
 inline float
-DistanceToPlane(const vec_t& point, const vec_t& plan)
+DistanceToPlane(const vec4& point, const vec4& plan)
 {
   return plan.Dot3(point) + plan.w;
 }
 
 float
-IntersectRayPlane(const vec_t& rOrigin,
-                  const vec_t& rVector,
-                  const vec_t& plan);
+IntersectRayPlane(const vec4& rOrigin, const vec4& rVector, const vec4& plan);
 
-vec_t
-PointOnSegment(const vec_t& point,
-               const vec_t& vertPos1,
-               const vec_t& vertPos2);
+vec4
+PointOnSegment(const vec4& point, const vec4& vertPos1, const vec4& vertPos2);
 
 void
 ComputeSnap(float* value, float snap);
 void
-ComputeSnap(vec_t& value, const float* snap);
+ComputeSnap(vec4& value, const float* snap);
 
 void
-ComputeFrustumPlanes(vec_t* frustum, const float* clip);
+ComputeFrustumPlanes(vec4* frustum, const float* clip);
+
+}

@@ -1,8 +1,10 @@
 #pragma once
-#include "vec_t.h"
+#include "vec4.h"
 #include <tuple>
 
-struct matrix_t
+namespace recti {
+
+struct mat4
 {
   float m00, m01, m02, m03;
   float m10, m11, m12, m13;
@@ -11,21 +13,21 @@ struct matrix_t
 
   float& operator[](size_t index) { return (&m00)[index]; }
   float operator[](size_t index) const { return (&m00)[index]; }
-  vec_t& right() { return *((vec_t*)&m00); }
-  vec_t& up() { return *((vec_t*)&m10); }
-  vec_t& dir() { return *((vec_t*)&m20); }
-  vec_t& position() { return *((vec_t*)&m30); }
-  const vec_t& right() const { return *((vec_t*)&m00); }
-  const vec_t& up() const { return *((vec_t*)&m10); }
-  const vec_t& dir() const { return *((vec_t*)&m20); }
-  const vec_t& position() const { return *((vec_t*)&m30); }
-  vec_t& component(size_t index) { return ((vec_t*)&m00)[index]; }
-  const vec_t& component(size_t index) const { return ((vec_t*)&m00)[index]; }
+  vec4& right() { return *((vec4*)&m00); }
+  vec4& up() { return *((vec4*)&m10); }
+  vec4& dir() { return *((vec4*)&m20); }
+  vec4& position() { return *((vec4*)&m30); }
+  const vec4& right() const { return *((vec4*)&m00); }
+  const vec4& up() const { return *((vec4*)&m10); }
+  const vec4& dir() const { return *((vec4*)&m20); }
+  const vec4& position() const { return *((vec4*)&m30); }
+  vec4& component(size_t index) { return ((vec4*)&m00)[index]; }
+  const vec4& component(size_t index) const { return ((vec4*)&m00)[index]; }
 
   operator float*() { return &m11; }
   operator const float*() const { return &m11; }
 
-  void Translation(const vec_t& vt)
+  void Translation(const vec4& vt)
   {
     *this = { 1.f,  0.f,  0.f,  0.f, //
               0.f,  1.f,  0.f,  0.f, //
@@ -43,26 +45,26 @@ struct matrix_t
     };
   }
 
-  void Scale(const vec_t& s) { Scale(s.x, s.y, s.z); }
+  void Scale(const vec4& s) { Scale(s.x, s.y, s.z); }
 
-  matrix_t& operator*=(const matrix_t& mat)
+  mat4& operator*=(const mat4& mat)
   {
-    matrix_t tmpMat;
+    mat4 tmpMat;
     tmpMat = *this;
     tmpMat.Multiply(mat);
     *this = tmpMat;
     return *this;
   }
 
-  matrix_t operator*(const matrix_t& mat) const
+  mat4 operator*(const mat4& mat) const
   {
-    matrix_t matT;
+    mat4 matT;
     matT.Multiply(*this, mat);
     return matT;
   }
 
-  void Multiply(const matrix_t& matrix);
-  void Multiply(const matrix_t& m1, const matrix_t& m2);
+  void Multiply(const mat4& matrix);
+  void Multiply(const mat4& m1, const mat4& m2);
 
   float GetDeterminant() const
   {
@@ -70,7 +72,7 @@ struct matrix_t
            m02 * m11 * m20 - m01 * m10 * m22 - m00 * m12 * m21;
   }
 
-  float Inverse(const matrix_t& srcMatrix, bool affine = false);
+  float Inverse(const mat4& srcMatrix, bool affine = false);
   void SetToIdentity()
   {
     *this = {
@@ -82,7 +84,7 @@ struct matrix_t
   }
   void Transpose();
 
-  void RotationAxis(const vec_t& axis, float angle);
+  void RotationAxis(const vec4& axis, float angle);
 
   void OrthoNormalize()
   {
@@ -135,17 +137,19 @@ void
 LookAt(const float* eye, const float* at, const float* up, float* m16);
 
 std::tuple<float, float>
-worldToPos(const vec_t& worldPos, const matrix_t& mat, const vec_t& screenRect);
+worldToPos(const vec4& worldPos, const mat4& mat, const vec4& screenRect);
 
 float
-GetSegmentLengthClipSpace(const vec_t& start,
-                          const vec_t& end,
-                          const matrix_t& mvp,
+GetSegmentLengthClipSpace(const vec4& start,
+                          const vec4& end,
+                          const mat4& mvp,
                           float mDisplayRatio);
 
 float
-GetParallelogram(const vec_t& ptO,
-                 const vec_t& ptA,
-                 const vec_t& ptB,
-                 const matrix_t& mMVP,
+GetParallelogram(const vec4& ptO,
+                 const vec4& ptA,
+                 const vec4& ptB,
+                 const mat4& mMVP,
                  float mDisplayRatio);
+
+}

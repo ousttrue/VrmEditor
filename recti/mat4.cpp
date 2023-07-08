@@ -1,14 +1,16 @@
-#include "matrix_t.h"
+#include "mat4.h"
 #include <DirectXMath.h>
 #include <cfloat>
 #include <math.h>
 
+namespace recti {
+
 static const float ZPI = 3.14159265358979323846f;
 static const float RAD2DEG = (180.f / ZPI);
 static const float DEG2RAD = (ZPI / 180.f);
-static const vec_t directionUnary[3] = { { 1.f, 0.f, 0.f, 0 },
-                                         { 0.f, 1.f, 0.f, 0 },
-                                         { 0.f, 0.f, 1.f, 0 } };
+static const vec4 directionUnary[3] = { { 1.f, 0.f, 0.f, 0 },
+                                        { 0.f, 1.f, 0.f, 0 },
+                                        { 0.f, 0.f, 1.f, 0 } };
 
 inline void
 FPU_MatrixF_x_MatrixF(const float* a, const float* b, float* r)
@@ -35,7 +37,7 @@ FPU_MatrixF_x_MatrixF(const float* a, const float* b, float* r)
 }
 
 void
-matrix_t::Transpose()
+mat4::Transpose()
 {
   DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)this,
                            DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(
@@ -43,22 +45,22 @@ matrix_t::Transpose()
 }
 
 void
-matrix_t::Multiply(const matrix_t& matrix)
+mat4::Multiply(const mat4& matrix)
 {
-  matrix_t tmp;
+  mat4 tmp;
   tmp = *this;
 
   FPU_MatrixF_x_MatrixF((float*)&tmp, (float*)&matrix, (float*)this);
 }
 
 void
-matrix_t::Multiply(const matrix_t& m1, const matrix_t& m2)
+mat4::Multiply(const mat4& m1, const mat4& m2)
 {
   FPU_MatrixF_x_MatrixF((float*)&m1, (float*)&m2, (float*)this);
 }
 
 float
-matrix_t::Inverse(const matrix_t& srcMatrix, bool affine)
+mat4::Inverse(const mat4& srcMatrix, bool affine)
 {
   float det = 0;
 
@@ -167,7 +169,7 @@ matrix_t::Inverse(const matrix_t& srcMatrix, bool affine)
 }
 
 void
-matrix_t::RotationAxis(const vec_t& axis, float angle)
+mat4::RotationAxis(const vec4& axis, float angle)
 {
   float length2 = axis.LengthSq();
   if (length2 < FLT_EPSILON) {
@@ -175,7 +177,7 @@ matrix_t::RotationAxis(const vec_t& axis, float angle)
     return;
   }
 
-  vec_t n = axis * (1.f / sqrtf(length2));
+  vec4 n = axis * (1.f / sqrtf(length2));
   float s = sinf(angle);
   float c = cosf(angle);
   float k = 1.f - c;
@@ -255,9 +257,9 @@ LookAt(const float* eye, const float* at, const float* up, float* m16)
 }
 
 std::tuple<float, float>
-worldToPos(const vec_t& worldPos, const matrix_t& mat, const vec_t& screenRect)
+worldToPos(const vec4& worldPos, const mat4& mat, const vec4& screenRect)
 {
-  vec_t trans;
+  vec4 trans;
   trans.TransformPoint(worldPos, mat);
   trans *= 0.5f / trans.w;
   trans += { 0.5f, 0.5f };
@@ -275,7 +277,7 @@ DecomposeMatrixToComponents(const float* matrix,
                             float* rotation,
                             float* scale)
 {
-  matrix_t mat = *(matrix_t*)matrix;
+  mat4 mat = *(mat4*)matrix;
 
   scale[0] = mat.right().Length();
   scale[1] = mat.up().Length();
@@ -299,9 +301,9 @@ RecomposeMatrixFromComponents(const float* translation,
                               const float* scale,
                               float* matrix)
 {
-  matrix_t& mat = *(matrix_t*)matrix;
+  mat4& mat = *(mat4*)matrix;
 
-  matrix_t rot[3];
+  mat4 rot[3];
   for (int i = 0; i < 3; i++) {
     rot[i].RotationAxis(directionUnary[i], rotation[i] * DEG2RAD);
   }
@@ -323,12 +325,12 @@ RecomposeMatrixFromComponents(const float* translation,
 }
 
 float
-GetSegmentLengthClipSpace(const vec_t& start,
-                          const vec_t& end,
-                          const matrix_t& mvp,
+GetSegmentLengthClipSpace(const vec4& start,
+                          const vec4& end,
+                          const mat4& mvp,
                           float mDisplayRatio)
 {
-  vec_t startOfSegment = start;
+  vec4 startOfSegment = start;
   startOfSegment.TransformPoint(mvp);
   if (fabsf(startOfSegment.w) >
       FLT_EPSILON) // check for axis aligned with camera direction
@@ -336,7 +338,7 @@ GetSegmentLengthClipSpace(const vec_t& start,
     startOfSegment *= 1.f / startOfSegment.w;
   }
 
-  vec_t endOfSegment = end;
+  vec4 endOfSegment = end;
   endOfSegment.TransformPoint(mvp);
   if (fabsf(endOfSegment.w) >
       FLT_EPSILON) // check for axis aligned with camera direction
@@ -344,7 +346,7 @@ GetSegmentLengthClipSpace(const vec_t& start,
     endOfSegment *= 1.f / endOfSegment.w;
   }
 
-  vec_t clipSpaceAxis = endOfSegment - startOfSegment;
+  vec4 clipSpaceAxis = endOfSegment - startOfSegment;
   clipSpaceAxis.y /= mDisplayRatio;
   float segmentLengthInClipSpace = sqrtf(clipSpaceAxis.x * clipSpaceAxis.x +
                                          clipSpaceAxis.y * clipSpaceAxis.y);
@@ -352,13 +354,13 @@ GetSegmentLengthClipSpace(const vec_t& start,
 }
 
 float
-GetParallelogram(const vec_t& ptO,
-                 const vec_t& ptA,
-                 const vec_t& ptB,
-                 const matrix_t& mMVP,
+GetParallelogram(const vec4& ptO,
+                 const vec4& ptA,
+                 const vec4& ptB,
+                 const mat4& mMVP,
                  float mDisplayRatio)
 {
-  vec_t pts[] = { ptO, ptA, ptB };
+  vec4 pts[] = { ptO, ptA, ptB };
   for (unsigned int i = 0; i < 3; i++) {
     pts[i].TransformPoint(mMVP);
     if (fabsf(pts[i].w) >
@@ -367,13 +369,15 @@ GetParallelogram(const vec_t& ptO,
       pts[i] *= 1.f / pts[i].w;
     }
   }
-  vec_t segA = pts[1] - pts[0];
-  vec_t segB = pts[2] - pts[0];
+  vec4 segA = pts[1] - pts[0];
+  vec4 segB = pts[2] - pts[0];
   segA.y /= mDisplayRatio;
   segB.y /= mDisplayRatio;
-  vec_t segAOrtho = { -segA.y, segA.x };
+  vec4 segAOrtho = { -segA.y, segA.x };
   segAOrtho.Normalize();
   float dt = segAOrtho.Dot3(segB);
   float surface = sqrtf(segA.x * segA.x + segA.y * segA.y) * fabsf(dt);
   return surface;
 }
+
+} // namespace

@@ -1,38 +1,40 @@
-#include "vec_t.h"
-#include "matrix_t.h"
+#include "mat4.h"
+#include "vec4.h"
 #include <cfloat>
 #include <math.h>
 #include <memory.h>
 
+namespace recti {
+
 float
-vec_t::Length() const
+vec4::Length() const
 {
   return sqrtf(x * x + y * y + z * z);
 }
 
-vec_t
-vec_t::Normalize()
+vec4
+vec4::Normalize()
 {
   (*this) *= (1.f / (Length() > FLT_EPSILON ? Length() : FLT_EPSILON));
   return (*this);
 }
 
 bool
-vec_t::operator!=(const vec_t& other) const
+vec4::operator!=(const vec4& other) const
 {
-  return memcmp(this, &other, sizeof(vec_t)) != 0;
+  return memcmp(this, &other, sizeof(vec4)) != 0;
 }
 
-vec_t
-vec_t::Abs() const
+vec4
+vec4::Abs() const
 {
   return { fabsf(x), fabsf(y), fabsf(z) };
 }
 
 void
-vec_t::Transform(const matrix_t& matrix)
+vec4::Transform(const mat4& matrix)
 {
-  vec_t out;
+  vec4 out;
   out.x = x * matrix.m00 + y * matrix.m10 + z * matrix.m20 + w * matrix.m30;
   out.y = x * matrix.m01 + y * matrix.m11 + z * matrix.m21 + w * matrix.m31;
   out.z = x * matrix.m02 + y * matrix.m12 + z * matrix.m22 + w * matrix.m32;
@@ -44,16 +46,16 @@ vec_t::Transform(const matrix_t& matrix)
 }
 
 void
-vec_t::Transform(const vec_t& s, const matrix_t& matrix)
+vec4::Transform(const vec4& s, const mat4& matrix)
 {
   *this = s;
   Transform(matrix);
 }
 
 void
-vec_t::TransformPoint(const matrix_t& matrix)
+vec4::TransformPoint(const mat4& matrix)
 {
-  vec_t out;
+  vec4 out;
   out.x = x * matrix.m00 + y * matrix.m10 + z * matrix.m20 + matrix.m30;
   out.y = x * matrix.m01 + y * matrix.m11 + z * matrix.m21 + matrix.m31;
   out.z = x * matrix.m02 + y * matrix.m12 + z * matrix.m22 + matrix.m32;
@@ -65,9 +67,9 @@ vec_t::TransformPoint(const matrix_t& matrix)
 }
 
 void
-vec_t::TransformVector(const matrix_t& matrix)
+vec4::TransformVector(const mat4& matrix)
 {
-  vec_t out;
+  vec4 out;
   out.x = x * matrix.m00 + y * matrix.m10 + z * matrix.m20;
   out.y = x * matrix.m01 + y * matrix.m11 + z * matrix.m21;
   out.z = x * matrix.m02 + y * matrix.m12 + z * matrix.m22;
@@ -88,7 +90,7 @@ Normalize(const float* a, float* r)
 }
 
 float
-IntersectRayPlane(const vec_t& rOrigin, const vec_t& rVector, const vec_t& plan)
+IntersectRayPlane(const vec4& rOrigin, const vec4& rVector, const vec4& plan)
 {
   const float numer = plan.Dot3(rOrigin) - plan.w;
   const float denom = plan.Dot3(rVector);
@@ -102,11 +104,11 @@ IntersectRayPlane(const vec_t& rOrigin, const vec_t& rVector, const vec_t& plan)
   return -(numer / denom);
 }
 
-vec_t
-PointOnSegment(const vec_t& point, const vec_t& vertPos1, const vec_t& vertPos2)
+vec4
+PointOnSegment(const vec4& point, const vec4& vertPos1, const vec4& vertPos2)
 {
-  vec_t c = point - vertPos1;
-  vec_t V;
+  vec4 c = point - vertPos1;
+  vec4 V;
 
   V.Normalize(vertPos2 - vertPos1);
   float d = (vertPos2 - vertPos1).Length();
@@ -140,7 +142,7 @@ ComputeSnap(float* value, float snap)
   }
 }
 void
-ComputeSnap(vec_t& value, const float* snap)
+ComputeSnap(vec4& value, const float* snap)
 {
   for (int i = 0; i < 3; i++) {
     ComputeSnap(&value[i], snap[i]);
@@ -148,7 +150,7 @@ ComputeSnap(vec_t& value, const float* snap)
 }
 
 void
-ComputeFrustumPlanes(vec_t* frustum, const float* clip)
+ComputeFrustumPlanes(vec4* frustum, const float* clip)
 {
   frustum[0].x = clip[3] - clip[0];
   frustum[0].y = clip[7] - clip[4];
@@ -184,3 +186,5 @@ ComputeFrustumPlanes(vec_t* frustum, const float* clip)
     frustum[i].Normalize();
   }
 }
+
+} // namespace
