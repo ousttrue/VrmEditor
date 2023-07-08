@@ -259,8 +259,6 @@ class ContextImpl
 
   float mRadiusSquareCenter;
   recti::Vec2 mScreenSquareCenter;
-  recti::Vec2 mScreenSquareMin;
-  recti::Vec2 mScreenSquareMax;
 
   float mScreenFactor;
   recti::Vec4 mRelativeOrigin;
@@ -411,14 +409,6 @@ private:
 
     MOVETYPE type = MT_NONE;
 
-    // screen
-    // ImGuiIO& io = ImGui::GetIO();
-    if (mousePos.X >= mScreenSquareMin.X && mousePos.X <= mScreenSquareMax.X &&
-        mousePos.Y >= mScreenSquareMin.Y && mousePos.Y <= mScreenSquareMax.Y &&
-        Contains(op, TRANSLATE)) {
-      type = MT_MOVE_SCREEN;
-    }
-
     // compute
     for (int i = 0; i < 3 && type == MT_NONE; i++) {
       recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
@@ -477,7 +467,6 @@ private:
     if (mState.mbUsing) {
       return MT_NONE;
     }
-    // ImGuiIO& io = ImGui::GetIO();
     MOVETYPE type = MT_NONE;
 
     recti::Vec4 deltaScreen = { mousePos.X - mScreenSquareCenter.X,
@@ -539,15 +528,7 @@ private:
     if (mState.mbUsing) {
       return MT_NONE;
     }
-    // ImGuiIO& io = ImGui::GetIO();
     MOVETYPE type = MT_NONE;
-
-    // screen
-    if (mousePos.X >= mScreenSquareMin.X && mousePos.X <= mScreenSquareMax.X &&
-        mousePos.Y >= mScreenSquareMin.Y && mousePos.Y <= mScreenSquareMax.Y &&
-        Contains(op, SCALE)) {
-      type = MT_SCALE_XYZ;
-    }
 
     // compute
     for (int i = 0; i < 3 && type == MT_NONE; i++) {
@@ -681,21 +662,6 @@ private:
   // return true if mouse IsOver or if the gizmo is in moving state
   bool IsUsing() const { return mState.Using() || mbUsingBounds; }
 
-  bool CanActivate(bool mouseLeftDown) const
-  {
-    // if (mouseLeftDown /*ImGui::IsMouseClicked(0)*/) {
-    //   if (mAllowActiveHoverItem) {
-    //     return true;
-    //   } else {
-    //     if (!ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive()) {
-    //       return true;
-    //     }
-    //   }
-    // }
-    // return false;
-    return mouseLeftDown;
-  }
-
   recti::Vec2 worldToPos(const recti::Vec4& worldPos,
                          const recti::Mat4& mat) const
   {
@@ -742,8 +708,6 @@ private:
 
     recti::Vec2 centerSSpace = worldToPos({ 0.f, 0.f }, this->mMVP);
     this->mScreenSquareCenter = centerSSpace;
-    this->mScreenSquareMin = centerSSpace - recti::Vec2{ 10.f, 10.f };
-    this->mScreenSquareMax = centerSSpace + recti::Vec2{ 10.f, 10.f };
   }
 
   void ComputeColors(uint32_t* colors, int type, OPERATION operation)
@@ -1408,8 +1372,8 @@ private:
         int type = MT_NONE;
 
         if (Intersects(operation, TRANSLATE)) {
-          type =
-            GetMoveType(operation, mCameraMouse.ScreenMousePos(), mouse.Position);
+          type = GetMoveType(
+            operation, mCameraMouse.ScreenMousePos(), mouse.Position);
         }
         if (Intersects(operation, ROTATE) && type == MT_NONE) {
           type = GetRotateType(operation, mouse.Position);
@@ -1441,8 +1405,7 @@ private:
           midBound, AnchorSmallRadius - 1.2f, smallAnchorColor);
         int oppositeIndex = (i + 2) % 4;
         // big anchor on corners
-        if (!mbUsingBounds && mbEnable && overBigAnchor &&
-            CanActivate(mouse.LeftDown)) {
+        if (!mbUsingBounds && mbEnable && overBigAnchor && mouse.LeftDown) {
           mBoundsPivot.TransformPoint(aabb[(i + 2) % 4], mModelSource);
           mBoundsAnchor.TransformPoint(aabb[i], mModelSource);
           mBoundsPlan = BuildPlan(mBoundsAnchor, bestAxisWorldDirection);
@@ -1459,8 +1422,7 @@ private:
           mBoundsMatrix = mModelSource;
         }
         // small anchor on middle of segment
-        if (!mbUsingBounds && mbEnable && overSmallAnchor &&
-            CanActivate(mouse.LeftDown)) {
+        if (!mbUsingBounds && mbEnable && overSmallAnchor && mouse.LeftDown) {
           recti::Vec4 midPointOpposite =
             (aabb[(i + 2) % 4] + aabb[(i + 3) % 4]) * 0.5f;
           mBoundsPivot.TransformPoint(midPointOpposite, mModelSource);
@@ -1633,7 +1595,7 @@ private:
       type = GetMoveType(op, mCameraMouse.ScreenMousePos(), mouse.Position);
       if (type != MT_NONE) {
       }
-      if (CanActivate(mouse.LeftDown) && type != MT_NONE) {
+      if (mouse.LeftDown && type != MT_NONE) {
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
@@ -1683,7 +1645,7 @@ private:
       type = GetScaleType(op, mouse.Position);
       if (type != MT_NONE) {
       }
-      if (CanActivate(mouse.LeftDown) && type != MT_NONE) {
+      if (mouse.LeftDown && type != MT_NONE) {
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
@@ -1800,7 +1762,7 @@ private:
         applyRotationLocaly = true;
       }
 
-      if (CanActivate(mouse.LeftDown) && type != MT_NONE) {
+      if (mouse.LeftDown && type != MT_NONE) {
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
