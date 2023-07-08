@@ -1,6 +1,7 @@
 #pragma once
 #include "vec_t.h"
 
+struct ImVec2;
 struct matrix_t
 {
   float m00, m01, m02, m03;

@@ -432,8 +432,10 @@ private:
                    mViewProjection) -
         leftTop();
 
-      vec_t closestPointOnAxis = PointOnSegment(
-        screenCoord, makeVect(axisStartOnScreen), makeVect(axisEndOnScreen));
+      vec_t closestPointOnAxis =
+        PointOnSegment(screenCoord,
+                       { axisStartOnScreen.x, axisStartOnScreen.y },
+                       { axisEndOnScreen.x, axisEndOnScreen.y });
       if ((closestPointOnAxis - screenCoord).Length() < 12.f &&
           Intersects(op,
                      static_cast<OPERATION>(TRANSLATE_X << i))) // pixel size
@@ -502,7 +504,8 @@ private:
 
       const ImVec2 distanceOnScreen = idealPosOnCircleScreen - io.MousePos;
 
-      const float distance = makeVect(distanceOnScreen).Length();
+      const float distance =
+        vec_t{ distanceOnScreen.x, distanceOnScreen.y }.Length();
       if (distance < 8.f) // pixel size
       {
         type = (MOVETYPE)(MT_ROTATE_X + i);
@@ -563,12 +566,13 @@ private:
         worldToPos(mModelLocal.position() + dirAxis * mScreenFactor * endOffset,
                    mViewProjection);
 
-      vec_t closestPointOnAxis = PointOnSegment(makeVect(posOnPlanScreen),
-                                                makeVect(axisStartOnScreen),
-                                                makeVect(axisEndOnScreen));
+      vec_t closestPointOnAxis =
+        PointOnSegment({ posOnPlanScreen.x, posOnPlanScreen.y },
+                       { axisStartOnScreen.x, axisStartOnScreen.y },
+                       { axisEndOnScreen.x, axisEndOnScreen.y });
 
-      if ((closestPointOnAxis - makeVect(posOnPlanScreen)).Length() <
-          12.f) // pixel size
+      if ((closestPointOnAxis - vec_t{ posOnPlanScreen.x, posOnPlanScreen.y })
+            .Length() < 12.f) // pixel size
       {
         type = (MOVETYPE)(MT_SCALE_X + i);
       }
@@ -681,7 +685,8 @@ private:
   vec_t screenCoord() const
   {
     ImGuiIO& io = ImGui::GetIO();
-    return makeVect(io.MousePos - leftTop());
+    auto rel = io.MousePos - leftTop();
+    return { rel.x, rel.y };
   }
 
   ImVec2 worldToPos(const vec_t& worldPos, const matrix_t& mat) const

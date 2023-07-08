@@ -1,7 +1,7 @@
 #include "vec_t.h"
 #include "matrix_t.h"
 #include <cfloat>
-#include <imgui.h>
+// #include <imgui.h>
 #include <math.h>
 #include <memory.h>
 
@@ -28,17 +28,6 @@ vec_t
 vec_t::Abs() const
 {
   return { fabsf(x), fabsf(y), fabsf(z) };
-}
-
-vec_t
-makeVect(const ImVec2& v)
-{
-  vec_t res;
-  res.x = v.x;
-  res.y = v.y;
-  res.z = 0.f;
-  res.w = 0.f;
-  return res;
 }
 
 void

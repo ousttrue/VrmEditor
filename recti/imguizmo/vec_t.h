@@ -1,7 +1,6 @@
 #pragma once
 
 struct matrix_t;
-struct ImVec2;
 struct vec_t
 {
   float x = 0;
@@ -125,9 +124,6 @@ struct vec_t
   const float& operator[](size_t index) const { return ((float*)&x)[index]; }
   bool operator!=(const vec_t& other) const;
 };
-
-vec_t
-makeVect(const ImVec2& v);
 
 inline vec_t
 vec_t::operator*(float f) const
