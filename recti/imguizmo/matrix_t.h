@@ -1,7 +1,7 @@
 #pragma once
 #include "vec_t.h"
+#include <tuple>
 
-struct ImVec2;
 struct matrix_t
 {
   float m00, m01, m02, m03;
@@ -134,7 +134,7 @@ Perspective(float fovyInDegrees,
 void
 LookAt(const float* eye, const float* at, const float* up, float* m16);
 
-ImVec2
+std::tuple<float, float>
 worldToPos(const vec_t& worldPos, const matrix_t& mat, const vec_t& screenRect);
 
 float

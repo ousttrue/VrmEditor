@@ -255,7 +255,7 @@ LookAt(const float* eye, const float* at, const float* up, float* m16)
   m16[15] = 1.0f;
 }
 
-ImVec2
+std::tuple<float, float>
 worldToPos(const vec_t& worldPos, const matrix_t& mat, const vec_t& screenRect)
 {
   vec_t trans;
@@ -267,7 +267,7 @@ worldToPos(const vec_t& worldPos, const matrix_t& mat, const vec_t& screenRect)
   trans.y *= screenRect.w;
   trans.x += screenRect.x;
   trans.y += screenRect.y;
-  return ImVec2(trans.x, trans.y);
+  return { trans.x, trans.y };
 }
 
 void

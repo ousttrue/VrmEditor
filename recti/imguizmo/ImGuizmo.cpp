@@ -691,7 +691,8 @@ private:
 
   ImVec2 worldToPos(const vec_t& worldPos, const matrix_t& mat) const
   {
-    return ::worldToPos(worldPos, mat, { mX, mY, mWidth, mHeight });
+    auto [x, y] = ::worldToPos(worldPos, mat, { mX, mY, mWidth, mHeight });
+    return { x, y };
   }
 
   void ComputeContext(const float* view,

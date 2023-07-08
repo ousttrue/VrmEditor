@@ -1,7 +1,6 @@
 #include "vec_t.h"
 #include "matrix_t.h"
 #include <cfloat>
-// #include <imgui.h>
 #include <math.h>
 #include <memory.h>
 
