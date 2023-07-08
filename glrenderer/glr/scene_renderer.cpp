@@ -99,14 +99,17 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
 
     auto& io = ImGui::GetIO();
     auto& vp = camera.Projection.Viewport;
-    m_screen->SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
+    m_screen->Begin(&camera.ViewMatrix._11,
+                    &camera.ProjectionMatrix._11,
+                    vp.Left,
+                    vp.Top,
+                    vp.Width,
+                    vp.Height,
+                    io.MousePos,
+                    io.MouseDown[0]);
     if (m_screen->Manipulate(node.get(),
-                             &camera.ViewMatrix._11,
-                             &camera.ProjectionMatrix._11,
                              { enableTranslation, true, false, true },
                              (float*)&m,
-                             io.MousePos,
-                             io.MouseDown[0],
                              nullptr,
                              nullptr,
                              nullptr,
@@ -117,12 +120,8 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
 
       scene->RaiseSceneUpdated();
     }
-    auto& drawlist = m_screen->GetDrawList();
+    auto& drawlist = m_screen->End();
     recti::Render(drawlist, ImGui::GetWindowDrawList());
-    // void SetDrawlist(ImDrawList* drawlist)
-    // {
-    //   mDrawList = drawlist ? drawlist : ImGui::GetWindowDrawList();
-    // }
   }
 }
 
@@ -180,14 +179,17 @@ SceneRenderer::RenderRuntime(
 
     auto& io = ImGui::GetIO();
     auto& vp = camera.Projection.Viewport;
-    m_screen->SetRect(vp.Left, vp.Top, vp.Width, vp.Height);
+    m_screen->Begin(&camera.ViewMatrix._11,
+                    &camera.ProjectionMatrix._11,
+                    vp.Left,
+                    vp.Top,
+                    vp.Width,
+                    vp.Height,
+                    io.MousePos,
+                    io.MouseDown[0]);
     if (m_screen->Manipulate(node.get(),
-                             &camera.ViewMatrix._11,
-                             &camera.ProjectionMatrix._11,
                              { enableTranslation, true, false, true },
                              (float*)&m,
-                             io.MousePos,
-                             io.MouseDown[0],
                              nullptr,
                              nullptr,
                              nullptr,
@@ -196,7 +198,7 @@ SceneRenderer::RenderRuntime(
       node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldMatrix(true);
     }
-    auto& drawlist = m_screen->GetDrawList();
+    auto& drawlist = m_screen->End();
     recti::Render(drawlist, ImGui::GetWindowDrawList());
   }
 }

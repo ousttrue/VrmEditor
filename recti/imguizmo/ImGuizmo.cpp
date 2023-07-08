@@ -233,8 +233,16 @@ struct State
   }
 };
 
+struct FrameContext
+{
+  recti::Vec2 mMousePos;
+  bool mMouseLeftDown;
+};
+
 class ContextImpl
 {
+  FrameContext mFrame;
+
   std::shared_ptr<recti::DrawList> mDrawList;
   Style mStyle;
 
@@ -242,6 +250,7 @@ class ContextImpl
 
   MODE mMode;
   matrix_t mViewMat;
+  matrix_t mViewInverse;
   matrix_t mProjectionMat;
   matrix_t mModel;
   matrix_t mModelLocal; // orthonormalized model
@@ -725,15 +734,9 @@ private:
     return { x, y };
   }
 
-  void ComputeContext(const float* view,
-                      const float* projection,
-                      float* matrix,
-                      MODE mode,
-                      const recti::Vec2& mousePos)
+  void ComputeContext(float* matrix, MODE mode)
   {
     this->mMode = mode;
-    this->mViewMat = *(matrix_t*)view;
-    this->mProjectionMat = *(matrix_t*)projection;
 
     this->mModelLocal = *(matrix_t*)matrix;
     this->mModelLocal.OrthoNormalize();
@@ -754,30 +757,15 @@ private:
     this->mMVP = this->mModel * this->mViewProjection;
     this->mMVPLocal = this->mModelLocal * this->mViewProjection;
 
-    matrix_t viewInverse;
-    viewInverse.Inverse(this->mViewMat);
-    this->mCameraDir = viewInverse.dir();
-    this->mCameraEye = viewInverse.position();
-    this->mCameraRight = viewInverse.right();
-    this->mCameraUp = viewInverse.up();
-
-    // projection reverse
-    vec_t nearPos, farPos;
-    nearPos.Transform({ 0, 0, 1.f, 1.f }, this->mProjectionMat);
-    farPos.Transform({ 0, 0, 2.f, 1.f }, this->mProjectionMat);
-
-    this->mReversed = (nearPos.z / nearPos.w) > (farPos.z / farPos.w);
-
     // compute scale from the size of camera right vector projected on screen at
     // the matrix position
-    vec_t pointRight = viewInverse.right();
+    vec_t pointRight = mViewInverse.right();
     pointRight.TransformPoint(this->mViewProjection);
 
     this->mScreenFactor = this->mGizmoSizeClipSpace /
                           (pointRight.x / pointRight.w -
                            this->mMVP.position().x / this->mMVP.position().w);
-
-    vec_t rightViewInverse = viewInverse.right();
+    vec_t rightViewInverse = mViewInverse.right();
     rightViewInverse.TransformVector(this->mModelInverse);
     float rightLength = GetSegmentLengthClipSpace(
       { 0.f, 0.f }, rightViewInverse, mMVP, mDisplayRatio);
@@ -787,8 +775,6 @@ private:
     this->mScreenSquareCenter = centerSSpace;
     this->mScreenSquareMin = centerSSpace - recti::Vec2{ 10.f, 10.f };
     this->mScreenSquareMax = centerSSpace + recti::Vec2{ 10.f, 10.f };
-
-    ComputeCameraRay(this->mRayOrigin, this->mRayVector, mousePos);
   }
 
   void ComputeColors(uint32_t* colors, int type, OPERATION operation)
@@ -1975,8 +1961,18 @@ public:
   //
   // entery point
   //
-  void SetRect(float x, float y, float width, float height)
+  void Begin(const float* view,
+             const float* projection,
+             float x,
+             float y,
+             float width,
+             float height,
+             const recti::Vec2& mousePos,
+             bool mouseLeftDown)
   {
+    mFrame.mMousePos = mousePos;
+    mFrame.mMouseLeftDown = mouseLeftDown;
+
     mDrawList->m_commands.clear();
     mX = x;
     mY = y;
@@ -1985,16 +1981,28 @@ public:
     mXMax = mX + mWidth;
     mYMax = mY + mXMax;
     mDisplayRatio = width / height;
+
+    this->mViewMat = *(matrix_t*)view;
+    mViewInverse.Inverse(this->mViewMat);
+    this->mCameraDir = mViewInverse.dir();
+    this->mCameraEye = mViewInverse.position();
+    this->mCameraRight = mViewInverse.right();
+    this->mCameraUp = mViewInverse.up();
+
+    this->mProjectionMat = *(matrix_t*)projection;
+    // projection reverse
+    vec_t nearPos, farPos;
+    nearPos.Transform({ 0, 0, 1.f, 1.f }, this->mProjectionMat);
+    farPos.Transform({ 0, 0, 2.f, 1.f }, this->mProjectionMat);
+    this->mReversed = (nearPos.z / nearPos.w) > (farPos.z / farPos.w);
+
+    ComputeCameraRay(this->mRayOrigin, this->mRayVector, mousePos);
   }
 
   bool Manipulate(void* id,
-                  const float* view,
-                  const float* projection,
                   OPERATION operation,
                   MODE mode,
                   float* matrix,
-                  const recti::Vec2& mousePos,
-                  bool mouseLeftDown,
                   float* deltaMatrix,
                   const float* snap,
                   const float* localBounds,
@@ -2005,8 +2013,7 @@ public:
 
     // Scale is always local or matrix will be skewed when applying world scale
     // or oriented matrix
-    ComputeContext(
-      view, projection, matrix, (operation & SCALE) ? LOCAL : mode, mousePos);
+    ComputeContext(matrix, (operation & SCALE) ? LOCAL : mode);
 
     // set delta to identity
     if (deltaMatrix) {
@@ -2030,22 +2037,22 @@ public:
                                         operation,
                                         type,
                                         snap,
-                                        mousePos,
-                                        mouseLeftDown) ||
+                                        mFrame.mMousePos,
+                                        mFrame.mMouseLeftDown) ||
                       HandleScale(matrix,
                                   deltaMatrix,
                                   operation,
                                   type,
                                   snap,
-                                  mousePos,
-                                  mouseLeftDown) ||
+                                  mFrame.mMousePos,
+                                  mFrame.mMouseLeftDown) ||
                       HandleRotation(matrix,
                                      deltaMatrix,
                                      operation,
                                      type,
                                      snap,
-                                     mousePos,
-                                     mouseLeftDown);
+                                     mFrame.mMousePos,
+                                     mFrame.mMouseLeftDown);
       }
     }
 
@@ -2054,8 +2061,8 @@ public:
                                (matrix_t*)matrix,
                                boundsSnap,
                                operation,
-                               mousePos,
-                               mouseLeftDown);
+                               mFrame.mMousePos,
+                               mFrame.mMouseLeftDown);
     }
 
     mOperation = operation;
@@ -2085,41 +2092,34 @@ Context::~Context()
 }
 
 void
-Context::SetRect(float x, float y, float width, float height)
+Context::Begin(const float* view,
+               const float* projection,
+               float x,
+               float y,
+               float width,
+               float height,
+               const recti::Vec2& mousePos,
+               bool mouseLeftDown)
 {
-  m_impl->SetRect(x, y, width, height);
+  m_impl->Begin(view, projection, x, y, width, height, mousePos, mouseLeftDown);
 }
 
 bool
 Context::Manipulate(void* id,
-                    const float* view,
-                    const float* projection,
                     OPERATION operation,
                     MODE mode,
                     float* matrix,
-                    const recti::Vec2 &mousePos,
-                    bool mouseLeftDown,
                     float* deltaMatrix,
                     const float* snap,
                     const float* localBounds,
                     const float* boundsSnap)
 {
-  return m_impl->Manipulate(id,
-                            view,
-                            projection,
-                            operation,
-                            mode,
-                            matrix,
-                            mousePos,
-                            mouseLeftDown,
-                            deltaMatrix,
-                            snap,
-                            localBounds,
-                            boundsSnap);
+  return m_impl->Manipulate(
+    id, operation, mode, matrix, deltaMatrix, snap, localBounds, boundsSnap);
 }
 
 const recti::DrawList&
-Context::GetDrawList()
+Context::End()
 {
   return m_impl->GetDrawList();
 }

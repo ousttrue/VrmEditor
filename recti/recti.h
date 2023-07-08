@@ -20,19 +20,22 @@ class Screen
 public:
   Screen();
   ~Screen();
-  void SetRect(float x, float y, float width, float height);
+  void Begin(const float* view,
+             const float* projection,
+             float x,
+             float y,
+             float width,
+             float height,
+             const recti::Vec2& mousePos,
+             bool mouseLeftDown);
   bool Manipulate(void* id,
-                  const float* view,
-                  const float* projection,
                   const Operation& operation,
                   float* matrix,
-                  const Vec2& mousePos,
-                  bool mouseLeftDown,
                   float* deltaMatrix = nullptr,
                   const float* snap = nullptr,
                   const float* localBounds = nullptr,
                   const float* boundsSnap = nullptr);
-  const DrawList& GetDrawList();
+  const DrawList& End();
 };
 
 } // namespace

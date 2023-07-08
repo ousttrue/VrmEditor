@@ -36,38 +36,38 @@ struct ScreenImpl
 
   ScreenImpl() { m_im_gizmo = std::make_shared<ImGuizmo::Context>(); }
 
-  void SetRect(float x, float y, float w, float h)
+  void Begin(const float* view,
+             const float* projection,
+             float x,
+             float y,
+             float width,
+             float height,
+             const recti::Vec2& mousePos,
+             bool mouseLeftDown)
   {
-    m_im_gizmo->SetRect(x, y, w, h);
+    m_im_gizmo->Begin(
+      view, projection, x, y, width, height, mousePos, mouseLeftDown);
   }
 
   bool Manipulate(void* id,
-                  const float* view,
-                  const float* projection,
                   const Operation& operation,
                   float* matrix,
-                  const Vec2& mousePos,
-                  bool mouseLeftDown,
                   float* deltaMatrix,
                   const float* snap,
                   const float* localBounds,
                   const float* boundsSnap)
   {
     return m_im_gizmo->Manipulate(id,
-                                  view,
-                                  projection,
                                   ToOperation(operation),
                                   ToMode(operation),
                                   matrix,
-                                  mousePos,
-                                  mouseLeftDown,
                                   deltaMatrix,
                                   snap,
                                   localBounds,
                                   boundsSnap);
   }
 
-  const DrawList& GetDrawList() { return m_im_gizmo->GetDrawList(); }
+  const DrawList& End() { return m_im_gizmo->End(); }
 };
 
 //
@@ -84,41 +84,35 @@ Screen::~Screen()
 }
 
 void
-Screen::SetRect(float x, float y, float w, float h)
+Screen::Begin(const float* view,
+              const float* projection,
+              float x,
+              float y,
+              float width,
+              float height,
+              const recti::Vec2& mousePos,
+              bool mouseLeftDown)
 {
-  m_impl->SetRect(x, y, w, h);
+  m_impl->Begin(view, projection, x, y, width, height, mousePos, mouseLeftDown);
 }
 
 bool
 Screen::Manipulate(void* id,
-                   const float* view,
-                   const float* projection,
                    const Operation& operation,
                    float* matrix,
-                   const Vec2& mousePos,
-                   bool mouseLeftDown,
                    float* deltaMatrix,
                    const float* snap,
                    const float* localBounds,
                    const float* boundsSnap)
 {
-  return m_impl->Manipulate(id,
-                            view,
-                            projection,
-                            operation,
-                            matrix,
-                            mousePos,
-                            mouseLeftDown,
-                            deltaMatrix,
-                            snap,
-                            localBounds,
-                            boundsSnap);
+  return m_impl->Manipulate(
+    id, operation, matrix, deltaMatrix, snap, localBounds, boundsSnap);
 }
 
 const DrawList&
-Screen::GetDrawList()
+Screen::End()
 {
-  return m_impl->GetDrawList();
+  return m_impl->End();
 }
 
 } // namespace
