@@ -1,4 +1,7 @@
 #pragma once
+#include "drawcommand.h"
+
+struct Vec2;
 
 namespace recti {
 
@@ -27,7 +30,7 @@ public:
                   const float* snap = nullptr,
                   const float* localBounds = nullptr,
                   const float* boundsSnap = nullptr);
-  void Render();
+  const DrawList& GetDrawList();
 };
 
 } // namespace

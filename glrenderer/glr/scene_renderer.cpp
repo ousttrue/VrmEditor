@@ -7,7 +7,7 @@
 #include "rendertarget.h"
 #include "scene_renderer.h"
 #include <boneskin/skinning_manager.h>
-#include <recti.h>
+#include <recti_imgui.h>
 #include <vrm/gltfroot.h>
 #include <vrm/runtime_node.h>
 #include <vrm/runtime_scene.h>
@@ -114,7 +114,12 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
 
       scene->RaiseSceneUpdated();
     }
-    m_screen->Render();
+    auto& drawlist = m_screen->GetDrawList();
+    recti::Render(drawlist, ImGui::GetWindowDrawList());
+    // void SetDrawlist(ImDrawList* drawlist)
+    // {
+    //   mDrawList = drawlist ? drawlist : ImGui::GetWindowDrawList();
+    // }
   }
 }
 
@@ -185,7 +190,8 @@ SceneRenderer::RenderRuntime(
       node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldMatrix(true);
     }
-    m_screen->Render();
+    auto& drawlist = m_screen->GetDrawList();
+    recti::Render(drawlist, ImGui::GetWindowDrawList());
   }
 }
 

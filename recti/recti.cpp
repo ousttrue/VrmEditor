@@ -64,11 +64,7 @@ struct ScreenImpl
                                   boundsSnap);
   }
 
-  void Render()
-  {
-    auto mDrawList = ImGui::GetWindowDrawList();
-    m_im_gizmo->Render(mDrawList);
-  }
+  const DrawList& GetDrawList() { return m_im_gizmo->GetDrawList(); }
 };
 
 //
@@ -112,10 +108,10 @@ Screen::Manipulate(void* id,
                             boundsSnap);
 }
 
-void
-Screen::Render()
+const DrawList&
+Screen::GetDrawList()
 {
-  m_impl->Render();
+  return m_impl->GetDrawList();
 }
 
 } // namespace

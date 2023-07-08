@@ -24,6 +24,7 @@
 // SOFTWARE.
 //
 #pragma once
+#include "../drawcommand.h"
 #include <stdint.h>
 
 struct ImDrawList;
@@ -121,7 +122,7 @@ public:
                   const float* snap = nullptr,
                   const float* localBounds = nullptr,
                   const float* boundsSnap = nullptr);
-  void Render(ImDrawList* drawList);
+  const recti::DrawList& GetDrawList();
 };
 
 } // namespace
