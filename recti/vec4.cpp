@@ -89,21 +89,6 @@ Normalize(const float* a, float* r)
   r[2] = a[2] * il;
 }
 
-float
-IntersectRayPlane(const Vec4& rOrigin, const Vec4& rVector, const Vec4& plan)
-{
-  const float numer = plan.Dot3(rOrigin) - plan.w;
-  const float denom = plan.Dot3(rVector);
-
-  if (fabsf(denom) <
-      FLT_EPSILON) // normal is orthogonal to vector, cant intersect
-  {
-    return -1.0f;
-  }
-
-  return -(numer / denom);
-}
-
 Vec4
 PointOnSegment(const Vec4& point, const Vec4& vertPos1, const Vec4& vertPos2)
 {

@@ -244,9 +244,6 @@ DistanceToPlane(const Vec4& point, const Vec4& plan)
   return plan.Dot3(point) + plan.w;
 }
 
-float
-IntersectRayPlane(const Vec4& rOrigin, const Vec4& rVector, const Vec4& plan);
-
 Vec4
 PointOnSegment(const Vec4& point, const Vec4& vertPos1, const Vec4& vertPos2);
 

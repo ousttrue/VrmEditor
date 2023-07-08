@@ -25,6 +25,7 @@
 //
 
 #include "../mat4.h"
+#include "../ray.h"
 #include "../vec2.h"
 #include "../vec4.h"
 #include <assert.h>
@@ -269,8 +270,8 @@ class ContextImpl
   recti::Vec4 mCameraRight;
   recti::Vec4 mCameraDir;
   recti::Vec4 mCameraUp;
-  recti::Vec4 mRayOrigin;
-  recti::Vec4 mRayVector;
+
+  recti::Ray mRay;
 
   float mRadiusSquareCenter;
   recti::Vec2 mScreenSquareCenter;
@@ -281,7 +282,6 @@ class ContextImpl
   recti::Vec4 mRelativeOrigin;
 
   bool mbEnable;
-  bool mReversed; // reversed projection matrix
 
   // translation
   recti::Vec4 mTranslationPlan;
@@ -394,8 +394,11 @@ private:
       dirPlaneY *= mulAxisY;
 
       // for axis
-      float axisLengthInClipSpace = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirAxis * mScreenFactor, mvp, mCameraMouse.Camera.DisplayRatio());
+      float axisLengthInClipSpace =
+        GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
+                                  dirAxis * mScreenFactor,
+                                  mvp,
+                                  mCameraMouse.Camera.DisplayRatio());
 
       float paraSurf = GetParallelogram({ 0.f, 0.f, 0.f },
                                         dirPlaneX * mScreenFactor,
@@ -448,9 +451,8 @@ private:
       dirPlaneX.TransformVector(mModel);
       dirPlaneY.TransformVector(mModel);
 
-      const float len = IntersectRayPlane(
-        mRayOrigin, mRayVector, BuildPlan(mModel.position(), dirAxis));
-      recti::Vec4 posOnPlan = mRayOrigin + mRayVector * len;
+      auto posOnPlan =
+        mRay.IntersectPlane(BuildPlan(mModel.position(), dirAxis));
 
       const recti::Vec2 axisStartOnScreen =
         worldToPos(mModel.position() + dirAxis * mScreenFactor * 0.1f,
@@ -518,8 +520,7 @@ private:
       // pickup plan
       recti::Vec4 pickupPlan = BuildPlan(mModel.position(), planNormals[i]);
 
-      const float len = IntersectRayPlane(mRayOrigin, mRayVector, pickupPlan);
-      const recti::Vec4 intersectWorldPos = mRayOrigin + mRayVector * len;
+      const recti::Vec4 intersectWorldPos = mRay.IntersectPlane(pickupPlan);
       recti::Vec4 intersectViewPos;
       intersectViewPos.TransformPoint(intersectWorldPos, mViewMat);
 
@@ -580,9 +581,8 @@ private:
       dirPlaneX.TransformVector(mModelLocal);
       dirPlaneY.TransformVector(mModelLocal);
 
-      const float len = IntersectRayPlane(
-        mRayOrigin, mRayVector, BuildPlan(mModelLocal.position(), dirAxis));
-      recti::Vec4 posOnPlan = mRayOrigin + mRayVector * len;
+      recti::Vec4 posOnPlan =
+        mRay.IntersectPlane(BuildPlan(mModelLocal.position(), dirAxis));
 
       const float startOffset =
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.0f : 0.1f;
@@ -719,7 +719,8 @@ private:
   recti::Vec2 worldToPos(const recti::Vec4& worldPos,
                          const recti::Mat4& mat) const
   {
-    auto [x, y] = recti::worldToPos(worldPos, mat, mCameraMouse.Camera.Viewport);
+    auto [x, y] =
+      recti::worldToPos(worldPos, mat, mCameraMouse.Camera.Viewport);
     return { x, y };
   }
 
@@ -1503,9 +1504,7 @@ private:
         scale.SetToIdentity();
 
         // compute projected mouse position on plan
-        const float len =
-          IntersectRayPlane(mRayOrigin, mRayVector, mBoundsPlan);
-        recti::Vec4 newPos = mRayOrigin + mRayVector * len;
+        recti::Vec4 newPos = mRay.IntersectPlane(mBoundsPlan);
 
         // compute a reference and delta vectors base on mouse move
         recti::Vec4 deltaVector = (newPos - mBoundsPivot).Abs();
@@ -1578,39 +1577,6 @@ private:
     }
   }
 
-  void ComputeCameraRay(recti::Vec4& rayOrigin,
-                        recti::Vec4& rayDir,
-                        recti::Vec2 position,
-                        recti::Vec2 size,
-                        const recti::Vec2& mousePos)
-  {
-    // ImGuiIO& io = ImGui::GetIO();
-
-    recti::Mat4 mViewProjInverse;
-    mViewProjInverse.Inverse(mViewMat * mProjectionMat);
-
-    const float mox = ((mousePos.X - position.X) / size.X) * 2.f - 1.f;
-    const float moy = (1.f - ((mousePos.Y - position.Y) / size.Y)) * 2.f - 1.f;
-
-    const float zNear = mReversed ? (1.f - FLT_EPSILON) : 0.f;
-    const float zFar = mReversed ? 0.f : (1.f - FLT_EPSILON);
-
-    rayOrigin.Transform({ mox, moy, zNear, 1.f }, mViewProjInverse);
-    rayOrigin *= 1.f / rayOrigin.w;
-    recti::Vec4 rayEnd;
-    rayEnd.Transform({ mox, moy, zFar, 1.f }, mViewProjInverse);
-    rayEnd *= 1.f / rayEnd.w;
-    rayDir = Normalized(rayEnd - rayOrigin);
-  }
-
-  void ComputeCameraRay(recti::Vec4& rayOrigin,
-                        recti::Vec4& rayDir,
-                        const recti::Vec2& mousePos)
-  {
-    ComputeCameraRay(
-      rayOrigin, rayDir, mCameraMouse.Camera.LeftTop(), mCameraMouse.Camera.Size(), mousePos);
-  }
-
   bool HandleTranslation(float* matrix,
                          float* deltaMatrix,
                          OPERATION op,
@@ -1626,15 +1592,7 @@ private:
 
     // move
     if (mState.Using() && IsTranslateType(mCurrentOperation)) {
-      // #if IMGUI_VERSION_NUM >= 18723
-      //       ImGui::SetNextFrameWantCaptureMouse(true);
-      // #else
-      //       ImGui::CaptureMouseFromApp();
-      // #endif
-      const float signedLength =
-        IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
-      const float len = fabsf(signedLength); // near plan
-      const recti::Vec4 newPos = mRayOrigin + mRayVector * len;
+      const recti::Vec4 newPos = mRay.IntersectPlane(mTranslationPlan);
 
       // compute delta
       const recti::Vec4 newOrigin = newPos - mRelativeOrigin * mScreenFactor;
@@ -1710,9 +1668,7 @@ private:
         // pickup plan
         mTranslationPlan =
           BuildPlan(mModel.position(), movePlanNormal[type - MT_MOVE_X]);
-        const float len =
-          IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
-        mTranslationPlanOrigin = mRayOrigin + mRayVector * len;
+        mTranslationPlanOrigin = mRay.IntersectPlane(mTranslationPlan);
         mMatrixOrigin = mModel.position();
 
         mRelativeOrigin =
@@ -1752,9 +1708,7 @@ private:
 
         mTranslationPlan =
           BuildPlan(mModel.position(), movePlanNormal[type - MT_SCALE_X]);
-        const float len =
-          IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
-        mTranslationPlanOrigin = mRayOrigin + mRayVector * len;
+        mTranslationPlanOrigin = mRay.IntersectPlane(mTranslationPlan);
         mMatrixOrigin = mModel.position();
         mScale.Set(1.f, 1.f, 1.f);
         mRelativeOrigin =
@@ -1767,9 +1721,7 @@ private:
     }
     // scale
     if (mState.Using() && IsScaleType(mCurrentOperation)) {
-      const float len =
-        IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
-      recti::Vec4 newPos = mRayOrigin + mRayVector * len;
+      recti::Vec4 newPos = mRay.IntersectPlane(mTranslationPlan);
       recti::Vec4 newOrigin = newPos - mRelativeOrigin * mScreenFactor;
       recti::Vec4 delta = newOrigin - mModelLocal.position();
 
@@ -1876,10 +1828,8 @@ private:
                                        directionUnary[type - MT_ROTATE_X]);
         }
 
-        const float len =
-          IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
         recti::Vec4 localPos =
-          mRayOrigin + mRayVector * len - mModel.position();
+          mRay.IntersectPlane(mTranslationPlan) - mModel.position();
         mRotationVectorSource = Normalized(localPos);
         mRotationAngleOrigin = ComputeAngleOnPlan();
       }
@@ -1935,10 +1885,8 @@ private:
 
   float ComputeAngleOnPlan()
   {
-    const float len =
-      IntersectRayPlane(mRayOrigin, mRayVector, mTranslationPlan);
     recti::Vec4 localPos =
-      Normalized(mRayOrigin + mRayVector * len - mModel.position());
+      Normalized(mRay.IntersectPlane(mTranslationPlan) - mModel.position());
 
     recti::Vec4 perpendicularVector;
     perpendicularVector.Cross(mRotationVectorSource, mTranslationPlan);
@@ -1967,13 +1915,13 @@ public:
     this->mCameraUp = mViewInverse.up();
 
     this->mProjectionMat = camera.ProjectionMatrix;
-    // projection reverse
+    // projection reverse(OpenGL or DirectX) ?
     recti::Vec4 nearPos, farPos;
     nearPos.Transform({ 0, 0, 1.f, 1.f }, this->mProjectionMat);
     farPos.Transform({ 0, 0, 2.f, 1.f }, this->mProjectionMat);
-    this->mReversed = (nearPos.z / nearPos.w) > (farPos.z / farPos.w);
 
-    ComputeCameraRay(this->mRayOrigin, this->mRayVector, mouse.Position);
+    bool mReversed = (nearPos.z / nearPos.w) > (farPos.z / farPos.w);
+    mRay.Initialize(camera, mouse.Position, mReversed);
   }
 
   bool Manipulate(void* id,
@@ -2012,14 +1960,19 @@ public:
         manipulated =
           HandleTranslation(
             matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse) ||
-          HandleScale(matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse) ||
-          HandleRotation(matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse);
+          HandleScale(
+            matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse) ||
+          HandleRotation(
+            matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse);
       }
     }
 
     if (localBounds && !mState.mbUsing) {
-      HandleAndDrawLocalBounds(
-        localBounds, (recti::Mat4*)matrix, boundsSnap, operation, mCameraMouse.Mouse);
+      HandleAndDrawLocalBounds(localBounds,
+                               (recti::Mat4*)matrix,
+                               boundsSnap,
+                               operation,
+                               mCameraMouse.Mouse);
     }
 
     mOperation = operation;
