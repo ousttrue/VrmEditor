@@ -121,6 +121,7 @@ public:
                   const float* snap = nullptr,
                   const float* localBounds = nullptr,
                   const float* boundsSnap = nullptr);
+  void Render(ImDrawList* drawList);
 };
 
 } // namespace

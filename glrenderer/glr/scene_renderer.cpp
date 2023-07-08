@@ -114,6 +114,7 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
 
       scene->RaiseSceneUpdated();
     }
+    m_screen->Render();
   }
 }
 
@@ -184,6 +185,7 @@ SceneRenderer::RenderRuntime(
       node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldMatrix(true);
     }
+    m_screen->Render();
   }
 }
 

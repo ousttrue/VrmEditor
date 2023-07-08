@@ -1,5 +1,6 @@
 #include "recti.h"
 #include "imguizmo/ImGuizmo.h"
+#include <imgui.h>
 #include <memory>
 #include <stdint.h>
 
@@ -62,6 +63,12 @@ struct ScreenImpl
                                   localBounds,
                                   boundsSnap);
   }
+
+  void Render()
+  {
+    auto mDrawList = ImGui::GetWindowDrawList();
+    m_im_gizmo->Render(mDrawList);
+  }
 };
 
 //
@@ -103,6 +110,12 @@ Screen::Manipulate(void* id,
                             snap,
                             localBounds,
                             boundsSnap);
+}
+
+void
+Screen::Render()
+{
+  m_impl->Render();
 }
 
 } // namespace

@@ -27,7 +27,12 @@
 #include "matrix_t.h"
 #include "vec_t.h"
 #include <cfloat>
+#include <memory>
 #include <numbers>
+#include <optional>
+#include <string>
+#include <variant>
+#include <vector>
 
 // Matches MT_MOVE_AB order
 static const char* translationInfoMask[] = { "X : %5.3f",
@@ -201,8 +206,174 @@ struct State
   }
 };
 
+struct DrawList
+{
+  struct Line
+  {
+    ImVec2 p1;
+    ImVec2 p2;
+  };
+  struct Triangle
+  {
+    ImVec2 p1;
+    ImVec2 p2;
+    ImVec2 p3;
+  };
+  struct Circle
+  {
+    ImVec2 center;
+    float radius;
+    int num_segments;
+  };
+  struct Text
+  {
+    ImVec2 pos;
+    std::string text;
+  };
+  struct Polyline
+  {
+    std::vector<ImVec2> points;
+  };
+  // struct ConvexPoly
+  // {
+  //   std::vector<ImVec2> points;
+  // };
+
+  struct Command
+  {
+    std::variant<Line, Triangle, Circle, Polyline, Text> m_shape;
+    ImU32 m_col;
+    std::optional<float> m_thickness;
+  };
+
+  std::vector<Command> m_commands;
+
+  void AddLine(const ImVec2& p1,
+               const ImVec2& p2,
+               ImU32 col,
+               float thickness = 1.0f)
+  {
+    m_commands.push_back({ Line{ p1, p2 }, col, thickness });
+  }
+
+  void AddTriangleFilled(const ImVec2& p1,
+                         const ImVec2& p2,
+                         const ImVec2& p3,
+                         ImU32 col)
+  {
+    m_commands.push_back({ Triangle{ p1, p2, p3 }, col });
+  }
+
+  void AddCircle(const ImVec2& center,
+                 float radius,
+                 ImU32 col,
+                 int num_segments = 0,
+                 float thickness = 1.0f)
+  {
+    m_commands.push_back(
+      { Circle{ center, radius, num_segments }, col, thickness });
+  }
+
+  void AddCircleFilled(const ImVec2& center,
+                       float radius,
+                       ImU32 col,
+                       int num_segments = 0)
+  {
+    m_commands.push_back({ Circle{ center, radius, num_segments }, col });
+  }
+
+  void AddText(const ImVec2& pos,
+               ImU32 col,
+               const char* text_begin,
+               const char* text_end = NULL)
+  {
+    m_commands.push_back({ Text{ pos,
+                                 text_end ? std::string{ text_begin, text_end }
+                                          : std::string{ text_begin } },
+                           col });
+  }
+
+  void AddPolyline(const ImVec2* points,
+                   int num_points,
+                   ImU32 col,
+                   ImDrawFlags flags,
+                   float thickness)
+  {
+    Polyline line;
+    line.points.assign(points, points + num_points);
+    m_commands.push_back({ line, col, thickness });
+  }
+
+  void AddConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col)
+  {
+    Polyline line;
+    line.points.assign(points, points + num_points);
+    m_commands.push_back({ line, col });
+  }
+
+  void Render(ImDrawList* drawlist)
+  {
+    struct Visitor
+    {
+      ImDrawList* mDrawList;
+      ImU32 mColor;
+      std::optional<float> mThickness;
+      void operator()(const Line& shape)
+      {
+        if (mThickness) {
+          mDrawList->AddLine(shape.p1, shape.p2, mColor, *mThickness);
+        } else {
+        }
+      }
+      void operator()(const Triangle& shape)
+      {
+        if (mThickness) {
+        } else {
+          mDrawList->AddTriangleFilled(shape.p1, shape.p2, shape.p2, mColor);
+        }
+      }
+      void operator()(const Circle& shape)
+      {
+        if (mThickness) {
+          mDrawList->AddCircle(shape.center,
+                               shape.radius,
+                               mColor,
+                               shape.num_segments,
+                               *mThickness);
+        } else {
+          mDrawList->AddCircleFilled(
+            shape.center, shape.radius, mColor, shape.num_segments);
+        }
+      }
+      void operator()(const Polyline& shape)
+      {
+        if (mThickness) {
+          mDrawList->AddPolyline(
+            shape.points.data(), shape.points.size(), mColor, 0, *mThickness);
+        } else {
+          mDrawList->AddConvexPolyFilled(
+            shape.points.data(), shape.points.size(), mColor);
+        }
+      }
+      void operator()(const Text& shape)
+      {
+        mDrawList->AddText(shape.pos,
+                           mColor,
+                           shape.text.data(),
+                           shape.text.data() + shape.text.size());
+      }
+    };
+    for (auto& c : m_commands) {
+      std::visit(Visitor{ drawlist, c.m_col, c.m_thickness }, c.m_shape);
+    }
+    m_commands.clear();
+  }
+};
+
 class ContextImpl
 {
+  // ImDrawList* mDrawList;
+  std::shared_ptr<DrawList> mDrawList;
   Style mStyle;
 
   State mState = {};
@@ -299,6 +470,7 @@ public:
     : mbEnable(true)
     , mbUsingBounds(false)
   {
+    mDrawList = std::make_shared<DrawList>();
   }
 
 private:
@@ -666,10 +838,10 @@ private:
     return false;
   }
 
-  void SetDrawlist(ImDrawList* drawlist)
-  {
-    mDrawList = drawlist ? drawlist : ImGui::GetWindowDrawList();
-  }
+  // void SetDrawlist(ImDrawList* drawlist)
+  // {
+  //   mDrawList = drawlist ? drawlist : ImGui::GetWindowDrawList();
+  // }
 
   ImVec2 leftTop() const { return { mX, mY }; }
   ImVec2 size() const { return { mWidth, mHeight }; }
@@ -830,10 +1002,9 @@ private:
     }
   }
 
-  ImDrawList* mDrawList;
   void DrawScaleGizmo(OPERATION op, MOVETYPE type)
   {
-    ImDrawList* drawList = mDrawList;
+    auto drawList = mDrawList;
 
     if (!Intersects(op, SCALE)) {
       return;
@@ -947,7 +1118,7 @@ private:
     if (!Intersects(op, ROTATE)) {
       return;
     }
-    ImDrawList* drawList = mDrawList;
+    auto drawList = mDrawList;
 
     // colors
     ImU32 colors[7];
@@ -1056,7 +1227,7 @@ private:
 
   void DrawScaleUniveralGizmo(OPERATION op, MOVETYPE type)
   {
-    ImDrawList* drawList = mDrawList;
+    auto drawList = mDrawList;
 
     if (!Intersects(op, SCALEU)) {
       return;
@@ -1159,7 +1330,7 @@ private:
 
   void DrawTranslationGizmo(OPERATION op, MOVETYPE type)
   {
-    ImDrawList* drawList = mDrawList;
+    auto drawList = mDrawList;
     if (!drawList) {
       return;
     }
@@ -1287,7 +1458,7 @@ private:
                                 OPERATION operation)
   {
     ImGuiIO& io = ImGui::GetIO();
-    ImDrawList* drawList = mDrawList;
+    auto drawList = mDrawList;
 
     // compute best projection axis
     vec_t axesWorldDirections[3];
@@ -1948,8 +2119,6 @@ public:
   //
   void SetRect(float x, float y, float width, float height)
   {
-    SetDrawlist(nullptr);
-
     mX = x;
     mY = y;
     mWidth = width;
@@ -2016,6 +2185,8 @@ public:
     }
     return manipulated;
   }
+
+  void Render(ImDrawList* drawlist) { mDrawList->Render(drawlist); }
 };
 
 //
@@ -2059,6 +2230,12 @@ Context::Manipulate(void* id,
                             snap,
                             localBounds,
                             boundsSnap);
+}
+
+void
+Context::Render(ImDrawList* drawList)
+{
+  m_impl->Render(drawList);
 }
 
 } // namespace
