@@ -236,13 +236,6 @@ struct State
 
 class ContextImpl
 {
-  // float mX = 0.f;
-  // float mY = 0.f;
-  // float mWidth = 0.f;
-  // float mHeight = 0.f;
-  // float mXMax = 0.f;
-  // float mYMax = 0.f;
-  // float mDisplayRatio = 1.f;
   recti::CameraMouse mCameraMouse;
 
   std::shared_ptr<recti::DrawList> mDrawList;
@@ -251,9 +244,7 @@ class ContextImpl
   State mState = {};
 
   MODE mMode;
-  recti::Mat4 mViewMat;
-  recti::Mat4 mViewInverse;
-  recti::Mat4 mProjectionMat;
+
   recti::Mat4 mModel;
   recti::Mat4 mModelLocal; // orthonormalized model
   recti::Mat4 mModelInverse;
@@ -263,15 +254,8 @@ class ContextImpl
   recti::Mat4
     mMVPLocal; // MVP with full model matrix whereas mMVP's model matrix
                // might only be translation in case of World space edition
-  recti::Mat4 mViewProjection;
 
   recti::Vec4 mModelScaleOrigin;
-  recti::Vec4 mCameraEye;
-  recti::Vec4 mCameraRight;
-  recti::Vec4 mCameraDir;
-  recti::Vec4 mCameraUp;
-
-  recti::Ray mRay;
 
   float mRadiusSquareCenter;
   recti::Vec2 mScreenSquareCenter;
@@ -452,15 +436,15 @@ private:
       dirPlaneY.TransformVector(mModel);
 
       auto posOnPlan =
-        mRay.IntersectPlane(BuildPlan(mModel.position(), dirAxis));
+        mCameraMouse.Ray.IntersectPlane(BuildPlan(mModel.position(), dirAxis));
 
       const recti::Vec2 axisStartOnScreen =
         worldToPos(mModel.position() + dirAxis * mScreenFactor * 0.1f,
-                   mViewProjection) -
+                   mCameraMouse.mViewProjection) -
         mCameraMouse.Camera.LeftTop();
       const recti::Vec2 axisEndOnScreen =
         worldToPos(mModel.position() + dirAxis * mScreenFactor,
-                   mViewProjection) -
+                   mCameraMouse.mViewProjection) -
         mCameraMouse.Camera.LeftTop();
 
       recti::Vec4 closestPointOnAxis =
@@ -511,7 +495,8 @@ private:
                                         mModel.dir() };
 
     recti::Vec4 modelViewPos;
-    modelViewPos.TransformPoint(mModel.position(), mViewMat);
+    modelViewPos.TransformPoint(mModel.position(),
+                                mCameraMouse.Camera.ViewMatrix);
 
     for (int i = 0; i < 3 && type == MT_NONE; i++) {
       if (!Intersects(op, static_cast<OPERATION>(ROTATE_X << i))) {
@@ -520,9 +505,11 @@ private:
       // pickup plan
       recti::Vec4 pickupPlan = BuildPlan(mModel.position(), planNormals[i]);
 
-      const recti::Vec4 intersectWorldPos = mRay.IntersectPlane(pickupPlan);
+      const recti::Vec4 intersectWorldPos =
+        mCameraMouse.Ray.IntersectPlane(pickupPlan);
       recti::Vec4 intersectViewPos;
-      intersectViewPos.TransformPoint(intersectWorldPos, mViewMat);
+      intersectViewPos.TransformPoint(intersectWorldPos,
+                                      mCameraMouse.Camera.ViewMatrix);
 
       if (fabs(modelViewPos.z) - fabs(intersectViewPos.z) < -FLT_EPSILON) {
         continue;
@@ -581,21 +568,21 @@ private:
       dirPlaneX.TransformVector(mModelLocal);
       dirPlaneY.TransformVector(mModelLocal);
 
-      recti::Vec4 posOnPlan =
-        mRay.IntersectPlane(BuildPlan(mModelLocal.position(), dirAxis));
+      recti::Vec4 posOnPlan = mCameraMouse.Ray.IntersectPlane(
+        BuildPlan(mModelLocal.position(), dirAxis));
 
       const float startOffset =
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.0f : 0.1f;
       const float endOffset =
         Contains(op, static_cast<OPERATION>(TRANSLATE_X << i)) ? 1.4f : 1.0f;
       const recti::Vec2 posOnPlanScreen =
-        worldToPos(posOnPlan, mViewProjection);
+        worldToPos(posOnPlan, mCameraMouse.mViewProjection);
       const recti::Vec2 axisStartOnScreen = worldToPos(
         mModelLocal.position() + dirAxis * mScreenFactor * startOffset,
-        mViewProjection);
+        mCameraMouse.mViewProjection);
       const recti::Vec2 axisEndOnScreen =
         worldToPos(mModelLocal.position() + dirAxis * mScreenFactor * endOffset,
-                   mViewProjection);
+                   mCameraMouse.mViewProjection);
 
       recti::Vec4 closestPointOnAxis =
         recti::PointOnSegment({ posOnPlanScreen.X, posOnPlanScreen.Y },
@@ -743,19 +730,18 @@ private:
 
     this->mModelInverse.Inverse(this->mModel);
     this->mModelSourceInverse.Inverse(this->mModelSource);
-    this->mViewProjection = this->mViewMat * this->mProjectionMat;
-    this->mMVP = this->mModel * this->mViewProjection;
-    this->mMVPLocal = this->mModelLocal * this->mViewProjection;
+    this->mMVP = this->mModel * this->mCameraMouse.mViewProjection;
+    this->mMVPLocal = this->mModelLocal * this->mCameraMouse.mViewProjection;
 
     // compute scale from the size of camera right vector projected on screen at
     // the matrix position
-    recti::Vec4 pointRight = mViewInverse.right();
-    pointRight.TransformPoint(this->mViewProjection);
+    recti::Vec4 pointRight = mCameraMouse.mViewInverse.right();
+    pointRight.TransformPoint(this->mCameraMouse.mViewProjection);
 
     this->mScreenFactor = this->mGizmoSizeClipSpace /
                           (pointRight.x / pointRight.w -
                            this->mMVP.position().x / this->mMVP.position().w);
-    recti::Vec4 rightViewInverse = mViewInverse.right();
+    recti::Vec4 rightViewInverse = mCameraMouse.mViewInverse.right();
     rightViewInverse.TransformVector(this->mModelInverse);
     float rightLength = GetSegmentLengthClipSpace(
       { 0.f, 0.f }, rightViewInverse, mMVP, mCameraMouse.Camera.DisplayRatio());
@@ -925,7 +911,7 @@ private:
       // recti::Vec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
       // mViewProjection);
       recti::Vec2 destinationPosOnScreen =
-        worldToPos(mModel.position(), mViewProjection);
+        worldToPos(mModel.position(), mCameraMouse.mViewProjection);
       /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
       destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
       *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f,
@@ -967,11 +953,10 @@ private:
 
     recti::Vec4 cameraToModelNormalized;
     if (mIsOrthographic) {
-      recti::Mat4 viewInverse;
-      viewInverse.Inverse(*(recti::Mat4*)&mViewMat);
-      cameraToModelNormalized = -viewInverse.dir();
+      cameraToModelNormalized = -mCameraMouse.mViewInverse.dir();
     } else {
-      cameraToModelNormalized = Normalized(mModel.position() - mCameraEye);
+      cameraToModelNormalized =
+        Normalized(mModel.position() - mCameraMouse.CameraEye());
     }
 
     cameraToModelNormalized.TransformVector(mModelInverse);
@@ -1013,24 +998,27 @@ private:
       }
 
       float radiusAxis =
-        sqrtf((worldToPos(mModel.position(), mViewProjection) - circlePos[0])
+        sqrtf((worldToPos(mModel.position(), mCameraMouse.mViewProjection) -
+               circlePos[0])
                 .SqrLength());
       if (radiusAxis > mRadiusSquareCenter) {
         mRadiusSquareCenter = radiusAxis;
       }
     }
     if (hasRSC && (!mState.mbUsing || type == MT_ROTATE_SCREEN)) {
-      drawList->AddCircle(worldToPos(mModel.position(), mViewProjection),
-                          mRadiusSquareCenter,
-                          colors[0],
-                          64,
-                          mStyle.RotationOuterLineThickness);
+      drawList->AddCircle(
+        worldToPos(mModel.position(), mCameraMouse.mViewProjection),
+        mRadiusSquareCenter,
+        colors[0],
+        64,
+        mStyle.RotationOuterLineThickness);
     }
 
     if (mState.Using() && IsRotateType(type)) {
       recti::Vec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
 
-      circlePos[0] = worldToPos(mModel.position(), mViewProjection);
+      circlePos[0] =
+        worldToPos(mModel.position(), mCameraMouse.mViewProjection);
       for (unsigned int i = 1; i < HALF_CIRCLE_SEGMENT_COUNT; i++) {
         float ng = mRotationAngle *
                    ((float)(i - 1) / (float)(HALF_CIRCLE_SEGMENT_COUNT - 1));
@@ -1039,7 +1027,8 @@ private:
         recti::Vec4 pos;
         pos.TransformPoint(mRotationVectorSource, rotateVectorMatrix);
         pos *= mScreenFactor * ROTATION_DISPLAY_FACTOR;
-        circlePos[i] = worldToPos(pos + mModel.position(), mViewProjection);
+        circlePos[i] =
+          worldToPos(pos + mModel.position(), mCameraMouse.mViewProjection);
       }
       drawList->AddConvexPolyFilled((const recti::VEC2*)circlePos,
                                     HALF_CIRCLE_SEGMENT_COUNT,
@@ -1143,7 +1132,7 @@ private:
       // recti::Vec2 sourcePosOnScreen = worldToPos(mMatrixOrigin,
       // mViewProjection);
       recti::Vec2 destinationPosOnScreen =
-        worldToPos(mModel.position(), mViewProjection);
+        worldToPos(mModel.position(), mCameraMouse.mViewProjection);
       /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x,
       destinationPosOnScreen.y - sourcePosOnScreen.y); dif.Normalize(); dif
       *= 5.f; drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
@@ -1187,7 +1176,8 @@ private:
     uint32_t colors[7];
     ComputeColors(colors, type, TRANSLATE);
 
-    const recti::Vec2 origin = worldToPos(mModel.position(), mViewProjection);
+    const recti::Vec2 origin =
+      worldToPos(mModel.position(), mCameraMouse.mViewProjection);
 
     // draw
     bool belowAxisLimit = false;
@@ -1265,9 +1255,9 @@ private:
       uint32_t translationLineColor = GetColorU32(TRANSLATION_LINE);
 
       recti::Vec2 sourcePosOnScreen =
-        worldToPos(mMatrixOrigin, mViewProjection);
+        worldToPos(mMatrixOrigin, mCameraMouse.mViewProjection);
       recti::Vec2 destinationPosOnScreen =
-        worldToPos(mModel.position(), mViewProjection);
+        worldToPos(mModel.position(), mCameraMouse.mViewProjection);
       recti::Vec4 dif = { destinationPosOnScreen.X - sourcePosOnScreen.X,
                           destinationPosOnScreen.Y - sourcePosOnScreen.Y,
                           0.f,
@@ -1327,8 +1317,9 @@ private:
         dirPlaneNormalWorld.TransformVector(directionUnary[i], mModelSource);
         dirPlaneNormalWorld.Normalize();
 
-        float dt = fabsf(Dot(Normalized(mCameraEye - mModelSource.position()),
-                             dirPlaneNormalWorld));
+        float dt = fabsf(
+          Dot(Normalized(mCameraMouse.CameraEye() - mModelSource.position()),
+              dirPlaneNormalWorld));
         if (dt >= bestDot) {
           bestDot = dt;
           bestAxis = i;
@@ -1385,7 +1376,7 @@ private:
       unsigned int anchorAlpha =
         mbEnable ? IM_COL32_BLACK : IM_COL32(0, 0, 0, 0x80);
 
-      recti::Mat4 boundsMVP = mModelSource * mViewProjection;
+      recti::Mat4 boundsMVP = mModelSource * mCameraMouse.mViewProjection;
       for (int i = 0; i < 4; i++) {
         recti::Vec2 worldBound1 = worldToPos(aabb[i], boundsMVP);
         recti::Vec2 worldBound2 = worldToPos(aabb[(i + 1) % 4], boundsMVP);
@@ -1504,7 +1495,7 @@ private:
         scale.SetToIdentity();
 
         // compute projected mouse position on plan
-        recti::Vec4 newPos = mRay.IntersectPlane(mBoundsPlan);
+        recti::Vec4 newPos = mCameraMouse.Ray.IntersectPlane(mBoundsPlan);
 
         // compute a reference and delta vectors base on mouse move
         recti::Vec4 deltaVector = (newPos - mBoundsPivot).Abs();
@@ -1547,7 +1538,7 @@ private:
         // info text
         char tmps[512];
         recti::Vec2 destinationPosOnScreen =
-          worldToPos(mModel.position(), mViewProjection);
+          worldToPos(mModel.position(), mCameraMouse.mViewProjection);
         snprintf(tmps,
                  sizeof(tmps),
                  "X: %.2f Y: %.2f Z: %.2f",
@@ -1592,7 +1583,8 @@ private:
 
     // move
     if (mState.Using() && IsTranslateType(mCurrentOperation)) {
-      const recti::Vec4 newPos = mRay.IntersectPlane(mTranslationPlan);
+      const recti::Vec4 newPos =
+        mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
 
       // compute delta
       const recti::Vec4 newOrigin = newPos - mRelativeOrigin * mScreenFactor;
@@ -1652,13 +1644,14 @@ private:
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
-        recti::Vec4 movePlanNormal[] = { mModel.right(), mModel.up(),
-                                         mModel.dir(),   mModel.right(),
-                                         mModel.up(),    mModel.dir(),
-                                         -mCameraDir };
+        recti::Vec4 movePlanNormal[] = {
+          mModel.right(),           mModel.up(), mModel.dir(),
+          mModel.right(),           mModel.up(), mModel.dir(),
+          -mCameraMouse.CameraDir()
+        };
 
         recti::Vec4 cameraToModelNormalized =
-          Normalized(mModel.position() - mCameraEye);
+          Normalized(mModel.position() - mCameraMouse.CameraEye());
         for (unsigned int i = 0; i < 3; i++) {
           recti::Vec4 orthoVector =
             Cross(movePlanNormal[i], cameraToModelNormalized);
@@ -1668,7 +1661,8 @@ private:
         // pickup plan
         mTranslationPlan =
           BuildPlan(mModel.position(), movePlanNormal[type - MT_MOVE_X]);
-        mTranslationPlanOrigin = mRay.IntersectPlane(mTranslationPlan);
+        mTranslationPlanOrigin =
+          mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
         mMatrixOrigin = mModel.position();
 
         mRelativeOrigin =
@@ -1700,15 +1694,16 @@ private:
         mState.mbUsing = true;
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
-        const recti::Vec4 movePlanNormal[] = { mModel.up(),    mModel.dir(),
-                                               mModel.right(), mModel.dir(),
-                                               mModel.up(),    mModel.right(),
-                                               -mCameraDir };
+        const recti::Vec4 movePlanNormal[] = {
+          mModel.up(), mModel.dir(),   mModel.right(),           mModel.dir(),
+          mModel.up(), mModel.right(), -mCameraMouse.CameraDir()
+        };
         // pickup plan
 
         mTranslationPlan =
           BuildPlan(mModel.position(), movePlanNormal[type - MT_SCALE_X]);
-        mTranslationPlanOrigin = mRay.IntersectPlane(mTranslationPlan);
+        mTranslationPlanOrigin =
+          mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
         mMatrixOrigin = mModel.position();
         mScale.Set(1.f, 1.f, 1.f);
         mRelativeOrigin =
@@ -1721,7 +1716,7 @@ private:
     }
     // scale
     if (mState.Using() && IsScaleType(mCurrentOperation)) {
-      recti::Vec4 newPos = mRay.IntersectPlane(mTranslationPlan);
+      recti::Vec4 newPos = mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
       recti::Vec4 newOrigin = newPos - mRelativeOrigin * mScreenFactor;
       recti::Vec4 delta = newOrigin - mModelLocal.position();
 
@@ -1817,7 +1812,7 @@ private:
         mState.mEditingID = mState.mActualID;
         mCurrentOperation = type;
         const recti::Vec4 rotatePlanNormal[] = {
-          mModel.right(), mModel.up(), mModel.dir(), -mCameraDir
+          mModel.right(), mModel.up(), mModel.dir(), -mCameraMouse.CameraDir()
         };
         // pickup plan
         if (applyRotationLocaly) {
@@ -1829,7 +1824,7 @@ private:
         }
 
         recti::Vec4 localPos =
-          mRay.IntersectPlane(mTranslationPlan) - mModel.position();
+          mCameraMouse.Ray.IntersectPlane(mTranslationPlan) - mModel.position();
         mRotationVectorSource = Normalized(localPos);
         mRotationAngleOrigin = ComputeAngleOnPlan();
       }
@@ -1885,8 +1880,8 @@ private:
 
   float ComputeAngleOnPlan()
   {
-    recti::Vec4 localPos =
-      Normalized(mRay.IntersectPlane(mTranslationPlan) - mModel.position());
+    recti::Vec4 localPos = Normalized(
+      mCameraMouse.Ray.IntersectPlane(mTranslationPlan) - mModel.position());
 
     recti::Vec4 perpendicularVector;
     perpendicularVector.Cross(mRotationVectorSource, mTranslationPlan);
@@ -1906,22 +1901,6 @@ public:
   {
     mDrawList->m_commands.clear();
     mCameraMouse.Initialize(camera, mouse);
-
-    this->mViewMat = camera.ViewMatrix;
-    mViewInverse.Inverse(this->mViewMat);
-    this->mCameraDir = mViewInverse.dir();
-    this->mCameraEye = mViewInverse.position();
-    this->mCameraRight = mViewInverse.right();
-    this->mCameraUp = mViewInverse.up();
-
-    this->mProjectionMat = camera.ProjectionMatrix;
-    // projection reverse(OpenGL or DirectX) ?
-    recti::Vec4 nearPos, farPos;
-    nearPos.Transform({ 0, 0, 1.f, 1.f }, this->mProjectionMat);
-    farPos.Transform({ 0, 0, 2.f, 1.f }, this->mProjectionMat);
-
-    bool mReversed = (nearPos.z / nearPos.w) > (farPos.z / farPos.w);
-    mRay.Initialize(camera, mouse.Position, mReversed);
   }
 
   bool Manipulate(void* id,

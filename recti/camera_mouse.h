@@ -1,5 +1,6 @@
 #pragma once
 #include "mat4.h"
+#include "ray.h"
 #include "vec2.h"
 
 namespace recti {
@@ -33,13 +34,18 @@ struct CameraMouse
 {
   Camera Camera;
   Mouse Mouse;
+  Ray Ray;
+  Mat4 mViewInverse;
+  Mat4 mViewProjection;
+
 private:
 public:
-  void Initialize(const struct Camera &camera, const struct Mouse &mouse)
-  {
-    Camera = camera;
-    Mouse = mouse;
-  }
+  const Vec4& CameraDir() const { return mViewInverse.dir(); }
+  const Vec4& CameraEye() const { return mViewInverse.position(); }
+  const Vec4& CameraRight() const { return mViewInverse.right(); }
+  const Vec4& CameraUp() const { return mViewInverse.up(); }
+
+  void Initialize(const struct Camera& camera, const struct Mouse& mouse);
 };
 
 } // namespace

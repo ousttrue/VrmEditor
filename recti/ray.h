@@ -1,5 +1,6 @@
 #pragma once
-#include "camera_mouse.h"
+#include "mat4.h"
+#include "vec2.h"
 #include <float.h>
 #include <math.h>
 
@@ -10,16 +11,22 @@ struct Ray
   Vec4 mRayOrigin;
   Vec4 mRayVector;
 
-  void Initialize(const Camera& camera, const Vec2& mousePos, bool mReversed)
+  void Initialize(const Mat4& view,
+                  const Mat4& projection,
+                  const Vec4& viewport,
+                  const Vec2& mousePos)
   {
     Mat4 mViewProjInverse;
-    mViewProjInverse.Inverse(camera.ViewMatrix * camera.ProjectionMatrix);
+    mViewProjInverse.Inverse(view * projection);
 
-    const float mox =
-      ((mousePos.X - camera.Viewport.x) / camera.Viewport.z) * 2.f - 1.f;
+    const float mox = ((mousePos.X - viewport.x) / viewport.z) * 2.f - 1.f;
     const float moy =
-      (1.f - ((mousePos.Y - camera.Viewport.y) / camera.Viewport.w)) * 2.f -
-      1.f;
+      (1.f - ((mousePos.Y - viewport.y) / viewport.w)) * 2.f - 1.f;
+
+    // projection reverse(OpenGL or DirectX) ?
+    recti::Vec4 nearPos, farPos;
+    nearPos.Transform({ 0, 0, 1.f, 1.f }, projection);
+    bool mReversed = (nearPos.z / nearPos.w) > (farPos.z / farPos.w);
 
     const float zNear = mReversed ? (1.f - FLT_EPSILON) : 0.f;
     const float zFar = mReversed ? 0.f : (1.f - FLT_EPSILON);
