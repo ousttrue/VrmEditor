@@ -218,6 +218,10 @@ struct State
 {
   int64_t mEditingID = -1;
   bool mbUsing = false;
+  // save axis factor when using gizmo
+  bool mBelowAxisLimit[3];
+  bool mBelowPlaneLimit[3];
+  float mAxisFactor[3];
 
   bool Using(uint64_t actualID) const
   {
@@ -294,6 +298,90 @@ struct ModelContext
   }
 };
 
+static void
+ComputeTripodAxisAndVisibility(const recti::CameraMouse& mCameraMouse,
+                               bool mAllowAxisFlip,
+                               const ModelContext& mCurrent,
+                               int64_t actualID,
+                               const int axisIndex,
+                               const recti::Mat4& mvp,
+                               State* state,
+                               recti::Vec4& dirAxis,
+                               recti::Vec4& dirPlaneX,
+                               recti::Vec4& dirPlaneY,
+                               bool& belowAxisLimit,
+                               bool& belowPlaneLimit)
+{
+  dirAxis = directionUnary[axisIndex];
+  dirPlaneX = directionUnary[(axisIndex + 1) % 3];
+  dirPlaneY = directionUnary[(axisIndex + 2) % 3];
+
+  if (state->Using(actualID)) {
+    // when using, use stored factors so the gizmo doesn't flip when we
+    // translate
+    belowAxisLimit = state->mBelowAxisLimit[axisIndex];
+    belowPlaneLimit = state->mBelowPlaneLimit[axisIndex];
+    dirAxis *= state->mAxisFactor[axisIndex];
+    dirPlaneX *= state->mAxisFactor[(axisIndex + 1) % 3];
+    dirPlaneY *= state->mAxisFactor[(axisIndex + 2) % 3];
+  } else {
+    // new method
+    float lenDir = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, dirAxis, mvp, mCameraMouse.Camera.DisplayRatio());
+    float lenDirMinus = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, -dirAxis, mvp, mCameraMouse.Camera.DisplayRatio());
+
+    float lenDirPlaneX = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, dirPlaneX, mvp, mCameraMouse.Camera.DisplayRatio());
+    float lenDirMinusPlaneX = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, -dirPlaneX, mvp, mCameraMouse.Camera.DisplayRatio());
+
+    float lenDirPlaneY = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, dirPlaneY, mvp, mCameraMouse.Camera.DisplayRatio());
+    float lenDirMinusPlaneY = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, -dirPlaneY, mvp, mCameraMouse.Camera.DisplayRatio());
+
+    // For readability
+    float mulAxis = (mAllowAxisFlip && lenDir < lenDirMinus &&
+                     fabsf(lenDir - lenDirMinus) > FLT_EPSILON)
+                      ? -1.f
+                      : 1.f;
+    float mulAxisX = (mAllowAxisFlip && lenDirPlaneX < lenDirMinusPlaneX &&
+                      fabsf(lenDirPlaneX - lenDirMinusPlaneX) > FLT_EPSILON)
+                       ? -1.f
+                       : 1.f;
+    float mulAxisY = (mAllowAxisFlip && lenDirPlaneY < lenDirMinusPlaneY &&
+                      fabsf(lenDirPlaneY - lenDirMinusPlaneY) > FLT_EPSILON)
+                       ? -1.f
+                       : 1.f;
+    dirAxis *= mulAxis;
+    dirPlaneX *= mulAxisX;
+    dirPlaneY *= mulAxisY;
+
+    // for axis
+    float axisLengthInClipSpace =
+      GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
+                                dirAxis * mCurrent.mScreenFactor,
+                                mvp,
+                                mCameraMouse.Camera.DisplayRatio());
+
+    float paraSurf = GetParallelogram({ 0.f, 0.f, 0.f },
+                                      dirPlaneX * mCurrent.mScreenFactor,
+                                      dirPlaneY * mCurrent.mScreenFactor,
+                                      mCurrent.mMVP,
+                                      mCameraMouse.Camera.DisplayRatio());
+    belowPlaneLimit = (paraSurf > 0.0025f);
+    belowAxisLimit = (axisLengthInClipSpace > 0.02f);
+
+    // and store values
+    state->mAxisFactor[axisIndex] = mulAxis;
+    state->mAxisFactor[(axisIndex + 1) % 3] = mulAxisX;
+    state->mAxisFactor[(axisIndex + 2) % 3] = mulAxisY;
+    state->mBelowAxisLimit[axisIndex] = belowAxisLimit;
+    state->mBelowPlaneLimit[axisIndex] = belowPlaneLimit;
+  }
+}
+
 class ContextImpl
 {
   recti::CameraMouse mCameraMouse;
@@ -328,11 +416,6 @@ class ContextImpl
   recti::Vec4 mScaleLast;
   float mSaveMousePosx;
 
-  // save axis factor when using gizmo
-  mutable bool mBelowAxisLimit[3];
-  mutable bool mBelowPlaneLimit[3];
-  mutable float mAxisFactor[3];
-
   // bounds stretching
   recti::Vec4 mBoundsPivot;
   recti::Vec4 mBoundsAnchor;
@@ -361,91 +444,11 @@ public:
   }
 
 private:
-  void ComputeTripodAxisAndVisibility(int64_t actualID,
-                                      const int axisIndex,
-                                      const recti::Mat4& mvp,
-                                      const State& state,
-                                      recti::Vec4& dirAxis,
-                                      recti::Vec4& dirPlaneX,
-                                      recti::Vec4& dirPlaneY,
-                                      bool& belowAxisLimit,
-                                      bool& belowPlaneLimit) const
-  {
-    dirAxis = directionUnary[axisIndex];
-    dirPlaneX = directionUnary[(axisIndex + 1) % 3];
-    dirPlaneY = directionUnary[(axisIndex + 2) % 3];
-
-    if (state.Using(actualID)) {
-      // when using, use stored factors so the gizmo doesn't flip when we
-      // translate
-      belowAxisLimit = mBelowAxisLimit[axisIndex];
-      belowPlaneLimit = mBelowPlaneLimit[axisIndex];
-
-      dirAxis *= mAxisFactor[axisIndex];
-      dirPlaneX *= mAxisFactor[(axisIndex + 1) % 3];
-      dirPlaneY *= mAxisFactor[(axisIndex + 2) % 3];
-    } else {
-      // new method
-      float lenDir = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirAxis, mvp, mCameraMouse.Camera.DisplayRatio());
-      float lenDirMinus = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, -dirAxis, mvp, mCameraMouse.Camera.DisplayRatio());
-
-      float lenDirPlaneX = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirPlaneX, mvp, mCameraMouse.Camera.DisplayRatio());
-      float lenDirMinusPlaneX = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, -dirPlaneX, mvp, mCameraMouse.Camera.DisplayRatio());
-
-      float lenDirPlaneY = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, dirPlaneY, mvp, mCameraMouse.Camera.DisplayRatio());
-      float lenDirMinusPlaneY = GetSegmentLengthClipSpace(
-        { 0.f, 0.f, 0.f }, -dirPlaneY, mvp, mCameraMouse.Camera.DisplayRatio());
-
-      // For readability
-      float mulAxis = (mAllowAxisFlip && lenDir < lenDirMinus &&
-                       fabsf(lenDir - lenDirMinus) > FLT_EPSILON)
-                        ? -1.f
-                        : 1.f;
-      float mulAxisX = (mAllowAxisFlip && lenDirPlaneX < lenDirMinusPlaneX &&
-                        fabsf(lenDirPlaneX - lenDirMinusPlaneX) > FLT_EPSILON)
-                         ? -1.f
-                         : 1.f;
-      float mulAxisY = (mAllowAxisFlip && lenDirPlaneY < lenDirMinusPlaneY &&
-                        fabsf(lenDirPlaneY - lenDirMinusPlaneY) > FLT_EPSILON)
-                         ? -1.f
-                         : 1.f;
-      dirAxis *= mulAxis;
-      dirPlaneX *= mulAxisX;
-      dirPlaneY *= mulAxisY;
-
-      // for axis
-      float axisLengthInClipSpace =
-        GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
-                                  dirAxis * mCurrent.mScreenFactor,
-                                  mvp,
-                                  mCameraMouse.Camera.DisplayRatio());
-
-      float paraSurf = GetParallelogram({ 0.f, 0.f, 0.f },
-                                        dirPlaneX * mCurrent.mScreenFactor,
-                                        dirPlaneY * mCurrent.mScreenFactor,
-                                        mCurrent.mMVP,
-                                        mCameraMouse.Camera.DisplayRatio());
-      belowPlaneLimit = (paraSurf > 0.0025f);
-      belowAxisLimit = (axisLengthInClipSpace > 0.02f);
-
-      // and store values
-      mAxisFactor[axisIndex] = mulAxis;
-      mAxisFactor[(axisIndex + 1) % 3] = mulAxisX;
-      mAxisFactor[(axisIndex + 2) % 3] = mulAxisY;
-      mBelowAxisLimit[axisIndex] = belowAxisLimit;
-      mBelowPlaneLimit[axisIndex] = belowPlaneLimit;
-    }
-  }
-
   MOVETYPE GetMoveType(int64_t actualID,
                        OPERATION op,
                        const recti::Vec4& screenCoord,
-                       const recti::Vec2& mousePos) const
+                       const recti::Vec2& mousePos,
+                       State* state) const
   {
     if (!Intersects(op, TRANSLATE) || mState.mbUsing) {
       return MT_NONE;
@@ -457,10 +460,13 @@ private:
     for (int i = 0; i < 3 && type == MT_NONE; i++) {
       recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
-      ComputeTripodAxisAndVisibility(actualID,
+      ComputeTripodAxisAndVisibility(mCameraMouse,
+                                     mAllowAxisFlip,
+                                     mCurrent,
+                                     actualID,
                                      i,
                                      mCurrent.mMVP,
-                                     mState,
+                                     state,
                                      dirAxis,
                                      dirPlaneX,
                                      dirPlaneY,
@@ -578,7 +584,8 @@ private:
 
   MOVETYPE GetScaleType(int64_t actualID,
                         OPERATION op,
-                        const recti::Vec2& mousePos) const
+                        const recti::Vec2& mousePos,
+                        State* state) const
   {
     if (mState.mbUsing) {
       return MT_NONE;
@@ -592,10 +599,13 @@ private:
       }
       recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
-      ComputeTripodAxisAndVisibility(actualID,
+      ComputeTripodAxisAndVisibility(mCameraMouse,
+                                     mAllowAxisFlip,
+                                     mCurrent,
+                                     actualID,
                                      i,
                                      mCurrent.mMVPLocal,
-                                     mState,
+                                     state,
                                      dirAxis,
                                      dirPlaneX,
                                      dirPlaneY,
@@ -651,10 +661,13 @@ private:
 
       recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
-      ComputeTripodAxisAndVisibility(actualID,
+      ComputeTripodAxisAndVisibility(mCameraMouse,
+                                     mAllowAxisFlip,
+                                     mCurrent,
+                                     actualID,
                                      i,
                                      mCurrent.mMVPLocal,
-                                     mState,
+                                     state,
                                      dirAxis,
                                      dirPlaneX,
                                      dirPlaneY,
@@ -680,27 +693,32 @@ private:
 
   // return true if mouse cursor is over any gizmo control (axis, plan or screen
   // component)
-  bool IsOver(int64_t actualID, const recti::Vec2& mousePos) const
+  bool IsOver(int64_t actualID, const recti::Vec2& mousePos, State* state) const
   {
     return (Intersects(mOperation, TRANSLATE) &&
-            GetMoveType(
-              actualID, mOperation, mCameraMouse.ScreenMousePos(), mousePos) !=
-              MT_NONE) ||
+            GetMoveType(actualID,
+                        mOperation,
+                        mCameraMouse.ScreenMousePos(),
+                        mousePos,
+                        state) != MT_NONE) ||
            (Intersects(mOperation, ROTATE) &&
             GetRotateType(actualID, mOperation, mousePos) != MT_NONE) ||
            (Intersects(mOperation, SCALE) &&
-            GetScaleType(actualID, mOperation, mousePos) != MT_NONE) ||
+            GetScaleType(actualID, mOperation, mousePos, state) != MT_NONE) ||
            IsUsing(actualID);
   }
 
   // return true if the cursor is over the operation's gizmo
-  bool IsOver(int64_t actualID, OPERATION op, const recti::Vec2& mousePos) const
+  bool IsOver(int64_t actualID,
+              OPERATION op,
+              const recti::Vec2& mousePos,
+              State* state) const
   {
     if (IsUsing(actualID)) {
       return true;
     }
     if (Intersects(op, SCALE) &&
-        GetScaleType(actualID, op, mousePos) != MT_NONE) {
+        GetScaleType(actualID, op, mousePos, state) != MT_NONE) {
       return true;
     }
     if (Intersects(op, ROTATE) &&
@@ -708,7 +726,8 @@ private:
       return true;
     }
     if (Intersects(op, TRANSLATE) &&
-        GetMoveType(actualID, op, mCameraMouse.ScreenMousePos(), mousePos) !=
+        GetMoveType(
+          actualID, op, mCameraMouse.ScreenMousePos(), mousePos, state) !=
           MT_NONE) {
       return true;
     }
@@ -824,10 +843,13 @@ private:
       if (!mState.mbUsing || usingAxis) {
         recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
         bool belowAxisLimit, belowPlaneLimit;
-        ComputeTripodAxisAndVisibility(actualID,
+        ComputeTripodAxisAndVisibility(mCameraMouse,
+                                       mAllowAxisFlip,
+                                       mCurrent,
+                                       actualID,
                                        i,
                                        mCurrent.mMVPLocal,
-                                       mState,
+                                       &mState,
                                        dirAxis,
                                        dirPlaneX,
                                        dirPlaneY,
@@ -867,7 +889,7 @@ private:
           drawList->AddCircleFilled(
             worldDirSSpace, mStyle.ScaleLineCircleSize, colors[i + 1]);
 
-          if (mAxisFactor[i] < 0.f) {
+          if (mState.mAxisFactor[i] < 0.f) {
             DrawHatchedAxis(dirAxis * scaleDisplay[i]);
           }
         }
@@ -1041,10 +1063,13 @@ private:
       if (!mState.mbUsing || usingAxis) {
         recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
         bool belowAxisLimit, belowPlaneLimit;
-        ComputeTripodAxisAndVisibility(actualID,
+        ComputeTripodAxisAndVisibility(mCameraMouse,
+                                       mAllowAxisFlip,
+                                       mCurrent,
+                                       actualID,
                                        i,
                                        mCurrent.mMVPLocal,
-                                       mState,
+                                       &mState,
                                        dirAxis,
                                        dirPlaneX,
                                        dirPlaneY,
@@ -1118,10 +1143,13 @@ private:
     bool belowPlaneLimit = false;
     for (int i = 0; i < 3; ++i) {
       recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
-      ComputeTripodAxisAndVisibility(actualID,
+      ComputeTripodAxisAndVisibility(mCameraMouse,
+                                     mAllowAxisFlip,
+                                     mCurrent,
+                                     actualID,
                                      i,
                                      mCurrent.mMVP,
-                                     mState,
+                                     &mState,
                                      dirAxis,
                                      dirPlaneX,
                                      dirPlaneY,
@@ -1157,7 +1185,7 @@ private:
                                       colors[i + 1]);
           // Arrow head end
 
-          if (mAxisFactor[i] < 0.f) {
+          if (mState.mAxisFactor[i] < 0.f) {
             DrawHatchedAxis(dirAxis);
           }
         }
@@ -1351,14 +1379,17 @@ private:
         int type = MT_NONE;
 
         if (Intersects(operation, TRANSLATE)) {
-          type = GetMoveType(
-            actualID, operation, mCameraMouse.ScreenMousePos(), mouse.Position);
+          type = GetMoveType(actualID,
+                             operation,
+                             mCameraMouse.ScreenMousePos(),
+                             mouse.Position,
+                             &mState);
         }
         if (Intersects(operation, ROTATE) && type == MT_NONE) {
           type = GetRotateType(actualID, operation, mouse.Position);
         }
         if (Intersects(operation, SCALE) && type == MT_NONE) {
-          type = GetScaleType(actualID, operation, mouse.Position);
+          type = GetScaleType(actualID, operation, mouse.Position, &mState);
         }
 
         if (type != MT_NONE) {
@@ -1576,7 +1607,7 @@ private:
     } else {
       // find new possible way to move
       type = GetMoveType(
-        actualID, op, mCameraMouse.ScreenMousePos(), mouse.Position);
+        actualID, op, mCameraMouse.ScreenMousePos(), mouse.Position, &mState);
       if (type != MT_NONE) {
       }
       if (mouse.LeftDown && type != MT_NONE) {
@@ -1628,7 +1659,7 @@ private:
 
     if (!mState.mbUsing) {
       // find new possible way to scale
-      type = GetScaleType(actualID, op, mouse.Position);
+      type = GetScaleType(actualID, op, mouse.Position, &mState);
       if (type != MT_NONE) {
       }
       if (mouse.LeftDown && type != MT_NONE) {
