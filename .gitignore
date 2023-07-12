@@ -17,6 +17,7 @@
 !/subprojects/simplefilewatcher.wrap
 !/subprojects/plog.wrap
 !/subprojects/freetype2.wrap
+!/subprojects/ktx.wrap
 #
 !/subprojects/ImGuizmo
 !/subprojects/ImGuiFileDialog

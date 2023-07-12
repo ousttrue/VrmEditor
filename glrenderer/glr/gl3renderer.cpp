@@ -1,4 +1,5 @@
 #include <GL/glew.h>
+#include <ktx.h>
 
 #include "gl3renderer.h"
 #include "material.h"
@@ -62,6 +63,62 @@ ParseImage(const gltfjson::Root& root,
     return std::unexpected{ "Image: fail to load" };
   }
   return ptr;
+}
+
+static std::shared_ptr<grapho::gl3::Texture>
+LoadBasisu(const gltfjson::Root& root,
+           const gltfjson::Bin& bin,
+           uint32_t source)
+{
+  auto span = bin.GetBufferViewBytes(root, source);
+  if (!span) {
+    return {};
+  }
+
+  ktxTexture2* ktx;
+  auto result = ktxTexture2_CreateFromMemory(
+    span->data(), span->size(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktx);
+  if (result != KTX_SUCCESS) {
+    return {};
+  }
+
+  if (ktxTexture2_NeedsTranscoding(ktx)) {
+    // ktx_texture_transcode_fmt_e tf;
+
+    // Using VkGetPhysicalDeviceFeatures or
+    // GL_COMPRESSED_TEXTURE_FORMATS or extension queries, determine
+    // what compressed texture formats are supported and pick a format.
+    // For example vk::PhysicalDeviceFeatures deviceFeatures;
+    // vkctx.gpu.getFeatures(&deviceFeatures);
+    // if (deviceFeatures.textureCompressionETC2)
+    //   tf = KTX_TTF_ETC2_RGBA;
+    // else if (deviceFeatures.textureCompressionBC)
+    //   tf = KTX_TTF_BC3_RGBA;
+    // else {
+    //   message << "Vulkan implementation does not support any
+    //   available
+    //   "
+    //              "transcode target.";
+    //   throw std::runtime_error(message.str());
+    // }
+    auto tf = KTX_TTF_ASTC_4x4_RGBA;
+
+    result = ktxTexture2_TranscodeBasis(ktx, tf, 0);
+    if (result != KTX_SUCCESS) {
+      return {};
+    }
+  }
+
+  auto texture = std::make_shared<grapho::gl3::Texture>();
+  GLenum target;
+  GLenum error;
+  result = ktxTexture_GLUpload(
+    (ktxTexture*)ktx, (GLuint*)&texture->Handle(), &target, &error);
+  if (result != KTX_SUCCESS) {
+    return {};
+  }
+
+  return texture;
 }
 
 class Gl3Renderer
@@ -245,16 +302,21 @@ public:
 
     auto src = root.Textures[*id];
     auto source = src.SourceId();
-    if (!source) {
-      return {};
+    std::shared_ptr<grapho::gl3::Texture> texture;
+    if (source) {
+      if (auto image = GetOrCreateImage(root, bin, *source)) {
+        texture = GetOrCreateTexture(image, colorspace);
+      }
+    } else {
+      if (auto KHR_texture_basisu =
+            src.GetExtension<gltfjson::KHR_texture_basisu>()) {
+        if (auto basisu = KHR_texture_basisu->SourceId()) {
+          texture = LoadBasisu(root, bin, *basisu);
+        }
+      }
     }
 
-    auto image = GetOrCreateImage(root, bin, *source);
-    if (!image) {
-      return {};
-    }
-
-    if (auto texture = GetOrCreateTexture(image, colorspace)) {
+    if (texture) {
       if (auto samplerIndex = src.SamplerId()) {
         auto sampler = root.Samplers[*samplerIndex];
         texture->Bind();

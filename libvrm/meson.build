@@ -5,6 +5,7 @@ libvrm_deps = [
     asio_dep,
     gltfjson_dep,
     stb_dep,
+    ktx_dep,
 ]
 libvrm_lib = static_library(
     'vrm',
