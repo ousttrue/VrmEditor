@@ -311,8 +311,6 @@ class ContextImpl
 
   recti::Vec4 mRelativeOrigin;
 
-  bool mbEnable;
-
   // translation
   recti::Vec4 mTranslationPlan;
   recti::Vec4 mTranslationPlanOrigin;
@@ -355,12 +353,9 @@ class ContextImpl
   bool mAllowAxisFlip = true;
   float mGizmoSizeClipSpace = 0.1f;
 
-  bool mAllowActiveHoverItem = true;
-
 public:
   ContextImpl()
-    : mbEnable(true)
-    , mbUsingBounds(false)
+    : mbUsingBounds(false)
   {
     mDrawList = std::make_shared<recti::DrawList>();
   }
@@ -736,52 +731,44 @@ private:
 
   void ComputeColors(uint32_t* colors, int type, OPERATION operation)
   {
-    if (mbEnable) {
-      uint32_t selectionColor = GetColorU32(SELECTION);
+    uint32_t selectionColor = GetColorU32(SELECTION);
 
-      switch (operation) {
-        case TRANSLATE:
-          colors[0] =
-            (type == MT_MOVE_SCREEN) ? selectionColor : IM_COL32_WHITE;
-          for (int i = 0; i < 3; i++) {
-            colors[i + 1] = (type == (int)(MT_MOVE_X + i))
-                              ? selectionColor
-                              : GetColorU32(DIRECTION_X + i);
-            colors[i + 4] = (type == (int)(MT_MOVE_YZ + i))
-                              ? selectionColor
-                              : GetColorU32(PLANE_X + i);
-            colors[i + 4] =
-              (type == MT_MOVE_SCREEN) ? selectionColor : colors[i + 4];
-          }
-          break;
-        case ROTATE:
-          colors[0] =
-            (type == MT_ROTATE_SCREEN) ? selectionColor : IM_COL32_WHITE;
-          for (int i = 0; i < 3; i++) {
-            colors[i + 1] = (type == (int)(MT_ROTATE_X + i))
-                              ? selectionColor
-                              : GetColorU32(DIRECTION_X + i);
-          }
-          break;
-        case SCALEU:
-        case SCALE:
-          colors[0] = (type == MT_SCALE_XYZ) ? selectionColor : IM_COL32_WHITE;
-          for (int i = 0; i < 3; i++) {
-            colors[i + 1] = (type == (int)(MT_SCALE_X + i))
-                              ? selectionColor
-                              : GetColorU32(DIRECTION_X + i);
-          }
-          break;
-        // note: this internal function is only called with three possible
-        // values for operation
-        default:
-          break;
-      }
-    } else {
-      uint32_t inactiveColor = GetColorU32(INACTIVE);
-      for (int i = 0; i < 7; i++) {
-        colors[i] = inactiveColor;
-      }
+    switch (operation) {
+      case TRANSLATE:
+        colors[0] = (type == MT_MOVE_SCREEN) ? selectionColor : IM_COL32_WHITE;
+        for (int i = 0; i < 3; i++) {
+          colors[i + 1] = (type == (int)(MT_MOVE_X + i))
+                            ? selectionColor
+                            : GetColorU32(DIRECTION_X + i);
+          colors[i + 4] = (type == (int)(MT_MOVE_YZ + i))
+                            ? selectionColor
+                            : GetColorU32(PLANE_X + i);
+          colors[i + 4] =
+            (type == MT_MOVE_SCREEN) ? selectionColor : colors[i + 4];
+        }
+        break;
+      case ROTATE:
+        colors[0] =
+          (type == MT_ROTATE_SCREEN) ? selectionColor : IM_COL32_WHITE;
+        for (int i = 0; i < 3; i++) {
+          colors[i + 1] = (type == (int)(MT_ROTATE_X + i))
+                            ? selectionColor
+                            : GetColorU32(DIRECTION_X + i);
+        }
+        break;
+      case SCALEU:
+      case SCALE:
+        colors[0] = (type == MT_SCALE_XYZ) ? selectionColor : IM_COL32_WHITE;
+        for (int i = 0; i < 3; i++) {
+          colors[i + 1] = (type == (int)(MT_SCALE_X + i))
+                            ? selectionColor
+                            : GetColorU32(DIRECTION_X + i);
+        }
+        break;
+      // note: this internal function is only called with three possible
+      // values for operation
+      default:
+        break;
     }
   }
 
@@ -1322,8 +1309,7 @@ private:
       }
 
       // draw bounds
-      unsigned int anchorAlpha =
-        mbEnable ? IM_COL32_BLACK : IM_COL32(0, 0, 0, 0x80);
+      unsigned int anchorAlpha = IM_COL32_BLACK;
 
       recti::Mat4 boundsMVP =
         mCurrent.mModelSource * mCameraMouse.mViewProjection;
@@ -1398,7 +1384,7 @@ private:
           midBound, AnchorSmallRadius - 1.2f, smallAnchorColor);
         int oppositeIndex = (i + 2) % 4;
         // big anchor on corners
-        if (!mbUsingBounds && mbEnable && overBigAnchor && mouse.LeftDown) {
+        if (!mbUsingBounds && overBigAnchor && mouse.LeftDown) {
           mBoundsPivot.TransformPoint(aabb[(i + 2) % 4], mCurrent.mModelSource);
           mBoundsAnchor.TransformPoint(aabb[i], mCurrent.mModelSource);
           mBoundsPlan = BuildPlan(mBoundsAnchor, bestAxisWorldDirection);
@@ -1415,7 +1401,7 @@ private:
           mBoundsMatrix = mCurrent.mModelSource;
         }
         // small anchor on middle of segment
-        if (!mbUsingBounds && mbEnable && overSmallAnchor && mouse.LeftDown) {
+        if (!mbUsingBounds && overSmallAnchor && mouse.LeftDown) {
           recti::Vec4 midPointOpposite =
             (aabb[(i + 2) % 4] + aabb[(i + 3) % 4]) * 0.5f;
           mBoundsPivot.TransformPoint(midPointOpposite, mCurrent.mModelSource);
@@ -1899,7 +1885,7 @@ public:
     // --
     MOVETYPE type = MT_NONE;
     bool manipulated = false;
-    if (mbEnable) {
+    {
       if (!mbUsingBounds) {
         manipulated = HandleTranslation(actualID,
                                         matrix,
