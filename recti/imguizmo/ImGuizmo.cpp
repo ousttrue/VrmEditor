@@ -306,16 +306,13 @@ ComputeTripodAxisAndVisibility(const recti::CameraMouse& mCameraMouse,
                                const int axisIndex,
                                const recti::Mat4& mvp,
                                State* state,
+
                                recti::Vec4& dirAxis,
                                recti::Vec4& dirPlaneX,
                                recti::Vec4& dirPlaneY,
                                bool& belowAxisLimit,
                                bool& belowPlaneLimit)
 {
-  dirAxis = directionUnary[axisIndex];
-  dirPlaneX = directionUnary[(axisIndex + 1) % 3];
-  dirPlaneY = directionUnary[(axisIndex + 2) % 3];
-
   if (state->Using(actualID)) {
     // when using, use stored factors so the gizmo doesn't flip when we
     // translate
@@ -326,6 +323,10 @@ ComputeTripodAxisAndVisibility(const recti::CameraMouse& mCameraMouse,
     dirPlaneY *= state->mAxisFactor[(axisIndex + 2) % 3];
   } else {
     // new method
+    dirAxis = directionUnary[axisIndex];
+    dirPlaneX = directionUnary[(axisIndex + 1) % 3];
+    dirPlaneY = directionUnary[(axisIndex + 2) % 3];
+
     float lenDir = GetSegmentLengthClipSpace(
       { 0.f, 0.f, 0.f }, dirAxis, mvp, mCameraMouse.Camera.DisplayRatio());
     float lenDirMinus = GetSegmentLengthClipSpace(
