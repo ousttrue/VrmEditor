@@ -216,17 +216,16 @@ IsScaleType(MOVETYPE type)
 
 struct State
 {
-  int64_t mActualID = -1;
   int64_t mEditingID = -1;
   bool mbUsing = false;
 
-  bool Using() const
+  bool Using(uint64_t actualID) const
   {
     if (mbUsing) {
-      if (mActualID == -1) {
+      if (actualID == -1) {
         return true;
       }
-      if (mActualID == mEditingID) {
+      if (actualID == mEditingID) {
         return true;
       }
     }
@@ -257,7 +256,6 @@ struct ModelContext
                       const recti::CameraMouse& cameraMouse,
                       float gizmoSizeClipSpace)
   {
-    // mActualID = (int64_t)id;
     mMode = mode;
 
     mModelLocal = *(recti::Mat4*)matrix;
@@ -368,7 +366,8 @@ public:
   }
 
 private:
-  void ComputeTripodAxisAndVisibility(const int axisIndex,
+  void ComputeTripodAxisAndVisibility(int64_t actualID,
+                                      const int axisIndex,
                                       const recti::Mat4& mvp,
                                       const State& state,
                                       recti::Vec4& dirAxis,
@@ -381,7 +380,7 @@ private:
     dirPlaneX = directionUnary[(axisIndex + 1) % 3];
     dirPlaneY = directionUnary[(axisIndex + 2) % 3];
 
-    if (state.Using()) {
+    if (state.Using(actualID)) {
       // when using, use stored factors so the gizmo doesn't flip when we
       // translate
       belowAxisLimit = mBelowAxisLimit[axisIndex];
@@ -448,7 +447,8 @@ private:
     }
   }
 
-  MOVETYPE GetMoveType(OPERATION op,
+  MOVETYPE GetMoveType(int64_t actualID,
+                       OPERATION op,
                        const recti::Vec4& screenCoord,
                        const recti::Vec2& mousePos) const
   {
@@ -462,7 +462,8 @@ private:
     for (int i = 0; i < 3 && type == MT_NONE; i++) {
       recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
-      ComputeTripodAxisAndVisibility(i,
+      ComputeTripodAxisAndVisibility(actualID,
+                                     i,
                                      mCurrent.mMVP,
                                      mState,
                                      dirAxis,
@@ -514,7 +515,9 @@ private:
   }
 
   MOVETYPE
-  GetRotateType(OPERATION op, const recti::Vec2& mousePos) const
+  GetRotateType(int64_t actualID,
+                OPERATION op,
+                const recti::Vec2& mousePos) const
   {
     if (mState.mbUsing) {
       return MT_NONE;
@@ -578,7 +581,9 @@ private:
     return type;
   }
 
-  MOVETYPE GetScaleType(OPERATION op, const recti::Vec2& mousePos) const
+  MOVETYPE GetScaleType(int64_t actualID,
+                        OPERATION op,
+                        const recti::Vec2& mousePos) const
   {
     if (mState.mbUsing) {
       return MT_NONE;
@@ -592,7 +597,8 @@ private:
       }
       recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
-      ComputeTripodAxisAndVisibility(i,
+      ComputeTripodAxisAndVisibility(actualID,
+                                     i,
                                      mCurrent.mMVPLocal,
                                      mState,
                                      dirAxis,
@@ -650,7 +656,8 @@ private:
 
       recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
       bool belowAxisLimit, belowPlaneLimit;
-      ComputeTripodAxisAndVisibility(i,
+      ComputeTripodAxisAndVisibility(actualID,
+                                     i,
                                      mCurrent.mMVPLocal,
                                      mState,
                                      dirAxis,
@@ -678,39 +685,46 @@ private:
 
   // return true if mouse cursor is over any gizmo control (axis, plan or screen
   // component)
-  bool IsOver(const recti::Vec2& mousePos) const
+  bool IsOver(int64_t actualID, const recti::Vec2& mousePos) const
   {
     return (Intersects(mOperation, TRANSLATE) &&
-            GetMoveType(mOperation, mCameraMouse.ScreenMousePos(), mousePos) !=
+            GetMoveType(
+              actualID, mOperation, mCameraMouse.ScreenMousePos(), mousePos) !=
               MT_NONE) ||
            (Intersects(mOperation, ROTATE) &&
-            GetRotateType(mOperation, mousePos) != MT_NONE) ||
+            GetRotateType(actualID, mOperation, mousePos) != MT_NONE) ||
            (Intersects(mOperation, SCALE) &&
-            GetScaleType(mOperation, mousePos) != MT_NONE) ||
-           IsUsing();
+            GetScaleType(actualID, mOperation, mousePos) != MT_NONE) ||
+           IsUsing(actualID);
   }
 
   // return true if the cursor is over the operation's gizmo
-  bool IsOver(OPERATION op, const recti::Vec2& mousePos) const
+  bool IsOver(int64_t actualID, OPERATION op, const recti::Vec2& mousePos) const
   {
-    if (IsUsing()) {
+    if (IsUsing(actualID)) {
       return true;
     }
-    if (Intersects(op, SCALE) && GetScaleType(op, mousePos) != MT_NONE) {
+    if (Intersects(op, SCALE) &&
+        GetScaleType(actualID, op, mousePos) != MT_NONE) {
       return true;
     }
-    if (Intersects(op, ROTATE) && GetRotateType(op, mousePos) != MT_NONE) {
+    if (Intersects(op, ROTATE) &&
+        GetRotateType(actualID, op, mousePos) != MT_NONE) {
       return true;
     }
     if (Intersects(op, TRANSLATE) &&
-        GetMoveType(op, mCameraMouse.ScreenMousePos(), mousePos) != MT_NONE) {
+        GetMoveType(actualID, op, mCameraMouse.ScreenMousePos(), mousePos) !=
+          MT_NONE) {
       return true;
     }
     return false;
   }
 
   // return true if mouse IsOver or if the gizmo is in moving state
-  bool IsUsing() const { return mState.Using() || mbUsingBounds; }
+  bool IsUsing(int64_t actualID) const
+  {
+    return mState.Using(actualID) || mbUsingBounds;
+  }
 
   recti::Vec2 worldToPos(const recti::Vec4& worldPos,
                          const recti::Mat4& mat) const
@@ -796,7 +810,7 @@ private:
     }
   }
 
-  void DrawScaleGizmo(OPERATION op, MOVETYPE type)
+  void DrawScaleGizmo(int64_t actualID, OPERATION op, MOVETYPE type)
   {
     auto drawList = mDrawList;
 
@@ -811,7 +825,7 @@ private:
     // draw
     recti::Vec4 scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
-    if (mState.Using()) {
+    if (mState.Using(actualID)) {
       scaleDisplay = mScale;
     }
 
@@ -823,7 +837,8 @@ private:
       if (!mState.mbUsing || usingAxis) {
         recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
         bool belowAxisLimit, belowPlaneLimit;
-        ComputeTripodAxisAndVisibility(i,
+        ComputeTripodAxisAndVisibility(actualID,
+                                       i,
                                        mCurrent.mMVPLocal,
                                        mState,
                                        dirAxis,
@@ -845,7 +860,7 @@ private:
             (dirAxis * markerScale * scaleDisplay[i]) * mCurrent.mScreenFactor,
             mCurrent.mMVP);
 
-          if (mState.Using()) {
+          if (mState.Using(actualID)) {
             uint32_t scaleLineColor = GetColorU32(SCALE_LINE);
             drawList->AddLine(baseSSpace,
                               worldDirSSpaceNoScale,
@@ -876,7 +891,7 @@ private:
     drawList->AddCircleFilled(
       mCurrent.mScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
 
-    if (mState.Using() && IsScaleType(type)) {
+    if (mState.Using(actualID) && IsScaleType(type)) {
       recti::Vec2 destinationPosOnScreen =
         worldToPos(mCurrent.mModel.position(), mCameraMouse.mViewProjection);
       char tmps[512];
@@ -898,7 +913,7 @@ private:
     }
   }
 
-  void DrawRotationGizmo(OPERATION op, MOVETYPE type)
+  void DrawRotationGizmo(int64_t actualID, OPERATION op, MOVETYPE type)
   {
     if (!Intersects(op, ROTATE)) {
       return;
@@ -970,7 +985,7 @@ private:
                           mStyle.RotationOuterLineThickness);
     }
 
-    if (mState.Using() && IsRotateType(type)) {
+    if (mState.Using(actualID) && IsRotateType(type)) {
       recti::Vec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
 
       circlePos[0] = mCameraMouse.WorldToPos(mCurrent.mModel.position());
@@ -1012,7 +1027,7 @@ private:
     }
   }
 
-  void DrawScaleUniveralGizmo(OPERATION op, MOVETYPE type)
+  void DrawScaleUniveralGizmo(int64_t actualID, OPERATION op, MOVETYPE type)
   {
     auto drawList = mDrawList;
 
@@ -1027,7 +1042,7 @@ private:
     // draw
     recti::Vec4 scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
-    if (mState.Using()) {
+    if (mState.Using(actualID)) {
       scaleDisplay = mScale;
     }
 
@@ -1039,7 +1054,8 @@ private:
       if (!mState.mbUsing || usingAxis) {
         recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
         bool belowAxisLimit, belowPlaneLimit;
-        ComputeTripodAxisAndVisibility(i,
+        ComputeTripodAxisAndVisibility(actualID,
+                                       i,
                                        mCurrent.mMVPLocal,
                                        mState,
                                        dirAxis,
@@ -1069,7 +1085,7 @@ private:
                         32,
                         mStyle.CenterCircleSize);
 
-    if (mState.Using() && IsScaleType(type)) {
+    if (mState.Using(actualID) && IsScaleType(type)) {
       recti::Vec2 destinationPosOnScreen =
         mCameraMouse.WorldToPos(mCurrent.mModel.position());
 
@@ -1092,7 +1108,7 @@ private:
     }
   }
 
-  void DrawTranslationGizmo(OPERATION op, MOVETYPE type)
+  void DrawTranslationGizmo(int64_t actualID, OPERATION op, MOVETYPE type)
   {
     auto drawList = mDrawList;
     if (!drawList) {
@@ -1115,7 +1131,8 @@ private:
     bool belowPlaneLimit = false;
     for (int i = 0; i < 3; ++i) {
       recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
-      ComputeTripodAxisAndVisibility(i,
+      ComputeTripodAxisAndVisibility(actualID,
+                                     i,
                                      mCurrent.mMVP,
                                      mState,
                                      dirAxis,
@@ -1182,7 +1199,7 @@ private:
     drawList->AddCircleFilled(
       mCurrent.mScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
 
-    if (mState.Using() && IsTranslateType(type)) {
+    if (mState.Using(actualID) && IsTranslateType(type)) {
       uint32_t translationLineColor = GetColorU32(TRANSLATION_LINE);
 
       recti::Vec2 sourcePosOnScreen = mCameraMouse.WorldToPos(mMatrixOrigin);
@@ -1223,7 +1240,8 @@ private:
     }
   }
 
-  void HandleAndDrawLocalBounds(const float* bounds,
+  void HandleAndDrawLocalBounds(int64_t actualID,
+                                const float* bounds,
                                 recti::Mat4* matrix,
                                 const float* snapValues,
                                 OPERATION operation,
@@ -1348,13 +1366,13 @@ private:
 
         if (Intersects(operation, TRANSLATE)) {
           type = GetMoveType(
-            operation, mCameraMouse.ScreenMousePos(), mouse.Position);
+            actualID, operation, mCameraMouse.ScreenMousePos(), mouse.Position);
         }
         if (Intersects(operation, ROTATE) && type == MT_NONE) {
-          type = GetRotateType(operation, mouse.Position);
+          type = GetRotateType(actualID, operation, mouse.Position);
         }
         if (Intersects(operation, SCALE) && type == MT_NONE) {
-          type = GetScaleType(operation, mouse.Position);
+          type = GetScaleType(actualID, operation, mouse.Position);
         }
 
         if (type != MT_NONE) {
@@ -1393,7 +1411,7 @@ private:
           mBoundsLocalPivot[thirdAxis] = aabb[oppositeIndex][thirdAxis];
 
           mbUsingBounds = true;
-          mState.mEditingID = mState.mActualID;
+          mState.mEditingID = actualID;
           mBoundsMatrix = mCurrent.mModelSource;
         }
         // small anchor on middle of segment
@@ -1415,12 +1433,12 @@ private:
                                   // + 1) & 2) ? 1.f : -1.f);
 
           mbUsingBounds = true;
-          mState.mEditingID = mState.mActualID;
+          mState.mEditingID = actualID;
           mBoundsMatrix = mCurrent.mModelSource;
         }
       }
 
-      if (mState.Using()) {
+      if (mState.Using(actualID)) {
         recti::Mat4 scale;
         scale.SetToIdentity();
 
@@ -1498,7 +1516,8 @@ private:
     }
   }
 
-  bool HandleTranslation(float* matrix,
+  bool HandleTranslation(int64_t actualID,
+                         float* matrix,
                          float* deltaMatrix,
                          OPERATION op,
                          MOVETYPE& type,
@@ -1513,7 +1532,7 @@ private:
     bool modified = false;
 
     // move
-    if (mState.Using() && IsTranslateType(mCurrentOperation)) {
+    if (mState.Using(actualID) && IsTranslateType(mCurrentOperation)) {
       const recti::Vec4 newPos =
         mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
 
@@ -1570,12 +1589,13 @@ private:
       type = mCurrentOperation;
     } else {
       // find new possible way to move
-      type = GetMoveType(op, mCameraMouse.ScreenMousePos(), mouse.Position);
+      type = GetMoveType(
+        actualID, op, mCameraMouse.ScreenMousePos(), mouse.Position);
       if (type != MT_NONE) {
       }
       if (mouse.LeftDown && type != MT_NONE) {
         mState.mbUsing = true;
-        mState.mEditingID = mState.mActualID;
+        mState.mEditingID = actualID;
         mCurrentOperation = type;
         recti::Vec4 movePlanNormal[] = {
           mCurrent.mModel.right(),  mCurrent.mModel.up(), mCurrent.mModel.dir(),
@@ -1606,7 +1626,8 @@ private:
     return modified;
   }
 
-  bool HandleScale(float* matrix,
+  bool HandleScale(int64_t actualID,
+                   float* matrix,
                    float* deltaMatrix,
                    OPERATION op,
                    MOVETYPE& type,
@@ -1621,12 +1642,12 @@ private:
 
     if (!mState.mbUsing) {
       // find new possible way to scale
-      type = GetScaleType(op, mouse.Position);
+      type = GetScaleType(actualID, op, mouse.Position);
       if (type != MT_NONE) {
       }
       if (mouse.LeftDown && type != MT_NONE) {
         mState.mbUsing = true;
-        mState.mEditingID = mState.mActualID;
+        mState.mEditingID = actualID;
         mCurrentOperation = type;
         const recti::Vec4 movePlanNormal[] = {
           mCurrent.mModel.up(),     mCurrent.mModel.dir(),
@@ -1652,7 +1673,7 @@ private:
       }
     }
     // scale
-    if (mState.Using() && IsScaleType(mCurrentOperation)) {
+    if (mState.Using(actualID) && IsScaleType(mCurrentOperation)) {
       recti::Vec4 newPos = mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
       recti::Vec4 newOrigin = newPos - mRelativeOrigin * mCurrent.mScreenFactor;
       recti::Vec4 delta = newOrigin - mCurrent.mModelLocal.position();
@@ -1722,7 +1743,8 @@ private:
     return modified;
   }
 
-  bool HandleRotation(float* matrix,
+  bool HandleRotation(int64_t actualID,
+                      float* matrix,
                       float* deltaMatrix,
                       OPERATION op,
                       MOVETYPE& type,
@@ -1736,7 +1758,7 @@ private:
     bool modified = false;
 
     if (!mState.mbUsing) {
-      type = GetRotateType(op, mouse.Position);
+      type = GetRotateType(actualID, op, mouse.Position);
 
       if (type != MT_NONE) {
       }
@@ -1747,7 +1769,7 @@ private:
 
       if (mouse.LeftDown && type != MT_NONE) {
         mState.mbUsing = true;
-        mState.mEditingID = mState.mActualID;
+        mState.mEditingID = actualID;
         mCurrentOperation = type;
         const recti::Vec4 rotatePlanNormal[] = { mCurrent.mModel.right(),
                                                  mCurrent.mModel.up(),
@@ -1771,7 +1793,7 @@ private:
     }
 
     // rotation
-    if (mState.Using() && IsRotateType(mCurrentOperation)) {
+    if (mState.Using(actualID) && IsRotateType(mCurrentOperation)) {
       mRotationAngle = ComputeAngleOnPlan();
       if (snap) {
         float snapInRadian = snap[0] * DEG2RAD;
@@ -1846,7 +1868,7 @@ public:
     mCameraMouse.Initialize(camera, mouse);
   }
 
-  bool Manipulate(void* id,
+  bool Manipulate(int64_t actualID,
                   OPERATION operation,
                   MODE mode,
                   float* matrix,
@@ -1855,8 +1877,6 @@ public:
                   const float* localBounds,
                   const float* boundsSnap)
   {
-    mState.mActualID = (int64_t)id;
-
     // Scale is always local or matrix will be skewed when applying world scale
     // or oriented matrix
     mCurrent.ComputeContext(matrix,
@@ -1881,18 +1901,33 @@ public:
     bool manipulated = false;
     if (mbEnable) {
       if (!mbUsingBounds) {
-        manipulated =
-          HandleTranslation(
-            matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse) ||
-          HandleScale(
-            matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse) ||
-          HandleRotation(
-            matrix, deltaMatrix, operation, type, snap, mCameraMouse.Mouse);
+        manipulated = HandleTranslation(actualID,
+                                        matrix,
+                                        deltaMatrix,
+                                        operation,
+                                        type,
+                                        snap,
+                                        mCameraMouse.Mouse) ||
+                      HandleScale(actualID,
+                                  matrix,
+                                  deltaMatrix,
+                                  operation,
+                                  type,
+                                  snap,
+                                  mCameraMouse.Mouse) ||
+                      HandleRotation(actualID,
+                                     matrix,
+                                     deltaMatrix,
+                                     operation,
+                                     type,
+                                     snap,
+                                     mCameraMouse.Mouse);
       }
     }
 
     if (localBounds && !mState.mbUsing) {
-      HandleAndDrawLocalBounds(localBounds,
+      HandleAndDrawLocalBounds(actualID,
+                               localBounds,
                                (recti::Mat4*)matrix,
                                boundsSnap,
                                operation,
@@ -1901,10 +1936,10 @@ public:
 
     mOperation = operation;
     if (!mbUsingBounds) {
-      DrawRotationGizmo(operation, type);
-      DrawTranslationGizmo(operation, type);
-      DrawScaleGizmo(operation, type);
-      DrawScaleUniveralGizmo(operation, type);
+      DrawRotationGizmo(actualID, operation, type);
+      DrawTranslationGizmo(actualID, operation, type);
+      DrawScaleGizmo(actualID, operation, type);
+      DrawScaleUniveralGizmo(actualID, operation, type);
     }
     return manipulated;
   }
@@ -1941,8 +1976,14 @@ Context::Manipulate(void* id,
                     const float* localBounds,
                     const float* boundsSnap)
 {
-  return m_impl->Manipulate(
-    id, operation, mode, matrix, deltaMatrix, snap, localBounds, boundsSnap);
+  return m_impl->Manipulate((int64_t)id,
+                            operation,
+                            mode,
+                            matrix,
+                            deltaMatrix,
+                            snap,
+                            localBounds,
+                            boundsSnap);
 }
 
 const recti::DrawList&
