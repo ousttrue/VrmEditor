@@ -63,7 +63,7 @@ ShowGuiString(const char* label,
 
   auto node = parentNode->Get(key);
   if (!node) {
-    node = parentNode->Add(key, u8"");
+    node = parentNode->SetProperty(key, u8"");
   }
   auto p = node->Ptr<std::u8string>();
   if (!p) {
@@ -83,7 +83,7 @@ ShowGuiBool(const char* label,
   }
   auto node = parentNode->Get(key);
   if (!node) {
-    node = parentNode->Add(key, false);
+    node = parentNode->SetProperty(key, false);
   }
 
   auto p = node->Ptr<bool>();
@@ -105,7 +105,7 @@ ShowGuiUInt32(const char* label,
   }
   auto node = parentNode->Get(key);
   if (!node) {
-    node = parentNode->Add(key, 0.0f);
+    node = parentNode->SetProperty(key, 0.0f);
   }
 
   auto p = node->Ptr<float>();
@@ -390,7 +390,7 @@ ShowGuiVectorFloat(const char* label,
   }
   auto node = parentNode->Get(key);
   if (!node) {
-    node = parentNode->Add(key, gltfjson::tree::ArrayValue{});
+    node = parentNode->SetProperty(key, gltfjson::tree::ArrayValue{});
   }
   auto array = node->Array();
   if (!array) {
@@ -460,7 +460,7 @@ ShowGuiOptional(
     }
   } else {
     if (ImGui::Button(buf.Printf("%s +", (const char*)key))) {
-      auto node = parentNode->Add(key, gltfjson::tree::ObjectValue{});
+      auto node = parentNode->SetProperty(key, gltfjson::tree::ObjectValue{});
       updated = true;
     }
   }

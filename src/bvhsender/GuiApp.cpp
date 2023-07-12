@@ -87,8 +87,7 @@ GuiApp::UpdateGui()
   ImGui::NewFrame();
 
   // camera
-  camera.Projection.SetSize(static_cast<int>(io.DisplaySize.x),
-                            static_cast<int>(io.DisplaySize.y));
+  camera.Projection.SetSize(io.DisplaySize.x, io.DisplaySize.y);
   if (!io.WantCaptureMouse) {
     if (io.MouseDown[ImGuiMouseButton_Right]) {
       camera.YawPitch(static_cast<int>(io.MouseDelta.x),

@@ -332,11 +332,11 @@ public:
   bool WriteScene(const std::filesystem::path& path)
   {
     std::stringstream ss;
-    gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+    gltfjson::StringSink write = [&ss](std::string_view src) mutable {
       ss.write(src.data(), src.size());
     };
     gltfjson::tree::Exporter exporter{ write };
-    exporter.Export(m_runtime->m_base->m_gltf->m_json);
+    exporter.Export(*m_runtime->m_base->m_gltf->m_json);
     auto str = ss.str();
 
     std::ofstream os(path, std::ios::binary);
