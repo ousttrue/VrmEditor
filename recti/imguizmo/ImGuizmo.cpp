@@ -481,6 +481,25 @@ GetScaleType(const recti::ModelContext& mCurrent,
   return type;
 }
 
+static float
+ComputeAngleOnPlan(const recti::ModelContext& mCurrent,
+                   const recti::Vec4& mRotationVectorSource,
+                   const recti::Vec4& mTranslationPlan)
+{
+  recti::Vec4 localPos =
+    Normalized(mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan) -
+               mCurrent.mModel.position());
+
+  recti::Vec4 perpendicularVector;
+  perpendicularVector.Cross(mRotationVectorSource, mTranslationPlan);
+  perpendicularVector.Normalize();
+  float acosAngle =
+    recti::Clamp(Dot(localPos, mRotationVectorSource), -1.f, 1.f);
+  float angle = acosf(acosAngle);
+  angle *= (Dot(localPos, perpendicularVector) < 0.f) ? 1.f : -1.f;
+  return angle;
+}
+
 class ContextImpl
 {
   recti::CameraMouse mCameraMouse;
@@ -648,7 +667,8 @@ private:
     }
   }
 
-  void DrawRotationGizmo(const recti::ModelContext& mCurrent, recti::MOVETYPE type)
+  void DrawRotationGizmo(const recti::ModelContext& mCurrent,
+                         recti::MOVETYPE type)
   {
     if (!Intersects(mCurrent.mOperation, recti::ROTATE)) {
       return;
@@ -677,7 +697,8 @@ private:
                       static_cast<recti::OPERATION>(recti::ROTATE_Z >> axis))) {
         continue;
       }
-      const bool usingAxis = (mState.mbUsing && type == recti::MT_ROTATE_Z - axis);
+      const bool usingAxis =
+        (mState.mbUsing && type == recti::MT_ROTATE_Z - axis);
       const int circleMul = (hasRSC && !usingAxis) ? 1 : 2;
 
       recti::Vec2* circlePos = (recti::Vec2*)alloca(
@@ -850,7 +871,8 @@ private:
     }
   }
 
-  void DrawTranslationGizmo(const recti::ModelContext& mCurrent, recti::MOVETYPE type)
+  void DrawTranslationGizmo(const recti::ModelContext& mCurrent,
+                            recti::MOVETYPE type)
   {
     auto drawList = mDrawList;
     if (!drawList) {
@@ -923,7 +945,8 @@ private:
         }
       }
       // draw plane
-      if (!mState.mbUsing || (mState.mbUsing && type == recti::MT_MOVE_YZ + i)) {
+      if (!mState.mbUsing ||
+          (mState.mbUsing && type == recti::MT_MOVE_YZ + i)) {
         if (belowPlaneLimit &&
             Contains(mCurrent.mOperation, TRANSLATE_PLANS[i])) {
           recti::Vec2 screenQuadPts[4];
@@ -1120,10 +1143,12 @@ private:
         if (Intersects(mCurrent.mOperation, recti::TRANSLATE)) {
           type = GetMoveType(mCurrent, mAllowAxisFlip, &mState);
         }
-        if (Intersects(mCurrent.mOperation, recti::ROTATE) && type == recti::MT_NONE) {
+        if (Intersects(mCurrent.mOperation, recti::ROTATE) &&
+            type == recti::MT_NONE) {
           type = GetRotateType(mCurrent, mRadiusSquareCenter, mState);
         }
-        if (Intersects(mCurrent.mOperation, recti::SCALE) && type == recti::MT_NONE) {
+        if (Intersects(mCurrent.mOperation, recti::SCALE) &&
+            type == recti::MT_NONE) {
           type = GetScaleType(mCurrent, mAllowAxisFlip, &mState);
         }
 
@@ -1276,7 +1301,8 @@ private:
                          recti::MOVETYPE& type,
                          const float* snap)
   {
-    if (!Intersects(mCurrent.mOperation, recti::TRANSLATE) || type != recti::MT_NONE) {
+    if (!Intersects(mCurrent.mOperation, recti::TRANSLATE) ||
+        type != recti::MT_NONE) {
       return false;
     }
     const bool applyRotationLocaly =
@@ -1296,7 +1322,8 @@ private:
       recti::Vec4 delta = newOrigin - mCurrent.mModel.position();
 
       // 1 axis constraint
-      if (mCurrentOperation >= recti::MT_MOVE_X && mCurrentOperation <= recti::MT_MOVE_Z) {
+      if (mCurrentOperation >= recti::MT_MOVE_X &&
+          mCurrentOperation <= recti::MT_MOVE_Z) {
         const int axisIndex = mCurrentOperation - recti::MT_MOVE_X;
         const recti::Vec4& axisValue = mCurrent.mModel.component(axisIndex);
         const float lengthOnAxis = Dot(axisValue, delta);
@@ -1432,7 +1459,8 @@ private:
       recti::Vec4 delta = newOrigin - mCurrent.mModelLocal.position();
 
       // 1 axis constraint
-      if (mCurrentOperation >= recti::MT_SCALE_X && mCurrentOperation <= recti::MT_SCALE_Z) {
+      if (mCurrentOperation >= recti::MT_SCALE_X &&
+          mCurrentOperation <= recti::MT_SCALE_Z) {
         int axisIndex = mCurrentOperation - recti::MT_SCALE_X;
         const recti::Vec4& axisValue =
           mCurrent.mModelLocal.component(axisIndex);
@@ -1502,7 +1530,8 @@ private:
                       recti::MOVETYPE& type,
                       const float* snap)
   {
-    if (!Intersects(mCurrent.mOperation, recti::ROTATE) || type != recti::MT_NONE) {
+    if (!Intersects(mCurrent.mOperation, recti::ROTATE) ||
+        type != recti::MT_NONE) {
       return false;
     }
     bool applyRotationLocaly = mCurrent.mMode == recti::LOCAL;
@@ -1529,24 +1558,28 @@ private:
                                                  -mCameraMouse.CameraDir() };
         // pickup plan
         if (applyRotationLocaly) {
-          mTranslationPlan = BuildPlan(mCurrent.mModel.position(),
-                                       rotatePlanNormal[type - recti::MT_ROTATE_X]);
+          mTranslationPlan =
+            BuildPlan(mCurrent.mModel.position(),
+                      rotatePlanNormal[type - recti::MT_ROTATE_X]);
         } else {
-          mTranslationPlan = BuildPlan(mCurrent.mModelSource.position(),
-                                       directionUnary[type - recti::MT_ROTATE_X]);
+          mTranslationPlan =
+            BuildPlan(mCurrent.mModelSource.position(),
+                      directionUnary[type - recti::MT_ROTATE_X]);
         }
 
         recti::Vec4 localPos =
           mCameraMouse.Ray.IntersectPlane(mTranslationPlan) -
           mCurrent.mModel.position();
         mRotationVectorSource = Normalized(localPos);
-        mRotationAngleOrigin = ComputeAngleOnPlan(mCurrent);
+        mRotationAngleOrigin =
+          ComputeAngleOnPlan(mCurrent, mRotationVectorSource, mTranslationPlan);
       }
     }
 
     // rotation
     if (mState.Using(mCurrent.mActualID) && IsRotateType(mCurrentOperation)) {
-      mRotationAngle = ComputeAngleOnPlan(mCurrent);
+      mRotationAngle =
+        ComputeAngleOnPlan(mCurrent, mRotationVectorSource, mTranslationPlan);
       if (snap) {
         float snapInRadian = snap[0] * DEG2RAD;
         recti::ComputeSnap(&mRotationAngle, snapInRadian);
@@ -1592,22 +1625,6 @@ private:
       type = mCurrentOperation;
     }
     return modified;
-  }
-
-  float ComputeAngleOnPlan(const recti::ModelContext& mCurrent)
-  {
-    recti::Vec4 localPos =
-      Normalized(mCameraMouse.Ray.IntersectPlane(mTranslationPlan) -
-                 mCurrent.mModel.position());
-
-    recti::Vec4 perpendicularVector;
-    perpendicularVector.Cross(mRotationVectorSource, mTranslationPlan);
-    perpendicularVector.Normalize();
-    float acosAngle =
-      recti::Clamp(Dot(localPos, mRotationVectorSource), -1.f, 1.f);
-    float angle = acosf(acosAngle);
-    angle *= (Dot(localPos, perpendicularVector) < 0.f) ? 1.f : -1.f;
-    return angle;
   }
 
 public:
