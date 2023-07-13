@@ -36,34 +36,25 @@ GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
 
   // compute
   for (int i = 0; i < 3 && type == MT_NONE; i++) {
-    Vec4 dirPlaneX, dirPlaneY, dirAxis;
-    bool belowAxisLimit, belowPlaneLimit;
-    ComputeTripodAxisAndVisibility(mCurrent,
-                                   mAllowAxisFlip,
-                                   i,
-                                   state,
-                                   dirAxis,
-                                   dirPlaneX,
-                                   dirPlaneY,
-                                   belowAxisLimit,
-                                   belowPlaneLimit);
-    dirAxis.TransformVector(mCurrent.mModel);
-    dirPlaneX.TransformVector(mCurrent.mModel);
-    dirPlaneY.TransformVector(mCurrent.mModel);
+    Tripod tripod(mCurrent, mAllowAxisFlip, i, state);
+    tripod.dirAxis.TransformVector(mCurrent.mModel);
+    tripod.dirPlaneX.TransformVector(mCurrent.mModel);
+    tripod.dirPlaneY.TransformVector(mCurrent.mModel);
 
     auto posOnPlan = mCurrent.mCameraMouse.Ray.IntersectPlane(
-      BuildPlan(mCurrent.mModel.position(), dirAxis));
+      BuildPlan(mCurrent.mModel.position(), tripod.dirAxis));
 
     // screen
     const Vec2 axisStartOnScreen =
-      mCurrent.mCameraMouse.WorldToPos(
-        mCurrent.mModel.position() + dirAxis * mCurrent.mScreenFactor * 0.1f) -
+      mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position() +
+                                       tripod.dirAxis * mCurrent.mScreenFactor *
+                                         0.1f) -
       mCurrent.mCameraMouse.Camera.LeftTop();
 
     // screen
     const Vec2 axisEndOnScreen =
-      mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position() +
-                                       dirAxis * mCurrent.mScreenFactor) -
+      mCurrent.mCameraMouse.WorldToPos(
+        mCurrent.mModel.position() + tripod.dirAxis * mCurrent.mScreenFactor) -
       mCurrent.mCameraMouse.Camera.LeftTop();
 
     auto screenCoord = mCurrent.mCameraMouse.ScreenMousePos();
@@ -78,11 +69,13 @@ GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
       type = (MOVETYPE)(MT_MOVE_X + i);
     }
 
-    const float dx = dirPlaneX.Dot3((posOnPlan - mCurrent.mModel.position()) *
-                                    (1.f / mCurrent.mScreenFactor));
-    const float dy = dirPlaneY.Dot3((posOnPlan - mCurrent.mModel.position()) *
-                                    (1.f / mCurrent.mScreenFactor));
-    if (belowPlaneLimit && dx >= quadUV[0] && dx <= quadUV[4] &&
+    const float dx =
+      tripod.dirPlaneX.Dot3((posOnPlan - mCurrent.mModel.position()) *
+                            (1.f / mCurrent.mScreenFactor));
+    const float dy =
+      tripod.dirPlaneY.Dot3((posOnPlan - mCurrent.mModel.position()) *
+                            (1.f / mCurrent.mScreenFactor));
+    if (tripod.belowPlaneLimit && dx >= quadUV[0] && dx <= quadUV[4] &&
         dy >= quadUV[1] && dy <= quadUV[3] &&
         Contains(mCurrent.mOperation, TRANSLATE_PLANS[i])) {
       type = (MOVETYPE)(MT_MOVE_YZ + i);
@@ -222,31 +215,22 @@ Translation::DrawTranslationGizmo(const ModelContext& mCurrent,
     mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position());
 
   // draw
-  bool belowAxisLimit = false;
-  bool belowPlaneLimit = false;
   for (int i = 0; i < 3; ++i) {
-    Vec4 dirPlaneX, dirPlaneY, dirAxis;
-    ComputeTripodAxisAndVisibility(mCurrent,
-                                   mAllowAxisFlip,
-                                   i,
-                                   &mState,
-                                   dirAxis,
-                                   dirPlaneX,
-                                   dirPlaneY,
-                                   belowAxisLimit,
-                                   belowPlaneLimit);
+    Tripod tripod(mCurrent, mAllowAxisFlip, i, &mState);
 
     if (!mState.mbUsing || (mState.mbUsing && type == MT_MOVE_X + i)) {
       // draw axis
-      if (belowAxisLimit &&
+      if (tripod.belowAxisLimit &&
           Intersects(mCurrent.mOperation,
                      static_cast<OPERATION>(TRANSLATE_X << i))) {
-        Vec2 baseSSpace = worldToPos(dirAxis * 0.1f * mCurrent.mScreenFactor,
-                                     mCurrent.mMVP,
-                                     mCurrent.mCameraMouse.Camera.Viewport);
-        Vec2 worldDirSSpace = worldToPos(dirAxis * mCurrent.mScreenFactor,
-                                         mCurrent.mMVP,
-                                         mCurrent.mCameraMouse.Camera.Viewport);
+        Vec2 baseSSpace =
+          worldToPos(tripod.dirAxis * 0.1f * mCurrent.mScreenFactor,
+                     mCurrent.mMVP,
+                     mCurrent.mCameraMouse.Camera.Viewport);
+        Vec2 worldDirSSpace =
+          worldToPos(tripod.dirAxis * mCurrent.mScreenFactor,
+                     mCurrent.mMVP,
+                     mCurrent.mCameraMouse.Camera.Viewport);
 
         drawList->AddLine(baseSSpace,
                           worldDirSSpace,
@@ -269,19 +253,19 @@ Translation::DrawTranslationGizmo(const ModelContext& mCurrent,
         // Arrow head end
 
         if (mState.mAxisFactor[i] < 0.f) {
-          drawList->DrawHatchedAxis(mCurrent, dirAxis, mStyle);
+          drawList->DrawHatchedAxis(mCurrent, tripod.dirAxis, mStyle);
         }
       }
     }
     // draw plane
     if (!mState.mbUsing || (mState.mbUsing && type == MT_MOVE_YZ + i)) {
-      if (belowPlaneLimit &&
+      if (tripod.belowPlaneLimit &&
           Contains(mCurrent.mOperation, TRANSLATE_PLANS[i])) {
         Vec2 screenQuadPts[4];
         for (int j = 0; j < 4; ++j) {
-          Vec4 cornerWorldPos =
-            (dirPlaneX * quadUV[j * 2] + dirPlaneY * quadUV[j * 2 + 1]) *
-            mCurrent.mScreenFactor;
+          Vec4 cornerWorldPos = (tripod.dirPlaneX * quadUV[j * 2] +
+                                 tripod.dirPlaneY * quadUV[j * 2 + 1]) *
+                                mCurrent.mScreenFactor;
           screenQuadPts[j] = worldToPos(cornerWorldPos,
                                         mCurrent.mMVP,
                                         mCurrent.mCameraMouse.Camera.Viewport);
