@@ -105,6 +105,75 @@ Contains(OPERATION lhs, OPERATION rhs)
   return (lhs & rhs) == rhs;
 }
 
+struct ModelContext
+{
+  int64_t mActualID;
+  OPERATION mOperation;
+  MODE mMode;
+  const recti::CameraMouse& mCameraMouse;
+  recti::Mat4 mModel;
+  recti::Mat4 mModelLocal; // orthonormalized model
+  recti::Mat4 mModelInverse;
+  recti::Mat4 mModelSource;
+  recti::Mat4 mModelSourceInverse;
+  recti::Mat4 mMVP;
+  recti::Mat4
+    mMVPLocal; // MVP with full model matrix whereas mMVP's model matrix
+               // might only be translation in case of World space edition
+  recti::Vec4 mModelScaleOrigin;
+  float mScreenFactor;
+
+  // window coords
+  recti::Vec2 mScreenSquareCenter;
+
+  // ,
+  ModelContext(int64_t actualID,
+               OPERATION operation,
+               MODE mode,
+               const float* matrix,
+               const recti::CameraMouse& cameraMouse,
+               float gizmoSizeClipSpace)
+    : mActualID(actualID)
+    , mOperation(operation)
+    , mMode((operation & SCALE) ? LOCAL : mode)
+    , mCameraMouse(cameraMouse)
+  {
+    mModelLocal = *(recti::Mat4*)matrix;
+    mModelLocal.OrthoNormalize();
+
+    if (mMode == LOCAL) {
+      mModel = mModelLocal;
+    } else {
+      mModel.Translation(((recti::Mat4*)matrix)->position());
+    }
+    mModelSource = *(recti::Mat4*)matrix;
+    mModelScaleOrigin.Set(mModelSource.right().Length(),
+                          mModelSource.up().Length(),
+                          mModelSource.dir().Length());
+
+    mModelInverse.Inverse(mModel);
+    mModelSourceInverse.Inverse(mModelSource);
+    mMVP = mModel * cameraMouse.mViewProjection;
+    mMVPLocal = mModelLocal * cameraMouse.mViewProjection;
+
+    // compute scale from the size of camera right vector projected on screen at
+    // the matrix position
+    recti::Vec4 pointRight = cameraMouse.mViewInverse.right();
+    pointRight.TransformPoint(cameraMouse.mViewProjection);
+
+    mScreenFactor =
+      gizmoSizeClipSpace / (pointRight.x / pointRight.w -
+                            this->mMVP.position().x / this->mMVP.position().w);
+    recti::Vec4 rightViewInverse = cameraMouse.mViewInverse.right();
+    rightViewInverse.TransformVector(this->mModelInverse);
+    float rightLength = GetSegmentLengthClipSpace(
+      { 0.f, 0.f }, rightViewInverse, mMVP, cameraMouse.Camera.DisplayRatio());
+    mScreenFactor = gizmoSizeClipSpace / rightLength;
+
+    mScreenSquareCenter = cameraMouse.WorldToPos(mModel.position());
+  }
+};
+
 class Context
 {
   class ContextImpl* m_impl;
