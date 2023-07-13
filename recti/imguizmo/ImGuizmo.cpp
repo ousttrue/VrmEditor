@@ -222,6 +222,7 @@ struct State
   bool mBelowAxisLimit[3];
   bool mBelowPlaneLimit[3];
   float mAxisFactor[3];
+  bool mbUsingBounds = false;
 
   bool Using(uint64_t actualID) const
   {
@@ -234,6 +235,12 @@ struct State
       }
     }
     return false;
+  }
+
+  // return true if mouse IsOver or if the gizmo is in moving state
+  bool UsingOrBounds(int64_t actualID) const
+  {
+    return Using(actualID) || mbUsingBounds;
   }
 };
 
@@ -405,6 +412,187 @@ GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
   }
   return type;
 }
+
+static MOVETYPE
+GetRotateType(const ModelContext& mCurrent,
+              float mRadiusSquareCenter,
+              const State& mState)
+{
+  if (mState.mbUsing) {
+    return MT_NONE;
+  }
+  MOVETYPE type = MT_NONE;
+
+  auto& mousePos = mCurrent.mCameraMouse.Mouse.Position;
+  recti::Vec4 deltaScreen = { mousePos.X - mCurrent.mScreenSquareCenter.X,
+                              mousePos.Y - mCurrent.mScreenSquareCenter.Y,
+                              0.f,
+                              0.f };
+  float dist = deltaScreen.Length();
+  if (Intersects(mCurrent.mOperation, ROTATE_SCREEN) &&
+      dist >= (mRadiusSquareCenter - 4.0f) &&
+      dist < (mRadiusSquareCenter + 4.0f)) {
+    type = MT_ROTATE_SCREEN;
+  }
+
+  const recti::Vec4 planNormals[] = { mCurrent.mModel.right(),
+                                      mCurrent.mModel.up(),
+                                      mCurrent.mModel.dir() };
+
+  recti::Vec4 modelViewPos;
+  modelViewPos.TransformPoint(mCurrent.mModel.position(),
+                              mCurrent.mCameraMouse.Camera.ViewMatrix);
+
+  for (int i = 0; i < 3 && type == MT_NONE; i++) {
+    if (!Intersects(mCurrent.mOperation,
+                    static_cast<OPERATION>(ROTATE_X << i))) {
+      continue;
+    }
+    // pickup plan
+    recti::Vec4 pickupPlan =
+      BuildPlan(mCurrent.mModel.position(), planNormals[i]);
+
+    const recti::Vec4 intersectWorldPos =
+      mCurrent.mCameraMouse.Ray.IntersectPlane(pickupPlan);
+    recti::Vec4 intersectViewPos;
+    intersectViewPos.TransformPoint(intersectWorldPos,
+                                    mCurrent.mCameraMouse.Camera.ViewMatrix);
+
+    if (fabs(modelViewPos.z) - fabs(intersectViewPos.z) < -FLT_EPSILON) {
+      continue;
+    }
+
+    const recti::Vec4 localPos = intersectWorldPos - mCurrent.mModel.position();
+    recti::Vec4 idealPosOnCircle = Normalized(localPos);
+    idealPosOnCircle.TransformVector(mCurrent.mModelInverse);
+    const recti::Vec2 idealPosOnCircleScreen = recti::worldToPos(
+      idealPosOnCircle * ROTATION_DISPLAY_FACTOR * mCurrent.mScreenFactor,
+      mCurrent.mMVP,
+      mCurrent.mCameraMouse.Camera.Viewport);
+
+    const recti::Vec2 distanceOnScreen = idealPosOnCircleScreen - mousePos;
+
+    const float distance =
+      recti::Vec4{ distanceOnScreen.X, distanceOnScreen.Y }.Length();
+    if (distance < 8.f) // pixel size
+    {
+      type = (MOVETYPE)(MT_ROTATE_X + i);
+    }
+  }
+
+  return type;
+}
+
+static MOVETYPE
+GetScaleType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
+{
+  if (state->mbUsing) {
+    return MT_NONE;
+  }
+  MOVETYPE type = MT_NONE;
+
+  // compute
+  for (int i = 0; i < 3 && type == MT_NONE; i++) {
+    if (!Intersects(mCurrent.mOperation,
+                    static_cast<OPERATION>(SCALE_X << i))) {
+      continue;
+    }
+    recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
+    bool belowAxisLimit, belowPlaneLimit;
+    ComputeTripodAxisAndVisibility(mCurrent,
+                                   mAllowAxisFlip,
+                                   i,
+                                   state,
+                                   dirAxis,
+                                   dirPlaneX,
+                                   dirPlaneY,
+                                   belowAxisLimit,
+                                   belowPlaneLimit);
+    dirAxis.TransformVector(mCurrent.mModelLocal);
+    dirPlaneX.TransformVector(mCurrent.mModelLocal);
+    dirPlaneY.TransformVector(mCurrent.mModelLocal);
+
+    recti::Vec4 posOnPlan = mCurrent.mCameraMouse.Ray.IntersectPlane(
+      BuildPlan(mCurrent.mModelLocal.position(), dirAxis));
+
+    const float startOffset =
+      Contains(mCurrent.mOperation, static_cast<OPERATION>(TRANSLATE_X << i))
+        ? 1.0f
+        : 0.1f;
+    const float endOffset =
+      Contains(mCurrent.mOperation, static_cast<OPERATION>(TRANSLATE_X << i))
+        ? 1.4f
+        : 1.0f;
+    const recti::Vec2 posOnPlanScreen =
+      mCurrent.mCameraMouse.WorldToPos(posOnPlan);
+    const recti::Vec2 axisStartOnScreen = mCurrent.mCameraMouse.WorldToPos(
+      mCurrent.mModelLocal.position() +
+      dirAxis * mCurrent.mScreenFactor * startOffset);
+    const recti::Vec2 axisEndOnScreen = mCurrent.mCameraMouse.WorldToPos(
+      mCurrent.mModelLocal.position() +
+      dirAxis * mCurrent.mScreenFactor * endOffset);
+
+    recti::Vec4 closestPointOnAxis =
+      recti::PointOnSegment({ posOnPlanScreen.X, posOnPlanScreen.Y },
+                            { axisStartOnScreen.X, axisStartOnScreen.Y },
+                            { axisEndOnScreen.X, axisEndOnScreen.Y });
+
+    if ((closestPointOnAxis -
+         recti::Vec4{ posOnPlanScreen.X, posOnPlanScreen.Y })
+          .Length() < 12.f) // pixel size
+    {
+      type = (MOVETYPE)(MT_SCALE_X + i);
+    }
+  }
+
+  // universal
+  auto& mousePos = mCurrent.mCameraMouse.Mouse.Position;
+  recti::Vec4 deltaScreen = { mousePos.X - mCurrent.mScreenSquareCenter.X,
+                              mousePos.Y - mCurrent.mScreenSquareCenter.Y,
+                              0.f,
+                              0.f };
+  float dist = deltaScreen.Length();
+  if (Contains(mCurrent.mOperation, SCALEU) && dist >= 17.0f && dist < 23.0f) {
+    type = MT_SCALE_XYZ;
+  }
+
+  for (int i = 0; i < 3 && type == MT_NONE; i++) {
+    if (!Intersects(mCurrent.mOperation,
+                    static_cast<OPERATION>(SCALE_XU << i))) {
+      continue;
+    }
+
+    recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
+    bool belowAxisLimit, belowPlaneLimit;
+    ComputeTripodAxisAndVisibility(mCurrent,
+                                   mAllowAxisFlip,
+                                   i,
+                                   state,
+                                   dirAxis,
+                                   dirPlaneX,
+                                   dirPlaneY,
+                                   belowAxisLimit,
+                                   belowPlaneLimit);
+
+    // draw axis
+    if (belowAxisLimit) {
+      bool hasTranslateOnAxis =
+        Contains(mCurrent.mOperation, static_cast<OPERATION>(TRANSLATE_X << i));
+      float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
+      recti::Vec2 worldDirSSpace =
+        recti::worldToPos((dirAxis * markerScale) * mCurrent.mScreenFactor,
+                          mCurrent.mMVPLocal,
+                          mCurrent.mCameraMouse.Camera.Viewport);
+
+      float distance = sqrtf((worldDirSSpace - mousePos).SqrLength());
+      if (distance < 12.f) {
+        type = (MOVETYPE)(MT_SCALE_X + i);
+      }
+    }
+  }
+  return type;
+}
+
 class ContextImpl
 {
   recti::CameraMouse mCameraMouse;
@@ -443,7 +631,6 @@ class ContextImpl
   recti::Vec4 mBoundsLocalPivot;
   int mBoundsBestAxis;
   int mBoundsAxis[2];
-  bool mbUsingBounds;
   recti::Mat4 mBoundsMatrix;
 
   //
@@ -457,213 +644,32 @@ class ContextImpl
   float mGizmoSizeClipSpace = 0.1f;
 
 public:
-  ContextImpl()
-    : mbUsingBounds(false)
-  {
-    mDrawList = std::make_shared<recti::DrawList>();
-  }
+  ContextImpl() { mDrawList = std::make_shared<recti::DrawList>(); }
 
 private:
-  MOVETYPE
-  GetRotateType(const ModelContext& mCurrent) const
-  {
-    if (mState.mbUsing) {
-      return MT_NONE;
-    }
-    MOVETYPE type = MT_NONE;
-
-    auto& mousePos = mCurrent.mCameraMouse.Mouse.Position;
-    recti::Vec4 deltaScreen = { mousePos.X - mCurrent.mScreenSquareCenter.X,
-                                mousePos.Y - mCurrent.mScreenSquareCenter.Y,
-                                0.f,
-                                0.f };
-    float dist = deltaScreen.Length();
-    if (Intersects(mCurrent.mOperation, ROTATE_SCREEN) &&
-        dist >= (mRadiusSquareCenter - 4.0f) &&
-        dist < (mRadiusSquareCenter + 4.0f)) {
-      type = MT_ROTATE_SCREEN;
-    }
-
-    const recti::Vec4 planNormals[] = { mCurrent.mModel.right(),
-                                        mCurrent.mModel.up(),
-                                        mCurrent.mModel.dir() };
-
-    recti::Vec4 modelViewPos;
-    modelViewPos.TransformPoint(mCurrent.mModel.position(),
-                                mCameraMouse.Camera.ViewMatrix);
-
-    for (int i = 0; i < 3 && type == MT_NONE; i++) {
-      if (!Intersects(mCurrent.mOperation,
-                      static_cast<OPERATION>(ROTATE_X << i))) {
-        continue;
-      }
-      // pickup plan
-      recti::Vec4 pickupPlan =
-        BuildPlan(mCurrent.mModel.position(), planNormals[i]);
-
-      const recti::Vec4 intersectWorldPos =
-        mCameraMouse.Ray.IntersectPlane(pickupPlan);
-      recti::Vec4 intersectViewPos;
-      intersectViewPos.TransformPoint(intersectWorldPos,
-                                      mCameraMouse.Camera.ViewMatrix);
-
-      if (fabs(modelViewPos.z) - fabs(intersectViewPos.z) < -FLT_EPSILON) {
-        continue;
-      }
-
-      const recti::Vec4 localPos =
-        intersectWorldPos - mCurrent.mModel.position();
-      recti::Vec4 idealPosOnCircle = Normalized(localPos);
-      idealPosOnCircle.TransformVector(mCurrent.mModelInverse);
-      const recti::Vec2 idealPosOnCircleScreen = recti::worldToPos(
-        idealPosOnCircle * ROTATION_DISPLAY_FACTOR * mCurrent.mScreenFactor,
-        mCurrent.mMVP,
-        mCurrent.mCameraMouse.Camera.Viewport);
-
-      const recti::Vec2 distanceOnScreen = idealPosOnCircleScreen - mousePos;
-
-      const float distance =
-        recti::Vec4{ distanceOnScreen.X, distanceOnScreen.Y }.Length();
-      if (distance < 8.f) // pixel size
-      {
-        type = (MOVETYPE)(MT_ROTATE_X + i);
-      }
-    }
-
-    return type;
-  }
-
-  MOVETYPE GetScaleType(const ModelContext& mCurrent, State* state) const
-  {
-    if (mState.mbUsing) {
-      return MT_NONE;
-    }
-    MOVETYPE type = MT_NONE;
-
-    // compute
-    for (int i = 0; i < 3 && type == MT_NONE; i++) {
-      if (!Intersects(mCurrent.mOperation,
-                      static_cast<OPERATION>(SCALE_X << i))) {
-        continue;
-      }
-      recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
-      bool belowAxisLimit, belowPlaneLimit;
-      ComputeTripodAxisAndVisibility(mCurrent,
-                                     mAllowAxisFlip,
-                                     i,
-                                     state,
-                                     dirAxis,
-                                     dirPlaneX,
-                                     dirPlaneY,
-                                     belowAxisLimit,
-                                     belowPlaneLimit);
-      dirAxis.TransformVector(mCurrent.mModelLocal);
-      dirPlaneX.TransformVector(mCurrent.mModelLocal);
-      dirPlaneY.TransformVector(mCurrent.mModelLocal);
-
-      recti::Vec4 posOnPlan = mCameraMouse.Ray.IntersectPlane(
-        BuildPlan(mCurrent.mModelLocal.position(), dirAxis));
-
-      const float startOffset =
-        Contains(mCurrent.mOperation, static_cast<OPERATION>(TRANSLATE_X << i))
-          ? 1.0f
-          : 0.1f;
-      const float endOffset =
-        Contains(mCurrent.mOperation, static_cast<OPERATION>(TRANSLATE_X << i))
-          ? 1.4f
-          : 1.0f;
-      const recti::Vec2 posOnPlanScreen = mCameraMouse.WorldToPos(posOnPlan);
-      const recti::Vec2 axisStartOnScreen =
-        mCameraMouse.WorldToPos(mCurrent.mModelLocal.position() +
-                                dirAxis * mCurrent.mScreenFactor * startOffset);
-      const recti::Vec2 axisEndOnScreen =
-        mCameraMouse.WorldToPos(mCurrent.mModelLocal.position() +
-                                dirAxis * mCurrent.mScreenFactor * endOffset);
-
-      recti::Vec4 closestPointOnAxis =
-        recti::PointOnSegment({ posOnPlanScreen.X, posOnPlanScreen.Y },
-                              { axisStartOnScreen.X, axisStartOnScreen.Y },
-                              { axisEndOnScreen.X, axisEndOnScreen.Y });
-
-      if ((closestPointOnAxis -
-           recti::Vec4{ posOnPlanScreen.X, posOnPlanScreen.Y })
-            .Length() < 12.f) // pixel size
-      {
-        type = (MOVETYPE)(MT_SCALE_X + i);
-      }
-    }
-
-    // universal
-    auto& mousePos = mCurrent.mCameraMouse.Mouse.Position;
-    recti::Vec4 deltaScreen = { mousePos.X - mCurrent.mScreenSquareCenter.X,
-                                mousePos.Y - mCurrent.mScreenSquareCenter.Y,
-                                0.f,
-                                0.f };
-    float dist = deltaScreen.Length();
-    if (Contains(mCurrent.mOperation, SCALEU) && dist >= 17.0f &&
-        dist < 23.0f) {
-      type = MT_SCALE_XYZ;
-    }
-
-    for (int i = 0; i < 3 && type == MT_NONE; i++) {
-      if (!Intersects(mCurrent.mOperation,
-                      static_cast<OPERATION>(SCALE_XU << i))) {
-        continue;
-      }
-
-      recti::Vec4 dirPlaneX, dirPlaneY, dirAxis;
-      bool belowAxisLimit, belowPlaneLimit;
-      ComputeTripodAxisAndVisibility(mCurrent,
-                                     mAllowAxisFlip,
-                                     i,
-                                     state,
-                                     dirAxis,
-                                     dirPlaneX,
-                                     dirPlaneY,
-                                     belowAxisLimit,
-                                     belowPlaneLimit);
-
-      // draw axis
-      if (belowAxisLimit) {
-        bool hasTranslateOnAxis = Contains(
-          mCurrent.mOperation, static_cast<OPERATION>(TRANSLATE_X << i));
-        float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-        recti::Vec2 worldDirSSpace =
-          recti::worldToPos((dirAxis * markerScale) * mCurrent.mScreenFactor,
-                            mCurrent.mMVPLocal,
-                            mCurrent.mCameraMouse.Camera.Viewport);
-
-        float distance = sqrtf((worldDirSSpace - mousePos).SqrLength());
-        if (distance < 12.f) {
-          type = (MOVETYPE)(MT_SCALE_X + i);
-        }
-      }
-    }
-    return type;
-  }
-
   // return true if mouse cursor is over any gizmo control (axis, plan or screen
   // component)
   // return true if the cursor is over the operation's gizmo
   bool IsOver(const ModelContext& mCurrent, State* state, bool any = true) const
   {
-    if (IsUsing(mCurrent.mActualID)) {
+    if (mState.UsingOrBounds(mCurrent.mActualID)) {
       return true;
     }
     if (any) {
       return (Intersects(mOperation, TRANSLATE) &&
               GetMoveType(mCurrent, mAllowAxisFlip, state) != MT_NONE) ||
              (Intersects(mOperation, ROTATE) &&
-              GetRotateType(mCurrent) != MT_NONE) ||
+              GetRotateType(mCurrent, mRadiusSquareCenter, *state) !=
+                MT_NONE) ||
              (Intersects(mOperation, SCALE) &&
-              GetScaleType(mCurrent, state) != MT_NONE);
+              GetScaleType(mCurrent, mAllowAxisFlip, state) != MT_NONE);
     } else {
       if (Intersects(mCurrent.mOperation, SCALE) &&
-          GetScaleType(mCurrent, state) != MT_NONE) {
+          GetScaleType(mCurrent, mAllowAxisFlip, state) != MT_NONE) {
         return true;
       }
       if (Intersects(mCurrent.mOperation, ROTATE) &&
-          GetRotateType(mCurrent) != MT_NONE) {
+          GetRotateType(mCurrent, mRadiusSquareCenter, *state) != MT_NONE) {
         return true;
       }
       if (Intersects(mCurrent.mOperation, TRANSLATE) &&
@@ -672,12 +678,6 @@ private:
       }
       return false;
     }
-  }
-
-  // return true if mouse IsOver or if the gizmo is in moving state
-  bool IsUsing(int64_t actualID) const
-  {
-    return mState.Using(actualID) || mbUsingBounds;
   }
 
   void ComputeColors(uint32_t* colors, int type, OPERATION operation)
@@ -1217,7 +1217,7 @@ private:
     unsigned int numAxes = 1;
     axes[0] = mBoundsBestAxis;
     int bestAxis = axes[0];
-    if (!mbUsingBounds) {
+    if (!mState.mbUsingBounds) {
       numAxes = 0;
       float bestDot = 0.f;
       for (int i = 0; i < 3; i++) {
@@ -1331,10 +1331,10 @@ private:
           type = GetMoveType(mCurrent, mAllowAxisFlip, &mState);
         }
         if (Intersects(mCurrent.mOperation, ROTATE) && type == MT_NONE) {
-          type = GetRotateType(mCurrent);
+          type = GetRotateType(mCurrent, mRadiusSquareCenter, mState);
         }
         if (Intersects(mCurrent.mOperation, SCALE) && type == MT_NONE) {
-          type = GetScaleType(mCurrent, &mState);
+          type = GetScaleType(mCurrent, mAllowAxisFlip, &mState);
         }
 
         if (type != MT_NONE) {
@@ -1360,7 +1360,7 @@ private:
           midBound, AnchorSmallRadius - 1.2f, smallAnchorColor);
         int oppositeIndex = (i + 2) % 4;
         // big anchor on corners
-        if (!mbUsingBounds && overBigAnchor && mouse.LeftDown) {
+        if (!mState.mbUsingBounds && overBigAnchor && mouse.LeftDown) {
           mBoundsPivot.TransformPoint(aabb[(i + 2) % 4], mCurrent.mModelSource);
           mBoundsAnchor.TransformPoint(aabb[i], mCurrent.mModelSource);
           mBoundsPlan = BuildPlan(mBoundsAnchor, bestAxisWorldDirection);
@@ -1372,12 +1372,12 @@ private:
           mBoundsLocalPivot[secondAxis] = aabb[oppositeIndex][secondAxis];
           mBoundsLocalPivot[thirdAxis] = aabb[oppositeIndex][thirdAxis];
 
-          mbUsingBounds = true;
+          mState.mbUsingBounds = true;
           mState.mEditingID = mCurrent.mActualID;
           mBoundsMatrix = mCurrent.mModelSource;
         }
         // small anchor on middle of segment
-        if (!mbUsingBounds && overSmallAnchor && mouse.LeftDown) {
+        if (!mState.mbUsingBounds && overSmallAnchor && mouse.LeftDown) {
           recti::Vec4 midPointOpposite =
             (aabb[(i + 2) % 4] + aabb[(i + 3) % 4]) * 0.5f;
           mBoundsPivot.TransformPoint(midPointOpposite, mCurrent.mModelSource);
@@ -1394,7 +1394,7 @@ private:
                 [indices[i % 2]]; // bounds[mBoundsAxis[0]] * (((i
                                   // + 1) & 2) ? 1.f : -1.f);
 
-          mbUsingBounds = true;
+          mState.mbUsingBounds = true;
           mState.mEditingID = mCurrent.mActualID;
           mBoundsMatrix = mCurrent.mModelSource;
         }
@@ -1469,10 +1469,10 @@ private:
       }
 
       if (!mouse.LeftDown) {
-        mbUsingBounds = false;
+        mState.mbUsingBounds = false;
         mState.mEditingID = -1;
       }
-      if (mbUsingBounds) {
+      if (mState.mbUsingBounds) {
         break;
       }
     }
@@ -1603,7 +1603,7 @@ private:
     auto& mouse = mCurrent.mCameraMouse.Mouse;
     if (!mState.mbUsing) {
       // find new possible way to scale
-      type = GetScaleType(mCurrent, &mState);
+      type = GetScaleType(mCurrent, mAllowAxisFlip, &mState);
       if (type != MT_NONE) {
       }
       if (mouse.LeftDown && type != MT_NONE) {
@@ -1718,7 +1718,7 @@ private:
 
     auto& mouse = mCurrent.mCameraMouse.Mouse;
     if (!mState.mbUsing) {
-      type = GetRotateType(mCurrent);
+      type = GetRotateType(mCurrent, mRadiusSquareCenter, mState);
 
       if (type != MT_NONE) {
       }
@@ -1858,7 +1858,7 @@ public:
     MOVETYPE type = MT_NONE;
     bool manipulated = false;
     {
-      if (!mbUsingBounds) {
+      if (!mState.mbUsingBounds) {
         manipulated =
           HandleTranslation(mCurrent, matrix, deltaMatrix, type, snap) ||
           HandleScale(mCurrent, matrix, deltaMatrix, type, snap) ||
@@ -1872,7 +1872,7 @@ public:
     }
 
     mOperation = operation;
-    if (!mbUsingBounds) {
+    if (!mState.mbUsingBounds) {
       DrawRotationGizmo(mCurrent, type);
       DrawTranslationGizmo(mCurrent, type);
       DrawScaleGizmo(mCurrent, type);
