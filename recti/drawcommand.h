@@ -1,4 +1,5 @@
 #pragma once
+#include "style.h"
 #include "vec2.h"
 #include "vec4.h"
 #include <array>
@@ -117,7 +118,12 @@ struct DrawList
 
   void DrawHatchedAxis(const struct ModelContext& mCurrent,
                        const Vec4& axis,
-                       const struct Style& mStyle);
+                       const Style& mStyle);
+
+  void DrawCubes(const struct CameraMouse& cameraMouse,
+                 const float* matrices,
+                 int matrixCount,
+                 const Style& mStyle);
 };
 
-}
+} // namespace

@@ -52,6 +52,11 @@ struct ScreenImpl
   }
 
   const DrawList& End() { return m_im_gizmo->End(); }
+
+  void DrawCubes(const float* cubes, uint32_t count)
+  {
+    m_im_gizmo->DrawCubes(cubes, count);
+  }
 };
 
 //
@@ -87,6 +92,12 @@ const DrawList&
 Screen::End()
 {
   return m_impl->End();
+}
+
+void
+Screen::DrawCubes(const float* cubes, uint32_t count)
+{
+  m_impl->DrawCubes(cubes, count);
 }
 
 } // namespace

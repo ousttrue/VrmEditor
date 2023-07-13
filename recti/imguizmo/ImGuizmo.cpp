@@ -123,6 +123,11 @@ public:
   }
 
   const recti::DrawList& GetDrawList() const { return *mDrawList; }
+
+  void DrawCubes(const float* cubes, uint32_t count)
+  {
+    mDrawList->DrawCubes(mCameraMouse, cubes, count, mStyle);
+  }
 };
 
 //
@@ -160,6 +165,12 @@ const recti::DrawList&
 Context::End()
 {
   return m_impl->GetDrawList();
+}
+
+void
+Context::DrawCubes(const float* cubes, uint32_t count)
+{
+  m_impl->DrawCubes(cubes, count);
 }
 
 } // namespace

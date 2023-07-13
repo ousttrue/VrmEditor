@@ -48,6 +48,7 @@ public:
                   float* deltaMatrix = nullptr,
                   const float* snap = nullptr);
   const recti::DrawList& End();
+  void DrawCubes(const float* cubes, uint32_t count);
 };
 
 } // namespace

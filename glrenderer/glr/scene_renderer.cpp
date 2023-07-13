@@ -182,13 +182,22 @@ SceneRenderer::RenderRuntime(
     recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
 
     m_screen->Begin(gizmo_camera, mouse);
-    if (m_screen->Manipulate(node.get(),
-                             { enableTranslation, true, false, true },
-                             (float*)&m)) {
+    if (m_screen->Manipulate(
+          node.get(), { enableTranslation, true, false, true }, (float*)&m)) {
       // decompose feedback
       node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldMatrix(true);
     }
+
+    // const float cubes[]{
+    //   1, 0, 0, 0, //
+    //   0, 1, 0, 0, //
+    //   0, 0, 1, 0, //
+    //   0, 0, 0, 1, //
+    // };
+    // auto cubes = runtime->ShapeMatrices();
+    // m_screen->DrawCubes((const float*)cubes.data(), cubes.size());
+
     auto& drawlist = m_screen->End();
     recti::Render(drawlist, ImGui::GetWindowDrawList());
   }
