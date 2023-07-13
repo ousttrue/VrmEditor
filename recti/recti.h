@@ -26,9 +26,7 @@ public:
                   const Operation& operation,
                   float* matrix,
                   float* deltaMatrix = nullptr,
-                  const float* snap = nullptr,
-                  const float* localBounds = nullptr,
-                  const float* boundsSnap = nullptr);
+                  const float* snap = nullptr);
   const DrawList& End();
 };
 

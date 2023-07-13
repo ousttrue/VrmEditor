@@ -107,13 +107,8 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
     recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
 
     m_screen->Begin(gizmo_camera, mouse);
-    if (m_screen->Manipulate(node.get(),
-                             { enableTranslation, true, false, true },
-                             (float*)&m,
-                             nullptr,
-                             nullptr,
-                             nullptr,
-                             nullptr)) {
+    if (m_screen->Manipulate(
+          node.get(), { enableTranslation, true, false, true }, (float*)&m)) {
       // decompose feedback
       node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldInitialMatrix(true);
@@ -189,11 +184,7 @@ SceneRenderer::RenderRuntime(
     m_screen->Begin(gizmo_camera, mouse);
     if (m_screen->Manipulate(node.get(),
                              { enableTranslation, true, false, true },
-                             (float*)&m,
-                             nullptr,
-                             nullptr,
-                             nullptr,
-                             nullptr)) {
+                             (float*)&m)) {
       // decompose feedback
       node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       node->CalcWorldMatrix(true);

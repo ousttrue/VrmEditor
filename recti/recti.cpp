@@ -45,18 +45,10 @@ struct ScreenImpl
                   const Operation& operation,
                   float* matrix,
                   float* deltaMatrix,
-                  const float* snap,
-                  const float* localBounds,
-                  const float* boundsSnap)
+                  const float* snap)
   {
-    return m_im_gizmo->Manipulate(id,
-                                  ToOperation(operation),
-                                  ToMode(operation),
-                                  matrix,
-                                  deltaMatrix,
-                                  snap,
-                                  localBounds,
-                                  boundsSnap);
+    return m_im_gizmo->Manipulate(
+      id, ToOperation(operation), ToMode(operation), matrix, deltaMatrix, snap);
   }
 
   const DrawList& End() { return m_im_gizmo->End(); }
@@ -86,12 +78,9 @@ Screen::Manipulate(void* id,
                    const Operation& operation,
                    float* matrix,
                    float* deltaMatrix,
-                   const float* snap,
-                   const float* localBounds,
-                   const float* boundsSnap)
+                   const float* snap)
 {
-  return m_impl->Manipulate(
-    id, operation, matrix, deltaMatrix, snap, localBounds, boundsSnap);
+  return m_impl->Manipulate(id, operation, matrix, deltaMatrix, snap);
 }
 
 const DrawList&

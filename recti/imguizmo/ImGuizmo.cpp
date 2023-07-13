@@ -104,7 +104,6 @@ struct State
   bool mBelowAxisLimit[3];
   bool mBelowPlaneLimit[3];
   float mAxisFactor[3];
-  bool mbUsingBounds = false;
   recti::MOVETYPE mCurrentOperation;
 
   bool Using(uint64_t actualID) const
@@ -118,12 +117,6 @@ struct State
       }
     }
     return false;
-  }
-
-  // return true if mouse IsOver or if the gizmo is in moving state
-  bool UsingOrBounds(int64_t actualID) const
-  {
-    return Using(actualID) || mbUsingBounds;
   }
 };
 
@@ -531,15 +524,6 @@ class ContextImpl
   recti::Vec4 mScaleValueOrigin;
   recti::Vec4 mScaleLast;
   float mSaveMousePosx;
-
-  // bounds stretching
-  recti::Vec4 mBoundsPivot;
-  recti::Vec4 mBoundsAnchor;
-  recti::Vec4 mBoundsPlan;
-  recti::Vec4 mBoundsLocalPivot;
-  int mBoundsBestAxis;
-  int mBoundsAxis[2];
-  recti::Mat4 mBoundsMatrix;
 
   //
   bool mIsOrthographic = false;
@@ -1014,286 +998,6 @@ private:
     }
   }
 
-  void HandleAndDrawLocalBounds(const recti::ModelContext& mCurrent,
-                                const float* bounds,
-                                const float* snapValues,
-                                recti::Mat4* matrix)
-  {
-    // ImGuiIO& io = ImGui::GetIO();
-    auto drawList = mDrawList;
-
-    // compute best projection axis
-    recti::Vec4 axesWorldDirections[3];
-    recti::Vec4 bestAxisWorldDirection = { 0.0f, 0.0f, 0.0f, 0.0f };
-    int axes[3];
-    unsigned int numAxes = 1;
-    axes[0] = mBoundsBestAxis;
-    int bestAxis = axes[0];
-    if (!mState.mbUsingBounds) {
-      numAxes = 0;
-      float bestDot = 0.f;
-      for (int i = 0; i < 3; i++) {
-        recti::Vec4 dirPlaneNormalWorld;
-        dirPlaneNormalWorld.TransformVector(directionUnary[i],
-                                            mCurrent.mModelSource);
-        dirPlaneNormalWorld.Normalize();
-
-        float dt = fabsf(Dot(Normalized(mCameraMouse.CameraEye() -
-                                        mCurrent.mModelSource.position()),
-                             dirPlaneNormalWorld));
-        if (dt >= bestDot) {
-          bestDot = dt;
-          bestAxis = i;
-          bestAxisWorldDirection = dirPlaneNormalWorld;
-        }
-
-        if (dt >= 0.1f) {
-          axes[numAxes] = i;
-          axesWorldDirections[numAxes] = dirPlaneNormalWorld;
-          ++numAxes;
-        }
-      }
-    }
-
-    if (numAxes == 0) {
-      axes[0] = bestAxis;
-      axesWorldDirections[0] = bestAxisWorldDirection;
-      numAxes = 1;
-    }
-
-    else if (bestAxis != axes[0]) {
-      unsigned int bestIndex = 0;
-      for (unsigned int i = 0; i < numAxes; i++) {
-        if (axes[i] == bestAxis) {
-          bestIndex = i;
-          break;
-        }
-      }
-      int tempAxis = axes[0];
-      axes[0] = axes[bestIndex];
-      axes[bestIndex] = tempAxis;
-      recti::Vec4 tempDirection = axesWorldDirections[0];
-      axesWorldDirections[0] = axesWorldDirections[bestIndex];
-      axesWorldDirections[bestIndex] = tempDirection;
-    }
-
-    auto& mouse = mCurrent.mCameraMouse.Mouse;
-    for (unsigned int axisIndex = 0; axisIndex < numAxes; ++axisIndex) {
-      bestAxis = axes[axisIndex];
-      bestAxisWorldDirection = axesWorldDirections[axisIndex];
-
-      // corners
-      recti::Vec4 aabb[4];
-
-      int secondAxis = (bestAxis + 1) % 3;
-      int thirdAxis = (bestAxis + 2) % 3;
-
-      for (int i = 0; i < 4; i++) {
-        aabb[i][3] = aabb[i][bestAxis] = 0.f;
-        aabb[i][secondAxis] = bounds[secondAxis + 3 * (i >> 1)];
-        aabb[i][thirdAxis] = bounds[thirdAxis + 3 * ((i >> 1) ^ (i & 1))];
-      }
-
-      // draw bounds
-      unsigned int anchorAlpha = recti::COL32_BLACK();
-
-      recti::Mat4 boundsMVP =
-        mCurrent.mModelSource * mCameraMouse.mViewProjection;
-      for (int i = 0; i < 4; i++) {
-        recti::Vec2 worldBound1 = recti::worldToPos(
-          aabb[i], boundsMVP, mCurrent.mCameraMouse.Camera.Viewport);
-        recti::Vec2 worldBound2 = recti::worldToPos(
-          aabb[(i + 1) % 4], boundsMVP, mCurrent.mCameraMouse.Camera.Viewport);
-        if (!mCameraMouse.Camera.IsInContextRect(worldBound1) ||
-            !mCameraMouse.Camera.IsInContextRect(worldBound2)) {
-          continue;
-        }
-        float boundDistance = sqrtf((worldBound1 - worldBound2).SqrLength());
-        int stepCount = (int)(boundDistance / 10.f);
-        stepCount = recti::min(stepCount, 1000);
-        for (int j = 0; j < stepCount; j++) {
-          float stepLength = 1.f / (float)stepCount;
-          float t1 = (float)j * stepLength;
-          float t2 = (float)j * stepLength + stepLength * 0.5f;
-          recti::Vec2 worldBoundSS1 =
-            Lerp(worldBound1, worldBound2, recti::Vec2(t1, t1));
-          recti::Vec2 worldBoundSS2 =
-            Lerp(worldBound1, worldBound2, recti::Vec2(t2, t2));
-          // drawList->AddLine(worldBoundSS1, worldBoundSS2, IM_COL32(0, 0, 0,
-          // 0)
-          // + anchorAlpha, 3.f);
-          drawList->AddLine(worldBoundSS1,
-                            worldBoundSS2,
-                            recti::COL32(0xAA, 0xAA, 0xAA, 0) + anchorAlpha,
-                            2.f);
-        }
-        recti::Vec4 midPoint = (aabb[i] + aabb[(i + 1) % 4]) * 0.5f;
-        recti::Vec2 midBound = recti::worldToPos(
-          midPoint, boundsMVP, mCurrent.mCameraMouse.Camera.Viewport);
-        static const float AnchorBigRadius = 8.f;
-        static const float AnchorSmallRadius = 6.f;
-        bool overBigAnchor = (worldBound1 - mouse.Position).SqrLength() <=
-                             (AnchorBigRadius * AnchorBigRadius);
-        bool overSmallAnchor = (midBound - mouse.Position).SqrLength() <=
-                               (AnchorBigRadius * AnchorBigRadius);
-
-        int type = recti::MT_NONE;
-
-        if (Intersects(mCurrent.mOperation, recti::TRANSLATE)) {
-          type = GetMoveType(mCurrent, mAllowAxisFlip, &mState);
-        }
-        if (Intersects(mCurrent.mOperation, recti::ROTATE) &&
-            type == recti::MT_NONE) {
-          type = GetRotateType(mCurrent, mRadiusSquareCenter, mState);
-        }
-        if (Intersects(mCurrent.mOperation, recti::SCALE) &&
-            type == recti::MT_NONE) {
-          type = GetScaleType(mCurrent, mAllowAxisFlip, &mState);
-        }
-
-        if (type != recti::MT_NONE) {
-          overBigAnchor = false;
-          overSmallAnchor = false;
-        }
-
-        uint32_t selectionColor = mStyle.GetColorU32(recti::SELECTION);
-
-        unsigned int bigAnchorColor =
-          overBigAnchor ? selectionColor
-                        : (recti::COL32(0xAA, 0xAA, 0xAA, 0) + anchorAlpha);
-        unsigned int smallAnchorColor =
-          overSmallAnchor ? selectionColor
-                          : (recti::COL32(0xAA, 0xAA, 0xAA, 0) + anchorAlpha);
-
-        drawList->AddCircleFilled(
-          worldBound1, AnchorBigRadius, recti::COL32_BLACK());
-        drawList->AddCircleFilled(
-          worldBound1, AnchorBigRadius - 1.2f, bigAnchorColor);
-
-        drawList->AddCircleFilled(
-          midBound, AnchorSmallRadius, recti::COL32_BLACK());
-        drawList->AddCircleFilled(
-          midBound, AnchorSmallRadius - 1.2f, smallAnchorColor);
-        int oppositeIndex = (i + 2) % 4;
-        // big anchor on corners
-        if (!mState.mbUsingBounds && overBigAnchor && mouse.LeftDown) {
-          mBoundsPivot.TransformPoint(aabb[(i + 2) % 4], mCurrent.mModelSource);
-          mBoundsAnchor.TransformPoint(aabb[i], mCurrent.mModelSource);
-          mBoundsPlan = BuildPlan(mBoundsAnchor, bestAxisWorldDirection);
-          mBoundsBestAxis = bestAxis;
-          mBoundsAxis[0] = secondAxis;
-          mBoundsAxis[1] = thirdAxis;
-
-          mBoundsLocalPivot.Set(0.f);
-          mBoundsLocalPivot[secondAxis] = aabb[oppositeIndex][secondAxis];
-          mBoundsLocalPivot[thirdAxis] = aabb[oppositeIndex][thirdAxis];
-
-          mState.mbUsingBounds = true;
-          mState.mEditingID = mCurrent.mActualID;
-          mBoundsMatrix = mCurrent.mModelSource;
-        }
-        // small anchor on middle of segment
-        if (!mState.mbUsingBounds && overSmallAnchor && mouse.LeftDown) {
-          recti::Vec4 midPointOpposite =
-            (aabb[(i + 2) % 4] + aabb[(i + 3) % 4]) * 0.5f;
-          mBoundsPivot.TransformPoint(midPointOpposite, mCurrent.mModelSource);
-          mBoundsAnchor.TransformPoint(midPoint, mCurrent.mModelSource);
-          mBoundsPlan = BuildPlan(mBoundsAnchor, bestAxisWorldDirection);
-          mBoundsBestAxis = bestAxis;
-          int indices[] = { secondAxis, thirdAxis };
-          mBoundsAxis[0] = indices[i % 2];
-          mBoundsAxis[1] = -1;
-
-          mBoundsLocalPivot.Set(0.f);
-          mBoundsLocalPivot[mBoundsAxis[0]] =
-            aabb[oppositeIndex]
-                [indices[i % 2]]; // bounds[mBoundsAxis[0]] * (((i
-                                  // + 1) & 2) ? 1.f : -1.f);
-
-          mState.mbUsingBounds = true;
-          mState.mEditingID = mCurrent.mActualID;
-          mBoundsMatrix = mCurrent.mModelSource;
-        }
-      }
-
-      if (mState.Using(mCurrent.mActualID)) {
-        recti::Mat4 scale;
-        scale.SetToIdentity();
-
-        // compute projected mouse position on plan
-        recti::Vec4 newPos = mCameraMouse.Ray.IntersectPlane(mBoundsPlan);
-
-        // compute a reference and delta vectors base on mouse move
-        recti::Vec4 deltaVector = (newPos - mBoundsPivot).Abs();
-        recti::Vec4 referenceVector = (mBoundsAnchor - mBoundsPivot).Abs();
-
-        // for 1 or 2 axes, compute a ratio that's used for scale and snap it
-        // based on resulting length
-        for (int i = 0; i < 2; i++) {
-          int axisIndex1 = mBoundsAxis[i];
-          if (axisIndex1 == -1) {
-            continue;
-          }
-
-          float ratioAxis = 1.f;
-          recti::Vec4 axisDir = mBoundsMatrix.component(axisIndex1).Abs();
-
-          float dtAxis = axisDir.Dot(referenceVector);
-          float boundSize = bounds[axisIndex1 + 3] - bounds[axisIndex1];
-          if (dtAxis > FLT_EPSILON) {
-            ratioAxis = axisDir.Dot(deltaVector) / dtAxis;
-          }
-
-          if (snapValues) {
-            float length = boundSize * ratioAxis;
-            recti::ComputeSnap(&length, snapValues[axisIndex1]);
-            if (boundSize > FLT_EPSILON) {
-              ratioAxis = length / boundSize;
-            }
-          }
-          scale.component(axisIndex1) *= ratioAxis;
-        }
-
-        // transform matrix
-        recti::Mat4 preScale, postScale;
-        preScale.Translation(-mBoundsLocalPivot);
-        postScale.Translation(mBoundsLocalPivot);
-        recti::Mat4 res = preScale * scale * postScale * mBoundsMatrix;
-        *matrix = res;
-
-        // info text
-        char tmps[512];
-        recti::Vec2 destinationPosOnScreen =
-          mCameraMouse.WorldToPos(mCurrent.mModel.position());
-        snprintf(tmps,
-                 sizeof(tmps),
-                 "X: %.2f Y: %.2f Z: %.2f",
-                 (bounds[3] - bounds[0]) * mBoundsMatrix.component(0).Length() *
-                   scale.component(0).Length(),
-                 (bounds[4] - bounds[1]) * mBoundsMatrix.component(1).Length() *
-                   scale.component(1).Length(),
-                 (bounds[5] - bounds[2]) * mBoundsMatrix.component(2).Length() *
-                   scale.component(2).Length());
-        drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
-                                      destinationPosOnScreen.Y + 15),
-                          mStyle.GetColorU32(recti::TEXT_SHADOW),
-                          tmps);
-        drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
-                                      destinationPosOnScreen.Y + 14),
-                          mStyle.GetColorU32(recti::TEXT),
-                          tmps);
-      }
-
-      if (!mouse.LeftDown) {
-        mState.mbUsingBounds = false;
-        mState.mEditingID = -1;
-      }
-      if (mState.mbUsingBounds) {
-        break;
-      }
-    }
-  }
-
   bool HandleTranslation(const recti::ModelContext& mCurrent,
                          float* matrix,
                          float* deltaMatrix,
@@ -1643,9 +1347,7 @@ public:
                   recti::MODE mode,
                   float* matrix,
                   float* deltaMatrix,
-                  const float* snap,
-                  const float* localBounds,
-                  const float* boundsSnap)
+                  const float* snap)
   {
     // Scale is always local or matrix will be skewed when applying world scale
     // or oriented matrix
@@ -1666,23 +1368,15 @@ public:
 
     // --
     recti::MOVETYPE type = recti::MT_NONE;
-    bool manipulated = false;
-    if (!mState.mbUsingBounds) {
-      manipulated =
-        HandleTranslation(mCurrent, matrix, deltaMatrix, type, snap) ||
-        HandleScale(mCurrent, matrix, deltaMatrix, type, snap) ||
-        HandleRotation(mCurrent, matrix, deltaMatrix, type, snap);
-    }
-    if (localBounds && !mState.mbUsing) {
-      HandleAndDrawLocalBounds(
-        mCurrent, localBounds, boundsSnap, (recti::Mat4*)matrix);
-    }
-    if (!mState.mbUsingBounds) {
-      DrawRotationGizmo(mCurrent, type);
-      DrawTranslationGizmo(mCurrent, type);
-      DrawScaleGizmo(mCurrent, type);
-      DrawScaleUniveralGizmo(mCurrent, type);
-    }
+    auto manipulated =
+      HandleTranslation(mCurrent, matrix, deltaMatrix, type, snap) ||
+      HandleScale(mCurrent, matrix, deltaMatrix, type, snap) ||
+      HandleRotation(mCurrent, matrix, deltaMatrix, type, snap);
+
+    DrawRotationGizmo(mCurrent, type);
+    DrawTranslationGizmo(mCurrent, type);
+    DrawScaleGizmo(mCurrent, type);
+    DrawScaleUniveralGizmo(mCurrent, type);
 
     return manipulated;
   }
@@ -1715,18 +1409,10 @@ Context::Manipulate(void* id,
                     recti::MODE mode,
                     float* matrix,
                     float* deltaMatrix,
-                    const float* snap,
-                    const float* localBounds,
-                    const float* boundsSnap)
+                    const float* snap)
 {
-  return m_impl->Manipulate((int64_t)id,
-                            operation,
-                            mode,
-                            matrix,
-                            deltaMatrix,
-                            snap,
-                            localBounds,
-                            boundsSnap);
+  return m_impl->Manipulate(
+    (int64_t)id, operation, mode, matrix, deltaMatrix, snap);
 }
 
 const recti::DrawList&
