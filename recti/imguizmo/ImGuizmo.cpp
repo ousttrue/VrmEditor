@@ -133,6 +133,45 @@ enum COLOR
   COUNT
 };
 
+#include "ImGuizmo.h"
+
+namespace ImGuizmo {
+
+enum MOVETYPE
+{
+  MT_NONE,
+  MT_MOVE_X,
+  MT_MOVE_Y,
+  MT_MOVE_Z,
+  MT_MOVE_YZ,
+  MT_MOVE_ZX,
+  MT_MOVE_XY,
+  MT_MOVE_SCREEN,
+  MT_ROTATE_X,
+  MT_ROTATE_Y,
+  MT_ROTATE_Z,
+  MT_ROTATE_SCREEN,
+  MT_SCALE_X,
+  MT_SCALE_Y,
+  MT_SCALE_Z,
+  MT_SCALE_XYZ
+};
+inline bool
+IsTranslateType(MOVETYPE type)
+{
+  return type >= MT_MOVE_X && type <= MT_MOVE_SCREEN;
+}
+inline bool
+IsRotateType(MOVETYPE type)
+{
+  return type >= MT_ROTATE_X && type <= MT_ROTATE_SCREEN;
+}
+inline bool
+IsScaleType(MOVETYPE type)
+{
+  return type >= MT_SCALE_X && type <= MT_SCALE_XYZ;
+}
+
 struct Style
 {
   // Thickness of lines for translation gizmo
@@ -169,50 +208,60 @@ struct Style
     { 0.000f, 0.000f, 0.000f, 0.500f }, { 1.000f, 1.000f, 1.000f, 1.000f },
     { 0.000f, 0.000f, 0.000f, 1.000f },
   };
+
+  uint32_t GetColorU32(int idx) const
+  {
+    assert(idx < COLOR::COUNT);
+    return ColorConvertFloat4ToU32(Colors[idx]);
+  }
+
+  void ComputeColors(uint32_t* colors, int type, OPERATION operation) const
+  {
+    uint32_t selectionColor = GetColorU32(SELECTION);
+
+    switch (operation) {
+      case TRANSLATE:
+        colors[0] = (type == MT_MOVE_SCREEN) ? selectionColor : IM_COL32_WHITE;
+        for (int i = 0; i < 3; i++) {
+          colors[i + 1] = (type == (int)(MT_MOVE_X + i))
+                            ? selectionColor
+                            : GetColorU32(DIRECTION_X + i);
+          colors[i + 4] = (type == (int)(MT_MOVE_YZ + i))
+                            ? selectionColor
+                            : GetColorU32(PLANE_X + i);
+          colors[i + 4] =
+            (type == MT_MOVE_SCREEN) ? selectionColor : colors[i + 4];
+        }
+        break;
+      case ROTATE:
+        colors[0] =
+          (type == MT_ROTATE_SCREEN) ? selectionColor : IM_COL32_WHITE;
+        for (int i = 0; i < 3; i++) {
+          colors[i + 1] = (type == (int)(MT_ROTATE_X + i))
+                            ? selectionColor
+                            : GetColorU32(DIRECTION_X + i);
+        }
+        break;
+      case SCALEU:
+      case SCALE:
+        colors[0] = (type == MT_SCALE_XYZ) ? selectionColor : IM_COL32_WHITE;
+        for (int i = 0; i < 3; i++) {
+          colors[i + 1] = (type == (int)(MT_SCALE_X + i))
+                            ? selectionColor
+                            : GetColorU32(DIRECTION_X + i);
+        }
+        break;
+      // note: this internal function is only called with three possible
+      // values for operation
+      default:
+        break;
+    }
+  }
 };
-
-#include "ImGuizmo.h"
-
-namespace ImGuizmo {
 
 static const OPERATION TRANSLATE_PLANS[3] = { TRANSLATE_Y | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Y };
-
-enum MOVETYPE
-{
-  MT_NONE,
-  MT_MOVE_X,
-  MT_MOVE_Y,
-  MT_MOVE_Z,
-  MT_MOVE_YZ,
-  MT_MOVE_ZX,
-  MT_MOVE_XY,
-  MT_MOVE_SCREEN,
-  MT_ROTATE_X,
-  MT_ROTATE_Y,
-  MT_ROTATE_Z,
-  MT_ROTATE_SCREEN,
-  MT_SCALE_X,
-  MT_SCALE_Y,
-  MT_SCALE_Z,
-  MT_SCALE_XYZ
-};
-inline bool
-IsTranslateType(MOVETYPE type)
-{
-  return type >= MT_MOVE_X && type <= MT_MOVE_SCREEN;
-}
-inline bool
-IsRotateType(MOVETYPE type)
-{
-  return type >= MT_ROTATE_X && type <= MT_ROTATE_SCREEN;
-}
-inline bool
-IsScaleType(MOVETYPE type)
-{
-  return type >= MT_SCALE_X && type <= MT_SCALE_XYZ;
-}
 
 struct State
 {
@@ -647,55 +696,6 @@ public:
   ContextImpl() { mDrawList = std::make_shared<recti::DrawList>(); }
 
 private:
-  void ComputeColors(uint32_t* colors, int type, OPERATION operation)
-  {
-    uint32_t selectionColor = GetColorU32(SELECTION);
-
-    switch (operation) {
-      case TRANSLATE:
-        colors[0] = (type == MT_MOVE_SCREEN) ? selectionColor : IM_COL32_WHITE;
-        for (int i = 0; i < 3; i++) {
-          colors[i + 1] = (type == (int)(MT_MOVE_X + i))
-                            ? selectionColor
-                            : GetColorU32(DIRECTION_X + i);
-          colors[i + 4] = (type == (int)(MT_MOVE_YZ + i))
-                            ? selectionColor
-                            : GetColorU32(PLANE_X + i);
-          colors[i + 4] =
-            (type == MT_MOVE_SCREEN) ? selectionColor : colors[i + 4];
-        }
-        break;
-      case ROTATE:
-        colors[0] =
-          (type == MT_ROTATE_SCREEN) ? selectionColor : IM_COL32_WHITE;
-        for (int i = 0; i < 3; i++) {
-          colors[i + 1] = (type == (int)(MT_ROTATE_X + i))
-                            ? selectionColor
-                            : GetColorU32(DIRECTION_X + i);
-        }
-        break;
-      case SCALEU:
-      case SCALE:
-        colors[0] = (type == MT_SCALE_XYZ) ? selectionColor : IM_COL32_WHITE;
-        for (int i = 0; i < 3; i++) {
-          colors[i + 1] = (type == (int)(MT_SCALE_X + i))
-                            ? selectionColor
-                            : GetColorU32(DIRECTION_X + i);
-        }
-        break;
-      // note: this internal function is only called with three possible
-      // values for operation
-      default:
-        break;
-    }
-  }
-
-  uint32_t GetColorU32(int idx) const
-  {
-    assert(idx < COLOR::COUNT);
-    return ColorConvertFloat4ToU32(mStyle.Colors[idx]);
-  }
-
   void DrawHatchedAxis(const ModelContext& mCurrent, const recti::Vec4& axis)
   {
     if (mStyle.HatchedAxisLineThickness <= 0.0f) {
@@ -713,7 +713,7 @@ private:
         mCurrent.mCameraMouse.Camera.Viewport);
       mDrawList->AddLine(baseSSpace2,
                          worldDirSSpace2,
-                         GetColorU32(HATCHED_AXIS_LINES),
+                         mStyle.GetColorU32(HATCHED_AXIS_LINES),
                          mStyle.HatchedAxisLineThickness);
     }
   }
@@ -728,7 +728,7 @@ private:
 
     // colors
     uint32_t colors[7];
-    ComputeColors(colors, type, SCALE);
+    mStyle.ComputeColors(colors, type, SCALE);
 
     // draw
     recti::Vec4 scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
@@ -775,7 +775,7 @@ private:
             mCurrent.mCameraMouse.Camera.Viewport);
 
           if (mState.Using(mCurrent.mActualID)) {
-            uint32_t scaleLineColor = GetColorU32(SCALE_LINE);
+            uint32_t scaleLineColor = mStyle.GetColorU32(SCALE_LINE);
             drawList->AddLine(baseSSpace,
                               worldDirSSpaceNoScale,
                               scaleLineColor,
@@ -820,11 +820,11 @@ private:
                scaleDisplay[translationInfoIndex[componentInfoIndex]]);
       drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
                                     destinationPosOnScreen.Y + 15),
-                        GetColorU32(TEXT_SHADOW),
+                        mStyle.GetColorU32(TEXT_SHADOW),
                         tmps);
       drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
                                     destinationPosOnScreen.Y + 14),
-                        GetColorU32(TEXT),
+                        mStyle.GetColorU32(TEXT),
                         tmps);
     }
   }
@@ -838,7 +838,7 @@ private:
 
     // colors
     uint32_t colors[7];
-    ComputeColors(colors, type, ROTATE);
+    mStyle.ComputeColors(colors, type, ROTATE);
 
     recti::Vec4 cameraToModelNormalized;
     if (mIsOrthographic) {
@@ -920,10 +920,10 @@ private:
       }
       drawList->AddConvexPolyFilled((const recti::VEC2*)circlePos,
                                     HALF_CIRCLE_SEGMENT_COUNT,
-                                    GetColorU32(ROTATION_USING_FILL));
+                                    mStyle.GetColorU32(ROTATION_USING_FILL));
       drawList->AddPolyline((const recti::VEC2*)circlePos,
                             HALF_CIRCLE_SEGMENT_COUNT,
-                            GetColorU32(ROTATION_USING_BORDER),
+                            mStyle.GetColorU32(ROTATION_USING_BORDER),
                             true,
                             mStyle.RotationLineThickness);
 
@@ -936,11 +936,11 @@ private:
                mRotationAngle);
       drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
                                     destinationPosOnScreen.Y + 15),
-                        GetColorU32(TEXT_SHADOW),
+                        mStyle.GetColorU32(TEXT_SHADOW),
                         tmps);
       drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
                                     destinationPosOnScreen.Y + 14),
-                        GetColorU32(TEXT),
+                        mStyle.GetColorU32(TEXT),
                         tmps);
     }
   }
@@ -955,7 +955,7 @@ private:
 
     // colors
     uint32_t colors[7];
-    ComputeColors(colors, type, SCALEU);
+    mStyle.ComputeColors(colors, type, SCALEU);
 
     // draw
     recti::Vec4 scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
@@ -1019,11 +1019,11 @@ private:
                scaleDisplay[translationInfoIndex[componentInfoIndex]]);
       drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
                                     destinationPosOnScreen.Y + 15),
-                        GetColorU32(TEXT_SHADOW),
+                        mStyle.GetColorU32(TEXT_SHADOW),
                         tmps);
       drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
                                     destinationPosOnScreen.Y + 14),
-                        GetColorU32(TEXT),
+                        mStyle.GetColorU32(TEXT),
                         tmps);
     }
   }
@@ -1041,7 +1041,7 @@ private:
 
     // colors
     uint32_t colors[7];
-    ComputeColors(colors, type, TRANSLATE);
+    mStyle.ComputeColors(colors, type, TRANSLATE);
 
     const recti::Vec2 origin =
       mCameraMouse.WorldToPos(mCurrent.mModel.position());
@@ -1116,7 +1116,7 @@ private:
           }
           drawList->AddPolyline((const recti::VEC2*)screenQuadPts,
                                 4,
-                                GetColorU32(DIRECTION_X + i),
+                                mStyle.GetColorU32(DIRECTION_X + i),
                                 true,
                                 1.0f);
           drawList->AddConvexPolyFilled(
@@ -1129,7 +1129,7 @@ private:
       mCurrent.mScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
 
     if (mState.Using(mCurrent.mActualID) && IsTranslateType(type)) {
-      uint32_t translationLineColor = GetColorU32(TRANSLATION_LINE);
+      uint32_t translationLineColor = mStyle.GetColorU32(TRANSLATION_LINE);
 
       recti::Vec2 sourcePosOnScreen = mCameraMouse.WorldToPos(mMatrixOrigin);
       recti::Vec2 destinationPosOnScreen =
@@ -1160,11 +1160,11 @@ private:
                deltaInfo[translationInfoIndex[componentInfoIndex + 2]]);
       drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
                                     destinationPosOnScreen.Y + 15),
-                        GetColorU32(TEXT_SHADOW),
+                        mStyle.GetColorU32(TEXT_SHADOW),
                         tmps);
       drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
                                     destinationPosOnScreen.Y + 14),
-                        GetColorU32(TEXT),
+                        mStyle.GetColorU32(TEXT),
                         tmps);
     }
   }
@@ -1309,7 +1309,7 @@ private:
           overSmallAnchor = false;
         }
 
-        uint32_t selectionColor = GetColorU32(SELECTION);
+        uint32_t selectionColor = mStyle.GetColorU32(SELECTION);
 
         unsigned int bigAnchorColor =
           overBigAnchor ? selectionColor
@@ -1427,11 +1427,11 @@ private:
                    scale.component(2).Length());
         drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
                                       destinationPosOnScreen.Y + 15),
-                          GetColorU32(TEXT_SHADOW),
+                          mStyle.GetColorU32(TEXT_SHADOW),
                           tmps);
         drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
                                       destinationPosOnScreen.Y + 14),
-                          GetColorU32(TEXT),
+                          mStyle.GetColorU32(TEXT),
                           tmps);
       }
 
