@@ -105,6 +105,7 @@ struct State
   bool mBelowPlaneLimit[3];
   float mAxisFactor[3];
   bool mbUsingBounds = false;
+  recti::MOVETYPE mCurrentOperation;
 
   bool Using(uint64_t actualID) const
   {
@@ -541,11 +542,9 @@ class ContextImpl
   recti::Mat4 mBoundsMatrix;
 
   //
-  recti::MOVETYPE mCurrentOperation;
-
   bool mIsOrthographic = false;
 
-  recti::OPERATION mOperation = recti::OPERATION(-1);
+  // recti::OPERATION mOperation = recti::OPERATION(-1);
 
   bool mAllowAxisFlip = true;
   float mGizmoSizeClipSpace = 0.1f;
@@ -1312,7 +1311,7 @@ private:
     // move
     auto& mouse = mCurrent.mCameraMouse.Mouse;
     if (mState.Using(mCurrent.mActualID) &&
-        IsTranslateType(mCurrentOperation)) {
+        IsTranslateType(mState.mCurrentOperation)) {
       const recti::Vec4 newPos =
         mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
 
@@ -1322,9 +1321,9 @@ private:
       recti::Vec4 delta = newOrigin - mCurrent.mModel.position();
 
       // 1 axis constraint
-      if (mCurrentOperation >= recti::MT_MOVE_X &&
-          mCurrentOperation <= recti::MT_MOVE_Z) {
-        const int axisIndex = mCurrentOperation - recti::MT_MOVE_X;
+      if (mState.mCurrentOperation >= recti::MT_MOVE_X &&
+          mState.mCurrentOperation <= recti::MT_MOVE_Z) {
+        const int axisIndex = mState.mCurrentOperation - recti::MT_MOVE_X;
         const recti::Vec4& axisValue = mCurrent.mModel.component(axisIndex);
         const float lengthOnAxis = Dot(axisValue, delta);
         delta = axisValue * lengthOnAxis;
@@ -1367,7 +1366,7 @@ private:
         mState.mbUsing = false;
       }
 
-      type = mCurrentOperation;
+      type = mState.mCurrentOperation;
     } else {
       // find new possible way to move
       type = GetMoveType(mCurrent, mAllowAxisFlip, &mState);
@@ -1376,7 +1375,7 @@ private:
       if (mouse.LeftDown && type != recti::MT_NONE) {
         mState.mbUsing = true;
         mState.mEditingID = mCurrent.mActualID;
-        mCurrentOperation = type;
+        mState.mCurrentOperation = type;
         recti::Vec4 movePlanNormal[] = {
           mCurrent.mModel.right(),  mCurrent.mModel.up(), mCurrent.mModel.dir(),
           mCurrent.mModel.right(),  mCurrent.mModel.up(), mCurrent.mModel.dir(),
@@ -1428,7 +1427,7 @@ private:
       if (mouse.LeftDown && type != recti::MT_NONE) {
         mState.mbUsing = true;
         mState.mEditingID = mCurrent.mActualID;
-        mCurrentOperation = type;
+        mState.mCurrentOperation = type;
         const recti::Vec4 movePlanNormal[] = {
           mCurrent.mModel.up(),     mCurrent.mModel.dir(),
           mCurrent.mModel.right(),  mCurrent.mModel.dir(),
@@ -1453,15 +1452,16 @@ private:
       }
     }
     // scale
-    if (mState.Using(mCurrent.mActualID) && IsScaleType(mCurrentOperation)) {
+    if (mState.Using(mCurrent.mActualID) &&
+        IsScaleType(mState.mCurrentOperation)) {
       recti::Vec4 newPos = mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
       recti::Vec4 newOrigin = newPos - mRelativeOrigin * mCurrent.mScreenFactor;
       recti::Vec4 delta = newOrigin - mCurrent.mModelLocal.position();
 
       // 1 axis constraint
-      if (mCurrentOperation >= recti::MT_SCALE_X &&
-          mCurrentOperation <= recti::MT_SCALE_Z) {
-        int axisIndex = mCurrentOperation - recti::MT_SCALE_X;
+      if (mState.mCurrentOperation >= recti::MT_SCALE_X &&
+          mState.mCurrentOperation <= recti::MT_SCALE_Z) {
+        int axisIndex = mState.mCurrentOperation - recti::MT_SCALE_X;
         const recti::Vec4& axisValue =
           mCurrent.mModelLocal.component(axisIndex);
         float lengthOnAxis = Dot(axisValue, delta);
@@ -1519,7 +1519,7 @@ private:
         mScale.Set(1.f, 1.f, 1.f);
       }
 
-      type = mCurrentOperation;
+      type = mState.mCurrentOperation;
     }
     return modified;
   }
@@ -1551,7 +1551,7 @@ private:
       if (mouse.LeftDown && type != recti::MT_NONE) {
         mState.mbUsing = true;
         mState.mEditingID = mCurrent.mActualID;
-        mCurrentOperation = type;
+        mState.mCurrentOperation = type;
         const recti::Vec4 rotatePlanNormal[] = { mCurrent.mModel.right(),
                                                  mCurrent.mModel.up(),
                                                  mCurrent.mModel.dir(),
@@ -1577,7 +1577,8 @@ private:
     }
 
     // rotation
-    if (mState.Using(mCurrent.mActualID) && IsRotateType(mCurrentOperation)) {
+    if (mState.Using(mCurrent.mActualID) &&
+        IsRotateType(mState.mCurrentOperation)) {
       mRotationAngle =
         ComputeAngleOnPlan(mCurrent, mRotationVectorSource, mTranslationPlan);
       if (snap) {
@@ -1622,7 +1623,7 @@ private:
         mState.mbUsing = false;
         mState.mEditingID = -1;
       }
-      type = mCurrentOperation;
+      type = mState.mCurrentOperation;
     }
     return modified;
   }
@@ -1666,27 +1667,23 @@ public:
     // --
     recti::MOVETYPE type = recti::MT_NONE;
     bool manipulated = false;
-    {
-      if (!mState.mbUsingBounds) {
-        manipulated =
-          HandleTranslation(mCurrent, matrix, deltaMatrix, type, snap) ||
-          HandleScale(mCurrent, matrix, deltaMatrix, type, snap) ||
-          HandleRotation(mCurrent, matrix, deltaMatrix, type, snap);
-      }
+    if (!mState.mbUsingBounds) {
+      manipulated =
+        HandleTranslation(mCurrent, matrix, deltaMatrix, type, snap) ||
+        HandleScale(mCurrent, matrix, deltaMatrix, type, snap) ||
+        HandleRotation(mCurrent, matrix, deltaMatrix, type, snap);
     }
-
     if (localBounds && !mState.mbUsing) {
       HandleAndDrawLocalBounds(
         mCurrent, localBounds, boundsSnap, (recti::Mat4*)matrix);
     }
-
-    mOperation = operation;
     if (!mState.mbUsingBounds) {
       DrawRotationGizmo(mCurrent, type);
       DrawTranslationGizmo(mCurrent, type);
       DrawScaleGizmo(mCurrent, type);
       DrawScaleUniveralGizmo(mCurrent, type);
     }
+
     return manipulated;
   }
 
