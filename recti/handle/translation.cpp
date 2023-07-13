@@ -26,9 +26,9 @@ static const char* translationInfoMask[] = { "X : %5.3f",
                                              "X : %5.3f Y : %5.3f Z : %5.3f" };
 
 static MOVETYPE
-GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
+GetMoveType(const ModelContext& current, bool allowAxisFlip, State* state)
 {
-  if (!Intersects(mCurrent.mOperation, TRANSLATE) || state->mbUsing) {
+  if (!Intersects(current.mOperation, TRANSLATE) || state->mbUsing) {
     return MT_NONE;
   }
 
@@ -38,7 +38,7 @@ GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
   for (int i = 0; i < 3 && type == MT_NONE; i++) {
 
     Tripod tripod(i);
-    if (state->Using(mCurrent.mActualID)) {
+    if (state->Using(current.mActualID)) {
       // when using, use stored factors so the gizmo doesn't flip when we
       // translate
       tripod.belowAxisLimit = state->mBelowAxisLimit[i];
@@ -47,7 +47,7 @@ GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
       tripod.dirPlaneX *= state->mAxisFactor[(i + 1) % 3];
       tripod.dirPlaneY *= state->mAxisFactor[(i + 2) % 3];
     } else {
-      tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+      tripod.ComputeTripodAxisAndVisibility(current, allowAxisFlip);
       // and store values
       state->mAxisFactor[i] = tripod.mulAxis;
       state->mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
@@ -56,47 +56,45 @@ GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
       state->mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
     }
 
-    tripod.dirAxis.TransformVector(mCurrent.mModel);
-    tripod.dirPlaneX.TransformVector(mCurrent.mModel);
-    tripod.dirPlaneY.TransformVector(mCurrent.mModel);
+    tripod.dirAxis.TransformVector(current.mModel);
+    tripod.dirPlaneX.TransformVector(current.mModel);
+    tripod.dirPlaneY.TransformVector(current.mModel);
 
-    auto posOnPlan = mCurrent.mCameraMouse.Ray.IntersectPlane(
-      BuildPlan(mCurrent.mModel.position(), tripod.dirAxis));
+    auto posOnPlan = current.mCameraMouse.Ray.IntersectPlane(
+      BuildPlan(current.mModel.position(), tripod.dirAxis));
 
     // screen
     const Vec2 axisStartOnScreen =
-      mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position() +
-                                       tripod.dirAxis * mCurrent.mScreenFactor *
-                                         0.1f) -
-      mCurrent.mCameraMouse.Camera.LeftTop();
+      current.mCameraMouse.WorldToPos(current.mModel.position() +
+                                      tripod.dirAxis * current.mScreenFactor *
+                                        0.1f) -
+      current.mCameraMouse.Camera.LeftTop();
 
     // screen
     const Vec2 axisEndOnScreen =
-      mCurrent.mCameraMouse.WorldToPos(
-        mCurrent.mModel.position() + tripod.dirAxis * mCurrent.mScreenFactor) -
-      mCurrent.mCameraMouse.Camera.LeftTop();
+      current.mCameraMouse.WorldToPos(current.mModel.position() +
+                                      tripod.dirAxis * current.mScreenFactor) -
+      current.mCameraMouse.Camera.LeftTop();
 
-    auto screenCoord = mCurrent.mCameraMouse.ScreenMousePos();
+    auto screenCoord = current.mCameraMouse.ScreenMousePos();
     Vec4 closestPointOnAxis =
       PointOnSegment(screenCoord,
                      { axisStartOnScreen.X, axisStartOnScreen.Y },
                      { axisEndOnScreen.X, axisEndOnScreen.Y });
     if ((closestPointOnAxis - screenCoord).Length() < 12.f &&
-        Intersects(mCurrent.mOperation,
+        Intersects(current.mOperation,
                    static_cast<OPERATION>(TRANSLATE_X << i))) // pixel size
     {
       type = (MOVETYPE)(MT_MOVE_X + i);
     }
 
-    const float dx =
-      tripod.dirPlaneX.Dot3((posOnPlan - mCurrent.mModel.position()) *
-                            (1.f / mCurrent.mScreenFactor));
-    const float dy =
-      tripod.dirPlaneY.Dot3((posOnPlan - mCurrent.mModel.position()) *
-                            (1.f / mCurrent.mScreenFactor));
+    const float dx = tripod.dirPlaneX.Dot3(
+      (posOnPlan - current.mModel.position()) * (1.f / current.mScreenFactor));
+    const float dy = tripod.dirPlaneY.Dot3(
+      (posOnPlan - current.mModel.position()) * (1.f / current.mScreenFactor));
     if (tripod.belowPlaneLimit && dx >= quadUV[0] && dx <= quadUV[4] &&
         dy >= quadUV[1] && dy <= quadUV[3] &&
-        Contains(mCurrent.mOperation, TRANSLATE_PLANS[i])) {
+        Contains(current.mOperation, TRANSLATE_PLANS[i])) {
       type = (MOVETYPE)(MT_MOVE_YZ + i);
     }
   }
@@ -104,19 +102,17 @@ GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
 }
 
 void
-Translation::Begin(const ModelContext& mCurrent, MOVETYPE type)
+Translation::Begin(const ModelContext& current, MOVETYPE type)
 {
   // find new possible way to move
-  Vec4 movePlanNormal[] = { mCurrent.mModel.right(),
-                            mCurrent.mModel.up(),
-                            mCurrent.mModel.dir(),
-                            mCurrent.mModel.right(),
-                            mCurrent.mModel.up(),
-                            mCurrent.mModel.dir(),
-                            -mCurrent.mCameraMouse.CameraDir() };
+  Vec4 movePlanNormal[] = {
+    current.mModel.right(),           current.mModel.up(), current.mModel.dir(),
+    current.mModel.right(),           current.mModel.up(), current.mModel.dir(),
+    -current.mCameraMouse.CameraDir()
+  };
 
   Vec4 cameraToModelNormalized =
-    Normalized(mCurrent.mModel.position() - mCurrent.mCameraMouse.CameraEye());
+    Normalized(current.mModel.position() - current.mCameraMouse.CameraEye());
   for (unsigned int i = 0; i < 3; i++) {
     Vec4 orthoVector = Cross(movePlanNormal[i], cameraToModelNormalized);
     movePlanNormal[i].Cross(orthoVector);
@@ -124,45 +120,44 @@ Translation::Begin(const ModelContext& mCurrent, MOVETYPE type)
   }
   // pickup plan
   mTranslationPlan =
-    BuildPlan(mCurrent.mModel.position(), movePlanNormal[type - MT_MOVE_X]);
+    BuildPlan(current.mModel.position(), movePlanNormal[type - MT_MOVE_X]);
   mTranslationPlanOrigin =
-    mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
-  mMatrixOrigin = mCurrent.mModel.position();
+    current.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
+  mMatrixOrigin = current.mModel.position();
 
-  mRelativeOrigin = (mTranslationPlanOrigin - mCurrent.mModel.position()) *
-                    (1.f / mCurrent.mScreenFactor);
+  mRelativeOrigin = (mTranslationPlanOrigin - current.mModel.position()) *
+                    (1.f / current.mScreenFactor);
 }
 
 bool
-Translation::Drag(const ModelContext& mCurrent,
-                  const State& mState,
+Translation::Drag(const ModelContext& current,
+                  const State& state,
                   const float* snap,
                   float* matrix,
                   float* deltaMatrix)
 {
-  const Vec4 newPos =
-    mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
+  const Vec4 newPos = current.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
 
   // compute delta
-  const Vec4 newOrigin = newPos - mRelativeOrigin * mCurrent.mScreenFactor;
-  Vec4 delta = newOrigin - mCurrent.mModel.position();
+  const Vec4 newOrigin = newPos - mRelativeOrigin * current.mScreenFactor;
+  Vec4 delta = newOrigin - current.mModel.position();
 
   // 1 axis constraint
-  if (mState.mCurrentOperation >= MT_MOVE_X &&
-      mState.mCurrentOperation <= MT_MOVE_Z) {
-    const int axisIndex = mState.mCurrentOperation - MT_MOVE_X;
-    const Vec4& axisValue = mCurrent.mModel.component(axisIndex);
+  if (state.mCurrentOperation >= MT_MOVE_X &&
+      state.mCurrentOperation <= MT_MOVE_Z) {
+    const int axisIndex = state.mCurrentOperation - MT_MOVE_X;
+    const Vec4& axisValue = current.mModel.component(axisIndex);
     const float lengthOnAxis = Dot(axisValue, delta);
     delta = axisValue * lengthOnAxis;
   }
 
   // snap
   if (snap) {
-    Vec4 cumulativeDelta = mCurrent.mModel.position() + delta - mMatrixOrigin;
+    Vec4 cumulativeDelta = current.mModel.position() + delta - mMatrixOrigin;
     const bool applyRotationLocaly =
-      mCurrent.mMode == LOCAL || mState.mCurrentOperation == MT_MOVE_SCREEN;
+      current.mMode == LOCAL || state.mCurrentOperation == MT_MOVE_SCREEN;
     if (applyRotationLocaly) {
-      Mat4 modelSourceNormalized = mCurrent.mModelSource;
+      Mat4 modelSourceNormalized = current.mModelSource;
       modelSourceNormalized.OrthoNormalize();
       Mat4 modelSourceNormalizedInverse;
       modelSourceNormalizedInverse.Inverse(modelSourceNormalized);
@@ -172,7 +167,7 @@ Translation::Drag(const ModelContext& mCurrent,
     } else {
       ComputeSnap(cumulativeDelta, snap);
     }
-    delta = mMatrixOrigin + cumulativeDelta - mCurrent.mModel.position();
+    delta = mMatrixOrigin + cumulativeDelta - current.mModel.position();
   }
 
   auto modified = false;
@@ -188,116 +183,104 @@ Translation::Drag(const ModelContext& mCurrent,
     memcpy(deltaMatrix, &deltaMatrixTranslation.m00, sizeof(float) * 16);
   }
 
-  const Mat4 res = mCurrent.mModelSource * deltaMatrixTranslation;
+  const Mat4 res = current.mModelSource * deltaMatrixTranslation;
   *(Mat4*)matrix = res;
 
   return modified;
 }
 
-bool
-Translation::HandleTranslation(const ModelContext& mCurrent,
-                               bool mAllowAxisFlip,
-                               float* matrix,
-                               float* deltaMatrix,
-                               MOVETYPE& type,
+Translation::Result
+Translation::HandleTranslation(const ModelContext& current,
+                               bool allowAxisFlip,
                                const float* snap,
-                               State& mState)
+                               State& state,
+                               float* matrix,
+                               float* deltaMatrix)
 {
-  if (!Intersects(mCurrent.mOperation, TRANSLATE) || type != MT_NONE) {
-    return false;
+  if (!Intersects(current.mOperation, TRANSLATE)) {
+    return {};
   }
 
-  if (mState.Using(mCurrent.mActualID) &&
-      IsTranslateType(mState.mCurrentOperation)) {
+  if (state.Using(current.mActualID) &&
+      IsTranslateType(state.mCurrentOperation)) {
     // drag
-    auto modified = Drag(mCurrent, mState, snap, matrix, deltaMatrix);
-    if (!mCurrent.mCameraMouse.Mouse.LeftDown) {
-      mState.mbUsing = false;
+    auto modified = Drag(current, state, snap, matrix, deltaMatrix);
+    if (!current.mCameraMouse.Mouse.LeftDown) {
+      state.mbUsing = false;
     }
-    type = mState.mCurrentOperation;
 
-    return modified;
+    return { state.mCurrentOperation, modified };
   }
 
-  type = GetMoveType(mCurrent, mAllowAxisFlip, &mState);
+  auto type = GetMoveType(current, allowAxisFlip, &state);
   if (type != MT_NONE) {
     // hover
-    if (mCurrent.mCameraMouse.Mouse.LeftDown) {
+    if (current.mCameraMouse.Mouse.LeftDown) {
       // begin
-      mState.mbUsing = true;
-      mState.mEditingID = mCurrent.mActualID;
-      mState.mCurrentOperation = type;
-      Begin(mCurrent, type);
+      state.mbUsing = true;
+      state.mEditingID = current.mActualID;
+      state.mCurrentOperation = type;
+      Begin(current, type);
     }
   }
-  return false;
+  return { type };
 }
 
 void
-Translation::DrawTranslationGizmo(const ModelContext& mCurrent,
-                                  bool mAllowAxisFlip,
+Translation::DrawTranslationGizmo(const ModelContext& current,
+                                  bool allowAxisFlip,
                                   MOVETYPE type,
-                                  Style& mStyle,
-                                  State& mState,
+                                  const Style& style,
+                                  const State& state,
                                   const std::shared_ptr<DrawList>& drawList)
 {
-  if (!Intersects(mCurrent.mOperation, TRANSLATE)) {
+  if (!Intersects(current.mOperation, TRANSLATE)) {
     return;
   }
 
   // colors
   uint32_t colors[7];
-  mStyle.ComputeColors(colors, type, TRANSLATE);
+  style.ComputeColors(colors, type, TRANSLATE);
 
   const Vec2 origin =
-    mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position());
+    current.mCameraMouse.WorldToPos(current.mModel.position());
 
   // draw
   for (int i = 0; i < 3; ++i) {
     Tripod tripod(i);
-    if (mState.Using(mCurrent.mActualID)) {
-      // when using, use stored factors so the gizmo doesn't flip when we
-      // translate
-      tripod.belowAxisLimit = mState.mBelowAxisLimit[i];
-      tripod.belowPlaneLimit = mState.mBelowPlaneLimit[i];
-      tripod.dirAxis *= mState.mAxisFactor[i];
-      tripod.dirPlaneX *= mState.mAxisFactor[(i + 1) % 3];
-      tripod.dirPlaneY *= mState.mAxisFactor[(i + 2) % 3];
-    } else {
-      tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
-      // and store values
-      mState.mAxisFactor[i] = tripod.mulAxis;
-      mState.mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
-      mState.mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
-      mState.mBelowAxisLimit[i] = tripod.belowAxisLimit;
-      mState.mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
-    }
 
-    if (!mState.mbUsing || (mState.mbUsing && type == MT_MOVE_X + i)) {
+    // when using, use stored factors so the gizmo doesn't flip when we
+    // translate
+    tripod.belowAxisLimit = state.mBelowAxisLimit[i];
+    tripod.belowPlaneLimit = state.mBelowPlaneLimit[i];
+    tripod.dirAxis *= state.mAxisFactor[i];
+    tripod.dirPlaneX *= state.mAxisFactor[(i + 1) % 3];
+    tripod.dirPlaneY *= state.mAxisFactor[(i + 2) % 3];
+
+    if (!state.mbUsing || (state.mbUsing && type == MT_MOVE_X + i)) {
       // draw axis
       if (tripod.belowAxisLimit &&
-          Intersects(mCurrent.mOperation,
+          Intersects(current.mOperation,
                      static_cast<OPERATION>(TRANSLATE_X << i))) {
         Vec2 baseSSpace =
-          worldToPos(tripod.dirAxis * 0.1f * mCurrent.mScreenFactor,
-                     mCurrent.mMVP,
-                     mCurrent.mCameraMouse.Camera.Viewport);
-        Vec2 worldDirSSpace =
-          worldToPos(tripod.dirAxis * mCurrent.mScreenFactor,
-                     mCurrent.mMVP,
-                     mCurrent.mCameraMouse.Camera.Viewport);
+          worldToPos(tripod.dirAxis * 0.1f * current.mScreenFactor,
+                     current.mMVP,
+                     current.mCameraMouse.Camera.Viewport);
+        Vec2 worldDirSSpace = worldToPos(tripod.dirAxis * current.mScreenFactor,
+                                         current.mMVP,
+                                         current.mCameraMouse.Camera.Viewport);
 
         drawList->AddLine(baseSSpace,
                           worldDirSSpace,
                           colors[i + 1],
-                          mStyle.TranslationLineThickness);
+                          style.TranslationLineThickness);
 
         // Arrow head begin
         Vec2 dir(origin - worldDirSSpace);
 
         float d = sqrtf(dir.SqrLength());
         dir /= d; // Normalize
-        dir *= mStyle.TranslationLineArrowSize;
+        dir *= style.TranslationLineArrowSize;
 
         Vec2 ortogonalDir(dir.Y, -dir.X); // Perpendicular vector
         Vec2 a(worldDirSSpace + dir);
@@ -307,27 +290,26 @@ Translation::DrawTranslationGizmo(const ModelContext& mCurrent,
                                     colors[i + 1]);
         // Arrow head end
 
-        if (mState.mAxisFactor[i] < 0.f) {
-          drawList->DrawHatchedAxis(mCurrent, tripod.dirAxis, mStyle);
+        if (state.mAxisFactor[i] < 0.f) {
+          drawList->DrawHatchedAxis(current, tripod.dirAxis, style);
         }
       }
     }
     // draw plane
-    if (!mState.mbUsing || (mState.mbUsing && type == MT_MOVE_YZ + i)) {
+    if (!state.mbUsing || (state.mbUsing && type == MT_MOVE_YZ + i)) {
       if (tripod.belowPlaneLimit &&
-          Contains(mCurrent.mOperation, TRANSLATE_PLANS[i])) {
+          Contains(current.mOperation, TRANSLATE_PLANS[i])) {
         Vec2 screenQuadPts[4];
         for (int j = 0; j < 4; ++j) {
           Vec4 cornerWorldPos = (tripod.dirPlaneX * quadUV[j * 2] +
                                  tripod.dirPlaneY * quadUV[j * 2 + 1]) *
-                                mCurrent.mScreenFactor;
-          screenQuadPts[j] = worldToPos(cornerWorldPos,
-                                        mCurrent.mMVP,
-                                        mCurrent.mCameraMouse.Camera.Viewport);
+                                current.mScreenFactor;
+          screenQuadPts[j] = worldToPos(
+            cornerWorldPos, current.mMVP, current.mCameraMouse.Camera.Viewport);
         }
         drawList->AddPolyline((const VEC2*)screenQuadPts,
                               4,
-                              mStyle.GetColorU32(DIRECTION_X + i),
+                              style.GetColorU32(DIRECTION_X + i),
                               true,
                               1.0f);
         drawList->AddConvexPolyFilled(
@@ -337,14 +319,14 @@ Translation::DrawTranslationGizmo(const ModelContext& mCurrent,
   }
 
   drawList->AddCircleFilled(
-    mCurrent.mScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
+    current.mScreenSquareCenter, style.CenterCircleSize, colors[0], 32);
 
-  if (mState.Using(mCurrent.mActualID) && IsTranslateType(type)) {
-    uint32_t translationLineColor = mStyle.GetColorU32(TRANSLATION_LINE);
+  if (state.Using(current.mActualID) && IsTranslateType(type)) {
+    uint32_t translationLineColor = style.GetColorU32(TRANSLATION_LINE);
 
-    Vec2 sourcePosOnScreen = mCurrent.mCameraMouse.WorldToPos(mMatrixOrigin);
+    Vec2 sourcePosOnScreen = current.mCameraMouse.WorldToPos(mMatrixOrigin);
     Vec2 destinationPosOnScreen =
-      mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position());
+      current.mCameraMouse.WorldToPos(current.mModel.position());
     Vec4 dif = { destinationPosOnScreen.X - sourcePosOnScreen.X,
                  destinationPosOnScreen.Y - sourcePosOnScreen.Y,
                  0.f,
@@ -360,7 +342,7 @@ Translation::DrawTranslationGizmo(const ModelContext& mCurrent,
       2.f);
 
     char tmps[512];
-    Vec4 deltaInfo = mCurrent.mModel.position() - mMatrixOrigin;
+    Vec4 deltaInfo = current.mModel.position() - mMatrixOrigin;
     int componentInfoIndex = (type - MT_MOVE_X) * 3;
     snprintf(tmps,
              sizeof(tmps),
@@ -370,11 +352,11 @@ Translation::DrawTranslationGizmo(const ModelContext& mCurrent,
              deltaInfo[translationInfoIndex[componentInfoIndex + 2]]);
     drawList->AddText(
       Vec2(destinationPosOnScreen.X + 15, destinationPosOnScreen.Y + 15),
-      mStyle.GetColorU32(TEXT_SHADOW),
+      style.GetColorU32(TEXT_SHADOW),
       tmps);
     drawList->AddText(
       Vec2(destinationPosOnScreen.X + 14, destinationPosOnScreen.Y + 14),
-      mStyle.GetColorU32(TEXT),
+      style.GetColorU32(TEXT),
       tmps);
   }
 }

@@ -30,7 +30,7 @@
 #include "../ray.h"
 #include "../state.h"
 #include "../style.h"
-#include "../translation.h"
+#include "../handle/translation.h"
 #include "../tripod.h"
 #include "../vec2.h"
 #include "../vec4.h"
@@ -935,12 +935,12 @@ public:
     }
 
     // --
-    recti::MOVETYPE type = recti::MT_NONE;
-    auto manipulated =
-      mT.HandleTranslation(
-        mCurrent, mAllowAxisFlip, matrix, deltaMatrix, type, snap, mState) ||
-      HandleScale(mCurrent, matrix, deltaMatrix, type, snap) ||
-      HandleRotation(mCurrent, matrix, deltaMatrix, type, snap);
+    auto [type, manipulated] = mT.HandleTranslation(
+      mCurrent, mAllowAxisFlip, snap, mState, matrix, deltaMatrix);
+    if (!manipulated) {
+      manipulated = HandleScale(mCurrent, matrix, deltaMatrix, type, snap) ||
+                    HandleRotation(mCurrent, matrix, deltaMatrix, type, snap);
+    }
 
     DrawRotationGizmo(mCurrent, type);
     mT.DrawTranslationGizmo(
