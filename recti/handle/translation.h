@@ -1,9 +1,10 @@
 #pragma once
-#include "drawcommand.h"
-#include "model_context.h"
-#include "operation.h"
-#include "state.h"
-#include "vec4.h"
+#include "../drawcommand.h"
+#include "../model_context.h"
+#include "../operation.h"
+#include "../state.h"
+#include "../vec4.h"
+#include "result.h"
 #include <memory>
 
 namespace recti {
@@ -15,12 +16,6 @@ struct Translation
   Vec4 mMatrixOrigin;
   Vec4 mTranslationLastDelta;
   Vec4 mRelativeOrigin;
-
-  struct Result
-  {
-    MOVETYPE DrawType;
-    bool Modified;
-  };
 
   Result HandleTranslation(const ModelContext& current,
                            bool allowAxisFlip,

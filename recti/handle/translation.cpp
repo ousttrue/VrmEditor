@@ -189,7 +189,7 @@ Translation::Drag(const ModelContext& current,
   return modified;
 }
 
-Translation::Result
+Result
 Translation::HandleTranslation(const ModelContext& current,
                                bool allowAxisFlip,
                                const float* snap,

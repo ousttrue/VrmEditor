@@ -25,12 +25,13 @@
 //
 
 #include "../drawcommand.h"
+#include "../handle/rotation.h"
+#include "../handle/translation.h"
 #include "../mat4.h"
 #include "../model_context.h"
 #include "../ray.h"
 #include "../state.h"
 #include "../style.h"
-#include "../handle/translation.h"
 #include "../tripod.h"
 #include "../vec2.h"
 #include "../vec4.h"
@@ -44,14 +45,6 @@
 #include <vector>
 
 // Matches MT_MOVE_AB order
-static const char* rotationInfoMask[] = { "X : %5.2f deg %5.2f rad",
-                                          "Y : %5.2f deg %5.2f rad",
-                                          "Z : %5.2f deg %5.2f rad",
-                                          "Screen : %5.2f deg %5.2f rad" };
-static const int HALF_CIRCLE_SEGMENT_COUNT = 64;
-
-const float screenRotateSize = 0.06f;
-
 static const char* scaleInfoMask[] = { "X : %5.2f",
                                        "Y : %5.2f",
                                        "Z : %5.2f",
@@ -64,12 +57,6 @@ static const recti::Vec4 directionUnary[3] = { { 1.f, 0.f, 0.f, 0 },
                                                { 0.f, 1.f, 0.f, 0 },
                                                { 0.f, 0.f, 1.f, 0 } };
 
-// scale a bit so translate axis do not touch when in universal
-const float ROTATION_DISPLAY_FACTOR = 1.2f;
-
-static const float ZPI = 3.14159265358979323846f;
-static const float DEG2RAD = (ZPI / 180.f);
-
 struct RGBA
 {
   float r;
@@ -81,76 +68,6 @@ struct RGBA
 #include "ImGuizmo.h"
 
 namespace ImGuizmo {
-
-static recti::MOVETYPE
-GetRotateType(const recti::ModelContext& mCurrent,
-              float mRadiusSquareCenter,
-              const recti::State& mState)
-{
-  if (mState.mbUsing) {
-    return recti::MT_NONE;
-  }
-  recti::MOVETYPE type = recti::MT_NONE;
-
-  auto& mousePos = mCurrent.mCameraMouse.Mouse.Position;
-  recti::Vec4 deltaScreen = { mousePos.X - mCurrent.mScreenSquareCenter.X,
-                              mousePos.Y - mCurrent.mScreenSquareCenter.Y,
-                              0.f,
-                              0.f };
-  float dist = deltaScreen.Length();
-  if (Intersects(mCurrent.mOperation, recti::ROTATE_SCREEN) &&
-      dist >= (mRadiusSquareCenter - 4.0f) &&
-      dist < (mRadiusSquareCenter + 4.0f)) {
-    type = recti::MT_ROTATE_SCREEN;
-  }
-
-  const recti::Vec4 planNormals[] = { mCurrent.mModel.right(),
-                                      mCurrent.mModel.up(),
-                                      mCurrent.mModel.dir() };
-
-  recti::Vec4 modelViewPos;
-  modelViewPos.TransformPoint(mCurrent.mModel.position(),
-                              mCurrent.mCameraMouse.Camera.ViewMatrix);
-
-  for (int i = 0; i < 3 && type == recti::MT_NONE; i++) {
-    if (!Intersects(mCurrent.mOperation,
-                    static_cast<recti::OPERATION>(recti::ROTATE_X << i))) {
-      continue;
-    }
-    // pickup plan
-    recti::Vec4 pickupPlan =
-      BuildPlan(mCurrent.mModel.position(), planNormals[i]);
-
-    const recti::Vec4 intersectWorldPos =
-      mCurrent.mCameraMouse.Ray.IntersectPlane(pickupPlan);
-    recti::Vec4 intersectViewPos;
-    intersectViewPos.TransformPoint(intersectWorldPos,
-                                    mCurrent.mCameraMouse.Camera.ViewMatrix);
-
-    if (fabs(modelViewPos.z) - fabs(intersectViewPos.z) < -FLT_EPSILON) {
-      continue;
-    }
-
-    const recti::Vec4 localPos = intersectWorldPos - mCurrent.mModel.position();
-    recti::Vec4 idealPosOnCircle = Normalized(localPos);
-    idealPosOnCircle.TransformVector(mCurrent.mModelInverse);
-    const recti::Vec2 idealPosOnCircleScreen = recti::worldToPos(
-      idealPosOnCircle * ROTATION_DISPLAY_FACTOR * mCurrent.mScreenFactor,
-      mCurrent.mMVP,
-      mCurrent.mCameraMouse.Camera.Viewport);
-
-    const recti::Vec2 distanceOnScreen = idealPosOnCircleScreen - mousePos;
-
-    const float distance =
-      recti::Vec4{ distanceOnScreen.X, distanceOnScreen.Y }.Length();
-    if (distance < 8.f) // pixel size
-    {
-      type = (recti::MOVETYPE)(recti::MT_ROTATE_X + i);
-    }
-  }
-
-  return type;
-}
 
 static recti::MOVETYPE
 GetScaleType(const recti::ModelContext& mCurrent,
@@ -283,25 +200,6 @@ GetScaleType(const recti::ModelContext& mCurrent,
   return type;
 }
 
-static float
-ComputeAngleOnPlan(const recti::ModelContext& mCurrent,
-                   const recti::Vec4& mRotationVectorSource,
-                   const recti::Vec4& mTranslationPlan)
-{
-  recti::Vec4 localPos =
-    Normalized(mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan) -
-               mCurrent.mModel.position());
-
-  recti::Vec4 perpendicularVector;
-  perpendicularVector.Cross(mRotationVectorSource, mTranslationPlan);
-  perpendicularVector.Normalize();
-  float acosAngle =
-    recti::Clamp(Dot(localPos, mRotationVectorSource), -1.f, 1.f);
-  float angle = acosf(acosAngle);
-  angle *= (Dot(localPos, perpendicularVector) < 0.f) ? 1.f : -1.f;
-  return angle;
-}
-
 class ContextImpl
 {
   recti::CameraMouse mCameraMouse;
@@ -317,11 +215,7 @@ class ContextImpl
   recti::Vec4 mRelativeOrigin;
 
   recti::Translation mT;
-
-  // rotation
-  recti::Vec4 mRotationVectorSource;
-  float mRotationAngle;
-  float mRotationAngleOrigin;
+  recti::Rotation mR;
 
   // scale
   recti::Vec4 mScale;
@@ -451,125 +345,6 @@ private:
                sizeof(tmps),
                scaleInfoMask[type - recti::MT_SCALE_X],
                scaleDisplay[translationInfoIndex[componentInfoIndex]]);
-      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
-                                    destinationPosOnScreen.Y + 15),
-                        mStyle.GetColorU32(recti::TEXT_SHADOW),
-                        tmps);
-      drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 14,
-                                    destinationPosOnScreen.Y + 14),
-                        mStyle.GetColorU32(recti::TEXT),
-                        tmps);
-    }
-  }
-
-  void DrawRotationGizmo(const recti::ModelContext& mCurrent,
-                         recti::MOVETYPE type)
-  {
-    if (!Intersects(mCurrent.mOperation, recti::ROTATE)) {
-      return;
-    }
-    auto drawList = mDrawList;
-
-    // colors
-    uint32_t colors[7];
-    mStyle.ComputeColors(colors, type, recti::ROTATE);
-
-    recti::Vec4 cameraToModelNormalized;
-    if (mIsOrthographic) {
-      cameraToModelNormalized = -mCameraMouse.mViewInverse.dir();
-    } else {
-      cameraToModelNormalized =
-        Normalized(mCurrent.mModel.position() - mCameraMouse.CameraEye());
-    }
-
-    cameraToModelNormalized.TransformVector(mCurrent.mModelInverse);
-
-    mRadiusSquareCenter = screenRotateSize * mCameraMouse.Camera.Height();
-
-    bool hasRSC = Intersects(mCurrent.mOperation, recti::ROTATE_SCREEN);
-    for (int axis = 0; axis < 3; axis++) {
-      if (!Intersects(mCurrent.mOperation,
-                      static_cast<recti::OPERATION>(recti::ROTATE_Z >> axis))) {
-        continue;
-      }
-      const bool usingAxis =
-        (mState.mbUsing && type == recti::MT_ROTATE_Z - axis);
-      const int circleMul = (hasRSC && !usingAxis) ? 1 : 2;
-
-      recti::Vec2* circlePos = (recti::Vec2*)alloca(
-        sizeof(recti::Vec2) * (circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1));
-
-      float angleStart = atan2f(cameraToModelNormalized[(4 - axis) % 3],
-                                cameraToModelNormalized[(3 - axis) % 3]) +
-                         std::numbers::pi * 0.5f;
-
-      //
-      for (int i = 0; i < circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1; i++) {
-        float ng = angleStart + (float)circleMul * std::numbers::pi *
-                                  ((float)i / (float)HALF_CIRCLE_SEGMENT_COUNT);
-        recti::Vec4 axisPos = { cosf(ng), sinf(ng), 0.f };
-        recti::Vec4 pos = recti::Vec4{ axisPos[axis],
-                                       axisPos[(axis + 1) % 3],
-                                       axisPos[(axis + 2) % 3] } *
-                          mCurrent.mScreenFactor * ROTATION_DISPLAY_FACTOR;
-        circlePos[i] = recti::worldToPos(
-          pos, mCurrent.mMVP, mCurrent.mCameraMouse.Camera.Viewport);
-      }
-      if (!mState.mbUsing || usingAxis) {
-        drawList->AddPolyline((const recti::VEC2*)circlePos,
-                              circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1,
-                              colors[3 - axis],
-                              false,
-                              mStyle.RotationLineThickness);
-      }
-
-      float radiusAxis = sqrtf(
-        (mCameraMouse.WorldToPos(mCurrent.mModel.position()) - circlePos[0])
-          .SqrLength());
-      if (radiusAxis > mRadiusSquareCenter) {
-        mRadiusSquareCenter = radiusAxis;
-      }
-    }
-    if (hasRSC && (!mState.mbUsing || type == recti::MT_ROTATE_SCREEN)) {
-      drawList->AddCircle(mCameraMouse.WorldToPos(mCurrent.mModel.position()),
-                          mRadiusSquareCenter,
-                          colors[0],
-                          64,
-                          mStyle.RotationOuterLineThickness);
-    }
-
-    if (mState.Using(mCurrent.mActualID) && IsRotateType(type)) {
-      recti::Vec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
-
-      circlePos[0] = mCameraMouse.WorldToPos(mCurrent.mModel.position());
-      for (unsigned int i = 1; i < HALF_CIRCLE_SEGMENT_COUNT; i++) {
-        float ng = mRotationAngle *
-                   ((float)(i - 1) / (float)(HALF_CIRCLE_SEGMENT_COUNT - 1));
-        recti::Mat4 rotateVectorMatrix;
-        rotateVectorMatrix.RotationAxis(mT.mTranslationPlan, ng);
-        recti::Vec4 pos;
-        pos.TransformPoint(mRotationVectorSource, rotateVectorMatrix);
-        pos *= mCurrent.mScreenFactor * ROTATION_DISPLAY_FACTOR;
-        circlePos[i] =
-          mCameraMouse.WorldToPos(pos + mCurrent.mModel.position());
-      }
-      drawList->AddConvexPolyFilled(
-        (const recti::VEC2*)circlePos,
-        HALF_CIRCLE_SEGMENT_COUNT,
-        mStyle.GetColorU32(recti::ROTATION_USING_FILL));
-      drawList->AddPolyline((const recti::VEC2*)circlePos,
-                            HALF_CIRCLE_SEGMENT_COUNT,
-                            mStyle.GetColorU32(recti::ROTATION_USING_BORDER),
-                            true,
-                            mStyle.RotationLineThickness);
-
-      recti::Vec2 destinationPosOnScreen = circlePos[1];
-      char tmps[512];
-      snprintf(tmps,
-               sizeof(tmps),
-               rotationInfoMask[type - recti::MT_ROTATE_X],
-               (mRotationAngle / std::numbers::pi) * 180.f,
-               mRotationAngle);
       drawList->AddText(recti::Vec2(destinationPosOnScreen.X + 15,
                                     destinationPosOnScreen.Y + 15),
                         mStyle.GetColorU32(recti::TEXT_SHADOW),
@@ -794,112 +569,6 @@ private:
     return modified;
   }
 
-  bool HandleRotation(const recti::ModelContext& mCurrent,
-                      float* matrix,
-                      float* deltaMatrix,
-                      recti::MOVETYPE& type,
-                      const float* snap)
-  {
-    if (!Intersects(mCurrent.mOperation, recti::ROTATE) ||
-        type != recti::MT_NONE) {
-      return false;
-    }
-    bool applyRotationLocaly = mCurrent.mMode == recti::LOCAL;
-    bool modified = false;
-
-    auto& mouse = mCurrent.mCameraMouse.Mouse;
-    if (!mState.mbUsing) {
-      type = GetRotateType(mCurrent, mRadiusSquareCenter, mState);
-
-      if (type != recti::MT_NONE) {
-      }
-
-      if (type == recti::MT_ROTATE_SCREEN) {
-        applyRotationLocaly = true;
-      }
-
-      if (mouse.LeftDown && type != recti::MT_NONE) {
-        mState.mbUsing = true;
-        mState.mEditingID = mCurrent.mActualID;
-        mState.mCurrentOperation = type;
-        const recti::Vec4 rotatePlanNormal[] = { mCurrent.mModel.right(),
-                                                 mCurrent.mModel.up(),
-                                                 mCurrent.mModel.dir(),
-                                                 -mCameraMouse.CameraDir() };
-        // pickup plan
-        if (applyRotationLocaly) {
-          mT.mTranslationPlan =
-            BuildPlan(mCurrent.mModel.position(),
-                      rotatePlanNormal[type - recti::MT_ROTATE_X]);
-        } else {
-          mT.mTranslationPlan =
-            BuildPlan(mCurrent.mModelSource.position(),
-                      directionUnary[type - recti::MT_ROTATE_X]);
-        }
-
-        recti::Vec4 localPos =
-          mCameraMouse.Ray.IntersectPlane(mT.mTranslationPlan) -
-          mCurrent.mModel.position();
-        mRotationVectorSource = Normalized(localPos);
-        mRotationAngleOrigin = ComputeAngleOnPlan(
-          mCurrent, mRotationVectorSource, mT.mTranslationPlan);
-      }
-    }
-
-    // rotation
-    if (mState.Using(mCurrent.mActualID) &&
-        IsRotateType(mState.mCurrentOperation)) {
-      mRotationAngle = ComputeAngleOnPlan(
-        mCurrent, mRotationVectorSource, mT.mTranslationPlan);
-      if (snap) {
-        float snapInRadian = snap[0] * DEG2RAD;
-        recti::ComputeSnap(&mRotationAngle, snapInRadian);
-      }
-      recti::Vec4 rotationAxisLocalSpace;
-
-      rotationAxisLocalSpace.TransformVector({ mT.mTranslationPlan.x,
-                                               mT.mTranslationPlan.y,
-                                               mT.mTranslationPlan.z,
-                                               0.f },
-                                             mCurrent.mModelInverse);
-      rotationAxisLocalSpace.Normalize();
-
-      recti::Mat4 deltaRotation;
-      deltaRotation.RotationAxis(rotationAxisLocalSpace,
-                                 mRotationAngle - mRotationAngleOrigin);
-      if (mRotationAngle != mRotationAngleOrigin) {
-        modified = true;
-      }
-      mRotationAngleOrigin = mRotationAngle;
-
-      recti::Mat4 scaleOrigin;
-      scaleOrigin.Scale(mCurrent.mModelScaleOrigin);
-
-      if (applyRotationLocaly) {
-        *(recti::Mat4*)matrix =
-          scaleOrigin * deltaRotation * mCurrent.mModelLocal;
-      } else {
-        recti::Mat4 res = mCurrent.mModelSource;
-        res.position().Set(0.f);
-
-        *(recti::Mat4*)matrix = res * deltaRotation;
-        ((recti::Mat4*)matrix)->position() = mCurrent.mModelSource.position();
-      }
-
-      if (deltaMatrix) {
-        *(recti::Mat4*)deltaMatrix =
-          mCurrent.mModelInverse * deltaRotation * mCurrent.mModel;
-      }
-
-      if (!mouse.LeftDown) {
-        mState.mbUsing = false;
-        mState.mEditingID = -1;
-      }
-      type = mState.mCurrentOperation;
-    }
-    return modified;
-  }
-
 public:
   //
   // entery point
@@ -935,20 +604,30 @@ public:
     }
 
     // --
-    auto [type, manipulated] = mT.HandleTranslation(
+    auto result = mT.HandleTranslation(
       mCurrent, mAllowAxisFlip, snap, mState, matrix, deltaMatrix);
-    if (!manipulated) {
-      manipulated = HandleScale(mCurrent, matrix, deltaMatrix, type, snap) ||
-                    HandleRotation(mCurrent, matrix, deltaMatrix, type, snap);
+    if (!result.Modified) {
+      result.Modified =
+        HandleScale(mCurrent, matrix, deltaMatrix, result.DrawType, snap);
+      if (!result.Modified) {
+        result = mR.HandleRotation(
+          mCurrent, mRadiusSquareCenter, mState, snap, matrix, deltaMatrix);
+      }
     }
 
-    DrawRotationGizmo(mCurrent, type);
+    mR.DrawRotationGizmo(mCurrent,
+                         mRadiusSquareCenter,
+                         mIsOrthographic,
+                         result.DrawType,
+                         mState,
+                         mStyle,
+                         mDrawList);
     mT.DrawTranslationGizmo(
-      mCurrent, mAllowAxisFlip, type, mStyle, mState, mDrawList);
-    DrawScaleGizmo(mCurrent, type);
-    DrawScaleUniveralGizmo(mCurrent, type);
+      mCurrent, mAllowAxisFlip, result.DrawType, mStyle, mState, mDrawList);
+    DrawScaleGizmo(mCurrent, result.DrawType);
+    DrawScaleUniveralGizmo(mCurrent, result.DrawType);
 
-    return manipulated;
+    return result.Modified;
   }
 
   const recti::DrawList& GetDrawList() const { return *mDrawList; }
