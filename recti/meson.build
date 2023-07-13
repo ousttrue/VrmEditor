@@ -14,6 +14,7 @@ recti_lib = static_library(
         'tripod.cpp',
         'handle/translation.cpp',
         'handle/rotation.cpp',
+        'handle/scale.cpp',
     ],
     include_directories: recti_inc,
     dependencies: [directxmath_dep],

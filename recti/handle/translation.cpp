@@ -192,8 +192,8 @@ Translation::Drag(const ModelContext& current,
 Result
 Translation::HandleTranslation(const ModelContext& current,
                                bool allowAxisFlip,
-                               const float* snap,
                                State& state,
+                               const float* snap,
                                float* matrix,
                                float* deltaMatrix)
 {
@@ -230,8 +230,8 @@ void
 Translation::DrawTranslationGizmo(const ModelContext& current,
                                   bool allowAxisFlip,
                                   MOVETYPE type,
-                                  const Style& style,
                                   const State& state,
+                                  const Style& style,
                                   const std::shared_ptr<DrawList>& drawList)
 {
   if (!Intersects(current.mOperation, TRANSLATE)) {
