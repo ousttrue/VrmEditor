@@ -647,39 +647,6 @@ public:
   ContextImpl() { mDrawList = std::make_shared<recti::DrawList>(); }
 
 private:
-  // return true if mouse cursor is over any gizmo control (axis, plan or screen
-  // component)
-  // return true if the cursor is over the operation's gizmo
-  bool IsOver(const ModelContext& mCurrent, State* state, bool any = true) const
-  {
-    if (mState.UsingOrBounds(mCurrent.mActualID)) {
-      return true;
-    }
-    if (any) {
-      return (Intersects(mOperation, TRANSLATE) &&
-              GetMoveType(mCurrent, mAllowAxisFlip, state) != MT_NONE) ||
-             (Intersects(mOperation, ROTATE) &&
-              GetRotateType(mCurrent, mRadiusSquareCenter, *state) !=
-                MT_NONE) ||
-             (Intersects(mOperation, SCALE) &&
-              GetScaleType(mCurrent, mAllowAxisFlip, state) != MT_NONE);
-    } else {
-      if (Intersects(mCurrent.mOperation, SCALE) &&
-          GetScaleType(mCurrent, mAllowAxisFlip, state) != MT_NONE) {
-        return true;
-      }
-      if (Intersects(mCurrent.mOperation, ROTATE) &&
-          GetRotateType(mCurrent, mRadiusSquareCenter, *state) != MT_NONE) {
-        return true;
-      }
-      if (Intersects(mCurrent.mOperation, TRANSLATE) &&
-          GetMoveType(mCurrent, mAllowAxisFlip, state) != MT_NONE) {
-        return true;
-      }
-      return false;
-    }
-  }
-
   void ComputeColors(uint32_t* colors, int type, OPERATION operation)
   {
     uint32_t selectionColor = GetColorU32(SELECTION);
