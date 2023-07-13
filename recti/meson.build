@@ -11,6 +11,8 @@ recti_lib = static_library(
         'camera_mouse.cpp',
         'style.cpp',
         'drawcommand.cpp',
+        'translation.cpp',
+        'tripod.cpp',
     ],
     include_directories: recti_inc,
     dependencies: [directxmath_dep],
