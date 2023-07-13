@@ -5,26 +5,26 @@
 
 namespace recti {
 
-static ImGuizmo::OPERATION
+static OPERATION
 ToOperation(const Operation& o)
 {
-  ImGuizmo::OPERATION operation = {};
+  OPERATION operation = {};
   if (o.EnableT) {
-    operation |= ImGuizmo::TRANSLATE;
+    operation |= TRANSLATE;
   }
   if (o.EnableR) {
-    operation |= ImGuizmo::ROTATE;
+    operation |= ROTATE;
   }
   if (o.EnableS) {
-    operation |= ImGuizmo::SCALE;
+    operation |= SCALE;
   }
   return operation;
 }
 
-static ImGuizmo::MODE
+static MODE
 ToMode(const Operation& o)
 {
-  return ImGuizmo::LOCAL;
+  return LOCAL;
 }
 
 //

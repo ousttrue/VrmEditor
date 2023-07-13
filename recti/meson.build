@@ -9,6 +9,8 @@ recti_lib = static_library(
         'vec4.cpp',
         'mat4.cpp',
         'camera_mouse.cpp',
+        'style.cpp',
+        'drawcommand.cpp',
     ],
     include_directories: recti_inc,
     dependencies: [directxmath_dep],
