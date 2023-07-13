@@ -36,7 +36,26 @@ GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
 
   // compute
   for (int i = 0; i < 3 && type == MT_NONE; i++) {
-    Tripod tripod(mCurrent, mAllowAxisFlip, i, state);
+
+    Tripod tripod(i);
+    if (state->Using(mCurrent.mActualID)) {
+      // when using, use stored factors so the gizmo doesn't flip when we
+      // translate
+      tripod.belowAxisLimit = state->mBelowAxisLimit[i];
+      tripod.belowPlaneLimit = state->mBelowPlaneLimit[i];
+      tripod.dirAxis *= state->mAxisFactor[i];
+      tripod.dirPlaneX *= state->mAxisFactor[(i + 1) % 3];
+      tripod.dirPlaneY *= state->mAxisFactor[(i + 2) % 3];
+    } else {
+      tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+      // and store values
+      state->mAxisFactor[i] = tripod.mulAxis;
+      state->mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
+      state->mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
+      state->mBelowAxisLimit[i] = tripod.belowAxisLimit;
+      state->mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
+    }
+
     tripod.dirAxis.TransformVector(mCurrent.mModel);
     tripod.dirPlaneX.TransformVector(mCurrent.mModel);
     tripod.dirPlaneY.TransformVector(mCurrent.mModel);
@@ -84,6 +103,97 @@ GetMoveType(const ModelContext& mCurrent, bool mAllowAxisFlip, State* state)
   return type;
 }
 
+void
+Translation::Begin(const ModelContext& mCurrent, MOVETYPE type)
+{
+  // find new possible way to move
+  Vec4 movePlanNormal[] = { mCurrent.mModel.right(),
+                            mCurrent.mModel.up(),
+                            mCurrent.mModel.dir(),
+                            mCurrent.mModel.right(),
+                            mCurrent.mModel.up(),
+                            mCurrent.mModel.dir(),
+                            -mCurrent.mCameraMouse.CameraDir() };
+
+  Vec4 cameraToModelNormalized =
+    Normalized(mCurrent.mModel.position() - mCurrent.mCameraMouse.CameraEye());
+  for (unsigned int i = 0; i < 3; i++) {
+    Vec4 orthoVector = Cross(movePlanNormal[i], cameraToModelNormalized);
+    movePlanNormal[i].Cross(orthoVector);
+    movePlanNormal[i].Normalize();
+  }
+  // pickup plan
+  mTranslationPlan =
+    BuildPlan(mCurrent.mModel.position(), movePlanNormal[type - MT_MOVE_X]);
+  mTranslationPlanOrigin =
+    mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
+  mMatrixOrigin = mCurrent.mModel.position();
+
+  mRelativeOrigin = (mTranslationPlanOrigin - mCurrent.mModel.position()) *
+                    (1.f / mCurrent.mScreenFactor);
+}
+
+bool
+Translation::Drag(const ModelContext& mCurrent,
+                  const State& mState,
+                  const float* snap,
+                  float* matrix,
+                  float* deltaMatrix)
+{
+  const Vec4 newPos =
+    mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
+
+  // compute delta
+  const Vec4 newOrigin = newPos - mRelativeOrigin * mCurrent.mScreenFactor;
+  Vec4 delta = newOrigin - mCurrent.mModel.position();
+
+  // 1 axis constraint
+  if (mState.mCurrentOperation >= MT_MOVE_X &&
+      mState.mCurrentOperation <= MT_MOVE_Z) {
+    const int axisIndex = mState.mCurrentOperation - MT_MOVE_X;
+    const Vec4& axisValue = mCurrent.mModel.component(axisIndex);
+    const float lengthOnAxis = Dot(axisValue, delta);
+    delta = axisValue * lengthOnAxis;
+  }
+
+  // snap
+  if (snap) {
+    Vec4 cumulativeDelta = mCurrent.mModel.position() + delta - mMatrixOrigin;
+    const bool applyRotationLocaly =
+      mCurrent.mMode == LOCAL || mState.mCurrentOperation == MT_MOVE_SCREEN;
+    if (applyRotationLocaly) {
+      Mat4 modelSourceNormalized = mCurrent.mModelSource;
+      modelSourceNormalized.OrthoNormalize();
+      Mat4 modelSourceNormalizedInverse;
+      modelSourceNormalizedInverse.Inverse(modelSourceNormalized);
+      cumulativeDelta.TransformVector(modelSourceNormalizedInverse);
+      ComputeSnap(cumulativeDelta, snap);
+      cumulativeDelta.TransformVector(modelSourceNormalized);
+    } else {
+      ComputeSnap(cumulativeDelta, snap);
+    }
+    delta = mMatrixOrigin + cumulativeDelta - mCurrent.mModel.position();
+  }
+
+  auto modified = false;
+  if (delta != mTranslationLastDelta) {
+    modified = true;
+    mTranslationLastDelta = delta;
+  }
+
+  // compute matrix & delta
+  Mat4 deltaMatrixTranslation;
+  deltaMatrixTranslation.Translation(delta);
+  if (deltaMatrix) {
+    memcpy(deltaMatrix, &deltaMatrixTranslation.m00, sizeof(float) * 16);
+  }
+
+  const Mat4 res = mCurrent.mModelSource * deltaMatrixTranslation;
+  *(Mat4*)matrix = res;
+
+  return modified;
+}
+
 bool
 Translation::HandleTranslation(const ModelContext& mCurrent,
                                bool mAllowAxisFlip,
@@ -96,103 +206,31 @@ Translation::HandleTranslation(const ModelContext& mCurrent,
   if (!Intersects(mCurrent.mOperation, TRANSLATE) || type != MT_NONE) {
     return false;
   }
-  const bool applyRotationLocaly =
-    mCurrent.mMode == LOCAL || type == MT_MOVE_SCREEN;
-  bool modified = false;
 
-  // move
-  auto& mouse = mCurrent.mCameraMouse.Mouse;
   if (mState.Using(mCurrent.mActualID) &&
       IsTranslateType(mState.mCurrentOperation)) {
-    const Vec4 newPos =
-      mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
-
-    // compute delta
-    const Vec4 newOrigin = newPos - mRelativeOrigin * mCurrent.mScreenFactor;
-    Vec4 delta = newOrigin - mCurrent.mModel.position();
-
-    // 1 axis constraint
-    if (mState.mCurrentOperation >= MT_MOVE_X &&
-        mState.mCurrentOperation <= MT_MOVE_Z) {
-      const int axisIndex = mState.mCurrentOperation - MT_MOVE_X;
-      const Vec4& axisValue = mCurrent.mModel.component(axisIndex);
-      const float lengthOnAxis = Dot(axisValue, delta);
-      delta = axisValue * lengthOnAxis;
-    }
-
-    // snap
-    if (snap) {
-      Vec4 cumulativeDelta = mCurrent.mModel.position() + delta - mMatrixOrigin;
-      if (applyRotationLocaly) {
-        Mat4 modelSourceNormalized = mCurrent.mModelSource;
-        modelSourceNormalized.OrthoNormalize();
-        Mat4 modelSourceNormalizedInverse;
-        modelSourceNormalizedInverse.Inverse(modelSourceNormalized);
-        cumulativeDelta.TransformVector(modelSourceNormalizedInverse);
-        ComputeSnap(cumulativeDelta, snap);
-        cumulativeDelta.TransformVector(modelSourceNormalized);
-      } else {
-        ComputeSnap(cumulativeDelta, snap);
-      }
-      delta = mMatrixOrigin + cumulativeDelta - mCurrent.mModel.position();
-    }
-
-    if (delta != mTranslationLastDelta) {
-      modified = true;
-    }
-    mTranslationLastDelta = delta;
-
-    // compute matrix & delta
-    Mat4 deltaMatrixTranslation;
-    deltaMatrixTranslation.Translation(delta);
-    if (deltaMatrix) {
-      memcpy(deltaMatrix, &deltaMatrixTranslation.m00, sizeof(float) * 16);
-    }
-
-    const Mat4 res = mCurrent.mModelSource * deltaMatrixTranslation;
-    *(Mat4*)matrix = res;
-
-    if (!mouse.LeftDown) {
+    // drag
+    auto modified = Drag(mCurrent, mState, snap, matrix, deltaMatrix);
+    if (!mCurrent.mCameraMouse.Mouse.LeftDown) {
       mState.mbUsing = false;
     }
-
     type = mState.mCurrentOperation;
-  } else {
-    // find new possible way to move
-    type = GetMoveType(mCurrent, mAllowAxisFlip, &mState);
-    if (type != MT_NONE) {
-    }
-    if (mouse.LeftDown && type != MT_NONE) {
+
+    return modified;
+  }
+
+  type = GetMoveType(mCurrent, mAllowAxisFlip, &mState);
+  if (type != MT_NONE) {
+    // hover
+    if (mCurrent.mCameraMouse.Mouse.LeftDown) {
+      // begin
       mState.mbUsing = true;
       mState.mEditingID = mCurrent.mActualID;
       mState.mCurrentOperation = type;
-      Vec4 movePlanNormal[] = { mCurrent.mModel.right(),
-                                mCurrent.mModel.up(),
-                                mCurrent.mModel.dir(),
-                                mCurrent.mModel.right(),
-                                mCurrent.mModel.up(),
-                                mCurrent.mModel.dir(),
-                                -mCurrent.mCameraMouse.CameraDir() };
-
-      Vec4 cameraToModelNormalized = Normalized(
-        mCurrent.mModel.position() - mCurrent.mCameraMouse.CameraEye());
-      for (unsigned int i = 0; i < 3; i++) {
-        Vec4 orthoVector = Cross(movePlanNormal[i], cameraToModelNormalized);
-        movePlanNormal[i].Cross(orthoVector);
-        movePlanNormal[i].Normalize();
-      }
-      // pickup plan
-      mTranslationPlan =
-        BuildPlan(mCurrent.mModel.position(), movePlanNormal[type - MT_MOVE_X]);
-      mTranslationPlanOrigin =
-        mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
-      mMatrixOrigin = mCurrent.mModel.position();
-
-      mRelativeOrigin = (mTranslationPlanOrigin - mCurrent.mModel.position()) *
-                        (1.f / mCurrent.mScreenFactor);
+      Begin(mCurrent, type);
     }
   }
-  return modified;
+  return false;
 }
 
 void
@@ -216,7 +254,24 @@ Translation::DrawTranslationGizmo(const ModelContext& mCurrent,
 
   // draw
   for (int i = 0; i < 3; ++i) {
-    Tripod tripod(mCurrent, mAllowAxisFlip, i, &mState);
+    Tripod tripod(i);
+    if (mState.Using(mCurrent.mActualID)) {
+      // when using, use stored factors so the gizmo doesn't flip when we
+      // translate
+      tripod.belowAxisLimit = mState.mBelowAxisLimit[i];
+      tripod.belowPlaneLimit = mState.mBelowPlaneLimit[i];
+      tripod.dirAxis *= mState.mAxisFactor[i];
+      tripod.dirPlaneX *= mState.mAxisFactor[(i + 1) % 3];
+      tripod.dirPlaneY *= mState.mAxisFactor[(i + 2) % 3];
+    } else {
+      tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+      // and store values
+      mState.mAxisFactor[i] = tripod.mulAxis;
+      mState.mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
+      mState.mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
+      mState.mBelowAxisLimit[i] = tripod.belowAxisLimit;
+      mState.mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
+    }
 
     if (!mState.mbUsing || (mState.mbUsing && type == MT_MOVE_X + i)) {
       // draw axis

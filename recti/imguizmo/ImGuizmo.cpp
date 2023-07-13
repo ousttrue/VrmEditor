@@ -168,7 +168,25 @@ GetScaleType(const recti::ModelContext& mCurrent,
                     static_cast<recti::OPERATION>(recti::SCALE_X << i))) {
       continue;
     }
-    recti::Tripod tripod(mCurrent, mAllowAxisFlip, i, state);
+    recti::Tripod tripod(i);
+    if (state->Using(mCurrent.mActualID)) {
+      // when using, use stored factors so the gizmo doesn't flip when we
+      // translate
+      tripod.belowAxisLimit = state->mBelowAxisLimit[i];
+      tripod.belowPlaneLimit = state->mBelowPlaneLimit[i];
+      tripod.dirAxis *= state->mAxisFactor[i];
+      tripod.dirPlaneX *= state->mAxisFactor[(i + 1) % 3];
+      tripod.dirPlaneY *= state->mAxisFactor[(i + 2) % 3];
+    } else {
+      tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+      // and store values
+      state->mAxisFactor[i] = tripod.mulAxis;
+      state->mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
+      state->mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
+      state->mBelowAxisLimit[i] = tripod.belowAxisLimit;
+      state->mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
+    }
+
     tripod.dirAxis.TransformVector(mCurrent.mModelLocal);
     tripod.dirPlaneX.TransformVector(mCurrent.mModelLocal);
     tripod.dirPlaneY.TransformVector(mCurrent.mModelLocal);
@@ -226,7 +244,24 @@ GetScaleType(const recti::ModelContext& mCurrent,
       continue;
     }
 
-    recti::Tripod tripod(mCurrent, mAllowAxisFlip, i, state);
+    recti::Tripod tripod(i);
+    if (state->Using(mCurrent.mActualID)) {
+      // when using, use stored factors so the gizmo doesn't flip when we
+      // translate
+      tripod.belowAxisLimit = state->mBelowAxisLimit[i];
+      tripod.belowPlaneLimit = state->mBelowPlaneLimit[i];
+      tripod.dirAxis *= state->mAxisFactor[i];
+      tripod.dirPlaneX *= state->mAxisFactor[(i + 1) % 3];
+      tripod.dirPlaneY *= state->mAxisFactor[(i + 2) % 3];
+    } else {
+      tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+      // and store values
+      state->mAxisFactor[i] = tripod.mulAxis;
+      state->mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
+      state->mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
+      state->mBelowAxisLimit[i] = tripod.belowAxisLimit;
+      state->mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
+    }
 
     // draw axis
     if (tripod.belowAxisLimit) {
@@ -332,7 +367,24 @@ private:
       }
       const bool usingAxis = (mState.mbUsing && type == recti::MT_SCALE_X + i);
       if (!mState.mbUsing || usingAxis) {
-        recti::Tripod tripod(mCurrent, mAllowAxisFlip, i, &mState);
+        recti::Tripod tripod(i);
+        if (mState.Using(mCurrent.mActualID)) {
+          // when using, use stored factors so the gizmo doesn't flip when we
+          // translate
+          tripod.belowAxisLimit = mState.mBelowAxisLimit[i];
+          tripod.belowPlaneLimit = mState.mBelowPlaneLimit[i];
+          tripod.dirAxis *= mState.mAxisFactor[i];
+          tripod.dirPlaneX *= mState.mAxisFactor[(i + 1) % 3];
+          tripod.dirPlaneY *= mState.mAxisFactor[(i + 2) % 3];
+        } else {
+          tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+          // and store values
+          mState.mAxisFactor[i] = tripod.mulAxis;
+          mState.mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
+          mState.mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
+          mState.mBelowAxisLimit[i] = tripod.belowAxisLimit;
+          mState.mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
+        }
 
         // draw axis
         if (tripod.belowAxisLimit) {
@@ -556,7 +608,24 @@ private:
       }
       const bool usingAxis = (mState.mbUsing && type == recti::MT_SCALE_X + i);
       if (!mState.mbUsing || usingAxis) {
-        recti::Tripod tripod(mCurrent, mAllowAxisFlip, i, &mState);
+        recti::Tripod tripod(i);
+        if (mState.Using(mCurrent.mActualID)) {
+          // when using, use stored factors so the gizmo doesn't flip when we
+          // translate
+          tripod.belowAxisLimit = mState.mBelowAxisLimit[i];
+          tripod.belowPlaneLimit = mState.mBelowPlaneLimit[i];
+          tripod.dirAxis *= mState.mAxisFactor[i];
+          tripod.dirPlaneX *= mState.mAxisFactor[(i + 1) % 3];
+          tripod.dirPlaneY *= mState.mAxisFactor[(i + 2) % 3];
+        } else {
+          tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+          // and store values
+          mState.mAxisFactor[i] = tripod.mulAxis;
+          mState.mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
+          mState.mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
+          mState.mBelowAxisLimit[i] = tripod.belowAxisLimit;
+          mState.mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
+        }
 
         // draw axis
         if (tripod.belowAxisLimit) {

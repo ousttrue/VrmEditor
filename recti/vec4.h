@@ -125,7 +125,13 @@ struct Vec4
   float& operator[](size_t index) { return ((float*)&x)[index]; }
   const float& operator[](size_t index) const { return ((float*)&x)[index]; }
   bool operator!=(const Vec4& other) const;
+
+  static const Vec4 DirectionUnary[3];
 };
+
+inline const Vec4 Vec4::DirectionUnary[3] = { { 1.f, 0.f, 0.f, 0 },
+                                              { 0.f, 1.f, 0.f, 0 },
+                                              { 0.f, 0.f, 1.f, 0 } };
 
 inline Vec4
 Vec4::operator*(float f) const

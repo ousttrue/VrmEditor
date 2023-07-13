@@ -24,6 +24,14 @@ struct Translation
                          const float* snap,
                          State& mState);
 
+  void Begin(const ModelContext& mCurrent, MOVETYPE type);
+
+  bool Drag(const ModelContext& mCurrent,
+            const State& mState,
+            const float* snap,
+            float* matrix,
+            float* deltaMatrix);
+
   void DrawTranslationGizmo(const ModelContext& mCurrent,
                             bool mAllowAxisFlip,
                             MOVETYPE type,

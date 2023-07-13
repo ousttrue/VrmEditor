@@ -13,12 +13,9 @@ struct Tripod
   float mulAxis = 1;
   float mulAxisX = 1;
   float mulAxisY = 1;
-
-  // ComputeTripodAxisAndVisibility
-  Tripod(const ModelContext& mCurrent,
-         bool mAllowAxisFlip,
-         const int axisIndex,
-         State* state);
+  Tripod(const int axisIndex);
+  void ComputeTripodAxisAndVisibility(const ModelContext& mCurrent,
+                                      bool mAllowAxisFlip);
 };
 
 }
