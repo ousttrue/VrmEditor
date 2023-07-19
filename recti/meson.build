@@ -4,8 +4,6 @@ recti_inc = include_directories('.')
 recti_lib = static_library(
     'recti',
     [
-        'recti.cpp',
-        'imguizmo/ImGuizmo.cpp',
         'vec4.cpp',
         'mat4.cpp',
         'camera_mouse.cpp',
