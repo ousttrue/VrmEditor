@@ -476,7 +476,6 @@ RuntimeScene::Reset()
 {
   m_nodes.clear();
   m_roots.clear();
-  m_selected = nullptr;
 
   std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<RuntimeNode>>
     nodeMap;

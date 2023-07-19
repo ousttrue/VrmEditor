@@ -57,7 +57,8 @@ RenderScene(const grapho::camera::Camera& camera,
 
 void
 SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                            const grapho::camera::Camera& camera) const
+                            const grapho::camera::Camera& camera,
+                            const std::shared_ptr<libvrm::Node>& selected) const
 {
   glr::ClearRendertarget(camera, *m_env);
 
@@ -83,13 +84,13 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
   }
 
   // manipulator
-  if (auto node = scene->m_selected) {
+  if (selected) {
     // TODO: conflict mouse event(left) with ImageButton
     DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(&m, node->WorldInitialMatrix());
+    DirectX::XMStoreFloat4x4(&m, selected->WorldInitialMatrix());
 
     bool enableTranslation = false;
-    if (auto humanoid = node->Humanoid) {
+    if (auto humanoid = selected->Humanoid) {
       if (*humanoid == libvrm::HumanBones::hips) {
         enableTranslation = true;
       }
@@ -107,11 +108,12 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
     recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
 
     m_screen->Begin(gizmo_camera, mouse);
-    if (m_screen->Manipulate(
-          node.get(), { enableTranslation, true, false, true }, (float*)&m)) {
+    if (m_screen->Manipulate(selected.get(),
+                             { enableTranslation, true, false, true },
+                             (float*)&m)) {
       // decompose feedback
-      node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
-      node->CalcWorldInitialMatrix(true);
+      selected->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
+      selected->CalcWorldInitialMatrix(true);
 
       scene->RaiseSceneUpdated();
     }
@@ -123,7 +125,8 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
 void
 SceneRenderer::RenderRuntime(
   const std::shared_ptr<libvrm::RuntimeScene>& runtime,
-  const grapho::camera::Camera& camera) const
+  const grapho::camera::Camera& camera,
+  const std::shared_ptr<libvrm::RuntimeNode>& selected) const
 {
   glr::ClearRendertarget(camera, *m_env);
 
@@ -158,13 +161,13 @@ SceneRenderer::RenderRuntime(
   }
 
   // manipulator
-  if (auto node = runtime->m_selected) {
+  if (selected) {
     //   // TODO: conflict mouse event(left) with ImageButton
     DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
+    DirectX::XMStoreFloat4x4(&m, selected->WorldMatrix());
 
     bool enableTranslation = false;
-    if (auto humanoid = node->Base->Humanoid) {
+    if (auto humanoid = selected->Base->Humanoid) {
       if (*humanoid == libvrm::HumanBones::hips) {
         enableTranslation = true;
       }
@@ -182,11 +185,12 @@ SceneRenderer::RenderRuntime(
     recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
 
     m_screen->Begin(gizmo_camera, mouse);
-    if (m_screen->Manipulate(
-          node.get(), { enableTranslation, true, false, true }, (float*)&m)) {
+    if (m_screen->Manipulate(selected.get(),
+                             { enableTranslation, true, false, true },
+                             (float*)&m)) {
       // decompose feedback
-      node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
-      node->CalcWorldMatrix(true);
+      selected->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+      selected->CalcWorldMatrix(true);
     }
 
     // const float cubes[]{

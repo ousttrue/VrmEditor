@@ -27,6 +27,7 @@
 #include <grapho/gl3/texture.h>
 #include <vrm/fileutil.h>
 #include <vrm/image.h>
+#include <vrm/runtime_node.h>
 #ifdef _WIN32
 #include "windows_helper.h"
 #else
@@ -92,8 +93,15 @@ public:
         m_lighting->SetGltf(runtime->m_base);
         m_animation->SetRuntime(runtime);
         m_hierarchy->SetRuntimeScene(runtime);
-        m_preview->SetGltf(runtime->m_base);
-        m_animationPreview->SetRuntime(runtime);
+        GetSelectedNode getSelectedNode = []() {
+          if (auto node = SceneState::GetInstance().m_node) {
+            return node->Base;
+          }
+          return std::shared_ptr<libvrm::Node>();
+        };
+        m_preview->SetGltf(runtime->m_base, getSelectedNode);
+        m_animationPreview->SetRuntime(
+          runtime, []() { return SceneState::GetInstance().m_node; });
         m_vrm->SetRuntime(runtime);
         m_humanoid->SetRuntime(runtime);
       });

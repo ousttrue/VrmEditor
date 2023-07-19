@@ -18,7 +18,7 @@ UdpNode::UdpNode(int id, std::string_view name)
   // update preview
   m_preview = std::make_shared<ScenePreview>();
   m_preview->Settings()->ShowCuber = true;
-  m_preview->SetRuntime(m_scene);
+  m_preview->SetRuntime(m_scene, {});
 
   m_udp = std::make_shared<UdpReceiver>();
 
@@ -55,5 +55,4 @@ UdpNode::DrawContent()
   m_preview->ShowScreenRect(
     m_scene->m_base->m_title.c_str(), color, sc.x, sc.y, 300, 300);
 }
-
 }

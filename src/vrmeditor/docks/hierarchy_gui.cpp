@@ -1,5 +1,6 @@
 #include "hierarchy_gui.h"
 #include "gui.h"
+#include "scene_state.h"
 #include <grapho/imgui/printfbuffer.h>
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
@@ -79,7 +80,7 @@ Traverse(const std::shared_ptr<T>& scene, const std::shared_ptr<N>& node)
       ImGuiTreeNodeFlags_Leaf |
       ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
   }
-  if (node == scene->m_selected) {
+  if (SceneState::GetInstance().IsSelected(node)) {
     node_flags |= ImGuiTreeNodeFlags_Selected;
   }
   if (DescendantHasHumanoid(node)) {
@@ -98,7 +99,7 @@ Traverse(const std::shared_ptr<T>& scene, const std::shared_ptr<N>& node)
     (void*)(intptr_t)node.get(), node_flags, "%s", node->GetLabel());
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-    scene->m_selected = node;
+    SceneState::GetInstance().SelectNode(node);
   }
 
   // 1

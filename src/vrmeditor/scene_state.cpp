@@ -5,6 +5,39 @@
 #include <gltfjson/json_tree_exporter.h>
 #include <plog/Log.h>
 #include <vrm/importer.h>
+#include <vrm/runtime_node.h>
+#include <vrm/runtime_scene.h>
+
+void
+SceneState::SelectNode(const std::shared_ptr<libvrm::RuntimeNode>& node)
+{
+  m_node = node;
+}
+
+void
+SceneState::SelectNode(const std::shared_ptr<libvrm::Node>& node)
+{
+  if (m_runtime) {
+    for (auto runtime_node : m_runtime->m_nodes) {
+      if (runtime_node->Base == node) {
+        SelectNode(runtime_node);
+        break;
+      }
+    }
+  }
+}
+
+bool
+SceneState::IsSelected(const std::shared_ptr<libvrm::Node>& node) const
+{
+  return m_node && m_node->Base == node;
+}
+
+bool
+SceneState::IsSelected(const std::shared_ptr<libvrm::RuntimeNode>& node) const
+{
+  return node && node == m_node;
+}
 
 void
 SceneState::SetGltf(const std::shared_ptr<libvrm::GltfRoot>& gltf)

@@ -6,7 +6,9 @@
 
 namespace libvrm {
 struct GltfRoot;
+struct Node;
 struct RuntimeScene;
+struct RuntimeNode;
 }
 
 namespace recti {
@@ -47,9 +49,12 @@ struct SceneRenderer
                 const std::shared_ptr<ViewSettings>& settings);
 
   void RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                    const grapho::camera::Camera& camera) const;
-  void RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
-                     const grapho::camera::Camera& camera) const;
+                    const grapho::camera::Camera& camera,
+                    const std::shared_ptr<libvrm::Node>& selected) const;
+  void RenderRuntime(
+    const std::shared_ptr<libvrm::RuntimeScene>& scene,
+    const grapho::camera::Camera& camera,
+    const std::shared_ptr<libvrm::RuntimeNode>& selected) const;
 };
 
 } // namespace

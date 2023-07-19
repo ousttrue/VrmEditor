@@ -16,6 +16,11 @@ struct SceneState
     return s_state;
   }
 
+  void SelectNode(const std::shared_ptr<libvrm::Node>& node);
+  void SelectNode(const std::shared_ptr<libvrm::RuntimeNode>& node);
+  bool IsSelected(const std::shared_ptr<libvrm::Node>& node) const;
+  bool IsSelected(const std::shared_ptr<libvrm::RuntimeNode>& node) const;
+
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& gltf);
 
   bool LoadModel(const std::filesystem::path& path);
