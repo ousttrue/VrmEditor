@@ -151,4 +151,16 @@ GltfRoot::GetHumanSkeleton()
   return skeleton;
 }
 
+void
+GltfRoot::SelectNode(const std::shared_ptr<libvrm::Node>& node)
+{
+  m_selected = node;
+}
+
+bool
+GltfRoot::IsSelected(const std::shared_ptr<libvrm::Node>& node) const
+{
+  return m_selected == node;
+}
+
 } // namespace

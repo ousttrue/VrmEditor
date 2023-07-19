@@ -51,13 +51,10 @@ struct SceneRenderer
 
   void RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
                     const grapho::camera::Viewport& viewport,
-                    const grapho::camera::MouseState& mouse,
-                    const std::shared_ptr<libvrm::Node>& selected) const;
-  void RenderRuntime(
-    const std::shared_ptr<libvrm::RuntimeScene>& scene,
-    const grapho::camera::Viewport& viewport,
-    const grapho::camera::MouseState& mouse,
-    const std::shared_ptr<libvrm::RuntimeNode>& selected) const;
+                    const grapho::camera::MouseState& mouse) const;
+  void RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
+                     const grapho::camera::Viewport& viewport,
+                     const grapho::camera::MouseState& mouse) const;
 };
 
 } // namespace

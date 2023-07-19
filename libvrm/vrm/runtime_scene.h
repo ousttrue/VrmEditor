@@ -135,6 +135,11 @@ struct RuntimeScene
   void DrawGizmo(IGizmoDrawer* gizmo);
 
   std::string CopyVrmPoseText();
+
+  std::shared_ptr<RuntimeNode> GetSelectedNode() const;
+  void SelectNode(const std::shared_ptr<libvrm::RuntimeNode>& node);
+  bool IsSelected(const std::shared_ptr<libvrm::RuntimeNode>& node) const;
+
 };
 
 } // namespace

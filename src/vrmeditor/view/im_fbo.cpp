@@ -23,16 +23,15 @@ ImFbo::ShowFbo(const grapho::camera::Viewport& viewport,
     return;
   }
 
-  if (auto texture =
-        m_rt->Begin((int)viewport.Width, (int)viewport.Height, color)) {
+  if (auto texture = m_rt->Begin(viewport.Width, viewport.Height, color)) {
     auto [isActive, isHovered] = grapho::imgui::DraggableImage(
       (ImTextureID)(uint64_t)texture, { viewport.Width, viewport.Height });
 
     auto& io = ImGui::GetIO();
 
     grapho::camera::MouseState mouse{
-      .X = io.MousePos.x,
-      .Y = io.MousePos.y,
+      .X = io.MousePos.x - viewport.Left,
+      .Y = io.MousePos.y - viewport.Top,
     };
     mouse.LeftDown = io.MouseDown[ImGuiMouseButton_Left];
     mouse.RightDown = io.MouseDown[ImGuiMouseButton_Right];

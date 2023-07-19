@@ -10,6 +10,7 @@
 #include "docks/humanoid_dock.h"
 #include "docks/imlogger.h"
 #include "docks/vrm_gui.h"
+#include "fbx_loader.h"
 #include "filewatcher.h"
 #include "fs_util.h"
 #include "humanpose/humanpose_stream.h"
@@ -93,15 +94,8 @@ public:
         m_lighting->SetGltf(runtime->m_base);
         m_animation->SetRuntime(runtime);
         m_hierarchy->SetRuntimeScene(runtime);
-        GetSelectedNode getSelectedNode = []() {
-          if (auto node = SceneState::GetInstance().m_node) {
-            return node->Base;
-          }
-          return std::shared_ptr<libvrm::Node>();
-        };
-        m_preview->SetGltf(runtime->m_base, getSelectedNode);
-        m_animationPreview->SetRuntime(
-          runtime, []() { return SceneState::GetInstance().m_node; });
+        m_preview->SetGltf(runtime->m_base);
+        m_animationPreview->SetRuntime(runtime);
         m_vrm->SetRuntime(runtime);
         m_humanoid->SetRuntime(runtime);
       });
@@ -258,6 +252,19 @@ public:
        << (maximize ? "true" : "false") << ")\n\n";
   }
 
+  bool LoadFbx(const std::filesystem::path& path)
+  {
+    FbxLoader fbx;
+    if (auto gltf = fbx.Load(path)) {
+      PLOG_DEBUG << "ufbx success: " << path.string();
+      SceneState::GetInstance().SetGltf(gltf);
+      return false;
+    } else {
+      PLOG_ERROR << fbx.Error();
+      return false;
+    }
+  }
+
   int Run(GLFWwindow* window)
   {
     glr::Initialize();
@@ -339,7 +346,7 @@ public:
       return humanpose::HumanPoseStream::Instance().LoadMotion(path);
     }
     if (extension == ".fbx") {
-      return SceneState::GetInstance().LoadFbx(path);
+      return LoadFbx(path);
     }
     if (extension == ".hdr") {
       return LoadHdr(path);

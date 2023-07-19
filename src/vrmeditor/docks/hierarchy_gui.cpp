@@ -80,7 +80,7 @@ Traverse(const std::shared_ptr<T>& scene, const std::shared_ptr<N>& node)
       ImGuiTreeNodeFlags_Leaf |
       ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
   }
-  if (SceneState::GetInstance().IsSelected(node)) {
+  if (scene->IsSelected(node)) {
     node_flags |= ImGuiTreeNodeFlags_Selected;
   }
   if (DescendantHasHumanoid(node)) {
@@ -99,7 +99,7 @@ Traverse(const std::shared_ptr<T>& scene, const std::shared_ptr<N>& node)
     (void*)(intptr_t)node.get(), node_flags, "%s", node->GetLabel());
 
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-    SceneState::GetInstance().SelectNode(node);
+    scene->SelectNode(node);
   }
 
   // 1

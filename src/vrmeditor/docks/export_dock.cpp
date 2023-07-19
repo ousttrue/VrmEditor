@@ -18,7 +18,7 @@ ExportDock::Create(const AddDockFunc& addDock,
 
   auto debug_scene = std::make_shared<libvrm::RuntimeScene>(debug_table);
   auto preview = std::make_shared<ScenePreview>();
-  preview->SetRuntime(debug_scene, {});
+  preview->SetRuntime(debug_scene);
 
   addDock({ { title.begin(), title.end() }, [scene, debug_scene, preview]() {
              auto pos = ImGui::GetCursorScreenPos();

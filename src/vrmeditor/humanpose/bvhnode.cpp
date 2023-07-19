@@ -19,7 +19,7 @@ BvhNode::BvhNode(int id, std::string_view name)
 
   m_preview = std::make_shared<ScenePreview>();
   m_preview->Settings()->ShowCuber = true;
-  m_preview->SetRuntime(m_scene, {});
+  m_preview->SetRuntime(m_scene);
 }
 
 void

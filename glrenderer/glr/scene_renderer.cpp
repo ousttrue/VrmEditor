@@ -6,11 +6,67 @@
 #include "rendering_env.h"
 #include "rendertarget.h"
 #include "scene_renderer.h"
+#include <DirectXCollision.h>
 #include <boneskin/skinning_manager.h>
+#include <limits>
 #include <recti_imgui.h>
 #include <vrm/gltfroot.h>
 #include <vrm/runtime_node.h>
 #include <vrm/runtime_scene.h>
+
+//   7+-+6
+//   / /|
+// 3+-+2 +5
+// | |
+// 0+-+1
+DirectX::XMFLOAT3 p[8] = {
+  { -0.5f, -0.5f, -0.5f }, //
+  { +0.5f, -0.5f, -0.5f }, //
+  { +0.5f, +0.5f, -0.5f }, //
+  { -0.5f, +0.5f, -0.5f }, //
+  { -0.5f, -0.5f, +0.5f }, //
+  { +0.5f, -0.5f, +0.5f }, //
+  { +0.5f, +0.5f, +0.5f }, //
+  { -0.5f, +0.5f, +0.5f }, //
+};
+
+std::array<int, 4> triangles[] = {
+  { 1, 5, 6, 2 }, // x+
+  { 3, 2, 6, 7 }, // y+
+  { 0, 1, 2, 3 }, // z+
+  { 4, 7, 3, 0 }, // x-
+  { 1, 0, 4, 5 }, // y-
+  { 5, 6, 7, 4 }, // z-
+};
+
+static std::optional<float>
+Intersect(DirectX::XMVECTOR origin,
+          DirectX::XMVECTOR dir,
+          DirectX::XMMATRIX m,
+          int t)
+{
+  auto [i0, i1, i2, i3] = triangles[t];
+  float dist;
+  if (DirectX::TriangleTests::Intersects(
+        origin,
+        dir,
+        DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i0]), m),
+        DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i1]), m),
+        DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i2]), m),
+        dist)) {
+    return dist;
+  } else if (DirectX::TriangleTests::Intersects(
+               origin,
+               dir,
+               DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i2]), m),
+               DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i3]), m),
+               DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i0]), m),
+               dist)) {
+    return dist;
+  } else {
+    return std::nullopt;
+  }
+}
 
 namespace glr {
 
@@ -59,8 +115,7 @@ RenderScene(const grapho::camera::Camera& camera,
 void
 SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
                             const grapho::camera::Viewport& viewport,
-                            const grapho::camera::MouseState& mouse,
-                            const std::shared_ptr<libvrm::Node>& selected) const
+                            const grapho::camera::MouseState& mouse) const
 {
   // update camera
   m_camera->Projection.SetViewport(viewport);
@@ -93,7 +148,7 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
   }
 
   // manipulator
-  if (selected) {
+  if (auto selected = scene->m_selected) {
     // TODO: conflict mouse event(left) with ImageButton
     DirectX::XMFLOAT4X4 m;
     DirectX::XMStoreFloat4x4(&m, selected->WorldInitialMatrix());
@@ -131,17 +186,24 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
   }
 }
 
+struct Hit
+{
+  uint32_t Index;
+  float Distance;
+};
+
 void
 SceneRenderer::RenderRuntime(
   const std::shared_ptr<libvrm::RuntimeScene>& runtime,
   const grapho::camera::Viewport& viewport,
-  const grapho::camera::MouseState& mouse,
-  const std::shared_ptr<libvrm::RuntimeNode>& selected) const
+  const grapho::camera::MouseState& mouse) const
 {
   // update camera
   m_camera->Projection.SetViewport(viewport);
   m_camera->MouseInputTurntable(mouse);
   m_camera->Update();
+
+  auto ray = m_camera->GetRay(mouse);
 
   glr::ClearRendertarget(*m_camera, *m_env);
 
@@ -165,18 +227,106 @@ SceneRenderer::RenderRuntime(
   }
   m_gizmo->Clear();
 
-  if (m_settings->ShowCuber) {
-    m_cuber->Instances.clear();
-    for (auto m : runtime->ShapeMatrices()) {
-      m_cuber->Instances.push_back({
-        .Matrix = m,
-      });
+  auto distance = std::numeric_limits<float>::infinity();
+  std::optional<uint32_t> closest;
+
+  m_cuber->Instances.clear();
+
+  auto matrices = runtime->ShapeMatrices();
+  for (uint32_t i = 0; i < matrices.size(); ++i) {
+    auto& m = matrices[i];
+    m_cuber->Instances.push_back({
+      .Matrix = m,
+    });
+    if (ray) {
+      auto& cube = m_cuber->Instances.back();
+      auto inv = DirectX::XMMatrixInverse(
+        nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
+      auto local_ray = ray->Transform(inv);
+      auto origin = DirectX::XMLoadFloat3(&ray->Origin);
+      auto dir = DirectX::XMLoadFloat3(&ray->Direction);
+      auto m = DirectX::XMLoadFloat4x4(&cube.Matrix);
+
+      {
+        float hit[3] = { 0, 0, 0 };
+
+        if (auto d = Intersect(origin, dir, m, 0)) {
+          cube.PositiveFaceFlag.x = 7;
+          hit[0] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.PositiveFaceFlag.x = 8;
+        }
+
+        if (auto d = Intersect(origin, dir, m, 1)) {
+          cube.PositiveFaceFlag.y = 7;
+          hit[1] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.PositiveFaceFlag.y = 8;
+        }
+
+        if (auto d = Intersect(origin, dir, m, 2)) {
+          cube.PositiveFaceFlag.z = 7;
+          hit[2] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.PositiveFaceFlag.z = 8;
+        }
+        // ImGui::InputFloat3(buf.Printf("%d.hit.positive", i), hit);
+      }
+
+      {
+        float hit[3] = { 0, 0, 0 };
+        if (auto d = Intersect(origin, dir, m, 3)) {
+          cube.NegativeFaceFlag.x = 7;
+          hit[0] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.NegativeFaceFlag.x = 8;
+        }
+
+        if (auto d = Intersect(origin, dir, m, 4)) {
+          cube.NegativeFaceFlag.y = 7;
+          hit[1] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.NegativeFaceFlag.y = 8;
+        }
+
+        if (auto d = Intersect(origin, dir, m, 5)) {
+          cube.NegativeFaceFlag.z = 7;
+          hit[2] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.NegativeFaceFlag.z = 8;
+        }
+        // ImGui::InputFloat3(buf.Printf("%d.hit.negative", i), hit);
+      }
     }
-    m_cuber->Render(*m_camera);
   }
 
   // manipulator
-  if (selected) {
+  bool manipulated = false;
+  if (auto selected = runtime->GetSelectedNode()) {
     //   // TODO: conflict mouse event(left) with ImageButton
     DirectX::XMFLOAT4X4 m;
     DirectX::XMStoreFloat4x4(&m, selected->WorldMatrix());
@@ -200,9 +350,9 @@ SceneRenderer::RenderRuntime(
     recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
 
     m_screen->Begin(gizmo_camera, mouse);
-    if (m_screen->Manipulate(selected.get(),
-                             { enableTranslation, true, false, true },
-                             (float*)&m)) {
+    manipulated = m_screen->Manipulate(
+      selected.get(), { enableTranslation, true, false, true }, (float*)&m);
+    if (manipulated) {
       // decompose feedback
       selected->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
       selected->CalcWorldMatrix(true);
@@ -219,6 +369,18 @@ SceneRenderer::RenderRuntime(
 
     auto& drawlist = m_screen->End();
     recti::Render(drawlist, ImGui::GetWindowDrawList());
+  }
+
+  if (!manipulated && mouse.LeftDown) {
+    if (closest) {
+      runtime->SelectNode(runtime->m_nodes[*closest]);
+    } else {
+      // runtime->SelectNode(nullptr);
+    }
+  }
+
+  if (m_settings->ShowCuber) {
+    m_cuber->Render(*m_camera);
   }
 }
 

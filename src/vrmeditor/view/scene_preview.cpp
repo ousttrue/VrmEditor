@@ -35,18 +35,13 @@ struct ScenePreviewImpl
     m_fbo = ImFbo::Create();
   }
 
-  void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root,
-               const GetSelectedNode& getSelected)
+  void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root)
   {
     m_title = root->m_title;
-    m_show = [root, getSelected, renderer = m_renderer](
-               const grapho::camera::Viewport& viewport,
-               const grapho::camera::MouseState& mouse) {
-      std::shared_ptr<libvrm::Node> selected;
-      if (getSelected) {
-        selected = getSelected();
-      }
-      renderer->RenderStatic(root, viewport, mouse, selected);
+    m_show = [root,
+              renderer = m_renderer](const grapho::camera::Viewport& viewport,
+                                     const grapho::camera::MouseState& mouse) {
+      renderer->RenderStatic(root, viewport, mouse);
     };
     auto [min, max] = root->GetBoundingBox();
     m_renderer->m_camera->Fit(min, max);
@@ -55,18 +50,13 @@ struct ScenePreviewImpl
     }
   }
 
-  void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime,
-                  const GetSelectedRuntimeNode& getSelected)
+  void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
     m_title = runtime->m_base->m_title;
-    m_show = [runtime, getSelected, renderer = m_renderer](
-               const grapho::camera::Viewport& viewport,
-               const grapho::camera::MouseState& mouse) {
-      std::shared_ptr<libvrm::RuntimeNode> selected;
-      if (getSelected) {
-        selected = getSelected();
-      }
-      renderer->RenderRuntime(runtime, viewport, mouse, selected);
+    m_show = [runtime,
+              renderer = m_renderer](const grapho::camera::Viewport& viewport,
+                                     const grapho::camera::MouseState& mouse) {
+      renderer->RenderRuntime(runtime, viewport, mouse);
     };
     auto [min, max] = runtime->m_base->GetBoundingBox();
     m_renderer->m_camera->Fit(min, max);
@@ -133,17 +123,15 @@ ScenePreview::~ScenePreview()
 }
 
 void
-ScenePreview::SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root,
-                      const GetSelectedNode& getSelected)
+ScenePreview::SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root)
 {
-  m_impl->SetGltf(root, getSelected);
+  m_impl->SetGltf(root);
 }
 
 void
-ScenePreview::SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime,
-                         const GetSelectedRuntimeNode& getSelected)
+ScenePreview::SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
 {
-  m_impl->SetRuntime(runtime, getSelected);
+  m_impl->SetRuntime(runtime);
 }
 
 void

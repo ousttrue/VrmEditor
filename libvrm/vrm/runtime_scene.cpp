@@ -961,8 +961,8 @@ RuntimeScene::CopyVrmPoseText()
       for (int i = 0; i < skeleton->Bones.size(); ++i) {
         auto& bone = skeleton->Bones[i];
         auto name = HumanBoneToName(bone.HumanBone);
-        auto vrmaHumanBone = vrmaHumanBones->SetProperty((const char8_t*)name,
-                                                 gltfjson::tree::ObjectValue());
+        auto vrmaHumanBone = vrmaHumanBones->SetProperty(
+          (const char8_t*)name, gltfjson::tree::ObjectValue());
         vrmaHumanBone->SetProperty(u8"node", (float)i);
       }
     }
@@ -1006,6 +1006,29 @@ RuntimeScene::CopyVrmPoseText()
   }
 
   return {};
+}
+
+std::shared_ptr<RuntimeNode>
+RuntimeScene::GetSelectedNode() const
+{
+  for (auto& node : m_nodes) {
+    if (node && node->Base == m_base->m_selected) {
+      return node;
+    }
+  }
+  return {};
+}
+
+void
+RuntimeScene::SelectNode(const std::shared_ptr<libvrm::RuntimeNode>& node)
+{
+  m_base->SelectNode(node ? node->Base : std::shared_ptr<libvrm::Node>());
+}
+
+bool
+RuntimeScene::IsSelected(const std::shared_ptr<libvrm::RuntimeNode>& node) const
+{
+  return m_base->IsSelected(node->Base);
 }
 
 } // namespace

@@ -1,49 +1,17 @@
 #include "scene_state.h"
-#include "fbx_loader.h"
 #include <gltfjson.h>
 #include <gltfjson/glb.h>
 #include <gltfjson/json_tree_exporter.h>
 #include <plog/Log.h>
+#include <vrm/gltfroot.h>
 #include <vrm/importer.h>
 #include <vrm/runtime_node.h>
 #include <vrm/runtime_scene.h>
 
 void
-SceneState::SelectNode(const std::shared_ptr<libvrm::RuntimeNode>& node)
-{
-  m_node = node;
-}
-
-void
-SceneState::SelectNode(const std::shared_ptr<libvrm::Node>& node)
-{
-  if (m_runtime) {
-    for (auto runtime_node : m_runtime->m_nodes) {
-      if (runtime_node->Base == node) {
-        SelectNode(runtime_node);
-        break;
-      }
-    }
-  }
-}
-
-bool
-SceneState::IsSelected(const std::shared_ptr<libvrm::Node>& node) const
-{
-  return m_node && m_node->Base == node;
-}
-
-bool
-SceneState::IsSelected(const std::shared_ptr<libvrm::RuntimeNode>& node) const
-{
-  return node && node == m_node;
-}
-
-void
 SceneState::SetGltf(const std::shared_ptr<libvrm::GltfRoot>& gltf)
 {
   m_runtime = std::make_shared<libvrm::RuntimeScene>(gltf);
-  m_node = {};
   m_lastTime = {};
 
   for (auto& callback : m_setCallbacks) {
@@ -75,20 +43,6 @@ SceneState::LoadGltfString(const std::string& json)
     return true;
   } else {
     PLOG_ERROR << gltf.error();
-    return false;
-  }
-}
-
-bool
-SceneState::LoadFbx(const std::filesystem::path& path)
-{
-  FbxLoader fbx;
-  if (auto gltf = fbx.Load(path)) {
-    PLOG_DEBUG << "ufbx success: " << path.string();
-    SetGltf(gltf);
-    return false;
-  } else {
-    PLOG_ERROR << fbx.Error();
     return false;
   }
 }
