@@ -13,6 +13,7 @@ recti_lib = static_library(
         'handle/translation.cpp',
         'handle/rotation.cpp',
         'handle/scale.cpp',
+        'recti.cpp',
     ],
     include_directories: recti_inc,
     dependencies: [directxmath_dep],
