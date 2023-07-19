@@ -137,80 +137,84 @@ Traverse(const std::shared_ptr<T>& scene, const std::shared_ptr<N>& node)
   }
 }
 
-template<typename T>
-void
-_ShowGui(const std::shared_ptr<T>& scene)
-{
-  if (!scene) {
-    return;
-  }
-
-  std::array<const char*, 5> cols = {
-    "name", "humanoid", "T", "R", "S",
-  };
-
-  if (grapho::imgui::BeginTableColumns("##NodeTree", cols)) {
-    // tree
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, Gui::Instance().Indent());
-
-    for (auto& root : scene->m_roots) {
-      Traverse(scene, root);
-    }
-
-    ImGui::PopStyleVar();
-    ImGui::EndTable();
-  }
-}
-
-struct HierarchyGuiImplRuntime
+struct HierarchyGuiImpl
 {
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;
+
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
     m_runtime = runtime;
   }
-  void ShowGui() { _ShowGui(m_runtime); }
-};
 
-struct HierarchyGuiImplAsset
-{
-  std::shared_ptr<libvrm::GltfRoot> m_base;
-  void SetBase(const std::shared_ptr<libvrm::GltfRoot>& root) { m_base = root; }
-  void ShowGui() { _ShowGui(m_base); }
+  void ShowRuntime()
+  {
+    for (auto& root : m_runtime->m_roots) {
+      Traverse(m_runtime, root);
+    }
+  }
+
+  void ShowAsset()
+  {
+    for (auto& root : m_runtime->m_base->m_roots) {
+      Traverse(m_runtime->m_base, root);
+    }
+  }
+
+  bool BeginTable()
+  {
+    if (!m_runtime) {
+      return false;
+    }
+
+    std::array<const char*, 5> cols = {
+      "name", "humanoid", "T", "R", "S",
+    };
+    return grapho::imgui::BeginTableColumns("##HierarchyGuiImpl", cols);
+  }
+
+  void EndTable() { ImGui::EndTable(); }
 };
 
 HierarchyGui::HierarchyGui()
-  : m_asset(new HierarchyGuiImplAsset)
-  , m_runtime(new HierarchyGuiImplRuntime)
+  : m_impl(new HierarchyGuiImpl)
 {
 }
 
 HierarchyGui::~HierarchyGui()
 {
-  delete m_runtime;
-  delete m_asset;
+  delete m_impl;
 }
 
 void
 HierarchyGui::SetRuntimeScene(
   const std::shared_ptr<libvrm::RuntimeScene>& rutime)
 {
-  m_asset->SetBase(rutime->m_base);
-  m_runtime->SetRuntime(rutime);
+  m_impl->SetRuntime(rutime);
 }
 
 void
 HierarchyGui::ShowGui()
 {
+  bool IsRuntime = false;
   if (ImGui::BeginTabBar("HierarchyTabs")) {
     if (ImGui::BeginTabItem("🎁Asset")) {
-      m_asset->ShowGui();
+      IsRuntime = false;
       ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("🎬Runtime")) {
-      m_runtime->ShowGui();
+      IsRuntime = true;
       ImGui::EndTabItem();
     }
     ImGui::EndTabBar();
+  }
+  if (m_impl->BeginTable()) {
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, Gui::Instance().Indent());
+    if (IsRuntime) {
+      m_impl->ShowRuntime();
+    } else {
+      m_impl->ShowAsset();
+    }
+    ImGui::PopStyleVar();
+    ImGui::EndTable();
   }
 }

@@ -7,8 +7,7 @@ struct RuntimeScene;
 
 class HierarchyGui
 {
-  struct HierarchyGuiImplAsset* m_asset;
-  struct HierarchyGuiImplRuntime* m_runtime;
+  struct HierarchyGuiImpl *m_impl;
 
 public:
   HierarchyGui();

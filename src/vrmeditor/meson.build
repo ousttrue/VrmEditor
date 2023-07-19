@@ -2,6 +2,7 @@ srcs = [
     'main.cpp',
     'platform.cpp',
     'app.cpp',
+    'scene_state.cpp',
     'luahost.cpp',
     'filewatcher.cpp',
     'fbx_loader.cpp',
