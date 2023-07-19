@@ -112,6 +112,7 @@ Screen::~Screen()
 void
 Screen::Begin(const Camera& camera, const Mouse& mouse)
 {
+  m_impl->Begin(camera, mouse);
 }
 
 const DrawList&
