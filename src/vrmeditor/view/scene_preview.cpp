@@ -32,12 +32,7 @@ struct ScenePreviewImpl
     , m_settings(new glr::ViewSettings)
   {
     m_renderer = std::make_shared<glr::SceneRenderer>(m_env, m_settings);
-    m_fbo = ImFbo::Create([=](const grapho::camera::Viewport& vp,
-                              const grapho::camera::MouseState& mouse) mutable {
-      if (m_show) {
-        m_show(vp, mouse);
-      }
-    });
+    m_fbo = ImFbo::Create();
   }
 
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root,
@@ -90,8 +85,14 @@ struct ScenePreviewImpl
     if (w <= 0 || h <= 0) {
       return;
     }
+
     auto sc = ImGui::GetCursorScreenPos();
-    m_fbo->ShowFbo({ x, y, w, h }, color);
+    grapho::camera::Viewport vp{ x, y, w, h };
+    m_fbo->ShowFbo(vp, color, [=](const auto& vp, const auto& mouse) {
+      if (m_show) {
+        m_show(vp, mouse);
+      }
+    });
     // top, right pivot
     Overlay({ sc.x + w - 10, sc.y + 10 }, title);
   }
