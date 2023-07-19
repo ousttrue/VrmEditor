@@ -19,8 +19,8 @@ struct Camera
   float Bottom() const { return Viewport.y + Viewport.w; }
   bool IsInContextRect(const recti::Vec2& p) const
   {
-    return recti::IsWithin(p.X, Viewport.x, Right()) &&
-           recti::IsWithin(p.Y, Viewport.y, Bottom());
+    return recti::IsWithin(p.x, Viewport.x, Right()) &&
+           recti::IsWithin(p.y, Viewport.y, Bottom());
   }
   float DisplayRatio() const { return Width() / Height(); }
 };

@@ -7,8 +7,8 @@ struct ImDrawList;
 namespace recti {
 
 Vec2::Vec2(const ImVec2& v)
-  : X(v.x)
-  , Y(v.y)
+  : x(v.x)
+  , y(v.y)
 {
 }
 

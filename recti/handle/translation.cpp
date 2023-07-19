@@ -79,8 +79,8 @@ GetMoveType(const ModelContext& current, bool allowAxisFlip, State* state)
     auto screenCoord = current.mCameraMouse.ScreenMousePos();
     Vec4 closestPointOnAxis =
       PointOnSegment(screenCoord,
-                     { axisStartOnScreen.X, axisStartOnScreen.Y },
-                     { axisEndOnScreen.X, axisEndOnScreen.Y });
+                     { axisStartOnScreen.x, axisStartOnScreen.y },
+                     { axisEndOnScreen.x, axisEndOnScreen.y });
     if ((closestPointOnAxis - screenCoord).Length() < 12.f &&
         Intersects(current.mOperation,
                    static_cast<OPERATION>(TRANSLATE_X << i))) // pixel size
@@ -282,7 +282,7 @@ Translation::DrawTranslationGizmo(const ModelContext& current,
         dir /= d; // Normalize
         dir *= style.TranslationLineArrowSize;
 
-        Vec2 ortogonalDir(dir.Y, -dir.X); // Perpendicular vector
+        Vec2 ortogonalDir(dir.y, -dir.x); // Perpendicular vector
         Vec2 a(worldDirSSpace + dir);
         drawList->AddTriangleFilled(worldDirSSpace - dir,
                                     a + ortogonalDir,
@@ -327,8 +327,8 @@ Translation::DrawTranslationGizmo(const ModelContext& current,
     Vec2 sourcePosOnScreen = current.mCameraMouse.WorldToPos(mMatrixOrigin);
     Vec2 destinationPosOnScreen =
       current.mCameraMouse.WorldToPos(current.mModel.position());
-    Vec4 dif = { destinationPosOnScreen.X - sourcePosOnScreen.X,
-                 destinationPosOnScreen.Y - sourcePosOnScreen.Y,
+    Vec4 dif = { destinationPosOnScreen.x - sourcePosOnScreen.x,
+                 destinationPosOnScreen.y - sourcePosOnScreen.y,
                  0.f,
                  0.f };
     dif.Normalize();
@@ -336,8 +336,8 @@ Translation::DrawTranslationGizmo(const ModelContext& current,
     drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
     drawList->AddCircle(destinationPosOnScreen, 6.f, translationLineColor);
     drawList->AddLine(
-      Vec2(sourcePosOnScreen.X + dif.x, sourcePosOnScreen.Y + dif.y),
-      Vec2(destinationPosOnScreen.X - dif.x, destinationPosOnScreen.Y - dif.y),
+      Vec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y + dif.y),
+      Vec2(destinationPosOnScreen.x - dif.x, destinationPosOnScreen.y - dif.y),
       translationLineColor,
       2.f);
 
@@ -351,11 +351,11 @@ Translation::DrawTranslationGizmo(const ModelContext& current,
              deltaInfo[translationInfoIndex[componentInfoIndex + 1]],
              deltaInfo[translationInfoIndex[componentInfoIndex + 2]]);
     drawList->AddText(
-      Vec2(destinationPosOnScreen.X + 15, destinationPosOnScreen.Y + 15),
+      Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
       style.GetColorU32(TEXT_SHADOW),
       tmps);
     drawList->AddText(
-      Vec2(destinationPosOnScreen.X + 14, destinationPosOnScreen.Y + 14),
+      Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
       style.GetColorU32(TEXT),
       tmps);
   }

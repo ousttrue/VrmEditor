@@ -73,12 +73,12 @@ GetScaleType(const recti::ModelContext& mCurrent,
       tripod.dirAxis * mCurrent.mScreenFactor * endOffset);
 
     recti::Vec4 closestPointOnAxis =
-      recti::PointOnSegment({ posOnPlanScreen.X, posOnPlanScreen.Y },
-                            { axisStartOnScreen.X, axisStartOnScreen.Y },
-                            { axisEndOnScreen.X, axisEndOnScreen.Y });
+      recti::PointOnSegment({ posOnPlanScreen.x, posOnPlanScreen.y },
+                            { axisStartOnScreen.x, axisStartOnScreen.y },
+                            { axisEndOnScreen.x, axisEndOnScreen.y });
 
     if ((closestPointOnAxis -
-         recti::Vec4{ posOnPlanScreen.X, posOnPlanScreen.Y })
+         recti::Vec4{ posOnPlanScreen.x, posOnPlanScreen.y })
           .Length() < 12.f) // pixel size
     {
       type = (recti::MOVETYPE)(recti::MT_SCALE_X + i);
@@ -87,8 +87,8 @@ GetScaleType(const recti::ModelContext& mCurrent,
 
   // universal
   auto& mousePos = mCurrent.mCameraMouse.Mouse.Position;
-  recti::Vec4 deltaScreen = { mousePos.X - mCurrent.mScreenSquareCenter.X,
-                              mousePos.Y - mCurrent.mScreenSquareCenter.Y,
+  recti::Vec4 deltaScreen = { mousePos.x - mCurrent.mScreenSquareCenter.x,
+                              mousePos.y - mCurrent.mScreenSquareCenter.y,
                               0.f,
                               0.f };
   float dist = deltaScreen.Length();
@@ -178,7 +178,7 @@ Scale::HandleScale(const ModelContext& mCurrent,
       mScale[axisIndex] = max(ratio, 0.001f);
     } else {
       float scaleDelta =
-        (mCurrent.mCameraMouse.Mouse.Position.X - mSaveMousePosx) * 0.01f;
+        (mCurrent.mCameraMouse.Mouse.Position.x - mSaveMousePosx) * 0.01f;
       mScale.Set(max(1.f + scaleDelta, 0.001f));
     }
 
@@ -255,7 +255,7 @@ Scale::HandleScale(const ModelContext& mCurrent,
     mScaleValueOrigin = { mCurrent.mModelSource.right().Length(),
                           mCurrent.mModelSource.up().Length(),
                           mCurrent.mModelSource.dir().Length() };
-    mSaveMousePosx = mouse.Position.X;
+    mSaveMousePosx = mouse.Position.x;
   }
 
   return { type };
@@ -364,11 +364,11 @@ Scale::DrawScaleGizmo(const ModelContext& mCurrent,
              scaleInfoMask[type - MT_SCALE_X],
              scaleDisplay[translationInfoIndex[componentInfoIndex]]);
     drawList->AddText(
-      Vec2(destinationPosOnScreen.X + 15, destinationPosOnScreen.Y + 15),
+      Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
       mStyle.GetColorU32(TEXT_SHADOW),
       tmps);
     drawList->AddText(
-      Vec2(destinationPosOnScreen.X + 14, destinationPosOnScreen.Y + 14),
+      Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
       mStyle.GetColorU32(TEXT),
       tmps);
   }
@@ -446,11 +446,11 @@ Scale::DrawScaleUniveralGizmo(const ModelContext& mCurrent,
              scaleInfoMask[type - MT_SCALE_X],
              scaleDisplay[translationInfoIndex[componentInfoIndex]]);
     drawList->AddText(
-      Vec2(destinationPosOnScreen.X + 15, destinationPosOnScreen.Y + 15),
+      Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
       mStyle.GetColorU32(TEXT_SHADOW),
       tmps);
     drawList->AddText(
-      Vec2(destinationPosOnScreen.X + 14, destinationPosOnScreen.Y + 14),
+      Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
       mStyle.GetColorU32(TEXT),
       tmps);
   }

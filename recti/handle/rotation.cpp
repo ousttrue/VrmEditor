@@ -28,8 +28,8 @@ GetRotateType(const recti::ModelContext& mCurrent,
   recti::MOVETYPE type = recti::MT_NONE;
 
   auto& mousePos = mCurrent.mCameraMouse.Mouse.Position;
-  recti::Vec4 deltaScreen = { mousePos.X - mCurrent.mScreenSquareCenter.X,
-                              mousePos.Y - mCurrent.mScreenSquareCenter.Y,
+  recti::Vec4 deltaScreen = { mousePos.x - mCurrent.mScreenSquareCenter.x,
+                              mousePos.y - mCurrent.mScreenSquareCenter.y,
                               0.f,
                               0.f };
   float dist = deltaScreen.Length();
@@ -77,7 +77,7 @@ GetRotateType(const recti::ModelContext& mCurrent,
     const recti::Vec2 distanceOnScreen = idealPosOnCircleScreen - mousePos;
 
     const float distance =
-      recti::Vec4{ distanceOnScreen.X, distanceOnScreen.Y }.Length();
+      recti::Vec4{ distanceOnScreen.x, distanceOnScreen.y }.Length();
     if (distance < 8.f) // pixel size
     {
       type = (recti::MOVETYPE)(recti::MT_ROTATE_X + i);
@@ -326,11 +326,11 @@ Rotation::DrawRotationGizmo(const recti::ModelContext& mCurrent,
              (mRotationAngle / std::numbers::pi) * 180.f,
              mRotationAngle);
     drawList->AddText(
-      recti::Vec2(destinationPosOnScreen.X + 15, destinationPosOnScreen.Y + 15),
+      recti::Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
       mStyle.GetColorU32(recti::TEXT_SHADOW),
       tmps);
     drawList->AddText(
-      recti::Vec2(destinationPosOnScreen.X + 14, destinationPosOnScreen.Y + 14),
+      recti::Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
       mStyle.GetColorU32(recti::TEXT),
       tmps);
   }
