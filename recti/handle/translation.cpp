@@ -25,8 +25,10 @@ static const char* translationInfoMask[] = { "X : %5.3f",
                                              "X : %5.3f Y : %5.3f",
                                              "X : %5.3f Y : %5.3f Z : %5.3f" };
 
-static MOVETYPE
-GetMoveType(const ModelContext& current, bool allowAxisFlip, State* state)
+MOVETYPE
+Translation::GetMoveType(const ModelContext& current,
+                         bool allowAxisFlip,
+                         State* state)
 {
   if (!Intersects(current.mOperation, TRANSLATE) || state->mbUsing) {
     return MT_NONE;

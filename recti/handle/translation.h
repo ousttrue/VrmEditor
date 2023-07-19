@@ -17,6 +17,10 @@ struct Translation
   Vec4 mTranslationLastDelta;
   Vec4 mRelativeOrigin;
 
+  static MOVETYPE GetMoveType(const ModelContext& current,
+                              bool allowAxisFlip,
+                              State* state);
+
   Result HandleTranslation(const ModelContext& current,
                            bool allowAxisFlip,
                            State& state,

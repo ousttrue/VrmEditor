@@ -62,36 +62,46 @@ public:
     }
 
     // --
-    auto resultT = mT.HandleTranslation(
-      mCurrent, mAllowAxisFlip, mState, snap, matrix, deltaMatrix);
-    Result resultR{};
-    Result resultS{};
-    if (!resultT.Modified) {
-      resultS = mS.HandleScale(
-        mCurrent, mAllowAxisFlip, mState, snap, matrix, deltaMatrix);
-      if (!resultS.Modified) {
-        resultR = mR.HandleRotation(
-          mCurrent, mRadiusSquareCenter, mState, snap, matrix, deltaMatrix);
-      }
+    // auto resultT = mT.HandleTranslation(
+    //   mCurrent, mAllowAxisFlip, mState, snap, matrix, deltaMatrix);
+    // Result resultR{};
+    // Result resultS{};
+    // if (!resultT.Modified) {
+    //   resultS = mS.HandleScale(
+    //     mCurrent, mAllowAxisFlip, mState, snap, matrix, deltaMatrix);
+    //   if (!resultS.Modified) {
+    //     resultR = mR.HandleRotation(
+    //       mCurrent, mRadiusSquareCenter, mState, snap, matrix, deltaMatrix);
+    //   }
+    // }
+    //
+    // auto type = static_cast<MOVETYPE>(resultT.DrawType | resultR.DrawType |
+    //                                   resultS.DrawType);
+
+    if (Intersects(mCurrent.mOperation, ROTATE)) {
+      auto type =
+        Rotation::GetRotateType(mCurrent, mRadiusSquareCenter, mState);
+      mR.DrawRotationGizmo(mCurrent,
+                           mRadiusSquareCenter,
+                           mIsOrthographic,
+                           type,
+                           mState,
+                           mStyle,
+                           mDrawList);
+    }
+    if (Intersects(mCurrent.mOperation, TRANSLATE)) {
+      auto type = Translation::GetMoveType(mCurrent, mAllowAxisFlip, &mState);
+      mT.DrawTranslationGizmo(
+        mCurrent, mAllowAxisFlip, type, mState, mStyle, mDrawList);
+    }
+    if (Intersects(mCurrent.mOperation, SCALE)) {
+      auto type = Scale::GetScaleType(mCurrent, mAllowAxisFlip, &mState);
+      mS.DrawScaleGizmo(mCurrent, type, mState, mStyle, mDrawList);
+      mS.DrawScaleUniveralGizmo(
+        mCurrent, mAllowAxisFlip, type, mState, mStyle, mDrawList);
     }
 
-    auto type = static_cast<MOVETYPE>(resultT.DrawType | resultR.DrawType |
-                                      resultS.DrawType);
-
-    mR.DrawRotationGizmo(mCurrent,
-                         mRadiusSquareCenter,
-                         mIsOrthographic,
-                         type,
-                         mState,
-                         mStyle,
-                         mDrawList);
-    mT.DrawTranslationGizmo(
-      mCurrent, mAllowAxisFlip, type, mState, mStyle, mDrawList);
-    mS.DrawScaleGizmo(mCurrent, type, mState, mStyle, mDrawList);
-    mS.DrawScaleUniveralGizmo(
-      mCurrent, mAllowAxisFlip, type, mState, mStyle, mDrawList);
-
-    return resultT.Modified || resultR.Modified || resultS.Modified;
+    return false;
   }
 
   void DrawCubes(const float* cubes, uint32_t count)

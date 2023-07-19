@@ -23,6 +23,10 @@ struct Scale
   Vec4 mScaleLast;
   float mSaveMousePosx;
 
+  static MOVETYPE GetScaleType(const recti::ModelContext& mCurrent,
+                               bool mAllowAxisFlip,
+                               recti::State* state);
+
   Result HandleScale(const ModelContext& mCurrent,
                      bool mAllowAxisFlip,
                      State& mState,

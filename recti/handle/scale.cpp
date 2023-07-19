@@ -11,10 +11,10 @@ static const char* scaleInfoMask[] = { "X : %5.2f",
 static const int translationInfoIndex[] = { 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 2,
                                             0, 0, 2, 0, 0, 1, 0, 0, 1, 2 };
 
-static recti::MOVETYPE
-GetScaleType(const recti::ModelContext& mCurrent,
-             bool mAllowAxisFlip,
-             recti::State* state)
+recti::MOVETYPE
+Scale::GetScaleType(const recti::ModelContext& mCurrent,
+                    bool mAllowAxisFlip,
+                    recti::State* state)
 {
   if (state->mbUsing) {
     return recti::MT_NONE;

@@ -17,10 +17,10 @@ static const char* rotationInfoMask[] = { "X : %5.2f deg %5.2f rad",
                                           "Screen : %5.2f deg %5.2f rad" };
 static const int HALF_CIRCLE_SEGMENT_COUNT = 64;
 
-static recti::MOVETYPE
-GetRotateType(const recti::ModelContext& mCurrent,
-              float mRadiusSquareCenter,
-              const recti::State& mState)
+MOVETYPE
+Rotation::GetRotateType(const recti::ModelContext& mCurrent,
+                        float mRadiusSquareCenter,
+                        const recti::State& mState)
 {
   if (mState.mbUsing) {
     return recti::MT_NONE;
@@ -280,18 +280,20 @@ Rotation::DrawRotationGizmo(const recti::ModelContext& mCurrent,
     }
 
     float radiusAxis =
-      sqrtf((mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position()) - circlePos[0])
+      sqrtf((mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position()) -
+             circlePos[0])
               .SqrLength());
     if (radiusAxis > mRadiusSquareCenter) {
       mRadiusSquareCenter = radiusAxis;
     }
   }
   if (hasRSC && (!mState.mbUsing || type == recti::MT_ROTATE_SCREEN)) {
-    drawList->AddCircle(mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position()),
-                        mRadiusSquareCenter,
-                        colors[0],
-                        64,
-                        mStyle.RotationOuterLineThickness);
+    drawList->AddCircle(
+      mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position()),
+      mRadiusSquareCenter,
+      colors[0],
+      64,
+      mStyle.RotationOuterLineThickness);
   }
 
   if (mState.Using(mCurrent.mActualID) && IsRotateType(type)) {
@@ -306,7 +308,8 @@ Rotation::DrawRotationGizmo(const recti::ModelContext& mCurrent,
       recti::Vec4 pos;
       pos.TransformPoint(mRotationVectorSource, rotateVectorMatrix);
       pos *= mCurrent.mScreenFactor * ROTATION_DISPLAY_FACTOR;
-      circlePos[i] = mCurrent.mCameraMouse.WorldToPos(pos + mCurrent.mModel.position());
+      circlePos[i] =
+        mCurrent.mCameraMouse.WorldToPos(pos + mCurrent.mModel.position());
     }
     drawList->AddConvexPolyFilled(
       (const recti::VEC2*)circlePos,
