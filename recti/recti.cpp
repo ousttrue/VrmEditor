@@ -5,31 +5,6 @@
 
 namespace recti {
 
-static OPERATION
-ToOperation(const Operation& o)
-{
-  OPERATION operation = {};
-  if (o.EnableT) {
-    operation |= TRANSLATE;
-  }
-  if (o.EnableR) {
-    operation |= ROTATE;
-  }
-  if (o.EnableS) {
-    operation |= SCALE;
-  }
-  return operation;
-}
-
-static MODE
-ToMode(const Operation& o)
-{
-  return LOCAL;
-}
-
-//
-// ScreenImpl
-//
 struct ScreenImpl
 {
   std::shared_ptr<ImGuizmo::Context> m_im_gizmo;

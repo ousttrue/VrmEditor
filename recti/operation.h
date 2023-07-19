@@ -110,4 +110,34 @@ IsScaleType(MOVETYPE type)
   return type >= MT_SCALE_X && type <= MT_SCALE_XYZ;
 }
 
+struct Operation
+{
+  bool EnableT = false;
+  bool EnableR = false;
+  bool EnableS = false;
+  bool IsLocalSpace = false;
+};
+
+inline OPERATION
+ToOperation(const Operation& o)
+{
+  OPERATION operation = {};
+  if (o.EnableT) {
+    operation |= TRANSLATE;
+  }
+  if (o.EnableR) {
+    operation |= ROTATE;
+  }
+  if (o.EnableS) {
+    operation |= SCALE;
+  }
+  return operation;
+}
+
+inline MODE
+ToMode(const Operation& o)
+{
+  return LOCAL;
+}
+
 } // namespace

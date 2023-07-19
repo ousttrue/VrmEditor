@@ -1,18 +1,9 @@
 #pragma once
 #include "camera_mouse.h"
 #include "drawcommand.h"
-
-struct Vec2;
+#include "operation.h"
 
 namespace recti {
-
-struct Operation
-{
-  bool EnableT = false;
-  bool EnableR = false;
-  bool EnableS = false;
-  bool IsLocalSpace = false;
-};
 
 class Screen
 {
