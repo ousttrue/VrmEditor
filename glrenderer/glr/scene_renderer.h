@@ -44,16 +44,19 @@ struct SceneRenderer
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<LineGizmo> m_gizmo;
   std::shared_ptr<recti::Screen> m_screen;
+  std::shared_ptr<grapho::camera::Camera> m_camera;
 
   SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
                 const std::shared_ptr<ViewSettings>& settings);
 
   void RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                    const grapho::camera::Camera& camera,
+                    const grapho::camera::Viewport& viewport,
+                    const grapho::camera::MouseState& mouse,
                     const std::shared_ptr<libvrm::Node>& selected) const;
   void RenderRuntime(
     const std::shared_ptr<libvrm::RuntimeScene>& scene,
-    const grapho::camera::Camera& camera,
+    const grapho::camera::Viewport& viewport,
+    const grapho::camera::MouseState& mouse,
     const std::shared_ptr<libvrm::RuntimeNode>& selected) const;
 };
 

@@ -1,92 +1,27 @@
 #include <GL/glew.h>
 
 #include "rendertarget.h"
-#include <functional>
-#include <glr/rendering_env.h>
-#include <grapho/camera/camera.h>
 #include <grapho/gl3/fbo.h>
-#include <memory>
 
 namespace glr {
-RenderTarget::RenderTarget(
-  const std::shared_ptr<grapho::camera::Camera>& camera)
-  : Camera(camera)
+
+RenderTarget::RenderTarget(const RenderFunc& render)
+  : Render(render)
 {
-  if (!Camera) {
-    Camera = std::make_shared<grapho::camera::Camera>();
-  }
 }
 
 uint32_t
-RenderTarget::Begin(float x,
-                    float y,
-                    float width,
-                    float height,
-                    const float color[4])
+RenderTarget::Begin(float width, float height, const float color[4])
 {
-  if (width == 0 || height == 0) {
-    return 0;
-  }
-  if (!Fbo) {
-    Fbo = std::make_shared<grapho::gl3::Fbo>();
-  }
-
-  if (FboTexture) {
-    if (FboTexture->Width() != width || FboTexture->Height() != height) {
-      FboTexture = nullptr;
-    }
-  }
-  if (!FboTexture) {
-    FboTexture = grapho::gl3::Texture::Create({
-      static_cast<int>(width),
-      static_cast<int>(height),
-      grapho::PixelFormat::u8_RGB,
-      grapho::ColorSpace::Linear,
-    });
-    Fbo->AttachTexture2D(FboTexture->Handle());
-    Fbo->AttachDepth(static_cast<int>(width), static_cast<int>(height));
-  }
-
-  Fbo->Bind();
-  grapho::gl3::ClearViewport({
-    .Width = width,
-    .Height = height,
-    .Color = { color[0], color[1], color[2], color[3] },
-    .Depth = 1.0f,
-  });
-
-  Camera->Projection.SetRect(x, y, width, height);
-
-  return FboTexture->Handle();
+  return RT->Begin(width, height, color);
 }
 
 void
-RenderTarget::End(bool isActive,
-                  bool isHovered,
-                  bool isRightDown,
-                  bool isMiddleDown,
-                  int mouseDeltaX,
-                  int mouseDeltaY,
-                  int mouseWheel)
+RenderTarget::End(const grapho::camera::Viewport& viewport,
+                  const grapho::camera::MouseState& mouse)
 {
-  // update camera
-  if (isActive) {
-    if (isRightDown) {
-      Camera->YawPitch(mouseDeltaX, mouseDeltaY);
-    }
-    if (isMiddleDown) {
-      Camera->Shift(mouseDeltaX, mouseDeltaY);
-    }
-  }
-  if (isHovered) {
-    Camera->Dolly(mouseWheel);
-  }
-  Camera->Update();
-  if (render) {
-    render(*Camera);
-  }
-
-  Fbo->Unbind();
+  Render(viewport, mouse);
+  RT->End();
 }
 
 } // namespace

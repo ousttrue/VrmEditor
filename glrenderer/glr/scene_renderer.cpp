@@ -21,6 +21,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
   , m_cuber(new Cuber)
   , m_gizmo(new LineGizmo)
   , m_screen(new recti::Screen)
+  , m_camera(new grapho::camera::Camera)
 {
 }
 
@@ -57,30 +58,38 @@ RenderScene(const grapho::camera::Camera& camera,
 
 void
 SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                            const grapho::camera::Camera& camera,
+                            const grapho::camera::Viewport& viewport,
+                            const grapho::camera::MouseState& mouse,
                             const std::shared_ptr<libvrm::Node>& selected) const
 {
-  glr::ClearRendertarget(camera, *m_env);
+  // update camera
+  m_camera->Projection.SetViewport(viewport);
+  m_camera->MouseInputTurntable(mouse);
+  m_camera->Update();
+
+  glr::ClearRendertarget(*m_camera, *m_env);
 
   auto nodestates = scene->NodeStates();
   auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
     *scene->m_gltf, scene->m_bin, nodestates);
   RenderScene(
-    camera, *m_env, *scene->m_gltf, scene->m_bin, nodeMeshes, m_settings);
+    *m_camera, *m_env, *scene->m_gltf, scene->m_bin, nodeMeshes, m_settings);
 
   if (m_settings->ShowLine) {
-    glr::RenderLine(camera, m_gizmo->m_lines);
+    glr::RenderLine(*m_camera, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
 
   if (m_settings->ShowCuber) {
     m_cuber->Instances.clear();
+
     for (auto m : scene->ShapeMatrices()) {
       m_cuber->Instances.push_back({
         .Matrix = m,
       });
     }
-    m_cuber->Render(camera);
+
+    m_cuber->Render(*m_camera);
   }
 
   // manipulator
@@ -99,9 +108,9 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
     }
 
     recti::Camera gizmo_camera{
-      *((const recti::Mat4*)&camera.ViewMatrix),
-      *((const recti::Mat4*)&camera.ProjectionMatrix),
-      *((const recti::Vec4*)&camera.Projection.Viewport),
+      *((const recti::Mat4*)&m_camera->ViewMatrix),
+      *((const recti::Mat4*)&m_camera->ProjectionMatrix),
+      *((const recti::Vec4*)&m_camera->Projection.Viewport),
     };
 
     auto& io = ImGui::GetIO();
@@ -125,10 +134,16 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
 void
 SceneRenderer::RenderRuntime(
   const std::shared_ptr<libvrm::RuntimeScene>& runtime,
-  const grapho::camera::Camera& camera,
+  const grapho::camera::Viewport& viewport,
+  const grapho::camera::MouseState& mouse,
   const std::shared_ptr<libvrm::RuntimeNode>& selected) const
 {
-  glr::ClearRendertarget(camera, *m_env);
+  // update camera
+  m_camera->Projection.SetViewport(viewport);
+  m_camera->MouseInputTurntable(mouse);
+  m_camera->Update();
+
+  glr::ClearRendertarget(*m_camera, *m_env);
 
   auto nodestates = runtime->m_base->NodeStates();
   if (nodestates.size()) {
@@ -136,7 +151,7 @@ SceneRenderer::RenderRuntime(
     m_settings->NextSpringDelta = {};
     auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
       *runtime->m_base->m_gltf, runtime->m_base->m_bin, nodestates);
-    RenderScene(camera,
+    RenderScene(*m_camera,
                 *m_env,
                 *runtime->m_base->m_gltf,
                 runtime->m_base->m_bin,
@@ -146,7 +161,7 @@ SceneRenderer::RenderRuntime(
 
   if (m_settings->ShowLine) {
     runtime->DrawGizmo(m_gizmo.get());
-    glr::RenderLine(camera, m_gizmo->m_lines);
+    glr::RenderLine(*m_camera, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
 
@@ -157,7 +172,7 @@ SceneRenderer::RenderRuntime(
         .Matrix = m,
       });
     }
-    m_cuber->Render(camera);
+    m_cuber->Render(*m_camera);
   }
 
   // manipulator
@@ -176,9 +191,9 @@ SceneRenderer::RenderRuntime(
     }
 
     recti::Camera gizmo_camera{
-      *((const recti::Mat4*)&camera.ViewMatrix),
-      *((const recti::Mat4*)&camera.ProjectionMatrix),
-      *((const recti::Vec4*)&camera.Projection.Viewport),
+      *((const recti::Mat4*)&m_camera->ViewMatrix),
+      *((const recti::Mat4*)&m_camera->ProjectionMatrix),
+      *((const recti::Vec4*)&m_camera->Projection.Viewport),
     };
 
     auto& io = ImGui::GetIO();

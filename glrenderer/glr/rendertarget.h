@@ -5,39 +5,29 @@
 namespace grapho {
 
 namespace camera {
-struct Camera;
+struct Viewport;
+struct MouseState;
 }
 
 namespace gl3 {
-struct Fbo;
-class Texture;
+struct RenderTarget;
 }
 
 } // namespace
 
 namespace glr {
-using RenderFunc = std::function<void(const grapho::camera::Camera& camera)>;
+using RenderFunc = std::function<void(const grapho::camera::Viewport&,
+                                      const grapho::camera::MouseState&)>;
 
 struct RenderTarget
 {
-  std::shared_ptr<grapho::camera::Camera> Camera;
-  std::shared_ptr<grapho::gl3::Fbo> Fbo;
-  std::shared_ptr<grapho::gl3::Texture> FboTexture;
-  RenderFunc render;
+  std::shared_ptr<grapho::gl3::RenderTarget> RT;
+  RenderFunc Render;
 
-  RenderTarget(const std::shared_ptr<grapho::camera::Camera>& camera);
-  uint32_t Begin(float x,
-                 float y,
-                 float width,
-                 float height,
-                 const float color[4]);
-  void End(bool isActive,
-           bool isHovered,
-           bool isRightDown,
-           bool isMiddleDown,
-           int mouseDeltaX,
-           int mouseDeltaY,
-           int mouseWheel);
+  RenderTarget(const RenderFunc& render);
+  uint32_t Begin(float width, float height, const float color[4]);
+  void End(const grapho::camera::Viewport& viewport,
+           const grapho::camera::MouseState& mouse);
 };
 
 } // namespace

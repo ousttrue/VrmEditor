@@ -7,6 +7,7 @@
 #include <glr/gl3renderer.h>
 #include <glr/line_gizmo.h>
 #include <glr/rendering_env.h>
+#include <glr/rendertarget.h>
 #include <glr/scene_renderer.h>
 #include <grapho/camera/camera.h>
 #include <imgui.h>
@@ -21,21 +22,20 @@ struct ScenePreviewImpl
   std::array<float, 4> m_clear{ 0, 0, 0, 0 };
   std::shared_ptr<ImFbo> m_fbo;
   std::shared_ptr<glr::RenderingEnv> m_env;
-  std::shared_ptr<grapho::camera::Camera> m_camera;
   std::shared_ptr<glr::ViewSettings> m_settings;
   std::shared_ptr<glr::SceneRenderer> m_renderer;
 
-  std::function<void(const grapho::camera::Camera& camera)> m_show;
+  glr::RenderFunc m_show;
 
   ScenePreviewImpl(const std::shared_ptr<glr::RenderingEnv>& env)
     : m_env(env)
-    , m_camera(new grapho::camera::Camera)
     , m_settings(new glr::ViewSettings)
   {
     m_renderer = std::make_shared<glr::SceneRenderer>(m_env, m_settings);
-    m_fbo = ImFbo::Create(m_camera, [=](const grapho::camera::Camera& camera) {
+    m_fbo = ImFbo::Create([=](const grapho::camera::Viewport& vp,
+                              const grapho::camera::MouseState& mouse) mutable {
       if (m_show) {
-        m_show(camera);
+        m_show(vp, mouse);
       }
     });
   }
@@ -45,15 +45,16 @@ struct ScenePreviewImpl
   {
     m_title = root->m_title;
     m_show = [root, getSelected, renderer = m_renderer](
-               const grapho::camera::Camera& camera) {
+               const grapho::camera::Viewport& viewport,
+               const grapho::camera::MouseState& mouse) {
       std::shared_ptr<libvrm::Node> selected;
       if (getSelected) {
         selected = getSelected();
       }
-      renderer->RenderStatic(root, camera, selected);
+      renderer->RenderStatic(root, viewport, mouse, selected);
     };
     auto [min, max] = root->GetBoundingBox();
-    m_camera->Fit(min, max);
+    m_renderer->m_camera->Fit(min, max);
     if (m_env) {
       m_env->SetShadowHeight(min.y);
     }
@@ -64,15 +65,16 @@ struct ScenePreviewImpl
   {
     m_title = runtime->m_base->m_title;
     m_show = [runtime, getSelected, renderer = m_renderer](
-               const grapho::camera::Camera& camera) {
+               const grapho::camera::Viewport& viewport,
+               const grapho::camera::MouseState& mouse) {
       std::shared_ptr<libvrm::RuntimeNode> selected;
       if (getSelected) {
         selected = getSelected();
       }
-      renderer->RenderRuntime(runtime, camera, selected);
+      renderer->RenderRuntime(runtime, viewport, mouse, selected);
     };
     auto [min, max] = runtime->m_base->GetBoundingBox();
-    m_camera->Fit(min, max);
+    m_renderer->m_camera->Fit(min, max);
     if (m_env) {
       m_env->SetShadowHeight(min.y);
     }
@@ -89,7 +91,7 @@ struct ScenePreviewImpl
       return;
     }
     auto sc = ImGui::GetCursorScreenPos();
-    m_fbo->ShowFbo(x, y, w, h, color);
+    m_fbo->ShowFbo({ x, y, w, h }, color);
     // top, right pivot
     Overlay({ sc.x + w - 10, sc.y + 10 }, title);
   }
