@@ -25,21 +25,7 @@ enum MOVETYPE
   MT_SCALE_Z,
   MT_SCALE_XYZ
 };
-inline bool
-IsTranslateType(MOVETYPE type)
-{
-  return type >= MT_MOVE_X && type <= MT_MOVE_SCREEN;
-}
-inline bool
-IsRotateType(MOVETYPE type)
-{
-  return type >= MT_ROTATE_X && type <= MT_ROTATE_SCREEN;
-}
-inline bool
-IsScaleType(MOVETYPE type)
-{
-  return type >= MT_SCALE_X && type <= MT_SCALE_XYZ;
-}
+
 struct IGizmo
 {
   virtual ~IGizmo(){};
