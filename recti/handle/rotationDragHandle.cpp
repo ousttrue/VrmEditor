@@ -69,7 +69,6 @@ RotationDragHandle::RotationDragHandle(const ModelContext& mCurrent,
 
 bool
 RotationDragHandle::Drag(const recti::ModelContext& mCurrent,
-                         const State& mState,
                          const float* snap,
                          float* matrix,
                          float* deltaMatrix)

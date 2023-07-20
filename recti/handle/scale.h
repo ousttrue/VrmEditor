@@ -4,8 +4,6 @@
 #include "../operation.h"
 #include "../style.h"
 #include "../vec4.h"
-#include "result.h"
-#include "state.h"
 #include <memory>
 
 namespace recti {
@@ -13,19 +11,17 @@ namespace recti {
 struct Scale
 {
   static MOVETYPE GetType(const recti::ModelContext& mCurrent,
-                          bool mAllowAxisFlip,
-                          State* state);
+                          bool mAllowAxisFlip);
 
   static void DrawGizmo(const ModelContext& mCurrent,
+                        bool allowAxisFlip,
                         MOVETYPE type,
-                        const State& mState,
                         const Style& mStyle,
                         const std::shared_ptr<DrawList>& drawList);
 
   static void DrawUniveralGizmo(const ModelContext& mCurrent,
                                 bool mAllowAxisFlip,
                                 MOVETYPE type,
-                                const State& mState,
                                 const Style& mStyle,
                                 const std::shared_ptr<DrawList>& drawList);
 

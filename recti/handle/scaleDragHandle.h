@@ -1,5 +1,5 @@
 #pragma once
-#include "state.h"
+#include "draghandle.h"
 
 namespace recti {
 
@@ -20,7 +20,6 @@ struct ScaleDragHandle : public IDragHandle
   ScaleDragHandle(const ModelContext& mCurrent, MOVETYPE type);
 
   bool Drag(const ModelContext& current,
-            const struct State& state,
             const float* snap,
             float* matrix,
             float* deltaMatrix) override;
@@ -35,7 +34,6 @@ struct ScaleUDragHandle : public ScaleDragHandle
   ScaleUDragHandle(const ModelContext& mCurrent, MOVETYPE type);
 
   bool Drag(const ModelContext& current,
-            const struct State& state,
             const float* snap,
             float* matrix,
             float* deltaMatrix) override;

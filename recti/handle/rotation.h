@@ -4,8 +4,6 @@
 #include "../operation.h"
 #include "../style.h"
 #include "../vec4.h"
-#include "result.h"
-#include "state.h"
 #include <memory>
 
 namespace recti {
@@ -13,14 +11,12 @@ namespace recti {
 struct Rotation
 {
   static MOVETYPE GetType(const recti::ModelContext& mCurrent,
-                          float mRadiusSquareCenter,
-                          const recti::State& mState);
+                          float mRadiusSquareCenter);
 
   static void DrawGizmo(const ModelContext& mCurrent,
                         float mRadiusSquareCenter,
                         bool mIsOrthographic,
                         MOVETYPE type,
-                        const State& mState,
                         const Style& mStyle,
                         const std::shared_ptr<DrawList>& drawList);
 

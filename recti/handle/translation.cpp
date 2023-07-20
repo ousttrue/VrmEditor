@@ -16,9 +16,7 @@ static const OPERATION TRANSLATE_PLANS[3] = { TRANSLATE_Y | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Y };
 
 MOVETYPE
-Translation::GetType(const ModelContext& current,
-                     bool allowAxisFlip,
-                     State* state)
+Translation::GetType(const ModelContext& current, bool allowAxisFlip)
 {
   MOVETYPE type = MT_NONE;
 
@@ -27,13 +25,6 @@ Translation::GetType(const ModelContext& current,
 
     Tripod tripod(i);
     tripod.ComputeTripodAxisAndVisibility(current, allowAxisFlip);
-    // and store values
-    state->mAxisFactor[i] = tripod.mulAxis;
-    state->mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
-    state->mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
-    state->mBelowAxisLimit[i] = tripod.belowAxisLimit;
-    state->mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
-
     tripod.dirAxis.TransformVector(current.mModel);
     tripod.dirPlaneX.TransformVector(current.mModel);
     tripod.dirPlaneY.TransformVector(current.mModel);
@@ -83,7 +74,6 @@ void
 Translation::DrawGizmo(const ModelContext& current,
                        bool allowAxisFlip,
                        MOVETYPE type,
-                       const State& state,
                        const Style& style,
                        const std::shared_ptr<DrawList>& drawList)
 {
@@ -101,14 +91,7 @@ Translation::DrawGizmo(const ModelContext& current,
   // draw
   for (int i = 0; i < 3; ++i) {
     Tripod tripod(i);
-
-    // when using, use stored factors so the gizmo doesn't flip when we
-    // translate
-    tripod.belowAxisLimit = state.mBelowAxisLimit[i];
-    tripod.belowPlaneLimit = state.mBelowPlaneLimit[i];
-    tripod.dirAxis *= state.mAxisFactor[i];
-    tripod.dirPlaneX *= state.mAxisFactor[(i + 1) % 3];
-    tripod.dirPlaneY *= state.mAxisFactor[(i + 2) % 3];
+    tripod.ComputeTripodAxisAndVisibility(current, allowAxisFlip);
 
     if (!false || (false && type == MT_MOVE_X + i)) {
       // draw axis
@@ -142,10 +125,9 @@ Translation::DrawGizmo(const ModelContext& current,
                                     a - ortogonalDir,
                                     colors[i + 1]);
         // Arrow head end
-
-        if (state.mAxisFactor[i] < 0.f) {
-          drawList->DrawHatchedAxis(current, tripod.dirAxis, style);
-        }
+        // if (state.mAxisFactor[i] < 0.f) {
+        //   drawList->DrawHatchedAxis(current, tripod.dirAxis, style);
+        // }
       }
     }
     // draw plane

@@ -1,6 +1,6 @@
 #pragma once
 #include "../operation.h"
-#include "state.h"
+#include "draghandle.h"
 
 namespace recti {
 
@@ -15,7 +15,6 @@ struct TranslationDragHandle : public IDragHandle
 
   TranslationDragHandle(const ModelContext& current, MOVETYPE type);
   bool Drag(const ModelContext& current,
-            const State& state,
             const float* snap,
             float* matrix,
             float* deltaMatrix) override;

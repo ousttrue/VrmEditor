@@ -33,7 +33,6 @@ TranslationDragHandle::TranslationDragHandle(const ModelContext& current,
 
 bool
 TranslationDragHandle::Drag(const ModelContext& current,
-                            const State& state,
                             const float* snap,
                             float* matrix,
                             float* deltaMatrix)

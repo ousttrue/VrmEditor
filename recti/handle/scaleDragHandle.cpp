@@ -44,7 +44,6 @@ ScaleDragHandle::ScaleDragHandle(const ModelContext& mCurrent, MOVETYPE type)
 
 bool
 ScaleDragHandle::Drag(const ModelContext& mCurrent,
-                      const struct State& mState,
                       const float* snap,
                       float* matrix,
                       float* deltaMatrix)
@@ -143,7 +142,6 @@ ScaleUDragHandle::ScaleUDragHandle(const ModelContext& mCurrent, MOVETYPE type)
 
 bool
 ScaleUDragHandle::Drag(const ModelContext& mCurrent,
-                       const struct State& state,
                        const float* snap,
                        float* matrix,
                        float* deltaMatrix)

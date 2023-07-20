@@ -15,8 +15,7 @@ static const int HALF_CIRCLE_SEGMENT_COUNT = 64;
 
 MOVETYPE
 Rotation::GetType(const recti::ModelContext& mCurrent,
-                  float mRadiusSquareCenter,
-                  const recti::State& mState)
+                  float mRadiusSquareCenter)
 {
   recti::MOVETYPE type = recti::MT_NONE;
 
@@ -85,7 +84,6 @@ Rotation::DrawGizmo(const recti::ModelContext& mCurrent,
                     float mRadiusSquareCenter,
                     bool mIsOrthographic,
                     recti::MOVETYPE type,
-                    const State& mState,
                     const Style& mStyle,
                     const std::shared_ptr<DrawList>& drawList)
 {

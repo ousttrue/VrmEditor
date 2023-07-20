@@ -1,6 +1,4 @@
 #include "recti.h"
-#include "handle/state.h"
-
 #include "handle/rotation.h"
 #include "handle/rotationDragHandle.h"
 #include "handle/scale.h"
@@ -15,7 +13,7 @@ namespace recti {
 struct ScreenImpl
 {
   // over frame
-  State mState = {};
+  std::shared_ptr<IDragHandle> DragHandle;
 
   // current frame
   CameraMouse mCameraMouse;
@@ -63,12 +61,12 @@ public:
       return false;
     }
 
-    if (auto handle = mState.DragHandle) {
-      auto modified = handle->Drag(mCurrent, mState, snap, matrix, deltaMatrix);
+    if (auto handle = DragHandle) {
+      auto modified = handle->Drag(mCurrent, snap, matrix, deltaMatrix);
       handle->Draw(mCurrent, mStyle, mDrawList);
       if (!mCurrent.mCameraMouse.Mouse.LeftDown) {
         // drag end
-        mState.DragHandle = {};
+        DragHandle = {};
       }
       // return modified;
       return true;
@@ -77,52 +75,49 @@ public:
     // hover
     auto hoverT = MT_NONE;
     if (Intersects(mCurrent.mOperation, TRANSLATE)) {
-      hoverT = Translation::GetType(mCurrent, mAllowAxisFlip, &mState);
+      hoverT = Translation::GetType(mCurrent, mAllowAxisFlip);
       if (hoverT != MT_NONE) {
         // hover
         if (mCurrent.mCameraMouse.Mouse.LeftDown) {
           // begin drag
-          mState.DragHandle =
+          DragHandle =
             std::make_shared<TranslationDragHandle>(mCurrent, hoverT);
         }
       }
 
       Translation::DrawGizmo(
-        mCurrent, mAllowAxisFlip, hoverT, mState, mStyle, mDrawList);
+        mCurrent, mAllowAxisFlip, hoverT, mStyle, mDrawList);
     }
 
     auto hoverS = MT_NONE;
     if (Intersects(mCurrent.mOperation, SCALE)) {
-      hoverS = Scale::GetType(mCurrent, mAllowAxisFlip, &mState);
+      hoverS = Scale::GetType(mCurrent, mAllowAxisFlip);
       if (hoverS != MT_NONE) {
         // hover
         if (mCurrent.mCameraMouse.Mouse.LeftDown) {
           // begin drag
           if (hoverS >= MT_SCALE_X && hoverS <= MT_SCALE_Z) {
-            mState.DragHandle =
-              std::make_shared<ScaleDragHandle>(mCurrent, hoverS);
+            DragHandle = std::make_shared<ScaleDragHandle>(mCurrent, hoverS);
           } else {
             // uniform
-            mState.DragHandle =
-              std::make_shared<ScaleUDragHandle>(mCurrent, hoverS);
+            DragHandle = std::make_shared<ScaleUDragHandle>(mCurrent, hoverS);
           }
         }
       }
 
-      Scale::DrawGizmo(mCurrent, hoverS, mState, mStyle, mDrawList);
+      Scale::DrawGizmo(mCurrent, mAllowAxisFlip, hoverS, mStyle, mDrawList);
       Scale::DrawUniveralGizmo(
-        mCurrent, mAllowAxisFlip, hoverS, mState, mStyle, mDrawList);
+        mCurrent, mAllowAxisFlip, hoverS, mStyle, mDrawList);
     }
 
     auto hoverR = MT_NONE;
     if (Intersects(mCurrent.mOperation, ROTATE)) {
-      hoverR = Rotation::GetType(mCurrent, mRadiusSquareCenter, mState);
+      hoverR = Rotation::GetType(mCurrent, mRadiusSquareCenter);
       if (hoverR != MT_NONE) {
         // hover
         if (mCurrent.mCameraMouse.Mouse.LeftDown) {
           // begin drag
-          mState.DragHandle =
-            std::make_shared<RotationDragHandle>(mCurrent, hoverR);
+          DragHandle = std::make_shared<RotationDragHandle>(mCurrent, hoverR);
         }
       }
 
@@ -130,12 +125,11 @@ public:
                           mRadiusSquareCenter,
                           mIsOrthographic,
                           hoverR,
-                          mState,
                           mStyle,
                           mDrawList);
     }
 
-    return mState.DragHandle != nullptr;
+    return DragHandle != nullptr;
   }
 
   void DrawCubes(const float* cubes, uint32_t count)

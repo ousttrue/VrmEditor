@@ -1,7 +1,7 @@
 #pragma once
 #include "../model_context.h"
 #include "../operation.h"
-#include "state.h"
+#include "draghandle.h"
 
 namespace recti {
 
@@ -21,7 +21,6 @@ struct RotationDragHandle : public IDragHandle
 
   RotationDragHandle(const ModelContext& current, MOVETYPE type);
   bool Drag(const ModelContext& current,
-            const State& state,
             const float* snap,
             float* matrix,
             float* deltaMatrix) override;
