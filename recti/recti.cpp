@@ -84,7 +84,6 @@ public:
         if (mCurrent.mCameraMouse.Mouse.LeftDown) {
           // begin drag
           mState.mbUsing = true;
-          mState.mCurrentOperation = hoverT;
           mState.DragHandle =
             std::make_shared<TranslationDragHandle>(mCurrent, hoverT);
         }
@@ -102,10 +101,8 @@ public:
         if (mCurrent.mCameraMouse.Mouse.LeftDown) {
           // begin drag
           mState.mbUsing = true;
-          mState.mCurrentOperation = hoverS;
 
-          if (mState.mCurrentOperation >= MT_SCALE_X &&
-              mState.mCurrentOperation <= MT_SCALE_Z) {
+          if (hoverS >= MT_SCALE_X && hoverS <= MT_SCALE_Z) {
             mState.DragHandle =
               std::make_shared<ScaleDragHandle>(mCurrent, hoverS);
           } else {
@@ -129,7 +126,6 @@ public:
         if (mCurrent.mCameraMouse.Mouse.LeftDown) {
           // begin drag
           mState.mbUsing = true;
-          mState.mCurrentOperation = hoverR;
           mState.DragHandle =
             std::make_shared<RotationDragHandle>(mCurrent, hoverR);
         }

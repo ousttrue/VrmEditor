@@ -29,7 +29,6 @@ struct State
   bool mBelowAxisLimit[3];
   bool mBelowPlaneLimit[3];
   float mAxisFactor[3];
-  recti::MOVETYPE mCurrentOperation;
 
   std::shared_ptr<IDragHandle> DragHandle;
 };

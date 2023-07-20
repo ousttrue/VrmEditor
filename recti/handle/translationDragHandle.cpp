@@ -4,7 +4,7 @@ namespace recti {
 
 TranslationDragHandle::TranslationDragHandle(const ModelContext& current,
                                              MOVETYPE type)
-  : type(type)
+  : m_type(type)
 {
   // find new possible way to move
   Vec4 movePlanNormal[] = {
@@ -45,9 +45,8 @@ TranslationDragHandle::Drag(const ModelContext& current,
   Vec4 delta = newOrigin - current.mModel.position();
 
   // 1 axis constraint
-  if (state.mCurrentOperation >= MT_MOVE_X &&
-      state.mCurrentOperation <= MT_MOVE_Z) {
-    const int axisIndex = state.mCurrentOperation - MT_MOVE_X;
+  if (m_type >= MT_MOVE_X && m_type <= MT_MOVE_Z) {
+    const int axisIndex = m_type - MT_MOVE_X;
     const Vec4& axisValue = current.mModel.component(axisIndex);
     const float lengthOnAxis = Dot(axisValue, delta);
     delta = axisValue * lengthOnAxis;
@@ -57,7 +56,7 @@ TranslationDragHandle::Drag(const ModelContext& current,
   if (snap) {
     Vec4 cumulativeDelta = current.mModel.position() + delta - mMatrixOrigin;
     const bool applyRotationLocaly =
-      current.mMode == LOCAL || state.mCurrentOperation == MT_MOVE_SCREEN;
+      current.mMode == LOCAL || m_type == MT_MOVE_SCREEN;
     if (applyRotationLocaly) {
       Mat4 modelSourceNormalized = current.mModelSource;
       modelSourceNormalized.OrthoNormalize();
@@ -117,7 +116,7 @@ TranslationDragHandle::Draw(const ModelContext& current,
 
   char tmps[512];
   Vec4 deltaInfo = current.mModel.position() - mMatrixOrigin;
-  int componentInfoIndex = (type - MT_MOVE_X) * 3;
+  int componentInfoIndex = (m_type - MT_MOVE_X) * 3;
   static const int translationInfoIndex[] = { 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 2,
                                               0, 0, 2, 0, 0, 1, 0, 0, 1, 2 };
   static const char* translationInfoMask[] = {
@@ -132,7 +131,7 @@ TranslationDragHandle::Draw(const ModelContext& current,
 
   snprintf(tmps,
            sizeof(tmps),
-           translationInfoMask[type - MT_MOVE_X],
+           translationInfoMask[m_type - MT_MOVE_X],
            deltaInfo[translationInfoIndex[componentInfoIndex]],
            deltaInfo[translationInfoIndex[componentInfoIndex + 1]],
            deltaInfo[translationInfoIndex[componentInfoIndex + 2]]);

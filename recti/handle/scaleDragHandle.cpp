@@ -14,7 +14,7 @@ static const int translationInfoIndex[] = { 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 2,
 // ScaleDragHandle
 //
 ScaleDragHandle::ScaleDragHandle(const ModelContext& mCurrent, MOVETYPE type)
-  : type(type)
+  : m_type(type)
 {
   const Vec4 movePlanNormal[] = { mCurrent.mModel.up(),
                                   mCurrent.mModel.dir(),
@@ -56,7 +56,7 @@ ScaleDragHandle::Drag(const ModelContext& mCurrent,
 
   // 1 axis constraint
   {
-    int axisIndex = mState.mCurrentOperation - MT_SCALE_X;
+    int axisIndex = m_type - MT_SCALE_X;
     const Vec4& axisValue = mCurrent.mModelLocal.component(axisIndex);
     float lengthOnAxis = Dot(axisValue, delta);
     delta = axisValue * lengthOnAxis;
@@ -118,10 +118,10 @@ ScaleDragHandle::Draw(const ModelContext& mCurrent,
                mCurrent.mCameraMouse.mViewProjection,
                mCurrent.mCameraMouse.Camera.Viewport);
   char tmps[512];
-  int componentInfoIndex = (type - MT_SCALE_X) * 3;
+  int componentInfoIndex = (m_type - MT_SCALE_X) * 3;
   snprintf(tmps,
            sizeof(tmps),
-           scaleInfoMask[type - MT_SCALE_X],
+           scaleInfoMask[m_type - MT_SCALE_X],
            mScale[translationInfoIndex[componentInfoIndex]]);
   drawList->AddText(
     Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
@@ -167,10 +167,10 @@ ScaleUDragHandle::Draw(const ModelContext& mCurrent,
     mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position());
 
   char tmps[512];
-  int componentInfoIndex = (type - MT_SCALE_X) * 3;
+  int componentInfoIndex = (m_type - MT_SCALE_X) * 3;
   snprintf(tmps,
            sizeof(tmps),
-           scaleInfoMask[type - MT_SCALE_X],
+           scaleInfoMask[m_type - MT_SCALE_X],
            mScale[translationInfoIndex[componentInfoIndex]]);
   drawList->AddText(
     Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),

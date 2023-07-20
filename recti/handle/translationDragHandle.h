@@ -6,7 +6,7 @@ namespace recti {
 
 struct TranslationDragHandle : public IDragHandle
 {
-  MOVETYPE type;
+  MOVETYPE m_type;
   Vec4 mTranslationPlan;
   Vec4 mTranslationPlanOrigin;
   Vec4 mMatrixOrigin;
