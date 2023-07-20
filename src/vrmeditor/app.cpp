@@ -17,20 +17,18 @@
 #include "jsongui/json_gui.h"
 #include "luahost.h"
 #include "platform.h"
+#include "scene_state.h"
 #include "view/animation_view.h"
 #include "view/gl3renderer_gui.h"
 #include "view/lighting.h"
 #include "view/scene_preview.h"
 #include <boneskin/skinning_manager.h>
 #include <glr/rendering_env.h>
-#include <gltfjson.h>
-#include <gltfjson/glb.h>
-#include <gltfjson/json_tree_exporter.h>
 #include <grapho/gl3/error_check.h>
 #include <grapho/gl3/texture.h>
 #include <vrm/fileutil.h>
 #include <vrm/image.h>
-#include <vrm/importer.h>
+#include <vrm/runtime_node.h>
 #ifdef _WIN32
 #include "windows_helper.h"
 #else
@@ -45,7 +43,6 @@ std::filesystem::path g_ini;
 
 class App
 {
-  std::shared_ptr<libvrm::RuntimeScene> m_runtime;
   std::shared_ptr<JsonGui> m_json;
   std::shared_ptr<ScenePreview> m_preview;
   std::shared_ptr<ScenePreview> m_animationPreview;
@@ -76,6 +73,32 @@ public:
 
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
       [=] { ResetDock(); });
+
+    SceneState::GetInstance().m_setCallbacks.push_back(
+      [=](const std::shared_ptr<libvrm::RuntimeScene>& runtime) {
+        glr::Release();
+        boneskin::SkinningManager::Instance().Release();
+
+        std::weak_ptr<libvrm::RuntimeScene> weak = runtime;
+        humanpose::HumanPoseStream::Instance().HumanPoseChanged.push_back(
+          [weak](const auto& pose) {
+            if (auto scene = weak.lock()) {
+              scene->SetHumanPose(pose);
+              return true;
+            } else {
+              return false;
+            }
+          });
+
+        m_json->SetScene(runtime->m_base);
+        m_lighting->SetGltf(runtime->m_base);
+        m_animation->SetRuntime(runtime);
+        m_hierarchy->SetRuntimeScene(runtime);
+        m_preview->SetGltf(runtime->m_base);
+        m_animationPreview->SetRuntime(runtime);
+        m_vrm->SetRuntime(runtime);
+        m_humanoid->SetRuntime(runtime);
+      });
   }
 
   ~App() {}
@@ -177,35 +200,6 @@ public:
       { "🏃Vrm", [vrm = m_vrm]() { vrm->ShowGui(); } });
   }
 
-  std::shared_ptr<libvrm::RuntimeScene> SetGltf(
-    const std::shared_ptr<libvrm::GltfRoot>& gltf)
-  {
-    glr::Release();
-    boneskin::SkinningManager::Instance().Release();
-    m_runtime = std::make_shared<libvrm::RuntimeScene>(gltf);
-
-    std::weak_ptr<libvrm::RuntimeScene> weak = m_runtime;
-    humanpose::HumanPoseStream::Instance().HumanPoseChanged.push_back(
-      [weak](const auto& pose) {
-        if (auto scene = weak.lock()) {
-          scene->SetHumanPose(pose);
-          return true;
-        } else {
-          return false;
-        }
-      });
-
-    m_json->SetScene(gltf);
-    m_lighting->SetGltf(gltf);
-    m_animation->SetRuntime(m_runtime);
-    m_hierarchy->SetRuntimeScene(m_runtime);
-    m_preview->SetGltf(gltf);
-    m_animationPreview->SetRuntime(m_runtime);
-    m_vrm->SetRuntime(m_runtime);
-    m_humanoid->SetRuntime(m_runtime);
-    return m_runtime;
-  }
-
   // HumanoidDock::Create(
   //   addDock, "humanoid-body", "humanoid-finger", m_runtime->m_table);
 
@@ -258,6 +252,19 @@ public:
        << (maximize ? "true" : "false") << ")\n\n";
   }
 
+  bool LoadFbx(const std::filesystem::path& path)
+  {
+    FbxLoader fbx;
+    if (auto gltf = fbx.Load(path)) {
+      PLOG_DEBUG << "ufbx success: " << path.string();
+      SceneState::GetInstance().SetGltf(gltf);
+      return false;
+    } else {
+      PLOG_ERROR << fbx.Error();
+      return false;
+    }
+  }
+
   int Run(GLFWwindow* window)
   {
     glr::Initialize();
@@ -271,7 +278,6 @@ public:
     ResetDock();
 
     assert(!grapho::gl3::TryGetError());
-    std::optional<libvrm::Time> lastTime;
     while (true) {
 
       AsioTask::Instance().Poll();
@@ -289,17 +295,9 @@ public:
 
         auto time = info->Time;
 
-        if (m_runtime) {
-          if (lastTime) {
-            auto delta = time - *lastTime;
-            m_runtime->m_timeline->SetDeltaTime(delta);
-            m_runtime->NextSpringDelta = delta;
-          } else {
-            m_runtime->m_timeline->SetDeltaTime({}, true);
-          }
-        }
+        SceneState::GetInstance().Update(time);
+
         humanpose::HumanPoseStream::Instance().Update(time);
-        lastTime = time;
 
         // newFrame
         if (Gui::Instance().NewFrame()) {
@@ -329,29 +327,6 @@ public:
     return 0;
   }
 
-  bool WriteScene(const std::filesystem::path& path)
-  {
-    std::stringstream ss;
-    gltfjson::StringSink write = [&ss](std::string_view src) mutable {
-      ss.write(src.data(), src.size());
-    };
-    gltfjson::tree::Exporter exporter{ write };
-    exporter.Export(*m_runtime->m_base->m_gltf->m_json);
-    auto str = ss.str();
-
-    std::ofstream os(path, std::ios::binary);
-    if (!os) {
-      return false;
-    }
-
-    return gltfjson::Glb{
-      .JsonChunk = { (const uint8_t*)str.data(), str.size() },
-      .BinChunk = m_runtime->m_base->m_bin.Bytes,
-    }
-      .WriteTo(os);
-    return true;
-  }
-
   // expose to lua
   bool LoadPath(const std::filesystem::path& path)
   {
@@ -365,7 +340,7 @@ public:
 
     if (extension == ".gltf" || extension == ".glb" || extension == ".vrm" ||
         extension == ".vrma") {
-      return LoadModel(path);
+      return SceneState::GetInstance().LoadModel(path);
     }
     if (extension == ".bvh") {
       return humanpose::HumanPoseStream::Instance().LoadMotion(path);
@@ -443,45 +418,6 @@ public:
     return true;
   }
 
-  bool LoadModel(const std::filesystem::path& path)
-  {
-    if (auto gltf = libvrm::LoadPath(path)) {
-      auto scene = SetGltf(*gltf);
-      auto u8 = path.u8string();
-      PLOG_INFO << std::string_view{ (const char*)u8.data(), u8.size() };
-      return true;
-    } else {
-      PLOG_ERROR << gltf.error();
-      SetGltf(std::make_shared<libvrm::GltfRoot>());
-      return false;
-    }
-  }
-
-  bool LoadGltfString(const std::string& json)
-  {
-    if (auto gltf = libvrm::LoadGltf(json)) {
-      auto scene = SetGltf(*gltf);
-      PLOG_INFO << "paste gltf string";
-      return true;
-    } else {
-      PLOG_ERROR << gltf.error();
-      return false;
-    }
-  }
-
-  bool LoadFbx(const std::filesystem::path& path)
-  {
-    FbxLoader fbx;
-    if (auto gltf = fbx.Load(path)) {
-      PLOG_DEBUG << "ufbx success: " << path.string();
-      auto scene = SetGltf(gltf);
-      return false;
-    } else {
-      PLOG_ERROR << fbx.Error();
-      return false;
-    }
-  }
-
   bool LoadHdr(const std::filesystem::path& path)
   {
     return m_lighting->LoadHdr(path);
@@ -512,14 +448,6 @@ public:
 
     return true;
   }
-
-  std::string CopyVrmPoseText()
-  {
-    if (!m_runtime) {
-      return "";
-    }
-    return m_runtime->CopyVrmPoseText();
-  }
 };
 App g_app;
 
@@ -528,7 +456,8 @@ namespace app {
 void
 TaskLoadModel(const std::filesystem::path& path)
 {
-  AsioTask::Instance().PostTask([path]() { g_app.LoadModel(path); });
+  AsioTask::Instance().PostTask(
+    [path]() { SceneState::GetInstance().LoadModel(path); });
 }
 
 void
@@ -546,7 +475,7 @@ TaskLoadHdr(const std::filesystem::path& hdr)
 void
 LoadGltfString(const std::string& json)
 {
-  g_app.LoadGltfString(json);
+  SceneState::GetInstance().LoadGltfString(json);
 }
 
 void
@@ -625,7 +554,7 @@ Run(std::span<const char*> args)
 bool
 WriteScene(const std::filesystem::path& path)
 {
-  return g_app.WriteScene(path);
+  return SceneState::GetInstance().WriteScene(path);
 }
 
 bool
@@ -637,7 +566,7 @@ AddAssetDir(std::string_view name, const std::filesystem::path& path)
 std::string
 CopyVrmPoseText()
 {
-  return g_app.CopyVrmPoseText();
+  return SceneState::GetInstance().CopyVrmPoseText();
 }
 
 } // namespace

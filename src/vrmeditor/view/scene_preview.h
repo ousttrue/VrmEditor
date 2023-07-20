@@ -3,6 +3,10 @@
 #include <glr/scene_renderer.h>
 #include <vrm/gltfroot.h>
 #include <vrm/runtime_scene.h>
+
+using GetSelectedNode = std::function<std::shared_ptr<libvrm::Node>()>;
+using GetSelectedRuntimeNode =
+  std::function<std::shared_ptr<libvrm::RuntimeNode>()>;
 class ScenePreview
 {
   struct ScenePreviewImpl* m_impl;

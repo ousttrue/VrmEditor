@@ -1,5 +1,7 @@
 #pragma once
+#include "style.h"
 #include "vec2.h"
+#include "vec4.h"
 #include <array>
 #include <optional>
 #include <stdint.h>
@@ -113,6 +115,15 @@ struct DrawList
     line.points.assign(points, points + num_points);
     m_commands.push_back({ line, col });
   }
+
+  void DrawHatchedAxis(const struct ModelContext& mCurrent,
+                       const Vec4& axis,
+                       const Style& mStyle);
+
+  void DrawCubes(const struct CameraMouse& cameraMouse,
+                 const float* matrices,
+                 int matrixCount,
+                 const Style& mStyle);
 };
 
-}
+} // namespace

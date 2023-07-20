@@ -19,9 +19,9 @@ struct Ray
     Mat4 mViewProjInverse;
     mViewProjInverse.Inverse(view * projection);
 
-    const float mox = ((mousePos.X - viewport.x) / viewport.z) * 2.f - 1.f;
+    const float mox = ((mousePos.x - viewport.x) / viewport.z) * 2.f - 1.f;
     const float moy =
-      (1.f - ((mousePos.Y - viewport.y) / viewport.w)) * 2.f - 1.f;
+      (1.f - ((mousePos.y - viewport.y) / viewport.w)) * 2.f - 1.f;
 
     // projection reverse(OpenGL or DirectX) ?
     recti::Vec4 nearPos, farPos;

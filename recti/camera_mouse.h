@@ -11,6 +11,7 @@ struct Camera
   Mat4 ProjectionMatrix;
   // WindowViewport
   Vec4 Viewport;
+  bool IsOrthographic = false;
   Vec2 LeftTop() const { return { Viewport.x, Viewport.y }; }
   Vec2 Size() const { return { Viewport.z, Viewport.w }; }
   float Width() const { return Viewport.z; }
@@ -19,8 +20,8 @@ struct Camera
   float Bottom() const { return Viewport.y + Viewport.w; }
   bool IsInContextRect(const recti::Vec2& p) const
   {
-    return recti::IsWithin(p.X, Viewport.x, Right()) &&
-           recti::IsWithin(p.Y, Viewport.y, Bottom());
+    return recti::IsWithin(p.x, Viewport.x, Right()) &&
+           recti::IsWithin(p.y, Viewport.y, Bottom());
   }
   float DisplayRatio() const { return Width() / Height(); }
 };

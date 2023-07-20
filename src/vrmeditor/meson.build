@@ -5,6 +5,7 @@ srcs = [
     'luahost.cpp',
     'filewatcher.cpp',
     'fbx_loader.cpp',
+    'scene_state.cpp',
     'docks/asset_view.cpp',
     'docks/gui.cpp',
     'docks/dockspace.cpp',

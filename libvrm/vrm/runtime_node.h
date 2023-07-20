@@ -80,10 +80,12 @@ struct RuntimeNode
     DirectX::XMVECTOR s;
     DirectX::XMVECTOR r;
     DirectX::XMVECTOR t;
-    assert(DirectX::XMMatrixDecompose(&s, &r, &t, world));
-    DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&WorldScale, s);
-    DirectX::XMStoreFloat4((DirectX::XMFLOAT4*)&WorldTransform.Rotation, r);
-    DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&WorldTransform.Translation, t);
+    if (DirectX::XMMatrixDecompose(&s, &r, &t, world)) {
+      DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&WorldScale, s);
+      DirectX::XMStoreFloat4((DirectX::XMFLOAT4*)&WorldTransform.Rotation, r);
+      DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&WorldTransform.Translation,
+                             t);
+    }
 
     if (recursive) {
       for (auto& child : Children) {

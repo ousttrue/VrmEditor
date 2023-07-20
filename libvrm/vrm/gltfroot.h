@@ -34,8 +34,8 @@ struct GltfRoot
   gltfjson::Bin m_bin;
 
   std::vector<std::shared_ptr<Node>> m_nodes;
-  std::shared_ptr<Node> m_selected;
   std::vector<std::shared_ptr<Node>> m_roots;
+  std::shared_ptr<Node> m_selected;
 
   std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
@@ -67,6 +67,8 @@ struct GltfRoot
   std::span<NodeState> NodeStates();
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
   std::shared_ptr<HumanSkeleton> GetHumanSkeleton();
+  void SelectNode(const std::shared_ptr<libvrm::Node>& node);
+  bool IsSelected(const std::shared_ptr<libvrm::Node>& node) const;
 };
 
 } // namespace

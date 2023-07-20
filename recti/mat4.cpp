@@ -256,7 +256,7 @@ LookAt(const float* eye, const float* at, const float* up, float* m16)
   m16[15] = 1.0f;
 }
 
-std::tuple<float, float>
+Vec2
 worldToPos(const Vec4& worldPos, const Mat4& mat, const Vec4& screenRect)
 {
   Vec4 trans;

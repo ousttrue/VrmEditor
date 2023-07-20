@@ -1,5 +1,6 @@
 #pragma once
 #include "vec4.h"
+#include "vec2.h"
 #include <tuple>
 
 namespace recti {
@@ -136,7 +137,7 @@ Perspective(float fovyInDegrees,
 void
 LookAt(const float* eye, const float* at, const float* up, float* m16);
 
-std::tuple<float, float>
+Vec2
 worldToPos(const Vec4& worldPos, const Mat4& mat, const Vec4& screenRect);
 
 float

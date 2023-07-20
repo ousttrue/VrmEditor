@@ -6,11 +6,13 @@
 
 namespace libvrm {
 struct GltfRoot;
+struct Node;
 struct RuntimeScene;
+struct RuntimeNode;
 }
 
 namespace recti {
-class Screen;
+struct Screen;
 }
 
 namespace glr {
@@ -42,14 +44,17 @@ struct SceneRenderer
   std::shared_ptr<Cuber> m_cuber;
   std::shared_ptr<LineGizmo> m_gizmo;
   std::shared_ptr<recti::Screen> m_screen;
+  std::shared_ptr<grapho::camera::Camera> m_camera;
 
   SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
                 const std::shared_ptr<ViewSettings>& settings);
 
   void RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                    const grapho::camera::Camera& camera) const;
+                    const grapho::camera::Viewport& viewport,
+                    const grapho::camera::MouseState& mouse) const;
   void RenderRuntime(const std::shared_ptr<libvrm::RuntimeScene>& scene,
-                     const grapho::camera::Camera& camera) const;
+                     const grapho::camera::Viewport& viewport,
+                     const grapho::camera::MouseState& mouse) const;
 };
 
 } // namespace

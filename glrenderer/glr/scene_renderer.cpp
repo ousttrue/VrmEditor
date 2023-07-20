@@ -6,11 +6,68 @@
 #include "rendering_env.h"
 #include "rendertarget.h"
 #include "scene_renderer.h"
+#include <DirectXCollision.h>
 #include <boneskin/skinning_manager.h>
+#include <limits>
+#include <recti.h>
 #include <recti_imgui.h>
 #include <vrm/gltfroot.h>
 #include <vrm/runtime_node.h>
 #include <vrm/runtime_scene.h>
+
+//   7+-+6
+//   / /|
+// 3+-+2 +5
+// | |
+// 0+-+1
+DirectX::XMFLOAT3 p[8] = {
+  { -0.5f, -0.5f, -0.5f }, //
+  { +0.5f, -0.5f, -0.5f }, //
+  { +0.5f, +0.5f, -0.5f }, //
+  { -0.5f, +0.5f, -0.5f }, //
+  { -0.5f, -0.5f, +0.5f }, //
+  { +0.5f, -0.5f, +0.5f }, //
+  { +0.5f, +0.5f, +0.5f }, //
+  { -0.5f, +0.5f, +0.5f }, //
+};
+
+std::array<int, 4> triangles[] = {
+  { 1, 5, 6, 2 }, // x+
+  { 3, 2, 6, 7 }, // y+
+  { 0, 1, 2, 3 }, // z+
+  { 4, 7, 3, 0 }, // x-
+  { 1, 0, 4, 5 }, // y-
+  { 5, 6, 7, 4 }, // z-
+};
+
+static std::optional<float>
+Intersect(DirectX::XMVECTOR origin,
+          DirectX::XMVECTOR dir,
+          DirectX::XMMATRIX m,
+          int t)
+{
+  auto [i0, i1, i2, i3] = triangles[t];
+  float dist;
+  if (DirectX::TriangleTests::Intersects(
+        origin,
+        dir,
+        DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i0]), m),
+        DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i1]), m),
+        DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i2]), m),
+        dist)) {
+    return dist;
+  } else if (DirectX::TriangleTests::Intersects(
+               origin,
+               dir,
+               DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i2]), m),
+               DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i3]), m),
+               DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i0]), m),
+               dist)) {
+    return dist;
+  } else {
+    return std::nullopt;
+  }
+}
 
 namespace glr {
 
@@ -21,6 +78,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
   , m_cuber(new Cuber)
   , m_gizmo(new LineGizmo)
   , m_screen(new recti::Screen)
+  , m_camera(new grapho::camera::Camera)
 {
 }
 
@@ -57,80 +115,97 @@ RenderScene(const grapho::camera::Camera& camera,
 
 void
 SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                            const grapho::camera::Camera& camera) const
+                            const grapho::camera::Viewport& viewport,
+                            const grapho::camera::MouseState& mouse) const
 {
-  glr::ClearRendertarget(camera, *m_env);
+  // update camera
+  m_camera->Projection.SetViewport(viewport);
+  m_camera->MouseInputTurntable(mouse);
+  m_camera->Update();
+
+  glr::ClearRendertarget(*m_camera, *m_env);
 
   auto nodestates = scene->NodeStates();
   auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
     *scene->m_gltf, scene->m_bin, nodestates);
   RenderScene(
-    camera, *m_env, *scene->m_gltf, scene->m_bin, nodeMeshes, m_settings);
+    *m_camera, *m_env, *scene->m_gltf, scene->m_bin, nodeMeshes, m_settings);
 
   if (m_settings->ShowLine) {
-    glr::RenderLine(camera, m_gizmo->m_lines);
+    glr::RenderLine(*m_camera, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
 
   if (m_settings->ShowCuber) {
     m_cuber->Instances.clear();
+
     for (auto m : scene->ShapeMatrices()) {
       m_cuber->Instances.push_back({
         .Matrix = m,
       });
     }
-    m_cuber->Render(camera);
+
+    m_cuber->Render(*m_camera);
   }
 
   // manipulator
-  if (auto node = scene->m_selected) {
+  if (auto selected = scene->m_selected) {
     // TODO: conflict mouse event(left) with ImageButton
     DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(&m, node->WorldInitialMatrix());
+    DirectX::XMStoreFloat4x4(&m, selected->WorldInitialMatrix());
 
-    bool enableTranslation = false;
-    if (auto humanoid = node->Humanoid) {
+    auto op = recti::ROTATE;
+    if (auto humanoid = selected->Humanoid) {
       if (*humanoid == libvrm::HumanBones::hips) {
-        enableTranslation = true;
+        op |= recti::TRANSLATE;
       }
     } else {
-      enableTranslation = true;
+      op |= recti::TRANSLATE;
+      op |= recti::SCALE;
     }
 
     recti::Camera gizmo_camera{
-      *((const recti::Mat4*)&camera.ViewMatrix),
-      *((const recti::Mat4*)&camera.ProjectionMatrix),
-      *((const recti::Vec4*)&camera.Projection.Viewport),
+      *((const recti::Mat4*)&m_camera->ViewMatrix),
+      *((const recti::Mat4*)&m_camera->ProjectionMatrix),
+      *((const recti::Vec4*)&m_camera->Projection.Viewport),
     };
 
     auto& io = ImGui::GetIO();
     recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
 
     m_screen->Begin(gizmo_camera, mouse);
-    if (m_screen->Manipulate(node.get(),
-                             { enableTranslation, true, false, true },
-                             (float*)&m,
-                             nullptr,
-                             nullptr,
-                             nullptr,
-                             nullptr)) {
+    if (m_screen->Manipulate(
+          (int64_t)selected.get(), op, recti::LOCAL, (float*)&m)) {
       // decompose feedback
-      node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
-      node->CalcWorldInitialMatrix(true);
+      selected->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
+      selected->CalcWorldInitialMatrix(true);
 
       scene->RaiseSceneUpdated();
     }
-    auto& drawlist = m_screen->End();
-    recti::Render(drawlist, ImGui::GetWindowDrawList());
+    recti::Render(m_screen->DrawList, ImGui::GetWindowDrawList());
   }
 }
+
+struct Hit
+{
+  uint32_t Index;
+  float Distance;
+};
 
 void
 SceneRenderer::RenderRuntime(
   const std::shared_ptr<libvrm::RuntimeScene>& runtime,
-  const grapho::camera::Camera& camera) const
+  const grapho::camera::Viewport& viewport,
+  const grapho::camera::MouseState& mouse) const
 {
-  glr::ClearRendertarget(camera, *m_env);
+  // update camera
+  m_camera->Projection.SetViewport(viewport);
+  m_camera->MouseInputTurntable(mouse);
+  m_camera->Update();
+
+  auto ray = m_camera->GetRay(mouse);
+
+  glr::ClearRendertarget(*m_camera, *m_env);
 
   auto nodestates = runtime->m_base->NodeStates();
   if (nodestates.size()) {
@@ -138,7 +213,7 @@ SceneRenderer::RenderRuntime(
     m_settings->NextSpringDelta = {};
     auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
       *runtime->m_base->m_gltf, runtime->m_base->m_bin, nodestates);
-    RenderScene(camera,
+    RenderScene(*m_camera,
                 *m_env,
                 *runtime->m_base->m_gltf,
                 runtime->m_base->m_bin,
@@ -148,58 +223,164 @@ SceneRenderer::RenderRuntime(
 
   if (m_settings->ShowLine) {
     runtime->DrawGizmo(m_gizmo.get());
-    glr::RenderLine(camera, m_gizmo->m_lines);
+    glr::RenderLine(*m_camera, m_gizmo->m_lines);
   }
   m_gizmo->Clear();
 
-  if (m_settings->ShowCuber) {
-    m_cuber->Instances.clear();
-    for (auto m : runtime->ShapeMatrices()) {
-      m_cuber->Instances.push_back({
-        .Matrix = m,
-      });
+  auto distance = std::numeric_limits<float>::infinity();
+  std::optional<uint32_t> closest;
+
+  m_cuber->Instances.clear();
+
+  auto matrices = runtime->ShapeMatrices();
+  for (uint32_t i = 0; i < matrices.size(); ++i) {
+    auto& m = matrices[i];
+    m_cuber->Instances.push_back({
+      .Matrix = m,
+    });
+    if (ray) {
+      auto& cube = m_cuber->Instances.back();
+      auto inv = DirectX::XMMatrixInverse(
+        nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
+      auto local_ray = ray->Transform(inv);
+      auto origin = DirectX::XMLoadFloat3(&ray->Origin);
+      auto dir = DirectX::XMLoadFloat3(&ray->Direction);
+      auto m = DirectX::XMLoadFloat4x4(&cube.Matrix);
+
+      {
+        float hit[3] = { 0, 0, 0 };
+
+        if (auto d = Intersect(origin, dir, m, 0)) {
+          cube.PositiveFaceFlag.x = 7;
+          hit[0] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.PositiveFaceFlag.x = 8;
+        }
+
+        if (auto d = Intersect(origin, dir, m, 1)) {
+          cube.PositiveFaceFlag.y = 7;
+          hit[1] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.PositiveFaceFlag.y = 8;
+        }
+
+        if (auto d = Intersect(origin, dir, m, 2)) {
+          cube.PositiveFaceFlag.z = 7;
+          hit[2] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.PositiveFaceFlag.z = 8;
+        }
+        // ImGui::InputFloat3(buf.Printf("%d.hit.positive", i), hit);
+      }
+
+      {
+        float hit[3] = { 0, 0, 0 };
+        if (auto d = Intersect(origin, dir, m, 3)) {
+          cube.NegativeFaceFlag.x = 7;
+          hit[0] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.NegativeFaceFlag.x = 8;
+        }
+
+        if (auto d = Intersect(origin, dir, m, 4)) {
+          cube.NegativeFaceFlag.y = 7;
+          hit[1] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.NegativeFaceFlag.y = 8;
+        }
+
+        if (auto d = Intersect(origin, dir, m, 5)) {
+          cube.NegativeFaceFlag.z = 7;
+          hit[2] = *d;
+          if (*d < distance) {
+            distance = *d;
+            closest = i;
+          }
+        } else {
+          cube.NegativeFaceFlag.z = 8;
+        }
+        // ImGui::InputFloat3(buf.Printf("%d.hit.negative", i), hit);
+      }
     }
-    m_cuber->Render(camera);
   }
 
   // manipulator
-  if (auto node = runtime->m_selected) {
+  bool manipulated = false;
+  if (auto selected = runtime->GetSelectedNode()) {
     //   // TODO: conflict mouse event(left) with ImageButton
     DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(&m, node->WorldMatrix());
+    DirectX::XMStoreFloat4x4(&m, selected->WorldMatrix());
 
-    bool enableTranslation = false;
-    if (auto humanoid = node->Base->Humanoid) {
+    auto op = recti::ROTATE;
+    if (auto humanoid = selected->Base->Humanoid) {
       if (*humanoid == libvrm::HumanBones::hips) {
-        enableTranslation = true;
+        op |= recti::TRANSLATE;
       }
     } else {
-      enableTranslation = true;
+      op |= recti::TRANSLATE;
+      op |= recti::SCALE;
     }
 
     recti::Camera gizmo_camera{
-      *((const recti::Mat4*)&camera.ViewMatrix),
-      *((const recti::Mat4*)&camera.ProjectionMatrix),
-      *((const recti::Vec4*)&camera.Projection.Viewport),
+      *((const recti::Mat4*)&m_camera->ViewMatrix),
+      *((const recti::Mat4*)&m_camera->ProjectionMatrix),
+      *((const recti::Vec4*)&m_camera->Projection.Viewport),
     };
 
     auto& io = ImGui::GetIO();
     recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
 
     m_screen->Begin(gizmo_camera, mouse);
-    if (m_screen->Manipulate(node.get(),
-                             { enableTranslation, true, false, true },
-                             (float*)&m,
-                             nullptr,
-                             nullptr,
-                             nullptr,
-                             nullptr)) {
+    manipulated = m_screen->Manipulate(
+      (int64_t)selected.get(), op, recti::LOCAL, (float*)&m);
+    if (manipulated) {
       // decompose feedback
-      node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
-      node->CalcWorldMatrix(true);
+      selected->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+      selected->CalcWorldMatrix(true);
     }
-    auto& drawlist = m_screen->End();
-    recti::Render(drawlist, ImGui::GetWindowDrawList());
+
+    // const float cubes[]{
+    //   1, 0, 0, 0, //
+    //   0, 1, 0, 0, //
+    //   0, 0, 1, 0, //
+    //   0, 0, 0, 1, //
+    // };
+    // auto cubes = runtime->ShapeMatrices();
+    // m_screen->DrawCubes((const float*)cubes.data(), cubes.size());
+
+    recti::Render(m_screen->DrawList, ImGui::GetWindowDrawList());
+  }
+
+  if (!manipulated && mouse.LeftDown) {
+    if (closest) {
+      runtime->SelectNode(runtime->m_nodes[*closest]);
+    } else {
+      // runtime->SelectNode(nullptr);
+    }
+  }
+
+  if (m_settings->ShowCuber) {
+    m_cuber->Render(*m_camera);
   }
 }
 

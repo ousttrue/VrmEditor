@@ -58,7 +58,6 @@ struct RuntimeScene
   std::shared_ptr<GltfRoot> m_base;
   std::vector<std::shared_ptr<RuntimeNode>> m_nodes;
   std::vector<std::shared_ptr<RuntimeNode>> m_roots;
-  std::shared_ptr<RuntimeNode> m_selected;
   std::vector<std::shared_ptr<Animation>> m_animations;
   std::shared_ptr<Timeline> m_timeline;
   std::unordered_map<uint32_t, std::vector<float>> m_moprhWeigts;
@@ -136,6 +135,11 @@ struct RuntimeScene
   void DrawGizmo(IGizmoDrawer* gizmo);
 
   std::string CopyVrmPoseText();
+
+  std::shared_ptr<RuntimeNode> GetSelectedNode() const;
+  void SelectNode(const std::shared_ptr<libvrm::RuntimeNode>& node);
+  bool IsSelected(const std::shared_ptr<libvrm::RuntimeNode>& node) const;
+
 };
 
 } // namespace

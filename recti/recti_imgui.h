@@ -1,5 +1,6 @@
 #pragma once
-#include "recti.h"
+#include "drawcommand.h"
+#include "vec2.h"
 #include <imgui.h>
 
 struct ImDrawList;
@@ -7,8 +8,8 @@ struct ImDrawList;
 namespace recti {
 
 Vec2::Vec2(const ImVec2& v)
-  : X(v.x)
-  , Y(v.y)
+  : x(v.x)
+  , y(v.y)
 {
 }
 
