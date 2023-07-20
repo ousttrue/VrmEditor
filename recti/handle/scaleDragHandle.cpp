@@ -180,6 +180,16 @@ ScaleUDragHandle::Draw(const ModelContext& mCurrent,
     Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
     mStyle.GetColorU32(TEXT),
     tmps);
+
+  // if (mState.Using(mCurrent.mActualID)) {
+  //   uint32_t scaleLineColor = mStyle.GetColorU32(SCALE_LINE);
+  //   drawList->AddLine(baseSSpace,
+  //                     worldDirSSpaceNoScale,
+  //                     scaleLineColor,
+  //                     mStyle.ScaleLineThickness);
+  //   drawList->AddCircleFilled(
+  //     worldDirSSpaceNoScale, mStyle.ScaleLineCircleSize, scaleLineColor);
+  // }
 }
 
 } // namespace

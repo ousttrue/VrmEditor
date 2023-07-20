@@ -24,7 +24,6 @@ struct IDragHandle
 
 struct State
 {
-  int64_t mEditingID = -1;
   bool mbUsing = false;
   // save axis factor when using gizmo
   bool mBelowAxisLimit[3];
@@ -33,19 +32,6 @@ struct State
   recti::MOVETYPE mCurrentOperation;
 
   std::shared_ptr<IDragHandle> DragHandle;
-
-  bool Using(uint64_t actualID) const
-  {
-    if (mbUsing) {
-      if (actualID == -1) {
-        return true;
-      }
-      if (actualID == mEditingID) {
-        return true;
-      }
-    }
-    return false;
-  }
 };
 
 }

@@ -17,8 +17,8 @@ static const OPERATION TRANSLATE_PLANS[3] = { TRANSLATE_Y | TRANSLATE_Z,
 
 MOVETYPE
 Translation::GetType(const ModelContext& current,
-                         bool allowAxisFlip,
-                         State* state)
+                     bool allowAxisFlip,
+                     State* state)
 {
   if (!Intersects(current.mOperation, TRANSLATE) || state->mbUsing) {
     return MT_NONE;
@@ -30,23 +30,13 @@ Translation::GetType(const ModelContext& current,
   for (int i = 0; i < 3 && type == MT_NONE; i++) {
 
     Tripod tripod(i);
-    if (state->Using(current.mActualID)) {
-      // when using, use stored factors so the gizmo doesn't flip when we
-      // translate
-      tripod.belowAxisLimit = state->mBelowAxisLimit[i];
-      tripod.belowPlaneLimit = state->mBelowPlaneLimit[i];
-      tripod.dirAxis *= state->mAxisFactor[i];
-      tripod.dirPlaneX *= state->mAxisFactor[(i + 1) % 3];
-      tripod.dirPlaneY *= state->mAxisFactor[(i + 2) % 3];
-    } else {
-      tripod.ComputeTripodAxisAndVisibility(current, allowAxisFlip);
-      // and store values
-      state->mAxisFactor[i] = tripod.mulAxis;
-      state->mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
-      state->mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
-      state->mBelowAxisLimit[i] = tripod.belowAxisLimit;
-      state->mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
-    }
+    tripod.ComputeTripodAxisAndVisibility(current, allowAxisFlip);
+    // and store values
+    state->mAxisFactor[i] = tripod.mulAxis;
+    state->mAxisFactor[(i + 1) % 3] = tripod.mulAxisX;
+    state->mAxisFactor[(i + 2) % 3] = tripod.mulAxisY;
+    state->mBelowAxisLimit[i] = tripod.belowAxisLimit;
+    state->mBelowPlaneLimit[i] = tripod.belowPlaneLimit;
 
     tripod.dirAxis.TransformVector(current.mModel);
     tripod.dirPlaneX.TransformVector(current.mModel);
