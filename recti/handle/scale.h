@@ -28,6 +28,10 @@ struct Scale
                                 const State& mState,
                                 const Style& mStyle,
                                 const std::shared_ptr<DrawList>& drawList);
+
+  static void ComputeColors(uint32_t colors[7],
+                            MOVETYPE type,
+                            const Style& style);
 };
 
 } // namespace

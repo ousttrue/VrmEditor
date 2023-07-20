@@ -12,8 +12,8 @@ namespace recti {
 struct Translation
 {
   static MOVETYPE GetType(const ModelContext& current,
-                              bool allowAxisFlip,
-                              State* state);
+                          bool allowAxisFlip,
+                          State* state);
 
   static void DrawGizmo(const ModelContext& current,
                         bool allowAxisFlip,
@@ -21,6 +21,10 @@ struct Translation
                         const State& state,
                         const Style& style,
                         const std::shared_ptr<DrawList>& drawList);
+
+  static void ComputeColors(uint32_t colors[7],
+                            MOVETYPE type,
+                            const Style& style);
 };
 
 } // namespace

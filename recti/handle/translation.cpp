@@ -97,7 +97,7 @@ Translation::DrawGizmo(const ModelContext& current,
 
   // colors
   uint32_t colors[7];
-  style.ComputeColors(colors, type, TRANSLATE);
+  ComputeColors(colors, type, style);
 
   const Vec2 origin =
     current.mCameraMouse.WorldToPos(current.mModel.position());
@@ -177,6 +177,25 @@ Translation::DrawGizmo(const ModelContext& current,
 
   drawList->AddCircleFilled(
     current.mScreenSquareCenter, style.CenterCircleSize, colors[0], 32);
+}
+
+void
+Translation::ComputeColors(uint32_t colors[7],
+                           MOVETYPE type,
+                           const Style& style)
+{
+  uint32_t selectionColor = style.GetColorU32(SELECTION);
+
+  colors[0] = (type == MT_MOVE_SCREEN) ? selectionColor : COL32_WHITE();
+  for (int i = 0; i < 3; i++) {
+    colors[i + 1] = (type == (int)(MT_MOVE_X + i))
+                      ? selectionColor
+                      : style.GetColorU32(DIRECTION_X + i);
+    colors[i + 4] = (type == (int)(MT_MOVE_YZ + i))
+                      ? selectionColor
+                      : style.GetColorU32(PLANE_X + i);
+    colors[i + 4] = (type == MT_MOVE_SCREEN) ? selectionColor : colors[i + 4];
+  }
 }
 
 } // namespace

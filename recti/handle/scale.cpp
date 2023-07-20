@@ -127,7 +127,7 @@ Scale::DrawGizmo(const ModelContext& mCurrent,
 
   // colors
   uint32_t colors[7];
-  mStyle.ComputeColors(colors, type, SCALE);
+  ComputeColors(colors, type, mStyle);
 
   // draw
   Vec4 scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
@@ -205,7 +205,7 @@ Scale::DrawUniveralGizmo(const ModelContext& mCurrent,
 
   // colors
   uint32_t colors[7];
-  mStyle.ComputeColors(colors, type, SCALEU);
+  ComputeColors(colors, type, mStyle);
 
   // draw
   Vec4 scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
@@ -245,6 +245,19 @@ Scale::DrawUniveralGizmo(const ModelContext& mCurrent,
   // draw screen cirle
   drawList->AddCircle(
     mCurrent.mScreenSquareCenter, 20.f, colors[0], 32, mStyle.CenterCircleSize);
+}
+
+void
+Scale::ComputeColors(uint32_t colors[7], MOVETYPE type, const Style& style)
+{
+  uint32_t selectionColor = style.GetColorU32(SELECTION);
+
+  colors[0] = (type == MT_SCALE_XYZ) ? selectionColor : COL32_WHITE();
+  for (int i = 0; i < 3; i++) {
+    colors[i + 1] = (type == (int)(MT_SCALE_X + i))
+                      ? selectionColor
+                      : style.GetColorU32(DIRECTION_X + i);
+  }
 }
 
 } // namespace

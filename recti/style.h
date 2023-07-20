@@ -63,7 +63,6 @@ struct Style
   };
 
   uint32_t GetColorU32(int idx) const;
-  void ComputeColors(uint32_t* colors, int type, OPERATION operation) const;
 };
 
 uint32_t

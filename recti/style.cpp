@@ -42,47 +42,4 @@ Style::GetColorU32(int idx) const
   return ColorConvertFloat4ToU32(Colors[idx]);
 }
 
-void
-Style::ComputeColors(uint32_t* colors, int type, OPERATION operation) const
-{
-  uint32_t selectionColor = GetColorU32(SELECTION);
-
-  switch (operation) {
-    case TRANSLATE:
-      colors[0] = (type == MT_MOVE_SCREEN) ? selectionColor : COL32_WHITE();
-      for (int i = 0; i < 3; i++) {
-        colors[i + 1] = (type == (int)(MT_MOVE_X + i))
-                          ? selectionColor
-                          : GetColorU32(DIRECTION_X + i);
-        colors[i + 4] = (type == (int)(MT_MOVE_YZ + i))
-                          ? selectionColor
-                          : GetColorU32(PLANE_X + i);
-        colors[i + 4] =
-          (type == MT_MOVE_SCREEN) ? selectionColor : colors[i + 4];
-      }
-      break;
-    case ROTATE:
-      colors[0] = (type == MT_ROTATE_SCREEN) ? selectionColor : COL32_WHITE();
-      for (int i = 0; i < 3; i++) {
-        colors[i + 1] = (type == (int)(MT_ROTATE_X + i))
-                          ? selectionColor
-                          : GetColorU32(DIRECTION_X + i);
-      }
-      break;
-    case SCALEU:
-    case SCALE:
-      colors[0] = (type == MT_SCALE_XYZ) ? selectionColor : COL32_WHITE();
-      for (int i = 0; i < 3; i++) {
-        colors[i + 1] = (type == (int)(MT_SCALE_X + i))
-                          ? selectionColor
-                          : GetColorU32(DIRECTION_X + i);
-      }
-      break;
-    // note: this internal function is only called with three possible
-    // values for operation
-    default:
-      break;
-  }
-}
-
 } // namespace

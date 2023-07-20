@@ -94,7 +94,7 @@ Rotation::DrawGizmo(const recti::ModelContext& mCurrent,
 {
   // colors
   uint32_t colors[7];
-  mStyle.ComputeColors(colors, type, recti::ROTATE);
+  ComputeColors(colors, type, mStyle);
 
   recti::Vec4 cameraToModelNormalized;
   if (mIsOrthographic) {
@@ -161,6 +161,19 @@ Rotation::DrawGizmo(const recti::ModelContext& mCurrent,
       colors[0],
       64,
       mStyle.RotationOuterLineThickness);
+  }
+}
+
+void
+Rotation::ComputeColors(uint32_t colors[7], MOVETYPE type, const Style& style)
+{
+  uint32_t selectionColor = style.GetColorU32(SELECTION);
+
+  colors[0] = (type == MT_ROTATE_SCREEN) ? selectionColor : COL32_WHITE();
+  for (int i = 0; i < 3; i++) {
+    colors[i + 1] = (type == (int)(MT_ROTATE_X + i))
+                      ? selectionColor
+                      : style.GetColorU32(DIRECTION_X + i);
   }
 }
 
