@@ -71,9 +71,8 @@ ComputeColors(uint32_t colors[7], MOVETYPE type, const Style& style)
 MOVETYPE
 ScaleGizmo::Hover(const ModelContext& current)
 {
-  if (!Intersects(current.Operation, SCALE)) {
-    return MT_NONE;
-  }
+  // if (!Intersects(current.Operation, SCALE)) {
+  // }
   return GetType(current, m_allowAxisFlip);
 }
 
@@ -140,6 +139,56 @@ ScaleGizmo::Draw(const ModelContext& mCurrent,
   // draw screen cirle
   drawList.AddCircleFilled(
     mCurrent.ScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
+}
+
+//
+// Uniform
+//
+static MOVETYPE
+GetUniformType(const recti::ModelContext& mCurrent, bool mAllowAxisFlip)
+{
+  auto& mousePos = mCurrent.CameraMouse.Mouse.Position;
+  recti::Vec4 deltaScreen = { mousePos.x - mCurrent.ScreenSquareCenter.x,
+                              mousePos.y - mCurrent.ScreenSquareCenter.y,
+                              0.f,
+                              0.f };
+  float dist = deltaScreen.Length();
+  if (Contains(mCurrent.Operation, recti::SCALEU) && dist >= 17.0f &&
+      dist < 23.0f) {
+    return recti::MT_SCALE_XYZ;
+  }
+
+  for (int i = 0; i < 3; i++) {
+    if (!Intersects(mCurrent.Operation,
+                    static_cast<recti::OPERATION>(recti::SCALE_XU << i))) {
+      continue;
+    }
+
+    recti::Tripod tripod(i);
+    tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+    tripod.dirAxis.TransformVector(mCurrent.ModelLocal);
+    tripod.dirPlaneX.TransformVector(mCurrent.ModelLocal);
+    tripod.dirPlaneY.TransformVector(mCurrent.ModelLocal);
+
+    // draw axis
+    if (tripod.belowAxisLimit) {
+      bool hasTranslateOnAxis =
+        Contains(mCurrent.Operation,
+                 static_cast<recti::OPERATION>(recti::TRANSLATE_X << i));
+      float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
+      recti::Vec2 worldDirSSpace = recti::worldToPos(
+        (tripod.dirAxis * markerScale) * mCurrent.ScreenFactor,
+        mCurrent.MVPLocal,
+        mCurrent.CameraMouse.Camera.Viewport);
+
+      float distance = sqrtf((worldDirSSpace - mousePos).SqrLength());
+      if (distance < 12.f) {
+        return (recti::MOVETYPE)(recti::MT_SCALE_X + i);
+      }
+    }
+  }
+
+  return MT_NONE;
 }
 
 } // namespace

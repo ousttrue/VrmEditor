@@ -30,7 +30,6 @@ struct Screen
     std::make_shared<TranslationGizmo>(),
     std::make_shared<RotationGizmo>(),
     std::make_shared<ScaleGizmo>(),
-    // std::make_shared<UniformScaleGizmo>(),
   };
   // drag & draw
   std::shared_ptr<IDragHandle> DragHandle;
