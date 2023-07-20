@@ -1,8 +1,10 @@
 #include "recti.h"
 #include "handle/rotation.h"
 #include "handle/scale.h"
+#include "handle/state.h"
 #include "handle/translation.h"
-#include "state.h"
+#include "handle/translationDragHandle.h"
+#include <iostream>
 
 namespace recti {
 
@@ -20,7 +22,6 @@ struct ScreenImpl
 
   float mRadiusSquareCenter = 0.0f;
 
-  Translation mT;
   Rotation mR;
   Scale mS;
 
@@ -61,6 +62,39 @@ public:
       return false;
     }
 
+    if (auto handle = mState.DragHandle) {
+      // if (state.Using(current.mActualID) &&
+      //     IsTranslateType(state.mCurrentOperation)) {
+      // drag
+      auto modified = handle->Drag(mCurrent, mState, snap, matrix, deltaMatrix);
+      handle->Draw(mCurrent, mStyle, mDrawList);
+      if (!mCurrent.mCameraMouse.Mouse.LeftDown) {
+        // drag end
+        std::cout << "end drag" << std::endl;
+        mState.mbUsing = false;
+        mState.DragHandle = {};
+      }
+      return modified;
+    }
+
+    // hover
+    auto hoverT = MT_NONE;
+    if (Intersects(mCurrent.mOperation, TRANSLATE)) {
+      hoverT = Translation::GetMoveType(mCurrent, mAllowAxisFlip, &mState);
+      if (hoverT != MT_NONE) {
+        // hover
+        if (mCurrent.mCameraMouse.Mouse.LeftDown) {
+          // begin drag
+          std::cout << "begin drag" << std::endl;
+          mState.mbUsing = true;
+          mState.mEditingID = mCurrent.mActualID;
+          mState.mCurrentOperation = hoverT;
+          mState.DragHandle = std::make_shared<TranslationDragHandle>(
+            mCurrent, hoverT); // Begin(current, type);
+        }
+      }
+    }
+
     // --
     // auto resultT = mT.HandleTranslation(
     //   mCurrent, mAllowAxisFlip, mState, snap, matrix, deltaMatrix);
@@ -90,9 +124,8 @@ public:
                            mDrawList);
     }
     if (Intersects(mCurrent.mOperation, TRANSLATE)) {
-      auto type = Translation::GetMoveType(mCurrent, mAllowAxisFlip, &mState);
-      mT.DrawTranslationGizmo(
-        mCurrent, mAllowAxisFlip, type, mState, mStyle, mDrawList);
+      Translation::DrawGizmo(
+        mCurrent, mAllowAxisFlip, hoverT, mState, mStyle, mDrawList);
     }
     if (Intersects(mCurrent.mOperation, SCALE)) {
       auto type = Scale::GetScaleType(mCurrent, mAllowAxisFlip, &mState);

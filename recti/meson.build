@@ -11,6 +11,7 @@ recti_lib = static_library(
         'drawcommand.cpp',
         'tripod.cpp',
         'handle/translation.cpp',
+        'handle/translationDragHandle.cpp',
         'handle/rotation.cpp',
         'handle/scale.cpp',
         'recti.cpp',

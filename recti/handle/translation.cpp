@@ -6,8 +6,6 @@
 
 namespace recti {
 
-static const int translationInfoIndex[] = { 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 2,
-                                            0, 0, 2, 0, 0, 1, 0, 0, 1, 2 };
 static const float quadMin = 0.5f;
 static const float quadMax = 0.8f;
 static const float quadUV[8] = { quadMin, quadMin, quadMin, quadMax,
@@ -16,14 +14,6 @@ static const float quadUV[8] = { quadMin, quadMin, quadMin, quadMax,
 static const OPERATION TRANSLATE_PLANS[3] = { TRANSLATE_Y | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Y };
-
-static const char* translationInfoMask[] = { "X : %5.3f",
-                                             "Y : %5.3f",
-                                             "Z : %5.3f",
-                                             "Y : %5.3f Z : %5.3f",
-                                             "X : %5.3f Z : %5.3f",
-                                             "X : %5.3f Y : %5.3f",
-                                             "X : %5.3f Y : %5.3f Z : %5.3f" };
 
 MOVETYPE
 Translation::GetMoveType(const ModelContext& current,
@@ -104,137 +94,12 @@ Translation::GetMoveType(const ModelContext& current,
 }
 
 void
-Translation::Begin(const ModelContext& current, MOVETYPE type)
-{
-  // find new possible way to move
-  Vec4 movePlanNormal[] = {
-    current.mModel.right(),           current.mModel.up(), current.mModel.dir(),
-    current.mModel.right(),           current.mModel.up(), current.mModel.dir(),
-    -current.mCameraMouse.CameraDir()
-  };
-
-  Vec4 cameraToModelNormalized =
-    Normalized(current.mModel.position() - current.mCameraMouse.CameraEye());
-  for (unsigned int i = 0; i < 3; i++) {
-    Vec4 orthoVector = Cross(movePlanNormal[i], cameraToModelNormalized);
-    movePlanNormal[i].Cross(orthoVector);
-    movePlanNormal[i].Normalize();
-  }
-  // pickup plan
-  mTranslationPlan =
-    BuildPlan(current.mModel.position(), movePlanNormal[type - MT_MOVE_X]);
-  mTranslationPlanOrigin =
-    current.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
-  mMatrixOrigin = current.mModel.position();
-
-  mRelativeOrigin = (mTranslationPlanOrigin - current.mModel.position()) *
-                    (1.f / current.mScreenFactor);
-}
-
-bool
-Translation::Drag(const ModelContext& current,
-                  const State& state,
-                  const float* snap,
-                  float* matrix,
-                  float* deltaMatrix)
-{
-  const Vec4 newPos = current.mCameraMouse.Ray.IntersectPlane(mTranslationPlan);
-
-  // compute delta
-  const Vec4 newOrigin = newPos - mRelativeOrigin * current.mScreenFactor;
-  Vec4 delta = newOrigin - current.mModel.position();
-
-  // 1 axis constraint
-  if (state.mCurrentOperation >= MT_MOVE_X &&
-      state.mCurrentOperation <= MT_MOVE_Z) {
-    const int axisIndex = state.mCurrentOperation - MT_MOVE_X;
-    const Vec4& axisValue = current.mModel.component(axisIndex);
-    const float lengthOnAxis = Dot(axisValue, delta);
-    delta = axisValue * lengthOnAxis;
-  }
-
-  // snap
-  if (snap) {
-    Vec4 cumulativeDelta = current.mModel.position() + delta - mMatrixOrigin;
-    const bool applyRotationLocaly =
-      current.mMode == LOCAL || state.mCurrentOperation == MT_MOVE_SCREEN;
-    if (applyRotationLocaly) {
-      Mat4 modelSourceNormalized = current.mModelSource;
-      modelSourceNormalized.OrthoNormalize();
-      Mat4 modelSourceNormalizedInverse;
-      modelSourceNormalizedInverse.Inverse(modelSourceNormalized);
-      cumulativeDelta.TransformVector(modelSourceNormalizedInverse);
-      ComputeSnap(cumulativeDelta, snap);
-      cumulativeDelta.TransformVector(modelSourceNormalized);
-    } else {
-      ComputeSnap(cumulativeDelta, snap);
-    }
-    delta = mMatrixOrigin + cumulativeDelta - current.mModel.position();
-  }
-
-  auto modified = false;
-  if (delta != mTranslationLastDelta) {
-    modified = true;
-    mTranslationLastDelta = delta;
-  }
-
-  // compute matrix & delta
-  Mat4 deltaMatrixTranslation;
-  deltaMatrixTranslation.Translation(delta);
-  if (deltaMatrix) {
-    memcpy(deltaMatrix, &deltaMatrixTranslation.m00, sizeof(float) * 16);
-  }
-
-  const Mat4 res = current.mModelSource * deltaMatrixTranslation;
-  *(Mat4*)matrix = res;
-
-  return modified;
-}
-
-Result
-Translation::HandleTranslation(const ModelContext& current,
-                               bool allowAxisFlip,
-                               State& state,
-                               const float* snap,
-                               float* matrix,
-                               float* deltaMatrix)
-{
-  if (!Intersects(current.mOperation, TRANSLATE)) {
-    return {};
-  }
-
-  if (state.Using(current.mActualID) &&
-      IsTranslateType(state.mCurrentOperation)) {
-    // drag
-    auto modified = Drag(current, state, snap, matrix, deltaMatrix);
-    if (!current.mCameraMouse.Mouse.LeftDown) {
-      state.mbUsing = false;
-    }
-
-    return { state.mCurrentOperation, modified };
-  }
-
-  auto type = GetMoveType(current, allowAxisFlip, &state);
-  if (type != MT_NONE) {
-    // hover
-    if (current.mCameraMouse.Mouse.LeftDown) {
-      // begin
-      state.mbUsing = true;
-      state.mEditingID = current.mActualID;
-      state.mCurrentOperation = type;
-      Begin(current, type);
-    }
-  }
-  return { type };
-}
-
-void
-Translation::DrawTranslationGizmo(const ModelContext& current,
-                                  bool allowAxisFlip,
-                                  MOVETYPE type,
-                                  const State& state,
-                                  const Style& style,
-                                  const std::shared_ptr<DrawList>& drawList)
+Translation::DrawGizmo(const ModelContext& current,
+                       bool allowAxisFlip,
+                       MOVETYPE type,
+                       const State& state,
+                       const Style& style,
+                       const std::shared_ptr<DrawList>& drawList)
 {
   if (!Intersects(current.mOperation, TRANSLATE)) {
     return;
@@ -322,45 +187,6 @@ Translation::DrawTranslationGizmo(const ModelContext& current,
 
   drawList->AddCircleFilled(
     current.mScreenSquareCenter, style.CenterCircleSize, colors[0], 32);
-
-  if (state.Using(current.mActualID) && IsTranslateType(type)) {
-    uint32_t translationLineColor = style.GetColorU32(TRANSLATION_LINE);
-
-    Vec2 sourcePosOnScreen = current.mCameraMouse.WorldToPos(mMatrixOrigin);
-    Vec2 destinationPosOnScreen =
-      current.mCameraMouse.WorldToPos(current.mModel.position());
-    Vec4 dif = { destinationPosOnScreen.x - sourcePosOnScreen.x,
-                 destinationPosOnScreen.y - sourcePosOnScreen.y,
-                 0.f,
-                 0.f };
-    dif.Normalize();
-    dif *= 5.f;
-    drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
-    drawList->AddCircle(destinationPosOnScreen, 6.f, translationLineColor);
-    drawList->AddLine(
-      Vec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y + dif.y),
-      Vec2(destinationPosOnScreen.x - dif.x, destinationPosOnScreen.y - dif.y),
-      translationLineColor,
-      2.f);
-
-    char tmps[512];
-    Vec4 deltaInfo = current.mModel.position() - mMatrixOrigin;
-    int componentInfoIndex = (type - MT_MOVE_X) * 3;
-    snprintf(tmps,
-             sizeof(tmps),
-             translationInfoMask[type - MT_MOVE_X],
-             deltaInfo[translationInfoIndex[componentInfoIndex]],
-             deltaInfo[translationInfoIndex[componentInfoIndex + 1]],
-             deltaInfo[translationInfoIndex[componentInfoIndex + 2]]);
-    drawList->AddText(
-      Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
-      style.GetColorU32(TEXT_SHADOW),
-      tmps);
-    drawList->AddText(
-      Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
-      style.GetColorU32(TEXT),
-      tmps);
-  }
 }
 
 } // namespace
