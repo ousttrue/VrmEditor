@@ -9,6 +9,7 @@
 #include <DirectXCollision.h>
 #include <boneskin/skinning_manager.h>
 #include <limits>
+#include <recti.h>
 #include <recti_imgui.h>
 #include <vrm/gltfroot.h>
 #include <vrm/runtime_node.h>
@@ -153,13 +154,14 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
     DirectX::XMFLOAT4X4 m;
     DirectX::XMStoreFloat4x4(&m, selected->WorldInitialMatrix());
 
-    bool enableTranslation = false;
+    auto op = recti::ROTATE;
     if (auto humanoid = selected->Humanoid) {
       if (*humanoid == libvrm::HumanBones::hips) {
-        enableTranslation = true;
+        op |= recti::TRANSLATE;
       }
     } else {
-      enableTranslation = true;
+      op |= recti::TRANSLATE;
+      op |= recti::SCALE;
     }
 
     recti::Camera gizmo_camera{
@@ -172,17 +174,15 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
     recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
 
     m_screen->Begin(gizmo_camera, mouse);
-    if (m_screen->Manipulate(selected.get(),
-                             { enableTranslation, true, false, true },
-                             (float*)&m)) {
+    if (m_screen->Manipulate(
+          (int64_t)selected.get(), op, recti::LOCAL, (float*)&m)) {
       // decompose feedback
       selected->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
       selected->CalcWorldInitialMatrix(true);
 
       scene->RaiseSceneUpdated();
     }
-    auto& drawlist = m_screen->End();
-    recti::Render(drawlist, ImGui::GetWindowDrawList());
+    recti::Render(m_screen->DrawList, ImGui::GetWindowDrawList());
   }
 }
 
@@ -331,13 +331,14 @@ SceneRenderer::RenderRuntime(
     DirectX::XMFLOAT4X4 m;
     DirectX::XMStoreFloat4x4(&m, selected->WorldMatrix());
 
-    bool enableTranslation = false;
+    auto op = recti::ROTATE;
     if (auto humanoid = selected->Base->Humanoid) {
       if (*humanoid == libvrm::HumanBones::hips) {
-        enableTranslation = true;
+        op |= recti::TRANSLATE;
       }
     } else {
-      enableTranslation = true;
+      op |= recti::TRANSLATE;
+      op |= recti::SCALE;
     }
 
     recti::Camera gizmo_camera{
@@ -351,7 +352,7 @@ SceneRenderer::RenderRuntime(
 
     m_screen->Begin(gizmo_camera, mouse);
     manipulated = m_screen->Manipulate(
-      selected.get(), { enableTranslation, true, false, true }, (float*)&m);
+      (int64_t)selected.get(), op, recti::LOCAL, (float*)&m);
     if (manipulated) {
       // decompose feedback
       selected->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
@@ -367,8 +368,7 @@ SceneRenderer::RenderRuntime(
     // auto cubes = runtime->ShapeMatrices();
     // m_screen->DrawCubes((const float*)cubes.data(), cubes.size());
 
-    auto& drawlist = m_screen->End();
-    recti::Render(drawlist, ImGui::GetWindowDrawList());
+    recti::Render(m_screen->DrawList, ImGui::GetWindowDrawList());
   }
 
   if (!manipulated && mouse.LeftDown) {

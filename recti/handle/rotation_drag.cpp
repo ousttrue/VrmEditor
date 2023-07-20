@@ -17,8 +17,8 @@ ComputeAngleOnPlan(const recti::ModelContext& mCurrent,
                    const recti::Vec4& mTranslationPlan)
 {
   recti::Vec4 localPos =
-    Normalized(mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan) -
-               mCurrent.mModel.position());
+    Normalized(mCurrent.CameraMouse.Ray.IntersectPlane(mTranslationPlan) -
+               mCurrent.Model.position());
 
   recti::Vec4 perpendicularVector;
   perpendicularVector.Cross(mRotationVectorSource, mTranslationPlan);
@@ -37,7 +37,7 @@ RotationDragHandle::RotationDragHandle(const ModelContext& mCurrent,
   // auto& mouse = mCurrent.mCameraMouse.Mouse;
   // auto type = GetType(mCurrent, mRadiusSquareCenter, mState);
 
-  bool applyRotationLocaly = mCurrent.mMode == recti::LOCAL;
+  bool applyRotationLocaly = mCurrent.Mode == recti::LOCAL;
   if (m_type == recti::MT_ROTATE_SCREEN) {
     applyRotationLocaly = true;
   }
@@ -45,23 +45,23 @@ RotationDragHandle::RotationDragHandle(const ModelContext& mCurrent,
   // mState.mbUsing = true;
   // mState.mEditingID = mCurrent.mActualID;
   // mState.mCurrentOperation = type;
-  const recti::Vec4 rotatePlanNormal[] = { mCurrent.mModel.right(),
-                                           mCurrent.mModel.up(),
-                                           mCurrent.mModel.dir(),
-                                           mCurrent.mCameraMouse.CameraDir() };
+  const recti::Vec4 rotatePlanNormal[] = { mCurrent.Model.right(),
+                                           mCurrent.Model.up(),
+                                           mCurrent.Model.dir(),
+                                           mCurrent.CameraMouse.CameraDir() };
   // pickup plan
   if (applyRotationLocaly) {
-    mTranslationPlan = BuildPlan(mCurrent.mModel.position(),
+    mTranslationPlan = BuildPlan(mCurrent.Model.position(),
                                  rotatePlanNormal[m_type - recti::MT_ROTATE_X]);
   } else {
     mTranslationPlan =
-      BuildPlan(mCurrent.mModelSource.position(),
+      BuildPlan(mCurrent.ModelSource.position(),
                 Vec4::DirectionUnary[m_type - recti::MT_ROTATE_X]);
   }
 
   recti::Vec4 localPos =
-    mCurrent.mCameraMouse.Ray.IntersectPlane(mTranslationPlan) -
-    mCurrent.mModel.position();
+    mCurrent.CameraMouse.Ray.IntersectPlane(mTranslationPlan) -
+    mCurrent.Model.position();
   mRotationVectorSource = Normalized(localPos);
   mRotationAngleOrigin =
     ComputeAngleOnPlan(mCurrent, mRotationVectorSource, mTranslationPlan);
@@ -85,7 +85,7 @@ RotationDragHandle::Drag(const recti::ModelContext& mCurrent,
 
   rotationAxisLocalSpace.TransformVector(
     { mTranslationPlan.x, mTranslationPlan.y, mTranslationPlan.z, 0.f },
-    mCurrent.mModelInverse);
+    mCurrent.ModelInverse);
   rotationAxisLocalSpace.Normalize();
 
   recti::Mat4 deltaRotation;
@@ -98,22 +98,22 @@ RotationDragHandle::Drag(const recti::ModelContext& mCurrent,
   mRotationAngleOrigin = mRotationAngle;
 
   recti::Mat4 scaleOrigin;
-  scaleOrigin.Scale(mCurrent.mModelScaleOrigin);
+  scaleOrigin.Scale(mCurrent.ModelScaleOrigin);
 
-  bool applyRotationLocaly = mCurrent.mMode == recti::LOCAL;
+  bool applyRotationLocaly = mCurrent.Mode == recti::LOCAL;
   if (applyRotationLocaly) {
-    *(recti::Mat4*)matrix = scaleOrigin * deltaRotation * mCurrent.mModelLocal;
+    *(recti::Mat4*)matrix = scaleOrigin * deltaRotation * mCurrent.ModelLocal;
   } else {
-    recti::Mat4 res = mCurrent.mModelSource;
+    recti::Mat4 res = mCurrent.ModelSource;
     res.position().Set(0.f);
 
     *(recti::Mat4*)matrix = res * deltaRotation;
-    ((recti::Mat4*)matrix)->position() = mCurrent.mModelSource.position();
+    ((recti::Mat4*)matrix)->position() = mCurrent.ModelSource.position();
   }
 
   if (deltaMatrix) {
     *(recti::Mat4*)deltaMatrix =
-      mCurrent.mModelInverse * deltaRotation * mCurrent.mModel;
+      mCurrent.ModelInverse * deltaRotation * mCurrent.Model;
   }
 
   return modified;
@@ -122,11 +122,11 @@ RotationDragHandle::Drag(const recti::ModelContext& mCurrent,
 void
 RotationDragHandle::Draw(const ModelContext& mCurrent,
                          const Style& mStyle,
-                         std::shared_ptr<DrawList>& drawList)
+                         DrawList& drawList)
 {
   recti::Vec2 circlePos[HALF_CIRCLE_SEGMENT_COUNT + 1];
 
-  circlePos[0] = mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position());
+  circlePos[0] = mCurrent.CameraMouse.WorldToPos(mCurrent.Model.position());
   for (unsigned int i = 1; i < HALF_CIRCLE_SEGMENT_COUNT; i++) {
     float ng = mRotationAngle *
                ((float)(i - 1) / (float)(HALF_CIRCLE_SEGMENT_COUNT - 1));
@@ -134,18 +134,18 @@ RotationDragHandle::Draw(const ModelContext& mCurrent,
     rotateVectorMatrix.RotationAxis(mTranslationPlan, ng);
     recti::Vec4 pos;
     pos.TransformPoint(mRotationVectorSource, rotateVectorMatrix);
-    pos *= mCurrent.mScreenFactor * ROTATION_DISPLAY_FACTOR;
+    pos *= mCurrent.ScreenFactor * ROTATION_DISPLAY_FACTOR;
     circlePos[i] =
-      mCurrent.mCameraMouse.WorldToPos(pos + mCurrent.mModel.position());
+      mCurrent.CameraMouse.WorldToPos(pos + mCurrent.Model.position());
   }
-  drawList->AddConvexPolyFilled((const recti::VEC2*)circlePos,
-                                HALF_CIRCLE_SEGMENT_COUNT,
-                                mStyle.GetColorU32(recti::ROTATION_USING_FILL));
-  drawList->AddPolyline((const recti::VEC2*)circlePos,
-                        HALF_CIRCLE_SEGMENT_COUNT,
-                        mStyle.GetColorU32(recti::ROTATION_USING_BORDER),
-                        true,
-                        mStyle.RotationLineThickness);
+  drawList.AddConvexPolyFilled((const recti::VEC2*)circlePos,
+                               HALF_CIRCLE_SEGMENT_COUNT,
+                               mStyle.GetColorU32(recti::ROTATION_USING_FILL));
+  drawList.AddPolyline((const recti::VEC2*)circlePos,
+                       HALF_CIRCLE_SEGMENT_COUNT,
+                       mStyle.GetColorU32(recti::ROTATION_USING_BORDER),
+                       true,
+                       mStyle.RotationLineThickness);
 
   recti::Vec2 destinationPosOnScreen = circlePos[1];
 
@@ -159,11 +159,11 @@ RotationDragHandle::Draw(const ModelContext& mCurrent,
            rotationInfoMask[m_type - recti::MT_ROTATE_X],
            (mRotationAngle / std::numbers::pi) * 180.f,
            mRotationAngle);
-  drawList->AddText(
+  drawList.AddText(
     recti::Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
     mStyle.GetColorU32(recti::TEXT_SHADOW),
     tmps);
-  drawList->AddText(
+  drawList.AddText(
     recti::Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
     mStyle.GetColorU32(recti::TEXT),
     tmps);

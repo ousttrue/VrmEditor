@@ -11,53 +11,53 @@ static const int HALF_CIRCLE_SEGMENT_COUNT = 64;
 static float
 ScreenRadius(const ModelContext& current)
 {
-  return current.mCameraMouse.Camera.Height() * current.mScreenFactor *
+  return current.CameraMouse.Camera.Height() * current.ScreenFactor *
          (ROTATION_DISPLAY_FACTOR * 1.2 / 2);
 }
 
 static MOVETYPE
 GetType(const recti::ModelContext& current)
 {
-  auto& mousePos = current.mCameraMouse.Mouse.Position;
-  recti::Vec4 deltaScreen = { mousePos.x - current.mScreenSquareCenter.x,
-                              mousePos.y - current.mScreenSquareCenter.y,
+  auto& mousePos = current.CameraMouse.Mouse.Position;
+  recti::Vec4 deltaScreen = { mousePos.x - current.ScreenSquareCenter.x,
+                              mousePos.y - current.ScreenSquareCenter.y,
                               0.f,
                               0.f };
 
-  const recti::Vec4 planNormals[] = { current.mModel.right(),
-                                      current.mModel.up(),
-                                      current.mModel.dir() };
+  const recti::Vec4 planNormals[] = { current.Model.right(),
+                                      current.Model.up(),
+                                      current.Model.dir() };
 
   recti::Vec4 modelViewPos;
-  modelViewPos.TransformPoint(current.mModel.position(),
-                              current.mCameraMouse.Camera.ViewMatrix);
+  modelViewPos.TransformPoint(current.Model.position(),
+                              current.CameraMouse.Camera.ViewMatrix);
 
   for (int i = 0; i < 3; i++) {
-    if (!Intersects(current.mOperation,
+    if (!Intersects(current.Operation,
                     static_cast<recti::OPERATION>(recti::ROTATE_X << i))) {
       continue;
     }
     // pickup plan
     recti::Vec4 pickupPlan =
-      BuildPlan(current.mModel.position(), planNormals[i]);
+      BuildPlan(current.Model.position(), planNormals[i]);
 
     const recti::Vec4 intersectWorldPos =
-      current.mCameraMouse.Ray.IntersectPlane(pickupPlan);
+      current.CameraMouse.Ray.IntersectPlane(pickupPlan);
     recti::Vec4 intersectViewPos;
     intersectViewPos.TransformPoint(intersectWorldPos,
-                                    current.mCameraMouse.Camera.ViewMatrix);
+                                    current.CameraMouse.Camera.ViewMatrix);
 
     if (fabs(modelViewPos.z) - fabs(intersectViewPos.z) < -FLT_EPSILON) {
       continue;
     }
 
-    const recti::Vec4 localPos = intersectWorldPos - current.mModel.position();
+    const recti::Vec4 localPos = intersectWorldPos - current.Model.position();
     recti::Vec4 idealPosOnCircle = Normalized(localPos);
-    idealPosOnCircle.TransformVector(current.mModelInverse);
+    idealPosOnCircle.TransformVector(current.ModelInverse);
     const recti::Vec2 idealPosOnCircleScreen = recti::worldToPos(
-      idealPosOnCircle * ROTATION_DISPLAY_FACTOR * current.mScreenFactor,
-      current.mMVP,
-      current.mCameraMouse.Camera.Viewport);
+      idealPosOnCircle * ROTATION_DISPLAY_FACTOR * current.ScreenFactor,
+      current.MVP,
+      current.CameraMouse.Camera.Viewport);
 
     const recti::Vec2 distanceOnScreen = idealPosOnCircleScreen - mousePos;
 
@@ -71,7 +71,7 @@ GetType(const recti::ModelContext& current)
 
   float mRadiusSquareCenter = ScreenRadius(current);
   float dist = deltaScreen.Length();
-  if (Intersects(current.mOperation, recti::ROTATE_SCREEN) &&
+  if (Intersects(current.Operation, recti::ROTATE_SCREEN) &&
       dist >= (mRadiusSquareCenter - 4.0f) &&
       dist < (mRadiusSquareCenter + 4.0f)) {
     return recti::MT_ROTATE_SCREEN;
@@ -104,24 +104,24 @@ RotationGizmo::Draw(const ModelContext& current,
                     MOVETYPE active,
                     MOVETYPE hover,
                     const Style& style,
-                    std::shared_ptr<DrawList>& drawList)
+                    DrawList& drawList)
 {
   // colors
   uint32_t colors[7];
   ComputeColors(colors, hover, style);
 
   recti::Vec4 cameraToModelNormalized;
-  if (current.mCameraMouse.Camera.IsOrthographic) {
-    cameraToModelNormalized = -current.mCameraMouse.mViewInverse.dir();
+  if (current.CameraMouse.Camera.IsOrthographic) {
+    cameraToModelNormalized = -current.CameraMouse.mViewInverse.dir();
   } else {
     cameraToModelNormalized =
-      Normalized(current.mModel.position() - current.mCameraMouse.CameraEye());
+      Normalized(current.Model.position() - current.CameraMouse.CameraEye());
   }
 
-  cameraToModelNormalized.TransformVector(current.mModelInverse);
+  cameraToModelNormalized.TransformVector(current.ModelInverse);
 
   for (int axis = 0; axis < 3; axis++) {
-    if (!Intersects(current.mOperation,
+    if (!Intersects(current.Operation,
                     static_cast<recti::OPERATION>(recti::ROTATE_Z >> axis))) {
       continue;
     }
@@ -144,28 +144,27 @@ RotationGizmo::Draw(const ModelContext& current,
       recti::Vec4 pos = recti::Vec4{ axisPos[axis],
                                      axisPos[(axis + 1) % 3],
                                      axisPos[(axis + 2) % 3] } *
-                        current.mScreenFactor * ROTATION_DISPLAY_FACTOR;
+                        current.ScreenFactor * ROTATION_DISPLAY_FACTOR;
       circlePos[i] = recti::worldToPos(
-        pos, current.mMVP, current.mCameraMouse.Camera.Viewport);
+        pos, current.MVP, current.CameraMouse.Camera.Viewport);
     }
 
     if (usingAxis) {
-      drawList->AddPolyline((const recti::VEC2*)circlePos,
-                            circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1,
-                            colors[3 - axis],
-                            false,
-                            style.RotationLineThickness);
+      drawList.AddPolyline((const recti::VEC2*)circlePos,
+                           circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1,
+                           colors[3 - axis],
+                           false,
+                           style.RotationLineThickness);
     }
   }
 
-  bool hasRSC = Intersects(current.mOperation, recti::ROTATE_SCREEN);
+  bool hasRSC = Intersects(current.Operation, recti::ROTATE_SCREEN);
   if (hasRSC && (active == MT_NONE || active == recti::MT_ROTATE_SCREEN)) {
-    drawList->AddCircle(
-      current.mCameraMouse.WorldToPos(current.mModel.position()),
-      ScreenRadius(current),
-      colors[0],
-      64,
-      style.RotationOuterLineThickness);
+    drawList.AddCircle(current.CameraMouse.WorldToPos(current.Model.position()),
+                       ScreenRadius(current),
+                       colors[0],
+                       64,
+                       style.RotationOuterLineThickness);
   }
 }
 

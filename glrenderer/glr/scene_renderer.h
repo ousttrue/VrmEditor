@@ -12,7 +12,7 @@ struct RuntimeNode;
 }
 
 namespace recti {
-class Screen;
+struct Screen;
 }
 
 namespace glr {

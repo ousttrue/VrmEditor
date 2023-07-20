@@ -7,79 +7,78 @@ namespace recti {
 
 struct ModelContext
 {
-  int64_t mActualID;
-  OPERATION mOperation;
-  MODE mMode;
-  const CameraMouse& mCameraMouse;
-  Mat4 mModel;
-  Mat4 mModelLocal; // orthonormalized model
-  Mat4 mModelInverse;
-  Mat4 mModelSource;
-  Mat4 mModelSourceInverse;
-  Mat4 mMVP;
-  Mat4 mMVPLocal; // MVP with full model matrix whereas mMVP's model matrix
-                  // might only be translation in case of World space edition
-  Vec4 mModelScaleOrigin;
-  float mScreenFactor;
+  int64_t ActualID;
+  OPERATION Operation;
+  MODE Mode;
+  const CameraMouse& CameraMouse;
+  Mat4 Model;
+  Mat4 ModelLocal; // orthonormalized model
+  Mat4 ModelInverse;
+  Mat4 ModelSource;
+  Mat4 ModelSourceInverse;
+  Mat4 MVP;
+  Mat4 MVPLocal; // MVP with full model matrix whereas mMVP's model matrix
+                 // might only be translation in case of World space edition
+  Vec4 ModelScaleOrigin;
+  float ScreenFactor;
 
   // window coords
-  Vec2 mScreenSquareCenter;
+  Vec2 ScreenSquareCenter;
 
   // ,
   ModelContext(int64_t actualID,
                OPERATION operation,
                MODE mode,
                const float* matrix,
-               const CameraMouse& cameraMouse,
+               const struct CameraMouse& cameraMouse,
                float gizmoSizeClipSpace)
-    : mActualID(actualID)
-    , mOperation(operation)
-    , mMode((operation & SCALE) ? LOCAL : mode)
-    , mCameraMouse(cameraMouse)
+    : ActualID(actualID)
+    , Operation(operation)
+    , Mode((operation & SCALE) ? LOCAL : mode)
+    , CameraMouse(cameraMouse)
   {
-    mModelLocal = *(Mat4*)matrix;
-    mModelLocal.OrthoNormalize();
+    ModelLocal = *(Mat4*)matrix;
+    ModelLocal.OrthoNormalize();
 
-    if (mMode == LOCAL) {
-      mModel = mModelLocal;
+    if (Mode == LOCAL) {
+      Model = ModelLocal;
     } else {
-      mModel.Translation(((Mat4*)matrix)->position());
+      Model.Translation(((Mat4*)matrix)->position());
     }
-    mModelSource = *(Mat4*)matrix;
-    mModelScaleOrigin.Set(mModelSource.right().Length(),
-                          mModelSource.up().Length(),
-                          mModelSource.dir().Length());
+    ModelSource = *(Mat4*)matrix;
+    ModelScaleOrigin.Set(ModelSource.right().Length(),
+                         ModelSource.up().Length(),
+                         ModelSource.dir().Length());
 
-    mModelInverse.Inverse(mModel);
-    mModelSourceInverse.Inverse(mModelSource);
-    mMVP = mModel * cameraMouse.mViewProjection;
-    mMVPLocal = mModelLocal * cameraMouse.mViewProjection;
+    ModelInverse.Inverse(Model);
+    ModelSourceInverse.Inverse(ModelSource);
+    MVP = Model * cameraMouse.mViewProjection;
+    MVPLocal = ModelLocal * cameraMouse.mViewProjection;
 
     // compute scale from the size of camera right vector projected on screen at
     // the matrix position
     Vec4 pointRight = cameraMouse.mViewInverse.right();
     pointRight.TransformPoint(cameraMouse.mViewProjection);
 
-    mScreenFactor =
-      gizmoSizeClipSpace / (pointRight.x / pointRight.w -
-                            this->mMVP.position().x / this->mMVP.position().w);
+    ScreenFactor = gizmoSizeClipSpace / (pointRight.x / pointRight.w -
+                                         MVP.position().x / MVP.position().w);
     Vec4 rightViewInverse = cameraMouse.mViewInverse.right();
-    rightViewInverse.TransformVector(this->mModelInverse);
+    rightViewInverse.TransformVector(ModelInverse);
     float rightLength = GetSegmentLengthClipSpace(
-      { 0.f, 0.f }, rightViewInverse, mMVP, cameraMouse.Camera.DisplayRatio());
-    mScreenFactor = gizmoSizeClipSpace / rightLength;
+      { 0.f, 0.f }, rightViewInverse, MVP, cameraMouse.Camera.DisplayRatio());
+    ScreenFactor = gizmoSizeClipSpace / rightLength;
 
-    mScreenSquareCenter = cameraMouse.WorldToPos(mModel.position());
+    ScreenSquareCenter = cameraMouse.WorldToPos(Model.position());
   }
 
   bool MouseInScreenSquare() const
   {
-    return recti::IsWithin(mCameraMouse.Mouse.Position.x,
-                           mScreenSquareCenter.x - 10,
-                           mScreenSquareCenter.x + 10) &&
-           recti::IsWithin(mCameraMouse.Mouse.Position.y,
-                           mScreenSquareCenter.y - 10,
-                           mScreenSquareCenter.y + 10);
+    return recti::IsWithin(CameraMouse.Mouse.Position.x,
+                           ScreenSquareCenter.x - 10,
+                           ScreenSquareCenter.x + 10) &&
+           recti::IsWithin(CameraMouse.Mouse.Position.y,
+                           ScreenSquareCenter.y - 10,
+                           ScreenSquareCenter.y + 10);
   }
 };
 

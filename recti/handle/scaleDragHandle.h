@@ -28,7 +28,7 @@ struct ScaleDragHandle : public IDragHandle
 
   void Draw(const ModelContext& current,
             const Style& style,
-            std::shared_ptr<DrawList>& drawList) override;
+            DrawList& drawList) override;
 };
 
 struct ScaleUDragHandle : public ScaleDragHandle
@@ -42,7 +42,7 @@ struct ScaleUDragHandle : public ScaleDragHandle
 
   void Draw(const ModelContext& current,
             const Style& style,
-            std::shared_ptr<DrawList>& drawList) override;
+            DrawList& drawList) override;
 };
 
 } // namespace

@@ -38,7 +38,7 @@ struct IGizmo
                     MOVETYPE active,
                     MOVETYPE hover,
                     const Style& style,
-                    std::shared_ptr<DrawList>& drawList) = 0;
+                    DrawList& drawList) = 0;
 };
 
 struct IDragHandle
@@ -54,7 +54,7 @@ struct IDragHandle
 
   virtual void Draw(const ModelContext& current,
                     const Style& style,
-                    std::shared_ptr<DrawList>& drawList) = 0;
+                    DrawList& drawList) = 0;
 };
 
 }

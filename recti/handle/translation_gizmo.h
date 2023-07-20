@@ -23,7 +23,7 @@ struct TranslationGizmo : IGizmo
             MOVETYPE active,
             MOVETYPE hover,
             const Style& style,
-            std::shared_ptr<DrawList>& drawList) override;
+            DrawList& drawList) override;
 };
 
 } // namespace

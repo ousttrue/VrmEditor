@@ -1,4 +1,4 @@
-#include "translationGizmo.h"
+#include "translation_gizmo.h"
 #include "operation.h"
 #include "style.h"
 #include "tripod.h"
@@ -27,45 +27,45 @@ GetType(const ModelContext& current, bool allowAxisFlip)
 
     Tripod tripod(i);
     tripod.ComputeTripodAxisAndVisibility(current, allowAxisFlip);
-    tripod.dirAxis.TransformVector(current.mModel);
-    tripod.dirPlaneX.TransformVector(current.mModel);
-    tripod.dirPlaneY.TransformVector(current.mModel);
+    tripod.dirAxis.TransformVector(current.Model);
+    tripod.dirPlaneX.TransformVector(current.Model);
+    tripod.dirPlaneY.TransformVector(current.Model);
 
-    auto posOnPlan = current.mCameraMouse.Ray.IntersectPlane(
-      BuildPlan(current.mModel.position(), tripod.dirAxis));
+    auto posOnPlan = current.CameraMouse.Ray.IntersectPlane(
+      BuildPlan(current.Model.position(), tripod.dirAxis));
 
     // screen
     const Vec2 axisStartOnScreen =
-      current.mCameraMouse.WorldToPos(current.mModel.position() +
-                                      tripod.dirAxis * current.mScreenFactor *
-                                        0.1f) -
-      current.mCameraMouse.Camera.LeftTop();
+      current.CameraMouse.WorldToPos(current.Model.position() +
+                                     tripod.dirAxis * current.ScreenFactor *
+                                       0.1f) -
+      current.CameraMouse.Camera.LeftTop();
 
     // screen
     const Vec2 axisEndOnScreen =
-      current.mCameraMouse.WorldToPos(current.mModel.position() +
-                                      tripod.dirAxis * current.mScreenFactor) -
-      current.mCameraMouse.Camera.LeftTop();
+      current.CameraMouse.WorldToPos(current.Model.position() +
+                                     tripod.dirAxis * current.ScreenFactor) -
+      current.CameraMouse.Camera.LeftTop();
 
-    auto screenCoord = current.mCameraMouse.ScreenMousePos();
+    auto screenCoord = current.CameraMouse.ScreenMousePos();
     Vec4 closestPointOnAxis =
       PointOnSegment(screenCoord,
                      { axisStartOnScreen.x, axisStartOnScreen.y },
                      { axisEndOnScreen.x, axisEndOnScreen.y });
     if ((closestPointOnAxis - screenCoord).Length() < 12.f &&
-        Intersects(current.mOperation,
+        Intersects(current.Operation,
                    static_cast<OPERATION>(TRANSLATE_X << i))) // pixel size
     {
       return (MOVETYPE)(MT_MOVE_X + i);
     }
 
     const float dx = tripod.dirPlaneX.Dot3(
-      (posOnPlan - current.mModel.position()) * (1.f / current.mScreenFactor));
+      (posOnPlan - current.Model.position()) * (1.f / current.ScreenFactor));
     const float dy = tripod.dirPlaneY.Dot3(
-      (posOnPlan - current.mModel.position()) * (1.f / current.mScreenFactor));
+      (posOnPlan - current.Model.position()) * (1.f / current.ScreenFactor));
     if (tripod.belowPlaneLimit && dx >= quadUV[0] && dx <= quadUV[4] &&
         dy >= quadUV[1] && dy <= quadUV[3] &&
-        Contains(current.mOperation, TRANSLATE_PLANS[i])) {
+        Contains(current.Operation, TRANSLATE_PLANS[i])) {
       return (MOVETYPE)(MT_MOVE_YZ + i);
     }
   }
@@ -101,15 +101,14 @@ TranslationGizmo::Draw(const ModelContext& current,
                        MOVETYPE active,
                        MOVETYPE hover,
                        const Style& style,
-                       std::shared_ptr<DrawList>& drawList)
+                       DrawList& drawList)
 
 {
   // colors
   uint32_t colors[7];
   ComputeColors(colors, hover, style);
 
-  const Vec2 origin =
-    current.mCameraMouse.WorldToPos(current.mModel.position());
+  const Vec2 origin = current.CameraMouse.WorldToPos(current.Model.position());
 
   // draw
   for (int i = 0; i < 3; ++i) {
@@ -119,20 +118,20 @@ TranslationGizmo::Draw(const ModelContext& current,
     if (active == MT_NONE || (active == MT_MOVE_X + i)) {
       // draw axis
       if (tripod.belowAxisLimit &&
-          Intersects(current.mOperation,
+          Intersects(current.Operation,
                      static_cast<OPERATION>(TRANSLATE_X << i))) {
         Vec2 baseSSpace =
-          worldToPos(tripod.dirAxis * 0.1f * current.mScreenFactor,
-                     current.mMVP,
-                     current.mCameraMouse.Camera.Viewport);
-        Vec2 worldDirSSpace = worldToPos(tripod.dirAxis * current.mScreenFactor,
-                                         current.mMVP,
-                                         current.mCameraMouse.Camera.Viewport);
+          worldToPos(tripod.dirAxis * 0.1f * current.ScreenFactor,
+                     current.MVP,
+                     current.CameraMouse.Camera.Viewport);
+        Vec2 worldDirSSpace = worldToPos(tripod.dirAxis * current.ScreenFactor,
+                                         current.MVP,
+                                         current.CameraMouse.Camera.Viewport);
 
-        drawList->AddLine(baseSSpace,
-                          worldDirSSpace,
-                          colors[i + 1],
-                          style.TranslationLineThickness);
+        drawList.AddLine(baseSSpace,
+                         worldDirSSpace,
+                         colors[i + 1],
+                         style.TranslationLineThickness);
 
         // Arrow head begin
         Vec2 dir(origin - worldDirSSpace);
@@ -143,10 +142,10 @@ TranslationGizmo::Draw(const ModelContext& current,
 
         Vec2 ortogonalDir(dir.y, -dir.x); // Perpendicular vector
         Vec2 a(worldDirSSpace + dir);
-        drawList->AddTriangleFilled(worldDirSSpace - dir,
-                                    a + ortogonalDir,
-                                    a - ortogonalDir,
-                                    colors[i + 1]);
+        drawList.AddTriangleFilled(worldDirSSpace - dir,
+                                   a + ortogonalDir,
+                                   a - ortogonalDir,
+                                   colors[i + 1]);
         // Arrow head end
         // if (state.mAxisFactor[i] < 0.f) {
         //   drawList->DrawHatchedAxis(current, tripod.dirAxis, style);
@@ -157,28 +156,28 @@ TranslationGizmo::Draw(const ModelContext& current,
     // draw plane
     if (active == MT_NONE || (active == MT_MOVE_YZ + i)) {
       if (tripod.belowPlaneLimit &&
-          Contains(current.mOperation, TRANSLATE_PLANS[i])) {
+          Contains(current.Operation, TRANSLATE_PLANS[i])) {
         Vec2 screenQuadPts[4];
         for (int j = 0; j < 4; ++j) {
           Vec4 cornerWorldPos = (tripod.dirPlaneX * quadUV[j * 2] +
                                  tripod.dirPlaneY * quadUV[j * 2 + 1]) *
-                                current.mScreenFactor;
+                                current.ScreenFactor;
           screenQuadPts[j] = worldToPos(
-            cornerWorldPos, current.mMVP, current.mCameraMouse.Camera.Viewport);
+            cornerWorldPos, current.MVP, current.CameraMouse.Camera.Viewport);
         }
-        drawList->AddPolyline((const VEC2*)screenQuadPts,
-                              4,
-                              style.GetColorU32(DIRECTION_X + i),
-                              true,
-                              1.0f);
-        drawList->AddConvexPolyFilled(
+        drawList.AddPolyline((const VEC2*)screenQuadPts,
+                             4,
+                             style.GetColorU32(DIRECTION_X + i),
+                             true,
+                             1.0f);
+        drawList.AddConvexPolyFilled(
           (const VEC2*)screenQuadPts, 4, colors[i + 4]);
       }
     }
   }
 
-  drawList->AddCircleFilled(
-    current.mScreenSquareCenter, style.CenterCircleSize, colors[0], 32);
+  drawList.AddCircleFilled(
+    current.ScreenSquareCenter, style.CenterCircleSize, colors[0], 32);
 }
 
 } // namespace

@@ -27,7 +27,7 @@ struct RotationDragHandle : public IDragHandle
             float* deltaMatrix) override;
   void Draw(const ModelContext& current,
             const Style& style,
-            std::shared_ptr<DrawList>& drawList) override;
+            DrawList& drawList) override;
 };
 
 } // namespace

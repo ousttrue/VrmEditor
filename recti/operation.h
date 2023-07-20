@@ -76,34 +76,4 @@ Contains(OPERATION lhs, OPERATION rhs)
   return (lhs & rhs) == rhs;
 }
 
-struct Operation
-{
-  bool EnableT = false;
-  bool EnableR = false;
-  bool EnableS = false;
-  bool IsLocalSpace = false;
-};
-
-inline OPERATION
-ToOperation(const Operation& o)
-{
-  OPERATION operation = {};
-  if (o.EnableT) {
-    operation |= TRANSLATE;
-  }
-  if (o.EnableR) {
-    operation |= ROTATE;
-  }
-  if (o.EnableS) {
-    operation |= SCALE;
-  }
-  return operation;
-}
-
-inline MODE
-ToMode(const Operation& o)
-{
-  return LOCAL;
-}
-
 } // namespace
