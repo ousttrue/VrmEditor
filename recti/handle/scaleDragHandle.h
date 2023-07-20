@@ -1,5 +1,5 @@
 #pragma once
-#include "draghandle.h"
+#include "handle.h"
 
 namespace recti {
 
@@ -18,6 +18,8 @@ struct ScaleDragHandle : public IDragHandle
   float mSaveMousePosx;
 
   ScaleDragHandle(const ModelContext& mCurrent, MOVETYPE type);
+
+  MOVETYPE Type() const override { return m_type; }
 
   bool Drag(const ModelContext& current,
             const float* snap,

@@ -71,6 +71,16 @@ struct ModelContext
 
     mScreenSquareCenter = cameraMouse.WorldToPos(mModel.position());
   }
+
+  bool MouseInScreenSquare() const
+  {
+    return recti::IsWithin(mCameraMouse.Mouse.Position.x,
+                           mScreenSquareCenter.x - 10,
+                           mScreenSquareCenter.x + 10) &&
+           recti::IsWithin(mCameraMouse.Mouse.Position.y,
+                           mScreenSquareCenter.y - 10,
+                           mScreenSquareCenter.y + 10);
+  }
 };
 
 } // namespace

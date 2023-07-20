@@ -1,4 +1,4 @@
-#include "translation.h"
+#include "translationGizmo.h"
 #include "operation.h"
 #include "style.h"
 #include "tripod.h"
@@ -15,13 +15,15 @@ static const OPERATION TRANSLATE_PLANS[3] = { TRANSLATE_Y | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Y };
 
-MOVETYPE
-Translation::GetType(const ModelContext& current, bool allowAxisFlip)
+static MOVETYPE
+GetType(const ModelContext& current, bool allowAxisFlip)
 {
-  MOVETYPE type = MT_NONE;
+  // screen
+  if (current.MouseInScreenSquare()) {
+    return MT_MOVE_SCREEN;
+  }
 
-  // compute
-  for (int i = 0; i < 3 && type == MT_NONE; i++) {
+  for (int i = 0; i < 3; i++) {
 
     Tripod tripod(i);
     tripod.ComputeTripodAxisAndVisibility(current, allowAxisFlip);
@@ -54,7 +56,7 @@ Translation::GetType(const ModelContext& current, bool allowAxisFlip)
         Intersects(current.mOperation,
                    static_cast<OPERATION>(TRANSLATE_X << i))) // pixel size
     {
-      type = (MOVETYPE)(MT_MOVE_X + i);
+      return (MOVETYPE)(MT_MOVE_X + i);
     }
 
     const float dx = tripod.dirPlaneX.Dot3(
@@ -64,26 +66,47 @@ Translation::GetType(const ModelContext& current, bool allowAxisFlip)
     if (tripod.belowPlaneLimit && dx >= quadUV[0] && dx <= quadUV[4] &&
         dy >= quadUV[1] && dy <= quadUV[3] &&
         Contains(current.mOperation, TRANSLATE_PLANS[i])) {
-      type = (MOVETYPE)(MT_MOVE_YZ + i);
+      return (MOVETYPE)(MT_MOVE_YZ + i);
     }
   }
-  return type;
+
+  return MT_NONE;
+}
+
+static void
+ComputeColors(uint32_t colors[7], MOVETYPE type, const Style& style)
+{
+  uint32_t selectionColor = style.GetColorU32(SELECTION);
+
+  colors[0] = (type == MT_MOVE_SCREEN) ? selectionColor : COL32_WHITE();
+  for (int i = 0; i < 3; i++) {
+    colors[i + 1] = (type == (int)(MT_MOVE_X + i))
+                      ? selectionColor
+                      : style.GetColorU32(DIRECTION_X + i);
+    colors[i + 4] = (type == (int)(MT_MOVE_YZ + i))
+                      ? selectionColor
+                      : style.GetColorU32(PLANE_X + i);
+    colors[i + 4] = (type == MT_MOVE_SCREEN) ? selectionColor : colors[i + 4];
+  }
+}
+
+MOVETYPE
+TranslationGizmo::Hover(const ModelContext& current)
+{
+  return GetType(current, m_allowAxisFlip);
 }
 
 void
-Translation::DrawGizmo(const ModelContext& current,
-                       bool allowAxisFlip,
-                       MOVETYPE type,
+TranslationGizmo::Draw(const ModelContext& current,
+                       MOVETYPE active,
+                       MOVETYPE hover,
                        const Style& style,
-                       const std::shared_ptr<DrawList>& drawList)
-{
-  if (!Intersects(current.mOperation, TRANSLATE)) {
-    return;
-  }
+                       std::shared_ptr<DrawList>& drawList)
 
+{
   // colors
   uint32_t colors[7];
-  ComputeColors(colors, type, style);
+  ComputeColors(colors, hover, style);
 
   const Vec2 origin =
     current.mCameraMouse.WorldToPos(current.mModel.position());
@@ -91,9 +114,9 @@ Translation::DrawGizmo(const ModelContext& current,
   // draw
   for (int i = 0; i < 3; ++i) {
     Tripod tripod(i);
-    tripod.ComputeTripodAxisAndVisibility(current, allowAxisFlip);
+    tripod.ComputeTripodAxisAndVisibility(current, m_allowAxisFlip);
 
-    if (!false || (false && type == MT_MOVE_X + i)) {
+    if (active == MT_NONE || (active == MT_MOVE_X + i)) {
       // draw axis
       if (tripod.belowAxisLimit &&
           Intersects(current.mOperation,
@@ -130,8 +153,9 @@ Translation::DrawGizmo(const ModelContext& current,
         // }
       }
     }
+
     // draw plane
-    if (!false || (false && type == MT_MOVE_YZ + i)) {
+    if (active == MT_NONE || (active == MT_MOVE_YZ + i)) {
       if (tripod.belowPlaneLimit &&
           Contains(current.mOperation, TRANSLATE_PLANS[i])) {
         Vec2 screenQuadPts[4];
@@ -155,25 +179,6 @@ Translation::DrawGizmo(const ModelContext& current,
 
   drawList->AddCircleFilled(
     current.mScreenSquareCenter, style.CenterCircleSize, colors[0], 32);
-}
-
-void
-Translation::ComputeColors(uint32_t colors[7],
-                           MOVETYPE type,
-                           const Style& style)
-{
-  uint32_t selectionColor = style.GetColorU32(SELECTION);
-
-  colors[0] = (type == MT_MOVE_SCREEN) ? selectionColor : COL32_WHITE();
-  for (int i = 0; i < 3; i++) {
-    colors[i + 1] = (type == (int)(MT_MOVE_X + i))
-                      ? selectionColor
-                      : style.GetColorU32(DIRECTION_X + i);
-    colors[i + 4] = (type == (int)(MT_MOVE_YZ + i))
-                      ? selectionColor
-                      : style.GetColorU32(PLANE_X + i);
-    colors[i + 4] = (type == MT_MOVE_SCREEN) ? selectionColor : colors[i + 4];
-  }
 }
 
 } // namespace

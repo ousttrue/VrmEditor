@@ -1,13 +1,13 @@
 #pragma once
 #include "../model_context.h"
 #include "../operation.h"
-#include "draghandle.h"
+#include "handle.h"
 
 namespace recti {
 
 struct RotationDragHandle : public IDragHandle
 {
-  MOVETYPE type;
+  MOVETYPE m_type;
 
   Vec4 mTranslationPlan;
   Vec4 mTranslationPlanOrigin;
@@ -20,6 +20,7 @@ struct RotationDragHandle : public IDragHandle
   float mRotationAngleOrigin;
 
   RotationDragHandle(const ModelContext& current, MOVETYPE type);
+  MOVETYPE Type() const override { return m_type; }
   bool Drag(const ModelContext& current,
             const float* snap,
             float* matrix,

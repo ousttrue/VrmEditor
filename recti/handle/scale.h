@@ -4,6 +4,7 @@
 #include "../operation.h"
 #include "../style.h"
 #include "../vec4.h"
+#include "handle.h"
 #include <memory>
 
 namespace recti {

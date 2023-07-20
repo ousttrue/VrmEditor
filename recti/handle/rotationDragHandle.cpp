@@ -32,13 +32,13 @@ ComputeAngleOnPlan(const recti::ModelContext& mCurrent,
 
 RotationDragHandle::RotationDragHandle(const ModelContext& mCurrent,
                                        MOVETYPE type)
-  : type(type)
+  : m_type(type)
 {
   // auto& mouse = mCurrent.mCameraMouse.Mouse;
   // auto type = GetType(mCurrent, mRadiusSquareCenter, mState);
 
   bool applyRotationLocaly = mCurrent.mMode == recti::LOCAL;
-  if (type == recti::MT_ROTATE_SCREEN) {
+  if (m_type == recti::MT_ROTATE_SCREEN) {
     applyRotationLocaly = true;
   }
 
@@ -52,11 +52,11 @@ RotationDragHandle::RotationDragHandle(const ModelContext& mCurrent,
   // pickup plan
   if (applyRotationLocaly) {
     mTranslationPlan = BuildPlan(mCurrent.mModel.position(),
-                                 rotatePlanNormal[type - recti::MT_ROTATE_X]);
+                                 rotatePlanNormal[m_type - recti::MT_ROTATE_X]);
   } else {
     mTranslationPlan =
       BuildPlan(mCurrent.mModelSource.position(),
-                Vec4::DirectionUnary[type - recti::MT_ROTATE_X]);
+                Vec4::DirectionUnary[m_type - recti::MT_ROTATE_X]);
   }
 
   recti::Vec4 localPos =
@@ -156,7 +156,7 @@ RotationDragHandle::Draw(const ModelContext& mCurrent,
   char tmps[512];
   snprintf(tmps,
            sizeof(tmps),
-           rotationInfoMask[type - recti::MT_ROTATE_X],
+           rotationInfoMask[m_type - recti::MT_ROTATE_X],
            (mRotationAngle / std::numbers::pi) * 180.f,
            mRotationAngle);
   drawList->AddText(

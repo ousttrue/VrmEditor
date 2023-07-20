@@ -15,6 +15,7 @@ enum MODE
 // translation is applied in world space
 enum OPERATION
 {
+  OP_NONE = 0,
   TRANSLATE_X = (1u << 0),
   TRANSLATE_Y = (1u << 1),
   TRANSLATE_Z = (1u << 2),
@@ -73,41 +74,6 @@ inline bool
 Contains(OPERATION lhs, OPERATION rhs)
 {
   return (lhs & rhs) == rhs;
-}
-
-enum MOVETYPE
-{
-  MT_NONE,
-  MT_MOVE_X,
-  MT_MOVE_Y,
-  MT_MOVE_Z,
-  MT_MOVE_YZ,
-  MT_MOVE_ZX,
-  MT_MOVE_XY,
-  MT_MOVE_SCREEN,
-  MT_ROTATE_X,
-  MT_ROTATE_Y,
-  MT_ROTATE_Z,
-  MT_ROTATE_SCREEN,
-  MT_SCALE_X,
-  MT_SCALE_Y,
-  MT_SCALE_Z,
-  MT_SCALE_XYZ
-};
-inline bool
-IsTranslateType(MOVETYPE type)
-{
-  return type >= MT_MOVE_X && type <= MT_MOVE_SCREEN;
-}
-inline bool
-IsRotateType(MOVETYPE type)
-{
-  return type >= MT_ROTATE_X && type <= MT_ROTATE_SCREEN;
-}
-inline bool
-IsScaleType(MOVETYPE type)
-{
-  return type >= MT_SCALE_X && type <= MT_SCALE_XYZ;
 }
 
 struct Operation
