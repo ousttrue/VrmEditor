@@ -16,13 +16,6 @@ struct Rotation
                           float mRadiusSquareCenter,
                           const recti::State& mState);
 
-  // Result HandleRotation(const ModelContext& mCurrent,
-  //                       float mRadiusSquareCenter,
-  //                       State& mState,
-  //                       const float* snap,
-  //                       float* matrix,
-  //                       float* deltaMatrix);
-
   static void DrawGizmo(const ModelContext& mCurrent,
                         float mRadiusSquareCenter,
                         bool mIsOrthographic,

@@ -15,6 +15,7 @@ recti_lib = static_library(
         'handle/rotation.cpp',
         'handle/rotationDragHandle.cpp',
         'handle/scale.cpp',
+        'handle/scaleDragHandle.cpp',
         'recti.cpp',
     ],
     include_directories: recti_inc,

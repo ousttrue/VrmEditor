@@ -1,10 +1,13 @@
 #include "recti.h"
+#include "handle/state.h"
+
 #include "handle/rotation.h"
 #include "handle/rotationDragHandle.h"
 #include "handle/scale.h"
-#include "handle/state.h"
+#include "handle/scaleDragHandle.h"
 #include "handle/translation.h"
 #include "handle/translationDragHandle.h"
+
 #include <iostream>
 
 namespace recti {
@@ -22,8 +25,6 @@ struct ScreenImpl
   Style mStyle;
 
   float mRadiusSquareCenter = 0.0f;
-
-  Scale mS;
 
   bool mIsOrthographic = false;
   bool mAllowAxisFlip = true;
@@ -71,7 +72,8 @@ public:
         mState.DragHandle = {};
         mState.mEditingID = -1;
       }
-      return modified;
+      // return modified;
+      return true;
     }
 
     // hover
@@ -89,7 +91,11 @@ public:
             std::make_shared<TranslationDragHandle>(mCurrent, hoverT);
         }
       }
+
+      Translation::DrawGizmo(
+        mCurrent, mAllowAxisFlip, hoverT, mState, mStyle, mDrawList);
     }
+
     auto hoverS = MT_NONE;
     if (Intersects(mCurrent.mOperation, SCALE)) {
       hoverS = Scale::GetType(mCurrent, mAllowAxisFlip, &mState);
@@ -100,11 +106,24 @@ public:
           mState.mbUsing = true;
           mState.mEditingID = mCurrent.mActualID;
           mState.mCurrentOperation = hoverS;
-          // mState.DragHandle = std::make_shared<ScaleDragHandle>( mCurrent,
-          // hoverS);
+
+          if (mState.mCurrentOperation >= MT_SCALE_X &&
+              mState.mCurrentOperation <= MT_SCALE_Z) {
+            mState.DragHandle =
+              std::make_shared<ScaleDragHandle>(mCurrent, hoverS);
+          } else {
+            // uniform
+            mState.DragHandle =
+              std::make_shared<ScaleUDragHandle>(mCurrent, hoverS);
+          }
         }
       }
+
+      Scale::DrawGizmo(mCurrent, hoverS, mState, mStyle, mDrawList);
+      Scale::DrawUniveralGizmo(
+        mCurrent, mAllowAxisFlip, hoverS, mState, mStyle, mDrawList);
     }
+
     auto hoverR = MT_NONE;
     if (Intersects(mCurrent.mOperation, ROTATE)) {
       hoverR = Rotation::GetType(mCurrent, mRadiusSquareCenter, mState);
@@ -119,9 +138,7 @@ public:
             std::make_shared<RotationDragHandle>(mCurrent, hoverR);
         }
       }
-    }
 
-    if (Intersects(mCurrent.mOperation, ROTATE)) {
       Rotation::DrawGizmo(mCurrent,
                           mRadiusSquareCenter,
                           mIsOrthographic,
@@ -130,17 +147,8 @@ public:
                           mStyle,
                           mDrawList);
     }
-    if (Intersects(mCurrent.mOperation, TRANSLATE)) {
-      Translation::DrawGizmo(
-        mCurrent, mAllowAxisFlip, hoverT, mState, mStyle, mDrawList);
-    }
-    if (Intersects(mCurrent.mOperation, SCALE)) {
-      mS.DrawScaleGizmo(mCurrent, hoverS, mState, mStyle, mDrawList);
-      mS.DrawScaleUniveralGizmo(
-        mCurrent, mAllowAxisFlip, hoverS, mState, mStyle, mDrawList);
-    }
 
-    return false;
+    return mState.DragHandle != nullptr;
   }
 
   void DrawCubes(const float* cubes, uint32_t count)
