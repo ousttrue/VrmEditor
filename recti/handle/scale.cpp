@@ -8,9 +8,6 @@ Scale::GetType(const recti::ModelContext& mCurrent,
                bool mAllowAxisFlip,
                recti::State* state)
 {
-  if (state->mbUsing) {
-    return recti::MT_NONE;
-  }
   recti::MOVETYPE type = recti::MT_NONE;
 
   // compute
@@ -138,8 +135,8 @@ Scale::DrawGizmo(const ModelContext& mCurrent,
       continue;
     }
 
-    const bool usingAxis = (mState.mbUsing && type == MT_SCALE_X + i);
-    if (!mState.mbUsing || usingAxis) {
+    const bool usingAxis = (false && type == MT_SCALE_X + i);
+    if (!false || usingAxis) {
       Tripod tripod(i);
 
       // when using, use stored factors so the gizmo doesn't flip when we
@@ -169,7 +166,7 @@ Scale::DrawGizmo(const ModelContext& mCurrent,
                      mCurrent.mMVP,
                      mCurrent.mCameraMouse.Camera.Viewport);
 
-        if (!hasTranslateOnAxis || mState.mbUsing) {
+        if (!hasTranslateOnAxis || false) {
           drawList->AddLine(baseSSpace,
                             worldDirSSpace,
                             colors[i + 1],
@@ -215,8 +212,8 @@ Scale::DrawUniveralGizmo(const ModelContext& mCurrent,
                     static_cast<OPERATION>(SCALE_XU << i))) {
       continue;
     }
-    const bool usingAxis = (mState.mbUsing && type == MT_SCALE_X + i);
-    if (!mState.mbUsing || usingAxis) {
+    const bool usingAxis = (false && type == MT_SCALE_X + i);
+    if (!false || usingAxis) {
       Tripod tripod(i);
       // when using, use stored factors so the gizmo doesn't flip when we
       // translate

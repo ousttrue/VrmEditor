@@ -18,9 +18,6 @@ Rotation::GetType(const recti::ModelContext& mCurrent,
                   float mRadiusSquareCenter,
                   const recti::State& mState)
 {
-  if (mState.mbUsing) {
-    return recti::MT_NONE;
-  }
   recti::MOVETYPE type = recti::MT_NONE;
 
   auto& mousePos = mCurrent.mCameraMouse.Mouse.Position;
@@ -115,8 +112,7 @@ Rotation::DrawGizmo(const recti::ModelContext& mCurrent,
                     static_cast<recti::OPERATION>(recti::ROTATE_Z >> axis))) {
       continue;
     }
-    const bool usingAxis =
-      (mState.mbUsing && type == recti::MT_ROTATE_Z - axis);
+    const bool usingAxis = (false && type == recti::MT_ROTATE_Z - axis);
     const int circleMul = (hasRSC && !usingAxis) ? 1 : 2;
 
     recti::Vec2* circlePos = (recti::Vec2*)alloca(
@@ -138,7 +134,7 @@ Rotation::DrawGizmo(const recti::ModelContext& mCurrent,
       circlePos[i] = recti::worldToPos(
         pos, mCurrent.mMVP, mCurrent.mCameraMouse.Camera.Viewport);
     }
-    if (!mState.mbUsing || usingAxis) {
+    if (!false || usingAxis) {
       drawList->AddPolyline((const recti::VEC2*)circlePos,
                             circleMul * HALF_CIRCLE_SEGMENT_COUNT + 1,
                             colors[3 - axis],
@@ -154,7 +150,7 @@ Rotation::DrawGizmo(const recti::ModelContext& mCurrent,
       mRadiusSquareCenter = radiusAxis;
     }
   }
-  if (hasRSC && (!mState.mbUsing || type == recti::MT_ROTATE_SCREEN)) {
+  if (hasRSC && (!false || type == recti::MT_ROTATE_SCREEN)) {
     drawList->AddCircle(
       mCurrent.mCameraMouse.WorldToPos(mCurrent.mModel.position()),
       mRadiusSquareCenter,

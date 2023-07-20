@@ -24,7 +24,6 @@ struct IDragHandle
 
 struct State
 {
-  bool mbUsing = false;
   // save axis factor when using gizmo
   bool mBelowAxisLimit[3];
   bool mBelowPlaneLimit[3];

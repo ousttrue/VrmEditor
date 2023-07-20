@@ -20,10 +20,6 @@ Translation::GetType(const ModelContext& current,
                      bool allowAxisFlip,
                      State* state)
 {
-  if (!Intersects(current.mOperation, TRANSLATE) || state->mbUsing) {
-    return MT_NONE;
-  }
-
   MOVETYPE type = MT_NONE;
 
   // compute
@@ -114,7 +110,7 @@ Translation::DrawGizmo(const ModelContext& current,
     tripod.dirPlaneX *= state.mAxisFactor[(i + 1) % 3];
     tripod.dirPlaneY *= state.mAxisFactor[(i + 2) % 3];
 
-    if (!state.mbUsing || (state.mbUsing && type == MT_MOVE_X + i)) {
+    if (!false || (false && type == MT_MOVE_X + i)) {
       // draw axis
       if (tripod.belowAxisLimit &&
           Intersects(current.mOperation,
@@ -153,7 +149,7 @@ Translation::DrawGizmo(const ModelContext& current,
       }
     }
     // draw plane
-    if (!state.mbUsing || (state.mbUsing && type == MT_MOVE_YZ + i)) {
+    if (!false || (false && type == MT_MOVE_YZ + i)) {
       if (tripod.belowPlaneLimit &&
           Contains(current.mOperation, TRANSLATE_PLANS[i])) {
         Vec2 screenQuadPts[4];
