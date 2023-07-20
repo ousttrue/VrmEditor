@@ -11,9 +11,6 @@ namespace recti {
 
 struct RotationGizmo : public IGizmo
 {
-  float m_radius = 110;
-  bool m_isOrthographic = false;
-
   bool Enabled(OPERATION operation) const override
   {
     return Intersects(operation, ROTATE);

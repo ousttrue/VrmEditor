@@ -11,6 +11,7 @@ struct Camera
   Mat4 ProjectionMatrix;
   // WindowViewport
   Vec4 Viewport;
+  bool IsOrthographic = false;
   Vec2 LeftTop() const { return { Viewport.x, Viewport.y }; }
   Vec2 Size() const { return { Viewport.z, Viewport.w }; }
   float Width() const { return Viewport.z; }

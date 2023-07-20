@@ -1,4 +1,5 @@
 #pragma once
+#include <math.h>
 
 struct ImVec2;
 namespace recti {
@@ -37,6 +38,8 @@ struct Vec2
   float Dot(const Vec2& rhs) const { return x * x + y * y; }
 
   float SqrLength() const { return Dot(*this); }
+
+  float Length() const { return sqrt(SqrLength()); }
 };
 
 inline Vec2

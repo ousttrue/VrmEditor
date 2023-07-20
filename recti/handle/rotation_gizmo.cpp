@@ -8,8 +8,15 @@ const float ROTATION_DISPLAY_FACTOR = 1.2f;
 
 static const int HALF_CIRCLE_SEGMENT_COUNT = 64;
 
+static float
+ScreenRadius(const ModelContext& current)
+{
+  return current.mCameraMouse.Camera.Height() * current.mScreenFactor *
+         (ROTATION_DISPLAY_FACTOR * 1.2 / 2);
+}
+
 static MOVETYPE
-GetType(const recti::ModelContext& current, float mRadiusSquareCenter)
+GetType(const recti::ModelContext& current)
 {
   auto& mousePos = current.mCameraMouse.Mouse.Position;
   recti::Vec4 deltaScreen = { mousePos.x - current.mScreenSquareCenter.x,
@@ -62,6 +69,7 @@ GetType(const recti::ModelContext& current, float mRadiusSquareCenter)
     }
   }
 
+  float mRadiusSquareCenter = ScreenRadius(current);
   float dist = deltaScreen.Length();
   if (Intersects(current.mOperation, recti::ROTATE_SCREEN) &&
       dist >= (mRadiusSquareCenter - 4.0f) &&
@@ -88,7 +96,7 @@ ComputeColors(uint32_t colors[7], MOVETYPE type, const Style& style)
 MOVETYPE
 RotationGizmo::Hover(const ModelContext& current)
 {
-  return GetType(current, m_radius);
+  return GetType(current);
 }
 
 void
@@ -103,7 +111,7 @@ RotationGizmo::Draw(const ModelContext& current,
   ComputeColors(colors, hover, style);
 
   recti::Vec4 cameraToModelNormalized;
-  if (m_isOrthographic) {
+  if (current.mCameraMouse.Camera.IsOrthographic) {
     cameraToModelNormalized = -current.mCameraMouse.mViewInverse.dir();
   } else {
     cameraToModelNormalized =
@@ -154,7 +162,7 @@ RotationGizmo::Draw(const ModelContext& current,
   if (hasRSC && (active == MT_NONE || active == recti::MT_ROTATE_SCREEN)) {
     drawList->AddCircle(
       current.mCameraMouse.WorldToPos(current.mModel.position()),
-      m_radius,
+      ScreenRadius(current),
       colors[0],
       64,
       style.RotationOuterLineThickness);

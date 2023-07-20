@@ -28,10 +28,6 @@ struct ScreenImpl
   std::shared_ptr<DrawList> mDrawList;
   Style mStyle;
 
-  float mRadiusSquareCenter = 0.0f;
-
-  bool mIsOrthographic = false;
-  bool mAllowAxisFlip = true;
   float mGizmoSizeClipSpace = 0.1f;
 
 public:
@@ -58,7 +54,8 @@ public:
     // behind camera
     Vec4 camSpacePosition;
     camSpacePosition.TransformPoint({ 0.f, 0.f, 0.f }, current.mMVP);
-    if (!mIsOrthographic && camSpacePosition.z < 0.001f) {
+    if (!current.mCameraMouse.Camera.IsOrthographic &&
+        camSpacePosition.z < 0.001f) {
       return false;
     }
 
