@@ -13,6 +13,7 @@ recti_lib = static_library(
         'handle/translation.cpp',
         'handle/translationDragHandle.cpp',
         'handle/rotation.cpp',
+        'handle/rotationDragHandle.cpp',
         'handle/scale.cpp',
         'recti.cpp',
     ],

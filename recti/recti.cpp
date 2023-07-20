@@ -1,5 +1,6 @@
 #include "recti.h"
 #include "handle/rotation.h"
+#include "handle/rotationDragHandle.h"
 #include "handle/scale.h"
 #include "handle/state.h"
 #include "handle/translation.h"
@@ -22,7 +23,6 @@ struct ScreenImpl
 
   float mRadiusSquareCenter = 0.0f;
 
-  Rotation mR;
   Scale mS;
 
   bool mIsOrthographic = false;
@@ -63,15 +63,13 @@ public:
     }
 
     if (auto handle = mState.DragHandle) {
-      // if (state.Using(current.mActualID) &&
-      //     IsTranslateType(state.mCurrentOperation)) {
-      // drag
       auto modified = handle->Drag(mCurrent, mState, snap, matrix, deltaMatrix);
       handle->Draw(mCurrent, mStyle, mDrawList);
       if (!mCurrent.mCameraMouse.Mouse.LeftDown) {
         // drag end
         mState.mbUsing = false;
         mState.DragHandle = {};
+        mState.mEditingID = -1;
       }
       return modified;
     }
@@ -117,20 +115,20 @@ public:
           mState.mbUsing = true;
           mState.mEditingID = mCurrent.mActualID;
           mState.mCurrentOperation = hoverR;
-          // mState.DragHandle = std::make_shared<RotationDragHandle>( mCurrent,
-          // hoverS);
+          mState.DragHandle =
+            std::make_shared<RotationDragHandle>(mCurrent, hoverR);
         }
       }
     }
 
     if (Intersects(mCurrent.mOperation, ROTATE)) {
-      mR.DrawRotationGizmo(mCurrent,
-                           mRadiusSquareCenter,
-                           mIsOrthographic,
-                           hoverR,
-                           mState,
-                           mStyle,
-                           mDrawList);
+      Rotation::DrawGizmo(mCurrent,
+                          mRadiusSquareCenter,
+                          mIsOrthographic,
+                          hoverR,
+                          mState,
+                          mStyle,
+                          mDrawList);
     }
     if (Intersects(mCurrent.mOperation, TRANSLATE)) {
       Translation::DrawGizmo(
