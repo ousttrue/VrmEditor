@@ -11,7 +11,7 @@ namespace recti {
 
 struct Translation
 {
-  static MOVETYPE GetMoveType(const ModelContext& current,
+  static MOVETYPE GetType(const ModelContext& current,
                               bool allowAxisFlip,
                               State* state);
 

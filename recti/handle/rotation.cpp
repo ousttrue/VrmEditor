@@ -18,7 +18,7 @@ static const char* rotationInfoMask[] = { "X : %5.2f deg %5.2f rad",
 static const int HALF_CIRCLE_SEGMENT_COUNT = 64;
 
 MOVETYPE
-Rotation::GetRotateType(const recti::ModelContext& mCurrent,
+Rotation::GetType(const recti::ModelContext& mCurrent,
                         float mRadiusSquareCenter,
                         const recti::State& mState)
 {
@@ -173,7 +173,7 @@ Rotation::HandleRotation(const recti::ModelContext& mCurrent,
   }
 
   auto& mouse = mCurrent.mCameraMouse.Mouse;
-  auto type = GetRotateType(mCurrent, mRadiusSquareCenter, mState);
+  auto type = GetType(mCurrent, mRadiusSquareCenter, mState);
 
   bool applyRotationLocaly = mCurrent.mMode == recti::LOCAL;
   if (type == recti::MT_ROTATE_SCREEN) {

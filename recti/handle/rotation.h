@@ -22,7 +22,7 @@ struct Rotation
   float mRotationAngle;
   float mRotationAngleOrigin;
 
-  static MOVETYPE GetRotateType(const recti::ModelContext& mCurrent,
+  static MOVETYPE GetType(const recti::ModelContext& mCurrent,
                                 float mRadiusSquareCenter,
                                 const recti::State& mState);
 

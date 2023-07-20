@@ -11,10 +11,10 @@ static const char* scaleInfoMask[] = { "X : %5.2f",
 static const int translationInfoIndex[] = { 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 2,
                                             0, 0, 2, 0, 0, 1, 0, 0, 1, 2 };
 
-recti::MOVETYPE
-Scale::GetScaleType(const recti::ModelContext& mCurrent,
-                    bool mAllowAxisFlip,
-                    recti::State* state)
+MOVETYPE
+Scale::GetType(const recti::ModelContext& mCurrent,
+               bool mAllowAxisFlip,
+               recti::State* state)
 {
   if (state->mbUsing) {
     return recti::MT_NONE;
@@ -230,7 +230,7 @@ Scale::HandleScale(const ModelContext& mCurrent,
   auto& mouse = mCurrent.mCameraMouse.Mouse;
 
   // find new possible way to scale
-  auto type = GetScaleType(mCurrent, mAllowAxisFlip, &mState);
+  auto type = GetType(mCurrent, mAllowAxisFlip, &mState);
   if (mouse.LeftDown && type != MT_NONE) {
     mState.mbUsing = true;
     mState.mEditingID = mCurrent.mActualID;

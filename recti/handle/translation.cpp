@@ -16,7 +16,7 @@ static const OPERATION TRANSLATE_PLANS[3] = { TRANSLATE_Y | TRANSLATE_Z,
                                               TRANSLATE_X | TRANSLATE_Y };
 
 MOVETYPE
-Translation::GetMoveType(const ModelContext& current,
+Translation::GetType(const ModelContext& current,
                          bool allowAxisFlip,
                          State* state)
 {
