@@ -11,11 +11,6 @@ namespace recti {
 
 struct RotationGizmo : public IGizmo
 {
-  bool Enabled(OPERATION operation) const override
-  {
-    return Intersects(operation, ROTATE);
-  }
-
   MOVETYPE Hover(const ModelContext& current) override;
 
   void Draw(const ModelContext& current,

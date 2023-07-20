@@ -1,4 +1,4 @@
-#include "scaleDragHandle.h"
+#include "scale_drag.h"
 
 namespace recti {
 
@@ -130,64 +130,6 @@ ScaleDragHandle::Draw(const ModelContext& mCurrent,
     Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
     mStyle.GetColorU32(TEXT),
     tmps);
-}
-
-//
-// ScaleUDragHandle
-//
-ScaleUDragHandle::ScaleUDragHandle(const ModelContext& mCurrent, MOVETYPE type)
-  : ScaleDragHandle(mCurrent, type)
-{
-}
-
-bool
-ScaleUDragHandle::Drag(const ModelContext& mCurrent,
-                       const float* snap,
-                       float* matrix,
-                       float* deltaMatrix)
-{
-  {
-    float scaleDelta =
-      (mCurrent.CameraMouse.Mouse.Position.x - mSaveMousePosx) * 0.01f;
-    mScale.Set(max(1.f + scaleDelta, 0.001f));
-  }
-
-  return false;
-}
-
-void
-ScaleUDragHandle::Draw(const ModelContext& mCurrent,
-                       const Style& mStyle,
-                       DrawList& drawList)
-{
-
-  Vec2 destinationPosOnScreen =
-    mCurrent.CameraMouse.WorldToPos(mCurrent.Model.position());
-
-  char tmps[512];
-  int componentInfoIndex = (m_type - MT_SCALE_X) * 3;
-  snprintf(tmps,
-           sizeof(tmps),
-           scaleInfoMask[m_type - MT_SCALE_X],
-           mScale[translationInfoIndex[componentInfoIndex]]);
-  drawList.AddText(
-    Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
-    mStyle.GetColorU32(TEXT_SHADOW),
-    tmps);
-  drawList.AddText(
-    Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
-    mStyle.GetColorU32(TEXT),
-    tmps);
-
-  // if (mState.Using(mCurrent.mActualID)) {
-  //   uint32_t scaleLineColor = mStyle.GetColorU32(SCALE_LINE);
-  //   drawList->AddLine(baseSSpace,
-  //                     worldDirSSpaceNoScale,
-  //                     scaleLineColor,
-  //                     mStyle.ScaleLineThickness);
-  //   drawList->AddCircleFilled(
-  //     worldDirSSpaceNoScale, mStyle.ScaleLineCircleSize, scaleLineColor);
-  // }
 }
 
 } // namespace

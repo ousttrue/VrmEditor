@@ -1,4 +1,5 @@
 #include "rotation_gizmo.h"
+#include <iostream>
 #include <numbers>
 
 namespace recti {
@@ -11,8 +12,9 @@ static const int HALF_CIRCLE_SEGMENT_COUNT = 64;
 static float
 ScreenRadius(const ModelContext& current)
 {
-  return current.CameraMouse.Camera.Height() * current.ScreenFactor *
-         (ROTATION_DISPLAY_FACTOR * 1.2 / 2);
+  // return current.CameraMouse.Camera.Height() * current.ScreenFactor *
+  //        (ROTATION_DISPLAY_FACTOR * 1.2 / 2);
+  return 120;
 }
 
 static MOVETYPE
@@ -96,6 +98,9 @@ ComputeColors(uint32_t colors[7], MOVETYPE type, const Style& style)
 MOVETYPE
 RotationGizmo::Hover(const ModelContext& current)
 {
+  if (!Intersects(current.Operation, ROTATE)) {
+    return MT_NONE;
+  }
   return GetType(current);
 }
 
@@ -160,8 +165,9 @@ RotationGizmo::Draw(const ModelContext& current,
 
   bool hasRSC = Intersects(current.Operation, recti::ROTATE_SCREEN);
   if (hasRSC && (active == MT_NONE || active == recti::MT_ROTATE_SCREEN)) {
+    auto r = ScreenRadius(current);
     drawList.AddCircle(current.CameraMouse.WorldToPos(current.Model.position()),
-                       ScreenRadius(current),
+                       r,
                        colors[0],
                        64,
                        style.RotationOuterLineThickness);

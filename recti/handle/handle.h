@@ -30,8 +30,6 @@ struct IGizmo
 {
   virtual ~IGizmo(){};
 
-  virtual bool Enabled(OPERATION operation) const = 0;
-
   virtual MOVETYPE Hover(const ModelContext& current) = 0;
 
   virtual void Draw(const ModelContext& current,

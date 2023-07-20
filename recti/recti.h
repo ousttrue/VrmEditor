@@ -3,7 +3,8 @@
 #include "drawcommand.h"
 #include "handle/rotation_drag.h"
 #include "handle/rotation_gizmo.h"
-#include "handle/scaleDragHandle.h"
+#include "handle/scale_drag.h"
+#include "handle/scale_gizmo.h"
 #include "handle/translation_drag.h"
 #include "handle/translation_gizmo.h"
 #include "operation.h"
@@ -28,6 +29,8 @@ struct Screen
   std::list<std::shared_ptr<IGizmo>> Gizmos = {
     std::make_shared<TranslationGizmo>(),
     std::make_shared<RotationGizmo>(),
+    std::make_shared<ScaleGizmo>(),
+    // std::make_shared<UniformScaleGizmo>(),
   };
   // drag & draw
   std::shared_ptr<IDragHandle> DragHandle;
@@ -88,12 +91,10 @@ struct Screen
 
     // draw
     for (auto& gizmo : Gizmos) {
-      if (gizmo->Enabled(current.Operation)) {
-        if (DragHandle) {
-          active = DragHandle->Type();
-        }
-        gizmo->Draw(current, active, hover, Style, DrawList);
+      if (DragHandle) {
+        active = DragHandle->Type();
       }
+      gizmo->Draw(current, active, hover, Style, DrawList);
     }
     if (DragHandle) {
       DragHandle->Draw(current, Style, DrawList);
@@ -108,8 +109,10 @@ struct Screen
     MOVETYPE hover = MT_NONE;
 
     for (auto& gizmo : Gizmos) {
-      if (gizmo->Enabled(current.Operation)) {
-        hover = (MOVETYPE)(hover | gizmo->Hover(current));
+      auto new_hover = gizmo->Hover(current);
+      if (new_hover != MT_NONE) {
+        hover = new_hover;
+        break;
       }
     }
 
@@ -124,12 +127,18 @@ struct Screen
   {
     if (hover >= MT_MOVE_X && hover <= MT_MOVE_SCREEN) {
       return std::make_shared<TranslationDragHandle>(current, hover);
-    } else if (hover >= MT_ROTATE_X && hover <= MT_ROTATE_SCREEN) {
+    }
+    if (hover >= MT_ROTATE_X && hover <= MT_ROTATE_SCREEN) {
       return std::make_shared<RotationDragHandle>(current, hover);
-    } else if (hover >= MT_SCALE_X && hover <= MT_SCALE_Z) {
-      return std::make_shared<ScaleDragHandle>(current, hover);
-    } else if (hover == MT_SCALE_XYZ) {
-      return std::make_shared<ScaleUDragHandle>(current, hover);
+    }
+    if (Intersects(current.Operation, SCALE)) {
+      if (hover >= MT_SCALE_X && hover <= MT_SCALE_XYZ) {
+        return std::make_shared<ScaleDragHandle>(current, hover);
+      }
+    } else if (Intersects(current.Operation, SCALEU)) {
+      // if (hover >= MT_SCALE_X && hover <= MT_SCALE_XYZ) {
+      //   return std::make_shared<UniformScaleDragHandle>(current, hover);
+      // }
     }
 
     return {};

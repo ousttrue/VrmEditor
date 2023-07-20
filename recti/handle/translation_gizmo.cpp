@@ -93,6 +93,9 @@ ComputeColors(uint32_t colors[7], MOVETYPE type, const Style& style)
 MOVETYPE
 TranslationGizmo::Hover(const ModelContext& current)
 {
+  if (!Intersects(current.Operation, TRANSLATE)) {
+    return MT_NONE;
+  }
   return GetType(current, m_allowAxisFlip);
 }
 

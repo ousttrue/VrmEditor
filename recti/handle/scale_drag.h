@@ -31,18 +31,4 @@ struct ScaleDragHandle : public IDragHandle
             DrawList& drawList) override;
 };
 
-struct ScaleUDragHandle : public ScaleDragHandle
-{
-  ScaleUDragHandle(const ModelContext& mCurrent, MOVETYPE type);
-
-  bool Drag(const ModelContext& current,
-            const float* snap,
-            float* matrix,
-            float* deltaMatrix) override;
-
-  void Draw(const ModelContext& current,
-            const Style& style,
-            DrawList& drawList) override;
-};
-
 } // namespace
