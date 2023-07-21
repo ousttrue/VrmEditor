@@ -2,7 +2,7 @@
 #include <DirectXMath.h>
 #include <unordered_map>
 
-namespace libvrm {
+namespace boneskin {
 
 struct NodeState
 {

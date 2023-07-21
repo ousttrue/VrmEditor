@@ -40,6 +40,7 @@ struct FbxLoaderImpl
       return {};
     }
     auto ptr = std::make_shared<libvrm::GltfRoot>();
+    ptr->InitializeGltf();
 
     boneskin::SkinningManager::Instance().Release();
     for (size_t i = 0; i < m_scene->meshes.count; ++i) {
@@ -120,6 +121,8 @@ struct FbxLoaderImpl
           }
         }
       }
+
+      ptr->AddMesh(pMesh);
     }
 
     for (size_t i = 0; i < m_scene->nodes.count; i++) {
@@ -133,8 +136,17 @@ struct FbxLoaderImpl
         ss << "node#" << i;
         name = ss.str();
       }
-      auto pNode = std::make_shared<libvrm::Node>(name);
-      ptr->m_nodes.push_back(pNode);
+
+      auto pNode = ptr->CreateNode(name);
+
+      if (node->mesh) {
+        for (size_t i = 0; i < m_scene->meshes.count; ++i) {
+          auto mesh = m_scene->meshes.data[i];
+          if (mesh == node->mesh) {
+            auto a = 0;
+          }
+        }
+      }
     }
 
     return ptr;

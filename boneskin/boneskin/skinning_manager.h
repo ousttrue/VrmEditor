@@ -1,13 +1,10 @@
 #pragma once
 #include "base_mesh.h"
 #include "deformed_mesh.h"
+#include "node_state.h"
 #include "skin.h"
 #include <DirectXMath.h>
 #include <span>
-
-namespace libvrm {
-struct NodeState;
-}
 
 namespace boneskin {
 
@@ -60,10 +57,9 @@ public:
                                        const gltfjson::Bin& bin,
                                        std::optional<uint32_t> skinId);
 
-  std::span<const NodeMesh> ProcessSkin(
-    const gltfjson::Root& root,
-    const gltfjson::Bin& bin,
-    std::span<const libvrm::NodeState> drawables);
+  std::span<const NodeMesh> ProcessSkin(const gltfjson::Root& root,
+                                        const gltfjson::Bin& bin,
+                                        std::span<const NodeState> drawables);
 };
 
 } // namespace

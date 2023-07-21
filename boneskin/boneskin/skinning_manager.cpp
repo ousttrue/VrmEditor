@@ -1,6 +1,6 @@
 #include "skinning_manager.h"
-#include <vrm/gltfroot.h>
-#include <vrm/node_state.h>
+// #include <vrm/gltfroot.h>
+// #include <vrm/node_state.h>
 
 namespace boneskin {
 
@@ -359,7 +359,7 @@ ApplySkinning(DeformedMesh& deformed,
 std::span<const NodeMesh>
 SkinningManager::ProcessSkin(const gltfjson::Root& root,
                              const gltfjson::Bin& bin,
-                             std::span<const libvrm::NodeState> drawables)
+                             std::span<const NodeState> drawables)
 {
   assert(root.Nodes.size() == drawables.size());
   m_meshNodes.clear();

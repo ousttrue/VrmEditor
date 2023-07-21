@@ -1,8 +1,8 @@
 #pragma once
 #include "boundingbox.h"
 #include "humanoid/humanbones.h"
-#include "node_state.h"
 #include <DirectXMath.h>
+#include <boneskin/node_state.h>
 #include <functional>
 #include <gltfjson.h>
 #include <memory>
@@ -10,6 +10,10 @@
 #include <span>
 #include <unordered_map>
 #include <vector>
+
+namespace boneskin {
+struct BaseMesh;
+}
 
 namespace libvrm {
 
@@ -39,7 +43,7 @@ struct GltfRoot
 
   std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
-  std::vector<NodeState> m_drawables;
+  std::vector<boneskin::NodeState> m_drawables;
 
   GltfRoot();
   ~GltfRoot();
@@ -64,7 +68,7 @@ struct GltfRoot
   std::tuple<std::shared_ptr<Node>, uint32_t> GetBoneNode(HumanBones bone);
   BoundingBox GetBoundingBox() const;
   void InitializeNodes();
-  std::span<NodeState> NodeStates();
+  std::span<boneskin::NodeState> NodeStates();
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
   std::shared_ptr<HumanSkeleton> GetHumanSkeleton();
   std::shared_ptr<libvrm::Node> GetSelectedNode() const { return m_selected; }
@@ -79,6 +83,19 @@ struct GltfRoot
     }
     return std::nullopt;
   }
+
+  // Build glTF
+  void InitializeGltf();
+  uint32_t AddBufferView(uint32_t byteOffset,
+                         uint32_t byteSize,
+                         uint32_t stride);
+  uint32_t AddAccessor(uint32_t bufferViewIndex,
+                       uint32_t accessorCount,
+                       uint32_t accessorOffset,
+                       uint32_t elementType,
+                       const char* type);
+  uint32_t AddMesh(const std::shared_ptr<boneskin::BaseMesh>& mesh);
+  std::shared_ptr<Node> CreateNode(const std::string& name);
 };
 
 } // namespace

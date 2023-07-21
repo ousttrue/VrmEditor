@@ -1,13 +1,18 @@
-#include "gltfroot.h"
+#include <Windows.h>
+
 #include "dmath.h"
+#include "gltfroot.h"
 #include "humanoid/humanskeleton.h"
 #include "node.h"
-#include "node_state.h"
 #include "spring_bone.h"
 #include <DirectXMath.h>
+#include <GL/GL.h>
 #include <array>
+#include <boneskin/base_mesh.h>
+#include <boneskin/node_state.h>
 #include <expected>
 #include <fstream>
+#include <gltfjson/bin_writer.h>
 #include <gltfjson/glb.h>
 #include <iostream>
 #include <limits>
@@ -87,7 +92,7 @@ GltfRoot::InitializeNodes()
   }
 }
 
-std::span<NodeState>
+std::span<boneskin::NodeState>
 GltfRoot::NodeStates()
 {
   if (m_gltf) {
@@ -161,6 +166,123 @@ bool
 GltfRoot::IsSelected(const std::shared_ptr<libvrm::Node>& node) const
 {
   return m_selected == node;
+}
+
+void
+GltfRoot::InitializeGltf()
+{
+  auto json = std::make_shared<gltfjson::tree::Node>();
+  json->Set(gltfjson::ObjectValue());
+  json->SetProperty(u8"asset", gltfjson::ObjectValue());
+  json->SetProperty(u8"images", gltfjson::ArrayValue());
+  json->SetProperty(u8"textures", gltfjson::ArrayValue());
+  json->SetProperty(u8"materials", gltfjson::ArrayValue());
+  json->SetProperty(u8"buffers", gltfjson::ArrayValue());
+  json->SetProperty(u8"bufferViews", gltfjson::ArrayValue());
+  json->SetProperty(u8"accessors", gltfjson::ArrayValue());
+  json->SetProperty(u8"meshes", gltfjson::ArrayValue());
+  json->SetProperty(u8"nodes", gltfjson::ArrayValue());
+  json->SetProperty(u8"skins", gltfjson::ArrayValue());
+  json->SetProperty(u8"scenes", gltfjson::ArrayValue());
+  m_gltf = std::make_shared<gltfjson::Root>(json);
+}
+
+uint32_t
+GltfRoot::AddBufferView(uint32_t byteOffset,
+                        uint32_t byteLength,
+                        uint32_t byteStride)
+{
+  auto index = m_gltf->BufferViews.size();
+  auto bufferView = m_gltf->BufferViews.m_json->Add(gltfjson::ObjectValue());
+  bufferView->SetProperty(u8"byteOffset", (float)byteOffset);
+  bufferView->SetProperty(u8"byteLength", (float)byteLength);
+  if (byteStride) {
+    bufferView->SetProperty(u8"byteStride", (float)byteStride);
+  }
+  return index;
+}
+
+uint32_t
+GltfRoot::AddAccessor(uint32_t bufferViewIndex,
+                      uint32_t accessorCount,
+                      uint32_t accessorOffset,
+                      uint32_t elementType,
+                      const char* type)
+{
+  auto index = m_gltf->Accessors.size();
+  auto accessor = m_gltf->Accessors.m_json->Add(gltfjson::ObjectValue());
+
+  accessor->SetProperty(u8"bufferView", (float)bufferViewIndex);
+  if (accessorOffset) {
+    accessor->SetProperty(u8"byteOffset", (float)accessorOffset);
+  }
+  accessor->SetProperty(u8"componentType", (float)elementType);
+  accessor->SetProperty(u8"type", std::u8string((const char8_t*)type));
+  accessor->SetProperty(u8"count", (float)accessorCount);
+
+  return index;
+}
+
+uint32_t
+GltfRoot::AddMesh(const std::shared_ptr<boneskin::BaseMesh>& mesh)
+{
+  // glTF
+  auto index = m_gltf->Meshes.size();
+  auto meshJson = m_gltf->Meshes.m_json->Add(gltfjson::ObjectValue{});
+  auto attributes =
+    meshJson->SetProperty(u8"attributes", gltfjson::ObjectValue{});
+
+  gltfjson::BinWriter w(m_bytes);
+
+  {
+    auto view =
+      w.PushBufferView(mesh->m_vertices.data(), mesh->m_vertices.size());
+    auto bufferView =
+      AddBufferView(view.ByteOffset, view.ByteOffset, sizeof(boneskin::Vertex));
+    {
+      auto accessor =
+        AddAccessor(bufferView, mesh->m_vertices.size(), 0, GL_FLOAT, "VEC3");
+      attributes->SetProperty(u8"POSITION", (float)accessor);
+    }
+    {
+      auto accessor =
+        AddAccessor(bufferView, mesh->m_vertices.size(), 12, GL_FLOAT, "VEC3");
+      attributes->SetProperty(u8"NORMAL", (float)accessor);
+    }
+    {
+      auto accessor =
+        AddAccessor(bufferView, mesh->m_vertices.size(), 24, GL_FLOAT, "VEC2");
+      attributes->SetProperty(u8"TEXCOORD_0", (float)accessor);
+    }
+  }
+
+  {
+    auto view =
+      w.PushBufferView(mesh->m_indices.data(), mesh->m_indices.size());
+    auto bufferView =
+      AddBufferView(view.ByteOffset, view.ByteOffset, sizeof(uint32_t));
+    {
+      auto accessor = AddAccessor(
+        bufferView, mesh->m_indices.size(), 0, GL_UNSIGNED_INT, "SCALAR");
+      meshJson->SetProperty(u8"indices", (float)accessor);
+    }
+  }
+
+  m_bin.Bytes = m_bytes;
+
+  return index;
+}
+
+std::shared_ptr<Node>
+GltfRoot::CreateNode(const std::string& name)
+{
+  auto pNode = std::make_shared<libvrm::Node>(name);
+  m_nodes.push_back(pNode);
+
+  // glTF
+  auto obj = m_gltf->Nodes.m_json->Add(gltfjson::ObjectValue{});
+  obj->SetProperty(u8"name", std::u8string((const char8_t*)name.c_str()));
+  return pNode;
 }
 
 } // namespace

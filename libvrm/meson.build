@@ -6,6 +6,7 @@ libvrm_deps = [
     gltfjson_dep,
     stb_dep,
     ktx_dep,
+    boneskin_dep,
 ]
 libvrm_lib = static_library(
     'vrm',

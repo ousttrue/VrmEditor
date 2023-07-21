@@ -110,7 +110,7 @@ struct RuntimeScene
   std::shared_ptr<RuntimeSpringCollision> GetOrCreateRuntimeSpringCollision(
     const std::shared_ptr<SpringBone>& springBone);
 
-  void UpdateNodeStates(std::span<NodeState> nodestates);
+  void UpdateNodeStates(std::span<boneskin::NodeState> nodestates);
 
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
@@ -142,7 +142,7 @@ struct RuntimeScene
   void SelectNode(const std::shared_ptr<libvrm::RuntimeNode>& node);
   bool IsSelected(const std::shared_ptr<libvrm::RuntimeNode>& node) const;
 
-  void SelectJoint(const std::shared_ptr<libvrm::SpringJoint> &joint);
+  void SelectJoint(const std::shared_ptr<libvrm::SpringJoint>& joint);
 };
 
 } // namespace

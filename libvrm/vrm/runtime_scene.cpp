@@ -4,9 +4,9 @@
 #include "expression.h"
 #include "gizmo.h"
 #include "humanoid/humanskeleton.h"
-#include "node_state.h"
 #include "runtime_node.h"
 #include "spring_collision.h"
+#include <boneskin/node_state.h>
 #include <gltfjson.h>
 #include <gltfjson/gltf_typing_vrm0.h>
 #include <gltfjson/gltf_typing_vrm1.h>
@@ -539,7 +539,7 @@ RuntimeScene::GetOrCreateRuntimeSpringCollision(
 }
 
 void
-RuntimeScene::UpdateNodeStates(std::span<NodeState> nodestates)
+RuntimeScene::UpdateNodeStates(std::span<boneskin::NodeState> nodestates)
 {
   if (!m_base->m_gltf) {
     return;
