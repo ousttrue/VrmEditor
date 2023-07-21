@@ -22,37 +22,25 @@ RuntimeSpringJoint::RuntimeSpringJoint(
                            DirectX::XMLoadFloat3(&joint->LocalTailPosition)));
 }
 
+const DirectX::XMFLOAT4 CYAN = { 1, 1, 0, 1 };
+const DirectX::XMFLOAT4 RED = { 1, 0, 0, 1 };
+
 void
-RuntimeSpringJoint::DrawGizmo(libvrm::IGizmoDrawer* gizmo)
+RuntimeSpringJoint::DrawGizmo(libvrm::IGizmoDrawer* gizmo, const DirectX::XMFLOAT4 &color)
 {
-  // gizmo->drawSphere(Head->worldPosition(), {1, 1, 1, 1});
-  // gizmo->drawSphere(m_currentTailPosotion, {0, 1, 0, 1});
-  // gizmo->drawLine(Head->worldPosition(), m_currentTailPosotion, {0, 1, 0,
-  // 1});
-  //
-  // gizmo->drawSphere(m_lastTailPosotion, {1, 0, 0, 1});
-  // gizmo->drawLine(Head->worldPosition(), m_lastTailPosotion, {1, 0, 0, 1});
+  gizmo->DrawSphere(
+    m_currentTailPosotion, Joint->Radius, color);
+  gizmo->DrawLine(
+    Joint->Head->WorldTransform.Translation, m_currentTailPosotion, CYAN);
 
-  // gizmo->drawSphere(lastHead, {1, 1, 1, 1});
-  // gizmo->DrawSphere(Head->WorldTransform.Translation, Radius, { 0, 1, 0, 1
-  // }); gizmo->drawLine(lastHead, Head->worldPosition(), {1, 0, 1, 1});
-
-  // gizmo->drawSphere(currentTail, {1, 1, 1, 1});
-  gizmo->DrawSphere(m_currentTailPosotion, Joint->Radius, { 1, 0, 1, 1 });
-  // gizmo->drawLine(currentTail, nextTail, {0, 1, 0, 1});
-
-  gizmo->DrawLine(Joint->Head->WorldTransform.Translation,
-                  m_currentTailPosotion,
-                  { 1, 1, 0, 1 });
-
-  if (Joint->Head->Children.size()) {
-    gizmo->DrawSphere(Joint->Head->Children.front()->WorldTransform.Translation,
-                      Joint->Radius,
-                      { 1, 0, 0, 1 });
-    gizmo->DrawLine(Joint->Head->WorldTransform.Translation,
-                    Joint->Head->Children.front()->WorldTransform.Translation,
-                    { 1, 0, 0, 1 });
-  }
+  // if (Joint->Head->Children.size()) {
+  //   gizmo->DrawSphere(Joint->Head->Children.front()->WorldTransform.Translation,
+  //                     Joint->Radius,
+  //                     RED);
+  //   gizmo->DrawLine(Joint->Head->WorldTransform.Translation,
+  //                   Joint->Head->Children.front()->WorldTransform.Translation,
+  //                   RED);
+  // }
 }
 
 void

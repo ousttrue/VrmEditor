@@ -16,7 +16,7 @@ struct Screen;
 }
 
 namespace glr {
-class Cuber;
+class Gizmo;
 struct LineGizmo;
 struct RenderingEnv;
 
@@ -31,6 +31,7 @@ struct ViewSettings
   // gizmo
   bool ShowLine = true;
   bool ShowCuber = false;
+  bool ShowSpring = true;
 
   float Color[4] = { 0.2f, 0.2f, 0.2f, 1 };
 
@@ -41,8 +42,7 @@ struct SceneRenderer
 {
   std::shared_ptr<RenderingEnv> m_env;
   std::shared_ptr<ViewSettings> m_settings;
-  std::shared_ptr<Cuber> m_cuber;
-  std::shared_ptr<LineGizmo> m_gizmo;
+  std::shared_ptr<Gizmo> m_gizmo;
   std::shared_ptr<recti::Screen> m_screen;
   std::shared_ptr<grapho::camera::Camera> m_camera;
 

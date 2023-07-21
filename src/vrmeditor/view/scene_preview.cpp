@@ -3,15 +3,12 @@
 #include "overlay.h"
 #include <DirectXMath.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <glr/cuber.h>
 #include <glr/gl3renderer.h>
-#include <glr/line_gizmo.h>
 #include <glr/rendering_env.h>
 #include <glr/rendertarget.h>
 #include <glr/scene_renderer.h>
 #include <grapho/camera/camera.h>
 #include <imgui.h>
-#include <vrm/gizmo.h>
 #include <vrm/humanoid/humanbones.h>
 #include <vrm/runtime_node.h>
 #include <vrm/runtime_scene.h>
@@ -24,6 +21,7 @@ struct ScenePreviewImpl
   std::shared_ptr<glr::RenderingEnv> m_env;
   std::shared_ptr<glr::ViewSettings> m_settings;
   std::shared_ptr<glr::SceneRenderer> m_renderer;
+  bool m_showSpring = false;
 
   glr::RenderFunc m_show;
 
@@ -48,6 +46,8 @@ struct ScenePreviewImpl
     if (m_env) {
       m_env->SetShadowHeight(min.y);
     }
+
+    m_showSpring = false;
   }
 
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
@@ -63,6 +63,8 @@ struct ScenePreviewImpl
     if (m_env) {
       m_env->SetShadowHeight(min.y);
     }
+
+    m_showSpring = true;
   }
 
   void ShowScreenRect(const char* title,
@@ -105,6 +107,10 @@ struct ScenePreviewImpl
     ImGui::Checkbox("bone", &m_renderer->m_settings->ShowCuber);
     ImGui::SameLine();
     ImGui::Checkbox("shadow", &m_renderer->m_settings->ShowShadow);
+    if (m_showSpring) {
+      ImGui::SameLine();
+      ImGui::Checkbox("spring", &m_renderer->m_settings->ShowSpring);
+    }
     ShowFullWindow(m_title.c_str(), m_clear.data());
   }
 };

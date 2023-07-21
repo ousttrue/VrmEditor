@@ -1,8 +1,7 @@
 #include <GL/glew.h>
 
-#include "cuber.h"
+#include "gizmo.h"
 #include "gl3renderer.h"
-#include "line_gizmo.h"
 #include "rendering_env.h"
 #include "rendertarget.h"
 #include "scene_renderer.h"
@@ -108,12 +107,12 @@ GetNodeLabel(const std::shared_ptr<libvrm::RuntimeNode>& node)
 
 template<typename T>
 static bool
-Gizmo(const grapho::camera::Camera& camera,
-      const grapho::camera::MouseState& mouse,
-      const std::shared_ptr<T>& scene,
-      const std::shared_ptr<recti::Screen>& screen,
-      std::optional<uint32_t> selectedIndex,
-      std::optional<uint32_t> hoverIndex)
+ScreenGizmo(const grapho::camera::Camera& camera,
+            const grapho::camera::MouseState& mouse,
+            const std::shared_ptr<T>& scene,
+            const std::shared_ptr<recti::Screen>& screen,
+            std::optional<uint32_t> selectedIndex,
+            std::optional<uint32_t> hoverIndex)
 {
   recti::Camera gizmo_camera{
     *((const recti::Mat4*)&camera.ViewMatrix),
@@ -165,8 +164,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
                              const std::shared_ptr<ViewSettings>& settings)
   : m_env(env ? env : std::make_shared<RenderingEnv>())
   , m_settings(settings ? settings : std::make_shared<ViewSettings>())
-  , m_cuber(new Cuber)
-  , m_gizmo(new LineGizmo)
+  , m_gizmo(new Gizmo)
   , m_screen(new recti::Screen)
   , m_camera(new grapho::camera::Camera)
 {
@@ -213,7 +211,7 @@ RenderFrame(grapho::camera::Camera& camera,
             const gltfjson::Bin& bin,
             std::span<libvrm::NodeState> nodestates,
             const ViewSettings& settings,
-            const std::shared_ptr<Cuber>& cuber,
+            const std::shared_ptr<Gizmo>& gizmo,
             std::span<const DirectX::XMFLOAT4X4> matrices,
             const std::shared_ptr<T>& scene,
             const std::shared_ptr<recti::Screen>& screen,
@@ -230,34 +228,33 @@ RenderFrame(grapho::camera::Camera& camera,
 
   const int SELECTED = 9;
   const int HOVER = 10;
-  cuber->Instances.clear();
-  if (settings.ShowCuber) {
-    for (uint32_t i = 0; i < matrices.size(); ++i) {
-      auto& m = matrices[i];
-      cuber->Instances.push_back({
-        .Matrix = m,
-      });
-      if (selected && i == *selected) {
-        cuber->Instances.back().PositiveFaceFlag.x = SELECTED;
-        cuber->Instances.back().PositiveFaceFlag.y = SELECTED;
-        cuber->Instances.back().PositiveFaceFlag.z = SELECTED;
-        cuber->Instances.back().NegativeFaceFlag.x = SELECTED;
-        cuber->Instances.back().NegativeFaceFlag.y = SELECTED;
-        cuber->Instances.back().NegativeFaceFlag.z = SELECTED;
-      } else if (hover && i == *hover) {
-        cuber->Instances.back().PositiveFaceFlag.x = HOVER;
-        cuber->Instances.back().PositiveFaceFlag.y = HOVER;
-        cuber->Instances.back().PositiveFaceFlag.z = HOVER;
-        cuber->Instances.back().NegativeFaceFlag.x = HOVER;
-        cuber->Instances.back().NegativeFaceFlag.y = HOVER;
-        cuber->Instances.back().NegativeFaceFlag.z = HOVER;
-      }
+  gizmo->Instances.clear();
+  for (uint32_t i = 0; i < matrices.size(); ++i) {
+    auto& m = matrices[i];
+    gizmo->Instances.push_back({
+      .Matrix = m,
+    });
+    if (selected && i == *selected) {
+      gizmo->Instances.back().PositiveFaceFlag.x = SELECTED;
+      gizmo->Instances.back().PositiveFaceFlag.y = SELECTED;
+      gizmo->Instances.back().PositiveFaceFlag.z = SELECTED;
+      gizmo->Instances.back().NegativeFaceFlag.x = SELECTED;
+      gizmo->Instances.back().NegativeFaceFlag.y = SELECTED;
+      gizmo->Instances.back().NegativeFaceFlag.z = SELECTED;
+    } else if (hover && i == *hover) {
+      gizmo->Instances.back().PositiveFaceFlag.x = HOVER;
+      gizmo->Instances.back().PositiveFaceFlag.y = HOVER;
+      gizmo->Instances.back().PositiveFaceFlag.z = HOVER;
+      gizmo->Instances.back().NegativeFaceFlag.x = HOVER;
+      gizmo->Instances.back().NegativeFaceFlag.y = HOVER;
+      gizmo->Instances.back().NegativeFaceFlag.z = HOVER;
     }
-    cuber->Render(camera);
   }
+  gizmo->Render(camera, settings.ShowCuber, settings.ShowLine);
+  gizmo->Clear();
 
   // manipulator
-  auto manipulated = Gizmo(camera, mouse, scene, screen, selected, hover);
+  auto manipulated = ScreenGizmo(camera, mouse, scene, screen, selected, hover);
   if (!manipulated && camera.InViewport(mouse) && mouse.LeftDown) {
     if (hover) {
       scene->SelectNode(scene->m_nodes[*hover]);
@@ -389,7 +386,7 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
               scene->m_bin,
               nodestates,
               *m_settings,
-              m_cuber,
+              m_gizmo,
               scene->ShapeMatrices(),
               scene,
               m_screen,
@@ -417,6 +414,10 @@ SceneRenderer::RenderRuntime(
     m_settings->NextSpringDelta = {};
   }
 
+  if (m_settings->ShowSpring) {
+    runtime->DrawGizmo(m_gizmo.get());
+  }
+
   // render scene
   RenderFrame(*m_camera,
               viewport,
@@ -426,19 +427,12 @@ SceneRenderer::RenderRuntime(
               runtime->m_base->m_bin,
               nodestates,
               *m_settings,
-              m_cuber,
+              m_gizmo,
               runtime->ShapeMatrices(),
               runtime,
               m_screen,
               runtime->m_base->SelectedIndex(),
               hover);
-
-  // grid, spring, spring collider
-  if (m_settings->ShowLine) {
-    runtime->DrawGizmo(m_gizmo.get());
-    glr::RenderLine(*m_camera, m_gizmo->m_lines);
-  }
-  m_gizmo->Clear();
 }
 
 } // namespace

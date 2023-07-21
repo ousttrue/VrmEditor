@@ -1,20 +1,31 @@
 #pragma once
 #include <DirectXMath.h>
-#include <cuber/mesh.h>
+#include <cuber/gl3/GlCubeRenderer.h>
+#include <cuber/gl3/GlLineRenderer.h>
+#include <grapho/camera/camera.h>
+#include <memory>
 #include <vector>
-#include <vrm/dmath.h>
 #include <vrm/gizmo.h>
+#include <vrm/node.h>
 
 namespace glr {
 
-struct LineGizmo : public libvrm::IGizmoDrawer
+class Gizmo : public libvrm::IGizmoDrawer
 {
-  std::vector<cuber::LineVertex> m_lines;
+  std::shared_ptr<cuber::gl3::GlCubeRenderer> m_cuber;
+  std::shared_ptr<cuber::gl3::GlLineRenderer> m_liner;
   size_t m_keep = 0;
 
-  LineGizmo();
-  void Fix() override { m_keep = m_lines.size(); }
-  void Clear() override { m_lines.resize(m_keep); }
+public:
+  std::vector<cuber::LineVertex> Lines;
+  Gizmo();
+  std::vector<cuber::Instance> Instances;
+  void Render(const grapho::camera::Camera& camera,
+              bool ShowCube,
+              bool ShowLine);
+
+  void Fix() override { m_keep = Lines.size(); }
+  void Clear() override { Lines.resize(m_keep); }
 
   void DrawLine(const DirectX::XMFLOAT3& p0,
                 const DirectX::XMFLOAT3& p1,
@@ -73,5 +84,4 @@ struct LineGizmo : public libvrm::IGizmoDrawer
         division);
   }
 };
-
 }

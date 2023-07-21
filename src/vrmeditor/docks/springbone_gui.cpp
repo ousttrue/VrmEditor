@@ -18,10 +18,9 @@ ToLabel(const std::shared_ptr<libvrm::RuntimeNode>& node)
 
 struct SpringBoneGuiImpl
 {
+  grapho::imgui::PrintfBuffer buf;
   int m_vrm_version = 0;
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;
-  // current selected
-  std::shared_ptr<libvrm::SpringBone> m_spring;
 
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
@@ -53,7 +52,6 @@ struct SpringBoneGuiImpl
       return;
     }
 
-    grapho::imgui::PrintfBuffer buf;
     std::array<const char*, 3> cols = { "index", "RootNode", "✅" };
     if (grapho::imgui::BeginTableColumns("##_springs", cols)) {
       int i = 0;
@@ -63,8 +61,9 @@ struct SpringBoneGuiImpl
 
         // 0
         ImGui::TableNextColumn();
-        if (ImGui::Selectable(buf.Printf("%d", i), spring == m_spring)) {
-          m_spring = spring;
+        if (ImGui::Selectable(buf.Printf("%d", i),
+                              spring == m_runtime->m_springBoneSelected)) {
+          m_runtime->m_springBoneSelected = spring;
         }
 
         // 1
@@ -104,7 +103,8 @@ struct SpringBoneGuiImpl
 
   void _EditSpring()
   {
-    if (!m_spring) {
+    auto spring = m_runtime->m_springBoneSelected;
+    if (!spring) {
       return;
     }
 
@@ -113,24 +113,23 @@ struct SpringBoneGuiImpl
     };
     if (grapho::imgui::BeginTableColumns("##_springs", cols)) {
       int j = 0;
-      for (auto joint : m_spring->Joints) {
+      for (auto joint : spring->Joints) {
 
+        bool editable = true;
         if (m_vrm_version == 0 && j > 0) {
           // VRM-0.x use same setting
-          ImGui::BeginDisabled(true);
+          editable = false;
         }
 
-        _EditSpringJoint(
-          j, joint, (j == m_spring->Joints.size() - 1) && m_vrm_version == 1);
-
-        if (m_vrm_version == 0 && j > 0) {
-          ImGui::EndDisabled();
-        }
+        _EditSpringJoint(j,
+                         joint,
+                         (j == spring->Joints.size() - 1) && m_vrm_version == 1,
+                         editable);
 
         ++j;
       }
 
-      if (m_vrm_version == 0 && m_spring->Joints.size() > 0) {
+      if (m_vrm_version == 0 && spring->Joints.size() > 0) {
         ImGui::TableNextRow();
         // 0
         ImGui::TableNextColumn();
@@ -153,16 +152,23 @@ struct SpringBoneGuiImpl
 
   void _EditSpringJoint(int j,
                         const std::shared_ptr<libvrm::SpringJoint>& joint,
-                        bool notUsed)
+                        bool notUsed,
+                        bool editable)
   {
     ImGui::PushID(joint.get());
     ImGui::TableNextRow();
 
     // 0
     ImGui::TableNextColumn();
-    ImGui::Text("%d", j);
+    // ImGui::Text("%d", j);
+    if (ImGui::Selectable(buf.Printf("%d", j),
+                          joint == m_runtime->m_springJointSelected)) {
+      m_runtime->SelectJoint(joint);
+    }
 
     // 1
+    ImGui::BeginDisabled(!editable);
+
     ImGui::TableNextColumn();
     if (auto selected =
           grapho::imgui::SelectVector<std::shared_ptr<libvrm::RuntimeNode>>(
@@ -197,6 +203,7 @@ struct SpringBoneGuiImpl
       // TODO: remove
     }
 
+    ImGui::EndDisabled();
     ImGui::PopID();
   }
 

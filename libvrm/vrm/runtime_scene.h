@@ -68,6 +68,8 @@ struct RuntimeScene
   std::vector<std::shared_ptr<SpringCollider>> m_springColliders;
   std::vector<std::shared_ptr<SpringColliderGroup>> m_springColliderGroups;
   std::vector<std::shared_ptr<SpringBone>> m_springBones;
+  std::shared_ptr<libvrm::SpringBone> m_springBoneSelected;
+  std::shared_ptr<libvrm::SpringJoint> m_springJointSelected;
 
   std::optional<size_t> IndexOf(const std::shared_ptr<RuntimeNode>& node) const
   {
@@ -140,6 +142,7 @@ struct RuntimeScene
   void SelectNode(const std::shared_ptr<libvrm::RuntimeNode>& node);
   bool IsSelected(const std::shared_ptr<libvrm::RuntimeNode>& node) const;
 
+  void SelectJoint(const std::shared_ptr<libvrm::SpringJoint> &joint);
 };
 
 } // namespace

@@ -1,36 +1,60 @@
-#include "line_gizmo.h"
-#include <cuber/mesh.h>
+#include "gizmo.h"
+#include <cuber/gl3/GlCubeRenderer.h>
+#include <cuber/gl3/GlLineRenderer.h>
+#include <glr/rendering_env.h>
 
 namespace glr {
 
-LineGizmo::LineGizmo()
+Gizmo::Gizmo()
 {
-  cuber::PushGrid(m_lines);
+  cuber::PushGrid(Lines);
   Fix();
 }
 
 void
-LineGizmo::DrawLine(const DirectX::XMFLOAT3& p0,
-                    const DirectX::XMFLOAT3& p1,
-                    const DirectX::XMFLOAT4& color)
+Gizmo::Render(const grapho::camera::Camera& camera,
+              bool ShowCube,
+              bool ShowLine)
 {
-  m_lines.push_back({
+  if (!m_cuber) {
+    m_cuber = std::make_shared<cuber::gl3::GlCubeRenderer>();
+    m_liner = std::make_shared<cuber::gl3::GlLineRenderer>();
+  }
+
+  if (ShowCube) {
+    m_cuber->Render(&camera.ProjectionMatrix._11,
+                    &camera.ViewMatrix._11,
+                    Instances.data(),
+                    Instances.size());
+  }
+  if (ShowLine) {
+    m_liner->Render(
+      &camera.ProjectionMatrix._11, &camera.ViewMatrix._11, Lines);
+  }
+}
+
+void
+Gizmo::DrawLine(const DirectX::XMFLOAT3& p0,
+                const DirectX::XMFLOAT3& p1,
+                const DirectX::XMFLOAT4& color)
+{
+  Lines.push_back({
     .Position = { p0.x, p0.y, p0.z },
     .Color = color,
   });
-  m_lines.push_back({
+  Lines.push_back({
     .Position = { p1.x, p1.y, p1.z },
     .Color = color,
   });
 }
 
 void
-LineGizmo::Arc(const DirectX::XMFLOAT4& color,
-               const DirectX::XMFLOAT3& pos,
-               const DirectX::XMFLOAT3& normal,
-               const DirectX::XMFLOAT3& base,
-               float delta,
-               int count)
+Gizmo::Arc(const DirectX::XMFLOAT4& color,
+           const DirectX::XMFLOAT3& pos,
+           const DirectX::XMFLOAT3& normal,
+           const DirectX::XMFLOAT3& base,
+           float delta,
+           int count)
 {
   auto Y = DirectX::XMLoadFloat3(&normal);
   auto Z = DirectX::XMLoadFloat3(&base);
@@ -62,9 +86,9 @@ LineGizmo::Arc(const DirectX::XMFLOAT4& color,
 }
 
 void
-LineGizmo::DrawSphere(const DirectX::XMFLOAT3& pos,
-                      float r,
-                      const DirectX::XMFLOAT4& color)
+Gizmo::DrawSphere(const DirectX::XMFLOAT3& pos,
+                  float r,
+                  const DirectX::XMFLOAT4& color)
 {
   CircleXY(pos, r, color);
   CircleYZ(pos, r, color);
@@ -72,10 +96,10 @@ LineGizmo::DrawSphere(const DirectX::XMFLOAT3& pos,
 }
 
 void
-LineGizmo::DrawCapsule(const DirectX::XMFLOAT3& p0,
-                       const DirectX::XMFLOAT3& p1,
-                       float radius,
-                       const DirectX::XMFLOAT4& color)
+Gizmo::DrawCapsule(const DirectX::XMFLOAT3& p0,
+                   const DirectX::XMFLOAT3& p1,
+                   float radius,
+                   const DirectX::XMFLOAT4& color)
 {
   DrawSphere(p0, radius, color);
   DrawSphere(p1, radius, color);
@@ -141,4 +165,4 @@ LineGizmo::DrawCapsule(const DirectX::XMFLOAT3& p0,
 //          dmath::add(pos, points[5]),
 //          *((DirectX::XMFLOAT4*)&color));
 
-} // namespace gizmo
+} // namespace

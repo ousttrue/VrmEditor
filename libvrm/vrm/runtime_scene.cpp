@@ -649,13 +649,22 @@ RuntimeScene::SpringUpdate(const std::shared_ptr<SpringBone>& spring,
   }
 }
 
+const DirectX::XMFLOAT4 MAGENTA = { 1, 0, 1, 1 };
+const DirectX::XMFLOAT4 YELLOW = { 1, 1, 0, 1 };
+const DirectX::XMFLOAT4 RED = { 1, 0.5f, 0, 1 };
 void
 RuntimeScene::SpringDrawGizmo(const std::shared_ptr<SpringBone>& solver,
                               IGizmoDrawer* gizmo)
 {
   for (auto& joint : solver->Joints) {
     auto runtime = GetOrCreateRuntimeJoint(joint);
-    runtime->DrawGizmo(gizmo);
+    auto color = MAGENTA;
+    if (joint == m_springJointSelected) {
+      color = RED;
+    } else if (solver == m_springBoneSelected) {
+      color = YELLOW;
+    }
+    runtime->DrawGizmo(gizmo, color);
   }
 }
 
@@ -1023,12 +1032,28 @@ void
 RuntimeScene::SelectNode(const std::shared_ptr<libvrm::RuntimeNode>& node)
 {
   m_base->SelectNode(node ? node->Base : std::shared_ptr<libvrm::Node>());
+  for (auto& spring : m_springBones) {
+    for (auto& joint : spring->Joints) {
+      if (joint->Head == node) {
+        m_springBoneSelected = spring;
+        m_springJointSelected = joint;
+        return;
+      }
+    }
+  }
 }
 
 bool
 RuntimeScene::IsSelected(const std::shared_ptr<libvrm::RuntimeNode>& node) const
 {
   return m_base->IsSelected(node->Base);
+}
+
+void
+RuntimeScene::SelectJoint(const std::shared_ptr<libvrm::SpringJoint>& joint)
+{
+  m_springJointSelected = joint;
+  m_base->m_selected = joint->Head->Base;
 }
 
 } // namespace

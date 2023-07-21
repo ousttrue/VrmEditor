@@ -24,7 +24,7 @@ struct RuntimeSpringJoint
   DirectX::XMVECTOR ConstraintTailPosition(const DirectX::XMVECTOR& src);
   DirectX::XMVECTOR WorldPosToLocalRotation(
     const DirectX::XMVECTOR& nextTail) const;
-  void DrawGizmo(IGizmoDrawer* gizmo);
+  void DrawGizmo(IGizmoDrawer* gizmo, const DirectX::XMFLOAT4& color);
 };
 
 } // namespace
