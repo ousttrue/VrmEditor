@@ -69,113 +69,79 @@ Intersect(DirectX::XMVECTOR origin,
   }
 }
 
-static bool
-Gizmo(const grapho::camera::Camera& camera,
-      const grapho::camera::MouseState& mouse,
-      const std::shared_ptr<libvrm::RuntimeScene>& scene,
-      const std::shared_ptr<recti::Screen>& screen)
+inline DirectX::XMMATRIX
+GetMatrix(const std::shared_ptr<libvrm::Node>& node)
 {
-  bool active = false;
-  if (auto selected = scene->GetSelectedNode()) {
-    //   // TODO: conflict mouse event(left) with ImageButton
-    DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(&m, selected->WorldMatrix());
-
-    auto op = recti::ROTATE;
-    if (auto humanoid = selected->Base->Humanoid) {
-      if (*humanoid == libvrm::HumanBones::hips) {
-        op |= recti::TRANSLATE;
-      }
-    } else {
-      op |= recti::TRANSLATE;
-      op |= recti::SCALE;
-    }
-
-    recti::Camera gizmo_camera{
-      *((const recti::Mat4*)&camera.ViewMatrix),
-      *((const recti::Mat4*)&camera.ProjectionMatrix),
-      *((const recti::Vec4*)&camera.Projection.Viewport),
-    };
-
-    auto& io = ImGui::GetIO();
-    recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
-
-    screen->Begin(gizmo_camera, mouse);
-    active =
-      screen->Manipulate((int64_t)selected.get(), op, recti::LOCAL, (float*)&m);
-    if (active) {
-      // decompose feedback
-      selected->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
-      selected->CalcWorldMatrix(true);
-    }
-
-    // const float cubes[]{
-    //   1, 0, 0, 0, //
-    //   0, 1, 0, 0, //
-    //   0, 0, 1, 0, //
-    //   0, 0, 0, 1, //
-    // };
-    // auto cubes = runtime->ShapeMatrices();
-    // m_screen->DrawCubes((const float*)cubes.data(), cubes.size());
-
-    recti::Render(screen->DrawList, ImGui::GetWindowDrawList());
-  }
-
-  return active;
+  return node->WorldInitialMatrix();
+}
+inline DirectX::XMMATRIX
+GetMatrix(const std::shared_ptr<libvrm::RuntimeNode>& node)
+{
+  return node->WorldMatrix();
+}
+inline void
+SetMatrix(const std::shared_ptr<libvrm::Node>& node,
+          const DirectX::XMFLOAT4X4& m)
+{
+  node->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
+  node->CalcWorldInitialMatrix(true);
+}
+inline void
+SetMatrix(const std::shared_ptr<libvrm::RuntimeNode>& node,
+          const DirectX::XMFLOAT4X4& m)
+{
+  node->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+  node->CalcWorldMatrix(true);
 }
 
+template<typename T>
 static bool
 Gizmo(const grapho::camera::Camera& camera,
       const grapho::camera::MouseState& mouse,
-      const std::shared_ptr<libvrm::GltfRoot>& scene,
-      const std::shared_ptr<recti::Screen>& screen)
+      const std::shared_ptr<T>& scene,
+      const std::shared_ptr<recti::Screen>& screen,
+      std::optional<uint32_t> selectedIndex,
+      std::optional<uint32_t> hoverIndex)
 {
+  recti::Camera gizmo_camera{
+    *((const recti::Mat4*)&camera.ViewMatrix),
+    *((const recti::Mat4*)&camera.ProjectionMatrix),
+    *((const recti::Vec4*)&camera.Projection.Viewport),
+  };
+  auto& io = ImGui::GetIO();
+  recti::Mouse gizmo_mouse{ io.MousePos, io.MouseDown[0] };
   bool active = false;
-  if (auto selected = scene->GetSelectedNode()) {
-    //   // TODO: conflict mouse event(left) with ImageButton
-    DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(&m, selected->WorldInitialMatrix());
+  screen->Begin(gizmo_camera, gizmo_mouse);
+  {
+    auto cubes = scene->ShapeMatrices();
+    if (hoverIndex) {
+      screen->DrawCubes((const float*)(cubes.data() + *hoverIndex), 1);
+    }
+    if (selectedIndex) {
+      screen->DrawCubes((const float*)(cubes.data() + *selectedIndex), 1);
+    }
 
-    auto op = recti::ROTATE;
-    if (auto humanoid = selected->Humanoid) {
-      if (*humanoid == libvrm::HumanBones::hips) {
+    if (auto selected = scene->GetSelectedNode()) {
+      auto op = recti::ROTATE;
+      if (auto humanoid = selected->GetHumanBone()) {
+        if (*humanoid == libvrm::HumanBones::hips) {
+          op |= recti::TRANSLATE;
+        }
+      } else {
         op |= recti::TRANSLATE;
+        op |= recti::SCALE;
       }
-    } else {
-      op |= recti::TRANSLATE;
-      op |= recti::SCALE;
+
+      DirectX::XMFLOAT4X4 m;
+      DirectX::XMStoreFloat4x4(&m, GetMatrix(selected));
+      active = screen->Manipulate(
+        (int64_t)selected.get(), op, recti::LOCAL, (float*)&m);
+      if (active) {
+        SetMatrix(selected, m);
+      }
     }
-
-    recti::Camera gizmo_camera{
-      *((const recti::Mat4*)&camera.ViewMatrix),
-      *((const recti::Mat4*)&camera.ProjectionMatrix),
-      *((const recti::Vec4*)&camera.Projection.Viewport),
-    };
-
-    auto& io = ImGui::GetIO();
-    recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
-
-    screen->Begin(gizmo_camera, mouse);
-    active =
-      screen->Manipulate((int64_t)selected.get(), op, recti::LOCAL, (float*)&m);
-    if (active) {
-      // decompose feedback
-      selected->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
-      selected->CalcWorldInitialMatrix(true);
-    }
-
-    // const float cubes[]{
-    //   1, 0, 0, 0, //
-    //   0, 1, 0, 0, //
-    //   0, 0, 1, 0, //
-    //   0, 0, 0, 1, //
-    // };
-    // auto cubes = runtime->ShapeMatrices();
-    // m_screen->DrawCubes((const float*)cubes.data(), cubes.size());
-
-    recti::Render(screen->DrawList, ImGui::GetWindowDrawList());
   }
-
+  recti::Render(screen->DrawList, ImGui::GetWindowDrawList());
   return active;
 }
 
@@ -251,40 +217,39 @@ RenderFrame(grapho::camera::Camera& camera,
   const int SELECTED = 9;
   const int HOVER = 10;
   cuber->Instances.clear();
-  for (uint32_t i = 0; i < matrices.size(); ++i) {
-    auto& m = matrices[i];
-    cuber->Instances.push_back({
-      .Matrix = m,
-    });
-    if (selected && i == *selected) {
-      cuber->Instances.back().PositiveFaceFlag.x = SELECTED;
-      cuber->Instances.back().PositiveFaceFlag.y = SELECTED;
-      cuber->Instances.back().PositiveFaceFlag.z = SELECTED;
-      cuber->Instances.back().NegativeFaceFlag.x = SELECTED;
-      cuber->Instances.back().NegativeFaceFlag.y = SELECTED;
-      cuber->Instances.back().NegativeFaceFlag.z = SELECTED;
-    } else if (hover && i == *hover) {
-      cuber->Instances.back().PositiveFaceFlag.x = HOVER;
-      cuber->Instances.back().PositiveFaceFlag.y = HOVER;
-      cuber->Instances.back().PositiveFaceFlag.z = HOVER;
-      cuber->Instances.back().NegativeFaceFlag.x = HOVER;
-      cuber->Instances.back().NegativeFaceFlag.y = HOVER;
-      cuber->Instances.back().NegativeFaceFlag.z = HOVER;
+  if (settings.ShowCuber) {
+    for (uint32_t i = 0; i < matrices.size(); ++i) {
+      auto& m = matrices[i];
+      cuber->Instances.push_back({
+        .Matrix = m,
+      });
+      if (selected && i == *selected) {
+        cuber->Instances.back().PositiveFaceFlag.x = SELECTED;
+        cuber->Instances.back().PositiveFaceFlag.y = SELECTED;
+        cuber->Instances.back().PositiveFaceFlag.z = SELECTED;
+        cuber->Instances.back().NegativeFaceFlag.x = SELECTED;
+        cuber->Instances.back().NegativeFaceFlag.y = SELECTED;
+        cuber->Instances.back().NegativeFaceFlag.z = SELECTED;
+      } else if (hover && i == *hover) {
+        cuber->Instances.back().PositiveFaceFlag.x = HOVER;
+        cuber->Instances.back().PositiveFaceFlag.y = HOVER;
+        cuber->Instances.back().PositiveFaceFlag.z = HOVER;
+        cuber->Instances.back().NegativeFaceFlag.x = HOVER;
+        cuber->Instances.back().NegativeFaceFlag.y = HOVER;
+        cuber->Instances.back().NegativeFaceFlag.z = HOVER;
+      }
     }
+    cuber->Render(camera);
   }
 
   // manipulator
-  auto manipulated = Gizmo(camera, mouse, scene, screen);
+  auto manipulated = Gizmo(camera, mouse, scene, screen, selected, hover);
   if (!manipulated && camera.InViewport(mouse) && mouse.LeftDown) {
     if (hover) {
       scene->SelectNode(scene->m_nodes[*hover]);
     } else {
       // runtime->SelectNode(nullptr);
     }
-  }
-
-  if (settings.ShowCuber) {
-    cuber->Render(camera);
   }
 }
 
