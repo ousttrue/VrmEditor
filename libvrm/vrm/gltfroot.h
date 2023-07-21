@@ -67,6 +67,7 @@ struct GltfRoot
   std::span<NodeState> NodeStates();
   std::span<const DirectX::XMFLOAT4X4> ShapeMatrices();
   std::shared_ptr<HumanSkeleton> GetHumanSkeleton();
+  std::shared_ptr<libvrm::Node> GetSelectedNode() const { return m_selected; }
   void SelectNode(const std::shared_ptr<libvrm::Node>& node);
   bool IsSelected(const std::shared_ptr<libvrm::Node>& node) const;
 };

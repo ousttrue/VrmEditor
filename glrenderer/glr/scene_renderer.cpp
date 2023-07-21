@@ -69,6 +69,123 @@ Intersect(DirectX::XMVECTOR origin,
   }
 }
 
+static bool
+Gizmo(const grapho::camera::Camera& camera,
+      const grapho::camera::MouseState& mouse,
+      const std::shared_ptr<libvrm::RuntimeScene>& scene,
+      const std::shared_ptr<recti::Screen>& screen)
+{
+  bool active = false;
+  if (auto selected = scene->GetSelectedNode()) {
+    //   // TODO: conflict mouse event(left) with ImageButton
+    DirectX::XMFLOAT4X4 m;
+    DirectX::XMStoreFloat4x4(&m, selected->WorldMatrix());
+
+    auto op = recti::ROTATE;
+    if (auto humanoid = selected->Base->Humanoid) {
+      if (*humanoid == libvrm::HumanBones::hips) {
+        op |= recti::TRANSLATE;
+      }
+    } else {
+      op |= recti::TRANSLATE;
+      op |= recti::SCALE;
+    }
+
+    recti::Camera gizmo_camera{
+      *((const recti::Mat4*)&camera.ViewMatrix),
+      *((const recti::Mat4*)&camera.ProjectionMatrix),
+      *((const recti::Vec4*)&camera.Projection.Viewport),
+    };
+
+    auto& io = ImGui::GetIO();
+    recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
+
+    screen->Begin(gizmo_camera, mouse);
+    active =
+      screen->Manipulate((int64_t)selected.get(), op, recti::LOCAL, (float*)&m);
+    if (active) {
+      // decompose feedback
+      selected->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
+      selected->CalcWorldMatrix(true);
+    }
+
+    // const float cubes[]{
+    //   1, 0, 0, 0, //
+    //   0, 1, 0, 0, //
+    //   0, 0, 1, 0, //
+    //   0, 0, 0, 1, //
+    // };
+    // auto cubes = runtime->ShapeMatrices();
+    // m_screen->DrawCubes((const float*)cubes.data(), cubes.size());
+
+    recti::Render(screen->DrawList, ImGui::GetWindowDrawList());
+  }
+
+  // grid, spring, spring collider
+  // if (showLine) {
+  //   scene->DrawGizmo(m_gizmo.get());
+  //   glr::RenderLine(*m_camera, m_gizmo->m_lines);
+  // }
+  // m_gizmo->Clear();
+
+  return active;
+}
+
+static bool
+Gizmo(const grapho::camera::Camera& camera,
+      const grapho::camera::MouseState& mouse,
+      const std::shared_ptr<libvrm::GltfRoot>& scene,
+      const std::shared_ptr<recti::Screen>& screen)
+{
+  bool active = false;
+  if (auto selected = scene->GetSelectedNode()) {
+    //   // TODO: conflict mouse event(left) with ImageButton
+    DirectX::XMFLOAT4X4 m;
+    DirectX::XMStoreFloat4x4(&m, selected->WorldInitialMatrix());
+
+    auto op = recti::ROTATE;
+    if (auto humanoid = selected->Humanoid) {
+      if (*humanoid == libvrm::HumanBones::hips) {
+        op |= recti::TRANSLATE;
+      }
+    } else {
+      op |= recti::TRANSLATE;
+      op |= recti::SCALE;
+    }
+
+    recti::Camera gizmo_camera{
+      *((const recti::Mat4*)&camera.ViewMatrix),
+      *((const recti::Mat4*)&camera.ProjectionMatrix),
+      *((const recti::Vec4*)&camera.Projection.Viewport),
+    };
+
+    auto& io = ImGui::GetIO();
+    recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
+
+    screen->Begin(gizmo_camera, mouse);
+    active =
+      screen->Manipulate((int64_t)selected.get(), op, recti::LOCAL, (float*)&m);
+    if (active) {
+      // decompose feedback
+      selected->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
+      selected->CalcWorldInitialMatrix(true);
+    }
+
+    // const float cubes[]{
+    //   1, 0, 0, 0, //
+    //   0, 1, 0, 0, //
+    //   0, 0, 1, 0, //
+    //   0, 0, 0, 1, //
+    // };
+    // auto cubes = runtime->ShapeMatrices();
+    // m_screen->DrawCubes((const float*)cubes.data(), cubes.size());
+
+    recti::Render(screen->DrawList, ImGui::GetWindowDrawList());
+  }
+
+  return active;
+}
+
 namespace glr {
 
 SceneRenderer::SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
@@ -88,24 +205,24 @@ RenderScene(const grapho::camera::Camera& camera,
             const gltfjson::Root& root,
             const gltfjson::Bin& bin,
             std::span<const boneskin::NodeMesh> nodeMeshes,
-            const std::shared_ptr<ViewSettings>& settings)
+            const ViewSettings& settings)
 {
   if (nodeMeshes.size()) {
     glDisable(GL_DEPTH_TEST);
-    if (settings->Skybox) {
+    if (settings.Skybox) {
       glr::RenderSkybox(camera.ProjectionMatrix, camera.ViewMatrix);
     }
 
     static std::vector<RenderPass> m_renderpass;
     m_renderpass.clear();
     glEnable(GL_DEPTH_TEST);
-    if (settings->ShowMesh) {
+    if (settings.ShowMesh) {
       m_renderpass.push_back(RenderPass::Opaque);
     }
-    if (settings->ShowShadow) {
+    if (settings.ShowShadow) {
       m_renderpass.push_back(RenderPass::ShadowMatrix);
     }
-    if (settings->ShowMesh) {
+    if (settings.ShowMesh) {
       m_renderpass.push_back(RenderPass::Transparent);
     }
 
@@ -113,136 +230,53 @@ RenderScene(const grapho::camera::Camera& camera,
   }
 }
 
-void
-SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
-                            const grapho::camera::Viewport& viewport,
-                            const grapho::camera::MouseState& mouse) const
+template<typename T>
+static void
+RenderFrame(grapho::camera::Camera& camera,
+            const grapho::camera::Viewport& viewport,
+            const grapho::camera::MouseState& mouse,
+            const RenderingEnv& env,
+            const gltfjson::Root& gltf,
+            const gltfjson::Bin& bin,
+            std::span<libvrm::NodeState> nodestates,
+            const ViewSettings& settings,
+            const std::shared_ptr<Cuber>& cuber,
+            std::span<const DirectX::XMFLOAT4X4> matrices,
+            const std::shared_ptr<T>& scene,
+            const std::shared_ptr<recti::Screen>& screen)
 {
   // update camera
-  m_camera->Projection.SetViewport(viewport);
-  m_camera->MouseInputTurntable(mouse);
-  m_camera->Update();
+  camera.Projection.SetViewport(viewport);
+  camera.MouseInputTurntable(mouse);
+  camera.Update();
 
-  glr::ClearRendertarget(*m_camera, *m_env);
+  auto ray = camera.GetRay(mouse);
 
-  auto nodestates = scene->NodeStates();
-  auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
-    *scene->m_gltf, scene->m_bin, nodestates);
-  RenderScene(
-    *m_camera, *m_env, *scene->m_gltf, scene->m_bin, nodeMeshes, m_settings);
+  glr::ClearRendertarget(camera, env);
 
-  if (m_settings->ShowLine) {
-    glr::RenderLine(*m_camera, m_gizmo->m_lines);
-  }
-  m_gizmo->Clear();
-
-  if (m_settings->ShowCuber) {
-    m_cuber->Instances.clear();
-
-    for (auto m : scene->ShapeMatrices()) {
-      m_cuber->Instances.push_back({
-        .Matrix = m,
-      });
-    }
-
-    m_cuber->Render(*m_camera);
-  }
-
-  // manipulator
-  if (auto selected = scene->m_selected) {
-    // TODO: conflict mouse event(left) with ImageButton
-    DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(&m, selected->WorldInitialMatrix());
-
-    auto op = recti::ROTATE;
-    if (auto humanoid = selected->Humanoid) {
-      if (*humanoid == libvrm::HumanBones::hips) {
-        op |= recti::TRANSLATE;
-      }
-    } else {
-      op |= recti::TRANSLATE;
-      op |= recti::SCALE;
-    }
-
-    recti::Camera gizmo_camera{
-      *((const recti::Mat4*)&m_camera->ViewMatrix),
-      *((const recti::Mat4*)&m_camera->ProjectionMatrix),
-      *((const recti::Vec4*)&m_camera->Projection.Viewport),
-    };
-
-    auto& io = ImGui::GetIO();
-    recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
-
-    m_screen->Begin(gizmo_camera, mouse);
-    if (m_screen->Manipulate(
-          (int64_t)selected.get(), op, recti::LOCAL, (float*)&m)) {
-      // decompose feedback
-      selected->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
-      selected->CalcWorldInitialMatrix(true);
-
-      scene->RaiseSceneUpdated();
-    }
-    recti::Render(m_screen->DrawList, ImGui::GetWindowDrawList());
-  }
-}
-
-struct Hit
-{
-  uint32_t Index;
-  float Distance;
-};
-
-void
-SceneRenderer::RenderRuntime(
-  const std::shared_ptr<libvrm::RuntimeScene>& runtime,
-  const grapho::camera::Viewport& viewport,
-  const grapho::camera::MouseState& mouse) const
-{
-  // update camera
-  m_camera->Projection.SetViewport(viewport);
-  m_camera->MouseInputTurntable(mouse);
-  m_camera->Update();
-
-  auto ray = m_camera->GetRay(mouse);
-
-  glr::ClearRendertarget(*m_camera, *m_env);
-
-  auto nodestates = runtime->m_base->NodeStates();
+  // auto nodestates = runtime->m_base->NodeStates();
   if (nodestates.size()) {
-    runtime->UpdateNodeStates(nodestates);
-    m_settings->NextSpringDelta = {};
-    auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
-      *runtime->m_base->m_gltf, runtime->m_base->m_bin, nodestates);
-    RenderScene(*m_camera,
-                *m_env,
-                *runtime->m_base->m_gltf,
-                runtime->m_base->m_bin,
-                nodeMeshes,
-                m_settings);
+    // runtime->UpdateNodeStates(nodestates);
+    auto nodeMeshes =
+      boneskin::SkinningManager::Instance().ProcessSkin(gltf, bin, nodestates);
+    RenderScene(camera, env, gltf, bin, nodeMeshes, settings);
   }
-
-  if (m_settings->ShowLine) {
-    runtime->DrawGizmo(m_gizmo.get());
-    glr::RenderLine(*m_camera, m_gizmo->m_lines);
-  }
-  m_gizmo->Clear();
 
   auto distance = std::numeric_limits<float>::infinity();
   std::optional<uint32_t> closest;
 
-  m_cuber->Instances.clear();
+  cuber->Instances.clear();
 
-  auto matrices = runtime->ShapeMatrices();
   for (uint32_t i = 0; i < matrices.size(); ++i) {
     auto& m = matrices[i];
-    m_cuber->Instances.push_back({
+    cuber->Instances.push_back({
       .Matrix = m,
     });
     if (ray) {
-      auto& cube = m_cuber->Instances.back();
-      auto inv = DirectX::XMMatrixInverse(
-        nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
-      auto local_ray = ray->Transform(inv);
+      auto& cube = cuber->Instances.back();
+      // auto inv = DirectX::XMMatrixInverse(
+      //   nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
+      // auto local_ray = ray->Transform(inv);
       auto origin = DirectX::XMLoadFloat3(&ray->Origin);
       auto dir = DirectX::XMLoadFloat3(&ray->Direction);
       auto m = DirectX::XMLoadFloat4x4(&cube.Matrix);
@@ -325,63 +359,137 @@ SceneRenderer::RenderRuntime(
   }
 
   // manipulator
-  bool manipulated = false;
-  if (auto selected = runtime->GetSelectedNode()) {
-    //   // TODO: conflict mouse event(left) with ImageButton
-    DirectX::XMFLOAT4X4 m;
-    DirectX::XMStoreFloat4x4(&m, selected->WorldMatrix());
-
-    auto op = recti::ROTATE;
-    if (auto humanoid = selected->Base->Humanoid) {
-      if (*humanoid == libvrm::HumanBones::hips) {
-        op |= recti::TRANSLATE;
-      }
-    } else {
-      op |= recti::TRANSLATE;
-      op |= recti::SCALE;
-    }
-
-    recti::Camera gizmo_camera{
-      *((const recti::Mat4*)&m_camera->ViewMatrix),
-      *((const recti::Mat4*)&m_camera->ProjectionMatrix),
-      *((const recti::Vec4*)&m_camera->Projection.Viewport),
-    };
-
-    auto& io = ImGui::GetIO();
-    recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
-
-    m_screen->Begin(gizmo_camera, mouse);
-    manipulated = m_screen->Manipulate(
-      (int64_t)selected.get(), op, recti::LOCAL, (float*)&m);
-    if (manipulated) {
-      // decompose feedback
-      selected->SetWorldMatrix(DirectX::XMLoadFloat4x4(&m));
-      selected->CalcWorldMatrix(true);
-    }
-
-    // const float cubes[]{
-    //   1, 0, 0, 0, //
-    //   0, 1, 0, 0, //
-    //   0, 0, 1, 0, //
-    //   0, 0, 0, 1, //
-    // };
-    // auto cubes = runtime->ShapeMatrices();
-    // m_screen->DrawCubes((const float*)cubes.data(), cubes.size());
-
-    recti::Render(m_screen->DrawList, ImGui::GetWindowDrawList());
-  }
-
+  auto manipulated = Gizmo(camera, mouse, scene, screen);
   if (!manipulated && mouse.LeftDown) {
     if (closest) {
-      runtime->SelectNode(runtime->m_nodes[*closest]);
+      scene->SelectNode(scene->m_nodes[*closest]);
     } else {
       // runtime->SelectNode(nullptr);
     }
   }
 
-  if (m_settings->ShowCuber) {
-    m_cuber->Render(*m_camera);
+  if (settings.ShowCuber) {
+    cuber->Render(camera);
   }
+}
+
+void
+SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
+                            const grapho::camera::Viewport& viewport,
+                            const grapho::camera::MouseState& mouse) const
+{
+
+  // m_camera->Projection.SetViewport(viewport);
+  // m_camera->MouseInputTurntable(mouse);
+  // m_camera->Update();
+  //
+  // glr::ClearRendertarget(*m_camera, *m_env);
+
+  auto nodestates = scene->NodeStates();
+  RenderFrame(*m_camera,
+              viewport,
+              mouse,
+              *m_env,
+              *scene->m_gltf,
+              scene->m_bin,
+              nodestates,
+              *m_settings,
+              m_cuber,
+              scene->ShapeMatrices(),
+              scene,
+              m_screen);
+  // auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
+  //   *scene->m_gltf, scene->m_bin, nodestates);
+  // RenderScene(
+  //   *m_camera, *m_env, *scene->m_gltf, scene->m_bin, nodeMeshes,
+  //   *m_settings);
+  //
+  // if (m_settings->ShowLine) {
+  //   glr::RenderLine(*m_camera, m_gizmo->m_lines);
+  // }
+  // m_gizmo->Clear();
+  //
+  // if (m_settings->ShowCuber) {
+  //   m_cuber->Instances.clear();
+  //
+  //   for (auto m : scene->ShapeMatrices()) {
+  //     m_cuber->Instances.push_back({
+  //       .Matrix = m,
+  //     });
+  //   }
+  //
+  //   m_cuber->Render(*m_camera);
+  // }
+  //
+  // // manipulator
+  // if (auto selected = scene->m_selected) {
+  //   // TODO: conflict mouse event(left) with ImageButton
+  //   DirectX::XMFLOAT4X4 m;
+  //   DirectX::XMStoreFloat4x4(&m, selected->WorldInitialMatrix());
+  //
+  //   auto op = recti::ROTATE;
+  //   if (auto humanoid = selected->Humanoid) {
+  //     if (*humanoid == libvrm::HumanBones::hips) {
+  //       op |= recti::TRANSLATE;
+  //     }
+  //   } else {
+  //     op |= recti::TRANSLATE;
+  //     op |= recti::SCALE;
+  //   }
+  //
+  //   recti::Camera gizmo_camera{
+  //     *((const recti::Mat4*)&m_camera->ViewMatrix),
+  //     *((const recti::Mat4*)&m_camera->ProjectionMatrix),
+  //     *((const recti::Vec4*)&m_camera->Projection.Viewport),
+  //   };
+  //
+  //   auto& io = ImGui::GetIO();
+  //   recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
+  //
+  //   m_screen->Begin(gizmo_camera, mouse);
+  //   if (m_screen->Manipulate(
+  //         (int64_t)selected.get(), op, recti::LOCAL, (float*)&m)) {
+  //     // decompose feedback
+  //     selected->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
+  //     selected->CalcWorldInitialMatrix(true);
+  //
+  //     scene->RaiseSceneUpdated();
+  //   }
+  //   recti::Render(m_screen->DrawList, ImGui::GetWindowDrawList());
+  // }
+}
+
+struct Hit
+{
+  uint32_t Index;
+  float Distance;
+};
+
+void
+SceneRenderer::RenderRuntime(
+  const std::shared_ptr<libvrm::RuntimeScene>& runtime,
+  const grapho::camera::Viewport& viewport,
+  const grapho::camera::MouseState& mouse) const
+{
+
+  auto nodestates = runtime->m_base->NodeStates();
+  if (nodestates.size()) {
+    runtime->UpdateNodeStates(nodestates);
+    m_settings->NextSpringDelta = {};
+  }
+
+  RenderFrame(*m_camera,
+              viewport,
+              mouse,
+              *m_env,
+              *runtime->m_base->m_gltf,
+              runtime->m_base->m_bin,
+              nodestates,
+              *m_settings,
+              m_cuber,
+              runtime->ShapeMatrices(),
+              runtime,
+              m_screen);
 }
 
 } // namespace
