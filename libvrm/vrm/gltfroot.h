@@ -70,6 +70,15 @@ struct GltfRoot
   std::shared_ptr<libvrm::Node> GetSelectedNode() const { return m_selected; }
   void SelectNode(const std::shared_ptr<libvrm::Node>& node);
   bool IsSelected(const std::shared_ptr<libvrm::Node>& node) const;
+  std::optional<uint32_t> SelectedIndex() const
+  {
+    for (uint32_t i = 0; i < m_nodes.size(); ++i) {
+      if (m_nodes[i] == m_selected) {
+        return i;
+      }
+    }
+    return std::nullopt;
+  }
 };
 
 } // namespace

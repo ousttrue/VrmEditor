@@ -121,13 +121,6 @@ Gizmo(const grapho::camera::Camera& camera,
     recti::Render(screen->DrawList, ImGui::GetWindowDrawList());
   }
 
-  // grid, spring, spring collider
-  // if (showLine) {
-  //   scene->DrawGizmo(m_gizmo.get());
-  //   glr::RenderLine(*m_camera, m_gizmo->m_lines);
-  // }
-  // m_gizmo->Clear();
-
   return active;
 }
 
@@ -243,126 +236,48 @@ RenderFrame(grapho::camera::Camera& camera,
             const std::shared_ptr<Cuber>& cuber,
             std::span<const DirectX::XMFLOAT4X4> matrices,
             const std::shared_ptr<T>& scene,
-            const std::shared_ptr<recti::Screen>& screen)
+            const std::shared_ptr<recti::Screen>& screen,
+            std::optional<uint32_t> selected,
+            std::optional<uint32_t> hover)
 {
-  // update camera
-  camera.Projection.SetViewport(viewport);
-  camera.MouseInputTurntable(mouse);
-  camera.Update();
-
-  auto ray = camera.GetRay(mouse);
-
   glr::ClearRendertarget(camera, env);
 
-  // auto nodestates = runtime->m_base->NodeStates();
   if (nodestates.size()) {
-    // runtime->UpdateNodeStates(nodestates);
     auto nodeMeshes =
       boneskin::SkinningManager::Instance().ProcessSkin(gltf, bin, nodestates);
     RenderScene(camera, env, gltf, bin, nodeMeshes, settings);
   }
 
-  auto distance = std::numeric_limits<float>::infinity();
-  std::optional<uint32_t> closest;
-
+  const int SELECTED = 9;
+  const int HOVER = 10;
   cuber->Instances.clear();
-
   for (uint32_t i = 0; i < matrices.size(); ++i) {
     auto& m = matrices[i];
     cuber->Instances.push_back({
       .Matrix = m,
     });
-    if (ray) {
-      auto& cube = cuber->Instances.back();
-      // auto inv = DirectX::XMMatrixInverse(
-      //   nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
-      // auto local_ray = ray->Transform(inv);
-      auto origin = DirectX::XMLoadFloat3(&ray->Origin);
-      auto dir = DirectX::XMLoadFloat3(&ray->Direction);
-      auto m = DirectX::XMLoadFloat4x4(&cube.Matrix);
-
-      {
-        float hit[3] = { 0, 0, 0 };
-
-        if (auto d = Intersect(origin, dir, m, 0)) {
-          cube.PositiveFaceFlag.x = 7;
-          hit[0] = *d;
-          if (*d < distance) {
-            distance = *d;
-            closest = i;
-          }
-        } else {
-          cube.PositiveFaceFlag.x = 8;
-        }
-
-        if (auto d = Intersect(origin, dir, m, 1)) {
-          cube.PositiveFaceFlag.y = 7;
-          hit[1] = *d;
-          if (*d < distance) {
-            distance = *d;
-            closest = i;
-          }
-        } else {
-          cube.PositiveFaceFlag.y = 8;
-        }
-
-        if (auto d = Intersect(origin, dir, m, 2)) {
-          cube.PositiveFaceFlag.z = 7;
-          hit[2] = *d;
-          if (*d < distance) {
-            distance = *d;
-            closest = i;
-          }
-        } else {
-          cube.PositiveFaceFlag.z = 8;
-        }
-        // ImGui::InputFloat3(buf.Printf("%d.hit.positive", i), hit);
-      }
-
-      {
-        float hit[3] = { 0, 0, 0 };
-        if (auto d = Intersect(origin, dir, m, 3)) {
-          cube.NegativeFaceFlag.x = 7;
-          hit[0] = *d;
-          if (*d < distance) {
-            distance = *d;
-            closest = i;
-          }
-        } else {
-          cube.NegativeFaceFlag.x = 8;
-        }
-
-        if (auto d = Intersect(origin, dir, m, 4)) {
-          cube.NegativeFaceFlag.y = 7;
-          hit[1] = *d;
-          if (*d < distance) {
-            distance = *d;
-            closest = i;
-          }
-        } else {
-          cube.NegativeFaceFlag.y = 8;
-        }
-
-        if (auto d = Intersect(origin, dir, m, 5)) {
-          cube.NegativeFaceFlag.z = 7;
-          hit[2] = *d;
-          if (*d < distance) {
-            distance = *d;
-            closest = i;
-          }
-        } else {
-          cube.NegativeFaceFlag.z = 8;
-        }
-        // ImGui::InputFloat3(buf.Printf("%d.hit.negative", i), hit);
-      }
+    if (selected && i == *selected) {
+      cuber->Instances.back().PositiveFaceFlag.x = SELECTED;
+      cuber->Instances.back().PositiveFaceFlag.y = SELECTED;
+      cuber->Instances.back().PositiveFaceFlag.z = SELECTED;
+      cuber->Instances.back().NegativeFaceFlag.x = SELECTED;
+      cuber->Instances.back().NegativeFaceFlag.y = SELECTED;
+      cuber->Instances.back().NegativeFaceFlag.z = SELECTED;
+    } else if (hover && i == *hover) {
+      cuber->Instances.back().PositiveFaceFlag.x = HOVER;
+      cuber->Instances.back().PositiveFaceFlag.y = HOVER;
+      cuber->Instances.back().PositiveFaceFlag.z = HOVER;
+      cuber->Instances.back().NegativeFaceFlag.x = HOVER;
+      cuber->Instances.back().NegativeFaceFlag.y = HOVER;
+      cuber->Instances.back().NegativeFaceFlag.z = HOVER;
     }
   }
 
   // manipulator
   auto manipulated = Gizmo(camera, mouse, scene, screen);
-  if (!manipulated && mouse.LeftDown) {
-    if (closest) {
-      scene->SelectNode(scene->m_nodes[*closest]);
+  if (!manipulated && camera.InViewport(mouse) && mouse.LeftDown) {
+    if (hover) {
+      scene->SelectNode(scene->m_nodes[*hover]);
     } else {
       // runtime->SelectNode(nullptr);
     }
@@ -373,17 +288,118 @@ RenderFrame(grapho::camera::Camera& camera,
   }
 }
 
+static std::optional<uint32_t>
+Hover(const grapho::camera::Camera& camera,
+      const grapho::camera::MouseState& mouse,
+      std::span<const DirectX::XMFLOAT4X4> matrices)
+{
+  auto ray = camera.GetRay(mouse);
+  if (!ray) {
+    return std::nullopt;
+  }
+
+  auto distance = std::numeric_limits<float>::infinity();
+  std::optional<uint32_t> closest;
+  for (uint32_t i = 0; i < matrices.size(); ++i) {
+    auto m = DirectX::XMLoadFloat4x4(&matrices[i]);
+
+    // auto& cube = cuber->Instances.back();
+    // auto inv = DirectX::XMMatrixInverse(
+    //   nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
+    // auto local_ray = ray->Transform(inv);
+    auto origin = DirectX::XMLoadFloat3(&ray->Origin);
+    auto dir = DirectX::XMLoadFloat3(&ray->Direction);
+    // auto m = DirectX::XMLoadFloat4x4(&cube.Matrix);
+
+    {
+      float hit[3] = { 0, 0, 0 };
+
+      if (auto d = Intersect(origin, dir, m, 0)) {
+        // cube.PositiveFaceFlag.x = 7;
+        hit[0] = *d;
+        if (*d < distance) {
+          distance = *d;
+          closest = i;
+        }
+      } else {
+        // cube.PositiveFaceFlag.x = 8;
+      }
+
+      if (auto d = Intersect(origin, dir, m, 1)) {
+        // cube.PositiveFaceFlag.y = 7;
+        hit[1] = *d;
+        if (*d < distance) {
+          distance = *d;
+          closest = i;
+        }
+      } else {
+        // cube.PositiveFaceFlag.y = 8;
+      }
+
+      if (auto d = Intersect(origin, dir, m, 2)) {
+        // cube.PositiveFaceFlag.z = 7;
+        hit[2] = *d;
+        if (*d < distance) {
+          distance = *d;
+          closest = i;
+        }
+      } else {
+        // cube.PositiveFaceFlag.z = 8;
+      }
+      // ImGui::InputFloat3(buf.Printf("%d.hit.positive", i), hit);
+    }
+
+    {
+      float hit[3] = { 0, 0, 0 };
+      if (auto d = Intersect(origin, dir, m, 3)) {
+        // cube.NegativeFaceFlag.x = 7;
+        hit[0] = *d;
+        if (*d < distance) {
+          distance = *d;
+          closest = i;
+        }
+      } else {
+        // cube.NegativeFaceFlag.x = 8;
+      }
+
+      if (auto d = Intersect(origin, dir, m, 4)) {
+        // cube.NegativeFaceFlag.y = 7;
+        hit[1] = *d;
+        if (*d < distance) {
+          distance = *d;
+          closest = i;
+        }
+      } else {
+        // cube.NegativeFaceFlag.y = 8;
+      }
+
+      if (auto d = Intersect(origin, dir, m, 5)) {
+        // cube.NegativeFaceFlag.z = 7;
+        hit[2] = *d;
+        if (*d < distance) {
+          distance = *d;
+          closest = i;
+        }
+      } else {
+        // cube.NegativeFaceFlag.z = 8;
+      }
+      // ImGui::InputFloat3(buf.Printf("%d.hit.negative", i), hit);
+    }
+  }
+  return closest;
+}
+
 void
 SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
                             const grapho::camera::Viewport& viewport,
                             const grapho::camera::MouseState& mouse) const
 {
+  // update camera
+  m_camera->Projection.SetViewport(viewport);
+  m_camera->MouseInputTurntable(mouse);
+  m_camera->Update();
 
-  // m_camera->Projection.SetViewport(viewport);
-  // m_camera->MouseInputTurntable(mouse);
-  // m_camera->Update();
-  //
-  // glr::ClearRendertarget(*m_camera, *m_env);
+  auto hover = Hover(*m_camera, mouse, scene->ShapeMatrices());
 
   auto nodestates = scene->NodeStates();
   RenderFrame(*m_camera,
@@ -397,73 +413,10 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
               m_cuber,
               scene->ShapeMatrices(),
               scene,
-              m_screen);
-  // auto nodeMeshes = boneskin::SkinningManager::Instance().ProcessSkin(
-  //   *scene->m_gltf, scene->m_bin, nodestates);
-  // RenderScene(
-  //   *m_camera, *m_env, *scene->m_gltf, scene->m_bin, nodeMeshes,
-  //   *m_settings);
-  //
-  // if (m_settings->ShowLine) {
-  //   glr::RenderLine(*m_camera, m_gizmo->m_lines);
-  // }
-  // m_gizmo->Clear();
-  //
-  // if (m_settings->ShowCuber) {
-  //   m_cuber->Instances.clear();
-  //
-  //   for (auto m : scene->ShapeMatrices()) {
-  //     m_cuber->Instances.push_back({
-  //       .Matrix = m,
-  //     });
-  //   }
-  //
-  //   m_cuber->Render(*m_camera);
-  // }
-  //
-  // // manipulator
-  // if (auto selected = scene->m_selected) {
-  //   // TODO: conflict mouse event(left) with ImageButton
-  //   DirectX::XMFLOAT4X4 m;
-  //   DirectX::XMStoreFloat4x4(&m, selected->WorldInitialMatrix());
-  //
-  //   auto op = recti::ROTATE;
-  //   if (auto humanoid = selected->Humanoid) {
-  //     if (*humanoid == libvrm::HumanBones::hips) {
-  //       op |= recti::TRANSLATE;
-  //     }
-  //   } else {
-  //     op |= recti::TRANSLATE;
-  //     op |= recti::SCALE;
-  //   }
-  //
-  //   recti::Camera gizmo_camera{
-  //     *((const recti::Mat4*)&m_camera->ViewMatrix),
-  //     *((const recti::Mat4*)&m_camera->ProjectionMatrix),
-  //     *((const recti::Vec4*)&m_camera->Projection.Viewport),
-  //   };
-  //
-  //   auto& io = ImGui::GetIO();
-  //   recti::Mouse mouse{ io.MousePos, io.MouseDown[0] };
-  //
-  //   m_screen->Begin(gizmo_camera, mouse);
-  //   if (m_screen->Manipulate(
-  //         (int64_t)selected.get(), op, recti::LOCAL, (float*)&m)) {
-  //     // decompose feedback
-  //     selected->SetWorldInitialMatrix(DirectX::XMLoadFloat4x4(&m));
-  //     selected->CalcWorldInitialMatrix(true);
-  //
-  //     scene->RaiseSceneUpdated();
-  //   }
-  //   recti::Render(m_screen->DrawList, ImGui::GetWindowDrawList());
-  // }
+              m_screen,
+              scene->SelectedIndex(),
+              hover);
 }
-
-struct Hit
-{
-  uint32_t Index;
-  float Distance;
-};
 
 void
 SceneRenderer::RenderRuntime(
@@ -471,6 +424,13 @@ SceneRenderer::RenderRuntime(
   const grapho::camera::Viewport& viewport,
   const grapho::camera::MouseState& mouse) const
 {
+  // update camera
+  m_camera->Projection.SetViewport(viewport);
+  m_camera->MouseInputTurntable(mouse);
+  m_camera->Update();
+
+  // node hover
+  auto hover = Hover(*m_camera, mouse, runtime->ShapeMatrices());
 
   auto nodestates = runtime->m_base->NodeStates();
   if (nodestates.size()) {
@@ -478,6 +438,7 @@ SceneRenderer::RenderRuntime(
     m_settings->NextSpringDelta = {};
   }
 
+  // render scene
   RenderFrame(*m_camera,
               viewport,
               mouse,
@@ -489,7 +450,16 @@ SceneRenderer::RenderRuntime(
               m_cuber,
               runtime->ShapeMatrices(),
               runtime,
-              m_screen);
+              m_screen,
+              runtime->m_base->SelectedIndex(),
+              hover);
+
+  // grid, spring, spring collider
+  if (m_settings->ShowLine) {
+    runtime->DrawGizmo(m_gizmo.get());
+    glr::RenderLine(*m_camera, m_gizmo->m_lines);
+  }
+  m_gizmo->Clear();
 }
 
 } // namespace
