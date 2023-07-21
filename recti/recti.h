@@ -143,6 +143,21 @@ struct Screen
     return {};
   }
 
+  void DrawText(const float* pos, const std::string& text)
+  {
+    Vec2 destinationPosOnScreen =
+      CameraMouse.WorldToPos({ pos[0], pos[1], pos[2], 1 });
+
+    DrawList.AddText(
+      Vec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15),
+      Style.GetColorU32(TEXT_SHADOW),
+      text.c_str());
+    DrawList.AddText(
+      Vec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14),
+      Style.GetColorU32(TEXT),
+      text.c_str());
+  }
+
   void DrawCubes(const float* cubes, uint32_t count)
   {
     DrawList.DrawCubes(CameraMouse, cubes, count, Style);

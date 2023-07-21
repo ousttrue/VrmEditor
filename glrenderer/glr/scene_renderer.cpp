@@ -94,6 +94,18 @@ SetMatrix(const std::shared_ptr<libvrm::RuntimeNode>& node,
   node->CalcWorldMatrix(true);
 }
 
+std::string
+GetNodeLabel(const std::shared_ptr<libvrm::Node>& node)
+{
+  return node->Name;
+}
+
+std::string
+GetNodeLabel(const std::shared_ptr<libvrm::RuntimeNode>& node)
+{
+  return GetNodeLabel(node->Base);
+}
+
 template<typename T>
 static bool
 Gizmo(const grapho::camera::Camera& camera,
@@ -115,11 +127,13 @@ Gizmo(const grapho::camera::Camera& camera,
   {
     auto cubes = scene->ShapeMatrices();
     if (hoverIndex) {
-      screen->DrawCubes((const float*)(cubes.data() + *hoverIndex), 1);
+      auto& m = cubes[*hoverIndex];
+      screen->DrawCubes((const float*)&m, 1);
+      screen->DrawText(m.m[3], GetNodeLabel(scene->m_nodes[*hoverIndex]));
     }
-    if (selectedIndex) {
-      screen->DrawCubes((const float*)(cubes.data() + *selectedIndex), 1);
-    }
+    // if (selectedIndex) {
+    //   screen->DrawCubes((const float*)(cubes.data() + *selectedIndex), 1);
+    // }
 
     if (auto selected = scene->GetSelectedNode()) {
       auto op = recti::ROTATE;
