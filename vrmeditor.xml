@@ -444,6 +444,7 @@
     <Feature Id="DefaultFeature" Title="Main Feature" Level="1">
       <ComponentRef Id="FREETYPE_6.DLL" />
       <ComponentRef Id="PNG16_16.DLL" />
+      <ComponentRef Id="KTX.DLL" />
       <ComponentRef Id="VRMEDITOR.EXE" />
       <ComponentRef Id="ERROR.FRAG" />
       <ComponentRef Id="ERROR.VERT" />
