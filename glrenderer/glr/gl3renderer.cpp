@@ -70,7 +70,7 @@ LoadBasisu(const gltfjson::Root& root,
            const gltfjson::Bin& bin,
            uint32_t source)
 {
-  auto span = bin.GetBufferViewBytes(root, source);
+  auto span = bin.GetImageBytes(root, source);
   if (!span) {
     return {};
   }
