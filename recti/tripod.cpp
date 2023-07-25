@@ -2,7 +2,7 @@
 namespace recti {
 
 Tripod::Tripod(const Mat4& mvp,
-               float displayRatio,
+               float aspectRatio,
                float screenFactor,
                bool mAllowAxisFlip,
                int axisIndex)
@@ -10,9 +10,9 @@ Tripod::Tripod(const Mat4& mvp,
   {
     dirAxis = Vec4::DirectionUnary[axisIndex];
     float lenDir =
-      GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f }, dirAxis, mvp, displayRatio);
+      GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f }, dirAxis, mvp, aspectRatio);
     float lenDirMinus =
-      GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f }, -dirAxis, mvp, displayRatio);
+      GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f }, -dirAxis, mvp, aspectRatio);
 
     auto mulAxis = (mAllowAxisFlip && lenDir < lenDirMinus &&
                     fabsf(lenDir - lenDirMinus) > FLT_EPSILON)
@@ -22,7 +22,7 @@ Tripod::Tripod(const Mat4& mvp,
 
     // axis is visible ?
     float axisLengthInClipSpace = GetSegmentLengthClipSpace(
-      { 0.f, 0.f, 0.f }, dirAxis * screenFactor, mvp, displayRatio);
+      { 0.f, 0.f, 0.f }, dirAxis * screenFactor, mvp, aspectRatio);
     belowAxisLimit = (axisLengthInClipSpace > 0.02f);
   }
 
@@ -32,9 +32,9 @@ Tripod::Tripod(const Mat4& mvp,
     dirPlaneY = Vec4::DirectionUnary[(axisIndex + 2) % 3];
 
     float lenDirPlaneX = GetSegmentLengthClipSpace(
-      { 0.f, 0.f, 0.f }, dirPlaneX, mvp, displayRatio);
+      { 0.f, 0.f, 0.f }, dirPlaneX, mvp, aspectRatio);
     float lenDirMinusPlaneX = GetSegmentLengthClipSpace(
-      { 0.f, 0.f, 0.f }, -dirPlaneX, mvp, displayRatio);
+      { 0.f, 0.f, 0.f }, -dirPlaneX, mvp, aspectRatio);
     auto mulAxisX = (mAllowAxisFlip && lenDirPlaneX < lenDirMinusPlaneX &&
                      fabsf(lenDirPlaneX - lenDirMinusPlaneX) > FLT_EPSILON)
                       ? -1.f
@@ -42,9 +42,9 @@ Tripod::Tripod(const Mat4& mvp,
     dirPlaneX *= mulAxisX;
 
     float lenDirPlaneY = GetSegmentLengthClipSpace(
-      { 0.f, 0.f, 0.f }, dirPlaneY, mvp, displayRatio);
+      { 0.f, 0.f, 0.f }, dirPlaneY, mvp, aspectRatio);
     float lenDirMinusPlaneY = GetSegmentLengthClipSpace(
-      { 0.f, 0.f, 0.f }, -dirPlaneY, mvp, displayRatio);
+      { 0.f, 0.f, 0.f }, -dirPlaneY, mvp, aspectRatio);
     auto mulAxisY = (mAllowAxisFlip && lenDirPlaneY < lenDirMinusPlaneY &&
                      fabsf(lenDirPlaneY - lenDirMinusPlaneY) > FLT_EPSILON)
                       ? -1.f
@@ -56,7 +56,7 @@ Tripod::Tripod(const Mat4& mvp,
                                       dirPlaneX * screenFactor,
                                       dirPlaneY * screenFactor,
                                       mvp,
-                                      displayRatio);
+                                      aspectRatio);
     belowPlaneLimit = (paraSurf > 0.0025f);
   }
 }

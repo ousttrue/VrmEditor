@@ -10,7 +10,7 @@ struct Tripod
   bool belowAxisLimit;
   bool belowPlaneLimit;
   Tripod(const Mat4& mvp,
-         float displayRatio,
+         float aspectRatio,
          float screenFactor,
          bool mAllowAxisFlip,
          int axisIndex);
