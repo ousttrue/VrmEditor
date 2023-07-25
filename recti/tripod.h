@@ -4,11 +4,11 @@ namespace recti {
 
 struct Tripod
 {
-  Vec4 dirAxis;
-  Vec4 dirPlaneX;
-  Vec4 dirPlaneY;
-  bool belowAxisLimit;
-  bool belowPlaneLimit;
+  Vec4 Axis;
+  Vec4 PlaneX;
+  Vec4 PlaneY;
+  bool VisibleAxis;
+  bool VisiblePlane;
   Tripod(const Mat4& mvp,
          float aspectRatio,
          float screenFactor,

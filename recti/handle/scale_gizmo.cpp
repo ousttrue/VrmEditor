@@ -4,43 +4,43 @@
 namespace recti {
 
 static MOVETYPE
-GetType(const recti::ModelContext& mCurrent, bool mAllowAxisFlip)
+GetType(const recti::ModelContext& current, bool allowAxisFlip)
 {
   for (int i = 0; i < 3; i++) {
-    if (!Intersects(mCurrent.Operation,
+    if (!Intersects(current.Operation,
                     static_cast<recti::OPERATION>(recti::SCALE_X << i))) {
       continue;
     }
-    recti::Tripod tripod(mCurrent.MVP,
-                         mCurrent.CameraMouse.Camera.AspectRatio(),
-                         mCurrent.ScreenFactor,
-                         mAllowAxisFlip,
+    recti::Tripod tripod(current.MVP,
+                         current.CameraMouse.Camera.AspectRatio(),
+                         current.ScreenFactor,
+                         allowAxisFlip,
                          i);
-    tripod.dirAxis.TransformVector(mCurrent.ModelLocal);
-    tripod.dirPlaneX.TransformVector(mCurrent.ModelLocal);
-    tripod.dirPlaneY.TransformVector(mCurrent.ModelLocal);
+    tripod.Axis.TransformVector(current.ModelLocal);
+    tripod.PlaneX.TransformVector(current.ModelLocal);
+    tripod.PlaneY.TransformVector(current.ModelLocal);
 
-    recti::Vec4 posOnPlan = mCurrent.CameraMouse.Ray.IntersectPlane(
-      BuildPlan(mCurrent.ModelLocal.position(), tripod.dirAxis));
+    recti::Vec4 posOnPlan = current.CameraMouse.Ray.IntersectPlane(
+      BuildPlan(current.ModelLocal.position(), tripod.Axis));
 
     const float startOffset =
-      Contains(mCurrent.Operation,
+      Contains(current.Operation,
                static_cast<recti::OPERATION>(recti::TRANSLATE_X << i))
         ? 1.0f
         : 0.1f;
     const float endOffset =
-      Contains(mCurrent.Operation,
+      Contains(current.Operation,
                static_cast<recti::OPERATION>(recti::TRANSLATE_X << i))
         ? 1.4f
         : 1.0f;
     const recti::Vec2 posOnPlanScreen =
-      mCurrent.CameraMouse.WorldToPos(posOnPlan);
-    const recti::Vec2 axisStartOnScreen = mCurrent.CameraMouse.WorldToPos(
-      mCurrent.ModelLocal.position() +
-      tripod.dirAxis * mCurrent.ScreenFactor * startOffset);
-    const recti::Vec2 axisEndOnScreen = mCurrent.CameraMouse.WorldToPos(
-      mCurrent.ModelLocal.position() +
-      tripod.dirAxis * mCurrent.ScreenFactor * endOffset);
+      current.CameraMouse.WorldToPos(posOnPlan);
+    const recti::Vec2 axisStartOnScreen = current.CameraMouse.WorldToPos(
+      current.ModelLocal.position() +
+      tripod.Axis * current.ScreenFactor * startOffset);
+    const recti::Vec2 axisEndOnScreen = current.CameraMouse.WorldToPos(
+      current.ModelLocal.position() +
+      tripod.Axis * current.ScreenFactor * endOffset);
 
     recti::Vec4 closestPointOnAxis =
       recti::PointOnSegment({ posOnPlanScreen.x, posOnPlanScreen.y },
@@ -80,7 +80,7 @@ ScaleGizmo::Hover(const ModelContext& current)
 }
 
 void
-ScaleGizmo::Draw(const ModelContext& mCurrent,
+ScaleGizmo::Draw(const ModelContext& current,
                  MOVETYPE active,
                  MOVETYPE hover,
                  const Style& mStyle,
@@ -94,36 +94,34 @@ ScaleGizmo::Draw(const ModelContext& mCurrent,
   Vec4 scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
   for (int i = 0; i < 3; i++) {
-    if (!Intersects(mCurrent.Operation, static_cast<OPERATION>(SCALE_X << i))) {
+    if (!Intersects(current.Operation, static_cast<OPERATION>(SCALE_X << i))) {
       continue;
     }
 
     const bool usingAxis = (active == MT_NONE || active == MT_SCALE_X + i);
     if (usingAxis) {
-      Tripod tripod(mCurrent.MVP,
-                    mCurrent.CameraMouse.Camera.AspectRatio(),
-                    mCurrent.ScreenFactor,
+      Tripod tripod(current.MVP,
+                    current.CameraMouse.Camera.AspectRatio(),
+                    current.ScreenFactor,
                     m_allowAxisFlip,
                     i);
 
       // draw axis
-      if (tripod.belowAxisLimit) {
-        bool hasTranslateOnAxis = Contains(
-          mCurrent.Operation, static_cast<OPERATION>(TRANSLATE_X << i));
+      if (tripod.VisibleAxis) {
+        bool hasTranslateOnAxis =
+          Contains(current.Operation, static_cast<OPERATION>(TRANSLATE_X << i));
         float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-        Vec2 baseSSpace =
-          worldToPos(tripod.dirAxis * 0.1f * mCurrent.ScreenFactor,
-                     mCurrent.MVP,
-                     mCurrent.CameraMouse.Camera.Viewport);
+        Vec2 baseSSpace = worldToPos(tripod.Axis * 0.1f * current.ScreenFactor,
+                                     current.MVP,
+                                     current.CameraMouse.Camera.Viewport);
         Vec2 worldDirSSpaceNoScale =
-          worldToPos(tripod.dirAxis * markerScale * mCurrent.ScreenFactor,
-                     mCurrent.MVP,
-                     mCurrent.CameraMouse.Camera.Viewport);
-        Vec2 worldDirSSpace =
-          worldToPos((tripod.dirAxis * markerScale * scaleDisplay[i]) *
-                       mCurrent.ScreenFactor,
-                     mCurrent.MVP,
-                     mCurrent.CameraMouse.Camera.Viewport);
+          worldToPos(tripod.Axis * markerScale * current.ScreenFactor,
+                     current.MVP,
+                     current.CameraMouse.Camera.Viewport);
+        Vec2 worldDirSSpace = worldToPos(
+          (tripod.Axis * markerScale * scaleDisplay[i]) * current.ScreenFactor,
+          current.MVP,
+          current.CameraMouse.Camera.Viewport);
 
         if (!hasTranslateOnAxis || false) {
           drawList.AddLine(baseSSpace,
@@ -136,7 +134,7 @@ ScaleGizmo::Draw(const ModelContext& mCurrent,
 
         // if (mState.mAxisFactor[i] < 0.f) {
         //   drawList->DrawHatchedAxis(
-        //     mCurrent, tripod.dirAxis * scaleDisplay[i], mStyle);
+        //     current, tripod.dirAxis * scaleDisplay[i], mStyle);
         // }
       }
     }
@@ -144,51 +142,51 @@ ScaleGizmo::Draw(const ModelContext& mCurrent,
 
   // draw screen cirle
   drawList.AddCircleFilled(
-    mCurrent.ScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
+    current.ScreenSquareCenter, mStyle.CenterCircleSize, colors[0], 32);
 }
 
 //
 // Uniform
 //
 static MOVETYPE
-GetUniformType(const recti::ModelContext& mCurrent, bool mAllowAxisFlip)
+GetUniformType(const recti::ModelContext& current, bool allowAxisFlip)
 {
-  auto& mousePos = mCurrent.CameraMouse.Mouse.Position;
-  recti::Vec4 deltaScreen = { mousePos.x - mCurrent.ScreenSquareCenter.x,
-                              mousePos.y - mCurrent.ScreenSquareCenter.y,
+  auto& mousePos = current.CameraMouse.Mouse.Position;
+  recti::Vec4 deltaScreen = { mousePos.x - current.ScreenSquareCenter.x,
+                              mousePos.y - current.ScreenSquareCenter.y,
                               0.f,
                               0.f };
   float dist = deltaScreen.Length();
-  if (Contains(mCurrent.Operation, recti::SCALEU) && dist >= 17.0f &&
+  if (Contains(current.Operation, recti::SCALEU) && dist >= 17.0f &&
       dist < 23.0f) {
     return recti::MT_SCALE_XYZ;
   }
 
   for (int i = 0; i < 3; i++) {
-    if (!Intersects(mCurrent.Operation,
+    if (!Intersects(current.Operation,
                     static_cast<recti::OPERATION>(recti::SCALE_XU << i))) {
       continue;
     }
 
-    recti::Tripod tripod(mCurrent.MVP,
-                         mCurrent.CameraMouse.Camera.AspectRatio(),
-                         mCurrent.ScreenFactor,
-                         mAllowAxisFlip,
+    recti::Tripod tripod(current.MVP,
+                         current.CameraMouse.Camera.AspectRatio(),
+                         current.ScreenFactor,
+                         allowAxisFlip,
                          i);
-    tripod.dirAxis.TransformVector(mCurrent.ModelLocal);
-    tripod.dirPlaneX.TransformVector(mCurrent.ModelLocal);
-    tripod.dirPlaneY.TransformVector(mCurrent.ModelLocal);
+    tripod.Axis.TransformVector(current.ModelLocal);
+    tripod.PlaneX.TransformVector(current.ModelLocal);
+    tripod.PlaneY.TransformVector(current.ModelLocal);
 
     // draw axis
-    if (tripod.belowAxisLimit) {
+    if (tripod.VisibleAxis) {
       bool hasTranslateOnAxis =
-        Contains(mCurrent.Operation,
+        Contains(current.Operation,
                  static_cast<recti::OPERATION>(recti::TRANSLATE_X << i));
       float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-      recti::Vec2 worldDirSSpace = recti::worldToPos(
-        (tripod.dirAxis * markerScale) * mCurrent.ScreenFactor,
-        mCurrent.MVPLocal,
-        mCurrent.CameraMouse.Camera.Viewport);
+      recti::Vec2 worldDirSSpace =
+        recti::worldToPos((tripod.Axis * markerScale) * current.ScreenFactor,
+                          current.MVPLocal,
+                          current.CameraMouse.Camera.Viewport);
 
       float distance = sqrtf((worldDirSSpace - mousePos).SqrLength());
       if (distance < 12.f) {

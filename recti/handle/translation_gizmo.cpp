@@ -30,21 +30,20 @@ GetType(const ModelContext& current, bool allowAxisFlip)
                   current.ScreenFactor,
                   allowAxisFlip,
                   i);
-    tripod.dirAxis.TransformVector(current.Model);
-    tripod.dirPlaneX.TransformVector(current.Model);
-    tripod.dirPlaneY.TransformVector(current.Model);
+    tripod.Axis.TransformVector(current.Model);
+    tripod.PlaneX.TransformVector(current.Model);
+    tripod.PlaneY.TransformVector(current.Model);
 
     // screen
     const Vec2 axisStartOnScreen =
-      current.CameraMouse.WorldToPos(current.Model.position() +
-                                     tripod.dirAxis * current.ScreenFactor *
-                                       0.1f) -
+      current.CameraMouse.WorldToPos(
+        current.Model.position() + tripod.Axis * current.ScreenFactor * 0.1f) -
       current.CameraMouse.Camera.LeftTop();
 
     // screen
     const Vec2 axisEndOnScreen =
       current.CameraMouse.WorldToPos(current.Model.position() +
-                                     tripod.dirAxis * current.ScreenFactor) -
+                                     tripod.Axis * current.ScreenFactor) -
       current.CameraMouse.Camera.LeftTop();
 
     auto screenCoord = current.CameraMouse.ScreenMousePos();
@@ -60,13 +59,13 @@ GetType(const ModelContext& current, bool allowAxisFlip)
     }
 
     auto posOnPlan = current.CameraMouse.Ray.IntersectPlane(
-      BuildPlan(current.Model.position(), tripod.dirAxis));
+      BuildPlan(current.Model.position(), tripod.Axis));
 
-    const float dx = tripod.dirPlaneX.Dot3(
-      (posOnPlan - current.Model.position()) * (1.f / current.ScreenFactor));
-    const float dy = tripod.dirPlaneY.Dot3(
-      (posOnPlan - current.Model.position()) * (1.f / current.ScreenFactor));
-    if (tripod.belowPlaneLimit && dx >= quadUV[0] && dx <= quadUV[4] &&
+    const float dx = tripod.PlaneX.Dot3((posOnPlan - current.Model.position()) *
+                                        (1.f / current.ScreenFactor));
+    const float dy = tripod.PlaneY.Dot3((posOnPlan - current.Model.position()) *
+                                        (1.f / current.ScreenFactor));
+    if (tripod.VisiblePlane && dx >= quadUV[0] && dx <= quadUV[4] &&
         dy >= quadUV[1] && dy <= quadUV[3] &&
         Contains(current.Operation, TRANSLATE_PLANS[i])) {
       return (MOVETYPE)(MT_MOVE_YZ + i);
@@ -126,14 +125,13 @@ TranslationGizmo::Draw(const ModelContext& current,
 
     if (active == MT_NONE || (active == MT_MOVE_X + i)) {
       // draw axis
-      if (tripod.belowAxisLimit &&
+      if (tripod.VisibleAxis &&
           Intersects(current.Operation,
                      static_cast<OPERATION>(TRANSLATE_X << i))) {
-        Vec2 baseSSpace =
-          worldToPos(tripod.dirAxis * 0.1f * current.ScreenFactor,
-                     current.MVP,
-                     current.CameraMouse.Camera.Viewport);
-        Vec2 worldDirSSpace = worldToPos(tripod.dirAxis * current.ScreenFactor,
+        Vec2 baseSSpace = worldToPos(tripod.Axis * 0.1f * current.ScreenFactor,
+                                     current.MVP,
+                                     current.CameraMouse.Camera.Viewport);
+        Vec2 worldDirSSpace = worldToPos(tripod.Axis * current.ScreenFactor,
                                          current.MVP,
                                          current.CameraMouse.Camera.Viewport);
 
@@ -164,12 +162,12 @@ TranslationGizmo::Draw(const ModelContext& current,
 
     // draw plane
     if (active == MT_NONE || (active == MT_MOVE_YZ + i)) {
-      if (tripod.belowPlaneLimit &&
+      if (tripod.VisiblePlane &&
           Contains(current.Operation, TRANSLATE_PLANS[i])) {
         Vec2 screenQuadPts[4];
         for (int j = 0; j < 4; ++j) {
-          Vec4 cornerWorldPos = (tripod.dirPlaneX * quadUV[j * 2] +
-                                 tripod.dirPlaneY * quadUV[j * 2 + 1]) *
+          Vec4 cornerWorldPos = (tripod.PlaneX * quadUV[j * 2] +
+                                 tripod.PlaneY * quadUV[j * 2 + 1]) *
                                 current.ScreenFactor;
           screenQuadPts[j] = worldToPos(
             cornerWorldPos, current.MVP, current.CameraMouse.Camera.Viewport);
