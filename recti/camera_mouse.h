@@ -23,7 +23,7 @@ struct Camera
     return recti::IsWithin(p.x, Viewport.x, Right()) &&
            recti::IsWithin(p.y, Viewport.y, Bottom());
   }
-  float DisplayRatio() const { return Width() / Height(); }
+  float AspectRatio() const { return Width() / Height(); }
 };
 
 struct Mouse

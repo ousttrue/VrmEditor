@@ -26,7 +26,7 @@ GetType(const ModelContext& current, bool allowAxisFlip)
   for (int i = 0; i < 3; i++) {
 
     Tripod tripod(current.MVP,
-                  current.CameraMouse.Camera.DisplayRatio(),
+                  current.CameraMouse.Camera.AspectRatio(),
                   current.ScreenFactor,
                   allowAxisFlip,
                   i);
@@ -119,7 +119,7 @@ TranslationGizmo::Draw(const ModelContext& current,
   // draw
   for (int i = 0; i < 3; ++i) {
     Tripod tripod(current.MVP,
-                  current.CameraMouse.Camera.DisplayRatio(),
+                  current.CameraMouse.Camera.AspectRatio(),
                   current.ScreenFactor,
                   m_allowAxisFlip,
                   i);

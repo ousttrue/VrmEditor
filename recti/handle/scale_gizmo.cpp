@@ -12,7 +12,7 @@ GetType(const recti::ModelContext& mCurrent, bool mAllowAxisFlip)
       continue;
     }
     recti::Tripod tripod(mCurrent.MVP,
-                         mCurrent.CameraMouse.Camera.DisplayRatio(),
+                         mCurrent.CameraMouse.Camera.AspectRatio(),
                          mCurrent.ScreenFactor,
                          mAllowAxisFlip,
                          i);
@@ -101,7 +101,7 @@ ScaleGizmo::Draw(const ModelContext& mCurrent,
     const bool usingAxis = (active == MT_NONE || active == MT_SCALE_X + i);
     if (usingAxis) {
       Tripod tripod(mCurrent.MVP,
-                    mCurrent.CameraMouse.Camera.DisplayRatio(),
+                    mCurrent.CameraMouse.Camera.AspectRatio(),
                     mCurrent.ScreenFactor,
                     m_allowAxisFlip,
                     i);
@@ -171,7 +171,7 @@ GetUniformType(const recti::ModelContext& mCurrent, bool mAllowAxisFlip)
     }
 
     recti::Tripod tripod(mCurrent.MVP,
-                         mCurrent.CameraMouse.Camera.DisplayRatio(),
+                         mCurrent.CameraMouse.Camera.AspectRatio(),
                          mCurrent.ScreenFactor,
                          mAllowAxisFlip,
                          i);

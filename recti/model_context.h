@@ -65,7 +65,7 @@ struct ModelContext
     Vec4 rightViewInverse = cameraMouse.mViewInverse.right();
     rightViewInverse.TransformVector(ModelInverse);
     float rightLength = GetSegmentLengthClipSpace(
-      { 0.f, 0.f }, rightViewInverse, MVP, cameraMouse.Camera.DisplayRatio());
+      { 0.f, 0.f }, rightViewInverse, MVP, cameraMouse.Camera.AspectRatio());
     ScreenFactor = gizmoSizeClipSpace / rightLength;
 
     ScreenSquareCenter = cameraMouse.WorldToPos(Model.position());
