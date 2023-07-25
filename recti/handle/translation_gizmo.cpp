@@ -25,14 +25,14 @@ GetType(const ModelContext& current, bool allowAxisFlip)
 
   for (int i = 0; i < 3; i++) {
 
-    Tripod tripod(i);
-    tripod.ComputeTripodAxisAndVisibility(current, allowAxisFlip);
+    Tripod tripod(current.MVP,
+                  current.CameraMouse.Camera.DisplayRatio(),
+                  current.ScreenFactor,
+                  allowAxisFlip,
+                  i);
     tripod.dirAxis.TransformVector(current.Model);
     tripod.dirPlaneX.TransformVector(current.Model);
     tripod.dirPlaneY.TransformVector(current.Model);
-
-    auto posOnPlan = current.CameraMouse.Ray.IntersectPlane(
-      BuildPlan(current.Model.position(), tripod.dirAxis));
 
     // screen
     const Vec2 axisStartOnScreen =
@@ -58,6 +58,9 @@ GetType(const ModelContext& current, bool allowAxisFlip)
     {
       return (MOVETYPE)(MT_MOVE_X + i);
     }
+
+    auto posOnPlan = current.CameraMouse.Ray.IntersectPlane(
+      BuildPlan(current.Model.position(), tripod.dirAxis));
 
     const float dx = tripod.dirPlaneX.Dot3(
       (posOnPlan - current.Model.position()) * (1.f / current.ScreenFactor));
@@ -115,8 +118,11 @@ TranslationGizmo::Draw(const ModelContext& current,
 
   // draw
   for (int i = 0; i < 3; ++i) {
-    Tripod tripod(i);
-    tripod.ComputeTripodAxisAndVisibility(current, m_allowAxisFlip);
+    Tripod tripod(current.MVP,
+                  current.CameraMouse.Camera.DisplayRatio(),
+                  current.ScreenFactor,
+                  m_allowAxisFlip,
+                  i);
 
     if (active == MT_NONE || (active == MT_MOVE_X + i)) {
       // draw axis

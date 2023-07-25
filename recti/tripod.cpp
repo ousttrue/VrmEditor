@@ -1,83 +1,64 @@
 #include "tripod.h"
 namespace recti {
 
-Tripod::Tripod(const int axisIndex)
+Tripod::Tripod(const Mat4& mvp,
+               float displayRatio,
+               float screenFactor,
+               bool mAllowAxisFlip,
+               int axisIndex)
 {
-  // new method
-  dirAxis = Vec4::DirectionUnary[axisIndex];
-  dirPlaneX = Vec4::DirectionUnary[(axisIndex + 1) % 3];
-  dirPlaneY = Vec4::DirectionUnary[(axisIndex + 2) % 3];
-}
+  {
+    dirAxis = Vec4::DirectionUnary[axisIndex];
+    float lenDir =
+      GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f }, dirAxis, mvp, displayRatio);
+    float lenDirMinus =
+      GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f }, -dirAxis, mvp, displayRatio);
 
-void
-Tripod::ComputeTripodAxisAndVisibility(const recti::ModelContext& mCurrent,
-                                       bool mAllowAxisFlip)
-{
-  float lenDir =
-    GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
-                              dirAxis,
-                              mCurrent.MVP,
-                              mCurrent.CameraMouse.Camera.DisplayRatio());
-  float lenDirMinus =
-    GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
-                              -dirAxis,
-                              mCurrent.MVP,
-                              mCurrent.CameraMouse.Camera.DisplayRatio());
+    auto mulAxis = (mAllowAxisFlip && lenDir < lenDirMinus &&
+                    fabsf(lenDir - lenDirMinus) > FLT_EPSILON)
+                     ? -1.f
+                     : 1.f;
+    dirAxis *= mulAxis;
 
-  float lenDirPlaneX =
-    GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
-                              dirPlaneX,
-                              mCurrent.MVP,
-                              mCurrent.CameraMouse.Camera.DisplayRatio());
-  float lenDirMinusPlaneX =
-    GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
-                              -dirPlaneX,
-                              mCurrent.MVP,
-                              mCurrent.CameraMouse.Camera.DisplayRatio());
+    // axis is visible ?
+    float axisLengthInClipSpace = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, dirAxis * screenFactor, mvp, displayRatio);
+    belowAxisLimit = (axisLengthInClipSpace > 0.02f);
+  }
 
-  float lenDirPlaneY =
-    GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
-                              dirPlaneY,
-                              mCurrent.MVP,
-                              mCurrent.CameraMouse.Camera.DisplayRatio());
-  float lenDirMinusPlaneY =
-    GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
-                              -dirPlaneY,
-                              mCurrent.MVP,
-                              mCurrent.CameraMouse.Camera.DisplayRatio());
+  {
+    // new method
+    dirPlaneX = Vec4::DirectionUnary[(axisIndex + 1) % 3];
+    dirPlaneY = Vec4::DirectionUnary[(axisIndex + 2) % 3];
 
-  // For readability
-  mulAxis = (mAllowAxisFlip && lenDir < lenDirMinus &&
-             fabsf(lenDir - lenDirMinus) > FLT_EPSILON)
-              ? -1.f
-              : 1.f;
-  mulAxisX = (mAllowAxisFlip && lenDirPlaneX < lenDirMinusPlaneX &&
-              fabsf(lenDirPlaneX - lenDirMinusPlaneX) > FLT_EPSILON)
-               ? -1.f
-               : 1.f;
-  mulAxisY = (mAllowAxisFlip && lenDirPlaneY < lenDirMinusPlaneY &&
-              fabsf(lenDirPlaneY - lenDirMinusPlaneY) > FLT_EPSILON)
-               ? -1.f
-               : 1.f;
-  dirAxis *= mulAxis;
-  dirPlaneX *= mulAxisX;
-  dirPlaneY *= mulAxisY;
+    float lenDirPlaneX = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, dirPlaneX, mvp, displayRatio);
+    float lenDirMinusPlaneX = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, -dirPlaneX, mvp, displayRatio);
+    auto mulAxisX = (mAllowAxisFlip && lenDirPlaneX < lenDirMinusPlaneX &&
+                     fabsf(lenDirPlaneX - lenDirMinusPlaneX) > FLT_EPSILON)
+                      ? -1.f
+                      : 1.f;
+    dirPlaneX *= mulAxisX;
 
-  // axis is visible ?
-  float axisLengthInClipSpace =
-    GetSegmentLengthClipSpace({ 0.f, 0.f, 0.f },
-                              dirAxis * mCurrent.ScreenFactor,
-                              mCurrent.MVP,
-                              mCurrent.CameraMouse.Camera.DisplayRatio());
-  belowAxisLimit = (axisLengthInClipSpace > 0.02f);
+    float lenDirPlaneY = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, dirPlaneY, mvp, displayRatio);
+    float lenDirMinusPlaneY = GetSegmentLengthClipSpace(
+      { 0.f, 0.f, 0.f }, -dirPlaneY, mvp, displayRatio);
+    auto mulAxisY = (mAllowAxisFlip && lenDirPlaneY < lenDirMinusPlaneY &&
+                     fabsf(lenDirPlaneY - lenDirMinusPlaneY) > FLT_EPSILON)
+                      ? -1.f
+                      : 1.f;
+    dirPlaneY *= mulAxisY;
 
-  // plane is visible ?
-  float paraSurf = GetParallelogram({ 0.f, 0.f, 0.f },
-                                    dirPlaneX * mCurrent.ScreenFactor,
-                                    dirPlaneY * mCurrent.ScreenFactor,
-                                    mCurrent.MVP,
-                                    mCurrent.CameraMouse.Camera.DisplayRatio());
-  belowPlaneLimit = (paraSurf > 0.0025f);
+    // plane is visible ?
+    float paraSurf = GetParallelogram({ 0.f, 0.f, 0.f },
+                                      dirPlaneX * screenFactor,
+                                      dirPlaneY * screenFactor,
+                                      mvp,
+                                      displayRatio);
+    belowPlaneLimit = (paraSurf > 0.0025f);
+  }
 }
 
 }

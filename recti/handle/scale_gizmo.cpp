@@ -11,8 +11,11 @@ GetType(const recti::ModelContext& mCurrent, bool mAllowAxisFlip)
                     static_cast<recti::OPERATION>(recti::SCALE_X << i))) {
       continue;
     }
-    recti::Tripod tripod(i);
-    tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+    recti::Tripod tripod(mCurrent.MVP,
+                         mCurrent.CameraMouse.Camera.DisplayRatio(),
+                         mCurrent.ScreenFactor,
+                         mAllowAxisFlip,
+                         i);
     tripod.dirAxis.TransformVector(mCurrent.ModelLocal);
     tripod.dirPlaneX.TransformVector(mCurrent.ModelLocal);
     tripod.dirPlaneY.TransformVector(mCurrent.ModelLocal);
@@ -97,8 +100,11 @@ ScaleGizmo::Draw(const ModelContext& mCurrent,
 
     const bool usingAxis = (active == MT_NONE || active == MT_SCALE_X + i);
     if (usingAxis) {
-      Tripod tripod(i);
-      tripod.ComputeTripodAxisAndVisibility(mCurrent, m_allowAxisFlip);
+      Tripod tripod(mCurrent.MVP,
+                    mCurrent.CameraMouse.Camera.DisplayRatio(),
+                    mCurrent.ScreenFactor,
+                    m_allowAxisFlip,
+                    i);
 
       // draw axis
       if (tripod.belowAxisLimit) {
@@ -164,8 +170,11 @@ GetUniformType(const recti::ModelContext& mCurrent, bool mAllowAxisFlip)
       continue;
     }
 
-    recti::Tripod tripod(i);
-    tripod.ComputeTripodAxisAndVisibility(mCurrent, mAllowAxisFlip);
+    recti::Tripod tripod(mCurrent.MVP,
+                         mCurrent.CameraMouse.Camera.DisplayRatio(),
+                         mCurrent.ScreenFactor,
+                         mAllowAxisFlip,
+                         i);
     tripod.dirAxis.TransformVector(mCurrent.ModelLocal);
     tripod.dirPlaneX.TransformVector(mCurrent.ModelLocal);
     tripod.dirPlaneY.TransformVector(mCurrent.ModelLocal);
