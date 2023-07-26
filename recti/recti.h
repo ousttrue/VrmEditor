@@ -125,7 +125,8 @@ struct Screen
                                           MOVETYPE hover)
   {
     if (hover >= MT_MOVE_X && hover <= MT_MOVE_SCREEN) {
-      return std::make_shared<TranslationDragHandle>(current, hover);
+      return std::make_shared<TranslationDragHandle>(
+        current.CameraMouse, current.Model, hover);
     }
     if (hover >= MT_ROTATE_X && hover <= MT_ROTATE_SCREEN) {
       return std::make_shared<RotationDragHandle>(current, hover);

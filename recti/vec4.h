@@ -78,19 +78,6 @@ struct Vec4
   }
   Vec4 Abs() const;
 
-  void Cross(const Vec4& v)
-  {
-    Vec4 res;
-    res.x = y * v.z - z * v.y;
-    res.y = z * v.x - x * v.z;
-    res.z = x * v.y - y * v.x;
-
-    x = res.x;
-    y = res.y;
-    z = res.z;
-    w = 0.f;
-  }
-
   void Cross(const Vec4& v1, const Vec4& v2)
   {
     x = v1.y * v2.z - v1.z * v2.y;

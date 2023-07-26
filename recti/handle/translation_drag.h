@@ -7,13 +7,14 @@ namespace recti {
 struct TranslationDragHandle : public IDragHandle
 {
   MOVETYPE m_type;
-  Vec4 mTranslationPlan;
-  Vec4 mTranslationPlanOrigin;
-  Vec4 mMatrixOrigin;
+  Vec4 Plain;
+  Vec4 PlainOrigin;
+  Vec4 ModelPosition;
   Vec4 mTranslationLastDelta;
-  Vec4 mRelativeOrigin;
 
-  TranslationDragHandle(const ModelContext& current, MOVETYPE type);
+  TranslationDragHandle(const CameraMouse& cameraMouse,
+                        const Mat4& model,
+                        MOVETYPE type);
 
   MOVETYPE Type() const override { return m_type; }
 
