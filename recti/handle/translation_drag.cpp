@@ -42,11 +42,11 @@ TranslationDragHandle::Drag(const ModelContext& current,
                             float* matrix,
                             float* deltaMatrix)
 {
-  const Vec4 newPos = current.CameraMouse.Ray.IntersectPlane(Plain);
+  const Vec4 newRayPos = current.CameraMouse.Ray.IntersectPlane(Plain);
 
   // compute delta
-  const Vec4 newOrigin = ModelPosition + (newPos - PlainOrigin);
-  Vec4 delta = newOrigin - current.Model.position();
+  const Vec4 newModelPos = ModelPosition + (newRayPos - PlainOrigin);
+  Vec4 delta = newModelPos - current.Model.position();
 
   // 1 axis constraint
   if (m_type >= MT_MOVE_X && m_type <= MT_MOVE_Z) {
