@@ -301,18 +301,15 @@ public:
     }
 
     auto src = root.Textures[*id];
-    auto source = src.SourceId();
     std::shared_ptr<grapho::gl3::Texture> texture;
-    if (source) {
+    if (auto KHR_texture_basisu =
+          src.GetExtension<gltfjson::KHR_texture_basisu>()) {
+      if (auto basisu = KHR_texture_basisu->SourceId()) {
+        texture = LoadBasisu(root, bin, *basisu);
+      }
+    } else if (auto source = src.SourceId()) {
       if (auto image = GetOrCreateImage(root, bin, *source)) {
         texture = GetOrCreateTexture(image, colorspace);
-      }
-    } else {
-      if (auto KHR_texture_basisu =
-            src.GetExtension<gltfjson::KHR_texture_basisu>()) {
-        if (auto basisu = KHR_texture_basisu->SourceId()) {
-          texture = LoadBasisu(root, bin, *basisu);
-        }
       }
     }
 

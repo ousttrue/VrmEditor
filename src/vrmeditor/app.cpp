@@ -339,7 +339,7 @@ public:
       extension.begin(), extension.end(), extension.begin(), tolower);
 
     if (extension == ".gltf" || extension == ".glb" || extension == ".vrm" ||
-        extension == ".vrma") {
+        extension == ".vci" || extension == ".vrma") {
       return SceneState::GetInstance().LoadModel(path);
     }
     if (extension == ".bvh") {

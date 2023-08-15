@@ -474,10 +474,16 @@ struct Expressions
                        const NodeToIndexFunc& nodeToIndex)
   {
     for (auto& bind : expression->morphBinds) {
+      auto nodeIndex = nodeToIndex(bind.Node);
+      if(nodeIndex==-1)
+      {
+        continue;
+      }
       MorphTargetKey key{
-        .NodeIndex = static_cast<uint16_t>(nodeToIndex(bind.Node)),
+        .NodeIndex = static_cast<uint16_t>(nodeIndex),
         .MorphIndex = static_cast<uint16_t>(bind.index),
       };
+
       auto found = m_morphTargetMap.find(key);
       auto weight = bind.weight * expression->weight;
       if (found != m_morphTargetMap.end()) {
