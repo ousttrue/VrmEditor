@@ -2,7 +2,6 @@
 url = https://github.com/ousttrue/grapho.git
 revision = v1.8.0
 depth = 1
-; patch_directory = grapho
 
 [provide]
 grapho = grapho_dep

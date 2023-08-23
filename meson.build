@@ -1,7 +1,7 @@
 project(
     'VrmEditor',
     ['cpp', 'c'],
-    version: '1.12.3',
+    version: '1.13.0',
     license: 'MIT',
     default_options: [],
 )
