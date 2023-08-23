@@ -177,3 +177,8 @@ mesh / skinning / deformed_mesh
 - `libvrm::bvh`
 - `libvrm::runtime` (NodeAnimation, MorphTarget, Skinning)
 - `libvrm::serialization` (Udp pose)
+
+## WIX の管理
+
+
+

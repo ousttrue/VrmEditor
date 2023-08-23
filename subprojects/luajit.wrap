@@ -1,7 +1,7 @@
 # https://github.com/franko/luajit
 [wrap-git]
 url = https://github.com/LuaJIT/LuaJIT.git
-revision = master
+revision = v2.0.5
 depth = 1
 patch_directory = luajit 
 
