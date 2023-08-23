@@ -39,7 +39,7 @@ executable(
     'vrmeditor',
     srcs,
     install: true,
-    # gui_app: true,
+    gui_app: meson.buildtype=='release',
     dependencies: [
         config_dep,
         glfw_dep,

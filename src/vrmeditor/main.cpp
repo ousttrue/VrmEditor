@@ -25,16 +25,20 @@ public:
 };
 }
 
-// int WINAPI
-// WinMain(HINSTANCE hInstance,
-//         HINSTANCE hPrevInstance,
-//         LPSTR lpCmdLine,
-//         int nCmdShow)
-// #else
+#if NDEBUG
+int WINAPI
+WinMain(HINSTANCE hInstance,
+        HINSTANCE hPrevInstance,
+        LPSTR lpCmdLine,
+        int nCmdShow)
+{
+  auto argc = __argc;
+  auto argv = __argv;
+#else
 int
 main(int argc, char** argv)
-// #endif
 {
+#endif
   // #ifdef _WIN32
   //   RedirectIOToConsole();
   // #endif
@@ -45,5 +49,7 @@ main(int argc, char** argv)
   plog::init(plog::debug,
              &imLoggerAppender); // Initialize the logger with our appender.
 
-  return app::Run({ (const char**)argv + 1, (size_t)(argc - 1) });
+  app::Run({ (const char**)argv + 1, (size_t)(argc - 1) });
+
+  return 0;
 }
