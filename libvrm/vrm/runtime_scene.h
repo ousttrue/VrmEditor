@@ -96,7 +96,7 @@ struct RuntimeScene
 
   HumanPose m_pose;
 
-  RuntimeScene();
+  RuntimeScene(const std::shared_ptr<GltfRoot>& table);
   static std::shared_ptr<RuntimeScene> Load(
     const std::shared_ptr<GltfRoot>& table);
   void Reset();

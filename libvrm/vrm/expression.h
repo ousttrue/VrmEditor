@@ -249,6 +249,8 @@ struct Expressions
   // other
   Expression Neutral;
 
+  Expression Error = {};
+
   std::list<Expression> CustomExpressions;
 
   struct generator
@@ -369,6 +371,7 @@ struct Expressions
     }
 
     assert(false);
+    return Error;
   }
 
   // Expression createExpression(const std::u8string& _presetName,
@@ -475,8 +478,7 @@ struct Expressions
   {
     for (auto& bind : expression->morphBinds) {
       auto nodeIndex = nodeToIndex(bind.Node);
-      if(nodeIndex==-1)
-      {
+      if (nodeIndex == -1) {
         continue;
       }
       MorphTargetKey key{

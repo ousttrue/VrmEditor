@@ -5,11 +5,12 @@
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
 #include <vrm/gltfroot.h>
+#include <vrm/runtime_scene.h>
 
 struct MeshGuiImpl
 {
   // seector
-  int m_selected = 0;
+  int m_selected = -1;
   std::shared_ptr<libvrm::GltfRoot> m_root;
   grapho::imgui::PrintfBuffer m_buf;
 
@@ -27,7 +28,11 @@ struct MeshGuiImpl
     m_fbo = ImFbo::Create();
   }
 
-  void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root) { m_root = root; }
+  void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root)
+  {
+    m_root = root;
+    m_runtime = std::make_shared<libvrm::RuntimeScene>(m_root);
+  }
 
   void Select(int selected)
   {
@@ -37,6 +42,7 @@ struct MeshGuiImpl
     m_selected = selected;
 
     // create runtime scene that has a Node with selected mesh
+    // m_runtime = std::make_shared<libvrm::RuntimeScene>(m_root);
   }
 
   void ShowGui()
@@ -63,7 +69,7 @@ struct MeshGuiImpl
           ImGui::TableNextColumn();
           if (ImGui::Selectable((const char*)mesh.NameString().c_str(),
                                 i == m_selected)) {
-            m_selected = i;
+            Select(i);
           }
           // 2
           ImGui::TableNextColumn();

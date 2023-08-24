@@ -379,8 +379,9 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
   return ptr;
 }
 
-RuntimeScene::RuntimeScene()
-  : m_timeline(new Timeline)
+RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& table)
+  : m_base(table)
+  , m_timeline(new Timeline)
 {
   Reset();
 }
@@ -388,8 +389,7 @@ RuntimeScene::RuntimeScene()
 std::shared_ptr<RuntimeScene>
 RuntimeScene::Load(const std::shared_ptr<GltfRoot>& base)
 {
-  auto ptr = std::make_shared<RuntimeScene>();
-  ptr->m_base = base;
+  auto ptr = std::make_shared<RuntimeScene>(base);
 
   if (base->m_gltf) {
     if (auto VRMC_vrm =
@@ -445,6 +445,8 @@ RuntimeScene::Load(const std::shared_ptr<GltfRoot>& base)
     }
     // Reset();
   });
+
+  return ptr;
 }
 
 void
@@ -483,23 +485,25 @@ RuntimeScene::Reset()
   m_nodes.clear();
   m_roots.clear();
 
-  std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<RuntimeNode>>
-    nodeMap;
+  if (m_base) {
+    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<RuntimeNode>>
+      nodeMap;
 
-  // COPY hierarchy
-  for (auto& node : m_base->m_nodes) {
-    auto runtime = std::make_shared<RuntimeNode>(node);
-    nodeMap.insert({ node, runtime });
-    m_nodes.push_back(runtime);
-  }
+    // COPY hierarchy
+    for (auto& node : m_base->m_nodes) {
+      auto runtime = std::make_shared<RuntimeNode>(node);
+      nodeMap.insert({ node, runtime });
+      m_nodes.push_back(runtime);
+    }
 
-  for (auto& node : m_base->m_nodes) {
-    auto runtime = nodeMap[node];
-    if (auto parent = node->Parent.lock()) {
-      auto runtimeParent = nodeMap[parent];
-      RuntimeNode::AddChild(runtimeParent, runtime);
-    } else {
-      m_roots.push_back(runtime);
+    for (auto& node : m_base->m_nodes) {
+      auto runtime = nodeMap[node];
+      if (auto parent = node->Parent.lock()) {
+        auto runtimeParent = nodeMap[parent];
+        RuntimeNode::AddChild(runtimeParent, runtime);
+      } else {
+        m_roots.push_back(runtime);
+      }
     }
   }
 }
