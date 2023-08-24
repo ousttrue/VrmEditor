@@ -21,6 +21,7 @@ srcs = [
     'view/lighting.cpp',
     'view/gl3renderer_gui.cpp',
     'view/animation_view.cpp',
+    'view/mesh_gui.cpp',
     'humanpose/humanpose_stream.cpp',
     'humanpose/udp_receiver.cpp',
     'humanpose/bvhnode.cpp',
@@ -39,7 +40,7 @@ executable(
     'vrmeditor',
     srcs,
     install: true,
-    gui_app: meson.buildtype=='release',
+    gui_app: get_option('buildtype') == 'release',
     dependencies: [
         config_dep,
         glfw_dep,

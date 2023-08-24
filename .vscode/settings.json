@@ -19,4 +19,5 @@
     "testMate.cpp.test.executables": "prefix/bin/tests*",
     "C_Cpp.default.compileCommands": "builddir\\compile_commands.json",
     "mesonbuild.configureOnOpen": false,
+    "dotnet.defaultSolution": "disable",
 }

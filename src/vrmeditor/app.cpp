@@ -21,6 +21,7 @@
 #include "view/animation_view.h"
 #include "view/gl3renderer_gui.h"
 #include "view/lighting.h"
+#include "view/mesh_gui.h"
 #include "view/scene_preview.h"
 #include <boneskin/skinning_manager.h>
 #include <glr/rendering_env.h>
@@ -53,6 +54,7 @@ class App
   std::shared_ptr<HierarchyGui> m_hierarchy;
   std::shared_ptr<VrmGui> m_vrm;
   std::shared_ptr<HumanoidDock> m_humanoid;
+  std::shared_ptr<MeshGui> m_meshGui;
 
 public:
   App()
@@ -70,6 +72,7 @@ public:
         json->ClearCache(jsonpath);
       });
     m_humanoid = std::make_shared<HumanoidDock>();
+    m_meshGui = std::make_shared<MeshGui>();
 
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
       [=] { ResetDock(); });
@@ -198,6 +201,9 @@ public:
 
     DockSpaceManager::Instance().AddDock(
       { "🏃Vrm", [vrm = m_vrm]() { vrm->ShowGui(); } });
+
+    DockSpaceManager::Instance().AddDock(
+      { "📐MeshAsset", [mesh = m_meshGui]() { mesh->ShowGui(); } });
   }
 
   // HumanoidDock::Create(
