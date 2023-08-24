@@ -101,6 +101,7 @@ public:
         m_animationPreview->SetRuntime(runtime);
         m_vrm->SetRuntime(runtime);
         m_humanoid->SetRuntime(runtime);
+        m_meshGui->SetGltf(runtime->m_base);
       });
   }
 
