@@ -13,5 +13,6 @@ public:
   MeshGui();
   ~MeshGui();
   void ShowGui();
+  void ShowView();
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root);
 };

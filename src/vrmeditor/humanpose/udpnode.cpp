@@ -12,7 +12,7 @@ UdpNode::UdpNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
   auto table = std::make_shared<libvrm::GltfRoot>();
-  m_scene = std::make_shared<libvrm::RuntimeScene>(table);
+  m_scene = libvrm::RuntimeScene::Load(table);
   m_scene->m_base->m_title = "UDP";
 
   // update preview

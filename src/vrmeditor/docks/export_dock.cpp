@@ -16,7 +16,7 @@ ExportDock::Create(const AddDockFunc& addDock,
   // auto impl = std::make_shared<JsonGui>();
   // impl->SetScene(debug_table);
 
-  auto debug_scene = std::make_shared<libvrm::RuntimeScene>(debug_table);
+  auto debug_scene = libvrm::RuntimeScene::Load(debug_table);
   auto preview = std::make_shared<ScenePreview>();
   preview->SetRuntime(debug_scene);
 

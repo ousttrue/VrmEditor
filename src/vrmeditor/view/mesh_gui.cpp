@@ -1,4 +1,6 @@
 #include "mesh_gui.h"
+#include "im_fbo.h"
+#include <glr/scene_renderer.h>
 #include <grapho/imgui/printfbuffer.h>
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
@@ -6,11 +8,36 @@
 
 struct MeshGuiImpl
 {
+  // seector
   int m_selected = 0;
   std::shared_ptr<libvrm::GltfRoot> m_root;
   grapho::imgui::PrintfBuffer m_buf;
 
+  // view
+  std::shared_ptr<glr::RenderingEnv> m_env;
+  std::shared_ptr<glr::ViewSettings> m_settings =
+    std::make_shared<glr::ViewSettings>();
+  std::shared_ptr<glr::SceneRenderer> m_renderer;
+  std::shared_ptr<libvrm::RuntimeScene> m_runtime;
+  std::shared_ptr<ImFbo> m_fbo;
+
+  MeshGuiImpl()
+  {
+    m_renderer = std::make_shared<glr::SceneRenderer>(m_env, m_settings);
+    m_fbo = ImFbo::Create();
+  }
+
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root) { m_root = root; }
+
+  void Select(int selected)
+  {
+    if (selected == m_selected) {
+      return;
+    }
+    m_selected = selected;
+
+    // create runtime scene that has a Node with selected mesh
+  }
 
   void ShowGui()
   {
@@ -110,6 +137,24 @@ struct MeshGuiImpl
     // 3D View gray scale
     // MorphTarget
   }
+
+  void ShowView()
+  {
+    if (!m_runtime) {
+      return;
+    }
+
+    auto pos = ImGui::GetCursorScreenPos();
+    auto size = ImGui::GetContentRegionAvail();
+    // ShowScreenRect(title, color, pos.x, pos.y, size.x, size.y);
+
+    auto sc = ImGui::GetCursorScreenPos();
+    grapho::camera::Viewport vp{ pos.x, pos.y, size.x, size.y };
+    float color[4]{ 0, 0, 0, 1 };
+    m_fbo->ShowFbo(vp, color, [=](const auto& vp, const auto& mouse) {
+      m_renderer->RenderRuntime(m_runtime, vp, mouse);
+    });
+  }
 };
 
 MeshGui::MeshGui()
@@ -126,6 +171,12 @@ void
 MeshGui::ShowGui()
 {
   m_impl->ShowGui();
+}
+
+void
+MeshGui::ShowView()
+{
+  m_impl->ShowView();
 }
 
 void

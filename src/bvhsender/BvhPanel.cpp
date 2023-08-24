@@ -33,7 +33,7 @@ public:
     , m_ep(asio::ip::address::from_string("127.0.0.1"), 54345)
   {
     auto scene = std::make_shared<libvrm::GltfRoot>();
-    m_scene = std::make_shared<libvrm::RuntimeScene>(scene);
+    m_scene = libvrm::RuntimeScene::Load(scene);
   }
 
   ~BvhPanelImpl() { m_work.reset(); }

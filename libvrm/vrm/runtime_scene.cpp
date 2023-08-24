@@ -379,25 +379,31 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
   return ptr;
 }
 
-RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& base)
-  : m_base(base)
+RuntimeScene::RuntimeScene()
+  : m_timeline(new Timeline)
 {
-  m_timeline = std::make_shared<Timeline>();
   Reset();
+}
+
+std::shared_ptr<RuntimeScene>
+RuntimeScene::Load(const std::shared_ptr<GltfRoot>& base)
+{
+  auto ptr = std::make_shared<RuntimeScene>();
+  ptr->m_base = base;
 
   if (base->m_gltf) {
     if (auto VRMC_vrm =
           base->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
-      ParseVrm1(this, *VRMC_vrm);
+      ParseVrm1(ptr.get(), *VRMC_vrm);
     } else if (auto VRM = base->m_gltf->GetExtension<gltfjson::vrm0::VRM>()) {
-      ParseVrm0(this, *VRM);
+      ParseVrm0(ptr.get(), *VRM);
     }
 
-    ParseConstraint(this);
+    ParseConstraint(ptr.get());
 
     for (int i = 0; i < base->m_gltf->Animations.size(); ++i) {
       if (auto animation = ParseAnimation(*base->m_gltf, base->m_bin, i)) {
-        m_animations.push_back(*animation);
+        ptr->m_animations.push_back(*animation);
       }
     }
 
@@ -409,7 +415,7 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& base)
         if (auto humanoid = VRMC_vrm_pose->Humanoid()) {
           for (auto kv : *humanoid) {
             if (kv.first == u8"translation") {
-              if (auto node = GetBoneNode(HumanBones::hips)) {
+              if (auto node = ptr->GetBoneNode(HumanBones::hips)) {
                 auto v = ToVec3(kv.second);
                 node->Transform.Translation = v;
               }
@@ -419,7 +425,7 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& base)
                 for (auto [key, value] : *rotations) {
                   if (auto bone = HumanBoneFromName(gltfjson::from_u8(key),
                                                     VrmVersion::_1_0)) {
-                    if (auto node = GetBoneNode(*bone)) {
+                    if (auto node = ptr->GetBoneNode(*bone)) {
                       DirectX::XMFLOAT4 q = ToVec4(value);
                       node->Transform.Rotation = q;
                     }
@@ -434,7 +440,7 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& base)
   }
 
   base->m_sceneUpdated.push_back([=](const auto&) {
-    for (auto& root : m_roots) {
+    for (auto& root : ptr->m_roots) {
       root->CalcWorldMatrix(true);
     }
     // Reset();

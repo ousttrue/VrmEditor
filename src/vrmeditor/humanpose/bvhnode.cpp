@@ -15,7 +15,7 @@ BvhNode::BvhNode(int id, std::string_view name)
   : GraphNodeBase(id, name)
 {
   auto table = std::make_shared<libvrm::GltfRoot>();
-  m_scene = std::make_shared<libvrm::RuntimeScene>(table);
+  m_scene = libvrm::RuntimeScene::Load(table);
 
   m_preview = std::make_shared<ScenePreview>();
   m_preview->Settings()->ShowCuber = true;

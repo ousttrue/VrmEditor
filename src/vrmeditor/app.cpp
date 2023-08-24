@@ -204,7 +204,9 @@ public:
       { "🏃Vrm", [vrm = m_vrm]() { vrm->ShowGui(); } });
 
     DockSpaceManager::Instance().AddDock(
-      { "📐MeshAsset", [mesh = m_meshGui]() { mesh->ShowGui(); } });
+      { "🎁MeshAsset", [mesh = m_meshGui]() { mesh->ShowGui(); } });
+    DockSpaceManager::Instance().AddDock(
+      { "🎁MeshAssetView", [mesh = m_meshGui]() { mesh->ShowView(); } });
   }
 
   // HumanoidDock::Create(

@@ -11,7 +11,7 @@
 void
 SceneState::SetGltf(const std::shared_ptr<libvrm::GltfRoot>& gltf)
 {
-  m_runtime = std::make_shared<libvrm::RuntimeScene>(gltf);
+  m_runtime = libvrm::RuntimeScene::Load(gltf);
   m_lastTime = {};
 
   for (auto& callback : m_setCallbacks) {

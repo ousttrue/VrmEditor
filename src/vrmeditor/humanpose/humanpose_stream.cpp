@@ -262,7 +262,7 @@ HumanPoseStream::LoadVrmPose(const std::string& json)
       "SrcNode",
       {},
       std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
-    auto runtime = std::make_shared<libvrm::RuntimeScene>(*loaded);
+    auto runtime = libvrm::RuntimeScene::Load(*loaded);
 
     if (auto VRMC_vrm_animation =
           runtime->m_base->m_gltf
