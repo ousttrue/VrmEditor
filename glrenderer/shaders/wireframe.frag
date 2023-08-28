@@ -1,21 +1,20 @@
 #version 400
-in vec3 normal;
-in vec2 uv;
-out vec4 FragColor;
-uniform sampler2D colorTexture;
+in vec3 fNormal;
+in vec3 fBaryxyz;
 
-uniform vec3 dir = vec3(0, 1, 0);
+out vec4 FragColor;
 
 float
 edgeFactor()
 {
-  vec3 d = fwidth(baryxyz);
-  vec3 f = step(d * lineWidth, baryxyz);
+  vec3 d = fwidth(fBaryxyz);
+  vec3 f = step(d * 0.5, fBaryxyz);
   return min(min(f.x, f.y), f.z);
 }
 
 void
 main()
 {
-  FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+  float c = edgeFactor();
+  FragColor = vec4(c, c, c, 1.0);
 }

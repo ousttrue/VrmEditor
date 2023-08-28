@@ -42,6 +42,7 @@ struct Material
   std::string Name;
   ShaderFactory VS;
   ShaderFactory FS;
+  ShaderFactory GS;
   std::expected<std::shared_ptr<grapho::gl3::ShaderProgram>, std::string>
     Compiled = std::unexpected{ "" };
   std::list<grapho::gl3::TextureSlot> Textures;

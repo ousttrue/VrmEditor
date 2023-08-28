@@ -42,6 +42,9 @@ MaterialFactory_Wireframe(const gltfjson::Root& root,
     .FS = {
       "wireframe.frag",
     },
+    .GS = {
+      "wireframe.geom",
+    },
     .UniformVarMap={
       {"Projection",
         Mat4Var{[](auto &world, auto &local, auto){return world.ProjectionMatrix();}}},

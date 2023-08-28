@@ -68,7 +68,11 @@ struct ShaderFactory
   }
 
   std::u8string Expand(const std::shared_ptr<ShaderSourceManager>& shaderSource)
-  {
+  {    
+    if(SourceName.empty())
+    {
+      return {};
+    }
     FullSource.clear();
 
     auto src = shaderSource->Get(SourceName);

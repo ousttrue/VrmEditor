@@ -20,7 +20,9 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
       auto vs = VS.Expand(shaderSource);
       FS.Update(world, local, gltf);
       auto fs = FS.Expand(shaderSource);
-      Compiled = grapho::gl3::ShaderProgram::Create(vs, fs);
+      GS.Update(world, local, gltf);
+      auto gs = GS.Expand(shaderSource);
+      Compiled = grapho::gl3::ShaderProgram::Create(vs, fs, gs);
 
       // match binding
       if (Compiled) {
@@ -37,6 +39,9 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
             UniformVars.push_back({});
           }
         }
+      } else {
+        auto error = Compiled.error();
+        auto a = 0;
       }
     }
   }
