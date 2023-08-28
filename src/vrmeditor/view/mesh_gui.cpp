@@ -186,7 +186,7 @@ struct MeshGuiImpl
 
       auto deformed = m_deformer->GetOrCreateDeformedMesh(m_selected, baseMesh);
 
-      glr::RenderPass pass[] = { glr::RenderPass::Opaque };
+      glr::RenderPass pass[] = { glr::RenderPass::Wireframe };
       glr::RenderPasses(pass,
                         *m_camera,
                         *m_env,

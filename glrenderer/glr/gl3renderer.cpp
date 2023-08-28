@@ -136,6 +136,7 @@ class Gl3Renderer
 
   Material m_shadow;
   Material m_error;
+  Material m_wireframe;
 
   std::shared_ptr<ShaderSourceManager> m_shaderSource;
 
@@ -199,13 +200,19 @@ public:
     }
   }
 
+  void ClearShaderCache()
+  {
+    m_materialMap.clear();
+    m_shadow = {};
+    m_wireframe = {};
+    m_error = {};
+  }
+
   // for local shader
   void SetShaderDir(const std::filesystem::path& path)
   {
     m_shaderSource->SetShaderDir(path);
-    // clear cache
-    m_materialMap.clear();
-    m_shadow = {};
+    ClearShaderCache();
   }
 
   void SetShaderChunkDir(const std::filesystem::path& path)
@@ -220,10 +227,7 @@ public:
     auto list = m_shaderSource->UpdateShader(path);
     for (auto type : list) {
     }
-    // clear
-    m_materialMap.clear();
-    m_shadow = {};
-    m_error = {};
+    ClearShaderCache();
   }
 
   std::shared_ptr<libvrm::Image> GetOrCreateImage(const gltfjson::Root& root,
@@ -535,6 +539,24 @@ public:
                           WorldInfo{ camera, env },
                           LocalInfo{ modelMatrix },
                           {});
+        uint32_t drawCount = 0;
+        for (auto& primitive : baseMesh->m_primitives) {
+          drawCount += primitive.DrawCount * 4;
+        }
+        vao->Draw(GL_TRIANGLES, drawCount, 0);
+        break;
+      }
+
+      case RenderPass::Wireframe: {
+        if (!m_wireframe.Compiled) {
+          if (auto material = MaterialFactory_Wireframe(root, bin, {})) {
+            m_wireframe = *material;
+          }
+        }
+        m_wireframe.Activate(m_shaderSource,
+                             WorldInfo{ camera, env },
+                             LocalInfo{ modelMatrix },
+                             {});
         uint32_t drawCount = 0;
         for (auto& primitive : baseMesh->m_primitives) {
           drawCount += primitive.DrawCount * 4;

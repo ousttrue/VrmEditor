@@ -10,7 +10,7 @@ enum class RenderPass
 
   //
 
-  MeshGrayScale,
+  Wireframe,
 };
 
 }
