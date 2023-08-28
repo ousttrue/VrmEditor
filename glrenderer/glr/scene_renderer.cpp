@@ -243,6 +243,9 @@ SceneRenderer::RenderFrame(grapho::camera::Camera& camera,
     RenderScene(camera, env, gltf, bin, meshdeformer, nodeMeshes, settings);
   }
 
+  //
+  // bone selector
+  //
   const int SELECTED = 9;
   const int HOVER = 10;
   gizmo->Instances.clear();

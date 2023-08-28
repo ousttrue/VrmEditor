@@ -1,6 +1,11 @@
 #include "mesh_gui.h"
 #include "im_fbo.h"
-#include <glr/scene_renderer.h>
+#include <boneskin/meshdeformer.h>
+#include <glr/gizmo.h>
+#include <glr/gl3renderer.h>
+#include <glr/rendering_env.h>
+#include <grapho/camera/camera.h>
+#include <grapho/camera/viewport.h>
 #include <grapho/imgui/printfbuffer.h>
 #include <grapho/imgui/widgets.h>
 #include <imgui.h>
@@ -9,29 +14,33 @@
 
 struct MeshGuiImpl
 {
-  // seector
+  // mesh selector
   int m_selected = -1;
   std::shared_ptr<libvrm::GltfRoot> m_root;
   grapho::imgui::PrintfBuffer m_buf;
 
   // view
   std::shared_ptr<glr::RenderingEnv> m_env;
-  std::shared_ptr<glr::ViewSettings> m_settings =
-    std::make_shared<glr::ViewSettings>();
-  std::shared_ptr<glr::SceneRenderer> m_renderer;
+  std::shared_ptr<glr::Gizmo> m_gizmo;
+  std::shared_ptr<grapho::camera::Camera> m_camera;
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;
   std::shared_ptr<ImFbo> m_fbo;
+  std::shared_ptr<boneskin::MeshDeformer> m_deformer;
 
   MeshGuiImpl()
   {
-    m_renderer = std::make_shared<glr::SceneRenderer>(m_env, m_settings);
     m_fbo = ImFbo::Create();
+    m_gizmo = std::make_shared<glr::Gizmo>();
+    m_env = std::make_shared<glr::RenderingEnv>();
+    m_env->ClearColor = { 0.3f, 0.3f, 0.3f, 1.0f };
+    m_camera = std::make_shared<grapho::camera::Camera>();
   }
 
   void SetGltf(const std::shared_ptr<libvrm::GltfRoot>& root)
   {
     m_root = root;
     m_runtime = std::make_shared<libvrm::RuntimeScene>(m_root);
+    m_deformer = std::make_shared<boneskin::MeshDeformer>();
   }
 
   void Select(int selected)
@@ -40,9 +49,6 @@ struct MeshGuiImpl
       return;
     }
     m_selected = selected;
-
-    // create runtime scene that has a Node with selected mesh
-    // m_runtime = std::make_shared<libvrm::RuntimeScene>(m_root);
   }
 
   void ShowGui()
@@ -139,27 +145,60 @@ struct MeshGuiImpl
         }
       }
     }
-
-    // 3D View gray scale
-    // MorphTarget
   }
 
   void ShowView()
   {
-    if (!m_runtime) {
-      return;
-    }
-
     auto pos = ImGui::GetCursorScreenPos();
     auto size = ImGui::GetContentRegionAvail();
-    // ShowScreenRect(title, color, pos.x, pos.y, size.x, size.y);
-
-    auto sc = ImGui::GetCursorScreenPos();
     grapho::camera::Viewport vp{ pos.x, pos.y, size.x, size.y };
     float color[4]{ 0, 0, 0, 1 };
-    m_fbo->ShowFbo(vp, color, [=](const auto& vp, const auto& mouse) {
-      m_renderer->RenderRuntime(m_runtime, vp, mouse);
-    });
+    m_fbo->ShowFbo(vp,
+                   color,
+                   std::bind(&MeshGuiImpl::Render,
+                             this,
+                             std::placeholders::_1,
+                             std::placeholders::_2));
+  }
+
+  void Render(const grapho::camera::Viewport& vp,
+              const grapho::camera::MouseState& mouse)
+  {
+    // update camera
+    m_camera->Projection.SetViewport(vp);
+    m_camera->MouseInputTurntable(mouse);
+    m_camera->Update();
+
+    // clear
+    glr::ClearRendertarget(*m_camera, *m_env);
+
+    // grid
+    m_gizmo->Render(*m_camera, false, true);
+
+    // selected mesh
+    if (m_selected >= 0 && m_selected < m_root->m_gltf->Meshes.size()) {
+      auto mesh = m_root->m_gltf->Meshes[m_selected];
+      DirectX::XMFLOAT4X4 identity = {
+        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+      };
+      auto baseMesh = m_deformer->GetOrCreateBaseMesh(
+        *m_root->m_gltf, m_root->m_bin, m_selected);
+
+      auto deformed = m_deformer->GetOrCreateDeformedMesh(m_selected, baseMesh);
+
+      glr::RenderPass pass[] = { glr::RenderPass::Opaque };
+      glr::RenderPasses(pass,
+                        *m_camera,
+                        *m_env,
+                        *m_root->m_gltf,
+                        m_root->m_bin,
+                        {
+                          .MeshId = (uint32_t)m_selected,
+                          .Matrix = identity,
+                          .BaseMesh = baseMesh,
+                          .Vertices = deformed->Vertices,
+                        });
+    }
   }
 };
 

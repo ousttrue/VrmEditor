@@ -7,6 +7,10 @@ enum class RenderPass
   Opaque,
   Transparent,
   ShadowMatrix,
+
+  //
+
+  MeshGrayScale,
 };
 
 }
