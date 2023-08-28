@@ -464,8 +464,7 @@ public:
                     const RenderingEnv& env,
                     const gltfjson::Root& root,
                     const gltfjson::Bin& bin,
-                    boneskin::MeshDeformer& meshDeformer,
-                    std::span<const boneskin::NodeMesh> meshNodes)
+                    const MeshDrawInfo& draw)
   {
     // rmt_ScopedCPUSample(RenderPasses, 0);
     glEnable(GL_DEPTH_TEST);
@@ -473,25 +472,12 @@ public:
 
     // render
     for (auto pass : passes) {
-      for (auto& [nodeId, meshId, matrix] : meshNodes) {
-        auto gltfNode = root.Nodes[nodeId];
-        if (auto meshId = gltfNode.MeshId()) {
-          if (auto baseMesh =
-                meshDeformer.GetOrCreateBaseMesh(root, bin, meshId)) {
-            auto vao = GetOrCreateMesh(*meshId, baseMesh);
+      auto vao = GetOrCreateMesh(draw.MeshId, draw.BaseMesh);
 
-            auto deformed =
-              meshDeformer.GetOrCreateDeformedMesh(*meshId, baseMesh);
+      vao->slots_[0]->Upload(draw.Vertices.size() * sizeof(boneskin::Vertex),
+                             draw.Vertices.data());
 
-            // auto vao = GetOrCreateMesh(*meshId, baseMesh);
-            vao->slots_[0]->Upload(deformed->Vertices.size() *
-                                     sizeof(boneskin::Vertex),
-                                   deformed->Vertices.data());
-
-            Render(pass, camera, env, root, bin, baseMesh, vao, matrix);
-          }
-        }
-      }
+      Render(pass, camera, env, root, bin, draw.BaseMesh, vao, draw.Matrix);
     }
   }
 
@@ -734,11 +720,9 @@ RenderPasses(std::span<const RenderPass> passes,
              const RenderingEnv& env,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
-             boneskin::MeshDeformer& meshDeformer,
-             std::span<const boneskin::NodeMesh> meshNodes)
+             const MeshDrawInfo& draw)
 {
-  Gl3Renderer::Instance().RenderPasses(
-    passes, camera, env, root, bin, meshDeformer, meshNodes);
+  Gl3Renderer::Instance().RenderPasses(passes, camera, env, root, bin, draw);
 }
 
 void

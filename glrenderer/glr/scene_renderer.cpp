@@ -197,8 +197,29 @@ SceneRenderer::RenderScene(const grapho::camera::Camera& camera,
       m_renderpass.push_back(RenderPass::Transparent);
     }
 
-    glr::RenderPasses(
-      m_renderpass, camera, env, root, bin, meshdeformer, nodeMeshes);
+    for (auto& [nodeId, meshId, matrix] : nodeMeshes) {
+      auto gltfNode = root.Nodes[nodeId];
+      if (auto meshId = gltfNode.MeshId()) {
+        if (auto baseMesh =
+              meshdeformer.GetOrCreateBaseMesh(root, bin, meshId)) {
+
+          auto deformed =
+            meshdeformer.GetOrCreateDeformedMesh(*meshId, baseMesh);
+
+          glr::RenderPasses(m_renderpass,
+                            camera,
+                            env,
+                            root,
+                            bin,
+                            {
+                              .MeshId = *meshId,
+                              .Matrix = matrix,
+                              .BaseMesh = baseMesh,
+                              .Vertices = deformed->Vertices,
+                            });
+        }
+      }
+    }
   }
 }
 

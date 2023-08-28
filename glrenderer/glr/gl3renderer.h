@@ -2,6 +2,7 @@
 #include "colorspace.h"
 #include "renderpass.h"
 #include <DirectXMath.h>
+#include <boneskin/base_mesh.h>
 #include <filesystem>
 #include <gltfjson.h>
 #include <memory>
@@ -24,14 +25,18 @@ class Image;
 namespace cuber {
 struct LineVertex;
 };
-namespace boneskin {
-struct NodeMesh;
-class MeshDeformer;
-}
 
 namespace glr {
 
 struct Material;
+
+struct MeshDrawInfo
+{
+  uint32_t MeshId;
+  DirectX::XMFLOAT4X4 Matrix;
+  std::shared_ptr<boneskin::BaseMesh> BaseMesh;
+  std::span<const boneskin::Vertex> Vertices;
+};
 
 enum class EnvCubemapTypes
 {
@@ -60,8 +65,7 @@ RenderPasses(std::span<const RenderPass> passes,
              const RenderingEnv& env,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
-             boneskin::MeshDeformer& meshDeformer,
-             std::span<const boneskin::NodeMesh> meshNodes);
+             const MeshDrawInfo& draw);
 
 // clear current render target
 void
