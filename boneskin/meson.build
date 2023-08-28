@@ -2,7 +2,7 @@ boneskin_inc = include_directories('.')
 boneskin_lib = static_library(
     'boneskin',
     [
-        'boneskin/skinning_manager.cpp',
+        'boneskin/meshdeformer.cpp',
     ],
     dependencies: [
         gltfjson_dep,

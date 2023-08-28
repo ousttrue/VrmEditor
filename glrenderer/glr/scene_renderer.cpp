@@ -6,7 +6,6 @@
 #include "rendertarget.h"
 #include "scene_renderer.h"
 #include <DirectXCollision.h>
-#include <boneskin/skinning_manager.h>
 #include <limits>
 #include <recti.h>
 #include <recti_imgui.h>
@@ -170,13 +169,13 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
 {
 }
 
-static void
-RenderScene(const grapho::camera::Camera& camera,
-            const RenderingEnv& env,
-            const gltfjson::Root& root,
-            const gltfjson::Bin& bin,
-            std::span<const boneskin::NodeMesh> nodeMeshes,
-            const ViewSettings& settings)
+void
+SceneRenderer::RenderScene(const grapho::camera::Camera& camera,
+                           const RenderingEnv& env,
+                           const gltfjson::Root& root,
+                           const gltfjson::Bin& bin,
+                           std::span<const boneskin::NodeMesh> nodeMeshes,
+                           const ViewSettings& settings)
 {
   if (nodeMeshes.size()) {
     glDisable(GL_DEPTH_TEST);
@@ -201,22 +200,17 @@ RenderScene(const grapho::camera::Camera& camera,
   }
 }
 
-template<typename T>
-static void
-RenderFrame(grapho::camera::Camera& camera,
-            const grapho::camera::Viewport& viewport,
-            const grapho::camera::MouseState& mouse,
-            const RenderingEnv& env,
-            const gltfjson::Root& gltf,
-            const gltfjson::Bin& bin,
-            std::span<boneskin::NodeState> nodestates,
-            const ViewSettings& settings,
-            const std::shared_ptr<Gizmo>& gizmo,
-            std::span<const DirectX::XMFLOAT4X4> matrices,
-            const std::shared_ptr<T>& scene,
-            const std::shared_ptr<recti::Screen>& screen,
-            std::optional<uint32_t> selected,
-            std::optional<uint32_t> hover)
+void
+SceneRenderer::RenderFrame(grapho::camera::Camera& camera,
+                           const RenderingEnv& env,
+                           const gltfjson::Root& gltf,
+                           const gltfjson::Bin& bin,
+                           std::span<boneskin::NodeState> nodestates,
+                           const ViewSettings& settings,
+                           const std::shared_ptr<Gizmo>& gizmo,
+                           std::span<const DirectX::XMFLOAT4X4> matrices,
+                           std::optional<uint32_t> selected,
+                           std::optional<uint32_t> hover)
 {
   glr::ClearRendertarget(camera, env);
 
@@ -252,7 +246,35 @@ RenderFrame(grapho::camera::Camera& camera,
   }
   gizmo->Render(camera, settings.ShowCuber, settings.ShowLine);
   gizmo->Clear();
+}
 
+template<typename T>
+static void
+RenderFrame(grapho::camera::Camera& camera,
+            const grapho::camera::Viewport& viewport,
+            const grapho::camera::MouseState& mouse,
+            const RenderingEnv& env,
+            const gltfjson::Root& gltf,
+            const gltfjson::Bin& bin,
+            std::span<boneskin::NodeState> nodestates,
+            const ViewSettings& settings,
+            const std::shared_ptr<Gizmo>& gizmo,
+            std::span<const DirectX::XMFLOAT4X4> matrices,
+            const std::shared_ptr<T>& scene,
+            const std::shared_ptr<recti::Screen>& screen,
+            std::optional<uint32_t> selected,
+            std::optional<uint32_t> hover)
+{
+  SceneRenderer::RenderFrame(camera,
+                             env,
+                             gltf,
+                             bin,
+                             nodestates,
+                             settings,
+                             gizmo,
+                             matrices,
+                             selected,
+                             hover);
   // manipulator
   auto manipulated = ScreenGizmo(camera, mouse, scene, screen, selected, hover);
   if (!manipulated && camera.InViewport(mouse) && mouse.LeftDown) {
@@ -378,20 +400,20 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
   auto hover = Hover(*m_camera, mouse, scene->ShapeMatrices());
 
   auto nodestates = scene->NodeStates();
-  RenderFrame(*m_camera,
-              viewport,
-              mouse,
-              *m_env,
-              *scene->m_gltf,
-              scene->m_bin,
-              nodestates,
-              *m_settings,
-              m_gizmo,
-              scene->ShapeMatrices(),
-              scene,
-              m_screen,
-              scene->SelectedIndex(),
-              hover);
+  ::glr::RenderFrame(*m_camera,
+                     viewport,
+                     mouse,
+                     *m_env,
+                     *scene->m_gltf,
+                     scene->m_bin,
+                     nodestates,
+                     *m_settings,
+                     m_gizmo,
+                     scene->ShapeMatrices(),
+                     scene,
+                     m_screen,
+                     scene->SelectedIndex(),
+                     hover);
 }
 
 void
@@ -419,20 +441,20 @@ SceneRenderer::RenderRuntime(
   }
 
   // render scene
-  RenderFrame(*m_camera,
-              viewport,
-              mouse,
-              *m_env,
-              *runtime->m_base->m_gltf,
-              runtime->m_base->m_bin,
-              nodestates,
-              *m_settings,
-              m_gizmo,
-              runtime->ShapeMatrices(),
-              runtime,
-              m_screen,
-              runtime->m_base->SelectedIndex(),
-              hover);
+  ::glr::RenderFrame(*m_camera,
+                     viewport,
+                     mouse,
+                     *m_env,
+                     *runtime->m_base->m_gltf,
+                     runtime->m_base->m_bin,
+                     nodestates,
+                     *m_settings,
+                     m_gizmo,
+                     runtime->ShapeMatrices(),
+                     runtime,
+                     m_screen,
+                     runtime->m_base->SelectedIndex(),
+                     hover);
 }
 
 } // namespace

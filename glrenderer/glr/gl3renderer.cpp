@@ -8,8 +8,8 @@
 #include <DirectXMath.h>
 // #include <Remotery.h>
 #include <boneskin/deformed_mesh.h>
+#include <boneskin/meshdeformer.h>
 #include <boneskin/skin.h>
-#include <boneskin/skinning_manager.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <cuber/mesh.h>
 #include <gltfjson/gltf_typing_vrm0.h>

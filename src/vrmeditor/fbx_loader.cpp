@@ -1,7 +1,7 @@
 #include "fbx_loader.h"
 #include <DirectXMath.h>
 #include <boneskin/base_mesh.h>
-#include <boneskin/skinning_manager.h>
+#include <boneskin/meshdeformer.h>
 #include <ufbx.h>
 #include <vrm/node.h>
 

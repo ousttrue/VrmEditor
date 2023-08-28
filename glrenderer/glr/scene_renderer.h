@@ -1,4 +1,6 @@
 #pragma once
+#include <boneskin/meshdeformer.h>
+#include <gltfjson.h>
 #include <grapho/camera/camera.h>
 #include <span>
 #include <vector>
@@ -48,6 +50,24 @@ struct SceneRenderer
 
   SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
                 const std::shared_ptr<ViewSettings>& settings);
+
+  static void RenderScene(const grapho::camera::Camera& camera,
+                          const RenderingEnv& env,
+                          const gltfjson::Root& root,
+                          const gltfjson::Bin& bin,
+                          std::span<const boneskin::NodeMesh> nodeMeshes,
+                          const ViewSettings& settings);
+
+  static void RenderFrame(grapho::camera::Camera& camera,
+                          const RenderingEnv& env,
+                          const gltfjson::Root& gltf,
+                          const gltfjson::Bin& bin,
+                          std::span<boneskin::NodeState> nodestates,
+                          const ViewSettings& settings,
+                          const std::shared_ptr<Gizmo>& gizmo,
+                          std::span<const DirectX::XMFLOAT4X4> matrices,
+                          std::optional<uint32_t> selected,
+                          std::optional<uint32_t> hover);
 
   void RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
                     const grapho::camera::Viewport& viewport,

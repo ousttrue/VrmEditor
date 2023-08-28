@@ -23,7 +23,7 @@
 #include "view/lighting.h"
 #include "view/mesh_gui.h"
 #include "view/scene_preview.h"
-#include <boneskin/skinning_manager.h>
+#include <boneskin/meshdeformer.h>
 #include <glr/rendering_env.h>
 #include <grapho/gl3/error_check.h>
 #include <grapho/gl3/texture.h>
