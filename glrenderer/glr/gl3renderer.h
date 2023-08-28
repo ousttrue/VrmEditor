@@ -26,6 +26,7 @@ struct LineVertex;
 };
 namespace boneskin {
 struct NodeMesh;
+class MeshDeformer;
 }
 
 namespace glr {
@@ -59,6 +60,7 @@ RenderPasses(std::span<const RenderPass> passes,
              const RenderingEnv& env,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
+             boneskin::MeshDeformer& meshDeformer,
              std::span<const boneskin::NodeMesh> meshNodes);
 
 // clear current render target

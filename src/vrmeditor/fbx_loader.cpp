@@ -32,7 +32,9 @@ struct FbxLoaderImpl
     }
   }
 
-  std::shared_ptr<libvrm::GltfRoot> Load(const std::filesystem::path& path)
+  std::tuple<std::shared_ptr<libvrm::GltfRoot>,
+             std::shared_ptr<boneskin::MeshDeformer>>
+  Load(const std::filesystem::path& path)
   {
     ufbx_load_opts opts = { 0 }; // Optional, pass NULL for defaults
     m_scene = ufbx_load_file(path.string().c_str(), &opts, &m_error);
@@ -42,11 +44,11 @@ struct FbxLoaderImpl
     auto ptr = std::make_shared<libvrm::GltfRoot>();
     ptr->InitializeGltf();
 
-    boneskin::SkinningManager::Instance().Release();
+    auto meshDeform = std::make_shared<boneskin::MeshDeformer>();
     for (size_t i = 0; i < m_scene->meshes.count; ++i) {
       auto mesh = m_scene->meshes.data[i];
       auto pMesh = std::make_shared<boneskin::BaseMesh>();
-      boneskin::SkinningManager::Instance().PushBaseMesh(pMesh);
+      meshDeform->PushBaseMesh(pMesh);
 
       // auto num_instances = mesh->instances.count;
       // auto instance_node_indices = alloc(int32_t, mesh->instances.count);
@@ -149,7 +151,7 @@ struct FbxLoaderImpl
       }
     }
 
-    return ptr;
+    return { ptr, meshDeform };
   }
 };
 
@@ -163,7 +165,8 @@ FbxLoader::~FbxLoader()
   delete m_impl;
 }
 
-std::shared_ptr<libvrm::GltfRoot>
+std::tuple<std::shared_ptr<libvrm::GltfRoot>,
+           std::shared_ptr<boneskin::MeshDeformer>>
 FbxLoader::Load(const std::filesystem::path& path)
 {
   return m_impl->Load(path);

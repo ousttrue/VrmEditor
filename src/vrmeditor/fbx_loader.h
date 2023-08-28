@@ -1,4 +1,5 @@
 #pragma once
+#include <boneskin/meshdeformer.h>
 #include <filesystem>
 #include <string>
 #include <vrm/gltfroot.h>
@@ -10,6 +11,8 @@ class FbxLoader
 public:
   FbxLoader();
   ~FbxLoader();
-  std::shared_ptr<libvrm::GltfRoot> Load(const std::filesystem::path& path);
+  std::tuple<std::shared_ptr<libvrm::GltfRoot>,
+             std::shared_ptr<boneskin::MeshDeformer>>
+  Load(const std::filesystem::path& path);
   std::string Error() const;
 };

@@ -47,6 +47,7 @@ struct SceneRenderer
   std::shared_ptr<Gizmo> m_gizmo;
   std::shared_ptr<recti::Screen> m_screen;
   std::shared_ptr<grapho::camera::Camera> m_camera;
+  mutable boneskin::MeshDeformer m_meshDeformer;
 
   SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
                 const std::shared_ptr<ViewSettings>& settings);
@@ -55,6 +56,7 @@ struct SceneRenderer
                           const RenderingEnv& env,
                           const gltfjson::Root& root,
                           const gltfjson::Bin& bin,
+                          boneskin::MeshDeformer& meshdeformer,
                           std::span<const boneskin::NodeMesh> nodeMeshes,
                           const ViewSettings& settings);
 
@@ -63,6 +65,7 @@ struct SceneRenderer
                           const gltfjson::Root& gltf,
                           const gltfjson::Bin& bin,
                           std::span<boneskin::NodeState> nodestates,
+                          boneskin::MeshDeformer& meshdeformer,
                           const ViewSettings& settings,
                           const std::shared_ptr<Gizmo>& gizmo,
                           std::span<const DirectX::XMFLOAT4X4> matrices,

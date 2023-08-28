@@ -213,10 +213,12 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
   return ptr;
 }
 
+MeshDeformer::MeshDeformer(){}
+
 std::shared_ptr<BaseMesh>
-SkinningManager::GetOrCreateBaseMesh(const gltfjson::Root& root,
-                                     const gltfjson::Bin& bin,
-                                     std::optional<uint32_t> mesh)
+MeshDeformer::GetOrCreateBaseMesh(const gltfjson::Root& root,
+                                  const gltfjson::Bin& bin,
+                                  std::optional<uint32_t> mesh)
 {
   if (!mesh) {
     return {};
@@ -236,9 +238,8 @@ SkinningManager::GetOrCreateBaseMesh(const gltfjson::Root& root,
 }
 
 std::shared_ptr<DeformedMesh>
-SkinningManager::GetOrCreateDeformedMesh(
-  uint32_t mesh,
-  const std::shared_ptr<BaseMesh>& baseMesh)
+MeshDeformer::GetOrCreateDeformedMesh(uint32_t mesh,
+                                      const std::shared_ptr<BaseMesh>& baseMesh)
 {
   auto found = m_deformMap.find(mesh);
   if (found != m_deformMap.end()) {
@@ -251,9 +252,9 @@ SkinningManager::GetOrCreateDeformedMesh(
 }
 
 std::shared_ptr<Skin>
-SkinningManager::GetOrCreaeSkin(const gltfjson::Root& root,
-                                const gltfjson::Bin& bin,
-                                std::optional<uint32_t> skinId)
+MeshDeformer::GetOrCreaeSkin(const gltfjson::Root& root,
+                             const gltfjson::Bin& bin,
+                             std::optional<uint32_t> skinId)
 {
   if (!skinId) {
     return {};
@@ -357,9 +358,9 @@ ApplySkinning(DeformedMesh& deformed,
 }
 
 std::span<const NodeMesh>
-SkinningManager::ProcessSkin(const gltfjson::Root& root,
-                             const gltfjson::Bin& bin,
-                             std::span<const NodeState> nodes)
+MeshDeformer::ProcessSkin(const gltfjson::Root& root,
+                          const gltfjson::Bin& bin,
+                          std::span<const NodeState> nodes)
 {
   assert(root.Nodes.size() == nodes.size());
   m_meshNodes.clear();
@@ -369,19 +370,14 @@ SkinningManager::ProcessSkin(const gltfjson::Root& root,
     auto& nodeState = nodes[i];
     if (auto meshId = gltfNode.MeshId()) {
       m_meshNodes.push_back({ i, *meshId, nodeState.Matrix });
-      if (auto baseMesh =
-            boneskin::SkinningManager::Instance().GetOrCreateBaseMesh(
-              root, bin, meshId)) {
+      if (auto baseMesh = GetOrCreateBaseMesh(root, bin, meshId)) {
 
-        auto deformed =
-          boneskin::SkinningManager::Instance().GetOrCreateDeformedMesh(
-            *meshId, baseMesh);
+        auto deformed = GetOrCreateDeformedMesh(*meshId, baseMesh);
         if (deformed->Vertices.size()) {
           // morph
           ApplyMorphTarget(*deformed, *baseMesh, nodeState.MorphMap);
 
-          if (auto skin = boneskin::SkinningManager::Instance().GetOrCreaeSkin(
-                root, bin, gltfNode.SkinId())) {
+          if (auto skin = GetOrCreaeSkin(root, bin, gltfNode.SkinId())) {
             // update skinnning
             skin->CurrentMatrices.resize(skin->BindMatrices.size());
 

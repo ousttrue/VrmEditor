@@ -4,7 +4,9 @@
 #include "node_state.h"
 #include "skin.h"
 #include <DirectXMath.h>
+#include <memory>
 #include <span>
+#include <stdint.h>
 
 namespace boneskin {
 
@@ -15,23 +17,17 @@ struct NodeMesh
   DirectX::XMFLOAT4X4 Matrix;
 };
 
-class SkinningManager
+class MeshDeformer
 {
   std::unordered_map<uint32_t, std::shared_ptr<BaseMesh>> m_baseMap;
   std::unordered_map<uint32_t, std::shared_ptr<DeformedMesh>> m_deformMap;
   std::unordered_map<uint32_t, std::shared_ptr<Skin>> m_skinMap;
   std::vector<NodeMesh> m_meshNodes;
 
-  SkinningManager() {}
-
 public:
-  static SkinningManager& Instance()
-  {
-    static SkinningManager s_instance;
-    return s_instance;
-  }
-  SkinningManager(const SkinningManager&) = delete;
-  SkinningManager& operator=(const SkinningManager&) = delete;
+  MeshDeformer();
+  MeshDeformer(const MeshDeformer&) = delete;
+  MeshDeformer& operator=(const MeshDeformer&) = delete;
 
   void Release()
   {

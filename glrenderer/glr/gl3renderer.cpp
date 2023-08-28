@@ -464,6 +464,7 @@ public:
                     const RenderingEnv& env,
                     const gltfjson::Root& root,
                     const gltfjson::Bin& bin,
+                    boneskin::MeshDeformer& meshDeformer,
                     std::span<const boneskin::NodeMesh> meshNodes)
   {
     // rmt_ScopedCPUSample(RenderPasses, 0);
@@ -476,13 +477,11 @@ public:
         auto gltfNode = root.Nodes[nodeId];
         if (auto meshId = gltfNode.MeshId()) {
           if (auto baseMesh =
-                boneskin::SkinningManager::Instance().GetOrCreateBaseMesh(
-                  root, bin, meshId)) {
+                meshDeformer.GetOrCreateBaseMesh(root, bin, meshId)) {
             auto vao = GetOrCreateMesh(*meshId, baseMesh);
 
             auto deformed =
-              boneskin::SkinningManager::Instance().GetOrCreateDeformedMesh(
-                *meshId, baseMesh);
+              meshDeformer.GetOrCreateDeformedMesh(*meshId, baseMesh);
 
             // auto vao = GetOrCreateMesh(*meshId, baseMesh);
             vao->slots_[0]->Upload(deformed->Vertices.size() *
@@ -735,10 +734,11 @@ RenderPasses(std::span<const RenderPass> passes,
              const RenderingEnv& env,
              const gltfjson::Root& root,
              const gltfjson::Bin& bin,
+             boneskin::MeshDeformer& meshDeformer,
              std::span<const boneskin::NodeMesh> meshNodes)
 {
   Gl3Renderer::Instance().RenderPasses(
-    passes, camera, env, root, bin, meshNodes);
+    passes, camera, env, root, bin, meshDeformer, meshNodes);
 }
 
 void

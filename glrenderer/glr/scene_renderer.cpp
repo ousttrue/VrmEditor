@@ -174,6 +174,7 @@ SceneRenderer::RenderScene(const grapho::camera::Camera& camera,
                            const RenderingEnv& env,
                            const gltfjson::Root& root,
                            const gltfjson::Bin& bin,
+                           boneskin::MeshDeformer& meshdeformer,
                            std::span<const boneskin::NodeMesh> nodeMeshes,
                            const ViewSettings& settings)
 {
@@ -196,7 +197,8 @@ SceneRenderer::RenderScene(const grapho::camera::Camera& camera,
       m_renderpass.push_back(RenderPass::Transparent);
     }
 
-    glr::RenderPasses(m_renderpass, camera, env, root, bin, nodeMeshes);
+    glr::RenderPasses(
+      m_renderpass, camera, env, root, bin, meshdeformer, nodeMeshes);
   }
 }
 
@@ -206,6 +208,7 @@ SceneRenderer::RenderFrame(grapho::camera::Camera& camera,
                            const gltfjson::Root& gltf,
                            const gltfjson::Bin& bin,
                            std::span<boneskin::NodeState> nodestates,
+                           boneskin::MeshDeformer& meshdeformer,
                            const ViewSettings& settings,
                            const std::shared_ptr<Gizmo>& gizmo,
                            std::span<const DirectX::XMFLOAT4X4> matrices,
@@ -215,9 +218,8 @@ SceneRenderer::RenderFrame(grapho::camera::Camera& camera,
   glr::ClearRendertarget(camera, env);
 
   if (nodestates.size()) {
-    auto nodeMeshes =
-      boneskin::SkinningManager::Instance().ProcessSkin(gltf, bin, nodestates);
-    RenderScene(camera, env, gltf, bin, nodeMeshes, settings);
+    auto nodeMeshes = meshdeformer.ProcessSkin(gltf, bin, nodestates);
+    RenderScene(camera, env, gltf, bin, meshdeformer, nodeMeshes, settings);
   }
 
   const int SELECTED = 9;
@@ -257,6 +259,7 @@ RenderFrame(grapho::camera::Camera& camera,
             const gltfjson::Root& gltf,
             const gltfjson::Bin& bin,
             std::span<boneskin::NodeState> nodestates,
+            boneskin::MeshDeformer& meshdeformer,
             const ViewSettings& settings,
             const std::shared_ptr<Gizmo>& gizmo,
             std::span<const DirectX::XMFLOAT4X4> matrices,
@@ -270,6 +273,7 @@ RenderFrame(grapho::camera::Camera& camera,
                              gltf,
                              bin,
                              nodestates,
+                             meshdeformer,
                              settings,
                              gizmo,
                              matrices,
@@ -407,6 +411,7 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
                      *scene->m_gltf,
                      scene->m_bin,
                      nodestates,
+                     m_meshDeformer,
                      *m_settings,
                      m_gizmo,
                      scene->ShapeMatrices(),
@@ -448,6 +453,7 @@ SceneRenderer::RenderRuntime(
                      *runtime->m_base->m_gltf,
                      runtime->m_base->m_bin,
                      nodestates,
+                     m_meshDeformer,
                      *m_settings,
                      m_gizmo,
                      runtime->ShapeMatrices(),

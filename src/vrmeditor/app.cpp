@@ -80,8 +80,6 @@ public:
     SceneState::GetInstance().m_setCallbacks.push_back(
       [=](const std::shared_ptr<libvrm::RuntimeScene>& runtime) {
         glr::Release();
-        boneskin::SkinningManager::Instance().Release();
-
         std::weak_ptr<libvrm::RuntimeScene> weak = runtime;
         humanpose::HumanPoseStream::Instance().HumanPoseChanged.push_back(
           [weak](const auto& pose) {
@@ -264,7 +262,8 @@ public:
   bool LoadFbx(const std::filesystem::path& path)
   {
     FbxLoader fbx;
-    if (auto gltf = fbx.Load(path)) {
+    auto [gltf, deform] = fbx.Load(path);
+    if (gltf) {
       PLOG_DEBUG << "ufbx success: " << path.string();
       SceneState::GetInstance().SetGltf(gltf);
       return false;
