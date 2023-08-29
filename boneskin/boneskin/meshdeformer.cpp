@@ -273,66 +273,6 @@ MeshDeformer::GetOrCreaeSkin(const gltfjson::Root& root,
   }
 }
 
-static void
-SkinningVertex(Vertex* dst,
-               // const Vertex& src,
-               const DirectX::XMVECTOR& pos,
-               const DirectX::XMVECTOR& normal,
-               float w,
-               std::span<const DirectX::XMFLOAT4X4> matrices,
-               uint16_t matrixIndex)
-{
-  if (w > 0) {
-    if (matrixIndex < matrices.size()) {
-      DirectX::XMFLOAT3 store;
-      {
-        auto newPos = DirectX::XMVector3Transform(
-          pos, DirectX::XMLoadFloat4x4(&matrices[matrixIndex]));
-        DirectX::XMStoreFloat3(&store, newPos);
-        dst->Position += (store * w);
-      }
-      {
-        auto newNormal = DirectX::XMVector3Transform(
-          normal, DirectX::XMLoadFloat4x4(&matrices[matrixIndex]));
-        DirectX::XMStoreFloat3(&store, newNormal);
-        dst->Normal += (store * w);
-      }
-    } else {
-      // error
-    }
-  }
-}
-
-static void
-ApplySkinning(DeformedMesh& deformed,
-              std::span<const JointBinding> bindings,
-              std::span<const DirectX::XMFLOAT4X4> skinningMatrices)
-{
-  if (skinningMatrices.size()) {
-    for (int i = 0; i < deformed.Vertices.size(); ++i) {
-      auto src = deformed.Vertices[i];
-      auto pos = DirectX::XMLoadFloat3(&src.Position);
-      auto normal = DirectX::XMLoadFloat3(&src.Normal);
-      auto& dst = deformed.Vertices[i];
-      dst.Position = { 0, 0, 0 };
-      dst.Normal = { 0, 0, 0 };
-      auto binding = bindings[i];
-      if (auto w = binding.Weights.x)
-        SkinningVertex(
-          &dst, pos, normal, w, skinningMatrices, binding.Joints.X);
-      if (auto w = binding.Weights.y)
-        SkinningVertex(
-          &dst, pos, normal, w, skinningMatrices, binding.Joints.Y);
-      if (auto w = binding.Weights.z)
-        SkinningVertex(
-          &dst, pos, normal, w, skinningMatrices, binding.Joints.Z);
-      if (auto w = binding.Weights.w)
-        SkinningVertex(
-          &dst, pos, normal, w, skinningMatrices, binding.Joints.W);
-    }
-  }
-}
-
 std::span<const NodeMesh>
 MeshDeformer::ProcessSkin(const gltfjson::Root& root,
                           const gltfjson::Bin& bin,
@@ -372,8 +312,8 @@ MeshDeformer::ProcessSkin(const gltfjson::Root& root,
                   rootInverse);
             }
 
-            ApplySkinning(
-              *deformed, baseMesh->m_bindings, skin->CurrentMatrices);
+            deformed->ApplySkinning(baseMesh->m_bindings,
+                                    skin->CurrentMatrices);
           }
         }
       }
