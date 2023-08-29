@@ -51,46 +51,112 @@ struct MeshGuiImpl
     m_selected = selected;
   }
 
+  grapho::imgui::SplitterObject m_outer;
+  grapho::imgui::SplitterObject m_inner;
+
+  const int no_scroll =
+    (ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
   void ShowGui()
   {
     if (!m_root) {
       return;
     }
 
+    auto size = ImGui::GetContentRegionAvail();
+    auto [o1, o2] = m_outer.SplitHorizontal(size, 0.3f);
+
+    ImGui::BeginChild("1", ImVec2(-1, o1), true);
+    _MeshSelector(o1);
+    ImGui::EndChild();
+
+    ImGui::BeginChild("2", ImVec2(-1, o2), true, no_scroll);
     {
-      std::array<const char*, 3> cols = {
-        "Index",
-        "Name",
-        "Prims",
-      };
+      auto [i1, i2] = m_inner.SplitHorizontal({ -1, o2 });
+      ImGui::BeginChild("21", ImVec2(-1, i1), true);
 
-      if (grapho::imgui::BeginTableColumns("##MeshTable", cols, { 0, 200 })) {
-        for (int i = 0; i < m_root->m_gltf->Meshes.size(); ++i) {
-          auto mesh = m_root->m_gltf->Meshes[i];
-          ImGui::TableNextRow();
-          // 0
-          ImGui::TableNextColumn();
-          ImGui::TextUnformatted(m_buf.Printf("%d", i));
-          // 1
-          ImGui::TableNextColumn();
-          if (ImGui::Selectable((const char*)mesh.NameString().c_str(),
-                                i == m_selected)) {
-            Select(i);
-          }
-          // 2
-          ImGui::TableNextColumn();
-          ImGui::TextUnformatted(m_buf.Printf("%d", mesh.Primitives.size()));
+      if (ImGui::BeginTabBar("HierarchyTabs")) {
+        if (ImGui::BeginTabItem("MorphTargets")) {
+          _MorphList();
+          ImGui::EndTabItem();
         }
+        if (ImGui::BeginTabItem("Primitives")) {
+          _PrimList();
+          ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+      }
 
-        ImGui::EndTable();
+      ImGui::EndChild();
+
+      ImGui::BeginChild("22", ImVec2(-1, i2), true, no_scroll);
+      _View({ size.x, i2 });
+      ImGui::EndChild();
+    }
+    ImGui::EndChild();
+  }
+
+  void _MeshSelector(float o1)
+  {
+    std::array<const char*, 3> cols = {
+      "Index",
+      "Name",
+      "Prims",
+    };
+
+    if (grapho::imgui::BeginTableColumns("##MeshTable", cols, { 0, o1 })) {
+      for (int i = 0; i < m_root->m_gltf->Meshes.size(); ++i) {
+        auto mesh = m_root->m_gltf->Meshes[i];
+        ImGui::TableNextRow();
+        // 0
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(m_buf.Printf("%d", i));
+        // 1
+        ImGui::TableNextColumn();
+        if (ImGui::Selectable((const char*)mesh.NameString().c_str(),
+                              i == m_selected)) {
+          Select(i);
+        }
+        // 2
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(m_buf.Printf("%d", mesh.Primitives.size()));
+      }
+
+      ImGui::EndTable();
+    }
+  }
+
+  void _MorphList()
+  {
+    if (m_selected >= 0 || m_selected <= m_root->m_gltf->Meshes.size()) {
+      auto mesh = m_root->m_gltf->Meshes[m_selected];
+      int morph_targets = -1;
+      for (int i = 0; i < mesh.Primitives.size(); ++i) {
+        auto prim = mesh.Primitives[i];
+        if (i == 0) {
+          morph_targets = prim.Targets.size();
+        } else {
+          if (prim.Targets.size() != morph_targets) {
+            // Invalid Error morph targets
+            morph_targets = -1;
+          }
+        }
+      }
+      if (morph_targets < 0) {
+        // Error
+      } else if (morph_targets > 0) {
+        // show sliders
+        for (int i = 0; i < morph_targets; ++i) {
+          float value = 0;
+          ImGui::SliderFloat(m_buf.Printf("morph %d", i), &value, 0, 1);
+        }
       }
     }
+  }
 
-    if (m_selected < 0 || m_selected >= m_root->m_gltf->Meshes.size()) {
-      return;
-    }
-
-    {
+  void _PrimList()
+  {
+    if (m_selected >= 0 || m_selected <= m_root->m_gltf->Meshes.size()) {
       auto mesh = m_root->m_gltf->Meshes[m_selected];
 
       std::array<const char*, 4> cols = {
@@ -100,8 +166,7 @@ struct MeshGuiImpl
         "MorphTargets",
       };
 
-      int morph_targets = -1;
-      if (grapho::imgui::BeginTableColumns("##PrimTable", cols, { 0, 200 })) {
+      if (grapho::imgui::BeginTableColumns("##PrimTable", cols, { 0, 0 })) {
         for (int i = 0; i < mesh.Primitives.size(); ++i) {
           auto prim = mesh.Primitives[i];
           ImGui::TableNextRow();
@@ -123,34 +188,15 @@ struct MeshGuiImpl
           // 3
           ImGui::TableNextColumn();
           ImGui::TextUnformatted(m_buf.Printf("%zu", prim.Targets.size()));
-          if (i == 0) {
-            morph_targets = prim.Targets.size();
-          } else {
-            if (prim.Targets.size() != morph_targets) {
-              // Invalid Error morph targets
-              morph_targets = -1;
-            }
-          }
         }
         ImGui::EndTable();
-      }
-
-      if (morph_targets < 0) {
-        // Error
-      } else if (morph_targets > 0) {
-        // show sliders
-        for (int i = 0; i < morph_targets; ++i) {
-          float value = 0;
-          ImGui::SliderFloat(m_buf.Printf("morph %d", i), &value, 0, 1);
-        }
       }
     }
   }
 
-  void ShowView()
+  void _View(const ImVec2& size)
   {
     auto pos = ImGui::GetCursorScreenPos();
-    auto size = ImGui::GetContentRegionAvail();
     grapho::camera::Viewport vp{ pos.x, pos.y, size.x, size.y };
     float color[4]{ 0, 0, 0, 1 };
     m_fbo->ShowFbo(vp,
@@ -215,13 +261,9 @@ MeshGui::~MeshGui()
 void
 MeshGui::ShowGui()
 {
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   m_impl->ShowGui();
-}
-
-void
-MeshGui::ShowView()
-{
-  m_impl->ShowView();
+  ImGui::PopStyleVar();
 }
 
 void
