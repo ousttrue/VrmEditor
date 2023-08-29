@@ -80,6 +80,21 @@ AddIndices(const gltfjson::Root& root,
   }
 }
 
+// extras.targetNames
+static gltfjson::tree::NodePtr
+TargetNames(gltfjson::tree::NodePtr extras)
+{
+  if (!extras) {
+    return {};
+  }
+  auto targetNames = extras->Get(u8"targetNames");
+  if (!targetNames) {
+    return {};
+  }
+
+  return targetNames->Array() ? targetNames : nullptr;
+}
+
 static std::expected<std::shared_ptr<boneskin::BaseMesh>, std::string>
 ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
 {
@@ -88,7 +103,13 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
   ptr->Name = mesh.NameString();
   std::optional<gltfjson::MeshPrimitiveAttributes> lastAtributes;
 
+  auto targetNames = TargetNames(mesh.Extras());
+
   for (auto prim : mesh.Primitives) {
+    if (!targetNames) {
+      targetNames = TargetNames(prim.m_json->Get(u8"extras"));
+    }
+
     if (prim.Attributes() == lastAtributes) {
       // for vrm shared vertex buffer
       if (auto expected = AddIndices(root, bin, 0, ptr.get(), prim)) {
@@ -153,6 +174,14 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
         for (int i = 0; i < targets.size(); ++i) {
           auto target = targets[i];
           auto morph = ptr->getOrCreateMorphTarget(i);
+          if (targetNames) {
+            if (auto array = targetNames->Array()) {
+              if (i < array->size()) {
+                auto name = (*array)[i]->U8String();
+                morph->Name = gltfjson::from_u8(name);
+              }
+            }
+          }
           // std::cout << target << std::endl;
           std::span<const DirectX::XMFLOAT3> positions;
           if (auto accessor = bin.GetAccessorBytes<DirectX::XMFLOAT3>(

@@ -27,6 +27,9 @@ struct MeshGuiImpl
   std::shared_ptr<ImFbo> m_fbo;
   std::shared_ptr<boneskin::MeshDeformer> m_deformer;
 
+  std::shared_ptr<boneskin::BaseMesh> m_baseMesh;
+  std::unordered_map<uint32_t, float> m_morphMap;
+
   MeshGuiImpl()
   {
     m_fbo = ImFbo::Create();
@@ -49,6 +52,9 @@ struct MeshGuiImpl
       return;
     }
     m_selected = selected;
+    m_morphMap.clear();
+    m_baseMesh = m_deformer->GetOrCreateBaseMesh(
+      *m_root->m_gltf, m_root->m_bin, m_selected);
   }
 
   grapho::imgui::SplitterObject m_outer;
@@ -147,8 +153,16 @@ struct MeshGuiImpl
       } else if (morph_targets > 0) {
         // show sliders
         for (int i = 0; i < morph_targets; ++i) {
-          float value = 0;
-          ImGui::SliderFloat(m_buf.Printf("morph %d", i), &value, 0, 1);
+          auto found = m_morphMap.find(i);
+          if (found == m_morphMap.end()) {
+            found = m_morphMap.insert({ i, 0.0f }).first;
+          }
+          ImGui::SliderFloat(
+            m_buf.Printf(
+              "[%d] %s", i, m_baseMesh->m_morphTargets[i]->Name.c_str()),
+            &found->second,
+            0,
+            1);
         }
       }
     }
@@ -231,6 +245,8 @@ struct MeshGuiImpl
         *m_root->m_gltf, m_root->m_bin, m_selected);
 
       auto deformed = m_deformer->GetOrCreateDeformedMesh(m_selected, baseMesh);
+
+      deformed->ApplyMorphTarget(*baseMesh, m_morphMap);
 
       glr::RenderPass pass[] = { glr::RenderPass::Wireframe };
       glr::RenderPasses(pass,
