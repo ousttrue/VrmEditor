@@ -213,7 +213,7 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
   return ptr;
 }
 
-MeshDeformer::MeshDeformer(){}
+MeshDeformer::MeshDeformer() {}
 
 std::shared_ptr<BaseMesh>
 MeshDeformer::GetOrCreateBaseMesh(const gltfjson::Root& root,
@@ -270,30 +270,6 @@ MeshDeformer::GetOrCreaeSkin(const gltfjson::Root& root,
     return *skin;
   } else {
     return {};
-  }
-}
-
-static void
-ApplyMorphTarget(DeformedMesh& deformed,
-                 const BaseMesh& mesh,
-                 const std::unordered_map<uint32_t, float>& morphMap)
-{
-  deformed.Vertices.assign(mesh.m_vertices.begin(), mesh.m_vertices.end());
-  if (morphMap.size()) {
-    for (int j = 0; j < mesh.m_morphTargets.size(); ++j) {
-      auto& morphtarget = mesh.m_morphTargets[j];
-      auto found = morphMap.find(j);
-      if (found != morphMap.end()) {
-        auto weight = found->second;
-        if (weight > 0) {
-          for (int i = 0; i < mesh.m_vertices.size(); ++i) {
-            // auto v = mesh.m_vertices[i];
-            deformed.Vertices[i].Position +=
-              morphtarget->Vertices[i].position * weight;
-          }
-        }
-      }
-    }
   }
 }
 
@@ -375,7 +351,7 @@ MeshDeformer::ProcessSkin(const gltfjson::Root& root,
         auto deformed = GetOrCreateDeformedMesh(*meshId, baseMesh);
         if (deformed->Vertices.size()) {
           // morph
-          ApplyMorphTarget(*deformed, *baseMesh, nodeState.MorphMap);
+          deformed->ApplyMorphTarget(*baseMesh, nodeState.MorphMap);
 
           if (auto skin = GetOrCreaeSkin(root, bin, gltfNode.SkinId())) {
             // update skinnning

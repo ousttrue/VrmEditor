@@ -3,6 +3,7 @@ boneskin_lib = static_library(
     'boneskin',
     [
         'boneskin/meshdeformer.cpp',
+        'boneskin/deformed_mesh.cpp',
     ],
     dependencies: [
         gltfjson_dep,
