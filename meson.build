@@ -49,17 +49,18 @@ simplefilewatcher_dep = dependency('simplefilewatcher')
 plog_dep = dependency('plog')
 ufbx_dep = subproject('ufbx').get_variable('ufbx_dep')
 
-# ktx_dep = dependency('ktx')
-cmake = import('cmake')
-opt_var = cmake.subproject_options()
-opt_var.add_cmake_defines(
-    {
-        'KTX_FEATURE_TOOLS': false,
-        'KTX_FEATURE_TESTS': false,
-    },
-)
-ktx_cmake = cmake.subproject('ktx', options: opt_var)
-ktx_dep = ktx_cmake.dependency('ktx')
+ktx_dep = dependency('ktx', default_options: ['cpp_std=c++17'])
+# cmake = import('cmake')
+# opt_var = cmake.subproject_options()
+# opt_var.set_override_option('cpp_std', 'c++17')
+# opt_var.add_cmake_defines(
+#     {
+#         'KTX_FEATURE_TOOLS': false,
+#         'KTX_FEATURE_TESTS': false,
+#     },
+# )
+# ktx_cmake = cmake.subproject('ktx', options: opt_var)
+# ktx_dep = ktx_cmake.dependency('ktx')
 
 subdir('recti')
 subdir('boneskin')

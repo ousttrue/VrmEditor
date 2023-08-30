@@ -15,8 +15,8 @@ struct LuaGet
   template<>
   static bool Get<bool>(lua_State* L)
   {
-    luaL_checktype(L, I+1, LUA_TBOOLEAN);
-    return lua_toboolean(L, I+1);
+    luaL_checktype(L, I + 1, LUA_TBOOLEAN);
+    return lua_toboolean(L, I + 1);
   }
 
   template<>
@@ -44,7 +44,7 @@ template<typename... AS, std::size_t... IS>
 std::tuple<AS...>
 GetTuple(lua_State* L, std::index_sequence<IS...>)
 {
-  auto t = std::make_tuple(LuaGet<IS>::Get<AS>(L)...);
+  auto t = std::make_tuple(LuaGet<IS>::template Get<AS>(L)...);
   return t;
 }
 
@@ -103,7 +103,10 @@ template<typename F, typename R, typename C, typename... AS>
 constexpr lua_CFunction
 _MakeLuaFunc(F f, R (C::*)(AS...) const)
 {
-  return _MakeLuaFunc<f>(&decltype(f)::operator(),
+  using Func = R (*)(AS...);
+  constexpr Func _p = +f;
+  constexpr auto p = (void*)_p;
+  return _MakeLuaFunc<p>(&decltype(f)::operator(),
                          std::index_sequence_for<AS...>{});
 }
 
