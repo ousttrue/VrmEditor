@@ -85,7 +85,7 @@ ShowGuiEnum(const char* label,
   }
   auto node = parentNode->Get(key);
   if (!node) {
-    node = parentNode->Add(key, 0.0f);
+    node = parentNode->SetProperty(key, 0.0f);
   }
 
   auto p = node->Ptr<float>();

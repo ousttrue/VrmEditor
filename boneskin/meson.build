@@ -7,7 +7,7 @@ boneskin_lib = static_library(
     ],
     dependencies: [
         gltfjson_dep,
-        # libvrm_dep,
+        directxmath_dep,
     ],
 )
 boneskin_dep = declare_dependency(

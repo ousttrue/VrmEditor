@@ -4,5 +4,5 @@ revision = v4.2.1
 depth = 1
 patch_directory = ktx
 
-[provide]
-ktx = ktx_dep
+; [provide]
+; ktx = ktx_dep
