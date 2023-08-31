@@ -17,34 +17,8 @@ config_dep = declare_dependency(
 )
 
 glew_dep = dependency('glew')
-# pthread_dep = dependency('pthread')
-c_compiler = meson.get_compiler('c')
-pthread_dep = c_compiler.find_library('pthread', required: true)
+ktx_deps = [glew_dep]
 
-if c_compiler.get_id() == 'msvc'
-    export_def = 'lib/internalexport.def'
-else
-    export_def = 'lib/internalexport_mingw.def'
-endif
-
-# ktx_args = [
-#     '-DBASISD_SUPPORT_FXT1=0',
-#     '-DBASISD_SUPPORT_KTX2=1',
-#     '-DBASISD_SUPPORT_KTX2_ZSTD=0',
-#     # '-DBASISU_NO_ITERATOR_DEBUG_LEVEL',
-#     '-DBASISU_SUPPORT_OPENCL=0',
-#     '-DBASISU_SUPPORT_SSE=1',
-#     # '-DDEBUG',
-#     '-DKTX_API=__declspec(dllexport)',
-#     '-DKTX_FEATURE_KTX1',
-#     '-DKTX_FEATURE_KTX2',
-#     '-DKTX_FEATURE_WRITE',
-#     '-DLIBKTX',
-#     # '-D_DEBUG',
-#     '-Dktx_EXPORTS',
-#     '/DWIN32',
-#     '/D_WINDOWS',
-# ]
 ktx_args = [
     '-DBASISD_SUPPORT_FXT1=0',
     '-DBASISD_SUPPORT_KTX2=1',
@@ -57,15 +31,38 @@ ktx_args = [
     '-DKTX_FEATURE_KTX2',
     '-DKTX_FEATURE_WRITE',
     '-DLIBKTX',
-    '-DWIN32_HAS_PTHREADS',
     '-Dktx_EXPORTS',
-    '-Wall',
-    '-Wextra',
-    '-Wno-nested-anon-types',
-    '-Wno-gnu-anonymous-struct',
-    '-Wno-pedantic',
-    '-msse4.1',
 ]
+
+c_compiler = meson.get_compiler('c')
+transcoder_args = []
+if c_compiler.get_id() == 'msvc'
+    ktx_args += [
+        '-DWIN32',
+        '-D_WINDOWS',
+    ]
+    export_def = 'lib/internalexport.def'
+else
+    ktx_args += [
+        '-DWIN32_HAS_PTHREADS',
+        '-Wall',
+        '-Wextra',
+        '-Wno-nested-anon-types',
+        '-Wno-gnu-anonymous-struct',
+        '-Wno-pedantic',
+        '-msse4.1',
+    ]
+    transcoder_args += [
+        '-Wno-sign-compare',
+        '-Wno-unused-function',
+        '-Wno-unused-variable',
+        '-Wno-class-memaccess',
+        '-Wno-maybe-uninitialized',
+    ]
+    export_def = 'lib/internalexport_mingw.def'
+    pthread_dep = c_compiler.find_library('pthread', required: true)
+    ktx_deps += pthread_dep
+endif
 
 ktx_inc = include_directories(
     'include',
@@ -182,13 +179,7 @@ ktx_srcs_astc = files(
 transcoder_lib = static_library(
     'transcoder',
     'lib/basisu/transcoder/basisu_transcoder.cpp',
-    cpp_args: [
-        '-Wno-sign-compare',
-        '-Wno-unused-function',
-        '-Wno-unused-variable',
-        '-Wno-class-memaccess',
-        '-Wno-maybe-uninitialized',
-    ] + ktx_args,
+    cpp_args: transcoder_args + ktx_args,
 )
 
 ktx_lib = shared_library(
@@ -207,7 +198,7 @@ ktx_lib = shared_library(
     ],
     install: true,
     include_directories: ktx_inc,
-    dependencies: [glew_dep, pthread_dep],
+    dependencies: ktx_deps,
     c_args: ktx_args,
     cpp_args: ktx_args,
     vs_module_defs: export_def,
@@ -216,6 +207,6 @@ ktx_lib = shared_library(
 ktx_dep = declare_dependency(
     include_directories: include_directories('include'),
     link_with: ktx_lib,
-    dependencies: [glew_dep, pthread_dep],
+    dependencies: ktx_deps,
     # compile_args: ktx_args,
 )
