@@ -44,7 +44,6 @@ if c_compiler.get_id() == 'msvc'
     export_def = 'lib/internalexport.def'
 else
     ktx_args += [
-        '-DWIN32_HAS_PTHREADS',
         '-Wall',
         '-Wextra',
         '-Wno-nested-anon-types',
@@ -60,8 +59,16 @@ else
         '-Wno-maybe-uninitialized',
     ]
     export_def = 'lib/internalexport_mingw.def'
-    pthread_dep = c_compiler.find_library('pthread', required: true)
-    ktx_deps += pthread_dep
+endif
+if host_machine.system() == 'windows'
+    if c_compiler.get_id() == 'msvc'
+    else
+        # ktx_args += [
+        #     '-DWIN32_HAS_PTHREADS',
+        # ]
+        # pthread_dep = c_compiler.find_library('pthread', required: true)
+        # ktx_deps += pthread_dep
+    endif
 endif
 
 ktx_inc = include_directories(
