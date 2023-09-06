@@ -1,4 +1,4 @@
-#include "Mat4.h"
+#include "mat4.h"
 #include "vec4.h"
 #include <cfloat>
 #include <math.h>
