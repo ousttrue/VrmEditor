@@ -48,7 +48,7 @@ executable(
         grapho_dep,
         recti_dep,
         libvrm_dep,
-        luajit_dep,
+        lua_dep,
         cuber_dep,
         imgui_filedialog_dep,
         iconfont_cpp_headers_dep,

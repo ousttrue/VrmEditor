@@ -26,10 +26,11 @@ imgui_dep = dependency('imgui', default_options: ['default_library=static'])
 grapho_dep = dependency('grapho')
 stb_dep = dependency('stb')
 # im_neo_sequencer_dep = dependency('im_neo_sequencer')
-luajit_dep = subproject(
-    'luajit',
-    default_options: ['default_library=static'],
-).get_variable('lua_dep')
+# luajit_dep = subproject(
+#     'luajit',
+#     default_options: ['default_library=static'],
+# ).get_variable('lua_dep')
+lua_dep = dependency('lua', default_options: ['default_library=static'])
 cuber_dep = dependency('cuber')
 imgui_filedialog_dep = subproject(
     'ImGuiFileDialog',
@@ -38,7 +39,7 @@ imgui_filedialog_dep = subproject(
 #     'ImFileDialog',
 # ).get_variable('im_filedialog_dep')
 iconfont_cpp_headers_dep = dependency('iconfont_cpp_headers')
-directxmath_dep = dependency('directxmath', include_type: 'system')
+directxmath_dep = dependency('directxmath')
 imnodes_dep = dependency('imnodes')
 imgui_colortextedit_dep = dependency('ImGuiColorTextEdit')
 asio_dep = dependency('asio')

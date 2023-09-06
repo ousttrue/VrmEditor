@@ -110,7 +110,8 @@ struct LuaEngineImpl
         }) },
       { nullptr, nullptr },
     };
-    luaL_register(m_lua, "vrmeditor", VrmEditorLuaModule);
+    // luaL_register(m_lua, "vrmeditor", VrmEditorLuaModule);
+    luaL_newlib(m_lua, VrmEditorLuaModule);
   }
   ~LuaEngineImpl() { lua_close(m_lua); }
 
