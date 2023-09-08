@@ -36,7 +36,7 @@
 
 namespace glr {
 
-static std::expected<std::shared_ptr<libvrm::Image>, std::string>
+static std::shared_ptr<libvrm::Image>
 ParseImage(const gltfjson::Root& root,
            const gltfjson::Bin& bin,
            const gltfjson::Image& image)
@@ -46,21 +46,25 @@ ParseImage(const gltfjson::Root& root,
     if (auto buffer_view = bin.GetBufferViewBytes(root, *bufferView)) {
       bytes = *buffer_view;
     } else {
-      return std::unexpected{ buffer_view.error() };
+      // return std::unexpected{ buffer_view.error() };
+      return {};
     }
   } else if (image.UriString().size()) {
     if (auto buffer_view = bin.Dir->GetBuffer(image.UriString())) {
       bytes = *buffer_view;
     } else {
-      return std::unexpected{ buffer_view.error() };
+      // return std::unexpected{ buffer_view.error() };
+      return {};
     }
   } else {
-    return std::unexpected{ "not bufferView nor uri" };
+    // return std::unexpected{ "not bufferView nor uri" };
+    return {};
   }
   auto name = image.NameString();
   auto ptr = std::make_shared<libvrm::Image>(name);
   if (!ptr->Load(bytes)) {
-    return std::unexpected{ "Image: fail to load" };
+    // return std::unexpected{ "Image: fail to load" };
+    return {};
   }
   return ptr;
 }
@@ -244,10 +248,10 @@ public:
     }
 
     if (auto image = ParseImage(root, bin, root.Images[*id])) {
-      m_imageMap.insert({ *id, *image });
-      return *image;
+      m_imageMap.insert({ *id, image });
+      return image;
     } else {
-      PLOG_ERROR << "image#" << *id << ": " << image.error();
+      PLOG_ERROR << "image#" << *id << ": " << "error"; //image.error();
       return {};
     }
   }

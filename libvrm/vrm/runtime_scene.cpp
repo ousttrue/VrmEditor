@@ -291,7 +291,7 @@ ParseVrm1(RuntimeScene* scene, const gltfjson::vrm1::VRMC_vrm& VRMC_vrm)
   }
 }
 
-static std::expected<std::shared_ptr<Animation>, std::string>
+static std::shared_ptr<Animation>
 ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
 {
   auto animation = root.Animations[i];
@@ -324,7 +324,8 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
                                 u8"-translation",
                               sampler.InterpolationEnum());
         } else {
-          return std::unexpected{ values.error() };
+          // return std::unexpected{ values.error() };
+          return {};
         }
       } else if (path == u8"rotation") {
         if (auto values =
@@ -335,7 +336,8 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
                            root.Nodes[node_index].NameString() + u8"-rotation",
                            sampler.InterpolationEnum());
         } else {
-          return std::unexpected{ values.error() };
+          // return std::unexpected{ values.error() };
+          return {};
         }
       } else if (path == u8"scale") {
         if (auto values =
@@ -346,7 +348,8 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
                         root.Nodes[node_index].NameString() + u8"-scale",
                         sampler.InterpolationEnum());
         } else {
-          return std::unexpected{ values.error() };
+          // return std::unexpected{ values.error() };
+          return {};
         }
       } else if (path == u8"weights") {
         if (auto values = bin.GetAccessorBytes<float>(root, output_index)) {
@@ -355,7 +358,8 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
             if (values->size() !=
                 root.Meshes[*mesh].Primitives[0].Targets.size() *
                   times->size()) {
-              return std::unexpected{ "animation-weights: size not match" };
+              // return std::unexpected{ "animation-weights: size not match" };
+              return {};
             }
             ptr->AddWeights(node_index,
                             *times,
@@ -363,16 +367,20 @@ ParseAnimation(const gltfjson::Root& root, const gltfjson::Bin& bin, int i)
                             node.NameString() + u8"-weights",
                             sampler.InterpolationEnum());
           } else {
-            return std::unexpected{ "animation-weights: no node.mesh" };
+            // return std::unexpected{ "animation-weights: no node.mesh" };
+            return {};
           }
         } else {
-          return std::unexpected{ values.error() };
+          // return std::unexpected{ values.error() };
+          return {};
         }
       } else {
-        return std::unexpected{ "animation path is not implemented: " };
+        // return std::unexpected{ "animation path is not implemented: " };
+        return {};
       }
     } else {
-      return std::unexpected{ times.error() };
+      // return std::unexpected{ times.error() };
+      return {};
     }
   }
 
@@ -403,7 +411,7 @@ RuntimeScene::Load(const std::shared_ptr<GltfRoot>& base)
 
     for (int i = 0; i < base->m_gltf->Animations.size(); ++i) {
       if (auto animation = ParseAnimation(*base->m_gltf, base->m_bin, i)) {
-        ptr->m_animations.push_back(*animation);
+        ptr->m_animations.push_back(animation);
       }
     }
 

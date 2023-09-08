@@ -4,7 +4,7 @@
 
 namespace boneskin {
 
-static std::expected<std::shared_ptr<boneskin::Skin>, std::string>
+static std::shared_ptr<boneskin::Skin>
 ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, uint32_t i)
 {
   auto skin = root.Skins[i];
@@ -19,7 +19,8 @@ ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, uint32_t i)
         root, *skin.InverseBindMatricesId())) {
     matrices = *accessor;
   } else {
-    return std::unexpected{ accessor.error() };
+    // return std::unexpected{ accessor.error() };
+    return {};
   }
   std::vector<DirectX::XMFLOAT4X4> copy;
   ptr->BindMatrices.assign(matrices.begin(), matrices.end());
@@ -30,7 +31,7 @@ ParseSkin(const gltfjson::Root& root, const gltfjson::Bin& bin, uint32_t i)
   return ptr;
 }
 
-static std::expected<bool, std::string>
+static bool
 AddIndices(const gltfjson::Root& root,
            const gltfjson::Bin& bin,
            int vertex_offset,
@@ -46,7 +47,8 @@ AddIndices(const gltfjson::Root& root,
           mesh->addSubmesh(vertex_offset, *span, prim.MaterialId());
           return true;
         } else {
-          return std::unexpected{ span.error() };
+          // return std::unexpected{ span.error() };
+          return {};
         }
       } break;
       case gltfjson::ComponentTypes::UNSIGNED_SHORT: {
@@ -54,7 +56,8 @@ AddIndices(const gltfjson::Root& root,
           mesh->addSubmesh(vertex_offset, *span, prim.MaterialId());
           return true;
         } else {
-          return std::unexpected{ span.error() };
+          // return std::unexpected{ span.error() };
+          return {};
         }
       } break;
       case gltfjson::ComponentTypes::UNSIGNED_INT: {
@@ -62,11 +65,13 @@ AddIndices(const gltfjson::Root& root,
           mesh->addSubmesh(vertex_offset, *span, prim.MaterialId());
           return true;
         } else {
-          return std::unexpected{ span.error() };
+          // return std::unexpected{ span.error() };
+          return {};
         }
       } break;
       default:
-        return std::unexpected{ "invalid index type" };
+        // return std::unexpected{ "invalid index type" };
+        return {};
     }
   } else {
     std::vector<uint32_t> indexList;
@@ -95,7 +100,7 @@ TargetNames(gltfjson::tree::NodePtr extras)
   return targetNames->Array() ? targetNames : nullptr;
 }
 
-static std::expected<std::shared_ptr<boneskin::BaseMesh>, std::string>
+static std::shared_ptr<boneskin::BaseMesh>
 ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
 {
   auto mesh = root.Meshes[meshIndex];
@@ -115,7 +120,8 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
       if (auto expected = AddIndices(root, bin, 0, ptr.get(), prim)) {
         // OK
       } else {
-        return std::unexpected{ expected.error() };
+        // return std::unexpected{ expected.error() };
+        return {};
       }
     } else {
       // extend vertex buffer
@@ -124,14 +130,16 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
             bin.GetAccessorBlock(root, *prim.Attributes()->POSITION_Id())) {
         offset = ptr->AddPosition(*positions);
       } else {
-        return std::unexpected{ positions.error() };
+        // return std::unexpected{ positions.error() };
+        return {};
       }
 
       if (auto normal = prim.Attributes()->NORMAL_Id()) {
         if (auto normals = bin.GetAccessorBlock(root, *normal)) {
           ptr->SetNormal(offset, *normals);
         } else {
-          return std::unexpected{ normals.error() };
+          // return std::unexpected{ normals.error() };
+          return {};
         }
       }
 
@@ -139,7 +147,8 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
         if (auto uv = bin.GetAccessorBlock(root, *tex0)) {
           ptr->SetUv(offset, *uv);
         } else {
-          return std::unexpected{ uv.error() };
+          // return std::unexpected{ uv.error() };
+          return {};
         }
       }
 
@@ -162,7 +171,8 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
 
               default:
                 assert(false);
-                return std::unexpected{ "JOINTS_0: not implemented" };
+                // return std::unexpected{ "JOINTS_0: not implemented" };
+                return {};
             }
           }
         }
@@ -188,7 +198,8 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
                 root, *target.POSITION_Id())) {
             positions = *accessor;
           } else {
-            return std::unexpected{ accessor.error() };
+            // return std::unexpected{ accessor.error() };
+            return {};
           }
           // if (scene->m_type == ModelType::Vrm0) {
           //   std::vector<DirectX::XMFLOAT3> copy;
@@ -206,7 +217,8 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
       if (auto expected = AddIndices(root, bin, offset, ptr.get(), prim)) {
         // OK
       } else {
-        return std::unexpected{ expected.error() };
+        // return std::unexpected{ expected.error() };
+        return {};
       }
     }
 
@@ -259,8 +271,8 @@ MeshDeformer::GetOrCreateBaseMesh(const gltfjson::Root& root,
   }
 
   if (auto base = ParseMesh(root, bin, *mesh)) {
-    m_baseMap.insert({ *mesh, *base });
-    return *base;
+    m_baseMap.insert({ *mesh, base });
+    return base;
   } else {
     return {};
   }
@@ -295,8 +307,8 @@ MeshDeformer::GetOrCreaeSkin(const gltfjson::Root& root,
   }
 
   if (auto skin = ParseSkin(root, bin, *skinId)) {
-    m_skinMap.insert({ *skinId, *skin });
-    return *skin;
+    m_skinMap.insert({ *skinId, skin });
+    return skin;
   } else {
     return {};
   }

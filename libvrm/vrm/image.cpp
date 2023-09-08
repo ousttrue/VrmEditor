@@ -7,8 +7,19 @@ namespace libvrm {
 bool
 Image::IsJpeg(std::span<const uint8_t> data)
 {
+  if(data.size()<2)
+  {
+    return false;
+  }
   static const uint8_t SOI[]{ 0xFF, 0xD8 };
-  return *((uint16_t*)data.data()) == *((uint16_t*)SOI);
+  for(int i=0; i<2; ++i)
+  {
+    if(data[i]!=SOI[i])
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool
@@ -17,7 +28,18 @@ Image::IsPng(std::span<const uint8_t> data)
   static const uint8_t PNG[]{
     0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
   };
-  return *((uint64_t*)data.data()) == *((uint64_t*)PNG);
+  if(data.size()<8)
+  {
+    return false;
+  }
+  for(int i=0; i<8; ++i)
+  {
+    if(data[i]!=PNG[i])
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool
