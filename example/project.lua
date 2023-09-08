@@ -1,3 +1,5 @@
+local vrmeditor=require('vrmeditor')
+
 ---@return string home
 ---@return boolean is_windows
 local function get_home()

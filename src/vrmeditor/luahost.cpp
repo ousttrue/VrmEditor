@@ -41,6 +41,74 @@ vrmeditor_load_imnodes_links(lua_State* L)
   return 0;
 }
 
+int
+luaopen_vrmeditor(lua_State* L)
+{
+  constexpr struct luaL_Reg VrmEditorLuaModule[] = {
+    { "imgui_load_ini", MakeLuaFunc([](const std::string& ini) {
+        Gui::Instance().LoadState(ini);
+      }) },
+    { "imnodes_load_ini", MakeLuaFunc([](const std::string& ini) {
+        humanpose::HumanPoseStream::Instance().LoadIni(ini);
+      }) },
+    { "imnodes_add_link", MakeLuaFunc([](int start, int end) {
+        humanpose::HumanPoseStream::Instance().TryCreateLink(start, end);
+      }) },
+    { "set_window_size",
+      MakeLuaFunc([](int width, int height, bool is_maximized) {
+        Platform::Instance().SetWindowSize(width, height, is_maximized);
+      }) },
+    // font settings
+    { "set_font_size", MakeLuaFunc([](int font_size) {
+        Gui::Instance().SetFontSize(font_size);
+      }) },
+    { "add_font",
+      MakeLuaFunc([](const std::filesystem::path& path,
+                     const std::string type) {
+        if (type == "emoji") {
+          return Gui::Instance().m_fonts.push_back(
+            FontSetting::EmojiFont(path));
+        } else if (type == "icon") {
+          return Gui::Instance().m_fonts.push_back(FontSetting::NerdFont(path));
+        } else {
+          return Gui::Instance().m_fonts.push_back(
+            FontSetting::JapaneseFont(path));
+        }
+      }) },
+    // asset
+    { "load_model", MakeLuaFunc([](const std::filesystem::path& path) {
+        return app::TaskLoadModel(path);
+      }) },
+    { "load_motion", MakeLuaFunc([](const std::filesystem::path& path) {
+        return humanpose::HumanPoseStream::Instance().LoadMotion(path);
+      }) },
+    { "add_asset_dir",
+      MakeLuaFunc(
+        [](const std::string& name, const std::filesystem::path& dir) {
+          app::AddAssetDir(name, dir);
+        }) },
+    { "add_human_map", vrmeditor_add_human_map },
+    { "show_dock", MakeLuaFunc([](const std::string& name, bool visible) {
+        DockSpaceManager::Instance().SetDockVisible(name, visible);
+      }) },
+    { "load_hdr", MakeLuaFunc([](const std::filesystem::path& path) {
+        app::TaskLoadHdr(path);
+      }) },
+    { "set_shaderpath", MakeLuaFunc([](const std::filesystem::path& path) {
+        app::SetShaderDir(path);
+      }) },
+    { "set_shader_chunk_path",
+      MakeLuaFunc([](const std::filesystem::path& path) {
+        glr::SetShaderChunkDir(path);
+      }) },
+    { nullptr, nullptr },
+  };
+  // luaL_register(m_lua, "vrmeditor", VrmEditorLuaModule);
+  luaL_newlib(L, VrmEditorLuaModule);
+
+  return 1;
+}
+
 struct LuaEngineImpl
 {
   lua_State* m_lua = nullptr;
@@ -49,69 +117,7 @@ struct LuaEngineImpl
     : m_lua(luaL_newstate())
   {
     luaL_openlibs(m_lua);
-
-    constexpr struct luaL_Reg VrmEditorLuaModule[] = {
-      { "imgui_load_ini", MakeLuaFunc([](const std::string& ini) {
-          Gui::Instance().LoadState(ini);
-        }) },
-      { "imnodes_load_ini", MakeLuaFunc([](const std::string& ini) {
-          humanpose::HumanPoseStream::Instance().LoadIni(ini);
-        }) },
-      { "imnodes_add_link", MakeLuaFunc([](int start, int end) {
-          humanpose::HumanPoseStream::Instance().TryCreateLink(start, end);
-        }) },
-      { "set_window_size",
-        MakeLuaFunc([](int width, int height, bool is_maximized) {
-          Platform::Instance().SetWindowSize(width, height, is_maximized);
-        }) },
-      // font settings
-      { "set_font_size", MakeLuaFunc([](int font_size) {
-          Gui::Instance().SetFontSize(font_size);
-        }) },
-      { "add_font",
-        MakeLuaFunc(
-          [](const std::filesystem::path& path, const std::string type) {
-            if (type == "emoji") {
-              return Gui::Instance().m_fonts.push_back(
-                FontSetting::EmojiFont(path));
-            } else if (type == "icon") {
-              return Gui::Instance().m_fonts.push_back(
-                FontSetting::NerdFont(path));
-            } else {
-              return Gui::Instance().m_fonts.push_back(
-                FontSetting::JapaneseFont(path));
-            }
-          }) },
-      // asset
-      { "load_model", MakeLuaFunc([](const std::filesystem::path& path) {
-          return app::TaskLoadModel(path);
-        }) },
-      { "load_motion", MakeLuaFunc([](const std::filesystem::path& path) {
-          return humanpose::HumanPoseStream::Instance().LoadMotion(path);
-        }) },
-      { "add_asset_dir",
-        MakeLuaFunc(
-          [](const std::string& name, const std::filesystem::path& dir) {
-            app::AddAssetDir(name, dir);
-          }) },
-      { "add_human_map", vrmeditor_add_human_map },
-      { "show_dock", MakeLuaFunc([](const std::string& name, bool visible) {
-          DockSpaceManager::Instance().SetDockVisible(name, visible);
-        }) },
-      { "load_hdr", MakeLuaFunc([](const std::filesystem::path& path) {
-          app::TaskLoadHdr(path);
-        }) },
-      { "set_shaderpath", MakeLuaFunc([](const std::filesystem::path& path) {
-          app::SetShaderDir(path);
-        }) },
-      { "set_shader_chunk_path",
-        MakeLuaFunc([](const std::filesystem::path& path) {
-          glr::SetShaderChunkDir(path);
-        }) },
-      { nullptr, nullptr },
-    };
-    // luaL_register(m_lua, "vrmeditor", VrmEditorLuaModule);
-    luaL_newlib(m_lua, VrmEditorLuaModule);
+    luaL_requiref(m_lua, "vrmeditor", luaopen_vrmeditor, 1);
   }
   ~LuaEngineImpl() { lua_close(m_lua); }
 
