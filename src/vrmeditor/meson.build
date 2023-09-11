@@ -64,7 +64,5 @@ executable(
         ufbx_dep,
         jsongui_dep,
     ],
-    # cpp_args: [
-    #     '-DPLOG_ENABLE_WCHAR_INPUT',
-    # ],
+    cpp_args: args,
 )

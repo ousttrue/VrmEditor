@@ -87,6 +87,7 @@ def main():
 
     # wix
     shutil.copy("vrmeditor.xml", "vrmeditor.wxs")
+    system("wix --version")
     system("wix convert vrmeditor.wxs")
     system("msbuild /restore")
     system("msbuild vrmeditor.wixproj /p:Configuration=Release")

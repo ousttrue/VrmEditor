@@ -22,6 +22,7 @@ glr_lib = static_library(
         recti_dep,
         imgui_dep,
     ],
+    cpp_args: args,
 )
 glr_dep = declare_dependency(
     include_directories: glr_inc,

@@ -1,7 +1,7 @@
 project(
     'VrmEditor',
     ['cpp', 'c'],
-    version: '1.14.6',
+    version: '1.14.7',
     license: 'MIT',
     default_options: [],
 )
@@ -65,6 +65,12 @@ ktx_dep = dependency('ktx', default_options: ['cpp_std=c++17'])
 # )
 # ktx_cmake = cmake.subproject('ktx', options: opt_var)
 # ktx_dep = ktx_cmake.dependency('ktx')
+
+args = []
+cpp = meson.get_compiler('cpp')
+if cpp.get_id() == 'clang'
+    args += '-Wno-defaulted-function-deleted'
+endif
 
 subdir('recti')
 subdir('boneskin')
