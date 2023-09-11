@@ -25,7 +25,8 @@ jobs:
           architecture: x64
       - name: WiX Installer
         run: dotnet tool install --global wix
-      - run: scripts/build.ps1
+      # - run: scripts/build.ps1
+      - run: python scripts/build.py
       - uses: actions/upload-artifact@v3
         with:
           name: artifact_windows
