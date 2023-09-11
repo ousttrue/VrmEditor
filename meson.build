@@ -1,7 +1,7 @@
 project(
     'VrmEditor',
     ['cpp', 'c'],
-    version: '1.14.4',
+    version: '1.14.5',
     license: 'MIT',
     default_options: [],
 )
@@ -30,7 +30,10 @@ stb_dep = dependency('stb')
 #     'luajit',
 #     default_options: ['default_library=static'],
 # ).get_variable('lua_dep')
-lua_dep = dependency('lua', default_options: ['default_library=static'])
+lua_dep = subproject(
+    'lua',
+    default_options: ['default_library=static'],
+).get_variable('lua_dep')
 cuber_dep = dependency('cuber')
 imgui_filedialog_dep = subproject(
     'ImGuiFileDialog',

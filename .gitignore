@@ -18,6 +18,7 @@
 !/subprojects/plog.wrap
 !/subprojects/freetype2.wrap
 !/subprojects/ktx.wrap
+!/subprojects/lua.wrap
 #
 !/subprojects/ImGuizmo
 !/subprojects/ImGuiFileDialog
