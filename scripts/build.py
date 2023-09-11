@@ -22,9 +22,10 @@ def get_package_dir(name: str) -> Optional[pathlib.Path]:
     raise Exception(f"{name} not found")
 
 
-def system(cmd: str):
+def system(cmd: str, *, isZero=True):
     LOGGER.info(cmd)
-    if subprocess.call(cmd, shell=True) != 0:
+    ret= subprocess.call(cmd, shell=True)
+    if isZero and ret!= 0:
         raise Exception(f'system: "{cmd}"')
 
 
@@ -86,9 +87,9 @@ def main():
     system("meson install -C builddir --tags runtime")
 
     # wix
-    shutil.copy("vrmeditor.xml", "vrmeditor.wxs")
     system("wix --version")
-    system("wix convert vrmeditor.wxs")
+    shutil.copy("vrmeditor.xml", "vrmeditor.wxs")
+    system("wix convert vrmeditor.wxs", isZero=False)
     system("msbuild /restore")
     system("msbuild vrmeditor.wixproj /p:Configuration=Release")
 

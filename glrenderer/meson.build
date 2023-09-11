@@ -27,6 +27,7 @@ glr_lib = static_library(
 glr_dep = declare_dependency(
     include_directories: glr_inc,
     link_with: glr_lib,
+    compile_args: args,
 )
 
 install_subdir(

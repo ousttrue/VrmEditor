@@ -5,429 +5,429 @@
         <Package Description="Test file in a VrmEditor" Comments="Simple" InstallerVersion="200" Compressed="yes" Platform="x64" />
         <WixVariable Id="WixUILicenseRtf" Value="LICENSE.rtf" />
         <Media Id="1" Cabinet="simple.cab" EmbedCab="yes" />
-        <Directory Id="TargetSrc" Name="SourceDir">
+        <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder" Name="PFiles">
                 <Directory Id="VRMEDITOR" Name="VrmEditor">
                     <Directory Id="BIN" Name="bin">
-                        <Component Id="FREETYPE_6.DLL" DiskId="1" Guid="243CF729-6BA4-4823-B2E1-BD39044F2450" Win64="yes">
+                        <Component Id="FREETYPE_6.DLL" DiskId="1" Guid="243CF729-6BA4-4823-B2E1-BD39044F2450" Bitness="always64">
                             <File Id="FREETYPE_6.DLL" Name="freetype-6.dll" Source="prefix\bin\libfreetype-6.dll" />
                         </Component>
-                        <Component Id="PNG16_16.DLL" DiskId="1" Guid="CCC8EB4D-B6FC-4A56-9792-93B64FEE54ED" Win64="yes">
+                        <Component Id="PNG16_16.DLL" DiskId="1" Guid="CCC8EB4D-B6FC-4A56-9792-93B64FEE54ED" Bitness="always64">
                             <File Id="PNG16_16.DLL" Name="png16-16.dll" Source="prefix\bin\libpng16-16.dll" />
                         </Component>
-                        <Component Id="VRMEDITOR.EXE" DiskId="1" Guid="97E757CC-1F18-427A-B3F2-46CA464541DB" Win64="yes">
+                        <Component Id="VRMEDITOR.EXE" DiskId="1" Guid="97E757CC-1F18-427A-B3F2-46CA464541DB" Bitness="always64">
                             <File Id="VRMEDITOR.EXE" Name="vrmeditor.exe" Source="prefix\bin\vrmeditor.exe" />
                         </Component>
-                        <Component Id="KTX.DLL" DiskId="1" Guid="B1B1FA24-BB96-45C0-8878-6C1B5B7B3659" Win64="yes">
+                        <Component Id="KTX.DLL" DiskId="1" Guid="B1B1FA24-BB96-45C0-8878-6C1B5B7B3659" Bitness="always64">
                             <File Id="KTX.DLL" Name="ktx.dll" Source="prefix\bin\libktx.dll" />
                         </Component>
                     </Directory>
                     <Directory Id="SHADERS" Name="shaders">
-                        <Component Id="ERROR.FRAG" DiskId="1" Guid="15BC2DFE-EFBC-405E-89A9-F210A3D6D34B" Win64="yes">
+                        <Component Id="ERROR.FRAG" DiskId="1" Guid="15BC2DFE-EFBC-405E-89A9-F210A3D6D34B" Bitness="always64">
                             <File Id="ERROR.FRAG" Name="error.frag" Source="prefix\shaders\error.frag" />
                         </Component>
-                        <Component Id="ERROR.VERT" DiskId="1" Guid="CE665C0B-D5D3-4B9A-9B60-51F826963AF9" Win64="yes">
+                        <Component Id="ERROR.VERT" DiskId="1" Guid="CE665C0B-D5D3-4B9A-9B60-51F826963AF9" Bitness="always64">
                             <File Id="ERROR.VERT" Name="error.vert" Source="prefix\shaders\error.vert" />
                         </Component>
-                        <Component Id="MTOON.FRAG" DiskId="1" Guid="526ACF75-7E15-4943-AB7D-7CAA2FE1F724" Win64="yes">
+                        <Component Id="MTOON.FRAG" DiskId="1" Guid="526ACF75-7E15-4943-AB7D-7CAA2FE1F724" Bitness="always64">
                             <File Id="MTOON.FRAG" Name="mtoon.frag" Source="prefix\shaders\mtoon.frag" />
                         </Component>
-                        <Component Id="MTOON.VERT" DiskId="1" Guid="8D6DDCAD-78ED-46D5-9C56-B54D695671CE" Win64="yes">
+                        <Component Id="MTOON.VERT" DiskId="1" Guid="8D6DDCAD-78ED-46D5-9C56-B54D695671CE" Bitness="always64">
                             <File Id="MTOON.VERT" Name="mtoon.vert" Source="prefix\shaders\mtoon.vert" />
                         </Component>
-                        <Component Id="PBR.FRAG" DiskId="1" Guid="AAA039E6-953E-4325-BFE3-BC2C954CFA33" Win64="yes">
+                        <Component Id="PBR.FRAG" DiskId="1" Guid="AAA039E6-953E-4325-BFE3-BC2C954CFA33" Bitness="always64">
                             <File Id="PBR.FRAG" Name="pbr.frag" Source="prefix\shaders\pbr.frag" />
                         </Component>
-                        <Component Id="PBR.VERT" DiskId="1" Guid="19519F54-2854-46FD-8F0C-0A43E48C411E" Win64="yes">
+                        <Component Id="PBR.VERT" DiskId="1" Guid="19519F54-2854-46FD-8F0C-0A43E48C411E" Bitness="always64">
                             <File Id="PBR.VERT" Name="pbr.vert" Source="prefix\shaders\pbr.vert" />
                         </Component>
-                        <Component Id="SHADOW.FRAG" DiskId="1" Guid="C6A949E9-9B20-4853-AC09-A09A933A3933" Win64="yes">
+                        <Component Id="SHADOW.FRAG" DiskId="1" Guid="C6A949E9-9B20-4853-AC09-A09A933A3933" Bitness="always64">
                             <File Id="SHADOW.FRAG" Name="shadow.frag" Source="prefix\shaders\shadow.frag" />
                         </Component>
-                        <Component Id="SHADOW.VERT" DiskId="1" Guid="9694540F-3F5A-490B-AB9E-AB023E8A81F7" Win64="yes">
+                        <Component Id="SHADOW.VERT" DiskId="1" Guid="9694540F-3F5A-490B-AB9E-AB023E8A81F7" Bitness="always64">
                             <File Id="SHADOW.VERT" Name="shadow.vert" Source="prefix\shaders\shadow.vert" />
                         </Component>
-                        <Component Id="UBO.GLSL" DiskId="1" Guid="00A52575-31C3-40DF-8217-A280AF0272CD" Win64="yes">
+                        <Component Id="UBO.GLSL" DiskId="1" Guid="00A52575-31C3-40DF-8217-A280AF0272CD" Bitness="always64">
                             <File Id="UBO.GLSL" Name="ubo.glsl" Source="prefix\shaders\ubo.glsl" />
                         </Component>
-                        <Component Id="UNLIT.FRAG" DiskId="1" Guid="184C9BFC-7379-404A-A3F4-EE882A75AB9B" Win64="yes">
+                        <Component Id="UNLIT.FRAG" DiskId="1" Guid="184C9BFC-7379-404A-A3F4-EE882A75AB9B" Bitness="always64">
                             <File Id="UNLIT.FRAG" Name="unlit.frag" Source="prefix\shaders\unlit.frag" />
                         </Component>
-                        <Component Id="UNLIT.VERT" DiskId="1" Guid="36D09DCC-AC73-439B-ADD6-9F9D93DC6A0E" Win64="yes">
+                        <Component Id="UNLIT.VERT" DiskId="1" Guid="36D09DCC-AC73-439B-ADD6-9F9D93DC6A0E" Bitness="always64">
                             <File Id="UNLIT.VERT" Name="unlit.vert" Source="prefix\shaders\unlit.vert" />
                         </Component>
                         <Directory Id="KHRONOS" Name="khronos">
-                            <Component Id="ANIMATION.GLSL" DiskId="1" Guid="1E7F016D-5B3B-49D2-BF16-F42B6C1A8C41" Win64="yes">
+                            <Component Id="ANIMATION.GLSL" DiskId="1" Guid="1E7F016D-5B3B-49D2-BF16-F42B6C1A8C41" Bitness="always64">
                                 <File Id="ANIMATION.GLSL" Name="animation.glsl" Source="prefix\shaders\khronos\animation.glsl" />
                             </Component>
-                            <Component Id="BRDF.GLSL" DiskId="1" Guid="8DA0A5AE-CA5E-4C38-9089-2B947B8043D6" Win64="yes">
+                            <Component Id="BRDF.GLSL" DiskId="1" Guid="8DA0A5AE-CA5E-4C38-9089-2B947B8043D6" Bitness="always64">
                                 <File Id="BRDF.GLSL" Name="brdf.glsl" Source="prefix\shaders\khronos\brdf.glsl" />
                             </Component>
-                            <Component Id="CUBEMAP.FRAG" DiskId="1" Guid="F15066C0-7E45-41D8-815E-EA6605BB08F7" Win64="yes">
+                            <Component Id="CUBEMAP.FRAG" DiskId="1" Guid="F15066C0-7E45-41D8-815E-EA6605BB08F7" Bitness="always64">
                                 <File Id="CUBEMAP.FRAG" Name="cubemap.frag" Source="prefix\shaders\khronos\cubemap.frag" />
                             </Component>
-                            <Component Id="CUBEMAP.VERT" DiskId="1" Guid="AF07EFD9-6704-48D7-930E-07817C26F82F" Win64="yes">
+                            <Component Id="CUBEMAP.VERT" DiskId="1" Guid="AF07EFD9-6704-48D7-930E-07817C26F82F" Bitness="always64">
                                 <File Id="CUBEMAP.VERT" Name="cubemap.vert" Source="prefix\shaders\khronos\cubemap.vert" />
                             </Component>
-                            <Component Id="FUNCTIONS.GLSL" DiskId="1" Guid="00FE51E4-57E6-4B3A-9D7B-A5CCC37F1E11" Win64="yes">
+                            <Component Id="FUNCTIONS.GLSL" DiskId="1" Guid="00FE51E4-57E6-4B3A-9D7B-A5CCC37F1E11" Bitness="always64">
                                 <File Id="FUNCTIONS.GLSL" Name="functions.glsl" Source="prefix\shaders\khronos\functions.glsl" />
                             </Component>
-                            <Component Id="IBL.GLSL" DiskId="1" Guid="9E8CA734-DA31-4374-8B19-AF67AD9EF85C" Win64="yes">
+                            <Component Id="IBL.GLSL" DiskId="1" Guid="9E8CA734-DA31-4374-8B19-AF67AD9EF85C" Bitness="always64">
                                 <File Id="IBL.GLSL" Name="ibl.glsl" Source="prefix\shaders\khronos\ibl.glsl" />
                             </Component>
-                            <Component Id="IRIDESCENCE.GLSL" DiskId="1" Guid="B0C68710-B724-4CCE-BC56-FEF597BAB340" Win64="yes">
+                            <Component Id="IRIDESCENCE.GLSL" DiskId="1" Guid="B0C68710-B724-4CCE-BC56-FEF597BAB340" Bitness="always64">
                                 <File Id="IRIDESCENCE.GLSL" Name="iridescence.glsl" Source="prefix\shaders\khronos\iridescence.glsl" />
                             </Component>
-                            <Component Id="MATERIAL_INFO.GLSL" DiskId="1" Guid="9152455F-A793-4513-8015-1DE4C4619D9C" Win64="yes">
+                            <Component Id="MATERIAL_INFO.GLSL" DiskId="1" Guid="9152455F-A793-4513-8015-1DE4C4619D9C" Bitness="always64">
                                 <File Id="MATERIAL_INFO.GLSL" Name="material_info.glsl" Source="prefix\shaders\khronos\material_info.glsl" />
                             </Component>
-                            <Component Id="PBR.FRAG_1" DiskId="1" Guid="9DF468D7-6B62-4D86-9A10-9AF51D590591" Win64="yes">
+                            <Component Id="PBR.FRAG_1" DiskId="1" Guid="9DF468D7-6B62-4D86-9A10-9AF51D590591" Bitness="always64">
                                 <File Id="PBR.FRAG_1" Name="pbr.frag" Source="prefix\shaders\khronos\pbr.frag" />
                             </Component>
-                            <Component Id="PRIMITIVE.VERT" DiskId="1" Guid="67CC8904-C585-4321-AD55-352EDBD50161" Win64="yes">
+                            <Component Id="PRIMITIVE.VERT" DiskId="1" Guid="67CC8904-C585-4321-AD55-352EDBD50161" Bitness="always64">
                                 <File Id="PRIMITIVE.VERT" Name="primitive.vert" Source="prefix\shaders\khronos\primitive.vert" />
                             </Component>
-                            <Component Id="PUNCTUAL.GLSL" DiskId="1" Guid="EB754DBF-8FE6-442E-AA01-88426B78CDC9" Win64="yes">
+                            <Component Id="PUNCTUAL.GLSL" DiskId="1" Guid="EB754DBF-8FE6-442E-AA01-88426B78CDC9" Bitness="always64">
                                 <File Id="PUNCTUAL.GLSL" Name="punctual.glsl" Source="prefix\shaders\khronos\punctual.glsl" />
                             </Component>
-                            <Component Id="TEXTURES.GLSL" DiskId="1" Guid="625A7B6D-368D-4FF6-875B-BAF9B62F390A" Win64="yes">
+                            <Component Id="TEXTURES.GLSL" DiskId="1" Guid="625A7B6D-368D-4FF6-875B-BAF9B62F390A" Bitness="always64">
                                 <File Id="TEXTURES.GLSL" Name="textures.glsl" Source="prefix\shaders\khronos\textures.glsl" />
                             </Component>
-                            <Component Id="TONEMAPPING.GLSL" DiskId="1" Guid="C6DE3E7E-2A62-4B00-A6C7-761208EECF0C" Win64="yes">
+                            <Component Id="TONEMAPPING.GLSL" DiskId="1" Guid="C6DE3E7E-2A62-4B00-A6C7-761208EECF0C" Bitness="always64">
                                 <File Id="TONEMAPPING.GLSL" Name="tonemapping.glsl" Source="prefix\shaders\khronos\tonemapping.glsl" />
                             </Component>
                         </Directory>
                     </Directory>
                     <Directory Id="THREEJS_SHADER_CHUNKS" Name="threejs_shader_chunks">
-                        <Component Id="ALPHAMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="79503907-A5F6-4C3A-B72B-5F1A60B76811" Win64="yes">
+                        <Component Id="ALPHAMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="79503907-A5F6-4C3A-B72B-5F1A60B76811" Bitness="always64">
                             <File Id="ALPHAMAP_FRAGMENT.GLSL.JS" Name="alphamap_fragment.glsl.js" Source="prefix\threejs_shader_chunks\alphamap_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ALPHAMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="13FF5EBC-22E7-423E-ACC4-61310B6F79C5" Win64="yes">
+                        <Component Id="ALPHAMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="13FF5EBC-22E7-423E-ACC4-61310B6F79C5" Bitness="always64">
                             <File Id="ALPHAMAP_PARS_FRAGMENT.GLSL.JS" Name="alphamap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\alphamap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ALPHATEST_FRAGMENT.GLSL.JS" DiskId="1" Guid="1D189263-ABB3-4FD6-972C-0F557031B5DD" Win64="yes">
+                        <Component Id="ALPHATEST_FRAGMENT.GLSL.JS" DiskId="1" Guid="1D189263-ABB3-4FD6-972C-0F557031B5DD" Bitness="always64">
                             <File Id="ALPHATEST_FRAGMENT.GLSL.JS" Name="alphatest_fragment.glsl.js" Source="prefix\threejs_shader_chunks\alphatest_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ALPHATEST_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="74E77104-42C2-4D9A-82E8-420B2311DD42" Win64="yes">
+                        <Component Id="ALPHATEST_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="74E77104-42C2-4D9A-82E8-420B2311DD42" Bitness="always64">
                             <File Id="ALPHATEST_PARS_FRAGMENT.GLSL.JS" Name="alphatest_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\alphatest_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="AOMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="7108710F-CD96-4DE3-A1E3-D9D167A6199E" Win64="yes">
+                        <Component Id="AOMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="7108710F-CD96-4DE3-A1E3-D9D167A6199E" Bitness="always64">
                             <File Id="AOMAP_FRAGMENT.GLSL.JS" Name="aomap_fragment.glsl.js" Source="prefix\threejs_shader_chunks\aomap_fragment.glsl.js" />
                         </Component>
-                        <Component Id="AOMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="A13F81EC-025D-4B6A-9243-17E2AE663953" Win64="yes">
+                        <Component Id="AOMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="A13F81EC-025D-4B6A-9243-17E2AE663953" Bitness="always64">
                             <File Id="AOMAP_PARS_FRAGMENT.GLSL.JS" Name="aomap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\aomap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="BEGINNORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="5FD6BE3A-839C-473C-98B3-C6C3F8F51141" Win64="yes">
+                        <Component Id="BEGINNORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="5FD6BE3A-839C-473C-98B3-C6C3F8F51141" Bitness="always64">
                             <File Id="BEGINNORMAL_VERTEX.GLSL.JS" Name="beginnormal_vertex.glsl.js" Source="prefix\threejs_shader_chunks\beginnormal_vertex.glsl.js" />
                         </Component>
-                        <Component Id="BEGIN_VERTEX.GLSL.JS" DiskId="1" Guid="6A9FA9BB-0DCD-437B-9A72-F996A2ABD42E" Win64="yes">
+                        <Component Id="BEGIN_VERTEX.GLSL.JS" DiskId="1" Guid="6A9FA9BB-0DCD-437B-9A72-F996A2ABD42E" Bitness="always64">
                             <File Id="BEGIN_VERTEX.GLSL.JS" Name="begin_vertex.glsl.js" Source="prefix\threejs_shader_chunks\begin_vertex.glsl.js" />
                         </Component>
-                        <Component Id="BSDFS.GLSL.JS" DiskId="1" Guid="596262AE-9554-4566-9997-9EBAB407AABE" Win64="yes">
+                        <Component Id="BSDFS.GLSL.JS" DiskId="1" Guid="596262AE-9554-4566-9997-9EBAB407AABE" Bitness="always64">
                             <File Id="BSDFS.GLSL.JS" Name="bsdfs.glsl.js" Source="prefix\threejs_shader_chunks\bsdfs.glsl.js" />
                         </Component>
-                        <Component Id="BUMPMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="D6DD3019-52B8-42E7-A4B7-1F89D14CD4F3" Win64="yes">
+                        <Component Id="BUMPMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="D6DD3019-52B8-42E7-A4B7-1F89D14CD4F3" Bitness="always64">
                             <File Id="BUMPMAP_PARS_FRAGMENT.GLSL.JS" Name="bumpmap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\bumpmap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="CLEARCOAT_NORMAL_FRAGMENT_BEGIN.GLSL.JS" DiskId="1" Guid="CFEBE5FD-10C4-4EFB-BECD-03F7CFA2C5BF" Win64="yes">
+                        <Component Id="CLEARCOAT_NORMAL_FRAGMENT_BEGIN.GLSL.JS" DiskId="1" Guid="CFEBE5FD-10C4-4EFB-BECD-03F7CFA2C5BF" Bitness="always64">
                             <File Id="CLEARCOAT_NORMAL_FRAGMENT_BEGIN.GLSL.JS" Name="clearcoat_normal_fragment_begin.glsl.js" Source="prefix\threejs_shader_chunks\clearcoat_normal_fragment_begin.glsl.js" />
                         </Component>
-                        <Component Id="CLEARCOAT_NORMAL_FRAGMENT_MAPS.GLSL.JS" DiskId="1" Guid="72699EE0-43D0-45F9-A8F4-2DC8A5FF09A2" Win64="yes">
+                        <Component Id="CLEARCOAT_NORMAL_FRAGMENT_MAPS.GLSL.JS" DiskId="1" Guid="72699EE0-43D0-45F9-A8F4-2DC8A5FF09A2" Bitness="always64">
                             <File Id="CLEARCOAT_NORMAL_FRAGMENT_MAPS.GLSL.JS" Name="clearcoat_normal_fragment_maps.glsl.js" Source="prefix\threejs_shader_chunks\clearcoat_normal_fragment_maps.glsl.js" />
                         </Component>
-                        <Component Id="CLEARCOAT_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="5481E51D-C041-4C37-8DC7-70C158801CAE" Win64="yes">
+                        <Component Id="CLEARCOAT_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="5481E51D-C041-4C37-8DC7-70C158801CAE" Bitness="always64">
                             <File Id="CLEARCOAT_PARS_FRAGMENT.GLSL.JS" Name="clearcoat_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\clearcoat_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="CLIPPING_PLANES_FRAGMENT.GLSL.JS" DiskId="1" Guid="B70423A2-2882-4CFA-A1D0-7A1A88BDFD90" Win64="yes">
+                        <Component Id="CLIPPING_PLANES_FRAGMENT.GLSL.JS" DiskId="1" Guid="B70423A2-2882-4CFA-A1D0-7A1A88BDFD90" Bitness="always64">
                             <File Id="CLIPPING_PLANES_FRAGMENT.GLSL.JS" Name="clipping_planes_fragment.glsl.js" Source="prefix\threejs_shader_chunks\clipping_planes_fragment.glsl.js" />
                         </Component>
-                        <Component Id="CLIPPING_PLANES_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="9D5DEF64-AFFC-472C-9357-136B0A5BFBD9" Win64="yes">
+                        <Component Id="CLIPPING_PLANES_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="9D5DEF64-AFFC-472C-9357-136B0A5BFBD9" Bitness="always64">
                             <File Id="CLIPPING_PLANES_PARS_FRAGMENT.GLSL.JS" Name="clipping_planes_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\clipping_planes_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="CLIPPING_PLANES_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="FB3396EA-5A9D-4AC4-80F3-F8D2A7303431" Win64="yes">
+                        <Component Id="CLIPPING_PLANES_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="FB3396EA-5A9D-4AC4-80F3-F8D2A7303431" Bitness="always64">
                             <File Id="CLIPPING_PLANES_PARS_VERTEX.GLSL.JS" Name="clipping_planes_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\clipping_planes_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="CLIPPING_PLANES_VERTEX.GLSL.JS" DiskId="1" Guid="3039E573-3FFB-431F-B93F-0B24C20AABEC" Win64="yes">
+                        <Component Id="CLIPPING_PLANES_VERTEX.GLSL.JS" DiskId="1" Guid="3039E573-3FFB-431F-B93F-0B24C20AABEC" Bitness="always64">
                             <File Id="CLIPPING_PLANES_VERTEX.GLSL.JS" Name="clipping_planes_vertex.glsl.js" Source="prefix\threejs_shader_chunks\clipping_planes_vertex.glsl.js" />
                         </Component>
-                        <Component Id="COLOR_FRAGMENT.GLSL.JS" DiskId="1" Guid="B2F55322-577D-4777-820D-A80B8107C516" Win64="yes">
+                        <Component Id="COLOR_FRAGMENT.GLSL.JS" DiskId="1" Guid="B2F55322-577D-4777-820D-A80B8107C516" Bitness="always64">
                             <File Id="COLOR_FRAGMENT.GLSL.JS" Name="color_fragment.glsl.js" Source="prefix\threejs_shader_chunks\color_fragment.glsl.js" />
                         </Component>
-                        <Component Id="COLOR_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="77E0E4CA-60E2-41BE-93CA-90081679F664" Win64="yes">
+                        <Component Id="COLOR_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="77E0E4CA-60E2-41BE-93CA-90081679F664" Bitness="always64">
                             <File Id="COLOR_PARS_FRAGMENT.GLSL.JS" Name="color_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\color_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="COLOR_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="E7A1D28D-64D8-4D1B-9F41-28F7CC98B84A" Win64="yes">
+                        <Component Id="COLOR_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="E7A1D28D-64D8-4D1B-9F41-28F7CC98B84A" Bitness="always64">
                             <File Id="COLOR_PARS_VERTEX.GLSL.JS" Name="color_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\color_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="COLOR_VERTEX.GLSL.JS" DiskId="1" Guid="4C19CE3B-2D76-448B-8752-FDF9DC720110" Win64="yes">
+                        <Component Id="COLOR_VERTEX.GLSL.JS" DiskId="1" Guid="4C19CE3B-2D76-448B-8752-FDF9DC720110" Bitness="always64">
                             <File Id="COLOR_VERTEX.GLSL.JS" Name="color_vertex.glsl.js" Source="prefix\threejs_shader_chunks\color_vertex.glsl.js" />
                         </Component>
-                        <Component Id="COMMON.GLSL.JS" DiskId="1" Guid="B4FCAB3A-1497-4229-992D-645765E1173C" Win64="yes">
+                        <Component Id="COMMON.GLSL.JS" DiskId="1" Guid="B4FCAB3A-1497-4229-992D-645765E1173C" Bitness="always64">
                             <File Id="COMMON.GLSL.JS" Name="common.glsl.js" Source="prefix\threejs_shader_chunks\common.glsl.js" />
                         </Component>
-                        <Component Id="CUBE_UV_REFLECTION_FRAGMENT.GLSL.JS" DiskId="1" Guid="84455F68-9CCD-4B92-A02A-DCC253EF4FFB" Win64="yes">
+                        <Component Id="CUBE_UV_REFLECTION_FRAGMENT.GLSL.JS" DiskId="1" Guid="84455F68-9CCD-4B92-A02A-DCC253EF4FFB" Bitness="always64">
                             <File Id="CUBE_UV_REFLECTION_FRAGMENT.GLSL.JS" Name="cube_uv_reflection_fragment.glsl.js" Source="prefix\threejs_shader_chunks\cube_uv_reflection_fragment.glsl.js" />
                         </Component>
-                        <Component Id="DEFAULTNORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="36B4FD51-9DE6-4778-9F39-E43CF7D32AA0" Win64="yes">
+                        <Component Id="DEFAULTNORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="36B4FD51-9DE6-4778-9F39-E43CF7D32AA0" Bitness="always64">
                             <File Id="DEFAULTNORMAL_VERTEX.GLSL.JS" Name="defaultnormal_vertex.glsl.js" Source="prefix\threejs_shader_chunks\defaultnormal_vertex.glsl.js" />
                         </Component>
-                        <Component Id="DEFAULT_FRAGMENT.GLSL.JS" DiskId="1" Guid="6C99F356-0892-4E7A-B144-092AF2E35A2B" Win64="yes">
+                        <Component Id="DEFAULT_FRAGMENT.GLSL.JS" DiskId="1" Guid="6C99F356-0892-4E7A-B144-092AF2E35A2B" Bitness="always64">
                             <File Id="DEFAULT_FRAGMENT.GLSL.JS" Name="default_fragment.glsl.js" Source="prefix\threejs_shader_chunks\default_fragment.glsl.js" />
                         </Component>
-                        <Component Id="DEFAULT_VERTEX.GLSL.JS" DiskId="1" Guid="5A03959E-8EEC-4C15-8AFE-684E536320C6" Win64="yes">
+                        <Component Id="DEFAULT_VERTEX.GLSL.JS" DiskId="1" Guid="5A03959E-8EEC-4C15-8AFE-684E536320C6" Bitness="always64">
                             <File Id="DEFAULT_VERTEX.GLSL.JS" Name="default_vertex.glsl.js" Source="prefix\threejs_shader_chunks\default_vertex.glsl.js" />
                         </Component>
-                        <Component Id="DISPLACEMENTMAP_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="70C20807-CBDB-4EEA-BA53-4B5A7F688667" Win64="yes">
+                        <Component Id="DISPLACEMENTMAP_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="70C20807-CBDB-4EEA-BA53-4B5A7F688667" Bitness="always64">
                             <File Id="DISPLACEMENTMAP_PARS_VERTEX.GLSL.JS" Name="displacementmap_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\displacementmap_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="DISPLACEMENTMAP_VERTEX.GLSL.JS" DiskId="1" Guid="950F19D6-40FB-414C-BD36-54582EC3E1FE" Win64="yes">
+                        <Component Id="DISPLACEMENTMAP_VERTEX.GLSL.JS" DiskId="1" Guid="950F19D6-40FB-414C-BD36-54582EC3E1FE" Bitness="always64">
                             <File Id="DISPLACEMENTMAP_VERTEX.GLSL.JS" Name="displacementmap_vertex.glsl.js" Source="prefix\threejs_shader_chunks\displacementmap_vertex.glsl.js" />
                         </Component>
-                        <Component Id="DITHERING_FRAGMENT.GLSL.JS" DiskId="1" Guid="4F8AE90C-E0F6-4337-8C02-7294AB13AD1F" Win64="yes">
+                        <Component Id="DITHERING_FRAGMENT.GLSL.JS" DiskId="1" Guid="4F8AE90C-E0F6-4337-8C02-7294AB13AD1F" Bitness="always64">
                             <File Id="DITHERING_FRAGMENT.GLSL.JS" Name="dithering_fragment.glsl.js" Source="prefix\threejs_shader_chunks\dithering_fragment.glsl.js" />
                         </Component>
-                        <Component Id="DITHERING_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="B267632C-A47D-48F1-8402-37A0E1B78A07" Win64="yes">
+                        <Component Id="DITHERING_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="B267632C-A47D-48F1-8402-37A0E1B78A07" Bitness="always64">
                             <File Id="DITHERING_PARS_FRAGMENT.GLSL.JS" Name="dithering_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\dithering_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="EMISSIVEMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="20E1C73B-D592-4C06-8721-A308AE4DBCC3" Win64="yes">
+                        <Component Id="EMISSIVEMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="20E1C73B-D592-4C06-8721-A308AE4DBCC3" Bitness="always64">
                             <File Id="EMISSIVEMAP_FRAGMENT.GLSL.JS" Name="emissivemap_fragment.glsl.js" Source="prefix\threejs_shader_chunks\emissivemap_fragment.glsl.js" />
                         </Component>
-                        <Component Id="EMISSIVEMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="1E10AC6E-3575-4C97-8DDD-747461CAB0D7" Win64="yes">
+                        <Component Id="EMISSIVEMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="1E10AC6E-3575-4C97-8DDD-747461CAB0D7" Bitness="always64">
                             <File Id="EMISSIVEMAP_PARS_FRAGMENT.GLSL.JS" Name="emissivemap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\emissivemap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ENCODINGS_FRAGMENT.GLSL.JS" DiskId="1" Guid="03917958-35E0-482E-B5CE-5664233FD862" Win64="yes">
+                        <Component Id="ENCODINGS_FRAGMENT.GLSL.JS" DiskId="1" Guid="03917958-35E0-482E-B5CE-5664233FD862" Bitness="always64">
                             <File Id="ENCODINGS_FRAGMENT.GLSL.JS" Name="encodings_fragment.glsl.js" Source="prefix\threejs_shader_chunks\encodings_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ENCODINGS_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="7E26EC85-5837-4987-A342-A46AB357B0CF" Win64="yes">
+                        <Component Id="ENCODINGS_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="7E26EC85-5837-4987-A342-A46AB357B0CF" Bitness="always64">
                             <File Id="ENCODINGS_PARS_FRAGMENT.GLSL.JS" Name="encodings_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\encodings_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ENVMAP_COMMON_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="C4BFF54E-BF72-4B12-A972-E929B9340AFF" Win64="yes">
+                        <Component Id="ENVMAP_COMMON_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="C4BFF54E-BF72-4B12-A972-E929B9340AFF" Bitness="always64">
                             <File Id="ENVMAP_COMMON_PARS_FRAGMENT.GLSL.JS" Name="envmap_common_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\envmap_common_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ENVMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="7A494867-DD3D-4414-B053-1B59F7E4B3C3" Win64="yes">
+                        <Component Id="ENVMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="7A494867-DD3D-4414-B053-1B59F7E4B3C3" Bitness="always64">
                             <File Id="ENVMAP_FRAGMENT.GLSL.JS" Name="envmap_fragment.glsl.js" Source="prefix\threejs_shader_chunks\envmap_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ENVMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="6D7E196C-C9DE-41CB-A529-01EDC9DB6E78" Win64="yes">
+                        <Component Id="ENVMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="6D7E196C-C9DE-41CB-A529-01EDC9DB6E78" Bitness="always64">
                             <File Id="ENVMAP_PARS_FRAGMENT.GLSL.JS" Name="envmap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\envmap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ENVMAP_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="E2206D08-B046-450F-82DC-8E602FD8E6AC" Win64="yes">
+                        <Component Id="ENVMAP_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="E2206D08-B046-450F-82DC-8E602FD8E6AC" Bitness="always64">
                             <File Id="ENVMAP_PARS_VERTEX.GLSL.JS" Name="envmap_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\envmap_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="ENVMAP_PHYSICAL_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="3FD5BB3F-2C83-4875-9C4A-FFC6C9EAAF19" Win64="yes">
+                        <Component Id="ENVMAP_PHYSICAL_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="3FD5BB3F-2C83-4875-9C4A-FFC6C9EAAF19" Bitness="always64">
                             <File Id="ENVMAP_PHYSICAL_PARS_FRAGMENT.GLSL.JS" Name="envmap_physical_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\envmap_physical_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ENVMAP_VERTEX.GLSL.JS" DiskId="1" Guid="45E7BE59-E2E6-4B5F-B671-3B920D0A63BD" Win64="yes">
+                        <Component Id="ENVMAP_VERTEX.GLSL.JS" DiskId="1" Guid="45E7BE59-E2E6-4B5F-B671-3B920D0A63BD" Bitness="always64">
                             <File Id="ENVMAP_VERTEX.GLSL.JS" Name="envmap_vertex.glsl.js" Source="prefix\threejs_shader_chunks\envmap_vertex.glsl.js" />
                         </Component>
-                        <Component Id="FOG_FRAGMENT.GLSL.JS" DiskId="1" Guid="F1EB6B0E-E8BE-4D6E-867F-4075C7D34AD1" Win64="yes">
+                        <Component Id="FOG_FRAGMENT.GLSL.JS" DiskId="1" Guid="F1EB6B0E-E8BE-4D6E-867F-4075C7D34AD1" Bitness="always64">
                             <File Id="FOG_FRAGMENT.GLSL.JS" Name="fog_fragment.glsl.js" Source="prefix\threejs_shader_chunks\fog_fragment.glsl.js" />
                         </Component>
-                        <Component Id="FOG_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="C013573C-4CDE-43BC-8962-70C77792DA41" Win64="yes">
+                        <Component Id="FOG_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="C013573C-4CDE-43BC-8962-70C77792DA41" Bitness="always64">
                             <File Id="FOG_PARS_FRAGMENT.GLSL.JS" Name="fog_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\fog_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="FOG_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="8A69215A-AB40-4D78-8E38-0FF48D55676A" Win64="yes">
+                        <Component Id="FOG_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="8A69215A-AB40-4D78-8E38-0FF48D55676A" Bitness="always64">
                             <File Id="FOG_PARS_VERTEX.GLSL.JS" Name="fog_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\fog_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="FOG_VERTEX.GLSL.JS" DiskId="1" Guid="FA79F80A-CA7E-4B47-9299-9E16DFD641F0" Win64="yes">
+                        <Component Id="FOG_VERTEX.GLSL.JS" DiskId="1" Guid="FA79F80A-CA7E-4B47-9299-9E16DFD641F0" Bitness="always64">
                             <File Id="FOG_VERTEX.GLSL.JS" Name="fog_vertex.glsl.js" Source="prefix\threejs_shader_chunks\fog_vertex.glsl.js" />
                         </Component>
-                        <Component Id="GRADIENTMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="827D2C66-B12E-4BD6-AF12-61911287514D" Win64="yes">
+                        <Component Id="GRADIENTMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="827D2C66-B12E-4BD6-AF12-61911287514D" Bitness="always64">
                             <File Id="GRADIENTMAP_PARS_FRAGMENT.GLSL.JS" Name="gradientmap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\gradientmap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="IRIDESCENCE_FRAGMENT.GLSL.JS" DiskId="1" Guid="9FC68048-F906-4563-AB7F-0665E813275C" Win64="yes">
+                        <Component Id="IRIDESCENCE_FRAGMENT.GLSL.JS" DiskId="1" Guid="9FC68048-F906-4563-AB7F-0665E813275C" Bitness="always64">
                             <File Id="IRIDESCENCE_FRAGMENT.GLSL.JS" Name="iridescence_fragment.glsl.js" Source="prefix\threejs_shader_chunks\iridescence_fragment.glsl.js" />
                         </Component>
-                        <Component Id="IRIDESCENCE_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="5D9DCAC9-E21C-420E-BA2B-A267E4C356BC" Win64="yes">
+                        <Component Id="IRIDESCENCE_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="5D9DCAC9-E21C-420E-BA2B-A267E4C356BC" Bitness="always64">
                             <File Id="IRIDESCENCE_PARS_FRAGMENT.GLSL.JS" Name="iridescence_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\iridescence_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="C79857DC-81D4-46D4-A225-305A3E709F6F" Win64="yes">
+                        <Component Id="LIGHTMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="C79857DC-81D4-46D4-A225-305A3E709F6F" Bitness="always64">
                             <File Id="LIGHTMAP_FRAGMENT.GLSL.JS" Name="lightmap_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lightmap_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="0136A39E-CA01-4A46-A5BF-BA1E29C61BA8" Win64="yes">
+                        <Component Id="LIGHTMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="0136A39E-CA01-4A46-A5BF-BA1E29C61BA8" Bitness="always64">
                             <File Id="LIGHTMAP_PARS_FRAGMENT.GLSL.JS" Name="lightmap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lightmap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_FRAGMENT_BEGIN.GLSL.JS" DiskId="1" Guid="7A3BB6C9-8784-4136-8338-EC1C839AD440" Win64="yes">
+                        <Component Id="LIGHTS_FRAGMENT_BEGIN.GLSL.JS" DiskId="1" Guid="7A3BB6C9-8784-4136-8338-EC1C839AD440" Bitness="always64">
                             <File Id="LIGHTS_FRAGMENT_BEGIN.GLSL.JS" Name="lights_fragment_begin.glsl.js" Source="prefix\threejs_shader_chunks\lights_fragment_begin.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_FRAGMENT_END.GLSL.JS" DiskId="1" Guid="677D1093-5429-4A8F-9E44-9144AC989585" Win64="yes">
+                        <Component Id="LIGHTS_FRAGMENT_END.GLSL.JS" DiskId="1" Guid="677D1093-5429-4A8F-9E44-9144AC989585" Bitness="always64">
                             <File Id="LIGHTS_FRAGMENT_END.GLSL.JS" Name="lights_fragment_end.glsl.js" Source="prefix\threejs_shader_chunks\lights_fragment_end.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_FRAGMENT_MAPS.GLSL.JS" DiskId="1" Guid="D11215CA-1932-4505-A6EE-5FB5C8115DBD" Win64="yes">
+                        <Component Id="LIGHTS_FRAGMENT_MAPS.GLSL.JS" DiskId="1" Guid="D11215CA-1932-4505-A6EE-5FB5C8115DBD" Bitness="always64">
                             <File Id="LIGHTS_FRAGMENT_MAPS.GLSL.JS" Name="lights_fragment_maps.glsl.js" Source="prefix\threejs_shader_chunks\lights_fragment_maps.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_LAMBERT_FRAGMENT.GLSL.JS" DiskId="1" Guid="FB7ED006-070E-4C66-BD42-F3A41671B0B6" Win64="yes">
+                        <Component Id="LIGHTS_LAMBERT_FRAGMENT.GLSL.JS" DiskId="1" Guid="FB7ED006-070E-4C66-BD42-F3A41671B0B6" Bitness="always64">
                             <File Id="LIGHTS_LAMBERT_FRAGMENT.GLSL.JS" Name="lights_lambert_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lights_lambert_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_LAMBERT_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="5704EC61-A554-4AD1-B902-4932E232C148" Win64="yes">
+                        <Component Id="LIGHTS_LAMBERT_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="5704EC61-A554-4AD1-B902-4932E232C148" Bitness="always64">
                             <File Id="LIGHTS_LAMBERT_PARS_FRAGMENT.GLSL.JS" Name="lights_lambert_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lights_lambert_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_PARS_BEGIN.GLSL.JS" DiskId="1" Guid="6DE4EF17-45FA-4031-A10D-FCC4F1599B6F" Win64="yes">
+                        <Component Id="LIGHTS_PARS_BEGIN.GLSL.JS" DiskId="1" Guid="6DE4EF17-45FA-4031-A10D-FCC4F1599B6F" Bitness="always64">
                             <File Id="LIGHTS_PARS_BEGIN.GLSL.JS" Name="lights_pars_begin.glsl.js" Source="prefix\threejs_shader_chunks\lights_pars_begin.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_PHONG_FRAGMENT.GLSL.JS" DiskId="1" Guid="FFDF79A8-EABE-4D9D-A6C8-4D077DF4F4C3" Win64="yes">
+                        <Component Id="LIGHTS_PHONG_FRAGMENT.GLSL.JS" DiskId="1" Guid="FFDF79A8-EABE-4D9D-A6C8-4D077DF4F4C3" Bitness="always64">
                             <File Id="LIGHTS_PHONG_FRAGMENT.GLSL.JS" Name="lights_phong_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lights_phong_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_PHONG_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="B974A03C-839B-4B1A-B6F6-4F0A11226E57" Win64="yes">
+                        <Component Id="LIGHTS_PHONG_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="B974A03C-839B-4B1A-B6F6-4F0A11226E57" Bitness="always64">
                             <File Id="LIGHTS_PHONG_PARS_FRAGMENT.GLSL.JS" Name="lights_phong_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lights_phong_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_PHYSICAL_FRAGMENT.GLSL.JS" DiskId="1" Guid="48EDACAE-0439-4AEC-98E0-DF9A36C12141" Win64="yes">
+                        <Component Id="LIGHTS_PHYSICAL_FRAGMENT.GLSL.JS" DiskId="1" Guid="48EDACAE-0439-4AEC-98E0-DF9A36C12141" Bitness="always64">
                             <File Id="LIGHTS_PHYSICAL_FRAGMENT.GLSL.JS" Name="lights_physical_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lights_physical_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_PHYSICAL_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="01DC062D-E454-4451-B4F8-C2794ACF63E9" Win64="yes">
+                        <Component Id="LIGHTS_PHYSICAL_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="01DC062D-E454-4451-B4F8-C2794ACF63E9" Bitness="always64">
                             <File Id="LIGHTS_PHYSICAL_PARS_FRAGMENT.GLSL.JS" Name="lights_physical_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lights_physical_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_TOON_FRAGMENT.GLSL.JS" DiskId="1" Guid="33C4B24F-7355-48DD-BBFC-891C86B88CEE" Win64="yes">
+                        <Component Id="LIGHTS_TOON_FRAGMENT.GLSL.JS" DiskId="1" Guid="33C4B24F-7355-48DD-BBFC-891C86B88CEE" Bitness="always64">
                             <File Id="LIGHTS_TOON_FRAGMENT.GLSL.JS" Name="lights_toon_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lights_toon_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LIGHTS_TOON_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="A45AF06F-C367-4F2D-8817-5D3AD420C3B8" Win64="yes">
+                        <Component Id="LIGHTS_TOON_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="A45AF06F-C367-4F2D-8817-5D3AD420C3B8" Bitness="always64">
                             <File Id="LIGHTS_TOON_PARS_FRAGMENT.GLSL.JS" Name="lights_toon_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\lights_toon_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LOGDEPTHBUF_FRAGMENT.GLSL.JS" DiskId="1" Guid="7A75130B-79D6-4487-8AD2-B4C412F52C4F" Win64="yes">
+                        <Component Id="LOGDEPTHBUF_FRAGMENT.GLSL.JS" DiskId="1" Guid="7A75130B-79D6-4487-8AD2-B4C412F52C4F" Bitness="always64">
                             <File Id="LOGDEPTHBUF_FRAGMENT.GLSL.JS" Name="logdepthbuf_fragment.glsl.js" Source="prefix\threejs_shader_chunks\logdepthbuf_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LOGDEPTHBUF_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="61B0D70C-FBA6-4026-91C6-90DB4559218F" Win64="yes">
+                        <Component Id="LOGDEPTHBUF_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="61B0D70C-FBA6-4026-91C6-90DB4559218F" Bitness="always64">
                             <File Id="LOGDEPTHBUF_PARS_FRAGMENT.GLSL.JS" Name="logdepthbuf_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\logdepthbuf_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="LOGDEPTHBUF_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="64D25393-9766-4F0E-AA17-C685955338B9" Win64="yes">
+                        <Component Id="LOGDEPTHBUF_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="64D25393-9766-4F0E-AA17-C685955338B9" Bitness="always64">
                             <File Id="LOGDEPTHBUF_PARS_VERTEX.GLSL.JS" Name="logdepthbuf_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\logdepthbuf_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="LOGDEPTHBUF_VERTEX.GLSL.JS" DiskId="1" Guid="54F7E48D-4362-4A5B-8E72-1668CDB0861B" Win64="yes">
+                        <Component Id="LOGDEPTHBUF_VERTEX.GLSL.JS" DiskId="1" Guid="54F7E48D-4362-4A5B-8E72-1668CDB0861B" Bitness="always64">
                             <File Id="LOGDEPTHBUF_VERTEX.GLSL.JS" Name="logdepthbuf_vertex.glsl.js" Source="prefix\threejs_shader_chunks\logdepthbuf_vertex.glsl.js" />
                         </Component>
-                        <Component Id="MAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="2892112A-C958-49F6-8C7C-9E1ADA176DD6" Win64="yes">
+                        <Component Id="MAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="2892112A-C958-49F6-8C7C-9E1ADA176DD6" Bitness="always64">
                             <File Id="MAP_FRAGMENT.GLSL.JS" Name="map_fragment.glsl.js" Source="prefix\threejs_shader_chunks\map_fragment.glsl.js" />
                         </Component>
-                        <Component Id="MAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="6CDDAA65-46BC-4362-8A80-686715D8A8E2" Win64="yes">
+                        <Component Id="MAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="6CDDAA65-46BC-4362-8A80-686715D8A8E2" Bitness="always64">
                             <File Id="MAP_PARS_FRAGMENT.GLSL.JS" Name="map_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\map_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="MAP_PARTICLE_FRAGMENT.GLSL.JS" DiskId="1" Guid="2D8B2839-6E9C-4248-A204-B51E5DAE7691" Win64="yes">
+                        <Component Id="MAP_PARTICLE_FRAGMENT.GLSL.JS" DiskId="1" Guid="2D8B2839-6E9C-4248-A204-B51E5DAE7691" Bitness="always64">
                             <File Id="MAP_PARTICLE_FRAGMENT.GLSL.JS" Name="map_particle_fragment.glsl.js" Source="prefix\threejs_shader_chunks\map_particle_fragment.glsl.js" />
                         </Component>
-                        <Component Id="MAP_PARTICLE_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="AA317661-F9D7-4AA9-B03C-DFF33B5F10C7" Win64="yes">
+                        <Component Id="MAP_PARTICLE_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="AA317661-F9D7-4AA9-B03C-DFF33B5F10C7" Bitness="always64">
                             <File Id="MAP_PARTICLE_PARS_FRAGMENT.GLSL.JS" Name="map_particle_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\map_particle_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="METALNESSMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="7EABCC6A-A4FA-4CDB-B169-F4E2C155F2D0" Win64="yes">
+                        <Component Id="METALNESSMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="7EABCC6A-A4FA-4CDB-B169-F4E2C155F2D0" Bitness="always64">
                             <File Id="METALNESSMAP_FRAGMENT.GLSL.JS" Name="metalnessmap_fragment.glsl.js" Source="prefix\threejs_shader_chunks\metalnessmap_fragment.glsl.js" />
                         </Component>
-                        <Component Id="METALNESSMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="FFF614AE-B32E-4DC3-B379-CC532E82DB16" Win64="yes">
+                        <Component Id="METALNESSMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="FFF614AE-B32E-4DC3-B379-CC532E82DB16" Bitness="always64">
                             <File Id="METALNESSMAP_PARS_FRAGMENT.GLSL.JS" Name="metalnessmap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\metalnessmap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="MORPHCOLOR_VERTEX.GLSL.JS" DiskId="1" Guid="F6CD9AD0-4569-414F-8EAC-12F1CA28A902" Win64="yes">
+                        <Component Id="MORPHCOLOR_VERTEX.GLSL.JS" DiskId="1" Guid="F6CD9AD0-4569-414F-8EAC-12F1CA28A902" Bitness="always64">
                             <File Id="MORPHCOLOR_VERTEX.GLSL.JS" Name="morphcolor_vertex.glsl.js" Source="prefix\threejs_shader_chunks\morphcolor_vertex.glsl.js" />
                         </Component>
-                        <Component Id="MORPHNORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="821B7C1D-93E6-4B07-986A-84AE4D049FC9" Win64="yes">
+                        <Component Id="MORPHNORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="821B7C1D-93E6-4B07-986A-84AE4D049FC9" Bitness="always64">
                             <File Id="MORPHNORMAL_VERTEX.GLSL.JS" Name="morphnormal_vertex.glsl.js" Source="prefix\threejs_shader_chunks\morphnormal_vertex.glsl.js" />
                         </Component>
-                        <Component Id="MORPHTARGET_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="67CED505-3369-41C6-83D8-4765F4112596" Win64="yes">
+                        <Component Id="MORPHTARGET_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="67CED505-3369-41C6-83D8-4765F4112596" Bitness="always64">
                             <File Id="MORPHTARGET_PARS_VERTEX.GLSL.JS" Name="morphtarget_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\morphtarget_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="MORPHTARGET_VERTEX.GLSL.JS" DiskId="1" Guid="C6899415-D648-4EEC-9555-156A552029D3" Win64="yes">
+                        <Component Id="MORPHTARGET_VERTEX.GLSL.JS" DiskId="1" Guid="C6899415-D648-4EEC-9555-156A552029D3" Bitness="always64">
                             <File Id="MORPHTARGET_VERTEX.GLSL.JS" Name="morphtarget_vertex.glsl.js" Source="prefix\threejs_shader_chunks\morphtarget_vertex.glsl.js" />
                         </Component>
-                        <Component Id="NORMALMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="AD348F17-E769-40D8-BCFD-C820FEAD8F3F" Win64="yes">
+                        <Component Id="NORMALMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="AD348F17-E769-40D8-BCFD-C820FEAD8F3F" Bitness="always64">
                             <File Id="NORMALMAP_PARS_FRAGMENT.GLSL.JS" Name="normalmap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\normalmap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="NORMAL_FRAGMENT_BEGIN.GLSL.JS" DiskId="1" Guid="1CB3DB7F-955B-4CD6-A369-6B70A675864F" Win64="yes">
+                        <Component Id="NORMAL_FRAGMENT_BEGIN.GLSL.JS" DiskId="1" Guid="1CB3DB7F-955B-4CD6-A369-6B70A675864F" Bitness="always64">
                             <File Id="NORMAL_FRAGMENT_BEGIN.GLSL.JS" Name="normal_fragment_begin.glsl.js" Source="prefix\threejs_shader_chunks\normal_fragment_begin.glsl.js" />
                         </Component>
-                        <Component Id="NORMAL_FRAGMENT_MAPS.GLSL.JS" DiskId="1" Guid="DA82FCFE-012C-47A6-834D-DEC44F13FD1B" Win64="yes">
+                        <Component Id="NORMAL_FRAGMENT_MAPS.GLSL.JS" DiskId="1" Guid="DA82FCFE-012C-47A6-834D-DEC44F13FD1B" Bitness="always64">
                             <File Id="NORMAL_FRAGMENT_MAPS.GLSL.JS" Name="normal_fragment_maps.glsl.js" Source="prefix\threejs_shader_chunks\normal_fragment_maps.glsl.js" />
                         </Component>
-                        <Component Id="NORMAL_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="361613A0-7AC6-4B53-8767-9AE1677FE766" Win64="yes">
+                        <Component Id="NORMAL_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="361613A0-7AC6-4B53-8767-9AE1677FE766" Bitness="always64">
                             <File Id="NORMAL_PARS_FRAGMENT.GLSL.JS" Name="normal_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\normal_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="NORMAL_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="A839B34C-692C-4AE3-89EE-56F53EA29DA2" Win64="yes">
+                        <Component Id="NORMAL_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="A839B34C-692C-4AE3-89EE-56F53EA29DA2" Bitness="always64">
                             <File Id="NORMAL_PARS_VERTEX.GLSL.JS" Name="normal_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\normal_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="NORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="AC5B0630-43FE-4E01-8060-6004021819CB" Win64="yes">
+                        <Component Id="NORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="AC5B0630-43FE-4E01-8060-6004021819CB" Bitness="always64">
                             <File Id="NORMAL_VERTEX.GLSL.JS" Name="normal_vertex.glsl.js" Source="prefix\threejs_shader_chunks\normal_vertex.glsl.js" />
                         </Component>
-                        <Component Id="OUTPUT_FRAGMENT.GLSL.JS" DiskId="1" Guid="54C5B53D-5948-4EEA-8C51-963EF71CEC0C" Win64="yes">
+                        <Component Id="OUTPUT_FRAGMENT.GLSL.JS" DiskId="1" Guid="54C5B53D-5948-4EEA-8C51-963EF71CEC0C" Bitness="always64">
                             <File Id="OUTPUT_FRAGMENT.GLSL.JS" Name="output_fragment.glsl.js" Source="prefix\threejs_shader_chunks\output_fragment.glsl.js" />
                         </Component>
-                        <Component Id="PACKING.GLSL.JS" DiskId="1" Guid="43D54722-9003-419C-A476-0DE993B28ED9" Win64="yes">
+                        <Component Id="PACKING.GLSL.JS" DiskId="1" Guid="43D54722-9003-419C-A476-0DE993B28ED9" Bitness="always64">
                             <File Id="PACKING.GLSL.JS" Name="packing.glsl.js" Source="prefix\threejs_shader_chunks\packing.glsl.js" />
                         </Component>
-                        <Component Id="PREMULTIPLIED_ALPHA_FRAGMENT.GLSL.JS" DiskId="1" Guid="163A2955-787A-4EFA-A19A-B09C027D07B9" Win64="yes">
+                        <Component Id="PREMULTIPLIED_ALPHA_FRAGMENT.GLSL.JS" DiskId="1" Guid="163A2955-787A-4EFA-A19A-B09C027D07B9" Bitness="always64">
                             <File Id="PREMULTIPLIED_ALPHA_FRAGMENT.GLSL.JS" Name="premultiplied_alpha_fragment.glsl.js" Source="prefix\threejs_shader_chunks\premultiplied_alpha_fragment.glsl.js" />
                         </Component>
-                        <Component Id="PROJECT_VERTEX.GLSL.JS" DiskId="1" Guid="F378A69B-E9B7-48D9-BD3A-87C5726D9BBC" Win64="yes">
+                        <Component Id="PROJECT_VERTEX.GLSL.JS" DiskId="1" Guid="F378A69B-E9B7-48D9-BD3A-87C5726D9BBC" Bitness="always64">
                             <File Id="PROJECT_VERTEX.GLSL.JS" Name="project_vertex.glsl.js" Source="prefix\threejs_shader_chunks\project_vertex.glsl.js" />
                         </Component>
-                        <Component Id="ROUGHNESSMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="D0300038-55DC-47B3-9809-821C4756335B" Win64="yes">
+                        <Component Id="ROUGHNESSMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="D0300038-55DC-47B3-9809-821C4756335B" Bitness="always64">
                             <File Id="ROUGHNESSMAP_FRAGMENT.GLSL.JS" Name="roughnessmap_fragment.glsl.js" Source="prefix\threejs_shader_chunks\roughnessmap_fragment.glsl.js" />
                         </Component>
-                        <Component Id="ROUGHNESSMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="568044F8-1C19-4291-85FB-C6AC006DA239" Win64="yes">
+                        <Component Id="ROUGHNESSMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="568044F8-1C19-4291-85FB-C6AC006DA239" Bitness="always64">
                             <File Id="ROUGHNESSMAP_PARS_FRAGMENT.GLSL.JS" Name="roughnessmap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\roughnessmap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="SHADOWMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="0DB9097B-AC94-4F03-BDA1-C94C26416E05" Win64="yes">
+                        <Component Id="SHADOWMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="0DB9097B-AC94-4F03-BDA1-C94C26416E05" Bitness="always64">
                             <File Id="SHADOWMAP_PARS_FRAGMENT.GLSL.JS" Name="shadowmap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\shadowmap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="SHADOWMAP_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="47CAC747-EFB6-4407-8080-CD3BC697A3BC" Win64="yes">
+                        <Component Id="SHADOWMAP_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="47CAC747-EFB6-4407-8080-CD3BC697A3BC" Bitness="always64">
                             <File Id="SHADOWMAP_PARS_VERTEX.GLSL.JS" Name="shadowmap_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\shadowmap_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="SHADOWMAP_VERTEX.GLSL.JS" DiskId="1" Guid="2F59F4E1-DECA-4FD7-8B55-19F529C71633" Win64="yes">
+                        <Component Id="SHADOWMAP_VERTEX.GLSL.JS" DiskId="1" Guid="2F59F4E1-DECA-4FD7-8B55-19F529C71633" Bitness="always64">
                             <File Id="SHADOWMAP_VERTEX.GLSL.JS" Name="shadowmap_vertex.glsl.js" Source="prefix\threejs_shader_chunks\shadowmap_vertex.glsl.js" />
                         </Component>
-                        <Component Id="SHADOWMASK_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="2BF9C64A-DDED-40BE-92D6-37E3A49AB8AE" Win64="yes">
+                        <Component Id="SHADOWMASK_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="2BF9C64A-DDED-40BE-92D6-37E3A49AB8AE" Bitness="always64">
                             <File Id="SHADOWMASK_PARS_FRAGMENT.GLSL.JS" Name="shadowmask_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\shadowmask_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="SKINBASE_VERTEX.GLSL.JS" DiskId="1" Guid="334752B0-9B9C-432E-9D8D-8900F61A7785" Win64="yes">
+                        <Component Id="SKINBASE_VERTEX.GLSL.JS" DiskId="1" Guid="334752B0-9B9C-432E-9D8D-8900F61A7785" Bitness="always64">
                             <File Id="SKINBASE_VERTEX.GLSL.JS" Name="skinbase_vertex.glsl.js" Source="prefix\threejs_shader_chunks\skinbase_vertex.glsl.js" />
                         </Component>
-                        <Component Id="SKINNING_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="7FE0DA82-C79A-40CC-838F-7D3EC6042D0D" Win64="yes">
+                        <Component Id="SKINNING_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="7FE0DA82-C79A-40CC-838F-7D3EC6042D0D" Bitness="always64">
                             <File Id="SKINNING_PARS_VERTEX.GLSL.JS" Name="skinning_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\skinning_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="SKINNING_VERTEX.GLSL.JS" DiskId="1" Guid="908E2AD7-4631-4A53-80E3-60CA6077AED1" Win64="yes">
+                        <Component Id="SKINNING_VERTEX.GLSL.JS" DiskId="1" Guid="908E2AD7-4631-4A53-80E3-60CA6077AED1" Bitness="always64">
                             <File Id="SKINNING_VERTEX.GLSL.JS" Name="skinning_vertex.glsl.js" Source="prefix\threejs_shader_chunks\skinning_vertex.glsl.js" />
                         </Component>
-                        <Component Id="SKINNORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="A0D7EEFC-75DA-41A3-9997-9B6C76F7A107" Win64="yes">
+                        <Component Id="SKINNORMAL_VERTEX.GLSL.JS" DiskId="1" Guid="A0D7EEFC-75DA-41A3-9997-9B6C76F7A107" Bitness="always64">
                             <File Id="SKINNORMAL_VERTEX.GLSL.JS" Name="skinnormal_vertex.glsl.js" Source="prefix\threejs_shader_chunks\skinnormal_vertex.glsl.js" />
                         </Component>
-                        <Component Id="SPECULARMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="3510F27D-86E5-458B-A15D-A3BFF9DA4DD5" Win64="yes">
+                        <Component Id="SPECULARMAP_FRAGMENT.GLSL.JS" DiskId="1" Guid="3510F27D-86E5-458B-A15D-A3BFF9DA4DD5" Bitness="always64">
                             <File Id="SPECULARMAP_FRAGMENT.GLSL.JS" Name="specularmap_fragment.glsl.js" Source="prefix\threejs_shader_chunks\specularmap_fragment.glsl.js" />
                         </Component>
-                        <Component Id="SPECULARMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="F9D11283-79E8-4031-BC37-963E5B108B0C" Win64="yes">
+                        <Component Id="SPECULARMAP_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="F9D11283-79E8-4031-BC37-963E5B108B0C" Bitness="always64">
                             <File Id="SPECULARMAP_PARS_FRAGMENT.GLSL.JS" Name="specularmap_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\specularmap_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="TONEMAPPING_FRAGMENT.GLSL.JS" DiskId="1" Guid="59564ADE-8746-4623-98D3-815546F060FE" Win64="yes">
+                        <Component Id="TONEMAPPING_FRAGMENT.GLSL.JS" DiskId="1" Guid="59564ADE-8746-4623-98D3-815546F060FE" Bitness="always64">
                             <File Id="TONEMAPPING_FRAGMENT.GLSL.JS" Name="tonemapping_fragment.glsl.js" Source="prefix\threejs_shader_chunks\tonemapping_fragment.glsl.js" />
                         </Component>
-                        <Component Id="TONEMAPPING_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="065279B2-461D-429E-853A-13BB9FF2D138" Win64="yes">
+                        <Component Id="TONEMAPPING_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="065279B2-461D-429E-853A-13BB9FF2D138" Bitness="always64">
                             <File Id="TONEMAPPING_PARS_FRAGMENT.GLSL.JS" Name="tonemapping_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\tonemapping_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="TRANSMISSION_FRAGMENT.GLSL.JS" DiskId="1" Guid="D8A296BD-41CD-41D6-B5AA-9C2DDB51BD2A" Win64="yes">
+                        <Component Id="TRANSMISSION_FRAGMENT.GLSL.JS" DiskId="1" Guid="D8A296BD-41CD-41D6-B5AA-9C2DDB51BD2A" Bitness="always64">
                             <File Id="TRANSMISSION_FRAGMENT.GLSL.JS" Name="transmission_fragment.glsl.js" Source="prefix\threejs_shader_chunks\transmission_fragment.glsl.js" />
                         </Component>
-                        <Component Id="TRANSMISSION_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="35FA283E-C18A-4D17-8E98-0C1DEC3EE99A" Win64="yes">
+                        <Component Id="TRANSMISSION_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="35FA283E-C18A-4D17-8E98-0C1DEC3EE99A" Bitness="always64">
                             <File Id="TRANSMISSION_PARS_FRAGMENT.GLSL.JS" Name="transmission_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\transmission_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="UV2_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="3D6A61EC-6412-447D-86DE-B3B70720C7A0" Win64="yes">
+                        <Component Id="UV2_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="3D6A61EC-6412-447D-86DE-B3B70720C7A0" Bitness="always64">
                             <File Id="UV2_PARS_FRAGMENT.GLSL.JS" Name="uv2_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\uv2_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="UV2_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="5FD4AB9F-267C-4684-AB2C-684E485B2C36" Win64="yes">
+                        <Component Id="UV2_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="5FD4AB9F-267C-4684-AB2C-684E485B2C36" Bitness="always64">
                             <File Id="UV2_PARS_VERTEX.GLSL.JS" Name="uv2_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\uv2_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="UV2_VERTEX.GLSL.JS" DiskId="1" Guid="00D8F32F-4ECF-4D2D-A508-2A132FF5FBA6" Win64="yes">
+                        <Component Id="UV2_VERTEX.GLSL.JS" DiskId="1" Guid="00D8F32F-4ECF-4D2D-A508-2A132FF5FBA6" Bitness="always64">
                             <File Id="UV2_VERTEX.GLSL.JS" Name="uv2_vertex.glsl.js" Source="prefix\threejs_shader_chunks\uv2_vertex.glsl.js" />
                         </Component>
-                        <Component Id="UV_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="B910F06D-3A84-4BA6-8896-A49F7225FDA7" Win64="yes">
+                        <Component Id="UV_PARS_FRAGMENT.GLSL.JS" DiskId="1" Guid="B910F06D-3A84-4BA6-8896-A49F7225FDA7" Bitness="always64">
                             <File Id="UV_PARS_FRAGMENT.GLSL.JS" Name="uv_pars_fragment.glsl.js" Source="prefix\threejs_shader_chunks\uv_pars_fragment.glsl.js" />
                         </Component>
-                        <Component Id="UV_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="40A7B559-F1A9-48ED-BEB3-E49A0F1BD8ED" Win64="yes">
+                        <Component Id="UV_PARS_VERTEX.GLSL.JS" DiskId="1" Guid="40A7B559-F1A9-48ED-BEB3-E49A0F1BD8ED" Bitness="always64">
                             <File Id="UV_PARS_VERTEX.GLSL.JS" Name="uv_pars_vertex.glsl.js" Source="prefix\threejs_shader_chunks\uv_pars_vertex.glsl.js" />
                         </Component>
-                        <Component Id="UV_VERTEX.GLSL.JS" DiskId="1" Guid="916A74DD-CE5C-4095-A79C-C605F821B856" Win64="yes">
+                        <Component Id="UV_VERTEX.GLSL.JS" DiskId="1" Guid="916A74DD-CE5C-4095-A79C-C605F821B856" Bitness="always64">
                             <File Id="UV_VERTEX.GLSL.JS" Name="uv_vertex.glsl.js" Source="prefix\threejs_shader_chunks\uv_vertex.glsl.js" />
                         </Component>
-                        <Component Id="WORLDPOS_VERTEX.GLSL.JS" DiskId="1" Guid="BB03380F-E865-4455-A9FD-9FD5058E7F53" Win64="yes">
+                        <Component Id="WORLDPOS_VERTEX.GLSL.JS" DiskId="1" Guid="BB03380F-E865-4455-A9FD-9FD5058E7F53" Bitness="always64">
                             <File Id="WORLDPOS_VERTEX.GLSL.JS" Name="worldpos_vertex.glsl.js" Source="prefix\threejs_shader_chunks\worldpos_vertex.glsl.js" />
                         </Component>
                     </Directory>
                 </Directory>
             </Directory>
         </Directory>
-        <DirectoryRef Id="TargetReg">
+        <DirectoryRef Id="TARGETDIR">
             <Component Id="RegistryEntries" Guid="53A51444-9B09-4574-9C04-19B7890C2F93">
                 <RegistryValue Id="VrmEditor" Root="HKCR" Key="VrmEditor\shell\open\command" Type="string" Value="&quot;[#VRMEDITOR.EXE]&quot; &quot;%1&quot;" />
             </Component>
