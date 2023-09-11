@@ -1,10 +1,11 @@
 #pragma once
 #include "constraint.h"
-#include <grapho/euclidean_transform.h>
 #include "humanoid/humanbones.h"
 #include <DirectXMath.h>
 #include <assert.h>
 #include <functional>
+#include <grapho/euclidean_transform.h>
+#include <iostream>
 #include <list>
 #include <memory>
 #include <optional>
@@ -104,7 +105,10 @@ struct Node
     DirectX::XMVECTOR s;
     DirectX::XMVECTOR r;
     DirectX::XMVECTOR t;
-    assert(DirectX::XMMatrixDecompose(&s, &r, &t, world));
+    if (!DirectX::XMMatrixDecompose(&s, &r, &t, world)) {
+      std::cerr << "XMMatrixDecompose" << std::endl;
+      return;
+    }
     DirectX::XMStoreFloat3((DirectX::XMFLOAT3*)&WorldInitialScale, s);
     DirectX::XMStoreFloat4((DirectX::XMFLOAT4*)&WorldInitialTransform.Rotation,
                            r);
