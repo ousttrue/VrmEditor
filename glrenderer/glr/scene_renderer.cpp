@@ -420,6 +420,11 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
                             const grapho::camera::Viewport& viewport,
                             const grapho::camera::MouseState& mouse) const
 {
+  if(!scene->m_gltf)
+  {
+    return;
+  }
+
   // update camera
   m_camera->Projection.SetViewport(viewport);
   m_camera->MouseInputTurntable(mouse);

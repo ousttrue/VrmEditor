@@ -85,28 +85,31 @@ struct VrmImpl
   void SetRuntime(const std::shared_ptr<libvrm::RuntimeScene>& runtime)
   {
     m_runtime = runtime;
-    if (auto VRMC_vrm =
-          m_runtime->m_base->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
-      if (auto meta = VRMC_vrm->Meta()) {
-        if (auto imgId = meta->ThumbnailImageId()) {
-          m_thumbImage = glr::GetOrCreateImage(
-            *m_runtime->m_base->m_gltf, m_runtime->m_base->m_bin, *imgId);
-        }
-      }
-    } else if (auto VRM = m_runtime->m_base->m_gltf
-                            ->GetExtension<gltfjson::vrm0::VRM>()) {
-      if (auto meta = VRM->Meta()) {
-        if (auto texId = meta->TextureId()) {
-          auto texture = m_runtime->m_base->m_gltf->Textures[*texId];
-          if (auto imgId = texture.SourceId()) {
+    if (m_runtime && m_runtime->m_base && m_runtime->m_base->m_gltf &&
+        m_runtime->m_base->m_gltf->m_json) {
+      if (auto VRMC_vrm = m_runtime->m_base->m_gltf
+                            ->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
+        if (auto meta = VRMC_vrm->Meta()) {
+          if (auto imgId = meta->ThumbnailImageId()) {
             m_thumbImage = glr::GetOrCreateImage(
               *m_runtime->m_base->m_gltf, m_runtime->m_base->m_bin, *imgId);
           }
         }
+      } else if (auto VRM = m_runtime->m_base->m_gltf
+                              ->GetExtension<gltfjson::vrm0::VRM>()) {
+        if (auto meta = VRM->Meta()) {
+          if (auto texId = meta->TextureId()) {
+            auto texture = m_runtime->m_base->m_gltf->Textures[*texId];
+            if (auto imgId = texture.SourceId()) {
+              m_thumbImage = glr::GetOrCreateImage(
+                *m_runtime->m_base->m_gltf, m_runtime->m_base->m_bin, *imgId);
+            }
+          }
+        }
       }
-    }
 
-    m_springbone->SetRuntime(runtime);
+      m_springbone->SetRuntime(runtime);
+    }
   }
 
   void ShowMeta()

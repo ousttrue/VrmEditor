@@ -14,6 +14,12 @@
             },
             "problemMatcher": [],
             "isBackground": true
-        }
+        },
+        {
+            "label": "copy-pdb",
+            "type": "shell",
+            "command": "copy builddir/src/vrmeditor/vrmeditor.pdb prefix/bin/",
+            "problemMatcher": [],
+        },
     ]
 }

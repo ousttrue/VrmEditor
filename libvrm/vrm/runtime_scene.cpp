@@ -397,8 +397,8 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& table)
 std::shared_ptr<RuntimeScene>
 RuntimeScene::Load(const std::shared_ptr<GltfRoot>& base)
 {
+  assert(base);
   auto ptr = std::make_shared<RuntimeScene>(base);
-
   if (base->m_gltf) {
     if (auto VRMC_vrm =
           base->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
