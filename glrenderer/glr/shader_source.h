@@ -1,7 +1,6 @@
 #pragma once
 #include <filesystem>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace glr {
@@ -20,7 +19,7 @@ namespace glr {
 struct ShaderSource
 {
   std::filesystem::path Path;
-  std::u8string Source;
+  std::string Source;
   std::vector<std::filesystem::path> Includes;
 
   void Reload(const std::filesystem::path& dir,

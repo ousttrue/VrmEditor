@@ -121,13 +121,14 @@ struct LuaEngineImpl
   }
   ~LuaEngineImpl() { lua_close(m_lua); }
 
-  std::expected<bool, std::string> Eval(const std::string& script)
+  bool Eval(const std::string& script)
   {
     auto ret = luaL_dostring(m_lua, script.c_str());
     if (ret != 0) {
       std::string msg = lua_tostring(m_lua, -1);
       lua_pop(m_lua, 1); // pop error message
-      return std::unexpected{ msg };
+      // return std::unexpected{ msg };
+      return {};
     }
     return true;
   }
@@ -157,7 +158,7 @@ LuaEngine::~LuaEngine()
   delete m_impl;
 }
 
-std::expected<bool, std::string>
+bool
 LuaEngine::Eval(std::string_view script)
 {
   return m_impl->Eval({ script.begin(), script.end() });

@@ -95,25 +95,25 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
     .Name = "three-vrm(vrm-1.0)",
     .VS={
       .SourceName = "mtoon.vert",
-      .Version = u8"#version 300 es",
+      .Version = "#version 300 es",
       .Codes{ VS_BUILTIN },
       .MacroGroups{
         {"VS", {
-          { u8"THREE_VRM_THREE_REVISION", ConstInt(150) },
-          { u8"NUM_SPOT_LIGHT_COORDS", ConstInt(4) },
-          { u8"NUM_CLIPPING_PLANES", ConstInt(0) },
-          { u8"MTOON_USE_UV" },
+          { "THREE_VRM_THREE_REVISION", ConstInt(150) },
+          { "NUM_SPOT_LIGHT_COORDS", ConstInt(4) },
+          { "NUM_CLIPPING_PLANES", ConstInt(0) },
+          { "MTOON_USE_UV" },
         }},
       },
     },
     .FS={
       .SourceName = "mtoon.frag",
-      .Version =u8"#version 300 es",
-      .Precision = u8"mediump float",
+      .Version ="#version 300 es",
+      .Precision = "mediump float",
       .Codes{ FS_BUIlTIN },
       .MacroGroups{
         {"TEXTURE", {
-          { u8"USE_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{ 
+          { "USE_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{ 
             auto m = gltf.Material();
             if(auto pbr = m.PbrMetallicRoughness())
             {
@@ -124,7 +124,7 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
             }
             return std::nullopt;
           }}},
-          { u8"USE_SHADEMULTIPLYTEXTURE", OptVar{[](auto &root, auto, auto &gltf)->std::optional<std::monostate>{
+          { "USE_SHADEMULTIPLYTEXTURE", OptVar{[](auto &root, auto, auto &gltf)->std::optional<std::monostate>{
             auto m = gltf.Material();
             if(auto extensions = m.Extensions())
             {
@@ -139,7 +139,7 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
             }
             return std::nullopt;
           }}},
-          { u8"USE_MATCAPTEXTURE", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
+          { "USE_MATCAPTEXTURE", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
             auto m = gltf.Material();
             if(auto extensions = m.Extensions())
             {
@@ -156,18 +156,18 @@ MaterialFactory_MToon1(const gltfjson::Root& root,
           }}},
         }},
         {"LIGHTING", {
-          { u8"MTOON_USE_UV" },
-          { u8"THREE_VRM_THREE_REVISION", ConstInt(150) },
-          { u8"NUM_SPOT_LIGHT_COORDS", ConstInt(4) },
-          { u8"NUM_DIR_LIGHTS", ConstInt(1) },
-          { u8"NUM_POINT_LIGHTS", ConstInt(0) },
-          { u8"NUM_SPOT_LIGHTS", ConstInt(0) },
-          { u8"NUM_RECT_AREA_LIGHTS", ConstInt(0) },
-          { u8"NUM_HEMI_LIGHTS", ConstInt(0) },
-          { u8"NUM_SPOT_LIGHT_MAPS", ConstInt(0) },
-          { u8"NUM_CLIPPING_PLANES", ConstInt(0) },
-          { u8"UNION_CLIPPING_PLANES", ConstInt(0) },
-          { u8"isOrthographic", ConstBool(false) },
+          { "MTOON_USE_UV" },
+          { "THREE_VRM_THREE_REVISION", ConstInt(150) },
+          { "NUM_SPOT_LIGHT_COORDS", ConstInt(4) },
+          { "NUM_DIR_LIGHTS", ConstInt(1) },
+          { "NUM_POINT_LIGHTS", ConstInt(0) },
+          { "NUM_SPOT_LIGHTS", ConstInt(0) },
+          { "NUM_RECT_AREA_LIGHTS", ConstInt(0) },
+          { "NUM_HEMI_LIGHTS", ConstInt(0) },
+          { "NUM_SPOT_LIGHT_MAPS", ConstInt(0) },
+          { "NUM_CLIPPING_PLANES", ConstInt(0) },
+          { "UNION_CLIPPING_PLANES", ConstInt(0) },
+          { "isOrthographic", ConstBool(false) },
         }},
         {"Material", {
           // {u8"USE_ALPHATEST", OptVar{[](auto,auto,auto &json)->std::optional<std::monostate>{

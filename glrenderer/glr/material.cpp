@@ -13,8 +13,9 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
                    const Gltf& gltf)
 {
   if (!Compiled) {
-    auto error = Compiled.error();
-    if (error.empty()) {
+    // auto error = Compiled.error();
+    // if (error.empty()) 
+    {
       // execute mcaro
       VS.Update(world, local, gltf);
       auto vs = VS.Expand(shaderSource);
@@ -26,7 +27,7 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
 
       // match binding
       if (Compiled) {
-        auto shader = *Compiled;
+        auto shader = Compiled;
         UniformVars.clear();
         for (auto& u : shader->Uniforms) {
           auto found = UniformVarMap.find(u.Name);
@@ -40,7 +41,7 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
           }
         }
       } else {
-        auto error = Compiled.error();
+        // auto error = Compiled.error();
         auto a = 0;
       }
     }
@@ -50,7 +51,7 @@ Material::Activate(const std::shared_ptr<ShaderSourceManager>& shaderSource,
       UpdateState(world, local, gltf);
     }
 
-    auto shader = *Compiled;
+    auto shader = Compiled;
     shader->Use();
 
     for (size_t i = 0; i < shader->Uniforms.size(); ++i) {

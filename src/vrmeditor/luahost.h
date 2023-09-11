@@ -1,7 +1,6 @@
 #pragma once
-#include <expected>
 #include <filesystem>
-#include <string>
+#include <string_view>
 
 class LuaEngine
 {
@@ -19,6 +18,6 @@ public:
     return s_instance;
   }
   // lua_State* state() { return L_; }
-  std::expected<bool, std::string> Eval(std::string_view script);
+  bool Eval(std::string_view script);
   void DoFile(const std::filesystem::path& path);
 };

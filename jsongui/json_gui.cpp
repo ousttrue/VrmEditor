@@ -360,16 +360,16 @@ JsonGui::OnEdit(const gltfjson::tree::NodePtr& parent,
       assert(!item);
       ClearCache(jsonpath);
       gltfjson::tree::Parser parser(prop.Value.DefaultJson);
-      if (auto new_child = parser.ParseExpected()) {
+      if (auto new_child = parser.Parse()) {
         if (auto object = parent->Object()) {
-          object->insert({ prop.Name.Key, *new_child });
+          object->insert({ prop.Name.Key, new_child });
           return true;
         } else if (auto array = parent->Array()) {
-          array->push_back(*new_child);
+          array->push_back(new_child);
           return true;
         }
       } else {
-        PLOG_ERROR << gltfjson::from_u8(new_child.error());
+        // PLOG_ERROR << gltfjson::from_u8(new_child.error());
         return false;
       }
       break;

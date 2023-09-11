@@ -119,14 +119,14 @@ Gl3RendererGui::ShowShaderSource(Material& material)
   if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
     if (ImGui::BeginTabItem("VS")) {
       if (ShowShader(material, material.VS, m_vsEditor)) {
-        material.Compiled = std::unexpected{ "" };
+        material.Compiled = {}; //std::unexpected{ "" };
         m_vsEditor.SetText("");
       }
       ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("FS")) {
       if (ShowShader(material, material.FS, m_fsEditor)) {
-        material.Compiled = std::unexpected{ "" };
+        material.Compiled = {}; //std::unexpected{ "" };
         m_fsEditor.SetText("");
       }
       ImGui::EndTabItem();
@@ -207,7 +207,7 @@ Gl3RendererGui::ShowShaderVariables(Material& factory)
 {
   bool updated = false;
   if (auto compiled = factory.Compiled) {
-    auto shader = *compiled;
+    auto shader = compiled;
 
     ImGui::TextUnformatted("uniform variables");
     std::array<const char*, 5> cols = {
@@ -246,13 +246,13 @@ Gl3RendererGui::ShowShaderVariables(Material& factory)
       ImGui::EndTable();
     }
   } else {
-    auto error = factory.Compiled.error();
-    if (error.size()) {
-      ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-      if (ImGui::CollapsingHeader("Error")) {
-        ImGui::TextWrapped("error: %s", error.c_str());
-      }
-    }
+    // auto error = factory.Compiled.error();
+    // if (error.size()) {
+    //   ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+    //   if (ImGui::CollapsingHeader("Error")) {
+    //     ImGui::TextWrapped("error: %s", error.c_str());
+    //   }
+    // }
   }
 }
 

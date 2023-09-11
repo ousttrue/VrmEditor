@@ -233,7 +233,7 @@ HumanPoseStream::LoadMotion(const std::filesystem::path& path)
   if (auto parsed = bvh->Parse({ (const char*)bytes.data(), bytes.size() })) {
   } else {
     PLOG_ERROR << "LoadMotion: " << path.string();
-    PLOG_ERROR << "LoadMotion: " << parsed.error();
+    // PLOG_ERROR << "LoadMotion: " << parsed.error();
     return false;
   }
   auto scaling = bvh->GuessScaling();
@@ -262,7 +262,7 @@ HumanPoseStream::LoadVrmPose(const std::string& json)
       "SrcNode",
       {},
       std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
-    auto runtime = libvrm::RuntimeScene::Load(*loaded);
+    auto runtime = libvrm::RuntimeScene::Load(loaded);
 
     if (auto VRMC_vrm_animation =
           runtime->m_base->m_gltf
@@ -299,7 +299,7 @@ HumanPoseStream::LoadVrmPose(const std::string& json)
 
     return true;
   } else {
-    PLOG_ERROR << loaded.error();
+    // PLOG_ERROR << loaded.error();
     return false;
   }
 }

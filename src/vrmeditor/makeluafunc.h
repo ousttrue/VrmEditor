@@ -63,19 +63,19 @@ LuaPush<bool>(lua_State* L, const bool& value)
   return 1;
 }
 
-template<>
-int
-LuaPush<std::expected<bool, std::string>>(
-  lua_State* L,
-  const std::expected<bool, std::string>& ret)
-{
-  if (ret) {
-    return LuaPush(L, *ret);
-  } else {
-    luaL_error(L, ret.error().c_str());
-    return {};
-  }
-}
+// template<>
+// int
+// LuaPush<bool>(
+//   lua_State* L,
+//   const std::expected<bool, std::string>& ret)
+// {
+//   if (ret) {
+//     return LuaPush(L, *ret);
+//   } else {
+//     luaL_error(L, ret.error().c_str());
+//     return {};
+//   }
+// }
 
 template<void* F, typename R, typename C, typename... AS, std::size_t... IS>
 constexpr lua_CFunction

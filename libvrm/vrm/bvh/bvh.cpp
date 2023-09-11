@@ -160,10 +160,11 @@ struct BvhImpl
 
   std::vector<int> stack_;
 
-  std::expected<bool, std::string> Parse()
+  bool Parse()
   {
     if (!token_.expect("HIERARCHY", is_space)) {
-      return std::unexpected{ "format: no HIERARCHY" };
+      // return std::unexpected{ "format: no HIERARCHY" };
+      return {};
     }
 
     if (auto parsed = ParseJoint()) {
@@ -172,23 +173,28 @@ struct BvhImpl
     }
 
     if (!token_.expect("Frames:", is_space)) {
-      return std::unexpected{ "format: no Frames:" };
+      // return std::unexpected{ "format: no Frames:" };
+      return {};
     }
     auto frames = token_.number<int>(is_space);
     if (!frames) {
-      return std::unexpected{ "format: no frame number" };
+      // return std::unexpected{ "format: no frame number" };
+      return {};
     }
     frame_count_ = *frames;
 
     if (!token_.expect("Frame", is_space)) {
-      return std::unexpected{ "format: Frame" };
+      // return std::unexpected{ "format: Frame" };
+      return {};
     }
     if (!token_.expect("Time:", is_space)) {
-      return std::unexpected{ "format: Time" };
+      // return std::unexpected{ "format: Time" };
+      return {};
     }
     auto frameTime = token_.number<float>(is_space);
     if (!frameTime) {
-      return std::unexpected{ "format: no frame time" };
+      // return std::unexpected{ "format: no frame time" };
+      return {};
     }
     frame_time_ = Time(*frameTime);
 
@@ -201,7 +207,8 @@ struct BvhImpl
     for (int i = 0; i < frame_count_; ++i) {
       auto line = token_.token(get_eol);
       if (!line) {
-        return std::unexpected{ "format: no line" };
+        // return std::unexpected{ "format: no line" };
+        return {};
       }
 
       Tokenizer line_token(*line);
@@ -212,7 +219,8 @@ struct BvhImpl
           std::stringstream ss;
           ss << "format:" << i << ",(" << j << "/" << channel_count_
              << "): no line value";
-          return std::unexpected{ ss.str() };
+          // return std::unexpected{ ss.str() };
+          return {};
         }
       }
     }
@@ -222,19 +230,21 @@ struct BvhImpl
       std::stringstream ss;
       ss << "format: invalid count:" << frames_.size() << "!=" << frame_count_
          << "x" << channel_count_ << "=" << frame_count_ * channel_count_;
-      return std::unexpected{ ss.str() };
+      // return std::unexpected{ ss.str() };
+      return {};
     }
 
     return true;
   }
 
 private:
-  std::expected<bool, std::string> ParseJoint()
+  bool ParseJoint()
   {
     while (true) {
       auto token = token_.token(is_space);
       if (!token) {
-        return std::unexpected{ "format: no token" };
+        // return std::unexpected{ "format: no token" };
+        return {};
       }
 
       if (*token == "ROOT" || *token == "JOINT") {
@@ -248,7 +258,8 @@ private:
         // }
         auto name = token_.token(get_name);
         if (!name) {
-          return std::unexpected{ "format: no name" };
+          // return std::unexpected{ "format: no name" };
+          return {};
         }
 
         // for (size_t i = 0; i < stack_.size(); ++i) {
@@ -257,17 +268,20 @@ private:
         // std::cout << *name << std::endl;
 
         if (!token_.expect("{", is_space)) {
-          return std::unexpected{ "format: {" };
+          // return std::unexpected{ "format: {" };
+          return {};
         }
 
         auto index = joints_.size();
         auto offset = ParseOffset();
         if (!offset) {
-          return std::unexpected{ "format: offset" };
+          // return std::unexpected{ "format: offset" };
+          return {};
         }
         auto channels = ParseChannels();
         if (!channels) {
-          return std::unexpected{ "format: channels" };
+          // return std::unexpected{ "format: channels" };
+          return {};
         }
         channels->init = *offset;
         channels->startIndex = joints_.empty()
@@ -304,15 +318,18 @@ private:
         // OFFSET x y z
         // }
         if (!token_.expect("Site", get_name)) {
-          return std::unexpected{ "format: no Site" };
+          // return std::unexpected{ "format: no Site" };
+          return {};
         }
 
         if (!token_.expect("{", is_space)) {
-          return std::unexpected{ "format: {" };
+          // return std::unexpected{ "format: {" };
+          return {};
         }
         auto offset = ParseOffset();
         if (!offset) {
-          return std::unexpected{ "format: offset" };
+          // return std::unexpected{ "format: offset" };
+          return {};
         }
         endsites_.push_back(Joint{
           .name = "End Site",
@@ -321,7 +338,8 @@ private:
         });
 
         if (!token_.expect("}", is_space)) {
-          return std::unexpected{ "}" };
+          // return std::unexpected{ "}" };
+          return {};
         }
       } else if (*token == "}") {
         stack_.pop_back();
@@ -329,11 +347,13 @@ private:
       } else if (*token == "MOTION") {
         return true;
       } else {
-        return std::unexpected{ "format: unknown" };
+        // return std::unexpected{ "format: unknown" };
+        return {};
       }
     }
 
-    return std::unexpected("not reach here");
+    // return std::unexpected("not reach here");
+    return {};
   }
 
   std::optional<DirectX::XMFLOAT3> ParseOffset()
@@ -395,12 +415,13 @@ private:
 Bvh::Bvh() {}
 Bvh::~Bvh() {}
 
-std::expected<std::shared_ptr<Bvh>, std::string>
+std::shared_ptr<Bvh>
 Bvh::FromFile(const std::filesystem::path& path)
 {
   auto bytes = ReadAllBytes(path);
   if (bytes.empty()) {
-    return std::unexpected{ std::string("fail to read: " + path.string()) };
+    // return std::unexpected{ std::string("fail to read: " + path.string()) };
+    return {};
   }
 
   auto ptr = std::make_shared<Bvh>();
@@ -410,11 +431,12 @@ Bvh::FromFile(const std::filesystem::path& path)
       })) {
     return ptr;
   } else {
-    return std::unexpected{ result.error() };
+    // return std::unexpected{ result.error() };
+    return {};
   }
 }
 
-std::expected<bool, std::string>
+bool
 Bvh::Parse(std::string_view src)
 {
   BvhImpl parser(joints, endsites, frames, src);

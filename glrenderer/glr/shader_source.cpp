@@ -2,7 +2,6 @@
 #include <expected>
 #include <plog/Log.h>
 #include <ranges>
-#include <span>
 #include <string_view>
 #include <vrm/fileutil.h>
 
@@ -97,8 +96,8 @@ void main()
 };
 )";
 
-std::u8string_view
-SkipSpace(std::u8string_view src)
+std::string_view
+SkipSpace(std::string_view src)
 {
   auto it = src.begin();
   for (; it != src.end(); ++it) {
@@ -110,19 +109,19 @@ SkipSpace(std::u8string_view src)
 }
 
 std::optional<std::filesystem::path>
-get_include_path(std::u8string_view line)
+get_include_path(std::string_view line)
 {
   line = SkipSpace(line);
-  if (!line.starts_with(u8"#include ")) {
+  if (!line.starts_with("#include ")) {
     return {};
   }
   auto tmp = line.substr(9);
-  auto open = tmp.find(u8'"');
+  auto open = tmp.find('"');
   if (open == std::string::npos) {
     return {};
   }
   tmp = tmp.substr(open + 1);
-  auto close = tmp.find(u8'"');
+  auto close = tmp.find('"');
   if (close == std::string::npos) {
     return {};
   }
@@ -130,10 +129,10 @@ get_include_path(std::u8string_view line)
 }
 
 std::optional<std::filesystem::path>
-get_chunk_path(std::u8string_view line)
+get_chunk_path(std::string_view line)
 {
   line = SkipSpace(line);
-  if (!line.starts_with(u8"#include ")) {
+  if (!line.starts_with("#include ")) {
     return {};
   }
   auto tmp = line.substr(9);
@@ -154,8 +153,8 @@ struct IncludeExpander
   std::filesystem::path ChunkDir;
   std::vector<std::filesystem::path> IncludeFiles;
 
-  std::u8string GetOrExpandLine(const std::filesystem::path& base,
-                                std::u8string_view line)
+  std::string GetOrExpandLine(const std::filesystem::path& base,
+                                std::string_view line)
   {
     auto path = get_include_path(line);
     if (!path) {
@@ -166,11 +165,11 @@ struct IncludeExpander
         auto chunk = *include;
 
         // for threejs_shader_chunks
-        const std::u8string EXPORT_DEFAULT = u8"export default /* glsl */`\n";
+        const std::string EXPORT_DEFAULT = "export default /* glsl */`\n";
         if (chunk.starts_with(EXPORT_DEFAULT)) {
           chunk = chunk.substr(EXPORT_DEFAULT.size());
         }
-        if (chunk.ends_with(u8"`;\n")) {
+        if (chunk.ends_with("`;\n")) {
           chunk.pop_back();
           chunk.pop_back();
           chunk.pop_back();
@@ -182,7 +181,7 @@ struct IncludeExpander
 #endif
         return chunk;
       } else {
-        PLOG_WARNING << include.error();
+        // PLOG_WARNING << include.error();
         return {};
       }
     } else {
@@ -190,7 +189,7 @@ struct IncludeExpander
     }
   }
 
-  std::expected<std::u8string, std::string> ExpandIncludeRecursive(
+  std::optional<std::string> ExpandIncludeRecursive(
     const std::filesystem::path& base,
     const std::filesystem::path& include)
   {
@@ -201,25 +200,26 @@ struct IncludeExpander
     } else if (std::filesystem::exists(chunk)) {
       return Expand(chunk);
     } else {
-      return std::unexpected{ "file not found: " + path.string() };
+      // return std::unexpected{ "file not found: " + path.string() };
+      return {};
     }
   }
 
-  std::expected<std::u8string, std::string> Expand(
-    const std::filesystem::path& path)
+  std::optional<std::string> Expand(const std::filesystem::path& path)
   {
     auto found = std::find(IncludeFiles.begin(), IncludeFiles.end(), path);
     if (found != IncludeFiles.end()) {
       // ERROR
-      return std::unexpected{ "circular include !" };
+      // return std::unexpected{ "circular include !" };
+      return {};
     }
     IncludeFiles.push_back(path);
     auto bytes = libvrm::ReadAllBytes(path);
-    std::u8string_view source{ (const char8_t*)bytes.data(), bytes.size() };
+    std::string_view source{ (const char*)bytes.data(), bytes.size() };
 
-    std::u8string dst;
-    for (auto sv : source | std::views::split(u8'\n')) {
-      std::u8string_view line{ sv };
+    std::string dst;
+    for (auto sv : source | std::views::split('\n')) {
+      std::string_view line{ sv.begin(), sv.end() };
       if (line.size() && line.back() == '\r') {
         line = line.substr(0, line.size() - 1);
       }
@@ -232,15 +232,15 @@ struct IncludeExpander
     return dst;
   }
 
-  std::u8string ExpandInclude(const std::filesystem::path& path)
+  std::string ExpandInclude(const std::filesystem::path& path)
   {
     auto bytes = libvrm::ReadAllBytes(path);
-    std::u8string_view root_source{ (const char8_t*)bytes.data(),
+    std::string_view root_source{ (const char*)bytes.data(),
                                     bytes.size() };
 
-    std::u8string dst;
-    for (auto sv : root_source | std::views::split(u8'\n')) {
-      std::u8string_view line{ sv };
+    std::string dst;
+    for (auto sv : root_source | std::views::split('\n')) {
+      std::string_view line{ sv.begin(), sv.end() };
       if (line.size() && line.back() == '\r') {
         line = line.substr(0, line.size() - 1);
       }

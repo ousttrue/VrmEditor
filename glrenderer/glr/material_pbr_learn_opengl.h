@@ -13,11 +13,11 @@ MaterialFactory_Pbr_LearnOpenGL(const gltfjson::Root& root,
     .Name = "PBR based Learn OpenGL",
     .VS = {
       .SourceName ="pbr.vert",
-      .Version = u8"#version 450",
+      .Version = "#version 450",
     },
     .FS = {
       .SourceName ="pbr.frag",
-      .Version = u8"#version 450",
+      .Version = "#version 450",
     },
     .EnvCubemaps{
       {0, EnvCubemapTypes::LOGL_IrradianceMap},
@@ -69,23 +69,23 @@ MaterialFactory_Pbr_LearnOpenGL(const gltfjson::Root& root,
   }
 
   if (albedo) {
-    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_ALBEDO_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ "HAS_ALBEDO_TEXTURE" });
     ptr->Textures.push_back({ 3, albedo });
   }
   if (normal) {
-    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_NORMAL_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ "HAS_NORMAL_TEXTURE" });
     ptr->Textures.push_back({ 4, normal });
   }
   if (metallic) {
-    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_METALLIC_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ "HAS_METALLIC_TEXTURE" });
     ptr->Textures.push_back({ 5, metallic });
   }
   if (roughness) {
-    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_ROUGHNESS_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ "HAS_ROUGHNESS_TEXTURE" });
     ptr->Textures.push_back({ 6, roughness });
   }
   if (ao) {
-    ptr->FS.MacroGroups["Texture"].push_back({ u8"HAS_AO_TEXTURE" });
+    ptr->FS.MacroGroups["Texture"].push_back({ "HAS_AO_TEXTURE" });
     ptr->Textures.push_back({ 7, ao });
   }
 

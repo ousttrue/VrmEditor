@@ -1,7 +1,7 @@
 namespace glr {
 
 // https://threejs.org/docs/#api/en/renderers/webgl/WebGLProgram
-inline const auto VS_BUILTIN = u8R"(
+inline const auto VS_BUILTIN = R"(
 // = object.matrixWorld
 uniform mat4 modelMatrix;
 
@@ -73,7 +73,7 @@ attribute vec2 uv;
 #endif
 )";
 
-inline const auto FS_BUIlTIN = u8R"(
+inline const auto FS_BUIlTIN = R"(
 uniform mat4 viewMatrix;
 uniform vec3 cameraPosition;
 

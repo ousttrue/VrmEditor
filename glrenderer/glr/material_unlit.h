@@ -14,11 +14,11 @@ MaterialFactory_Unlit(const gltfjson::Root& root,
     .Name = "experimental simple unlit",
     .VS = {
       .SourceName = "unlit.vert",
-      .Version = u8"#version 450",
+      .Version = "#version 450",
     },
     .FS = {
       .SourceName= "unlit.frag",
-      .Version = u8"#version 450",
+      .Version = "#version 450",
     },
   };
 

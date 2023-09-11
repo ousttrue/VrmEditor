@@ -20,7 +20,7 @@ RotateY180(const DirectX::XMFLOAT4& src)
   return dst;
 }
 
-static std::expected<std::shared_ptr<Node>, std::string>
+static std::shared_ptr<Node>
 ParseNode(const std::shared_ptr<GltfRoot>& scene,
           int i,
           const gltfjson::Node& node)
@@ -58,7 +58,7 @@ ParseNode(const std::shared_ptr<GltfRoot>& scene,
   return ptr;
 }
 
-static std::expected<bool, std::string>
+static bool
 Parse(const std::shared_ptr<GltfRoot>& scene)
 {
   scene->m_title = "glTF";
@@ -68,10 +68,12 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
       for (auto ex : *array) {
         auto name = ex->U8String();
         if (name == u8"KHR_draco_mesh_compression") {
-          return std::unexpected{ "KHR_draco_mesh_compression" };
+          // return std::unexpected{ "KHR_draco_mesh_compression" };
+          return {};
         }
         if (name == u8"KHR_mesh_quantization") {
-          return std::unexpected{ "KHR_mesh_quantization" };
+          // return std::unexpected{ "KHR_mesh_quantization" };
+          return {};
         }
       }
     }
@@ -81,9 +83,10 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
     auto& nodes = scene->m_gltf->Nodes;
     for (int i = 0; i < nodes.size(); ++i) {
       if (auto node = ParseNode(scene, i, nodes[i])) {
-        scene->m_nodes.push_back(*node);
+        scene->m_nodes.push_back(node);
       } else {
-        return std::unexpected{ node.error() };
+        // return std::unexpected{ node.error() };
+        return {};
       }
     }
     for (int i = 0; i < nodes.size(); ++i) {
@@ -125,7 +128,6 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
     if (auto pose =
           VRMC_vrm_animation->GetExtension<gltfjson::vrm1::VRMC_vrm_pose>()) {
       if (auto humanoid = pose->Humanoid()) {
-
       }
     }
   } else if (auto VRMC_vrm =
@@ -178,29 +180,30 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   return true;
 }
 
-static std::expected<bool, std::string>
+static bool
 Load(const std::shared_ptr<GltfRoot>& scene,
      std::span<const uint8_t> json_chunk,
      std::span<const uint8_t> bin_chunk,
      const std::shared_ptr<gltfjson::Directory>& dir)
 {
   gltfjson::tree::Parser parser(json_chunk);
-  if (auto result = parser.ParseExpected()) {
-    scene->m_gltf = std::make_shared<gltfjson::Root>(*result);
+  if (auto result = parser.Parse()) {
+    scene->m_gltf = std::make_shared<gltfjson::Root>(result);
     scene->m_bin = { dir, bin_chunk };
     if (!scene->m_bin.Dir) {
       scene->m_bin.Dir = std::make_shared<gltfjson::Directory>();
     }
     return Parse(scene);
   } else {
-    auto error = result.error();
-    std::string msg{ (const char*)error.data(),
-                     (const char*)error.data() + error.size() };
-    return std::unexpected{ msg };
+    // auto error = result.error();
+    // std::string msg{ (const char*)error.data(),
+    //                  (const char*)error.data() + error.size() };
+    // return std::unexpected{ msg };
+    return {};
   }
 }
 
-std::expected<bool, std::string>
+bool
 LoadBytes(const std::shared_ptr<GltfRoot>& scene,
           std::span<const uint8_t> bytes,
           const std::shared_ptr<gltfjson::Directory>& dir)
@@ -215,7 +218,7 @@ LoadBytes(const std::shared_ptr<GltfRoot>& scene,
   return Load(scene, scene->m_bytes, {}, dir);
 }
 
-std::expected<std::shared_ptr<GltfRoot>, std::string>
+std::shared_ptr<GltfRoot>
 LoadPath(const std::filesystem::path& path)
 {
   if (auto bytes = gltfjson::ReadAllBytes(path)) {
@@ -226,14 +229,16 @@ LoadPath(const std::filesystem::path& path)
           std::make_shared<gltfjson::Directory>(path.parent_path()))) {
       return ptr;
     } else {
-      return std::unexpected(load.error());
+      // return std::unexpected(load.error());
+      return {};
     }
   } else {
-    return std::unexpected{ bytes.error() };
+    // return std::unexpected{ bytes.error() };
+    return {};
   }
 }
 
-std::expected<std::shared_ptr<GltfRoot>, std::string>
+std::shared_ptr<GltfRoot>
 LoadGltf(const std::string& json)
 {
   auto ptr = std::make_shared<GltfRoot>();
@@ -241,7 +246,8 @@ LoadGltf(const std::string& json)
   if (auto load = LoadBytes(ptr, bytes, nullptr)) {
     return ptr;
   } else {
-    return std::unexpected(load.error());
+    // return std::unexpected(load.error());
+    return {};
   }
 }
 

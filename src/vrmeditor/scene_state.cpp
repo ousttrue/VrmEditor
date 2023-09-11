@@ -23,12 +23,12 @@ bool
 SceneState::LoadModel(const std::filesystem::path& path)
 {
   if (auto gltf = libvrm::LoadPath(path)) {
-    SetGltf(*gltf);
-    auto u8 = path.u8string();
-    PLOG_INFO << std::string_view{ (const char*)u8.data(), u8.size() };
+    SetGltf(gltf);
+    auto value = path.string();
+    PLOG_INFO << value;
     return true;
   } else {
-    PLOG_ERROR << gltf.error();
+    // PLOG_ERROR << gltf.error();
     SetGltf(std::make_shared<libvrm::GltfRoot>());
     return false;
   }
@@ -38,11 +38,11 @@ bool
 SceneState::LoadGltfString(const std::string& json)
 {
   if (auto gltf = libvrm::LoadGltf(json)) {
-    SetGltf(*gltf);
+    SetGltf(gltf);
     PLOG_INFO << "paste gltf string";
     return true;
   } else {
-    PLOG_ERROR << gltf.error();
+    // PLOG_ERROR << gltf.error();
     return false;
   }
 }

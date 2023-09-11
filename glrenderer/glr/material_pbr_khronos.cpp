@@ -75,64 +75,64 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
     .Name = "Khronos glTF-sample-viewer pbr",
     .VS={
       .SourceName = "khronos/primitive.vert",
-      .Version=u8"#version 300 es",
+      .Version="#version 300 es",
       .MacroGroups{
         {"VERTEX", {
-          { u8"HAS_NORMAL_VEC3", ConstInt(1) },
-          { u8"HAS_POSITION_VEC3", ConstInt(1) },
-          { u8"HAS_TEXCOORD_0_VEC2", ConstInt(1) },
+          { "HAS_NORMAL_VEC3", ConstInt(1) },
+          { "HAS_POSITION_VEC3", ConstInt(1) },
+          { "HAS_TEXCOORD_0_VEC2", ConstInt(1) },
         }},
       },
     },
     .FS={
       .SourceName = "khronos/pbr.frag",
-      .Version=u8"#version 300 es",
+      .Version="#version 300 es",
       .Enums = {
         {
           .Values = {
-            { u8"DEBUG_NONE", 0 },
-            { u8"DEBUG_NORMAL_SHADING", 1 },
-            { u8"DEBUG_NORMAL_TEXTURE", 2 },
-            { u8"DEBUG_NORMAL_GEOMETRY", 3 },
-            { u8"DEBUG_TANGENT", 4 },
-            { u8"DEBUG_BITANGENT", 5 },
-            { u8"DEBUG_ALPHA", 6 },
-            { u8"DEBUG_UV_0", 7 },
-            { u8"DEBUG_UV_1", 8 },
-            { u8"DEBUG_OCCLUSION", 9 },
-            { u8"DEBUG_EMISSIVE", 10 },
-            { u8"DEBUG_METALLIC_ROUGHNESS", 11 },
-            { u8"DEBUG_BASE_COLOR", 12 },
-            { u8"DEBUG_ROUGHNESS", 13 },
-            { u8"DEBUG_METALLIC", 14 },
-            { u8"DEBUG_CLEARCOAT", 15 },
-            { u8"DEBUG_CLEARCOAT_FACTOR", 16 },
-            { u8"DEBUG_CLEARCOAT_ROUGHNESS", 17 },
-            { u8"DEBUG_CLEARCOAT_NORMAL", 18 },
-            { u8"DEBUG_SHEEN", 19 },
-            { u8"DEBUG_SHEEN_COLOR", 20 },
-            { u8"DEBUG_SHEEN_ROUGHNESS", 21 },
-            { u8"DEBUG_SPECULAR", 22 },
-            { u8"DEBUG_SPECULAR_FACTOR", 23 },
-            { u8"DEBUG_SPECULAR_COLOR", 24 },
-            { u8"DEBUG_TRANSMISSION_VOLUME", 25 },
-            { u8"DEBUG_TRANSMISSION_FACTOR", 26 },
-            { u8"DEBUG_VOLUME_THICKNESS", 27 },
-            { u8"DEBUG_IRIDESCENCE", 28 },
-            { u8"DEBUG_IRIDESCENCE_FACTOR", 29 },
-            { u8"DEBUG_IRIDESCENCE_THICKNESS", 30 },
-            { u8"DEBUG_ANISOTROPIC_STRENGTH", 31 },
-            { u8"DEBUG_ANISOTROPIC_DIRECTION", 32 },
+            { "DEBUG_NONE", 0 },
+            { "DEBUG_NORMAL_SHADING", 1 },
+            { "DEBUG_NORMAL_TEXTURE", 2 },
+            { "DEBUG_NORMAL_GEOMETRY", 3 },
+            { "DEBUG_TANGENT", 4 },
+            { "DEBUG_BITANGENT", 5 },
+            { "DEBUG_ALPHA", 6 },
+            { "DEBUG_UV_0", 7 },
+            { "DEBUG_UV_1", 8 },
+            { "DEBUG_OCCLUSION", 9 },
+            { "DEBUG_EMISSIVE", 10 },
+            { "DEBUG_METALLIC_ROUGHNESS", 11 },
+            { "DEBUG_BASE_COLOR", 12 },
+            { "DEBUG_ROUGHNESS", 13 },
+            { "DEBUG_METALLIC", 14 },
+            { "DEBUG_CLEARCOAT", 15 },
+            { "DEBUG_CLEARCOAT_FACTOR", 16 },
+            { "DEBUG_CLEARCOAT_ROUGHNESS", 17 },
+            { "DEBUG_CLEARCOAT_NORMAL", 18 },
+            { "DEBUG_SHEEN", 19 },
+            { "DEBUG_SHEEN_COLOR", 20 },
+            { "DEBUG_SHEEN_ROUGHNESS", 21 },
+            { "DEBUG_SPECULAR", 22 },
+            { "DEBUG_SPECULAR_FACTOR", 23 },
+            { "DEBUG_SPECULAR_COLOR", 24 },
+            { "DEBUG_TRANSMISSION_VOLUME", 25 },
+            { "DEBUG_TRANSMISSION_FACTOR", 26 },
+            { "DEBUG_VOLUME_THICKNESS", 27 },
+            { "DEBUG_IRIDESCENCE", 28 },
+            { "DEBUG_IRIDESCENCE_FACTOR", 29 },
+            { "DEBUG_IRIDESCENCE_THICKNESS", 30 },
+            { "DEBUG_ANISOTROPIC_STRENGTH", 31 },
+            { "DEBUG_ANISOTROPIC_DIRECTION", 32 },
           },
-          .Selected = { u8"DEBUG", ConstInt(0) },
+          .Selected = { "DEBUG", ConstInt(0) },
         },
         {
           .Values = {
-            { u8"ALPHAMODE_OPAQUE", 0 },
-            { u8"ALPHAMODE_MASK", 1 },
-            { u8"ALPHAMODE_BLEND", 2 },
+            { "ALPHAMODE_OPAQUE", 0 },
+            { "ALPHAMODE_MASK", 1 },
+            { "ALPHAMODE_BLEND", 2 },
           },
-          .Selected = {u8"ALPHAMODE", IntVar{[](auto, auto, auto &gltf){
+          .Selected = {"ALPHAMODE", IntVar{[](auto, auto, auto &gltf){
             auto m = gltf.Material();
             auto mode = m.AlphaModeString();
             if(mode == u8"MASK")
@@ -151,15 +151,15 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
       },
       .MacroGroups{
         {"VertexAttribute", {
-          {u8"HAS_POSITION_VEC3"},
-          {u8"HAS_TEXCOORD_0_VEC2"},
-          {u8"HAS_NORMAL_VEC3"},
-          {u8"HAS_TANGENT_VEC4", Disable()},
-          {u8"HAS_COLOR_0_VEC3", Disable()},
-          {u8"HAS_COLOR_0_VEC4", Disable()},
+          {"HAS_POSITION_VEC3"},
+          {"HAS_TEXCOORD_0_VEC2"},
+          {"HAS_NORMAL_VEC3"},
+          {"HAS_TANGENT_VEC4", Disable()},
+          {"HAS_COLOR_0_VEC3", Disable()},
+          {"HAS_COLOR_0_VEC4", Disable()},
         }},
         {"LIGHTING", {
-          { u8"USE_PUNCTUAL", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{ 
+          { "USE_PUNCTUAL", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{ 
             // if(gltf.Root().GetExtension<gltfjson::KHR_lights_punctual>())
             // {
             //   return std::monostate{};
@@ -167,17 +167,17 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
             // return {}; 
             return std::monostate{};
           }}},
-          { u8"LIGHT_COUNT", IntVar{[](auto, auto, auto &gltf)->int{
+          { "LIGHT_COUNT", IntVar{[](auto, auto, auto &gltf)->int{
             if(auto light = gltf.Root().template GetExtension<gltfjson::KHR_lights_punctual>())
             {
               return light->Lights.size();
             }
             return 1;
           }} },
-          {u8"USE_IBL" },
+          {"USE_IBL" },
         }},
         {"Texture",{
-          {u8"HAS_BASE_COLOR_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
+          {"HAS_BASE_COLOR_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
             auto m = gltf.Material();
             if(auto pbr = m.PbrMetallicRoughness())
             {
@@ -188,9 +188,9 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
             }
             return std::nullopt;
           }}},
-          {u8"HAS_BASECOLOR_UV_TRANSFORM", Disable()},
+          {"HAS_BASECOLOR_UV_TRANSFORM", Disable()},
 
-          {u8"HAS_NORMAL_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
+          {"HAS_NORMAL_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
             auto m = gltf.Material();
             if (auto info = m.NormalTexture()) {
               return std::monostate{};
@@ -199,27 +199,27 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
               return std::nullopt;
             }
           }}},
-          {u8"HAS_NORMAL_UV_TRANSFORM", Disable()},
+          {"HAS_NORMAL_UV_TRANSFORM", Disable()},
 
-          {u8"HAS_EMISSIVE_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
+          {"HAS_EMISSIVE_MAP", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
             auto m = gltf.Material();
             if (auto info = m.EmissiveTexture()) {
               return std::monostate{};
             }
             return std::nullopt;
           }}},
-          {u8"HAS_EMISSIVE_UV_TRANSFORM", Disable()},
+          {"HAS_EMISSIVE_UV_TRANSFORM", Disable()},
 
-          {u8"HAS_OCCLUSION_MAP", OptVar{[](auto,auto,auto &gltf)->std::optional<std::monostate>{
+          {"HAS_OCCLUSION_MAP", OptVar{[](auto,auto,auto &gltf)->std::optional<std::monostate>{
             auto m = gltf.Material();
             if (auto info = m.OcclusionTexture()) {
               return std::monostate{};
             }
             return std::nullopt;
           }}},
-          {u8"HAS_OCCLUSION_UV_TRANSFORM", Disable()},
+          {"HAS_OCCLUSION_UV_TRANSFORM", Disable()},
 
-          {u8"HAS_METALLIC_ROUGHNESS_MAP", OptVar{[](auto,auto,auto &gltf)->std::optional<std::monostate>{
+          {"HAS_METALLIC_ROUGHNESS_MAP", OptVar{[](auto,auto,auto &gltf)->std::optional<std::monostate>{
             auto m = gltf.Material();
             if(auto pbr = m.PbrMetallicRoughness())
             {
@@ -230,48 +230,48 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
             }
             return std::nullopt;
           }}},
-          {u8"HAS_METALLICROUGHNESS_UV_TRANSFORM", Disable()},
+          {"HAS_METALLICROUGHNESS_UV_TRANSFORM", Disable()},
 
-          {u8"MATERIAL_SPECULARGLOSSINESS", Disable()},
-          {u8"HAS_SPECULARGLOSSINESS_UV_TRANSFORM", Disable()},
-          {u8"HAS_DIFFUSE_MAP", Disable()},
-          {u8"HAS_DIFFUSE_UV_TRANSFORM", Disable()},
-          {u8"MATERIAL_CLEARCOAT", Disable()},
-          {u8"HAS_CLEARCOAT_NORMAL_MAP", Disable()},
-          {u8"HAS_CLEARCOAT_MAP", Disable()},
-          {u8"HAS_CLEARCOAT_UV_TRANSFORM", Disable()},
-          {u8"HAS_CLEARCOATROUGHNESS_UV_TRANSFORM", Disable()},
-          {u8"HAS_CLEARCOATNORMAL_UV_TRANSFORM", Disable()},
-          {u8"MATERIAL_SHEEN", Disable()},
-          {u8"HAS_SHEEN_COLOR_MAP", Disable()},
-          {u8"HAS_SHEENCOLOR_UV_TRANSFORM", Disable()},
-          {u8"HAS_CLEARCOAT_ROUGHNESS_MAP", Disable()},
-          {u8"HAS_SHEEN_ROUGHNESS_MAP", Disable()},
-          {u8"HAS_SHEENROUGHNESS_UV_TRANSFORM", Disable()},
-          {u8"MATERIAL_SPECULAR", Disable()},
-          {u8"HAS_SPECULAR_GLOSSINESS_MAP", Disable()},
-          {u8"HAS_SPECULAR_MAP", Disable()},
-          {u8"HAS_SPECULAR_UV_TRANSFORM", Disable()},
-          {u8"HAS_SPECULAR_COLOR_MAP", Disable()},
-          {u8"HAS_SPECULARCOLOR_UV_TRANSFORM", Disable()},
-          {u8"MATERIAL_TRANSMISSION", Disable()},
-          {u8"HAS_TRANSMISSION_MAP", Disable()},
-          {u8"HAS_TRANSMISSION_UV_TRANSFORM", Disable()},
-          {u8"MATERIAL_VOLUME", Disable()},
-          {u8"HAS_THICKNESS_MAP", Disable()},
-          {u8"HAS_THICKNESS_UV_TRANSFORM", Disable()},
-          {u8"MATERIAL_IRIDESCENCE", Disable()},
-          {u8"HAS_IRIDESCENCE_MAP", Disable()},
-          {u8"HAS_IRIDESCENCE_UV_TRANSFORM", Disable()},
-          {u8"HAS_IRIDESCENCE_THICKNESS_MAP", Disable()},
-          {u8"HAS_IRIDESCENCETHICKNESS_UV_TRANSFORM", Disable()},
+          {"MATERIAL_SPECULARGLOSSINESS", Disable()},
+          {"HAS_SPECULARGLOSSINESS_UV_TRANSFORM", Disable()},
+          {"HAS_DIFFUSE_MAP", Disable()},
+          {"HAS_DIFFUSE_UV_TRANSFORM", Disable()},
+          {"MATERIAL_CLEARCOAT", Disable()},
+          {"HAS_CLEARCOAT_NORMAL_MAP", Disable()},
+          {"HAS_CLEARCOAT_MAP", Disable()},
+          {"HAS_CLEARCOAT_UV_TRANSFORM", Disable()},
+          {"HAS_CLEARCOATROUGHNESS_UV_TRANSFORM", Disable()},
+          {"HAS_CLEARCOATNORMAL_UV_TRANSFORM", Disable()},
+          {"MATERIAL_SHEEN", Disable()},
+          {"HAS_SHEEN_COLOR_MAP", Disable()},
+          {"HAS_SHEENCOLOR_UV_TRANSFORM", Disable()},
+          {"HAS_CLEARCOAT_ROUGHNESS_MAP", Disable()},
+          {"HAS_SHEEN_ROUGHNESS_MAP", Disable()},
+          {"HAS_SHEENROUGHNESS_UV_TRANSFORM", Disable()},
+          {"MATERIAL_SPECULAR", Disable()},
+          {"HAS_SPECULAR_GLOSSINESS_MAP", Disable()},
+          {"HAS_SPECULAR_MAP", Disable()},
+          {"HAS_SPECULAR_UV_TRANSFORM", Disable()},
+          {"HAS_SPECULAR_COLOR_MAP", Disable()},
+          {"HAS_SPECULARCOLOR_UV_TRANSFORM", Disable()},
+          {"MATERIAL_TRANSMISSION", Disable()},
+          {"HAS_TRANSMISSION_MAP", Disable()},
+          {"HAS_TRANSMISSION_UV_TRANSFORM", Disable()},
+          {"MATERIAL_VOLUME", Disable()},
+          {"HAS_THICKNESS_MAP", Disable()},
+          {"HAS_THICKNESS_UV_TRANSFORM", Disable()},
+          {"MATERIAL_IRIDESCENCE", Disable()},
+          {"HAS_IRIDESCENCE_MAP", Disable()},
+          {"HAS_IRIDESCENCE_UV_TRANSFORM", Disable()},
+          {"HAS_IRIDESCENCE_THICKNESS_MAP", Disable()},
+          {"HAS_IRIDESCENCETHICKNESS_UV_TRANSFORM", Disable()},
         }},
         {"Material", {
-          {u8"MATERIAL_METALLICROUGHNESS"},
-          {u8"MATERIAL_IOR", Disable()},
-          {u8"MATERIAL_EMISSIVE_STRENGTH", Disable()},
+          {"MATERIAL_METALLICROUGHNESS"},
+          {"MATERIAL_IOR", Disable()},
+          {"MATERIAL_EMISSIVE_STRENGTH", Disable()},
 
-          {u8"MATERIAL_UNLIT", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
+          {"MATERIAL_UNLIT", OptVar{[](auto, auto, auto &gltf)->std::optional<std::monostate>{
             auto m = gltf.Material();
             if(m.template GetExtension<gltfjson::KHR_materials_unlit>()){
               return std::monostate{};
@@ -279,7 +279,7 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
             return std::nullopt;
           }}},
 
-          {u8"LINEAR_OUTPUT", Disable()},
+          {"LINEAR_OUTPUT", Disable()},
         }},
       },
     },
