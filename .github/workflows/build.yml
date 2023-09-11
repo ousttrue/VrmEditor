@@ -23,7 +23,7 @@ jobs:
         uses: bus1/cabuild/action/msdevshell@v1
         with:
           architecture: x64
-      - name: WiX Installer
+      - name: Install WiX
         run: dotnet tool install --global wix
       # - run: scripts/build.ps1
       - run: python scripts/build.py

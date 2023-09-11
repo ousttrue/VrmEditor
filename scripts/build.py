@@ -23,8 +23,9 @@ def get_package_dir(name: str) -> Optional[pathlib.Path]:
 
 
 def system(cmd: str):
-    if subprocess.call(cmd, shell=True) < 0:
-        raise Exception(cmd)
+    LOGGER.info(cmd)
+    if subprocess.call(cmd, shell=True) != 0:
+        raise Exception(f'system: "{cmd}"')
 
 
 # https://github.com/mesonbuild/meson/pull/11918/files
@@ -46,6 +47,7 @@ def patch_meson(mesonbuild: pathlib.Path):
 
     w = io.StringIO()
     done = False
+    updated = False
     for l in dst.read_text().splitlines(True):
         strip = l.strip()
         if strip == MESON_ZIG_PATCH_ALREADY:
@@ -53,9 +55,12 @@ def patch_meson(mesonbuild: pathlib.Path):
         if not done and strip == MESON_ZIG_PATCH_INSERT:
             w.write(MESON_ZIG_PATCH)
             done = True
+            updated = True
         w.write(l)
 
-    dst.write_text(w.getvalue())
+    if updated:
+        LOGGER.info(f"patch meson for zig linker detection => {dst}")
+        dst.write_text(w.getvalue())
 
 
 def main():
