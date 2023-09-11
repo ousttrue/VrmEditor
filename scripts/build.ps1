@@ -1,3 +1,8 @@
+$ErrorActionPreference = "Stop"
+
+$zig_path = $(python scripts/zig_path.py)
+$ENV:PATH += ";${zig_path}"
+
 meson setup builddir --prefix "$(pwd)/prefix" --buildtype release --native-file zig.ini -Dcpp_std=c++20 -Dexecutables=true
 meson install -C builddir --tags runtime
 
