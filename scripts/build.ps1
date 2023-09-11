@@ -1,4 +1,4 @@
-meson setup builddir --prefix "$(pwd)/prefix" --buildtype release -Dcpp_std=c++latest -Dexecutables=true
+meson setup builddir --prefix "$(pwd)/prefix" --buildtype release --native-file zig.ini -Dcpp_std=c++20 -Dexecutables=true
 meson install -C builddir --tags runtime
 
 # Compress-Archive -Path "$(pwd)/vrmeditor" -DestinationPath "vrmeditor.zip"

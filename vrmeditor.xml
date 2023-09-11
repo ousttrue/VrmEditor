@@ -10,16 +10,16 @@
         <Directory Id="VRMEDITOR" Name="VrmEditor">
           <Directory Id="BIN" Name="bin">
             <Component Id="FREETYPE_6.DLL" DiskId="1" Guid="243CF729-6BA4-4823-B2E1-BD39044F2450" Win64="yes">
-              <File Id="FREETYPE_6.DLL" Name="freetype-6.dll" Source="prefix\bin\freetype-6.dll" />
+              <File Id="FREETYPE_6.DLL" Name="freetype-6.dll" Source="prefix\bin\libfreetype-6.dll" />
             </Component>
             <Component Id="PNG16_16.DLL" DiskId="1" Guid="CCC8EB4D-B6FC-4A56-9792-93B64FEE54ED" Win64="yes">
-              <File Id="PNG16_16.DLL" Name="png16-16.dll" Source="prefix\bin\png16-16.dll" />
+              <File Id="PNG16_16.DLL" Name="png16-16.dll" Source="prefix\bin\libpng16-16.dll" />
             </Component>
             <Component Id="VRMEDITOR.EXE" DiskId="1" Guid="97E757CC-1F18-427A-B3F2-46CA464541DB" Win64="yes">
               <File Id="VRMEDITOR.EXE" Name="vrmeditor.exe" Source="prefix\bin\vrmeditor.exe" />
             </Component>
             <Component Id="KTX.DLL" DiskId="1" Guid="B1B1FA24-BB96-45C0-8878-6C1B5B7B3659" Win64="yes">
-              <File Id="KTX.DLL" Name="ktx.dll" Source="prefix\bin\ktx.dll" />
+              <File Id="KTX.DLL" Name="ktx.dll" Source="prefix\bin\libktx.dll" />
             </Component>
           </Directory>
           <Directory Id="SHADERS" Name="shaders">

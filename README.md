@@ -180,5 +180,7 @@ mesh / skinning / deformed_mesh
 
 ## WIX の管理
 
+vrmeditor.xml
 
+`Product{Version=}` を更新する
 
