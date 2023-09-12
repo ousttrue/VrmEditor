@@ -239,8 +239,10 @@ NodeTag(const gltfjson::Root& root,
         if (vrma) {
           if (auto humanoid = vrma->Humanoid()) {
             if (auto humanBones = humanoid->HumanBones()) {
-              if (auto obj = humanBones->m_json->Object()) {
-                for (auto kv : *obj) {
+              if (auto obj =
+                    std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(
+                      humanBones->m_json)) {
+                for (auto kv : obj->Value) {
                   if (auto node = kv.second->Get(u8"node")) {
                     if (auto p = node->Ptr<float>()) {
                       if (*p == i) {
@@ -257,8 +259,10 @@ NodeTag(const gltfjson::Root& root,
         if (vrm1) {
           if (auto humanoid = vrm1->Humanoid()) {
             if (auto humanBones = humanoid->HumanBones()) {
-              if (auto obj = humanBones->m_json->Object()) {
-                for (auto kv : *obj) {
+              if (auto obj =
+                    std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(
+                      humanBones->m_json)) {
+                for (auto kv : obj->Value) {
                   if (auto node = kv.second->Get(u8"node")) {
                     if (auto p = node->Ptr<float>()) {
                       if (*p == i) {

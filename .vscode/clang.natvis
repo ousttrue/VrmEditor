@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <Type Name="std::__1::variant&lt;std::__1::monostate,bool,float,*&gt;">
+      <DisplayString>{{type={__impl}}}</DisplayString>
+  </Type>
+
+  <Type Name="std::__1::basic_string&lt;char8_t,*&gt;">
+    <Intrinsic Name="is_long"
+        Expression="*(((char*)this)) &amp; 0x01" />
+    <DisplayString Condition="is_long()">{*(((char8_t**)this)+2),s8}</DisplayString>
+    <DisplayString Condition="!is_long()">{((char8_t*)this)+1,s8}</DisplayString>
+    <Expand>
+      <Item Name="[is_long]">is_long()</Item>
+      <!-- <Item Name="[size]" Condition="is_long()" -->
+      <!--     ExcludeView="simple">((size_t*)this)[1]</Item> -->
+      <!-- <Item Name="[size]" Condition="!is_long()" -->
+      <!--     ExcludeView="simple">*(((char*)this))</Item> -->
+      <!-- <Item Name="[capacity]" Condition="is_long()" ExcludeView="simple"> -->
+      <!--   ((size_t*)this)[2] &amp; (~((size_t)0) &gt;&gt; 1) -->
+      <!-- </Item> -->
+      <!-- <Item Name="[capacity]" Condition="!is_long()" -->
+      <!--     ExcludeView="simple">22</Item> -->
+      <!-- <ArrayItems> -->
+      <!--   <Size Condition="is_long()">((size_t*)this)[1]</Size> -->
+      <!--   <Size Condition="!is_long()"> -->
+      <!--     *(((char*)this) + 3*sizeof(size_t) - 1) -->
+      <!--   </Size> -->
+      <!--   <ValuePointer Condition="is_long()">*(char**)this</ValuePointer> -->
+      <!--   <ValuePointer Condition="!is_long()">(char*)this</ValuePointer> -->
+      <!-- </ArrayItems> -->
+    </Expand>
+  </Type>
+
+</AutoVisualizer>

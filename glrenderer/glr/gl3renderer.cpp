@@ -251,7 +251,8 @@ public:
       m_imageMap.insert({ *id, image });
       return image;
     } else {
-      PLOG_ERROR << "image#" << *id << ": " << "error"; //image.error();
+      PLOG_ERROR << "image#" << *id << ": "
+                 << "error"; // image.error();
       return {};
     }
   }
@@ -385,9 +386,10 @@ public:
     if (auto root_extensins = root.Extensions()) {
       if (auto VRM = root_extensins->Get(u8"VRM")) {
         if (auto props = VRM->Get(u8"materialProperties")) {
-          if (auto array = props->Array()) {
-            if (*id < array->size()) {
-              auto mtoonMaterial = (*array)[*id];
+          if (auto array =
+                std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(props)) {
+            if (*id < array->Value.size()) {
+              auto mtoonMaterial = array->Value[*id];
               if (auto shader = mtoonMaterial->Get(u8"shader")) {
                 if (shader->U8String() == u8"VRM/MToon") {
                   mtoon0 = mtoonMaterial;

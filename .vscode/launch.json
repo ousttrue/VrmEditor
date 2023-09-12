@@ -37,7 +37,9 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "preLaunchTask": "copy-pdb",
+            "visualizerFile": "${workspaceFolder}/.vscode/clang.natvis",
         },
         {
             "name": "vrmeditor: vrm",
@@ -53,6 +55,7 @@
             "environment": [],
             "console": "integratedTerminal",
             "preLaunchTask": "copy-pdb",
+            "visualizerFile": "${workspaceFolder}/.vscode/clang.natvis",
         },
         {
             "name": "vrmeditor: empty",

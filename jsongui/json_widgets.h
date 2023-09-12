@@ -24,28 +24,28 @@ FillArray(const gltfjson::tree::NodePtr& node,
           const std::array<float, N>& defautColor)
 {
   std::array<float, N> values;
-  auto array = node->Array();
-  if (!array) {
-    node->Var = gltfjson::tree::ArrayValue{};
-    array = node->Array();
-  }
+  auto array = std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(node);
+  // if (!array) {
+  //   node->Var = gltfjson::tree::ArrayValue{};
+  //   array = node->Array();
+  // }
   for (int i = 0; i < N; ++i) {
-    if (i < array->size()) {
-      if (auto child = (*array)[i]) {
+    if (array && i < array->Value.size()) {
+      if (auto child = array->Value[i]) {
         if (auto n = child->Ptr<float>()) {
           values[i] = *n;
         } else {
-          child->Var = defautColor[i];
+          // child->Var = defautColor[i];
           values[i] = defautColor[i];
         }
       } else {
         assert(false);
       }
     } else {
-      auto new_child = std::make_shared<gltfjson::tree::Node>();
-      new_child->Var = defautColor[i];
+      // auto new_child = std::make_shared<gltfjson::tree::Node>();
+      // new_child->Var = defautColor[i];
       values[i] = defautColor[i];
-      array->push_back(new_child);
+      // array->push_back(new_child);
     }
   }
   return values;
@@ -84,16 +84,17 @@ ShowGuiEnum(const char* label,
     return false;
   }
   auto node = parentNode->Get(key);
-  if (!node) {
+  if (node) {
+    if (auto p = node->Ptr<float>()) {
+      // ok
+    } else {
+      node = parentNode->SetProperty(key, 0.0f);
+    }
+  } else {
     node = parentNode->SetProperty(key, 0.0f);
   }
 
   auto p = node->Ptr<float>();
-  if (!p) {
-    node->Var = 0.0f;
-    p = node->Ptr<float>();
-  }
-
   auto value = (T)*p;
   if (grapho::imgui::EnumCombo(label, &value, combo)) {
     *p = (float)value;

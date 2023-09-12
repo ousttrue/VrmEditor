@@ -13,9 +13,9 @@
         "--compile-commands-dir=${workspaceFolder}/builddir",
         "--header-insertion=never",
     ],
-    "clangd.fallbackFlags": [
-        "-std=c++2a"
-    ],
+    // "clangd.fallbackFlags": [
+    //     "-std=c++2a"
+    // ],
     "testMate.cpp.test.executables": "prefix/bin/tests*",
     "C_Cpp.default.compileCommands": "builddir\\compile_commands.json",
     "mesonbuild.configureOnOpen": false,

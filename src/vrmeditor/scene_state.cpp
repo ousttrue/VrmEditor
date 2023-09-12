@@ -70,7 +70,7 @@ SceneState::WriteScene(const std::filesystem::path& path)
     ss.write(src.data(), src.size());
   };
   gltfjson::tree::Exporter exporter{ write };
-  exporter.Export(*m_runtime->m_base->m_gltf->m_json);
+  exporter.Export(m_runtime->m_base->m_gltf->m_json);
   auto str = ss.str();
 
   std::ofstream os(path, std::ios::binary);

@@ -429,8 +429,10 @@ RuntimeScene::Load(const std::shared_ptr<GltfRoot>& base)
               }
             }
             if (kv.first == u8"rotations") {
-              if (auto rotations = kv.second->Object()) {
-                for (auto [key, value] : *rotations) {
+              if (auto rotations =
+                    std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(
+                      kv.second)) {
+                for (auto [key, value] : rotations->Value) {
                   if (auto bone = HumanBoneFromName(gltfjson::from_u8(key),
                                                     VrmVersion::_1_0)) {
                     if (auto node = ptr->GetBoneNode(*bone)) {
@@ -955,23 +957,15 @@ RuntimeScene::CopyVrmPoseText()
       node.m_json->SetProperty(u8"name", std::u8string((const char8_t*)name));
       if (i == 0) {
         // root
-        if (auto ptr = node.m_json->SetProperty(u8"translation", false)) {
-          ptr->Set(bone.WorldPosition);
-        }
-        if (auto ptr = node.m_json->SetProperty(u8"rotation", false)) {
-          ptr->Set(bone.WorldRotation);
-        }
+        node.m_json->SetProperty(u8"translation", bone.WorldPosition);
+        node.m_json->SetProperty(u8"rotation", bone.WorldRotation);
         gltf.Scenes[0].Nodes.m_json->Add((float)0);
       } else {
         gltf.Nodes[bone.ParentIndex].Children.m_json->Add((float)i);
         auto& parent = skeleton->Bones[bone.ParentIndex];
         auto [pos, rot] = bone.ToLocal(parent);
-        if (auto ptr = node.m_json->SetProperty(u8"translation", false)) {
-          ptr->Set(pos);
-        }
-        if (auto ptr = node.m_json->SetProperty(u8"rotation", false)) {
-          ptr->Set(rot);
-        }
+        node.m_json->SetProperty(u8"translation", pos);
+        node.m_json->SetProperty(u8"rotation", rot);
       }
       gltf.Nodes.push_back(node);
     }
@@ -1014,11 +1008,12 @@ RuntimeScene::CopyVrmPoseText()
         pose.RootPosition.z + base.z,
       };
 
-      vrmaFrame->SetProperty(u8"translation", false)->Set(pos);
+      vrmaFrame->SetProperty(u8"translation", pos);
       for (int i = 0; i < pose.Bones.size(); ++i) {
         auto name = HumanBoneToName(pose.Bones[i]);
-        vrmaFrame->SetProperty((const char8_t*)name, false)
-          ->Set(*((const std::array<float, 4>*)&pose.Rotations[i]));
+        vrmaFrame->SetProperty(
+          (const char8_t*)name,
+          *((const std::array<float, 4>*)&pose.Rotations[i]));
       }
     }
 
@@ -1027,7 +1022,7 @@ RuntimeScene::CopyVrmPoseText()
       ss.write(src.data(), src.size());
     };
     gltfjson::tree::Exporter exporter{ write };
-    exporter.Export(*gltf.m_json);
+    exporter.Export(gltf.m_json);
 
     return ss.str();
   }

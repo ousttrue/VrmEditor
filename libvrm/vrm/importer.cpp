@@ -64,8 +64,9 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
   scene->m_title = "glTF";
 
   if (auto required = scene->m_gltf->ExtensionsRequired()) {
-    if (auto array = required->Array()) {
-      for (auto ex : *array) {
+    if (auto array =
+          std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(required)) {
+      for (auto ex : array->Value) {
         auto name = ex->U8String();
         if (name == u8"KHR_draco_mesh_compression") {
           // return std::unexpected{ "KHR_draco_mesh_compression" };
@@ -111,8 +112,9 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
     scene->m_title = "vrm-animation";
     if (auto humanoid = VRMC_vrm_animation->Humanoid()) {
       if (auto humanBones = humanoid->HumanBones()) {
-        if (auto object = humanBones->m_json->Object()) {
-          for (auto& kv : *object) {
+        if (auto object = std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(
+              humanBones->m_json)) {
+          for (auto& kv : object->Value) {
             auto name = kv.first;
             if (auto bone = HumanBoneFromName(gltfjson::from_u8(name),
                                               VrmVersion::_1_0)) {
@@ -136,8 +138,9 @@ Parse(const std::shared_ptr<GltfRoot>& scene)
     scene->m_title = "vrm-1.0";
     if (auto humanoid = VRMC_vrm->Humanoid()) {
       if (auto humanBones = humanoid->HumanBones()) {
-        if (auto object = humanBones->m_json->Object()) {
-          for (auto& kv : *object) {
+        if (auto object = std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(
+              humanBones->m_json)) {
+          for (auto& kv : object->Value) {
             auto name = kv.first;
             if (auto bone = HumanBoneFromName(gltfjson::from_u8(name),
                                               VrmVersion::_1_0)) {

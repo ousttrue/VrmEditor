@@ -115,7 +115,8 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
   if (isOpen) {
     gltfjson::tree::AddDelimiter(jsonpath);
     auto size = jsonpath.size();
-    if (auto object = item->Object()) {
+    if (auto object =
+          std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(item)) {
       //
       // object
       //
@@ -138,15 +139,15 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
         }
       }
       std::function<void()> removeAfter;
-      for (auto it = object->begin(); it != object->end(); ++it) {
+      for (auto& it : object->Value) {
         auto child_result = EditorResult::None;
-        jsonpath += it->first;
-        if (used.find(it->first) == used.end()) {
+        jsonpath += it.first;
+        if (used.find(it.first) == used.end()) {
           JsonProp prop{ { u8"❔", jsonpath.substr(size) } };
-          child_result = Traverse(it->second, jsonpath, prop);
+          child_result = Traverse(it.second, jsonpath, prop);
           if (child_result != EditorResult::None) {
             removeAfter = [=, jp = jsonpath, p = &result]() {
-              if (OnEdit(item, it->second, jp, prop, child_result)) {
+              if (OnEdit(item, it.second, jp, prop, child_result)) {
                 *p = EditorResult::Updated;
               }
             };
@@ -157,7 +158,8 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
       if (removeAfter) {
         removeAfter();
       }
-    } else if (auto array = item->Array()) {
+    } else if (auto array =
+                 std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(item)) {
       //
       // array
       //
@@ -176,7 +178,7 @@ JsonGui::Traverse(const gltfjson::tree::NodePtr& item,
 
       int i = 0;
       std::function<void()> removeAfter;
-      for (auto& child : *array) {
+      for (auto& child : array->Value) {
         gltfjson::tree::concat_int(jsonpath, i);
         child_prop.Name.Key = jsonpath.substr(size);
         auto child_result = Traverse(child, jsonpath, child_prop);
@@ -226,8 +228,8 @@ JsonGui::Enter(const gltfjson::tree::NodePtr& item,
   ImGuiTreeNodeFlags node_flags = base_flags;
   bool is_leaf = !item;
   if (item) {
-    if (item->Array()) {
-    } else if (item->Object()) {
+    if (std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(item)) {
+    } else if (std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(item)) {
     } else {
       is_leaf = true;
     }
@@ -361,11 +363,14 @@ JsonGui::OnEdit(const gltfjson::tree::NodePtr& parent,
       ClearCache(jsonpath);
       gltfjson::tree::Parser parser(prop.Value.DefaultJson);
       if (auto new_child = parser.Parse()) {
-        if (auto object = parent->Object()) {
-          object->insert({ prop.Name.Key, new_child });
+        if (auto object =
+              std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(parent)) {
+          object->Value.insert({ prop.Name.Key, new_child });
           return true;
-        } else if (auto array = parent->Array()) {
-          array->push_back(new_child);
+        } else if (auto array =
+                     std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(
+                       parent)) {
+          array->Value.push_back(new_child);
           return true;
         }
       } else {
@@ -377,21 +382,25 @@ JsonGui::OnEdit(const gltfjson::tree::NodePtr& parent,
 
     case EditorResult::Removed:
       ClearCache(jsonpath);
-      if (auto array = parent->Array()) {
+      if (auto array =
+            std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(parent)) {
         int i = 0;
-        for (auto it = array->begin(); it != array->end(); ++it, ++i) {
+        for (auto it = array->Value.begin(); it != array->Value.end();
+             ++it, ++i) {
           if (*it == item) {
             PLOG_DEBUG << "array remove: " << gltfjson::from_u8(jsonpath)
                        << " at" << i;
-            array->erase(it);
+            array->Value.erase(it);
             return true;
           }
         }
-      } else if (auto object = parent->Object()) {
-        for (auto it = object->begin(); it != object->end(); ++it) {
+      } else if (auto object =
+                   std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(
+                     parent)) {
+        for (auto it = object->Value.begin(); it != object->Value.end(); ++it) {
           if (it->second == item) {
             PLOG_DEBUG << "prop.key remove: " << gltfjson::from_u8(jsonpath);
-            object->erase(it);
+            object->Value.erase(it);
             return true;
           }
         }

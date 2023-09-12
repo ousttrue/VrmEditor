@@ -97,7 +97,9 @@ TargetNames(gltfjson::tree::NodePtr extras)
     return {};
   }
 
-  return targetNames->Array() ? targetNames : nullptr;
+  return std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(targetNames)
+           ? targetNames
+           : nullptr;
 }
 
 static std::shared_ptr<boneskin::BaseMesh>
@@ -185,9 +187,11 @@ ParseMesh(const gltfjson::Root& root, const gltfjson::Bin& bin, int meshIndex)
           auto target = targets[i];
           auto morph = ptr->getOrCreateMorphTarget(i);
           if (targetNames) {
-            if (auto array = targetNames->Array()) {
-              if (i < array->size()) {
-                auto name = (*array)[i]->U8String();
+            if (auto array =
+                  std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(
+                    targetNames)) {
+              if (i < array->Value.size()) {
+                auto name = array->Value[i]->U8String();
                 morph->Name = gltfjson::from_u8(name);
               }
             }

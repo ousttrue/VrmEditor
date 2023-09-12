@@ -23,9 +23,10 @@ MaterialFactory_MToon(const gltfjson::Root& root,
     if (auto root_extensins = root.Extensions()) {
       if (auto VRM = root_extensins->Get(u8"VRM")) {
         if (auto props = VRM->Get(u8"materialProperties")) {
-          if (auto array = props->Array()) {
-            if (*materialId < array->size()) {
-              auto mtoonMaterial = (*array)[*materialId];
+          if (auto array =
+                std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(props)) {
+            if (*materialId < array->Value.size()) {
+              auto mtoonMaterial = array->Value[*materialId];
               if (auto shader = mtoonMaterial->Get(u8"shader")) {
                 if (shader->U8String() == u8"VRM/MToon") {
                   mtoon0 = mtoonMaterial;

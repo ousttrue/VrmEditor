@@ -71,7 +71,7 @@ struct LightingImpl
             if (auto color = light.ColorVec3()) {
               ImGui::SetNextItemWidth(-1);
               if (ImGui::ColorEdit3("##_color", color->data())) {
-                light.m_json->Get(u8"color")->Set(*color);
+                light.m_json->SetProperty(u8"color", *color);
               }
             } else {
               float white[]{ 1, 1, 1 };

@@ -171,19 +171,18 @@ GltfRoot::IsSelected(const std::shared_ptr<libvrm::Node>& node) const
 void
 GltfRoot::InitializeGltf()
 {
-  auto json = std::make_shared<gltfjson::tree::Node>();
-  json->Set(gltfjson::ObjectValue());
-  json->SetProperty(u8"asset", gltfjson::ObjectValue());
-  json->SetProperty(u8"images", gltfjson::ArrayValue());
-  json->SetProperty(u8"textures", gltfjson::ArrayValue());
-  json->SetProperty(u8"materials", gltfjson::ArrayValue());
-  json->SetProperty(u8"buffers", gltfjson::ArrayValue());
-  json->SetProperty(u8"bufferViews", gltfjson::ArrayValue());
-  json->SetProperty(u8"accessors", gltfjson::ArrayValue());
-  json->SetProperty(u8"meshes", gltfjson::ArrayValue());
-  json->SetProperty(u8"nodes", gltfjson::ArrayValue());
-  json->SetProperty(u8"skins", gltfjson::ArrayValue());
-  json->SetProperty(u8"scenes", gltfjson::ArrayValue());
+  auto json = gltfjson::tree::NewNode(gltfjson::tree::ObjectValue());
+  json->SetProperty(u8"asset", gltfjson::tree::ObjectValue());
+  json->SetProperty(u8"images", gltfjson::tree::ArrayValue());
+  json->SetProperty(u8"textures", gltfjson::tree::ArrayValue());
+  json->SetProperty(u8"materials", gltfjson::tree::ArrayValue());
+  json->SetProperty(u8"buffers", gltfjson::tree::ArrayValue());
+  json->SetProperty(u8"bufferViews", gltfjson::tree::ArrayValue());
+  json->SetProperty(u8"accessors", gltfjson::tree::ArrayValue());
+  json->SetProperty(u8"meshes", gltfjson::tree::ArrayValue());
+  json->SetProperty(u8"nodes", gltfjson::tree::ArrayValue());
+  json->SetProperty(u8"skins", gltfjson::tree::ArrayValue());
+  json->SetProperty(u8"scenes", gltfjson::tree::ArrayValue());
   m_gltf = std::make_shared<gltfjson::Root>(json);
 }
 
@@ -193,7 +192,8 @@ GltfRoot::AddBufferView(uint32_t byteOffset,
                         uint32_t byteStride)
 {
   auto index = m_gltf->BufferViews.size();
-  auto bufferView = m_gltf->BufferViews.m_json->Add(gltfjson::ObjectValue());
+  auto bufferView =
+    m_gltf->BufferViews.m_json->Add(gltfjson::tree::ObjectValue());
   bufferView->SetProperty(u8"byteOffset", (float)byteOffset);
   bufferView->SetProperty(u8"byteLength", (float)byteLength);
   if (byteStride) {
@@ -210,7 +210,7 @@ GltfRoot::AddAccessor(uint32_t bufferViewIndex,
                       const char* type)
 {
   auto index = m_gltf->Accessors.size();
-  auto accessor = m_gltf->Accessors.m_json->Add(gltfjson::ObjectValue());
+  auto accessor = m_gltf->Accessors.m_json->Add(gltfjson::tree::ObjectValue());
 
   accessor->SetProperty(u8"bufferView", (float)bufferViewIndex);
   if (accessorOffset) {
@@ -228,9 +228,9 @@ GltfRoot::AddMesh(const std::shared_ptr<boneskin::BaseMesh>& mesh)
 {
   // glTF
   auto index = m_gltf->Meshes.size();
-  auto meshJson = m_gltf->Meshes.m_json->Add(gltfjson::ObjectValue{});
+  auto meshJson = m_gltf->Meshes.m_json->Add(gltfjson::tree::ObjectValue{});
   auto attributes =
-    meshJson->SetProperty(u8"attributes", gltfjson::ObjectValue{});
+    meshJson->SetProperty(u8"attributes", gltfjson::tree::ObjectValue{});
 
   gltfjson::BinWriter w(m_bytes);
 
@@ -280,7 +280,7 @@ GltfRoot::CreateNode(const std::string& name)
   m_nodes.push_back(pNode);
 
   // glTF
-  auto obj = m_gltf->Nodes.m_json->Add(gltfjson::ObjectValue{});
+  auto obj = m_gltf->Nodes.m_json->Add(gltfjson::tree::ObjectValue{});
   obj->SetProperty(u8"name", std::u8string((const char8_t*)name.c_str()));
   return pNode;
 }

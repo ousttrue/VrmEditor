@@ -14,13 +14,13 @@ inline DirectX::XMFLOAT3
 Vec3(const gltfjson::tree::NodePtr& json, const DirectX::XMFLOAT3& defaultValue)
 {
   if (json) {
-    if (auto a = json->Array()) {
-      if (a->size() == 3) {
-        if (auto a0 = (*a)[0]) {
+    if (auto a = std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(json)) {
+      if (a->Value.size() == 3) {
+        if (auto a0 = a->Value[0]) {
           if (auto p0 = a0->Ptr<float>()) {
-            if (auto a1 = (*a)[1]) {
+            if (auto a1 = a->Value[1]) {
               if (auto p1 = a1->Ptr<float>()) {
-                if (auto a2 = (*a)[2]) {
+                if (auto a2 = a->Value[2]) {
                   if (auto p2 = a2->Ptr<float>()) {
                     return { *p0, *p1, *p2 };
                   }
@@ -39,15 +39,15 @@ inline DirectX::XMFLOAT4
 Vec4(const gltfjson::tree::NodePtr& json, const DirectX::XMFLOAT4& defaultValue)
 {
   if (json) {
-    if (auto a = json->Array()) {
-      if (a->size() == 4) {
-        if (auto a0 = (*a)[0]) {
+    if (auto a = std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(json)) {
+      if (a->Value.size() == 4) {
+        if (auto a0 = a->Value[0]) {
           if (auto p0 = a0->Ptr<float>()) {
-            if (auto a1 = (*a)[1]) {
+            if (auto a1 = a->Value[1]) {
               if (auto p1 = a1->Ptr<float>()) {
-                if (auto a2 = (*a)[2]) {
+                if (auto a2 = a->Value[2]) {
                   if (auto p2 = a2->Ptr<float>()) {
-                    if (auto a3 = (*a)[3]) {
+                    if (auto a3 = a->Value[3]) {
                       if (auto p3 = a3->Ptr<float>()) {
                         return { *p0, *p1, *p2, *p3 };
                       }
@@ -480,7 +480,8 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
         ptr->UniformVarMap[key + ".color"] =
           Vec3Var{ [i](auto, auto, auto& gltf) {
             if (auto light =
-                  gltf.Root().template GetExtension<gltfjson::KHR_lights_punctual>()) {
+                  gltf.Root()
+                    .template GetExtension<gltfjson::KHR_lights_punctual>()) {
               auto l = light->Lights[i];
               if (auto c = l.ColorVec3()) {
                 return DirectX::XMFLOAT3{ (*c)[0], (*c)[1], (*c)[2] };
@@ -491,7 +492,8 @@ MaterialFactory_Pbr_Khronos_GLTF(const gltfjson::Root& root,
         ptr->UniformVarMap[key + ".intensity"] =
           FloatVar{ [i](auto, auto, auto& gltf) {
             if (auto light =
-                  gltf.Root().template GetExtension<gltfjson::KHR_lights_punctual>()) {
+                  gltf.Root()
+                    .template GetExtension<gltfjson::KHR_lights_punctual>()) {
               auto l = light->Lights[i];
               return *l.Intensity();
             }

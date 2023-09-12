@@ -15,9 +15,9 @@ inline DirectX::XMFLOAT3
 ToVec3(const gltfjson::tree::NodePtr& json)
 {
   DirectX::XMFLOAT3 v3;
-  if (auto a = json->Array()) {
+  if (auto a = std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(json)) {
     int i = 0;
-    for (auto v : *a) {
+    for (auto v : a->Value) {
       if (auto p = v->Ptr<float>()) {
         (&v3.x)[i++] = *p;
       }
@@ -30,9 +30,9 @@ inline DirectX::XMFLOAT4
 ToVec4(const gltfjson::tree::NodePtr& json)
 {
   DirectX::XMFLOAT4 v4;
-  if (auto a = json->Array()) {
+  if (auto a = std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(json)) {
     int i = 0;
-    for (auto v : *a) {
+    for (auto v : a->Value) {
       if (auto p = v->Ptr<float>()) {
         (&v4.x)[i++] = *p;
       }

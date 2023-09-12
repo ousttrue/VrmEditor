@@ -279,8 +279,10 @@ HumanPoseStream::LoadVrmPose(const std::string& json)
               }
             }
             if (kv.first == u8"rotations") {
-              if (auto rotations = kv.second->Object()) {
-                for (auto [key, value] : *rotations) {
+              if (auto rotations =
+                    std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(
+                      kv.second)) {
+                for (auto [key, value] : rotations->Value) {
                   if (auto bone = libvrm::HumanBoneFromName(
                         gltfjson::from_u8(key), libvrm::VrmVersion::_1_0)) {
                     if (auto node = runtime->GetBoneNode(*bone)) {
