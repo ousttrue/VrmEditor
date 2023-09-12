@@ -89,7 +89,7 @@ struct DrawList
   void AddText(const VEC2& pos,
                uint32_t col,
                const char* text_begin,
-               const char* text_end = NULL)
+               const char* text_end =nullptr)
   {
     m_commands.push_back({ Text{ pos,
                                  text_end ? std::string{ text_begin, text_end }

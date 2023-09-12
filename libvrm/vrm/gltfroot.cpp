@@ -1,12 +1,9 @@
-#include <Windows.h>
-
-#include "dmath.h"
 #include "gltfroot.h"
+#include "dmath.h"
 #include "humanoid/humanskeleton.h"
 #include "node.h"
 #include "spring_bone.h"
 #include <DirectXMath.h>
-#include <GL/GL.h>
 #include <array>
 #include <boneskin/base_mesh.h>
 #include <boneskin/node_state.h>
@@ -22,6 +19,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#define GL_UNSIGNED_INT 0x1405
+#define GL_FLOAT 0x1406
 
 namespace libvrm {
 

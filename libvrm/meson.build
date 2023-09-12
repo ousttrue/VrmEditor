@@ -30,11 +30,11 @@ libvrm_lib = static_library(
     ],
     include_directories: libvrm_inc,
     dependencies: libvrm_deps,
-    cpp_args: ['-DNOMINMAX'],
+    cpp_args: args,
 )
 libvrm_dep = declare_dependency(
     link_with: libvrm_lib,
     include_directories: libvrm_inc,
     dependencies: libvrm_deps,
-    compile_args: ['-DNOMINMAX'],
+    compile_args: args,
 )

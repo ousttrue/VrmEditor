@@ -64,18 +64,3 @@ RedirectIOToConsole()
   std::cin.clear();
 }
 
-inline std::filesystem::path
-GetExe()
-{
-  char szModulePath[MAX_PATH];
-  GetModuleFileNameA(NULL, szModulePath, std::size(szModulePath));
-  return szModulePath;
-}
-
-inline std::string
-GetEnv(const std::string& name)
-{
-  char buf[32767];
-  GetEnvironmentVariableA(name.c_str(), buf, std::size(buf));
-  return buf;
-}

@@ -1,4 +1,3 @@
-#include <Windows.h>
 #include <docks/imlogger.h>
 #include <plog/Appenders/ColorConsoleAppender.h>
 #include <plog/Formatters/TxtFormatter.h>

@@ -518,7 +518,7 @@ Run(std::span<const char*> args)
   g_ini = file.u8string();
   LuaEngine::Instance().DoFile(g_ini);
 
-  auto exe = GetExe();
+  auto exe = get_exe();
   auto base = exe.parent_path().parent_path();
   app::SetShaderDir(base / "shaders");
   glr::SetShaderChunkDir(base / "threejs_shader_chunks");

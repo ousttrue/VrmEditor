@@ -1,4 +1,4 @@
-#include "runtime_springJoint.h"
+#include "runtime_springjoint.h"
 #include "gizmo.h"
 #include "runtime_node.h"
 #include "spring_collision.h"

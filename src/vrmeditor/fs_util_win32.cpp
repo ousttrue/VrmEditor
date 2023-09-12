@@ -29,3 +29,19 @@ shell_open(const std::filesystem::path& path)
   };
   ShellExecuteExW(&info);
 }
+
+std::filesystem::path
+get_exe()
+{
+  char szModulePath[MAX_PATH];
+  GetModuleFileNameA(NULL, szModulePath, std::size(szModulePath));
+  return szModulePath;
+}
+
+std::string
+get_env(const std::string& name)
+{
+  char buf[32767];
+  GetEnvironmentVariableA(name.c_str(), buf, std::size(buf));
+  return buf;
+}

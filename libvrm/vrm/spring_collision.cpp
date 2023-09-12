@@ -5,11 +5,11 @@ namespace libvrm {
 RuntimeSpringCollision::RuntimeSpringCollision(
   const std::shared_ptr<libvrm::SpringBone>& springBone)
 {
-  for (auto& group : springBone->Colliders) {
-    for (auto& collider : group->Colliders) {
-      // ColliderGroups.push_back
-    }
-  }
+  // for (auto& group : springBone->Colliders) {
+  //   for (auto& collider : group->Colliders) {
+  //     // ColliderGroups.push_back
+  //   }
+  // }
 }
 
 std::optional<DirectX::XMVECTOR>

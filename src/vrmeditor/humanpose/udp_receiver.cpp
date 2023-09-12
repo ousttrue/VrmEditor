@@ -54,8 +54,11 @@ struct UdpReceiverImpl
       m_handles.insert({ port, receiver });
       receiver->Start(callback);
     } catch (const std::runtime_error& ex) {
+#ifdef _WIN32
       OutputDebugStringA(ex.what());
-      // std::cerr << ex.what() << std::endl;
+#else
+      std::cerr << ex.what() << std::endl;
+#endif
     }
   }
 

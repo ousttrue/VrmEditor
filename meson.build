@@ -71,6 +71,9 @@ cpp = meson.get_compiler('cpp')
 if cpp.get_id() == 'clang'
     args += '-Wno-defaulted-function-deleted'
 endif
+if host_machine.system() == 'windows'
+    args += '-DNOMINMAX'
+endif
 
 subdir('recti')
 subdir('boneskin')

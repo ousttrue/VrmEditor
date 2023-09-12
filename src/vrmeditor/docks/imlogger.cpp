@@ -1,5 +1,5 @@
 #include "imlogger.h"
-#include "windows_helper.h"
+#include "fs_util.h"
 #include <array>
 #include <filesystem>
 #include <grapho/imgui/widgets.h>
@@ -10,7 +10,7 @@ ImLogger::ImLogger()
 {
   Clear();
 
-  std::filesystem::path home = GetEnv("USERPROFILE");
+  std::filesystem::path home = get_env("USERPROFILE");
 
   std::list<std::string> separate;
   for (auto current = home;; current = current.parent_path()) {

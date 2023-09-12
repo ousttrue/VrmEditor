@@ -129,13 +129,13 @@ ShowGuiUInt32(const char* label,
   }
 }
 
-// std::optional<float>
-// ShowGuiSliderFloat(const char* label,
-//                    const gltfjson::tree::NodePtr& node,
-//                    float min,
-//                    float max,
-//                    float defaultValue)
-// {
+std::optional<float>
+ShowGuiSliderFloat(const char* label,
+                   const gltfjson::tree::NodePtr& node,
+                   float min,
+                   float max,
+                   float defaultValue)
+{
 //   assert(node);
 //   float value = defaultValue;
 //   if (auto p = node->Ptr<float>()) {
@@ -148,17 +148,17 @@ ShowGuiUInt32(const char* label,
 //     }
 //     return value;
 //   } else {
-//     return std::nullopt;
+    return std::nullopt;
 //   }
-// }
+}
 
-// std::optional<std::u8string>
-// ShowGuiStringEnum(const char* label,
-//                   const gltfjson::tree::NodePtr& node,
-//                   // const gltfjson::tree::NodePtr& parentNode,
-//                   // std::u8string_view key,
-//                   std::span<const char*> items)
-// {
+std::optional<std::u8string>
+ShowGuiStringEnum(const char* label,
+                  const gltfjson::tree::NodePtr& node,
+                  // const gltfjson::tree::NodePtr& parentNode,
+                  // std::u8string_view key,
+                  std::span<const char*> items)
+{
 //   // if (!parentNode) {
 //   //   return false;
 //   // }
@@ -204,15 +204,15 @@ ShowGuiUInt32(const char* label,
 //     *p = gltfjson::to_u8(value);
 //     return std::u8string((const char8_t*)value.data(), value.size());
 //   } else {
-//     return {};
+    return {};
 //   }
-// }
+}
 
-// std::optional<std::array<float, 3>>
-// ShowGuiColor3(const char* label,
-//               const gltfjson::tree::NodePtr& node,
-//               const std::array<float, 3>& defaultValue)
-// {
+std::optional<std::array<float, 3>>
+ShowGuiColor3(const char* label,
+              const gltfjson::tree::NodePtr& node,
+              const std::array<float, 3>& defaultValue)
+{
 //   auto value = defaultValue;
 //   if (node) {
 //     if (auto p = node->Ptr<gltfjson::tree::ArrayValue>()) {
@@ -234,15 +234,15 @@ ShowGuiUInt32(const char* label,
 //     }
 //     return value;
 //   } else {
-//     return {};
+    return {};
 //   }
-// }
+}
 
-// std::optional<std::array<float, 4>>
-// ShowGuiColor4(const char* label,
-//               const gltfjson::tree::NodePtr& node,
-//               const std::array<float, 4>& defaultValue)
-// {
+std::optional<std::array<float, 4>>
+ShowGuiColor4(const char* label,
+              const gltfjson::tree::NodePtr& node,
+              const std::array<float, 4>& defaultValue)
+{
 //   auto value = defaultValue;
 //   if (node) {
 //     if (auto p = node->Ptr<gltfjson::tree::ArrayValue>()) {
@@ -266,9 +266,9 @@ ShowGuiUInt32(const char* label,
 //     }
 //     return value;
 //   } else {
-//     return {};
+    return {};
 //   }
-// }
+}
 
 // bool
 // ShowGuiFloat3(const char* label,
@@ -322,49 +322,50 @@ HelpMarker(const char* desc)
   }
 }
 
-// std::optional<uint32_t>
-// SelectId(const char* label,
-//          const gltfjson::tree::NodePtr& node,
-//          const gltfjson::tree::NodePtr& arrayNode)
-// {
-//   if (!arrayNode) {
-//     return false;
-//   }
-//   auto values = arrayNode->Array();
-//   if (!values) {
-//     return false;
-//   }
-//
-//   float* id = nullptr;
-//   if (node) {
-//     id = node->Ptr<float>();
-//   }
-//
-//   auto selected = (uint32_t)(id ? *id : -1);
-//   using TUPLE = std::tuple<uint32_t, std::string>;
-//   std::vector<TUPLE> combo;
-//   grapho::imgui::PrintfBuffer buf;
-//   for (int i = 0; i < values->size(); ++i) {
-//     auto item = (*values)[i];
-//     const gltfjson::tree::NodePtr name = item->Get(u8"name");
-//     combo.push_back(
-//       { i,
-//         buf.Printf(
-//           "[%d] %s", i, (name ? (const char*)name->U8String().c_str() : ""))
-//           });
-//   }
-//   std::span<const TUPLE> span(combo.data(), combo.size());
-//
-//   bool updated = grapho::imgui::GenericCombo<uint32_t>(label, &selected,
-//   span); if (updated) {
-//     if (node) {
-//       node->Var = (float)selected;
-//     }
-//     return selected;
-//   } else {
-//     return std::nullopt;
-//   }
-// }
+std::optional<uint32_t>
+SelectId(const char* label,
+         const gltfjson::tree::NodePtr& node,
+         const gltfjson::tree::NodePtr& arrayNode)
+{
+  // if (!arrayNode) {
+  //   return false;
+  // }
+  // auto values = arrayNode->Array();
+  // if (!values) {
+  //   return false;
+  // }
+  //
+  // float* id = nullptr;
+  // if (node) {
+  //   id = node->Ptr<float>();
+  // }
+  //
+  // auto selected = (uint32_t)(id ? *id : -1);
+  // using TUPLE = std::tuple<uint32_t, std::string>;
+  // std::vector<TUPLE> combo;
+  // grapho::imgui::PrintfBuffer buf;
+  // for (int i = 0; i < values->size(); ++i) {
+  //   auto item = (*values)[i];
+  //   const gltfjson::tree::NodePtr name = item->Get(u8"name");
+  //   combo.push_back(
+  //     { i,
+  //       buf.Printf(
+  //         "[%d] %s", i, (name ? (const char*)name->U8String().c_str() : ""))
+  //         });
+  // }
+  // std::span<const TUPLE> span(combo.data(), combo.size());
+  //
+  // bool updated = grapho::imgui::GenericCombo<uint32_t>(label, &selected,
+  // span); if (updated) {
+  //   if (node) {
+  //     // node->Var = (float)selected;
+  //   }
+  //   return selected;
+  // } else {
+  //   return std::nullopt;
+  // }
+  return {};
+}
 
 // bool
 // SelectId(const char* label,

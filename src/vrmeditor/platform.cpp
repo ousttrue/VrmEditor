@@ -5,9 +5,12 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+
+#ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 #include <Windows.h>
+#endif
 
 int Platform::Width = 2000;
 int Platform::Height = 1200;
@@ -77,10 +80,12 @@ Platform::WindowCreate(const char* title)
     return nullptr;
   }
 
+#ifdef _WIN32
   auto hWnd = glfwGetWin32Window(m_window);
   HICON hIcon = LoadIcon(GetModuleHandle(nullptr), "APPICON");
   SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
   SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+#endif
 
   glfwSetWindowUserPointer(m_window, this);
 
