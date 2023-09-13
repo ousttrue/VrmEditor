@@ -5,6 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "lldb",
+            "request": "launch",
+            "name": "lldb",
+            "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
+            "args": [
+                // "${env:GLTF_SAMPLE_MODELS}/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"
+                // "${env:GLTF_SAMPLE_MODELS}/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"
+                // "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm",
+                "${workspaceFolder}/example/project.lua",
+                // "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+        },
+        {
             "name": "gltf_samples_gen.py",
             "type": "python",
             "request": "launch",

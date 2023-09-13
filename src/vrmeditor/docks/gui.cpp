@@ -1,7 +1,5 @@
 #include "gui.h"
-#include "app.h"
 #include "dockspace.h"
-#include "fs_util.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -13,7 +11,6 @@
 #include <IconsMaterialDesign.h>
 #include <ImGuiFileDialog.h>
 #include <imnodes.h>
-#include <iostream>
 #include <plog/Log.h>
 
 void
@@ -204,14 +201,14 @@ Gui::Initialize()
   assert(m_impl == nullptr);
   m_impl = new GuiImpl(m_window, m_glsl_version.c_str());
 
-  // if (m_fonts.empty()) {
-  //   m_fonts.push_back(FontSetting::JapaneseFont());
-  //   m_fonts.push_back(FontSetting::EmojiFont());
-  // }
+  if (m_fonts.empty()) {
+    m_fonts.push_back(FontSetting::JapaneseFont());
+    m_fonts.push_back(FontSetting::EmojiFont());
+  }
 
-  // for (int i = 0; i < m_fonts.size(); ++i) {
-  //   m_fonts[i].AddFont(i, FontSize);
-  // }
+  for (int i = 0; i < m_fonts.size(); ++i) {
+    m_fonts[i].AddFont(i, FontSize);
+  }
 
   ImGui::GetIO().Fonts->Build();
 }
