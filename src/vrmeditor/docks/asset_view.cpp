@@ -27,23 +27,6 @@ static std::string s_supportedTypes[]{
   ".glb", ".gltf", ".vrm", ".bvh", ".fbx", ".obj", ".hdr", ".vrma",
 };
 
-static bool
-IsAncestorOf(const std::filesystem::path& lhs, const std::filesystem::path& rhs)
-{
-  if (!std::filesystem::is_directory(lhs)) {
-    return false;
-  }
-  for (auto current = rhs.parent_path();; current = current.parent_path()) {
-    if (current == lhs) {
-      return true;
-    }
-    if (current == current.parent_path()) {
-      break;
-    }
-  }
-  return false;
-}
-
 std::unordered_map<std::string, std::u8string> g_iconMap = {
   // image
   { ".png", u8"🖼" },
@@ -185,61 +168,61 @@ struct Asset
     return work;
   }
 
-  // asio::awaitable<void> LoadAsync()
-  // {
-  //   auto work =
-  //     co_await AsioTask::ThreadTask<std::shared_ptr<Asset>>::AsyncThredTask(
-  //       [path = Path]() { return Load(path); }, asio::use_awaitable);
-  //   ImageBytes = work->ImageBytes;
-  //   Tags.assign(work->Tags.begin(), work->Tags.end());
-  //   m_loaded = LoadStatus::Done;
-  // }
+  asio::awaitable<void> LoadAsync()
+  {
+    auto work =
+      co_await AsioTask::ThreadTask<std::shared_ptr<Asset>>::AsyncThredTask(
+        [path = Path]() { return Load(path); }, asio::use_awaitable);
+    ImageBytes = work->ImageBytes;
+    Tags.assign(work->Tags.begin(), work->Tags.end());
+    m_loaded = LoadStatus::Done;
+  }
 
- //  void ShowGui(float w)
- //  {
- //    if (m_loaded == LoadStatus::Yet) {
- //      m_loaded = LoadStatus::Loading;
- //      asio::co_spawn(AsioTask::Instance().Executor(),
- //                     std::bind(&Asset::LoadAsync, this),
- //                     asio::detached);
- //    }
-// 
- //    ImGui::PushID(this);
- //    if (ImageBytes.size()) {
- //      if (!Texture) {
- //        libvrm::Image image("thumb");
- //        if (image.Load(ImageBytes)) {
- //          Texture = glr::CreateTexture(image);
- //        }
- //      }
- //    }
- //    if (Texture) {
- //      ImGui::Image((ImTextureID)(intptr_t)Texture->Handle(), { 100, 100 });
- //    } else {
- //      ImGui::Image(0, { 100, 100 });
- //    }
- //    ImGui::SameLine();
-// 
- //    ImGui::BeginGroup();
- //    ImGui::SetNextItemWidth(-1);
- //    if (ImGui::Button((const char*)Label.c_str(), { w, 0 })) {
- //      app::TaskLoadPath(Path);
- //    }
-// 
- //    if (Tags.size()) {
- //      for (int i = 0; i < Tags.size(); ++i) {
- //        if (i) {
- //          ImGui::SameLine();
- //        }
- //        ImGui::SmallButton((const char*)Tags[i].c_str());
- //      }
- //    } else {
- //      ImGui::NewLine();
- //    }
- //    ImGui::EndGroup();
-// 
- //    ImGui::PopID();
- //  }
+  void ShowGui(float w)
+  {
+    if (m_loaded == LoadStatus::Yet) {
+      m_loaded = LoadStatus::Loading;
+      asio::co_spawn(AsioTask::Instance().Executor(),
+                     std::bind(&Asset::LoadAsync, this),
+                     asio::detached);
+    }
+
+    ImGui::PushID(this);
+    if (ImageBytes.size()) {
+      if (!Texture) {
+        libvrm::Image image("thumb");
+        if (image.Load(ImageBytes)) {
+          Texture = glr::CreateTexture(image);
+        }
+      }
+    }
+    if (Texture) {
+      ImGui::Image((ImTextureID)(intptr_t)Texture->Handle(), { 100, 100 });
+    } else {
+      ImGui::Image(0, { 100, 100 });
+    }
+    ImGui::SameLine();
+
+    ImGui::BeginGroup();
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::Button((const char*)Label.c_str(), { w, 0 })) {
+      app::TaskLoadPath(Path);
+    }
+
+    if (Tags.size()) {
+      for (int i = 0; i < Tags.size(); ++i) {
+        if (i) {
+          ImGui::SameLine();
+        }
+        ImGui::SmallButton((const char*)Tags[i].c_str());
+      }
+    } else {
+      ImGui::NewLine();
+    }
+    ImGui::EndGroup();
+
+    ImGui::PopID();
+  }
 
   bool operator<(const Asset& b) const noexcept { return Path < b.Path; }
 };
@@ -283,7 +266,7 @@ struct AssetViewImpl
     clipper.Begin(Assets.size(), 100);
     while (clipper.Step()) {
       for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-        // Assets[i]->ShowGui(size.x);
+        Assets[i]->ShowGui(size.x);
       }
     }
 #endif
