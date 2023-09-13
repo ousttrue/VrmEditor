@@ -20,4 +20,7 @@
     "C_Cpp.default.compileCommands": "builddir\\compile_commands.json",
     "mesonbuild.configureOnOpen": false,
     "dotnet.defaultSolution": "disable",
+    "cSpell.words": [
+        "Gltf"
+    ],
 }

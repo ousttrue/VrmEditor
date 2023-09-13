@@ -1,7 +1,7 @@
 #pragma once
 #include <vrm/runtime_scene.h>
 
-struct SceneState
+class SceneState
 {
   std::shared_ptr<libvrm::RuntimeScene> m_runtime;
   std::optional<libvrm::Time> m_lastTime;
@@ -9,6 +9,7 @@ struct SceneState
     std::function<void(const std::shared_ptr<libvrm::RuntimeScene>&)>;
   std::list<SetSceneFunc> m_setCallbacks;
 
+public:
   static SceneState& GetInstance()
   {
     static SceneState s_state;
@@ -26,4 +27,9 @@ struct SceneState
   bool WriteScene(const std::filesystem::path& path);
 
   std::string CopyVrmPoseText();
+
+  void SetCallback(const SetSceneFunc& callback)
+  {
+    m_setCallbacks.push_back(callback);
+  }
 };

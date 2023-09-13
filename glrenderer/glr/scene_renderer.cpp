@@ -420,8 +420,7 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
                             const grapho::camera::Viewport& viewport,
                             const grapho::camera::MouseState& mouse) const
 {
-  if(!scene->m_gltf)
-  {
+  if (!scene->m_gltf) {
     return;
   }
 
@@ -440,7 +439,7 @@ SceneRenderer::RenderStatic(const std::shared_ptr<libvrm::GltfRoot>& scene,
                      *scene->m_gltf,
                      scene->m_bin,
                      nodestates,
-                     m_meshDeformer,
+                     scene->m_meshDeformer,
                      *m_settings,
                      m_gizmo,
                      scene->ShapeMatrices(),
@@ -482,7 +481,7 @@ SceneRenderer::RenderRuntime(
                      *runtime->m_base->m_gltf,
                      runtime->m_base->m_bin,
                      nodestates,
-                     m_meshDeformer,
+                     runtime->m_base->m_meshDeformer,
                      *m_settings,
                      m_gizmo,
                      runtime->ShapeMatrices(),

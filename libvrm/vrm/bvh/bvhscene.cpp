@@ -85,7 +85,7 @@ InitializeSceneFromBvh(const std::shared_ptr<GltfRoot>& scene,
   scene->m_roots[0]->InitialTransform.Translation.y -= bb.Min.y;
   scene->m_roots[0]->CalcWorldInitialMatrix(true);
   scene->m_roots[0]->CalcShape();
-  scene->RaiseSceneUpdated();
+  // scene->RaiseSceneUpdated();
 }
 
 }

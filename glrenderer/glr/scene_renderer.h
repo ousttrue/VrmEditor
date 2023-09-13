@@ -47,7 +47,6 @@ struct SceneRenderer
   std::shared_ptr<Gizmo> m_gizmo;
   std::shared_ptr<recti::Screen> m_screen;
   std::shared_ptr<grapho::camera::Camera> m_camera;
-  mutable boneskin::MeshDeformer m_meshDeformer;
 
   SceneRenderer(const std::shared_ptr<RenderingEnv>& env,
                 const std::shared_ptr<ViewSettings>& settings);

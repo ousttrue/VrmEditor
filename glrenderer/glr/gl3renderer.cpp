@@ -139,7 +139,7 @@ class Gl3Renderer
   std::unordered_map<uint32_t, std::shared_ptr<grapho::gl3::Vao>> m_drawableMap;
 
   Material m_shadow;
-  Material m_error;
+  std::shared_ptr<Material> m_error;
   Material m_wireframe;
 
   std::shared_ptr<ShaderSourceManager> m_shaderSource;
@@ -368,6 +368,10 @@ public:
       }
     }
 
+    if (*id >= root.Materials.size()) {
+      return m_error;
+    }
+
     auto src = root.Materials[*id];
 
     auto extensions = src.Extensions();
@@ -500,6 +504,12 @@ public:
               const std::shared_ptr<grapho::gl3::Vao>& vao,
               const DirectX::XMFLOAT4X4& modelMatrix)
   {
+    if (!m_error) {
+      if (auto error = MaterialFactory_Error(root, bin, {})) {
+        m_error = error;
+      }
+    }
+
     switch (pass) {
       case RenderPass::Opaque: {
         uint32_t drawOffset = 0;
@@ -636,12 +646,7 @@ public:
 
     } else {
       // error
-      if (!m_error.Compiled) {
-        if (auto error = MaterialFactory_Error(root, bin, primitive.Material)) {
-          m_error = *error;
-        }
-      }
-      m_error.Activate(m_shaderSource, world, local, {});
+      m_error->Activate(m_shaderSource, world, local, {});
     }
 
     vao->Draw(GL_TRIANGLES, primitive.DrawCount, drawOffset);

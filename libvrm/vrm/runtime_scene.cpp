@@ -394,11 +394,18 @@ RuntimeScene::RuntimeScene(const std::shared_ptr<GltfRoot>& table)
   Reset();
 }
 
+RuntimeScene::~RuntimeScene()
+{
+  //
+  auto a = 0;
+}
+
 std::shared_ptr<RuntimeScene>
 RuntimeScene::Load(const std::shared_ptr<GltfRoot>& base)
 {
   assert(base);
   auto ptr = std::make_shared<RuntimeScene>(base);
+
   if (base->m_gltf) {
     if (auto VRMC_vrm =
           base->m_gltf->GetExtension<gltfjson::vrm1::VRMC_vrm>()) {
@@ -448,13 +455,6 @@ RuntimeScene::Load(const std::shared_ptr<GltfRoot>& base)
       }
     }
   }
-
-  base->m_sceneUpdated.push_back([=](const auto&) {
-    for (auto& root : ptr->m_roots) {
-      root->CalcWorldMatrix(true);
-    }
-    // Reset();
-  });
 
   return ptr;
 }
@@ -564,6 +564,13 @@ RuntimeScene::UpdateNodeStates(std::span<boneskin::NodeState> nodestates)
   if (!m_base->m_gltf) {
     return;
   }
+  // base->m_sceneUpdated.push_back([=](const auto&)
+  {
+    for (auto& root : m_roots) {
+      root->CalcWorldMatrix(true);
+    }
+    // Reset();
+  };
 
   // glTF morph animation
   for (int i = 0; i < m_nodes.size(); ++i) {

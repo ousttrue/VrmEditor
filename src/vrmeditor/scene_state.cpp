@@ -11,8 +11,13 @@
 void
 SceneState::SetGltf(const std::shared_ptr<libvrm::GltfRoot>& gltf)
 {
-  m_runtime = libvrm::RuntimeScene::Load(gltf);
   m_lastTime = {};
+  if (gltf) {
+    m_runtime = libvrm::RuntimeScene::Load(gltf);
+  } else {
+    // dummy empty
+    m_runtime = std::make_shared<libvrm::RuntimeScene>(std::make_shared<libvrm::GltfRoot>());
+  }
 
   for (auto& callback : m_setCallbacks) {
     callback(m_runtime);
@@ -29,7 +34,7 @@ SceneState::LoadModel(const std::filesystem::path& path)
     return true;
   } else {
     // PLOG_ERROR << gltf.error();
-    SetGltf(std::make_shared<libvrm::GltfRoot>());
+    SetGltf(nullptr);
     return false;
   }
 }

@@ -99,7 +99,7 @@ UpdateScene(const std::shared_ptr<GltfRoot>& scene,
       }
     }
     scene->InitializeNodes();
-    scene->RaiseSceneUpdated();
+    // scene->RaiseSceneUpdated();
   } else if (magic == "SRHTFRM1") {
     if (scene->m_roots.size()) {
       auto header = r.Get<FrameHeader>();

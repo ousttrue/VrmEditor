@@ -27,7 +27,11 @@ namespace libvrm {
 
 GltfRoot::GltfRoot() {}
 
-GltfRoot::~GltfRoot() {}
+GltfRoot::~GltfRoot()
+{
+  // debug
+  auto a = 0;
+}
 
 std::tuple<std::shared_ptr<Node>, uint32_t>
 GltfRoot::GetBoneNode(HumanBones bone)

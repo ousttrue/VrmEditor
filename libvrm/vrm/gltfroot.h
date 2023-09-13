@@ -2,6 +2,7 @@
 #include "boundingbox.h"
 #include "humanoid/humanbones.h"
 #include <DirectXMath.h>
+#include <boneskin/meshdeformer.h>
 #include <boneskin/node_state.h>
 #include <functional>
 #include <gltfjson.h>
@@ -41,9 +42,18 @@ struct GltfRoot
   std::vector<std::shared_ptr<Node>> m_roots;
   std::shared_ptr<Node> m_selected;
 
-  std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
+  // std::list<std::function<void(const GltfRoot& scene)>> m_sceneUpdated;
+  // void RaiseSceneUpdated()
+  // {
+  //   for (auto& callback : m_sceneUpdated) {
+  //     callback(*this);
+  //   }
+  // }
+
   std::vector<DirectX::XMFLOAT4X4> m_shapeMatrices;
   std::vector<boneskin::NodeState> m_drawables;
+
+  boneskin::MeshDeformer m_meshDeformer;
 
   GltfRoot();
   ~GltfRoot();
@@ -56,13 +66,6 @@ struct GltfRoot
     m_nodes.clear();
     m_roots.clear();
     m_gltf = {};
-  }
-
-  void RaiseSceneUpdated()
-  {
-    for (auto& callback : m_sceneUpdated) {
-      callback(*this);
-    }
   }
 
   std::tuple<std::shared_ptr<Node>, uint32_t> GetBoneNode(HumanBones bone);

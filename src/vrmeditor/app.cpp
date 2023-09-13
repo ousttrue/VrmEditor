@@ -77,7 +77,7 @@ public:
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
       [=] { ResetDock(); });
 
-    SceneState::GetInstance().m_setCallbacks.push_back(
+    SceneState::GetInstance().SetCallback(
       [=](const std::shared_ptr<libvrm::RuntimeScene>& runtime) {
         glr::Release();
         std::weak_ptr<libvrm::RuntimeScene> weak = runtime;
