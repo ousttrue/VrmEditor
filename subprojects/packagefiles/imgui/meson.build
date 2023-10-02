@@ -1,7 +1,7 @@
 project('imgui', 'cpp')
 
 glfw_dep = dependency('glfw3', default_options: ['default_library=static'])
-freetype_dep = dependency('freetype', default_options: ['default_library=static'])
+freetype_dep = dependency('freetype')
 deps = [
     glfw_dep,
     freetype_dep,

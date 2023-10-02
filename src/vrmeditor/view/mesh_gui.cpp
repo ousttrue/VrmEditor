@@ -104,10 +104,8 @@ struct MeshGuiImpl
 
   void _MeshSelector(float o1)
   {
-    std::array<const char*, 3> cols = {
-      "Index",
-      "Name",
-      "Prims",
+    const char* cols[] = {
+      "Index", "Name", "Prims", "MorphTargets", "Accessors",
     };
 
     if (grapho::imgui::BeginTableColumns("##MeshTable", cols, { 0, o1 })) {
@@ -116,7 +114,7 @@ struct MeshGuiImpl
         ImGui::TableNextRow();
         // 0
         ImGui::TableNextColumn();
-        ImGui::TextUnformatted(m_buf.Printf("%d", i));
+        ImGui::Text("%d", i);
         // 1
         ImGui::TableNextColumn();
         if (ImGui::Selectable((const char*)mesh.NameString().c_str(),
@@ -125,7 +123,45 @@ struct MeshGuiImpl
         }
         // 2
         ImGui::TableNextColumn();
-        ImGui::TextUnformatted(m_buf.Printf("%d", mesh.Primitives.size()));
+        ImGui::Text("%d", mesh.Primitives.size());
+        // 3
+        ImGui::TableNextColumn();
+        int morph_targets = 0;
+        if (mesh.Primitives.size() > 0) {
+          morph_targets = mesh.Primitives[0].Targets.size();
+        }
+        ImGui::Text("%d", morph_targets);
+        // 4
+        ImGui::TableNextColumn();
+        int accessors = 0;
+        for (auto prim : mesh.Primitives) {
+          if (prim.IndicesId()) {
+            ++accessors;
+          }
+          if (auto attr = prim.Attributes()) {
+            if (attr->POSITION_Id())
+              ++accessors;
+            if (attr->NORMAL_Id())
+              ++accessors;
+            if (attr->TEXCOORD_0_Id())
+              ++accessors;
+            if (attr->WEIGHTS_0_Id())
+              ++accessors;
+            if (attr->JOINTS_0_Id())
+              ++accessors;
+            if (attr->COLOR_0_Id())
+              ++accessors;
+            // TODO:
+          }
+          for (auto target : prim.Targets) {
+            if (target.POSITION_Id())
+              ++accessors;
+            if (target.NORMAL_Id())
+              ++accessors;
+            // TODO:
+          }
+        }
+        ImGui::Text("%d", accessors);
       }
 
       ImGui::EndTable();
