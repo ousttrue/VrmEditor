@@ -1,7 +1,6 @@
 #pragma once
 #include <filesystem>
 #include <string>
-#include <asio.hpp>
 
 struct AssetView
 {

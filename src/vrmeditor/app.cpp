@@ -1,7 +1,7 @@
 #include <GL/glew.h>
 
 #include "app.h"
-#include "asio_task.h"
+// #include "asio_task.h"
 #include "config.h"
 #include "docks/asset_view.h"
 #include "docks/dockspace.h"
@@ -75,10 +75,10 @@ public:
     m_meshGui = std::make_shared<MeshGui>();
 
     DockSpaceManager::Instance().OnResetCallbacks.push_back(
-      [=] { ResetDock(); });
+      [=, this] { ResetDock(); });
 
     SceneState::GetInstance().SetCallback(
-      [=](const std::shared_ptr<libvrm::RuntimeScene>& runtime) {
+      [=, this](const std::shared_ptr<libvrm::RuntimeScene>& runtime) {
         glr::Release();
         std::weak_ptr<libvrm::RuntimeScene> weak = runtime;
         humanpose::HumanPoseStream::Instance().HumanPoseChanged.push_back(
@@ -172,7 +172,7 @@ public:
 
     DockSpaceManager::Instance().AddDock({
       "🔍GL selector",
-      [=]() {
+      [=, this]() {
         //
         m_gl3gui->ShowSelector();
       },
@@ -180,7 +180,7 @@ public:
 
     DockSpaceManager::Instance().AddDock({
       "🔍GL selected shader source",
-      [=]() {
+      [=, this]() {
         //
         m_gl3gui->ShowSelectedShaderSource();
       },
@@ -188,7 +188,7 @@ public:
 
     DockSpaceManager::Instance().AddDock({
       "🔍GL selected shader variables",
-      [=]() {
+      [=, this]() {
         //
         m_gl3gui->ShowSelectedShaderVariables();
       },
@@ -196,7 +196,7 @@ public:
 
     // ImTimeline::Create(addDock, "[animation] timeline", m_timeline);
     DockSpaceManager::Instance().AddDock(
-      { "🏃Humanoid", [=]() { m_humanoid->ShowGui(); } });
+      { "🏃Humanoid", [=, this]() { m_humanoid->ShowGui(); } });
 
     DockSpaceManager::Instance().AddDock(
       { "🏃Vrm", [vrm = m_vrm]() { vrm->ShowGui(); } });
@@ -288,7 +288,7 @@ public:
     assert(!grapho::gl3::TryGetError());
     while (true) {
 
-      AsioTask::Instance().Poll();
+      // AsioTask::Instance().Poll();
 
       auto info = Platform::Instance().NewFrame();
       if (!info) {
@@ -464,20 +464,20 @@ namespace app {
 void
 TaskLoadModel(const std::filesystem::path& path)
 {
-  AsioTask::Instance().PostTask(
-    [path]() { SceneState::GetInstance().LoadModel(path); });
+  // AsioTask::Instance().PostTask(
+  //   [path]() { SceneState::GetInstance().LoadModel(path); });
 }
 
 void
 TaskLoadPath(const std::filesystem::path& path)
 {
-  AsioTask::Instance().PostTask([path]() { g_app.LoadPath(path); });
+  // AsioTask::Instance().PostTask([path]() { g_app.LoadPath(path); });
 }
 
 void
 TaskLoadHdr(const std::filesystem::path& hdr)
 {
-  AsioTask::Instance().PostTask([hdr]() { g_app.LoadHdr(hdr); });
+  // AsioTask::Instance().PostTask([hdr]() { g_app.LoadHdr(hdr); });
 }
 
 void
