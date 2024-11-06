@@ -32,8 +32,7 @@
             .hash = "12209cbed0c89b9c0661027e5feb482c195d29d527eddaff0e65e544a4d1863a3be2",
         },
         .glew = .{
-            .url = "https://github.com/nigels-com/glew/releases/download/glew-2.2.0/glew-2.2.0.tgz",
-            .hash = "122057b12bb9d1db984ec54e6369bd4b13d7fb01a0373a38f841c974637ba7ac0787",
+            .path = "deps/glew",
         },
         .grapho = .{
             .url = "git+https://github.com/ousttrue/grapho.git?ref=v1.10.1#e2aa5e078b55f3bea786105b5b9516e81e50b377",
@@ -46,8 +45,8 @@
             .path = "deps/glfw",
         },
         .gltfjson = .{
-            .url = "git+https://github.com/ousttrue/gltfjson.git#0934341a0c6c5968a643dc7fa8798a32e4d711cf",
-            .hash = "1220fa502491fd200e0b88bdcb89287554cbea557c3f3e919ffdd513f57b352bc747",
+            .url = "git+https://github.com/ousttrue/gltfjson.git?ref=v2.1.0#f0cf396cb9d42ef2a13f7301655a929bcf8b5ec1",
+            .hash = "1220b6b24f3951ebcfc85920c9143d94388d47b9a37ce68d31a3d89a7b8f4a1a066a",
         },
         .lua = .{
             .url = "https://www.lua.org/ftp/lua-5.4.6.tar.gz",
@@ -55,6 +54,29 @@
         },
         .directxmath = .{
             .path = "deps/DirectXMath-oct2024",
+        },
+        .iconfont = .{
+            .url = "git+https://github.com/juliettef/IconFontCppHeaders.git#f71e71c7045e86947d4a2669d01bbc2adefd7135",
+            .hash = "12204c8305ee81aa7e22dea71be643ea1761cec088819a195a7602fd9422b667b6c3",
+        },
+        .compile_commands = .{
+            .url = "git+https://github.com/the-argus/zig-compile-commands.git#34ffa4290ca4fc060168e8eca9574ff11002fb0b",
+            .hash = "12209264387a67972ccebb9ff53a08b2ee8519f5f9b93b9d400a144d849528136ead",
+        },
+        .cuber = .{
+            .url = "git+https://github.com/ousttrue/cuber.git?ref=v1.3.0#61aa43311d6e441d8be0fd8b30c99f8dc78e017e",
+            .hash = "12204ce7894a004af8037fea541f62b6eb069aad838c2b9107329c1dd255bbd92fdf",
+        },
+        .ktx = .{
+            .url = "git+https://github.com/KhronosGroup/KTX-Software?ref=v4.3.0#572e6102c37eb5864fa67bed8d40d9f73114f16b",
+            .hash = "12207d01e30fcb5c3650c80cd8b998cb3c7de24a247c062caec57cbc70d42ba38a53",
+        },
+        .freetpe = .{
+            .url = "git+https://github.com/freetype/freetype.git?ref=VER-2-13-3#42608f77f20749dd6ddc9e0536788eaad70ea4b5",
+            .hash = "1220179d427a4c911aa99196829e85ffc3a188b12b7a347143b6395d6c92cfc026af",
+        },
+        .stb = .{
+            .path = "deps/stb",
         },
     },
     .paths = .{

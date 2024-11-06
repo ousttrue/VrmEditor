@@ -4,6 +4,14 @@ read, write, edit and animation test.
 
 ![vrmeditor](./docs/vrmeditor.jpg)
 
+## TODO
+
+`zig-0.13`
+
+```sh
+> zig build
+```
+
 ## features
 
 - [x] glTF-2.0

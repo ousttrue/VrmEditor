@@ -2,7 +2,6 @@
 #include "app.h"
 #include "bvhnode.h"
 #include "posenode.h"
-#include "udpnode.h"
 #include <gltfjson/gltf_typing_vrm1.h>
 #include <imnodes.h>
 #include <plog/Log.h>
@@ -102,11 +101,11 @@ HumanPoseStream::HumanPoseStream()
   };
 
   // source nodes
-  CreateNode<UdpNode>(
-    "Udp",
-    "SrcNode",
-    {},
-    std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
+  // CreateNode<UdpNode>(
+  //   "Udp",
+  //   "SrcNode",
+  //   {},
+  //   std::vector<PinNameWithType>{ { "HumanPose", PinDataTypes::HumanPose } });
 
   CreateNode<PoseNode>(
     "InitialPose",

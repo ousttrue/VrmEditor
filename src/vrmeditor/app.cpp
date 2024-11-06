@@ -3,7 +3,6 @@
 #include "app.h"
 // #include "asio_task.h"
 #include "config.h"
-#include "docks/asset_view.h"
 #include "docks/dockspace.h"
 #include "docks/gui.h"
 #include "docks/hierarchy_gui.h"
@@ -437,15 +436,15 @@ public:
       return false;
     }
 
-    auto asset = std::make_shared<AssetView>(name, path);
-    auto title = std::string("🎁") + std::string{ name.data(), name.size() };
-    DockSpaceManager::Instance().AddDock(
-      { title, [asset]() { asset->ShowGui(); } },
-      { .ShowDefault = true, .Temporary = true });
+    // auto asset = std::make_shared<AssetView>(name, path);
+    // auto title = std::string("🎁") + std::string{ name.data(), name.size() };
+    // DockSpaceManager::Instance().AddDock(
+    //   { title, [asset]() { asset->ShowGui(); } },
+    //   { .ShowDefault = true, .Temporary = true });
 
-    PLOG_INFO << title << " => " << path.string();
+    // PLOG_INFO << title << " => " << path.string();
 
-    asset->ReloadAsync();
+    // asset->ReloadAsync();
 
     // AsioTask::Instance().PostThreadTask<std::shared_ptr<AssetView>>(
     //   [name, path]() {
@@ -466,12 +465,14 @@ TaskLoadModel(const std::filesystem::path& path)
 {
   // AsioTask::Instance().PostTask(
   //   [path]() { SceneState::GetInstance().LoadModel(path); });
+  SceneState::GetInstance().LoadModel(path);
 }
 
 void
 TaskLoadPath(const std::filesystem::path& path)
 {
   // AsioTask::Instance().PostTask([path]() { g_app.LoadPath(path); });
+  g_app.LoadPath(path);
 }
 
 void
@@ -491,7 +492,7 @@ SetShaderDir(const std::filesystem::path& path)
 {
   // g_app.SetShaderDir(path);
   g_shaderDir = path;
-  g_watcher.Watch(path);
+  // g_watcher.Watch(path);
   glr::SetShaderDir(path);
 }
 
@@ -520,6 +521,7 @@ Run(std::span<const char*> args)
 
   auto exe = get_exe();
   auto base = exe.parent_path().parent_path();
+
   app::SetShaderDir(base / "shaders");
   glr::SetShaderChunkDir(base / "threejs_shader_chunks");
 
@@ -538,8 +540,8 @@ Run(std::span<const char*> args)
     } else {
       // viewermode
       TaskLoadModel(arg);
+      // LoadPath(arg);
     }
-    // LoadPath(arg);
   }
 
   g_watcher.AddCallback([](const std::filesystem::path& path) {

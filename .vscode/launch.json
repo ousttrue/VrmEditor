@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "lldb",
-            "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
+            "program": "${workspaceFolder}/zig-out/bin/vrmeditor.exe",
             "args": [
                 // "${env:GLTF_SAMPLE_MODELS}/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"
                 // "${env:GLTF_SAMPLE_MODELS}/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"
@@ -41,7 +41,7 @@
             "name": "vrmeditor: project.lua",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
+            "program": "${workspaceFolder}/zig-out/bin/vrmeditor.exe",
             "args": [
                 // "${env:GLTF_SAMPLE_MODELS}/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"
                 // "${env:GLTF_SAMPLE_MODELS}/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"
@@ -60,7 +60,7 @@
             "name": "vrmeditor: vrm",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
+            "program": "${workspaceFolder}/zig-out/bin/vrmeditor.exe",
             "args": [
                 // "${workspaceFolder}/example/project.lua",
                 "../UniVRM/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm",
@@ -69,14 +69,14 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "integratedTerminal",
-            "preLaunchTask": "copy-pdb",
+            // "preLaunchTask": "copy-pdb",
             "visualizerFile": "${workspaceFolder}/.vscode/clang.natvis",
         },
         {
             "name": "vrmeditor: empty",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/prefix/bin/vrmeditor.exe",
+            "program": "${workspaceFolder}/zig-out/bin/vrmeditor.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -87,7 +87,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "(Linux) Launch",
-            "program": "${workspaceFolder}/prefix/bin/vrmeditor",
+            "program": "${workspaceFolder}/zig-out/bin/vrmeditor",
             "args": [
                 "${workspaceFolder}/example/project.lua",
             ],
@@ -97,7 +97,7 @@
             "name": "(Windows) bvhsender",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/prefix/bin/bvhsender.exe",
+            "program": "${workspaceFolder}/zig-out/bin/bvhsender.exe",
             "args": [
                 // "${env:GLTF_SAMPLE_MODELS}/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"
                 // "${env:GLTF_SAMPLE_MODELS}/2.0/CesiumMan/glTF-Binary/CesiumMan.glb"

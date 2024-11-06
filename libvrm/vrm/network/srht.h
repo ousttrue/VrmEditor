@@ -180,6 +180,9 @@ ToVrmBone(srht::HumanoidBones src)
       return HumanBones::rightLittleIntermediate;
     case HumanoidBones::RIGHT_LITTLE_DISTAL:
       return HumanBones::rightLittleDistal;
+
+    default:
+      break;
   }
 
   return {};

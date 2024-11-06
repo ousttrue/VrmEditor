@@ -23,7 +23,7 @@ Overlay(const ImVec2& pos,
   auto textSize = ImGui::CalcTextSize(buf);
   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
   if (ImGui::BeginChild(
-        "overlay", { textSize.x, textSize.y * 2 }, false, window_flags)) {
+        "overlay", { textSize.x, textSize.y * 2 }, false, 0/*window_flags*/)) {
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textSize.y * 0.5f);
     ImGui::TextColored({ 1, 1, 1, 1 }, "%s", buf);
     if (popupName && popup) {

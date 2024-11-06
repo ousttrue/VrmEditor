@@ -861,10 +861,10 @@ namespace DirectX
         float  operator() (size_t Row, size_t Column) const  noexcept { return m[Row][Column]; }
         float& operator() (size_t Row, size_t Column) noexcept { return m[Row][Column]; }
 
-// #if (__cplusplus >= 202002L)
-//         bool operator == (const XMFLOAT3X3&) const = default;
-//         auto operator <=> (const XMFLOAT3X3&) const = default;
-// #endif
+#if (__cplusplus >= 202002L)
+        bool operator == (const XMFLOAT3X3&) const = default;
+        auto operator <=> (const XMFLOAT3X3&) const = default;
+#endif
     };
 
     //------------------------------------------------------------------------------
@@ -905,10 +905,10 @@ namespace DirectX
         float  operator() (size_t Row, size_t Column) const  noexcept { return m[Row][Column]; }
         float& operator() (size_t Row, size_t Column) noexcept { return m[Row][Column]; }
 
-// #if (__cplusplus >= 202002L)
-//         bool operator == (const XMFLOAT4X3&) const = default;
-//         auto operator <=> (const XMFLOAT4X3&) const = default;
-// #endif
+#if (__cplusplus >= 202002L)
+        bool operator == (const XMFLOAT4X3&) const = default;
+        auto operator <=> (const XMFLOAT4X3&) const = default;
+#endif
     };
 
     // 4x3 Row-major Matrix: 32 bit floating point components aligned on a 16 byte boundary
@@ -952,10 +952,10 @@ namespace DirectX
         float  operator() (size_t Row, size_t Column) const noexcept { return m[Row][Column]; }
         float& operator() (size_t Row, size_t Column) noexcept { return m[Row][Column]; }
 
-// #if (__cplusplus >= 202002L)
-//         bool operator == (const XMFLOAT3X4&) const = default;
-//         auto operator <=> (const XMFLOAT3X4&) const = default;
-// #endif
+#if (__cplusplus >= 202002L)
+        bool operator == (const XMFLOAT3X4&) const = default;
+        auto operator <=> (const XMFLOAT3X4&) const = default;
+#endif
     };
 
     // 3x4 Column-major Matrix: 32 bit floating point components aligned on a 16 byte boundary
@@ -1001,10 +1001,10 @@ namespace DirectX
         float  operator() (size_t Row, size_t Column) const noexcept { return m[Row][Column]; }
         float& operator() (size_t Row, size_t Column) noexcept { return m[Row][Column]; }
 
-// #if (__cplusplus >= 202002L)
-//         bool operator == (const XMFLOAT4X4&) const = default;
-//         auto operator <=> (const XMFLOAT4X4&) const = default;
-// #endif
+#if (__cplusplus >= 202002L)
+        bool operator == (const XMFLOAT4X4&) const = default;
+        auto operator <=> (const XMFLOAT4X4&) const = default;
+#endif
     };
 
     // 4x4 Matrix: 32 bit floating point components aligned on a 16 byte boundary

@@ -1,0 +1,11 @@
+.{
+    .name = "glew",
+    .version = "0.0.0",
+    .paths = .{""},
+    .dependencies = .{
+        .glew = .{
+            .url = "https://github.com/nigels-com/glew/releases/download/glew-2.2.0/glew-2.2.0.zip",
+            .hash = "1220d7684645a8cd03c72c93b1ec0afcdf6a1e517332a5f7ada6339987abbdaee45b",
+        },
+    },
+}

@@ -1,0 +1,2 @@
+#define LIBKTX_VERSION "4.3.0"
+#define LIBKTX_DEFAULT_VERSION "4.3.0"

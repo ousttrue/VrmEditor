@@ -50,6 +50,6 @@ _build
 
 /.ccls-cache/
 
+zig-out
 zig-cache
 .zig-cache
-.zig-out
