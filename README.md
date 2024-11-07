@@ -4,12 +4,13 @@ read, write, edit and animation test.
 
 ![vrmeditor](./docs/vrmeditor.jpg)
 
-## TODO
+## TODO: restart
 
 `zig-0.13`
 
 ```sh
 > zig build
+> zig build run -- some.vrm
 ```
 
 ## features
@@ -191,4 +192,3 @@ mesh / skinning / deformed_mesh
 vrmeditor.xml
 
 `Product{Version=}` を更新する
-

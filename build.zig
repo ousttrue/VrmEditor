@@ -1,5 +1,5 @@
 const std = @import("std");
-const zcc = @import("compile_commands");
+// const zcc = @import("compile_commands");
 
 const FLAGS_CPP = [_][]const u8{
     "-std=c++20",
@@ -35,7 +35,7 @@ const FLAGS = [_][]const u8{
 const FLAGS_WITH_CPP = FLAGS ++ FLAGS_CPP;
 
 pub fn build(b: *std.Build) void {
-    var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
+    // var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
@@ -400,20 +400,45 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary("OpenGL32");
     exe.linkSystemLibrary("GDI32");
 
-    targets.append(exe) catch @panic("append");
+    // targets.append(exe) catch @panic("append");
 
     const install_dir = b.addInstallDirectory(.{
         .source_dir = b.path("glrenderer/shaders"),
         .install_dir = .{ .prefix = void{} },
         .install_subdir = "bin/shaders",
     });
-    install.step.dependOn(&install_dir.step);
+    b.getInstallStep().dependOn(&install_dir.step);
 
-    const run = b.addRunArtifact(exe);
+    //
+    // sokol-zig version
+    //
+    const sokol_dep = b.dependency("sokol", .{
+        .target = target,
+        .optimize = optimize,
+        .with_sokol_imgui = true,
+        .gl = true,
+    });
+    sokol_dep.artifact("sokol_clib").addIncludePath(cimgui_root.path(b, "imgui"));
+    sokol_dep.artifact("sokol_clib").addIncludePath(cimgui_root);
+    sokol_dep.artifact("sokol_clib").addCSourceFile(.{ .file = b.path("deps/cimgui/custom_button_behaviour.cpp") });
+    const z = b.addExecutable(.{
+        .name = "vrmeditorz",
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = b.path("main.zig"),
+    });
+    const z_install = b.addInstallArtifact(z, .{});
+    b.getInstallStep().dependOn(&z_install.step);
+    z.root_module.addImport("sokol", sokol_dep.module("sokol"));
+    z.root_module.addImport("cimgui", cimgui_dep.module("cimgui"));
+
+    const run = b.addRunArtifact(z);
+    if (b.args) |args| {
+        run.addArgs(args);
+    }
     run.setCwd(b.path("zig-out/bin"));
-    run.step.dependOn(&install.step);
+    run.step.dependOn(&z_install.step);
+    b.step("run", "run vrmeditor zig version").dependOn(&run.step);
 
-    b.step("run", "run vrmeditor").dependOn(&run.step);
-
-    zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
+    // zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
 }

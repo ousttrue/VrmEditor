@@ -41,6 +41,10 @@
         .cimgui = .{
             .path = "deps/cimgui",
         },
+        .sokol = .{
+            .url = "git+https://github.com/floooh/sokol-zig.git#7a1f685a29f7dbfe8ce0fe23871d01d5b29a6d0e",
+            .hash = "1220fd8800b4fe7a38d4778b8288f55eb451c8167b200c02e73068244d9ccefe3395",
+        },
         .glfw = .{
             .path = "deps/glfw",
         },
