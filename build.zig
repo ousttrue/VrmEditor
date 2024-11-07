@@ -1,5 +1,5 @@
 const std = @import("std");
-// const zcc = @import("compile_commands");
+const zcc = @import("compile_commands");
 
 const FLAGS_CPP = [_][]const u8{
     "-std=c++20",
@@ -35,29 +35,24 @@ const FLAGS = [_][]const u8{
 const FLAGS_WITH_CPP = FLAGS ++ FLAGS_CPP;
 
 pub fn build(b: *std.Build) void {
-    // var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
+    var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const user_config = b.addConfigHeader(.{
-        .style = .{ .cmake = b.path("config.h.in") },
-        .include_path = "config.h",
-    }, .{
-        .PACKAGE = "\"vrmeditor\"",
-        .PACKAGE_VERSION = "\"0.0.0\"",
-    });
+    // const user_config = b.addConfigHeader(.{
+    //     .style = .{ .cmake = b.path("config.h.in") },
+    //     .include_path = "config.h",
+    // }, .{
+    //     .PACKAGE = "\"vrmeditor\"",
+    //     .PACKAGE_VERSION = "\"0.0.0\"",
+    // });
 
-    const cimgui_dep = b.dependency("cimgui", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    // inject the cimgui header search path into the sokol C library compile step
-    const cimgui_root = cimgui_dep.namedWriteFiles("cimgui").getDirectory();
     const glfw_dep = b.dependency("glfw", .{
         .target = target,
         .optimize = optimize,
     });
 
+    const imgui_dep = b.dependency("imgui", .{});
     const dxmath_dep = b.dependency("directxmath", .{});
     const plog_dep = b.dependency("plog", .{});
     const watcher_dep = b.dependency("simplefilewatcher", .{});
@@ -83,7 +78,7 @@ pub fn build(b: *std.Build) void {
     });
     const install = b.addInstallArtifact(exe, .{});
     b.getInstallStep().dependOn(&install.step);
-    exe.addIncludePath(user_config.getOutput().dirname());
+    // exe.addIncludePath(user_config.getOutput().dirname());
     exe.linkLibCpp();
     exe.addCSourceFiles(.{
         .root = b.path("src/vrmeditor/"),
@@ -362,10 +357,10 @@ pub fn build(b: *std.Build) void {
     exe.addIncludePath(b.path("boneskin"));
     exe.addIncludePath(b.path("glrenderer"));
     exe.addIncludePath(b.path("subprojects/ufbx"));
-    exe.addIncludePath(cimgui_root.path(b, "imgui"));
-    exe.addIncludePath(cimgui_root.path(b, "imgui/backends"));
+    exe.addIncludePath(imgui_dep.path(""));
+    exe.addIncludePath(imgui_dep.path("backends"));
     exe.addCSourceFiles(.{
-        .root = cimgui_root.path(b, "imgui"),
+        .root = imgui_dep.path(""),
         .files = &.{
             "imgui.cpp",
             "imgui_demo.cpp",
@@ -380,7 +375,6 @@ pub fn build(b: *std.Build) void {
         .flags = &FLAGS,
     });
 
-    exe.addCSourceFile(.{ .file = cimgui_dep.path("custom_button_behaviour.cpp") });
     exe.addCSourceFiles(.{
         .root = grapho_dep.path("src"),
         .files = &.{
@@ -400,7 +394,7 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary("OpenGL32");
     exe.linkSystemLibrary("GDI32");
 
-    // targets.append(exe) catch @panic("append");
+    targets.append(exe) catch @panic("append");
 
     const install_dir = b.addInstallDirectory(.{
         .source_dir = b.path("glrenderer/shaders"),
@@ -418,6 +412,13 @@ pub fn build(b: *std.Build) void {
         .with_sokol_imgui = true,
         .gl = true,
     });
+    const cimgui_dep = b.dependency("cimgui", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const cimgui_root = cimgui_dep.namedWriteFiles("cimgui").getDirectory();
+    // exe.step.dependOn(&cimgui_dep.namedWriteFiles("cimgui").step);
+    // exe.addCSourceFile(.{ .file = cimgui_dep.path("custom_button_behaviour.cpp") });
     sokol_dep.artifact("sokol_clib").addIncludePath(cimgui_root.path(b, "imgui"));
     sokol_dep.artifact("sokol_clib").addIncludePath(cimgui_root);
     sokol_dep.artifact("sokol_clib").addCSourceFile(.{ .file = b.path("deps/cimgui/custom_button_behaviour.cpp") });
@@ -440,5 +441,5 @@ pub fn build(b: *std.Build) void {
     run.step.dependOn(&z_install.step);
     b.step("run", "run vrmeditor zig version").dependOn(&run.step);
 
-    // zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
+    zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
 }

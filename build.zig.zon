@@ -38,6 +38,10 @@
             .url = "git+https://github.com/ousttrue/grapho.git?ref=v1.10.1#e2aa5e078b55f3bea786105b5b9516e81e50b377",
             .hash = "1220d3d6a3031f219f596d1c1b9c39a0ecf4b3ee0deb823005b16f96aa69bced225c",
         },
+        .imgui = .{
+            .url = "git+https://github.com/ocornut/imgui.git#v1.90.7-docking",
+            .hash = "122087d4c571d9054c9bc0ba3d006a3ad5f0026a0d0d33febd95393c890c63042db0",
+        },
         .cimgui = .{
             .path = "deps/cimgui",
         },
